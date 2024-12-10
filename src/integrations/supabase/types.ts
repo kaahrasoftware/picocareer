@@ -109,6 +109,7 @@ export type Database = {
           sessions_held: string | null
           stats: Json
           title: string
+          user_type: string | null
           username: string
         }
         Insert: {
@@ -123,6 +124,7 @@ export type Database = {
           sessions_held?: string | null
           stats?: Json
           title: string
+          user_type?: string | null
           username: string
         }
         Update: {
@@ -137,6 +139,7 @@ export type Database = {
           sessions_held?: string | null
           stats?: Json
           title?: string
+          user_type?: string | null
           username?: string
         }
         Relationships: []
