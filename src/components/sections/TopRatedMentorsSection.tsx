@@ -24,7 +24,14 @@ export const TopRatedMentorsSection = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+
+      // Transform the data to match the expected MentorCard props
+      return data?.map(mentor => ({
+        ...mentor,
+        stats: typeof mentor.stats === 'string' 
+          ? JSON.parse(mentor.stats)
+          : mentor.stats
+      })) || [];
     },
   });
 

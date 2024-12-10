@@ -8,7 +8,7 @@ import { BookOpen, Users, Star } from "lucide-react";
 interface MentorCardProps {
   title: string;
   company: string;
-  image_url: string; // Changed from imageUrl to match database
+  image_url: string;
   name: string;
   stats: {
     mentees: string;
@@ -16,6 +16,13 @@ interface MentorCardProps {
     recordings: string;
   };
   username: string;
+  bio?: string;
+  position?: string;
+  education?: string;
+  sessions_held?: string;
+  skills?: string[];
+  tools?: string[];
+  keywords?: string[];
 }
 
 export function MentorCard(props: MentorCardProps) {
