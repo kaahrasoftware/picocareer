@@ -1,6 +1,5 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
-import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
@@ -19,7 +18,6 @@ const Index = () => {
             <TopRatedMentorsSection />
           </div>
         </main>
-        <ProfileSidebar />
       </div>
     </SidebarProvider>
   );
