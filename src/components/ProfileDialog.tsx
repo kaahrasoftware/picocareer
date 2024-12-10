@@ -36,7 +36,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
             <TabsContent value="profile" className="mt-6">
               <ProfileTab />
             </TabsContent>
