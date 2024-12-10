@@ -1,121 +1,67 @@
+import { Sidebar } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, User } from "lucide-react";
-
-const userProfile = {
-  name: "John Doe",
-  username: "@johndoe",
-  location: "Austin, TX, USA",
-  university: "NC State University",
-  major: "Bio-Chemical Engineering",
-  stats: {
-    mentees: 0,
-    connected: 495,
-    recordings: 35,
-  },
-  tags: ["biochemical engineering", "microbiology"],
-};
-
-const careerConsiderations = [
-  { name: "Bioprocess Eng.", value: 98 },
-  { name: "Pharmaceutical Eng.", value: 89 },
-  { name: "Biomedical Eng.", value: 81 },
-];
+import { Progress } from "@/components/ui/progress";
+import { Bell, Settings } from "lucide-react";
 
 export function ProfileSidebar() {
   return (
     <Sidebar side="right">
-      <div className="relative">
-        <SidebarTrigger 
-          className="absolute -left-3 top-3 z-50 bg-kahra-dark border border-border"
-          side="right"
-        />
-        <SidebarContent>
-          {/* Profile Header */}
-          <SidebarGroup>
-            <div className="p-6 text-center">
-              <h2 className="text-xl font-semibold mb-2">{userProfile.major}</h2>
-              <p className="text-sm text-muted-foreground mb-6">{userProfile.university}</p>
-              
-              <div className="relative mx-auto w-24 h-24 mb-4">
-                <Avatar className="w-24 h-24 border-4 border-primary">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-2 right-0 bg-primary rounded-full p-1">
-                  <User className="w-4 h-4" />
-                </div>
-              </div>
-
-              <h3 className="text-lg font-medium">{userProfile.name}</h3>
-              <p className="text-sm text-muted-foreground">{userProfile.username}</p>
-              <div className="flex items-center justify-center gap-1 mt-1 text-sm text-muted-foreground">
-                <MapPin className="w-3 h-3" />
-                <span>{userProfile.location}</span>
+      <div className="flex flex-col h-full bg-kahra-darker border-l border-kahra-dark/50">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold text-white">Profile</h2>
+            <SidebarTrigger className="text-gray-400 hover:text-white transition-colors" />
+          </div>
+          
+          <div className="space-y-6">
+            {/* User Profile */}
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src="/avatars/user.png" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-lg font-semibold">John Doe</h3>
+                <p className="text-sm text-gray-400">Student</p>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 px-6 py-4 border-t border-b border-border">
-              <div className="text-center">
-                <p className="text-2xl font-semibold">{userProfile.stats.mentees}</p>
-                <p className="text-xs text-muted-foreground">Mentees</p>
+            {/* Progress Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-400">Profile Completion</span>
+                <span className="text-sm font-medium">75%</span>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-semibold">{userProfile.stats.connected}</p>
-                <p className="text-xs text-muted-foreground">K-onnected</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-semibold">{userProfile.stats.recordings}</p>
-                <p className="text-xs text-muted-foreground">Recordings</p>
-              </div>
+              <Progress value={75} className="h-2" />
             </div>
 
-            {/* Tags */}
-            <div className="px-6 py-4">
+            {/* Interests */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Interests</h4>
               <div className="flex flex-wrap gap-2">
-                {userProfile.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="bg-primary/10">
-                    {tag}
-                  </Badge>
-                ))}
+                <Badge variant="secondary">Technology</Badge>
+                <Badge variant="secondary">Healthcare</Badge>
+                <Badge variant="secondary">Education</Badge>
+                <Badge variant="secondary">Business</Badge>
               </div>
             </div>
-          </SidebarGroup>
 
-          {/* Career Considerations */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Career Considerations</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="p-4">
-                <div className="space-y-4">
-                  {careerConsiderations.map((career) => (
-                    <div key={career.name} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>{career.name}</span>
-                        <span>{career.value}%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary"
-                          style={{ width: `${career.value}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+            {/* Quick Actions */}
+            <div className="space-y-2">
+              <Button variant="ghost" className="w-full justify-start">
+                <Bell className="mr-2 h-4 w-4" />
+                Notifications
+              </Button>
+              <Button variant="ghost" className="w-full justify-start">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </Sidebar>
   );

@@ -1,51 +1,31 @@
-import { Home, BookOpen, Users, RefreshCw, Search } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-
-const menuItems = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: BookOpen, label: "Featured Careers", href: "#careers" },
-  { icon: Users, label: "Top Rated Mentors", href: "#mentors" },
-  { icon: RefreshCw, label: "Career Switch", href: "#switch" },
-  { icon: Search, label: "Most Searched Majors", href: "#majors" },
-];
+import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
 
 export function MenuSidebar() {
   return (
     <Sidebar side="left">
-      <div className="relative">
-        <SidebarTrigger 
-          className="absolute -right-3 top-3 z-50 bg-kahra-dark border border-border"
-          side="left"
-        />
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Explore</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.href} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+      <div className="flex flex-col h-full bg-kahra-darker border-r border-kahra-dark/50">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold text-white">Explore</h2>
+            <SidebarTrigger className="text-gray-400 hover:text-white transition-colors" />
+          </div>
+          <nav className="flex-1">
+            <ul className="space-y-4">
+              <li>
+                <a href="#" className="text-gray-300 hover:text-white transition-colors">Home</a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-white transition-colors">Careers</a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-white transition-colors">About Us</a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
     </Sidebar>
   );
