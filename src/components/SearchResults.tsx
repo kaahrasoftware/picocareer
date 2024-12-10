@@ -27,10 +27,12 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     { id: '8', title: "Sarah Johnson", type: "mentor", description: "Data Science Lead at Amazon" },
   ];
 
-  const filteredResults = allResults.filter(result => 
-    result.title.toLowerCase().includes(query.toLowerCase()) ||
-    result.description?.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredResults = query.length > 0 
+    ? allResults.filter(result => 
+        result.title.toLowerCase().includes(query.toLowerCase()) ||
+        result.description?.toLowerCase().includes(query.toLowerCase())
+      )
+    : allResults;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -57,32 +59,41 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Command className="border-none bg-transparent">
-        <CommandInput placeholder="Type to search..." value={query} />
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandInput 
+          placeholder="Type to search..." 
+          value={query}
+          className="h-9"
+        />
         
-        {Object.entries(groupedResults).map(([category, results]) => 
-          results.length > 0 && (
-            <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
-              {results.map((result) => (
-                <CommandItem
-                  key={result.id}
-                  onSelect={() => {
-                    console.log("Selected:", result);
-                    onClose();
-                  }}
-                  className="cursor-pointer hover:bg-white/10 flex items-center"
-                >
-                  {getIcon(result.type)}
-                  <div>
-                    <div className="font-medium">{result.title}</div>
-                    {result.description && (
-                      <div className="text-sm text-muted-foreground">{result.description}</div>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )
+        {filteredResults.length === 0 ? (
+          <CommandEmpty>No results found.</CommandEmpty>
+        ) : (
+          <>
+            {Object.entries(groupedResults).map(([category, results]) => 
+              results.length > 0 && (
+                <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
+                  {results.map((result) => (
+                    <CommandItem
+                      key={result.id}
+                      onSelect={() => {
+                        console.log("Selected:", result);
+                        onClose();
+                      }}
+                      className="cursor-pointer hover:bg-white/10 flex items-center"
+                    >
+                      {getIcon(result.type)}
+                      <div>
+                        <div className="font-medium">{result.title}</div>
+                        {result.description && (
+                          <div className="text-sm text-muted-foreground">{result.description}</div>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )
+            )}
+          </>
         )}
       </Command>
     </Card>
