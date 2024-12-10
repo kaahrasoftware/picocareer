@@ -8,9 +8,6 @@ export function MenuSidebar() {
     { icon: GraduationCap, label: "Featured Careers", href: "#" },
     { icon: GraduationCap, label: "Featured Majors", href: "#" },
     { icon: Users, label: "Top Rated Mentors", href: "#" },
-    { icon: RefreshCw, label: "Career Switch", href: "#" },
-    { icon: Search, label: "Most Searched Majors", href: "#" },
-    { icon: Building2, label: "Top Universities in Bus...", href: "#" },
     { icon: Plus, label: "", href: "#" },
   ];
 
