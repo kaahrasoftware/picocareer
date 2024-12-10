@@ -107,11 +107,14 @@ export type Database = {
           education: string | null
           id: number
           image_url: string
+          keywords: string[] | null
           name: string
           position: string | null
           sessions_held: string | null
+          skills: string[] | null
           stats: Json
           title: string
+          tools: string[] | null
           top_rated: boolean | null
           user_type: string | null
           username: string
@@ -123,11 +126,14 @@ export type Database = {
           education?: string | null
           id?: number
           image_url: string
+          keywords?: string[] | null
           name: string
           position?: string | null
           sessions_held?: string | null
+          skills?: string[] | null
           stats?: Json
           title: string
+          tools?: string[] | null
           top_rated?: boolean | null
           user_type?: string | null
           username: string
@@ -139,11 +145,14 @@ export type Database = {
           education?: string | null
           id?: number
           image_url?: string
+          keywords?: string[] | null
           name?: string
           position?: string | null
           sessions_held?: string | null
+          skills?: string[] | null
           stats?: Json
           title?: string
+          tools?: string[] | null
           top_rated?: boolean | null
           user_type?: string | null
           username?: string
