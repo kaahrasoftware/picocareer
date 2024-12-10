@@ -17,10 +17,12 @@ export function ProfileHeader() {
             <div className="w-3 h-3 bg-green-500 rounded-full" />
           </div>
         </div>
-        <div>
-          <DialogTitle className="text-2xl font-bold">Bio-Chemical Engineering</DialogTitle>
-          <p className="text-gray-400 dark:text-gray-400">NC State University</p>
-          <div className="mt-2">
+        <div className="flex flex-col gap-2">
+          <div>
+            <DialogTitle className="text-2xl font-bold">Bio-Chemical Engineering</DialogTitle>
+            <p className="text-gray-400 dark:text-gray-400">NC State University</p>
+          </div>
+          <div>
             <h3 className="text-xl font-semibold">John Doe</h3>
             <p className="text-gray-400 dark:text-gray-400">@johndoe</p>
             <p className="text-gray-400 dark:text-gray-400">Austin, TX, USA</p>
