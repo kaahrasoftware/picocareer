@@ -24,17 +24,17 @@ export function MentorCard(props: MentorCardProps) {
   return (
     <>
       <Card 
-        className="relative overflow-hidden group cursor-pointer transition-all duration-300 hover:scale-105 bg-kahra-darker border-none p-4"
+        className="relative overflow-hidden group cursor-pointer transition-all duration-300 hover:scale-105 bg-card border p-4"
         onClick={() => setDialogOpen(true)}
       >
         <div className="flex flex-col h-full">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white mb-1">{props.title}</h3>
-            <p className="text-sm text-gray-400">{props.company}</p>
+            <h3 className="text-lg font-semibold mb-1">{props.title}</h3>
+            <p className="text-sm text-muted-foreground">{props.company}</p>
           </div>
           
           <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-4 text-xs text-gray-400">
+            <div className="flex gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Users size={14} />
                 <span>{props.stats.mentees}</span>
@@ -56,10 +56,10 @@ export function MentorCard(props: MentorCardProps) {
 
           <div className="flex justify-between items-center mt-auto">
             <div>
-              <p className="text-sm text-white font-medium">{props.name}</p>
-              <p className="text-xs text-gray-400">@{props.username}</p>
+              <p className="text-sm font-medium">{props.name}</p>
+              <p className="text-xs text-muted-foreground">@{props.username}</p>
             </div>
-            <Badge variant="secondary" className="bg-kahra-primary/20 text-kahra-primary hover:bg-kahra-primary/30">
+            <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
               mentor
             </Badge>
           </div>

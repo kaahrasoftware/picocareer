@@ -21,11 +21,11 @@ export const SearchBar = () => {
         placeholder="Search here..."
         value={searchQuery}
         onChange={handleInputChange}
-        className="w-full pl-4 pr-12 py-2 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+        className="w-full pl-4 pr-12 py-2 bg-background border-border text-foreground placeholder:text-muted-foreground"
       />
       <Button
         size="icon"
-        className="absolute right-1 top-1 bg-transparent hover:bg-white/10"
+        className="absolute right-1 top-1 bg-transparent hover:bg-muted"
       >
         <Search className="h-4 w-4" />
       </Button>

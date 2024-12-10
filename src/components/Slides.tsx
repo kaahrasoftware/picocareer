@@ -17,19 +17,19 @@ const slides: SlideContent[] = [
     title: "CAREER EXPLORATION",
     description:
       "Discover endless possibilities, unlock passions, and define your future through personalized guidance in our Career Exploration journey. Start today!",
-    gradient: "from-red-600 to-red-800",
+    gradient: "from-red-600/90 to-red-800/90",
   },
   {
     title: "EXPERIENCED MENTORS",
     description:
       "Unlock your potential with our seasoned mentors. Gain wisdom, guidance, and excel on your academic and career journey today!",
-    gradient: "from-purple-600 to-indigo-800",
+    gradient: "from-purple-600/90 to-indigo-800/90",
   },
   {
     title: "MAJORS EXPLORATION",
     description:
       "Navigate through diverse academic paths, discover your interests, and make informed decisions about your educational journey.",
-    gradient: "from-emerald-600 to-teal-800",
+    gradient: "from-emerald-600/90 to-teal-800/90",
   },
 ];
 
