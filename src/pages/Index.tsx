@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { CareerCard } from "@/components/CareerCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +54,7 @@ const Index = () => {
                 </Button>
               </div>
               <div className="w-48">
-                {/* Placeholder for profile section */}
+                <SidebarTrigger />
               </div>
             </header>
 
@@ -81,6 +82,7 @@ const Index = () => {
             </section>
           </div>
         </main>
+        <ProfileSidebar />
       </div>
     </SidebarProvider>
   );
