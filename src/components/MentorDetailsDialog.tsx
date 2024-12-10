@@ -15,7 +15,7 @@ interface MentorDetailsDialogProps {
   mentor: {
     title: string;
     company: string;
-    imageUrl: string;
+    image_url: string;
     name: string;
     stats: {
       mentees: string;
@@ -26,7 +26,10 @@ interface MentorDetailsDialogProps {
     bio?: string;
     position?: string;
     education?: string;
-    sessionsHeld?: string;
+    sessions_held?: string;
+    skills?: string[];
+    tools?: string[];
+    keywords?: string[];
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,7 +45,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
+                <AvatarImage src={mentor.image_url} alt={mentor.name} />
                 <AvatarFallback>{mentor.name[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -77,6 +80,35 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
               </div>
             )}
 
+            {(mentor.skills?.length > 0 || mentor.tools?.length > 0) && (
+              <div className="bg-kahra-darker rounded-lg p-4">
+                {mentor.skills?.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {mentor.skills.map((skill) => (
+                        <Badge key={skill} variant="secondary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {mentor.tools?.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Tools</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {mentor.tools.map((tool) => (
+                        <Badge key={tool} variant="outline">
+                          {tool}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-4 gap-4">
               <div className="bg-kahra-darker p-4 rounded-lg">
                 <div className="flex items-center gap-2 text-gray-400 mb-2">
@@ -104,7 +136,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
                   <Calendar size={16} />
                   <span>Sessions</span>
                 </div>
-                <p className="text-xl font-semibold">{mentor.sessionsHeld || "0"}</p>
+                <p className="text-xl font-semibold">{mentor.sessions_held || "0"}</p>
               </div>
             </div>
 
