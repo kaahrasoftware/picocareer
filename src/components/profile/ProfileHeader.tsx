@@ -24,7 +24,7 @@ export function ProfileHeader() {
       setCurrentIndex((prevIndex) => 
         prevIndex + 4 >= skills.length ? 0 : prevIndex + 1
       );
-    }, 7000); // Changed from 500 to 7000 milliseconds (7 seconds)
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [skills.length]);
@@ -36,7 +36,7 @@ export function ProfileHeader() {
 
   return (
     <div className="bg-background/80 backdrop-blur-sm border-b border-border p-4 dark:bg-kahra-darker/80">
-      <div className="flex items-start gap-4 mb-6">
+      <div className="flex items-start gap-4 mb-4">
         <div className="relative">
           <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-yellow-400">
             <img
@@ -62,7 +62,7 @@ export function ProfileHeader() {
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="text-center">
           <p className="text-2xl font-bold">0</p>
           <p className="text-sm text-gray-400 dark:text-gray-400">Mentees</p>
