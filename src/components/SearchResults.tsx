@@ -1,19 +1,24 @@
-import { Command } from "@/components/ui/command";
+import { Command } from "cmdk";
 import { Card } from "@/components/ui/card";
 
 interface SearchResultsProps {
   query: string;
   isOpen: boolean;
+  onClose: () => void;
+  careers?: any[];
+  majors?: any[];
+  mentors?: any[];
 }
 
-export function SearchResults({ query, isOpen }: SearchResultsProps) {
-  // Early return if not open to prevent unnecessary rendering
+export function SearchResults({ 
+  query, 
+  isOpen, 
+  onClose,
+  careers = [],
+  majors = [],
+  mentors = []
+}: SearchResultsProps) {
   if (!isOpen) return null;
-
-  // Initialize empty arrays for different result types
-  const careers = [];
-  const majors = [];
-  const mentors = [];
 
   return (
     <Card className="absolute top-full left-0 right-0 z-50 mt-2">
