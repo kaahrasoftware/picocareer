@@ -17,7 +17,7 @@ interface ProfileDialogProps {
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] bg-background text-foreground dark:bg-kahra-darker dark:text-white overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] bg-background text-foreground dark:bg-kahra-darker dark:text-white overflow-y-auto overflow-x-hidden">
         <ProfileHeader />
 
         <Tabs defaultValue="profile" className="w-full">
@@ -36,7 +36,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1">
+          <div className="w-full">
             <TabsContent value="profile" className="mt-6">
               <ProfileTab />
             </TabsContent>
