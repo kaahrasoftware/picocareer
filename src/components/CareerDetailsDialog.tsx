@@ -24,6 +24,8 @@ interface CareerDetailsDialogProps {
 }
 
 export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetailsDialogProps) {
+  if (!career) return null;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-kahra-darker">
@@ -43,33 +45,33 @@ export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetail
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Related Majors</h3>
               <div className="flex flex-wrap gap-2">
-                {career.relatedMajors.map((major) => (
+                {career.relatedMajors?.map((major) => (
                   <span key={major} className="px-3 py-1 bg-kahra-primary/20 rounded-full text-sm text-white">
                     {major}
                   </span>
-                ))}
+                )) || <span className="text-gray-400">No related majors listed</span>}
               </div>
             </div>
 
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Related Careers</h3>
               <div className="flex flex-wrap gap-2">
-                {career.relatedCareers.map((relatedCareer) => (
+                {career.relatedCareers?.map((relatedCareer) => (
                   <span key={relatedCareer} className="px-3 py-1 bg-kahra-secondary/20 rounded-full text-sm text-white">
                     {relatedCareer}
                   </span>
-                ))}
+                )) || <span className="text-gray-400">No related careers listed</span>}
               </div>
             </div>
 
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Required Skills</h3>
               <div className="flex flex-wrap gap-2">
-                {career.skills.map((skill) => (
+                {career.skills?.map((skill) => (
                   <span key={skill} className="px-3 py-1 bg-kahra-accent/20 rounded-full text-sm text-white">
                     {skill}
                   </span>
-                ))}
+                )) || <span className="text-gray-400">No skills listed</span>}
               </div>
             </div>
           </div>
