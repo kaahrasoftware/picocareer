@@ -1,6 +1,5 @@
 import React from "react";
 import { CircularProgress } from "@/components/ui/circular-progress";
-import { Badge } from "@/components/ui/badge";
 
 export function DashboardTab() {
   const careerConsiderations = [
@@ -68,7 +67,7 @@ export function DashboardTab() {
 
       <section>
         <h2 className="text-2xl font-semibold mb-6">Skills & Technologies</h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {skills.map((skill) => (
             <div key={skill} className="flex items-center gap-2">
               <span className="text-kahra-primary">•</span>
