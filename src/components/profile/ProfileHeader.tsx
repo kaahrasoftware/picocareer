@@ -24,7 +24,7 @@ export function ProfileHeader() {
       setCurrentIndex((prevIndex) => 
         prevIndex + 4 >= skills.length ? 0 : prevIndex + 1
       );
-    }, 500);
+    }, 7000); // Changed from 500 to 7000 milliseconds (7 seconds)
 
     return () => clearInterval(interval);
   }, [skills.length]);

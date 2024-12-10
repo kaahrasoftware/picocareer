@@ -34,8 +34,7 @@ export function DashboardTab() {
   return (
     <div className="space-y-8 p-4">
       <section>
-        <h2 className="text-2xl font-semibold mb-6">Career Considerations</h2>
-        <div className="flex flex-wrap gap-6 justify-start items-center">
+        <div className="flex flex-wrap gap-6 justify-start items-center mb-4">
           {careerConsiderations.map((career) => (
             <CircularProgress
               key={career.label}
@@ -46,14 +45,11 @@ export function DashboardTab() {
             />
           ))}
         </div>
+        <h2 className="text-2xl font-semibold">Career Considerations</h2>
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-6">Transferable Skills</h2>
-        <p className="text-gray-400 mb-4">
-          Percentile of your current skills you can transfer to other majors
-        </p>
-        <div className="flex flex-wrap gap-6 justify-start items-center">
+        <div className="flex flex-wrap gap-6 justify-start items-center mb-4">
           {transferableSkills.map((skill) => (
             <CircularProgress
               key={skill.label}
@@ -64,19 +60,20 @@ export function DashboardTab() {
             />
           ))}
         </div>
+        <h2 className="text-2xl font-semibold">Transferable Skills</h2>
+        <p className="text-gray-400 mt-2">
+          Percentile of your current skills you can transfer to other majors
+        </p>
       </section>
 
       <section>
         <h2 className="text-2xl font-semibold mb-6">Skills & Technologies</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-4">
           {skills.map((skill) => (
-            <Badge
-              key={skill}
-              variant="outline"
-              className="bg-kahra-dark hover:bg-kahra-darker border-kahra-primary text-kahra-primary px-4 py-2 rounded-full"
-            >
-              {skill}
-            </Badge>
+            <div key={skill} className="flex items-center gap-2">
+              <span className="text-kahra-primary">•</span>
+              <span className="text-sm text-gray-300">{skill}</span>
+            </div>
           ))}
         </div>
       </section>
