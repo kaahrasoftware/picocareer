@@ -8,7 +8,7 @@ import { BookOpen, Users, Star } from "lucide-react";
 interface MentorCardProps {
   title: string;
   company: string;
-  imageUrl: string;
+  image_url: string; // Changed from imageUrl to match database
   name: string;
   stats: {
     mentees: string;
@@ -49,7 +49,7 @@ export function MentorCard(props: MentorCardProps) {
               </div>
             </div>
             <Avatar className="h-12 w-12">
-              <AvatarImage src={props.imageUrl} alt={props.name} />
+              <AvatarImage src={props.image_url} alt={props.name} />
               <AvatarFallback>{props.name[0]}</AvatarFallback>
             </Avatar>
           </div>
