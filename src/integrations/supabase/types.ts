@@ -54,6 +54,93 @@ export type Database = {
         }
         Relationships: []
       }
+      majors: {
+        Row: {
+          average_gpa: string
+          category: string | null
+          created_at: string | null
+          description: string
+          id: number
+          image_url: string
+          level_of_study: string | null
+          related_careers: string[]
+          required_courses: string[]
+          title: string
+          users: string
+        }
+        Insert: {
+          average_gpa: string
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: number
+          image_url: string
+          level_of_study?: string | null
+          related_careers?: string[]
+          required_courses?: string[]
+          title: string
+          users: string
+        }
+        Update: {
+          average_gpa?: string
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: number
+          image_url?: string
+          level_of_study?: string | null
+          related_careers?: string[]
+          required_courses?: string[]
+          title?: string
+          users?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          bio: string | null
+          company: string
+          created_at: string | null
+          education: string | null
+          id: number
+          image_url: string
+          name: string
+          position: string | null
+          sessions_held: string | null
+          stats: Json
+          title: string
+          username: string
+        }
+        Insert: {
+          bio?: string | null
+          company: string
+          created_at?: string | null
+          education?: string | null
+          id?: number
+          image_url: string
+          name: string
+          position?: string | null
+          sessions_held?: string | null
+          stats?: Json
+          title: string
+          username: string
+        }
+        Update: {
+          bio?: string | null
+          company?: string
+          created_at?: string | null
+          education?: string | null
+          id?: number
+          image_url?: string
+          name?: string
+          position?: string | null
+          sessions_held?: string | null
+          stats?: Json
+          title?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
