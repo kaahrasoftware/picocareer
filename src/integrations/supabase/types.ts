@@ -14,6 +14,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string
+          featured: boolean | null
           id: number
           image_url: string
           level_of_study: string | null
@@ -28,6 +29,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description: string
+          featured?: boolean | null
           id?: number
           image_url: string
           level_of_study?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string
+          featured?: boolean | null
           id?: number
           image_url?: string
           level_of_study?: string | null
@@ -109,6 +112,7 @@ export type Database = {
           sessions_held: string | null
           stats: Json
           title: string
+          top_rated: boolean | null
           user_type: string | null
           username: string
         }
@@ -124,6 +128,7 @@ export type Database = {
           sessions_held?: string | null
           stats?: Json
           title: string
+          top_rated?: boolean | null
           user_type?: string | null
           username: string
         }
@@ -139,6 +144,7 @@ export type Database = {
           sessions_held?: string | null
           stats?: Json
           title?: string
+          top_rated?: boolean | null
           user_type?: string | null
           username?: string
         }

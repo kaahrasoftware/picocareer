@@ -7,60 +7,41 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
-const topRatedMentors = [
-  {
-    title: "Sr. UI/UX Designer",
-    company: "Microsoft Inc.",
-    imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-    name: "Anya Greiner",
-    stats: {
-      mentees: "495",
-      connected: "579K",
-      recordings: "57K",
-    },
-    username: "anyagreiner",
-  },
-  {
-    title: "Chief Information Security Officer",
-    company: "Lenovo",
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-    name: "Jeffrey Egoyo",
-    stats: {
-      mentees: "495",
-      connected: "579K",
-      recordings: "57K",
-    },
-    username: "jeffegoyo",
-  },
-  {
-    title: "Computer Science",
-    company: "Georgia Tech",
-    imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
-    name: "Anya Greiner",
-    stats: {
-      mentees: "495",
-      connected: "579K",
-      recordings: "57",
-    },
-    username: "anyagreiner",
-  },
-  {
-    title: "Pharmacist",
-    company: "Walmart",
-    imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-    name: "Gary Greiner",
-    stats: {
-      mentees: "495",
-      connected: "579K",
-      recordings: "57K",
-    },
-    username: "garygreiner",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { data: topRatedMentors, isLoading } = useQuery({
+    queryKey: ['topRatedMentors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_type', 'mentor')
+        .eq('top_rated', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-16">
@@ -81,8 +62,8 @@ export const TopRatedMentorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {topRatedMentors.map((mentor, index) => (
-            <CarouselItem key={index} className="basis-1/3">
+          {topRatedMentors?.map((mentor) => (
+            <CarouselItem key={mentor.id} className="basis-1/3">
               <MentorCard {...mentor} />
             </CarouselItem>
           ))}
