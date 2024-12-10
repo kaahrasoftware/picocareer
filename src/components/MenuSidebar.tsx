@@ -1,8 +1,12 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, RefreshCw, Search, Building2, Plus, LogOut } from "lucide-react";
+import { Home, GraduationCap, Users, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { ProfileDialog } from "./ProfileDialog";
 
 export function MenuSidebar() {
+  const [profileOpen, setProfileOpen] = useState(false);
+  
   const navigationItems = [
     { icon: Home, label: "Home", href: "#", active: true },
     { icon: GraduationCap, label: "Featured Careers", href: "#" },
@@ -64,9 +68,12 @@ export function MenuSidebar() {
           {/* User Profile and Logout */}
           <div className="mt-auto mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
+              >
                 <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
-              </div>
+              </button>
               <div className="flex-1">
                 <h3 className="text-sm font-medium text-white">John Doe</h3>
                 <p className="text-xs text-gray-400">Student</p>
@@ -136,6 +143,8 @@ export function MenuSidebar() {
           </div>
         </div>
       </div>
+
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </Sidebar>
   );
 }
