@@ -4,6 +4,8 @@ import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { CareerCard } from "@/components/CareerCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
+import { CareerListDialog } from "@/components/CareerListDialog";
+import { useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -56,6 +58,8 @@ const featuredCareers = [
 ];
 
 const Index = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-kahra-dark text-white">
@@ -79,7 +83,10 @@ const Index = () => {
             <section className="mb-16">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Featured Careers</h2>
-                <button className="text-kahra-primary hover:text-kahra-primary/80 transition-colors">
+                <button 
+                  onClick={() => setIsDialogOpen(true)}
+                  className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
+                >
                   View all
                 </button>
               </div>
@@ -105,6 +112,11 @@ const Index = () => {
           </div>
         </main>
         <ProfileSidebar />
+        <CareerListDialog
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          careers={featuredCareers}
+        />
       </div>
     </SidebarProvider>
   );
