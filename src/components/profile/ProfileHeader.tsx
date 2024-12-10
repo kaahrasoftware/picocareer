@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -24,7 +24,7 @@ export function ProfileHeader() {
       setCurrentIndex((prevIndex) => 
         prevIndex + 4 >= skills.length ? 0 : prevIndex + 1
       );
-    }, 500);
+    }, 7000); // Changed from 500ms to 7000ms (7 seconds)
 
     return () => clearInterval(interval);
   }, [skills.length]);
@@ -78,14 +78,14 @@ export function ProfileHeader() {
       </div>
 
       <ScrollArea className="w-full">
-        <div className="flex gap-2 pb-2">
+        <div className="grid grid-cols-3 gap-4 pb-2">
           {visibleSkills.map((skill, index) => (
-            <span
-              key={`${skill.text}-${index}`}
-              className={`px-3 py-1 rounded-full ${skill.colorClass} text-sm whitespace-nowrap transition-all duration-300 ease-in-out`}
-            >
-              {skill.text}
-            </span>
+            <div key={`${skill.text}-${index}`} className="flex items-center gap-2">
+              <span className="text-gray-400">•</span>
+              <span className={`${skill.colorClass} text-sm whitespace-nowrap`}>
+                {skill.text}
+              </span>
+            </div>
           ))}
         </div>
       </ScrollArea>
