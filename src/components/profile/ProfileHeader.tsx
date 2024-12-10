@@ -46,7 +46,7 @@ export function ProfileHeader() {
         </div>
       </div>
 
-      <ScrollArea className="w-full" orientation="horizontal">
+      <ScrollArea className="w-full">
         <div className="flex gap-2 pb-2">
           <span className="px-3 py-1 rounded-full bg-green-900/50 text-green-400 text-sm whitespace-nowrap">
             biochemical engineering
