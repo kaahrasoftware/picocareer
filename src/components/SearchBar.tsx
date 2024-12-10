@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,19 @@ import { supabase } from "@/integrations/supabase/client";
 export const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicking outside of search bar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const { data: careers } = useQuery({
     queryKey: ['searchCareers', searchQuery],
@@ -40,9 +53,17 @@ export const SearchBar = () => {
     queryKey: ['searchMentors', searchQuery],
     queryFn: async () => {
       const { data } = await supabase
-        .from('users')  // Changed from 'mentors' to 'users'
+        .from('users')
         .select('*')
-        .ilike('name', `%${searchQuery}%`)
+        .eq('user_type', 'mentor')
+        .or(`
+          name.ilike.%${searchQuery}%,
+          company.ilike.%${searchQuery}%,
+          title.ilike.%${searchQuery}%,
+          position.ilike.%${searchQuery}%,
+          education.ilike.%${searchQuery}%,
+          bio.ilike.%${searchQuery}%
+        `)
         .limit(5);
       return data || [];
     },
@@ -56,7 +77,7 @@ export const SearchBar = () => {
   };
 
   return (
-    <div className="relative flex-1 max-w-2xl mx-auto">
+    <div className="relative flex-1 max-w-2xl mx-auto" ref={searchBarRef}>
       <Input
         type="text"
         placeholder="Search careers, majors, schools, mentors..."
