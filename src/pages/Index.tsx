@@ -4,6 +4,7 @@ import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
+import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
             <HeroSection />
             <FeaturedCareersSection />
             <FeaturedMajorsSection />
+            <TopRatedMentorsSection />
           </div>
         </main>
         <ProfileSidebar />
