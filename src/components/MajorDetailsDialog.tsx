@@ -21,6 +21,8 @@ interface MajorDetailsDialogProps {
 }
 
 export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDialogProps) {
+  if (!major) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-kahra-dark text-white max-w-2xl">
@@ -34,18 +36,18 @@ export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDi
           <div>
             <h4 className="font-semibold mb-2">Required Courses</h4>
             <div className="flex flex-wrap gap-2">
-              {major.requiredCourses.map((course, index) => (
+              {major.requiredCourses?.map((course, index) => (
                 <Badge key={index} variant="secondary">{course}</Badge>
-              ))}
+              )) || <span className="text-gray-400">No required courses listed</span>}
             </div>
           </div>
 
           <div>
             <h4 className="font-semibold mb-2">Related Careers</h4>
             <div className="flex flex-wrap gap-2">
-              {major.relatedCareers.map((career, index) => (
+              {major.relatedCareers?.map((career, index) => (
                 <Badge key={index} variant="outline">{career}</Badge>
-              ))}
+              )) || <span className="text-gray-400">No related careers listed</span>}
             </div>
           </div>
 
