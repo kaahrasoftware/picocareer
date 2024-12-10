@@ -1,8 +1,39 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ProfileHeader() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const skills = [
+    { text: "biochemical engineering", color: "green" },
+    { text: "microbiology", color: "indigo" },
+    { text: "Bioreactor", color: "blue" },
+    { text: "Genetic engineering", color: "red" },
+    { text: "GMP", color: "yellow" },
+    { text: "MATLAB", color: "purple" },
+    { text: "AutoCAD", color: "gray" },
+    { text: "Computational modeling", color: "yellow" },
+    { text: "Mathematical modeling", color: "blue" },
+    { text: "Engineer-in-Training", color: "gray" },
+    { text: "Six Sigma", color: "orange" },
+    { text: "Data analysis", color: "purple" },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => 
+        prevIndex + 4 >= skills.length ? 0 : prevIndex + 1
+      );
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [skills.length]);
+
+  const visibleSkills = [...skills.slice(currentIndex, currentIndex + 4)];
+  if (visibleSkills.length < 4) {
+    visibleSkills.push(...skills.slice(0, 4 - visibleSkills.length));
+  }
+
   return (
     <div className="bg-background/80 backdrop-blur-sm border-b border-border p-4 dark:bg-kahra-darker/80">
       <div className="flex items-start gap-4 mb-6">
@@ -48,42 +79,14 @@ export function ProfileHeader() {
 
       <ScrollArea className="w-full">
         <div className="flex gap-2 pb-2">
-          <span className="px-3 py-1 rounded-full bg-green-900/50 text-green-400 text-sm whitespace-nowrap">
-            biochemical engineering
-          </span>
-          <span className="px-3 py-1 rounded-full bg-indigo-900/50 text-indigo-400 text-sm whitespace-nowrap">
-            microbiology
-          </span>
-          <span className="px-3 py-1 rounded-full bg-blue-900/50 text-blue-400 text-sm whitespace-nowrap">
-            Bioreactor
-          </span>
-          <span className="px-3 py-1 rounded-full bg-red-900/50 text-red-400 text-sm whitespace-nowrap">
-            Genetic engineering
-          </span>
-          <span className="px-3 py-1 rounded-full bg-yellow-900/50 text-yellow-400 text-sm whitespace-nowrap">
-            GMP
-          </span>
-          <span className="px-3 py-1 rounded-full bg-purple-900/50 text-purple-400 text-sm whitespace-nowrap">
-            MATLAB
-          </span>
-          <span className="px-3 py-1 rounded-full bg-gray-900/50 text-gray-400 text-sm whitespace-nowrap">
-            AutoCAD
-          </span>
-          <span className="px-3 py-1 rounded-full bg-yellow-900/50 text-yellow-400 text-sm whitespace-nowrap">
-            Computational modeling
-          </span>
-          <span className="px-3 py-1 rounded-full bg-blue-900/50 text-blue-400 text-sm whitespace-nowrap">
-            Mathematical modeling
-          </span>
-          <span className="px-3 py-1 rounded-full bg-gray-900/50 text-gray-400 text-sm whitespace-nowrap">
-            Engineer-in-Training
-          </span>
-          <span className="px-3 py-1 rounded-full bg-orange-900/50 text-orange-400 text-sm whitespace-nowrap">
-            Six Sigma
-          </span>
-          <span className="px-3 py-1 rounded-full bg-purple-900/50 text-purple-400 text-sm whitespace-nowrap">
-            Data analysis
-          </span>
+          {visibleSkills.map((skill, index) => (
+            <span
+              key={`${skill.text}-${index}`}
+              className={`px-3 py-1 rounded-full bg-${skill.color}-900/50 text-${skill.color}-400 text-sm whitespace-nowrap transition-all duration-300 ease-in-out`}
+            >
+              {skill.text}
+            </span>
+          ))}
         </div>
       </ScrollArea>
     </div>
