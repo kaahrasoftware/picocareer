@@ -33,7 +33,7 @@ export function DashboardTab() {
   return (
     <div className="space-y-8 p-4">
       <section>
-        <div className="flex flex-wrap gap-6 justify-start items-center mb-4">
+        <div className="flex flex-wrap justify-center gap-6 items-center mb-6">
           {careerConsiderations.map((career) => (
             <CircularProgress
               key={career.label}
@@ -44,11 +44,11 @@ export function DashboardTab() {
             />
           ))}
         </div>
-        <h2 className="text-2xl font-semibold">Career Considerations</h2>
+        <h2 className="text-2xl font-semibold text-left">Career Considerations</h2>
       </section>
 
       <section>
-        <div className="flex flex-wrap gap-6 justify-start items-center mb-4">
+        <div className="flex flex-wrap justify-center gap-6 items-center mb-6">
           {transferableSkills.map((skill) => (
             <CircularProgress
               key={skill.label}
@@ -59,22 +59,24 @@ export function DashboardTab() {
             />
           ))}
         </div>
-        <h2 className="text-2xl font-semibold">Transferable Skills</h2>
-        <p className="text-gray-400 mt-2">
-          Percentile of your current skills you can transfer to other majors
-        </p>
+        <div className="text-left">
+          <h2 className="text-2xl font-semibold">Transferable Skills</h2>
+          <p className="text-gray-400 mt-2">
+            Percentile of your current skills you can transfer to other majors
+          </p>
+        </div>
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-6">Skills & Technologies</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {skills.map((skill) => (
-            <div key={skill} className="flex items-center gap-2">
+            <div key={skill} className="flex items-center gap-2 justify-center">
               <span className="text-kahra-primary">•</span>
               <span className="text-sm text-gray-300">{skill}</span>
             </div>
           ))}
         </div>
+        <h2 className="text-2xl font-semibold text-left">Skills & Technologies</h2>
       </section>
     </div>
   );
