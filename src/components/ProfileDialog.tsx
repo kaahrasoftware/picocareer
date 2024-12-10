@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileHeader } from "./profile/ProfileHeader";
-import { DashboardTab } from "./profile/DashboardTab";
 import { ProfileTab } from "./profile/ProfileTab";
 import { CalendarTab } from "./profile/CalendarTab";
 
@@ -23,14 +22,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           <ProfileHeader />
         </DialogHeader>
 
-        <Tabs defaultValue="dashboard" className="w-full">
+        <Tabs defaultValue="profile" className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border">
-            <TabsTrigger 
-              value="dashboard"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-foreground dark:data-[state=active]:text-white"
-            >
-              Dashboard
-            </TabsTrigger>
             <TabsTrigger 
               value="profile"
               className="data-[state=active]:bg-transparent data-[state=active]:text-foreground dark:data-[state=active]:text-white"
@@ -44,10 +37,6 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               Calendar
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="dashboard" className="mt-6">
-            <DashboardTab />
-          </TabsContent>
 
           <TabsContent value="profile" className="mt-6">
             <ProfileTab />
