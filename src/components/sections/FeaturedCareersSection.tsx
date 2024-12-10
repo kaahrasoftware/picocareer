@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -9,51 +11,26 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const featuredCareers = [
-  {
-    title: "Cybersecurity Analyst",
-    description: "Thrive in a cybersecurity career defending against online threats and securing information.",
-    users: "72.3K",
-    salary: "$75K - $110K",
-    imageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b",
-    relatedMajors: ["Computer Science", "Information Technology", "Network Security"],
-    relatedCareers: ["Security Engineer", "Network Administrator", "IT Consultant"],
-    skills: ["Network Security", "Cryptography", "Risk Analysis", "Security Tools"],
-  },
-  {
-    title: "Healthcare",
-    description: "Healthcare fosters well-being through diverse services for individuals' physical and mental health needs.",
-    users: "125.2M",
-    salary: "$60K - $150K",
-    imageUrl: "https://images.unsplash.com/photo-1584982751601-97dcc096659c",
-    relatedMajors: ["Nursing", "Public Health", "Biology", "Pre-Med"],
-    relatedCareers: ["Nurse", "Medical Doctor", "Healthcare Administrator"],
-    skills: ["Patient Care", "Medical Knowledge", "Communication", "Empathy"],
-  },
-  {
-    title: "Software Engineering",
-    description: "Build innovative solutions and shape the digital future through code and creativity.",
-    users: "754.8K",
-    salary: "$90K - $120K",
-    imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
-    relatedMajors: ["Computer Science", "Software Engineering", "Information Systems"],
-    relatedCareers: ["Full Stack Developer", "DevOps Engineer", "Mobile Developer"],
-    skills: ["Programming", "Problem Solving", "System Design", "Algorithms"],
-  },
-  {
-    title: "Accountant",
-    description: "Guide financial success through expert analysis and strategic planning.",
-    users: "432.1K",
-    salary: "$65K - $95K",
-    imageUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c",
-    relatedMajors: ["Accounting", "Finance", "Business Administration"],
-    relatedCareers: ["Financial Analyst", "Tax Advisor", "Auditor"],
-    skills: ["Financial Analysis", "Tax Laws", "Bookkeeping", "Business Acumen"],
-  },
-];
-
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { data: featuredCareers, isLoading } = useQuery({
+    queryKey: ['featuredCareers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <section className="mb-16">
@@ -74,7 +51,7 @@ export const FeaturedCareersSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {featuredCareers.map((career, index) => (
+          {featuredCareers?.map((career, index) => (
             <CarouselItem key={index} className="basis-1/3">
               <CareerCard {...career} />
             </CarouselItem>
@@ -86,7 +63,7 @@ export const FeaturedCareersSection = () => {
       <CareerListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        careers={featuredCareers}
+        careers={featuredCareers || []}
       />
     </section>
   );
