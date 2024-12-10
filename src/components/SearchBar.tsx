@@ -11,16 +11,22 @@ export const SearchBar = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    setShowResults(value.length > 0);
+    setShowResults(true);
+  };
+
+  const handleClose = () => {
+    setShowResults(false);
+    setSearchQuery("");
   };
 
   return (
     <div className="relative flex-1 max-w-2xl mx-auto">
       <Input
         type="text"
-        placeholder="Search here..."
+        placeholder="Search careers, majors, schools, mentors..."
         value={searchQuery}
         onChange={handleInputChange}
+        onFocus={() => setShowResults(true)}
         className="w-full pl-4 pr-12 py-2 bg-background border-border text-foreground placeholder:text-muted-foreground"
       />
       <Button
@@ -29,7 +35,7 @@ export const SearchBar = () => {
       >
         <Search className="h-4 w-4" />
       </Button>
-      {showResults && <SearchResults query={searchQuery} onClose={() => setShowResults(false)} />}
+      {showResults && <SearchResults query={searchQuery} onClose={handleClose} />}
     </div>
   );
 };
