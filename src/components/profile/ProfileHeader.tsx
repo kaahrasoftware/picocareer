@@ -1,5 +1,6 @@
 import React from "react";
 import { DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ProfileHeader() {
   return (
@@ -45,14 +46,46 @@ export function ProfileHeader() {
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <span className="px-3 py-1 rounded-full bg-green-900/50 text-green-400 text-sm">
-          biochemical engineering
-        </span>
-        <span className="px-3 py-1 rounded-full bg-indigo-900/50 text-indigo-400 text-sm">
-          microbiology
-        </span>
-      </div>
+      <ScrollArea className="w-full" orientation="horizontal">
+        <div className="flex gap-2 pb-2">
+          <span className="px-3 py-1 rounded-full bg-green-900/50 text-green-400 text-sm whitespace-nowrap">
+            biochemical engineering
+          </span>
+          <span className="px-3 py-1 rounded-full bg-indigo-900/50 text-indigo-400 text-sm whitespace-nowrap">
+            microbiology
+          </span>
+          <span className="px-3 py-1 rounded-full bg-blue-900/50 text-blue-400 text-sm whitespace-nowrap">
+            Bioreactor
+          </span>
+          <span className="px-3 py-1 rounded-full bg-red-900/50 text-red-400 text-sm whitespace-nowrap">
+            Genetic engineering
+          </span>
+          <span className="px-3 py-1 rounded-full bg-yellow-900/50 text-yellow-400 text-sm whitespace-nowrap">
+            GMP
+          </span>
+          <span className="px-3 py-1 rounded-full bg-purple-900/50 text-purple-400 text-sm whitespace-nowrap">
+            MATLAB
+          </span>
+          <span className="px-3 py-1 rounded-full bg-gray-900/50 text-gray-400 text-sm whitespace-nowrap">
+            AutoCAD
+          </span>
+          <span className="px-3 py-1 rounded-full bg-yellow-900/50 text-yellow-400 text-sm whitespace-nowrap">
+            Computational modeling
+          </span>
+          <span className="px-3 py-1 rounded-full bg-blue-900/50 text-blue-400 text-sm whitespace-nowrap">
+            Mathematical modeling
+          </span>
+          <span className="px-3 py-1 rounded-full bg-gray-900/50 text-gray-400 text-sm whitespace-nowrap">
+            Engineer-in-Training
+          </span>
+          <span className="px-3 py-1 rounded-full bg-orange-900/50 text-orange-400 text-sm whitespace-nowrap">
+            Six Sigma
+          </span>
+          <span className="px-3 py-1 rounded-full bg-purple-900/50 text-purple-400 text-sm whitespace-nowrap">
+            Data analysis
+          </span>
+        </div>
+      </ScrollArea>
     </div>
   );
 }
