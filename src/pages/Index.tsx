@@ -6,13 +6,16 @@ import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSec
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "next-themes";
 import { useEffect } from "react";
 
 const Index = () => {
+  const { setTheme } = useTheme();
+  
   // Set dark theme by default
   useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
+    setTheme("dark");
+  }, [setTheme]);
 
   return (
     <SidebarProvider>
