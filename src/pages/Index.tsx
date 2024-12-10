@@ -53,9 +53,6 @@ const Index = () => {
                   <Search className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="w-48">
-                <SidebarTrigger />
-              </div>
             </header>
 
             {/* Hero Section */}
