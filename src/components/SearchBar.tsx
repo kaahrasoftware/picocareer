@@ -40,7 +40,7 @@ export const SearchBar = () => {
     queryKey: ['searchMentors', searchQuery],
     queryFn: async () => {
       const { data } = await supabase
-        .from('mentors')
+        .from('users')  // Changed from 'mentors' to 'users'
         .select('*')
         .ilike('name', `%${searchQuery}%`)
         .limit(5);
