@@ -36,16 +36,16 @@ interface CareerListDialogProps {
 
 export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [salaryFilter, setSalaryFilter] = useState<string>("");
-  const [studyLevelFilter, setStudyLevelFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [salaryFilter, setSalaryFilter] = useState<string>("all");
+  const [studyLevelFilter, setStudyLevelFilter] = useState<string>("all");
   const [skillsFilter, setSkillsFilter] = useState<string>("");
 
   const filteredCareers = careers.filter((career) => {
     const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !categoryFilter || career.category === categoryFilter;
-    const matchesSalary = !salaryFilter || career.salary.includes(salaryFilter);
-    const matchesStudyLevel = !studyLevelFilter || career.levelOfStudy === studyLevelFilter;
+    const matchesCategory = categoryFilter === "all" || career.category === categoryFilter;
+    const matchesSalary = salaryFilter === "all" || career.salary.includes(salaryFilter);
+    const matchesStudyLevel = studyLevelFilter === "all" || career.levelOfStudy === studyLevelFilter;
     const matchesSkills = !skillsFilter || career.skills.some(skill => 
       skill.toLowerCase().includes(skillsFilter.toLowerCase())
     );
@@ -75,7 +75,7 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="technology">Technology</SelectItem>
                 <SelectItem value="healthcare">Healthcare</SelectItem>
                 <SelectItem value="finance">Finance</SelectItem>
@@ -88,7 +88,7 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
                 <SelectValue placeholder="Salary Range" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Ranges</SelectItem>
+                <SelectItem value="all">All Ranges</SelectItem>
                 <SelectItem value="0-50K">$0 - $50K</SelectItem>
                 <SelectItem value="50K-100K">$50K - $100K</SelectItem>
                 <SelectItem value="100K+">$100K+</SelectItem>
@@ -100,7 +100,7 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
                 <SelectValue placeholder="Level of Study" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 <SelectItem value="high-school">High School</SelectItem>
                 <SelectItem value="bachelors">Bachelor's Degree</SelectItem>
                 <SelectItem value="masters">Master's Degree</SelectItem>
