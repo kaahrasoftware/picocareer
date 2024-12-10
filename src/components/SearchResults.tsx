@@ -65,11 +65,11 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           className="h-9"
         />
         
-        {filteredResults.length === 0 ? (
-          <CommandEmpty>No results found.</CommandEmpty>
-        ) : (
-          <>
-            {Object.entries(groupedResults).map(([category, results]) => 
+        <div className="max-h-[300px] overflow-y-auto">
+          {filteredResults.length === 0 ? (
+            <CommandEmpty>No results found.</CommandEmpty>
+          ) : (
+            Object.entries(groupedResults).map(([category, results]) => 
               results.length > 0 && (
                 <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
                   {results.map((result) => (
@@ -92,9 +92,9 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                   ))}
                 </CommandGroup>
               )
-            )}
-          </>
-        )}
+            )
+          )}
+        </div>
       </Command>
     </Card>
   );
