@@ -3,6 +3,7 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { CareerCard } from "@/components/CareerCard";
 import { SearchBar } from "@/components/SearchBar";
+import { Slides } from "@/components/Slides";
 
 const featuredCareers = [
   {
@@ -41,16 +42,11 @@ const Index = () => {
             </header>
 
             {/* Hero Section */}
-            <section className="text-center mb-16 animate-float">
+            <section className="text-center mb-16">
               <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-kahra-secondary to-kahra-primary bg-clip-text text-transparent">
                 Welcome to Kahra!
               </h1>
-              <div className="max-w-2xl mx-auto p-8 rounded-lg bg-gradient-to-r from-kahra-secondary/20 to-kahra-primary/20 backdrop-blur-sm">
-                <h2 className="text-2xl font-bold mb-4">CAREER EXPLORATION</h2>
-                <p className="text-gray-300">
-                  Discover endless possibilities, unlock passions, and define your future through personalized guidance in our Career Exploration journey. Start today!
-                </p>
-              </div>
+              <Slides />
             </section>
 
             {/* Featured Careers */}
