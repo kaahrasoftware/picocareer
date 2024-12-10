@@ -32,7 +32,7 @@ const careerConsiderations = [
 
 export function ProfileSidebar() {
   return (
-    <Sidebar side="right" variant="floating">
+    <Sidebar side="right">
       <div className="relative">
         <SidebarTrigger 
           className="absolute -left-3 top-3 z-50 bg-kahra-dark border border-border"

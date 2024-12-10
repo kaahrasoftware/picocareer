@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { MenuSidebar } from "@/components/MenuSidebar";
 import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { CareerCard } from "@/components/CareerCard";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-kahra-dark text-white">
-        <AppSidebar />
+        <MenuSidebar />
         <main className="flex-1 p-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
