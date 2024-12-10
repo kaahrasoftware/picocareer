@@ -7,7 +7,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { ProfileTab } from "./profile/ProfileTab";
-import { CalendarTab } from "./profile/CalendarTab";
+import { DashboardTab } from "./profile/DashboardTab";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -29,10 +29,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               Profile
             </TabsTrigger>
             <TabsTrigger 
-              value="calendar"
+              value="dashboard"
               className="data-[state=active]:bg-transparent data-[state=active]:text-foreground dark:data-[state=active]:text-white"
             >
-              Calendar
+              Dashboard
             </TabsTrigger>
           </TabsList>
 
@@ -40,8 +40,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             <ProfileTab />
           </TabsContent>
 
-          <TabsContent value="calendar" className="mt-6">
-            <CalendarTab />
+          <TabsContent value="dashboard" className="mt-6">
+            <DashboardTab />
           </TabsContent>
         </Tabs>
       </DialogContent>
