@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ProfileHeader() {
   return (
-    <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border p-4 dark:bg-kahra-darker/80">
+    <div className="bg-background/80 backdrop-blur-sm border-b border-border p-4 dark:bg-kahra-darker/80">
       <div className="flex items-start gap-4 mb-6">
         <div className="relative">
           <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-yellow-400">
