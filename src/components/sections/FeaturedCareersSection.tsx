@@ -24,7 +24,20 @@ export const FeaturedCareersSection = () => {
         .limit(4);
       
       if (error) throw error;
-      return data;
+      
+      // Map database fields to component props
+      return data?.map(career => ({
+        title: career.title,
+        description: career.description,
+        users: career.users,
+        salary: career.salary,
+        imageUrl: career.image_url,
+        relatedMajors: career.related_majors,
+        relatedCareers: career.related_careers,
+        skills: career.skills,
+        category: career.category,
+        levelOfStudy: career.level_of_study
+      }));
     },
   });
 
