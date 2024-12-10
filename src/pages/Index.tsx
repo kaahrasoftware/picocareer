@@ -1,10 +1,8 @@
-import { Search } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { CareerCard } from "@/components/CareerCard";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchBar } from "@/components/SearchBar";
 
 const featuredCareers = [
   {
@@ -39,19 +37,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <header className="flex justify-between items-center mb-12">
-              <div className="relative flex-1 max-w-2xl mx-auto">
-                <Input
-                  type="text"
-                  placeholder="Search here..."
-                  className="w-full pl-4 pr-12 py-2 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                />
-                <Button
-                  size="icon"
-                  className="absolute right-1 top-1 bg-transparent hover:bg-white/10"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
+              <SearchBar />
             </header>
 
             {/* Hero Section */}

@@ -1,4 +1,4 @@
-import { Home, BookOpen, Users, RefreshCw, Search, PanelLeftClose } from "lucide-react";
+import { Home, BookOpen, Users, RefreshCw, Search } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,8 +8,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { icon: Home, label: "Home", href: "/" },
@@ -23,10 +23,11 @@ export function AppSidebar() {
   return (
     <Sidebar side="left">
       <div className="relative">
-        <SidebarTrigger 
+        <Button 
           className="absolute -right-3 top-3 z-50 bg-kahra-dark border border-border"
-          side="left"
-        />
+        >
+          <span className="sr-only">Toggle sidebar</span>
+        </Button>
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Explore</SidebarGroupLabel>
