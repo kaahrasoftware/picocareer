@@ -5,18 +5,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export function ProfileHeader() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const skills = [
-    { text: "biochemical engineering", color: "green" },
-    { text: "microbiology", color: "indigo" },
-    { text: "Bioreactor", color: "blue" },
-    { text: "Genetic engineering", color: "red" },
-    { text: "GMP", color: "yellow" },
-    { text: "MATLAB", color: "purple" },
-    { text: "AutoCAD", color: "gray" },
-    { text: "Computational modeling", color: "yellow" },
-    { text: "Mathematical modeling", color: "blue" },
-    { text: "Engineer-in-Training", color: "gray" },
-    { text: "Six Sigma", color: "orange" },
-    { text: "Data analysis", color: "purple" },
+    { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
+    { text: "microbiology", colorClass: "bg-indigo-900/50 text-indigo-400" },
+    { text: "Bioreactor", colorClass: "bg-blue-900/50 text-blue-400" },
+    { text: "Genetic engineering", colorClass: "bg-red-900/50 text-red-400" },
+    { text: "GMP", colorClass: "bg-yellow-900/50 text-yellow-400" },
+    { text: "MATLAB", colorClass: "bg-purple-900/50 text-purple-400" },
+    { text: "AutoCAD", colorClass: "bg-gray-900/50 text-gray-400" },
+    { text: "Computational modeling", colorClass: "bg-yellow-900/50 text-yellow-400" },
+    { text: "Mathematical modeling", colorClass: "bg-blue-900/50 text-blue-400" },
+    { text: "Engineer-in-Training", colorClass: "bg-gray-900/50 text-gray-400" },
+    { text: "Six Sigma", colorClass: "bg-orange-900/50 text-orange-400" },
+    { text: "Data analysis", colorClass: "bg-purple-900/50 text-purple-400" },
   ];
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export function ProfileHeader() {
           {visibleSkills.map((skill, index) => (
             <span
               key={`${skill.text}-${index}`}
-              className={`px-3 py-1 rounded-full bg-${skill.color}-900/50 text-${skill.color}-400 text-sm whitespace-nowrap transition-all duration-300 ease-in-out`}
+              className={`px-3 py-1 rounded-full ${skill.colorClass} text-sm whitespace-nowrap transition-all duration-300 ease-in-out`}
             >
               {skill.text}
             </span>
