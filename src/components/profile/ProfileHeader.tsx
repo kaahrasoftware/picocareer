@@ -22,16 +22,16 @@ export function ProfileHeader() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => 
-        prevIndex + 4 >= skills.length ? 0 : prevIndex + 1
+        prevIndex + 6 >= skills.length ? 0 : prevIndex + 1
       );
-    }, 7000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [skills.length]);
 
-  const visibleSkills = [...skills.slice(currentIndex, currentIndex + 4)];
-  if (visibleSkills.length < 4) {
-    visibleSkills.push(...skills.slice(0, 4 - visibleSkills.length));
+  const visibleSkills = [...skills.slice(currentIndex, currentIndex + 6)];
+  if (visibleSkills.length < 6) {
+    visibleSkills.push(...skills.slice(0, 6 - visibleSkills.length));
   }
 
   return (
