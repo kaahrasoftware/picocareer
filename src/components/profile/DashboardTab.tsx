@@ -1,84 +1,85 @@
 import React from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-
-const careerData = [
-  { name: "Biomedical Eng.", value: 81 },
-  { name: "Pharmaceutical Eng.", value: 89 },
-  { name: "Bioprocess Eng.", value: 98 },
-];
-
-const skillsData = [
-  { name: "Data Science", value: 92 },
-  { name: "Pharmacology", value: 89 },
-  { name: "Biotechnology", value: 87 },
-  { name: "Computer Engineering", value: 72 },
-];
-
-const CAREER_COLORS = ["#6366f1", "#67e8f9", "#f59e0b"];
-const SKILLS_COLORS = ["#FFE29F", "#9b87f5", "#F97316", "#0EA5E9"];
+import { CircularProgress } from "@/components/ui/circular-progress";
+import { Badge } from "@/components/ui/badge";
 
 export function DashboardTab() {
-  return (
-    <div className="space-y-8 w-full overflow-x-hidden px-2">
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Career Considerations</h3>
-        <div className="h-[250px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={careerData}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ value }) => `${value}%`}
-              >
-                {careerData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CAREER_COLORS[index % CAREER_COLORS.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            {careerData.map((entry, index) => (
-              <div key={entry.name} className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: CAREER_COLORS[index] }}
-                />
-                <span className="text-sm text-gray-400">{entry.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+  const careerConsiderations = [
+    { label: "Bioprocess Eng.", percentage: 98, color: "#F97316" },
+    { label: "Pharmaceutical Eng.", percentage: 89, color: "#0EA5E9" },
+    { label: "Biomedical Eng.", percentage: 81, color: "#8B5CF6" },
+  ];
 
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Transferable Skills</h3>
-        <p className="text-gray-400 text-sm mb-4">
-          Percentile of your current skills you can transfer to other majors
-        </p>
-        <div className="grid grid-cols-1 gap-4">
-          {skillsData.map((skill, index) => (
-            <div key={skill.name} className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">{skill.name}</span>
-                <span className="text-sm font-bold">{skill.value}%</span>
-              </div>
-              <div className="h-2 bg-gray-700 rounded-full dark:bg-gray-700">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${skill.value}%`,
-                    backgroundColor: SKILLS_COLORS[index],
-                  }}
-                />
-              </div>
-            </div>
+  const transferableSkills = [
+    { label: "Data Science", percentage: 92, color: "#FEC6A1" },
+    { label: "Pharmacology", percentage: 89, color: "#9b87f5" },
+    { label: "Biotechnology", percentage: 87, color: "#DC2626" },
+    { label: "Computer Engineering", percentage: 72, color: "#0EA5E9" },
+  ];
+
+  const skills = [
+    "biochemical engineering",
+    "microbiology",
+    "Bioreactor",
+    "Genetic engineering",
+    "GMP",
+    "MATLAB",
+    "AutoCAD",
+    "Computational modeling",
+    "Mathematical modeling",
+    "Engineer-in-Training",
+    "Six Sigma",
+    "Data analysis",
+  ];
+
+  return (
+    <div className="space-y-8 p-4">
+      <section>
+        <h2 className="text-2xl font-semibold mb-6">Career Considerations</h2>
+        <div className="flex flex-wrap gap-6 justify-start items-center">
+          {careerConsiderations.map((career) => (
+            <CircularProgress
+              key={career.label}
+              percentage={career.percentage}
+              color={career.color}
+              size="lg"
+              label={career.label}
+            />
           ))}
         </div>
-      </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-6">Transferable Skills</h2>
+        <p className="text-gray-400 mb-4">
+          Percentile of your current skills you can transfer to other majors
+        </p>
+        <div className="flex flex-wrap gap-6 justify-start items-center">
+          {transferableSkills.map((skill) => (
+            <CircularProgress
+              key={skill.label}
+              percentage={skill.percentage}
+              color={skill.color}
+              size="md"
+              label={skill.label}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-6">Skills & Technologies</h2>
+        <div className="flex flex-wrap gap-2">
+          {skills.map((skill) => (
+            <Badge
+              key={skill}
+              variant="outline"
+              className="bg-kahra-dark hover:bg-kahra-darker border-kahra-primary text-kahra-primary px-4 py-2 rounded-full"
+            >
+              {skill}
+            </Badge>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

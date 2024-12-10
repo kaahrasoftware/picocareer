@@ -17,20 +17,20 @@ interface ProfileDialogProps {
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-background text-foreground dark:bg-kahra-darker dark:text-white overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] bg-kahra-darker text-white overflow-y-auto overflow-x-hidden">
         <ProfileHeader />
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border">
             <TabsTrigger 
               value="profile"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-foreground dark:data-[state=active]:text-white"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-white"
             >
               Profile
             </TabsTrigger>
             <TabsTrigger 
               value="dashboard"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-foreground dark:data-[state=active]:text-white"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-white"
             >
               Dashboard
             </TabsTrigger>
