@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { ProfileTab } from "./profile/ProfileTab";
 import { DashboardTab } from "./profile/DashboardTab";
+import { SettingsTab } from "./profile/SettingsTab";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -34,6 +35,12 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             >
               Dashboard
             </TabsTrigger>
+            <TabsTrigger 
+              value="settings"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-white"
+            >
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <div className="w-full">
@@ -43,6 +50,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
             <TabsContent value="dashboard" className="mt-4">
               <DashboardTab />
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-4">
+              <SettingsTab />
             </TabsContent>
           </div>
         </Tabs>
