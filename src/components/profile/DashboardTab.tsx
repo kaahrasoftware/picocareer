@@ -19,17 +19,17 @@ const SKILLS_COLORS = ["#FFE29F", "#9b87f5", "#F97316", "#0EA5E9"];
 
 export function DashboardTab() {
   return (
-    <div className="space-y-8 w-full overflow-x-hidden">
+    <div className="space-y-8 w-full overflow-x-hidden px-2">
       <div>
         <h3 className="text-xl font-semibold mb-4">Career Considerations</h3>
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={careerData}
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
+                outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
                 label={({ value }) => `${value}%`}
@@ -59,7 +59,7 @@ export function DashboardTab() {
         <p className="text-gray-400 text-sm mb-4">
           Percentile of your current skills you can transfer to other majors
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {skillsData.map((skill, index) => (
             <div key={skill.name} className="relative">
               <div className="flex items-center justify-between mb-2">
