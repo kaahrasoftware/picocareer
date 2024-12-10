@@ -31,24 +31,24 @@ export function DashboardTab() {
   ];
 
   return (
-    <div className="space-y-8 p-4">
-      <section>
-        <div className="flex flex-wrap justify-center gap-6 items-center mb-6">
+    <div className="space-y-12 p-4">
+      <section className="space-y-6">
+        <div className="flex flex-wrap justify-center gap-8 items-center">
           {careerConsiderations.map((career) => (
             <CircularProgress
               key={career.label}
               percentage={career.percentage}
               color={career.color}
-              size="lg"
+              size={career.percentage >= 95 ? "lg" : career.percentage >= 85 ? "md" : "sm"}
               label={career.label}
             />
           ))}
         </div>
-        <h2 className="text-2xl font-semibold text-left">Career Considerations</h2>
+        <h2 className="text-2xl font-semibold text-left text-gray-200">Career Considerations</h2>
       </section>
 
-      <section>
-        <div className="flex flex-wrap justify-center gap-6 items-center mb-6">
+      <section className="space-y-6">
+        <div className="flex flex-wrap justify-center gap-8 items-center">
           {transferableSkills.map((skill) => (
             <CircularProgress
               key={skill.label}
@@ -60,15 +60,15 @@ export function DashboardTab() {
           ))}
         </div>
         <div className="text-left">
-          <h2 className="text-2xl font-semibold">Transferable Skills</h2>
+          <h2 className="text-2xl font-semibold text-gray-200">Transferable Skills</h2>
           <p className="text-gray-400 mt-2">
             Percentile of your current skills you can transfer to other majors
           </p>
         </div>
       </section>
 
-      <section>
-        <div className="grid grid-cols-2 gap-4 mb-6">
+      <section className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
           {skills.map((skill) => (
             <div key={skill} className="flex items-center gap-2 justify-center">
               <span className="text-kahra-primary">•</span>
@@ -76,7 +76,7 @@ export function DashboardTab() {
             </div>
           ))}
         </div>
-        <h2 className="text-2xl font-semibold text-left">Skills & Technologies</h2>
+        <h2 className="text-2xl font-semibold text-left text-gray-200">Skills & Technologies</h2>
       </section>
     </div>
   );
