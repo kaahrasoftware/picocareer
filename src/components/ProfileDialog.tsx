@@ -18,9 +18,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl bg-background text-foreground dark:bg-kahra-darker dark:text-white">
-        <DialogHeader>
-          <ProfileHeader />
-        </DialogHeader>
+        <ProfileHeader />
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border">
