@@ -8,7 +8,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 const menuItems = [
@@ -24,10 +23,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <div className="flex items-center justify-between px-2 py-2">
-            <SidebarGroupLabel>Explore</SidebarGroupLabel>
-            <SidebarTrigger />
-          </div>
+          <SidebarGroupLabel>Explore</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (

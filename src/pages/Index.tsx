@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { CareerCard } from "@/components/CareerCard";
@@ -39,6 +39,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <header className="flex justify-between items-center mb-12">
+              <SidebarTrigger />
               <div className="relative flex-1 max-w-2xl mx-auto">
                 <Input
                   type="text"
