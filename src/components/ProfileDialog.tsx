@@ -17,7 +17,7 @@ interface ProfileDialogProps {
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-kahra-darker text-white overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-kahra-darker text-white overflow-y-auto overflow-x-hidden">
         <ProfileHeader />
 
         <Tabs defaultValue="profile" className="w-full">
@@ -37,11 +37,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           </TabsList>
 
           <div className="w-full">
-            <TabsContent value="profile" className="mt-6">
+            <TabsContent value="profile" className="mt-4">
               <ProfileTab />
             </TabsContent>
 
-            <TabsContent value="dashboard" className="mt-6">
+            <TabsContent value="dashboard" className="mt-4">
               <DashboardTab />
             </TabsContent>
           </div>
