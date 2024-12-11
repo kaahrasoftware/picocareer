@@ -4,6 +4,7 @@ import { ProfileCard } from "@/components/community/ProfileCard";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -13,6 +14,8 @@ export default function Community() {
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PROFILES_PER_PAGE = 15;
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['profiles'],
@@ -22,6 +25,7 @@ export default function Community() {
         .from('profiles')
         .select('*')
         .neq('id', user?.id) // Filter out current user
+        .neq('user_type', 'admin') // Filter out admin users
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -29,7 +33,7 @@ export default function Community() {
     },
   });
 
-  // Extract unique values for filters with null checks
+  // Extract unique values for filters
   const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
   const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
   const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
@@ -56,6 +60,11 @@ export default function Community() {
     return matchesSearch && matchesSkills && matchesUserType && 
            matchesLocation && matchesCompany && matchesSchool && matchesField;
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil((filteredProfiles?.length || 0) / PROFILES_PER_PAGE);
+  const startIndex = (currentPage - 1) * PROFILES_PER_PAGE;
+  const paginatedProfiles = filteredProfiles?.slice(startIndex, startIndex + PROFILES_PER_PAGE);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
@@ -103,11 +112,21 @@ export default function Community() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProfiles?.map((profile) => (
-            <ProfileCard key={profile.id} profile={profile} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedProfiles?.map((profile) => (
+              <ProfileCard key={profile.id} profile={profile} />
+            ))}
+          </div>
+          
+          {totalPages > 1 && (
+            <BlogPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
     </div>
   );

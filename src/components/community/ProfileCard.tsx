@@ -34,7 +34,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       case 'mentor':
         return 'shadow-[0_0_10px_rgba(139,92,246,0.5)] bg-kahra-primary text-white';
       case 'student':
-        return 'shadow-[0_0_10px_rgba(220,38,38,0.5)] bg-kahra-secondary text-white';
+        return 'shadow-[0_0_10px_rgba(34,197,94,0.5)] bg-green-600 text-white';
       default:
         return 'shadow-[0_0_10px_rgba(79,70,229,0.5)] bg-kahra-accent text-white';
     }
