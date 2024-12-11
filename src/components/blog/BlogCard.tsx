@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { BlogWithAuthor } from "@/types/blog";
+import { BlogWithAuthor } from "@/types/blog/types";
 import { useState } from "react";
 import { BlogPostDialog } from "./BlogPostDialog";
 
