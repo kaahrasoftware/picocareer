@@ -1,28 +1,21 @@
+import { User } from "@/integrations/supabase/types/user.types";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Calendar, BookOpen } from "lucide-react";
+import { Calendar, MessageSquare } from "lucide-react";
 
 interface MentorActionsProps {
-  onBookSession: () => void;
+  mentor: User;
 }
 
-export function MentorActions({ onBookSession }: MentorActionsProps) {
+export function MentorActions({ mentor }: MentorActionsProps) {
   return (
-    <div className="grid grid-cols-3 gap-4">
-      <Button className="w-full" variant="default">
-        <MessageSquare className="mr-2" />
-        Request Chat
-      </Button>
-      <Button 
-        className="w-full" 
-        variant="secondary"
-        onClick={onBookSession}
-      >
-        <Calendar className="mr-2" />
+    <div className="flex gap-4">
+      <Button className="flex-1" variant="default">
+        <Calendar className="w-4 h-4 mr-2" />
         Book Session
       </Button>
-      <Button className="w-full" variant="outline">
-        <BookOpen className="mr-2" />
-        View Profile
+      <Button className="flex-1" variant="outline">
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Message
       </Button>
     </div>
   );

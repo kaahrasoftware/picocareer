@@ -11,7 +11,7 @@ import { MentorBio } from "./mentor/MentorBio";
 import { MentorSkills } from "./mentor/MentorSkills";
 import { MentorStats } from "./mentor/MentorStats";
 import { MentorActions } from "./mentor/MentorActions";
-import { User } from "@/integrations/supabase/types";
+import { User } from "@/integrations/supabase/types/user.types";
 
 interface MentorDetailsDialogProps {
   mentor: User;

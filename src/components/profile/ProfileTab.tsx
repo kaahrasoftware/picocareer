@@ -13,11 +13,14 @@ export function ProfileTab() {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select()
         .eq('id', session.user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user data:', error);
+        return null;
+      }
       return data;
     },
     enabled: !!session?.user?.id
