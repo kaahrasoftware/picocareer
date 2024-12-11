@@ -30,17 +30,27 @@ export function TimeSlotSelector({
       <ScrollArea className="h-[200px] rounded-md border border-kahra-darker">
         <div className="grid grid-cols-2 gap-2 p-4">
           {availableTimeSlots.length > 0 ? (
-            availableTimeSlots.map((slot) => (
-              <Button
-                key={slot.time}
-                variant={selectedTime === slot.time ? "default" : "outline"}
-                onClick={() => onTimeSelect(slot.time)}
-                disabled={!slot.available}
-                className={`w-full ${!slot.available ? 'opacity-50' : ''}`}
-              >
-                {slot.time}
-              </Button>
-            ))
+            availableTimeSlots.map((slot) => {
+              // Convert 24h format to 12h format for display
+              const [hour] = slot.time.split(':');
+              const hourNum = parseInt(hour);
+              const displayTime = format(
+                new Date().setHours(hourNum, 0, 0),
+                'h:mm a'
+              );
+
+              return (
+                <Button
+                  key={slot.time}
+                  variant={selectedTime === slot.time ? "default" : "outline"}
+                  onClick={() => onTimeSelect(slot.time)}
+                  disabled={!slot.available}
+                  className={`w-full ${!slot.available ? 'opacity-50' : ''}`}
+                >
+                  {displayTime}
+                </Button>
+              );
+            })
           ) : (
             <div className="col-span-2 text-center text-gray-500 py-4">
               No available time slots for this date
