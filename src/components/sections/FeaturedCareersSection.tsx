@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CareerCard, CareerCardProps } from "@/components/CareerCard";
+import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,17 +11,40 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+// Only include the fields that CareerCard actually uses
+interface FeaturedCareerData {
+  id: number;
+  title: string;
+  description: string;
+  users: string;
+  salary: string;
+  image_url: string;
+  related_majors: string[];
+  related_careers: string[];
+  skills: string[];
+}
+
 const fetchFeaturedCareers = async () => {
   const { data, error } = await supabase
     .from('careers')
-    .select('*')
+    .select(`
+      id,
+      title,
+      description,
+      users,
+      salary,
+      image_url,
+      related_majors,
+      related_careers,
+      skills
+    `)
     .eq('featured', true);
 
   if (error) {
     throw error;
   }
 
-  return data as CareerCardProps[];
+  return data as FeaturedCareerData[];
 };
 
 export const FeaturedCareersSection = () => {

@@ -11,46 +11,38 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-interface MajorCardProps {
+// Only include the fields that MajorCard actually uses
+interface FeaturedMajorData {
   id: number;
   title: string;
   description: string;
   users: string;
-  imageUrl: string;
-  relatedCareers: string[];
-  requiredCourses: string[];
-  averageGPA: string;
-  category?: string;
-  levelOfStudy?: string;
-  createdAt?: string;
-  featured?: boolean;
+  image_url: string;
+  related_careers: string[];
+  required_courses: string[];
+  average_gpa: string;
 }
 
 const fetchFeaturedMajors = async () => {
   const { data, error } = await supabase
     .from('majors')
-    .select('*')
+    .select(`
+      id,
+      title,
+      description,
+      users,
+      image_url,
+      related_careers,
+      required_courses,
+      average_gpa
+    `)
     .eq('featured', true);
 
   if (error) {
     throw error;
   }
 
-  // Transform the data to match our component props
-  return (data || []).map(major => ({
-    id: major.id,
-    title: major.title,
-    description: major.description,
-    users: major.users,
-    imageUrl: major.image_url,
-    relatedCareers: major.related_careers,
-    requiredCourses: major.required_courses,
-    averageGPA: major.average_gpa,
-    category: major.category,
-    levelOfStudy: major.level_of_study,
-    createdAt: major.created_at,
-    featured: major.featured
-  })) as MajorCardProps[];
+  return data as FeaturedMajorData[];
 };
 
 export const FeaturedMajorsSection = () => {
@@ -107,7 +99,15 @@ export const FeaturedMajorsSection = () => {
         <CarouselContent>
           {majors?.map((major) => (
             <CarouselItem key={major.id} className="basis-1/3">
-              <MajorCard {...major} />
+              <MajorCard 
+                title={major.title}
+                description={major.description}
+                users={major.users}
+                imageUrl={major.image_url}
+                relatedCareers={major.related_careers}
+                requiredCourses={major.required_courses}
+                averageGPA={major.average_gpa}
+              />
             </CarouselItem>
           ))}
         </CarouselContent>
