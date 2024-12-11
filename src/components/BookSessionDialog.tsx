@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { DateSelector } from "./booking/DateSelector";
 import { TimeSlotSelector } from "./booking/TimeSlotSelector";
 import { SessionTypeSelector } from "./booking/SessionTypeSelector";
 import { SessionNote } from "./booking/SessionNote";
+import { useSessionTypes } from "@/hooks/useSessionTypes";
+import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { useBookSession } from "@/hooks/useBookSession";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -18,157 +19,31 @@ interface BookSessionDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface TimeSlot {
-  time: string;
-  available: boolean;
-}
-
-interface SessionType {
-  id: string;
-  type: string;
-  duration: number;
-  price: number;
-  description: string | null;
-}
-
 export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDialogProps) {
   const [date, setDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
-  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
-  const { toast } = useToast();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  useEffect(() => {
-    async function fetchSessionTypes() {
-      if (!mentor.id) {
-        toast({
-          title: "Error",
-          description: "Invalid mentor ID",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('mentor_session_types')
-        .select('*')
-        .eq('profile_id', mentor.id);
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load session types",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setSessionTypes(data);
-    }
-
-    if (open && mentor.id) {
-      fetchSessionTypes();
-    }
-  }, [mentor.id, open, toast]);
-
-  useEffect(() => {
-    async function fetchAvailability() {
-      if (!date || !mentor.id) return;
-
-      const dayOfWeek = date.getDay();
-      
-      const { data: availabilityData, error } = await supabase
-        .from('mentor_availability')
-        .select('*')
-        .eq('profile_id', mentor.id)
-        .eq('day_of_week', dayOfWeek)
-        .eq('is_available', true);
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load availability",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check existing bookings for this date
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data: bookingsData } = await supabase
-        .from('mentor_sessions')
-        .select('scheduled_at')
-        .eq('mentor_id', mentor.id)
-        .gte('scheduled_at', startOfDay.toISOString())
-        .lte('scheduled_at', endOfDay.toISOString())
-        .neq('status', 'cancelled');
-
-      // Generate available time slots
-      const slots: TimeSlot[] = [];
-      availabilityData?.forEach((availability) => {
-        const [startHour] = availability.start_time.split(':');
-        const [endHour] = availability.end_time.split(':');
-        
-        for (let hour = parseInt(startHour); hour < parseInt(endHour); hour++) {
-          const timeString = `${hour.toString().padStart(2, '0')}:00`;
-          const isBooked = bookingsData?.some(booking => {
-            const bookingHour = new Date(booking.scheduled_at).getHours();
-            return bookingHour === hour;
-          });
-          
-          slots.push({
-            time: timeString,
-            available: !isBooked
-          });
-        }
-      });
-
-      setAvailableTimeSlots(slots);
-    }
-
-    if (date && mentor.id) {
-      fetchAvailability();
-    }
-  }, [date, mentor.id, toast]);
+  const sessionTypes = useSessionTypes(mentor.id, open);
+  const availableTimeSlots = useAvailableTimeSlots(date, mentor.id);
+  const bookSession = useBookSession();
 
   const handleSubmit = async () => {
     if (!date || !selectedTime || !sessionType || !mentor.id) return;
 
-    const scheduledAt = new Date(date);
-    const [hours, minutes] = selectedTime.split(':');
-    scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    const { error } = await supabase
-      .from('mentor_sessions')
-      .insert({
-        mentor_id: mentor.id,
-        mentee_id: (await supabase.auth.getUser()).data.user?.id,
-        session_type_id: sessionType,
-        scheduled_at: scheduledAt.toISOString(),
-        notes: note,
-      });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to book session",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Session booked successfully",
+    const success = await bookSession({
+      mentorId: mentor.id,
+      date,
+      selectedTime,
+      sessionTypeId: sessionType,
+      note,
     });
-    onOpenChange(false);
+
+    if (success) {
+      onOpenChange(false);
+    }
   };
 
   return (
