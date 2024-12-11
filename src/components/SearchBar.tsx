@@ -11,7 +11,6 @@ export const SearchBar = () => {
   const [showResults, setShowResults] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
-  // Handle clicking outside of search bar
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
@@ -26,11 +25,16 @@ export const SearchBar = () => {
   const { data: careers } = useQuery({
     queryKey: ['searchCareers', searchQuery],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('careers')
-        .select('*')
+        .select('id, title, description, users, salary, image_url, related_majors, related_careers, skills, category, level_of_study')
         .ilike('title', `%${searchQuery}%`)
         .limit(5);
+
+      if (error) {
+        console.error('Error fetching careers:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: searchQuery.length > 0,
@@ -39,11 +43,16 @@ export const SearchBar = () => {
   const { data: majors } = useQuery({
     queryKey: ['searchMajors', searchQuery],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('majors')
-        .select('*')
+        .select('id, title, description, users, image_url, related_careers, required_courses, average_gpa, category, level_of_study')
         .ilike('title', `%${searchQuery}%`)
         .limit(5);
+
+      if (error) {
+        console.error('Error fetching majors:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: searchQuery.length > 0,
@@ -52,19 +61,17 @@ export const SearchBar = () => {
   const { data: mentors } = useQuery({
     queryKey: ['searchMentors', searchQuery],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('id, name, title, company, image_url, bio, position, education, sessions_held, stats, skills, tools, keywords')
         .eq('user_type', 'mentor')
-        .or(`
-          name.ilike.%${searchQuery}%,
-          company.ilike.%${searchQuery}%,
-          title.ilike.%${searchQuery}%,
-          position.ilike.%${searchQuery}%,
-          education.ilike.%${searchQuery}%,
-          bio.ilike.%${searchQuery}%
-        `)
+        .or(`name.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%`)
         .limit(5);
+
+      if (error) {
+        console.error('Error fetching mentors:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: searchQuery.length > 0,

@@ -1,82 +1,68 @@
-import { useState } from "react";
+import { User } from "@/types/user";
 import { Card } from "@/components/ui/card";
-import { MentorDetailsDialog } from "./MentorDetailsDialog";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { MentorDetailsDialog } from "@/components/MentorDetailsDialog";
+import { parseStats } from "@/types/stats";
 
 interface MentorCardProps {
-  title: string;
-  company: string;
-  image_url: string;
-  name: string;
-  stats: {
-    mentees: string;
-    connected: string;
-    recordings: string;
-  };
-  username: string;
-  bio?: string;
-  position?: string;
-  education?: string;
-  sessions_held?: string;
-  skills?: string[];
-  tools?: string[];
-  keywords?: string[];
+  mentor: User;
+  featured?: boolean;
 }
 
-export function MentorCard(props: MentorCardProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
+export const MentorCard = ({ mentor, featured }: MentorCardProps) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const stats = parseStats(mentor.stats);
 
   return (
     <>
-      <Card 
-        className="relative overflow-hidden group cursor-pointer transition-all duration-300 hover:scale-105 bg-card border p-4"
-        onClick={() => setDialogOpen(true)}
-      >
-        <div className="flex flex-col h-full">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold mb-1">{props.title}</h3>
-            <p className="text-sm text-muted-foreground">{props.company}</p>
+      <Card className="relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
+        onClick={() => setShowDetails(true)}>
+        <div className="p-4">
+          <div className="flex items-center gap-4 mb-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={mentor.image_url} alt={mentor.name} />
+              <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-medium text-lg">{mentor.name}</h3>
+              <p className="text-sm text-muted-foreground">{mentor.title} at {mentor.company}</p>
+            </div>
           </div>
           
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Users size={14} />
-                <span>{props.stats.mentees}</span>
+          {featured && (
+            <div className="flex justify-between items-center mt-4 text-sm text-muted-foreground">
+              <div>
+                <span className="font-medium">{stats.mentees}</span> mentees
               </div>
-              <div className="flex items-center gap-1">
-                <Star size={14} />
-                <span>{props.stats.connected}</span>
+              <div>
+                <span className="font-medium">{stats.connected}</span> connected
               </div>
-              <div className="flex items-center gap-1">
-                <BookOpen size={14} />
-                <span>{props.stats.recordings}</span>
+              <div>
+                <span className="font-medium">{stats.recordings}</span> recordings
               </div>
             </div>
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={props.image_url} alt={props.name} />
-              <AvatarFallback>{props.name[0]}</AvatarFallback>
-            </Avatar>
-          </div>
+          )}
 
-          <div className="flex justify-between items-center mt-auto">
-            <div>
-              <p className="text-sm font-medium">{props.name}</p>
-              <p className="text-xs text-muted-foreground">@{props.username}</p>
-            </div>
-            <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-              mentor
-            </Badge>
-          </div>
+          <Button 
+            variant="secondary" 
+            className="w-full mt-4"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDetails(true);
+            }}
+          >
+            View Profile
+          </Button>
         </div>
       </Card>
-      <MentorDetailsDialog 
-        mentor={props}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+
+      <MentorDetailsDialog
+        mentor={mentor}
+        open={showDetails}
+        onOpenChange={setShowDetails}
       />
     </>
   );
-}
+};

@@ -126,7 +126,7 @@ export function SearchResults({
                             <div className="p-3">
                               <h4 className="font-medium truncate">{mentor.name}</h4>
                               <p className="text-sm text-muted-foreground truncate">
-                                {mentor.title}
+                                {mentor.title} at {mentor.company}
                               </p>
                             </div>
                           </Card>

@@ -63,6 +63,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string
+          featured: boolean | null
           id: number
           image_url: string
           level_of_study: string | null
@@ -76,6 +77,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description: string
+          featured?: boolean | null
           id?: number
           image_url: string
           level_of_study?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string
+          featured?: boolean | null
           id?: number
           image_url?: string
           level_of_study?: string | null
@@ -99,16 +102,56 @@ export type Database = {
         }
         Relationships: []
       }
+      stories: {
+        Row: {
+          content: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          mentor_id: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          mentor_id: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          mentor_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           bio: string | null
           company: string
           created_at: string | null
           education: string | null
-          id: number
+          email: string | null
+          id: string
           image_url: string
           keywords: string[] | null
           name: string
+          password: string
           position: string | null
           sessions_held: string | null
           skills: string[] | null
@@ -124,10 +167,12 @@ export type Database = {
           company: string
           created_at?: string | null
           education?: string | null
-          id?: number
+          email?: string | null
+          id?: string
           image_url: string
           keywords?: string[] | null
           name: string
+          password?: string
           position?: string | null
           sessions_held?: string | null
           skills?: string[] | null
@@ -143,10 +188,12 @@ export type Database = {
           company?: string
           created_at?: string | null
           education?: string | null
-          id?: number
+          email?: string | null
+          id?: string
           image_url?: string
           keywords?: string[] | null
           name?: string
+          password?: string
           position?: string | null
           sessions_held?: string | null
           skills?: string[] | null

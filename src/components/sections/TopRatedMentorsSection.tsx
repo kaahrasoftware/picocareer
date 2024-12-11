@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -7,8 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { parseStats } from "@/types/stats";
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,14 +24,14 @@ export const TopRatedMentorsSection = () => {
         .eq('top_rated', true)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-
-      // Transform the data to match the expected MentorCard props
+      if (error) {
+        console.error('Error fetching top rated mentors:', error);
+        throw error;
+      }
+      
       return data?.map(mentor => ({
         ...mentor,
-        stats: typeof mentor.stats === 'string' 
-          ? JSON.parse(mentor.stats)
-          : mentor.stats
+        stats: parseStats(mentor.stats)
       })) || [];
     },
   });
@@ -71,7 +72,7 @@ export const TopRatedMentorsSection = () => {
         <CarouselContent>
           {topRatedMentors?.map((mentor) => (
             <CarouselItem key={mentor.id} className="basis-1/3">
-              <MentorCard {...mentor} />
+              <MentorCard mentor={mentor} />
             </CarouselItem>
           ))}
         </CarouselContent>
