@@ -9,6 +9,8 @@ export interface SearchResult {
   avatar_url?: string;
   salary_range?: string;
   average_salary?: number;
+  field_of_study?: string;
+  degree_level?: string;
 }
 
 export const useSearchData = (query: string) => {
@@ -57,6 +59,22 @@ export const useSearchData = (query: string) => {
         throw careerError;
       }
 
+      // Search majors
+      const { data: majors, error: majorError } = await supabase
+        .from('majors')
+        .select('id, title, description, field_of_study, degree_level')
+        .or(`title.ilike.%${query}%,` +
+            `description.ilike.%${query}%,` +
+            `field_of_study.ilike.%${query}%,` +
+            `required_courses.cs.{${query}},` +
+            `keywords.cs.{${query}}`)
+        .limit(3);
+
+      if (majorError) {
+        console.error('Error fetching majors:', majorError);
+        throw majorError;
+      }
+
       // Transform mentor results
       const mentorResults = (mentors || []).map(mentor => ({
         id: mentor.id,
@@ -76,7 +94,17 @@ export const useSearchData = (query: string) => {
         average_salary: career.average_salary
       }));
 
-      return [...mentorResults, ...careerResults];
+      // Transform major results
+      const majorResults = (majors || []).map(major => ({
+        id: major.id,
+        title: major.title,
+        description: major.description,
+        type: 'major' as const,
+        field_of_study: major.field_of_study,
+        degree_level: major.degree_level
+      }));
+
+      return [...mentorResults, ...careerResults, ...majorResults];
     },
     enabled: query.length > 2,
     staleTime: 1000 * 60 // Cache for 1 minute
