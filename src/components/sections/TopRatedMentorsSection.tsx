@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
 import { MentorListDialog } from "@/components/MentorListDialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -11,59 +9,83 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const fetchTopRatedMentors = async () => {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('user_type', 'mentor')
-    .eq('top_rated', true);
-
-  if (error) {
-    throw error;
+const TOP_RATED_MENTORS = [
+  {
+    id: "1",
+    title: "Senior Software Engineer",
+    company: "Google",
+    image_url: "/placeholder.svg",
+    full_name: "John Smith",
+    username: "johnsmith",
+    bio: "10+ years of experience in software development",
+    position: "Tech Lead",
+    education: "MS Computer Science",
+    sessions_held: "50",
+    stats: {
+      mentees: "120",
+      connected: "95",
+      recordings: "45"
+    },
+    user_type: "mentor",
+    top_rated: true,
+    skills: ["React", "Node.js", "System Design"],
+    tools: ["VS Code", "Git", "Docker"],
+    keywords: ["software", "engineering", "leadership"],
+    email: "john@example.com",
+    password: "123456789"
+  },
+  {
+    id: "2",
+    title: "Product Manager",
+    company: "Microsoft",
+    image_url: "/placeholder.svg",
+    full_name: "Sarah Johnson",
+    username: "sarahj",
+    bio: "Experienced in product strategy and development",
+    position: "Senior PM",
+    education: "MBA",
+    sessions_held: "35",
+    stats: {
+      mentees: "85",
+      connected: "70",
+      recordings: "30"
+    },
+    user_type: "mentor",
+    top_rated: true,
+    skills: ["Product Strategy", "Agile", "User Research"],
+    tools: ["Jira", "Figma", "Amplitude"],
+    keywords: ["product", "management", "strategy"],
+    email: "sarah@example.com",
+    password: "123456789"
+  },
+  {
+    id: "3",
+    title: "Data Science Lead",
+    company: "Amazon",
+    image_url: "/placeholder.svg",
+    full_name: "Michael Chen",
+    username: "michaelc",
+    bio: "Expert in machine learning and data analytics",
+    position: "Technical Lead",
+    education: "PhD Statistics",
+    sessions_held: "40",
+    stats: {
+      mentees: "95",
+      connected: "80",
+      recordings: "35"
+    },
+    user_type: "mentor",
+    top_rated: true,
+    skills: ["Machine Learning", "Python", "Statistics"],
+    tools: ["Python", "TensorFlow", "SQL"],
+    keywords: ["data", "science", "analytics"],
+    email: "michael@example.com",
+    password: "123456789"
   }
-
-  if (!data) return [];
-
-  return data.map(mentor => ({
-    ...mentor,
-    stats: typeof mentor.stats === 'string' 
-      ? JSON.parse(mentor.stats)
-      : mentor.stats
-  }));
-};
+];
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const { data: mentors, isLoading, error } = useQuery({
-    queryKey: ['topRatedMentors'],
-    queryFn: fetchTopRatedMentors,
-  });
-
-  if (isLoading) {
-    return (
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-6">Top Rated Mentors</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-background/50 animate-pulse rounded-lg" />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    console.error('Error fetching top rated mentors:', error);
-    return (
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-6">Top Rated Mentors</h2>
-        <div className="text-center text-muted-foreground">
-          Failed to load top rated mentors. Please try again later.
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="mb-16">
@@ -84,7 +106,7 @@ export const TopRatedMentorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {mentors?.map((mentor) => (
+          {TOP_RATED_MENTORS.map((mentor) => (
             <CarouselItem key={mentor.id} className="basis-1/3">
               <MentorCard {...mentor} />
             </CarouselItem>
@@ -93,13 +115,11 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
-      {mentors && (
-        <MentorListDialog
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          mentors={mentors}
-        />
-      )}
+      <MajorListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        majors={[]}
+      />
     </section>
   );
 };

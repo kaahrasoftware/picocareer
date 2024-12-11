@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { MajorCard } from "@/components/MajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -11,72 +9,41 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-// Only include the fields that MajorCard actually uses
-interface FeaturedMajorData {
-  id: number;
-  title: string;
-  description: string;
-  users: string;
-  image_url: string;
-  related_careers: string[];
-  required_courses: string[];
-  average_gpa: string;
-}
-
-const fetchFeaturedMajors = async () => {
-  const { data, error } = await supabase
-    .from('majors')
-    .select(`
-      id,
-      title,
-      description,
-      users,
-      image_url,
-      related_careers,
-      required_courses,
-      average_gpa
-    `)
-    .eq('featured', true);
-
-  if (error) {
-    throw error;
+const FEATURED_MAJORS = [
+  {
+    id: 1,
+    title: "Computer Science",
+    description: "Study the theory and practice of computing",
+    users: "20K",
+    imageUrl: "/placeholder.svg",
+    relatedCareers: ["Software Engineer", "Data Scientist", "Systems Architect"],
+    requiredCourses: ["Algorithms", "Data Structures", "Operating Systems"],
+    averageGPA: "3.5"
+  },
+  {
+    id: 2,
+    title: "Business Administration",
+    description: "Learn fundamental business principles and management",
+    users: "25K",
+    imageUrl: "/placeholder.svg",
+    relatedCareers: ["Business Analyst", "Project Manager", "Consultant"],
+    requiredCourses: ["Economics", "Marketing", "Finance"],
+    averageGPA: "3.3"
+  },
+  {
+    id: 3,
+    title: "Psychology",
+    description: "Explore human behavior and mental processes",
+    users: "18K",
+    imageUrl: "/placeholder.svg",
+    relatedCareers: ["Clinical Psychologist", "Counselor", "Research Analyst"],
+    requiredCourses: ["Research Methods", "Statistics", "Cognitive Psychology"],
+    averageGPA: "3.4"
   }
-
-  return data as FeaturedMajorData[];
-};
+];
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const { data: majors, isLoading, error } = useQuery({
-    queryKey: ['featuredMajors'],
-    queryFn: fetchFeaturedMajors,
-  });
-
-  if (isLoading) {
-    return (
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-6">Featured Majors</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-background/50 animate-pulse rounded-lg" />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    console.error('Error fetching featured majors:', error);
-    return (
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-6">Featured Majors</h2>
-        <div className="text-center text-muted-foreground">
-          Failed to load featured majors. Please try again later.
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="mb-16">
@@ -97,17 +64,9 @@ export const FeaturedMajorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {majors?.map((major) => (
+          {FEATURED_MAJORS.map((major) => (
             <CarouselItem key={major.id} className="basis-1/3">
-              <MajorCard 
-                title={major.title}
-                description={major.description}
-                users={major.users}
-                imageUrl={major.image_url}
-                relatedCareers={major.related_careers}
-                requiredCourses={major.required_courses}
-                averageGPA={major.average_gpa}
-              />
+              <MajorCard {...major} />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -117,7 +76,7 @@ export const FeaturedMajorsSection = () => {
       <MajorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        majors={majors || []}
+        majors={FEATURED_MAJORS}
       />
     </section>
   );
