@@ -17,6 +17,19 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-y-auto max-h-[90vh]">
+        <div className="flex flex-col items-center p-4">
+          <img 
+            src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png" 
+            alt="Kahra Logo" 
+            className="w-16 h-16 mb-2"
+          />
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-semibold mb-1">Welcome to Kahra!</h2>
+            <p className="text-muted-foreground text-sm">
+              We're the tool that helps you prepare for a career with the right education and skills.
+            </p>
+          </div>
+        </div>
         <Auth
           supabaseClient={supabase}
           appearance={{
@@ -68,7 +81,16 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             },
           }}
           theme={theme === 'dark' ? 'dark' : 'light'}
+          providers={['google', 'facebook', 'twitter', 'apple']}
           redirectTo={window.location.origin}
+          socialLayout="horizontal"
+          onError={(error) => {
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: error.message,
+            });
+          }}
           localization={{
             variables: {
               sign_in: {
@@ -76,6 +98,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 password_label: 'Password',
                 button_label: 'Login',
                 loading_button_label: 'Signing in...',
+                social_provider_text: 'Or continue with',
                 link_text: "Don't have an account? Sign Up",
               },
               sign_up: {
@@ -83,6 +106,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 password_label: 'Password',
                 button_label: 'Register',
                 loading_button_label: 'Signing up...',
+                social_provider_text: 'Or continue with',
                 link_text: 'Already have an account? Login',
               },
             },
