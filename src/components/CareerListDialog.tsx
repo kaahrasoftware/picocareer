@@ -13,25 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CareerCard } from "@/components/CareerCard";
-
-interface Career {
-  title: string;
-  description: string;
-  users: string;
-  salary: string;
-  imageUrl: string;
-  relatedMajors: string[];
-  relatedCareers: string[];
-  skills: string[];
-  category?: string;
-  levelOfStudy?: string;
-}
+import { CareerCard, CareerCardProps } from "@/components/CareerCard";
 
 interface CareerListDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  careers: Career[];
+  careers: CareerCardProps[];
 }
 
 export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogProps) => {
@@ -45,7 +32,7 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
     const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "all" || career.category === categoryFilter;
     const matchesSalary = salaryFilter === "all" || career.salary.includes(salaryFilter);
-    const matchesStudyLevel = studyLevelFilter === "all" || career.levelOfStudy === studyLevelFilter;
+    const matchesStudyLevel = studyLevelFilter === "all" || career.level_of_study === studyLevelFilter;
     const matchesSkills = !skillsFilter || career.skills.some(skill => 
       skill.toLowerCase().includes(skillsFilter.toLowerCase())
     );
@@ -118,8 +105,8 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
 
           {/* Results Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCareers.map((career, index) => (
-              <CareerCard key={index} {...career} />
+            {filteredCareers.map((career) => (
+              <CareerCard key={career.id} {...career} />
             ))}
           </div>
 
