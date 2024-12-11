@@ -5,17 +5,18 @@ interface BlogPostContentProps {
 }
 
 export function BlogPostContent({ blog }: BlogPostContentProps) {
+  // Generate a deterministic cover image URL based on the blog's ID
+  const coverImageUrl = `https://picsum.photos/seed/${blog.id}/1200/600`;
+
   return (
     <>
-      {blog.cover_image_url && (
-        <div className="relative h-64 w-full -mx-6">
-          <img
-            src={blog.cover_image_url}
-            alt={blog.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </div>
-      )}
+      <div className="relative h-64 w-full -mx-6">
+        <img
+          src={coverImageUrl}
+          alt={blog.title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
 
       <div className="prose prose-sm dark:prose-invert max-w-none mt-4">
         <p className="text-muted-foreground mb-4">{blog.summary}</p>

@@ -10,6 +10,9 @@ interface BlogCardProps {
 export function BlogCard({ blog }: BlogCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Generate a deterministic cover image URL based on the blog's ID
+  const coverImageUrl = `https://picsum.photos/seed/${blog.id}/800/400`;
+
   return (
     <>
       <Card 
@@ -17,15 +20,13 @@ export function BlogCard({ blog }: BlogCardProps) {
         className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
         onClick={() => setIsDialogOpen(true)}
       >
-        {blog.cover_image_url && (
-          <div className="relative h-48 w-full">
-            <img
-              src={blog.cover_image_url}
-              alt={blog.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
-        )}
+        <div className="relative h-48 w-full">
+          <img
+            src={coverImageUrl}
+            alt={blog.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
         <CardHeader>
           <CardTitle>{blog.title}</CardTitle>
           <CardDescription>
