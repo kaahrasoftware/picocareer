@@ -1,9 +1,6 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
-import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
-import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEffect } from "react";
 
@@ -16,7 +13,7 @@ const Index = () => {
   ];
 
   const otherLinks = [
-    { label: "Blog", href: "#" },
+    { label: "Blog", href: "/blog" },
     { label: "How Kahra works", href: "#" },
   ];
 
@@ -41,9 +38,6 @@ const Index = () => {
           <ThemeToggle />
           <div className="max-w-[1400px] mx-auto">
             <HeroSection />
-            <FeaturedCareersSection />
-            <FeaturedMajorsSection />
-            <TopRatedMentorsSection />
           </div>
           
           <footer className="mt-20 border-t border-border pt-6">
