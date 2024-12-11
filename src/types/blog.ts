@@ -7,8 +7,8 @@ export type BlogWithAuthor = {
   image_url: string | null;
   created_at: string;
   updated_at: string;
-  category: string | null;
-  subcategory: string | null;
+  categories: string[] | null;
+  subcategories: string[] | null;
   is_recent: boolean | null;
   cover_image_url: string | null;
   profiles: {

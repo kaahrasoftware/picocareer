@@ -12,42 +12,42 @@ export type Database = {
       blogs: {
         Row: {
           author_id: string
-          category: string | null
+          categories: string[] | null
           content: string
           cover_image_url: string | null
           created_at: string
           id: string
           image_url: string | null
           is_recent: boolean | null
-          subcategory: string | null
+          subcategories: string[] | null
           summary: string
           title: string
           updated_at: string
         }
         Insert: {
           author_id: string
-          category?: string | null
+          categories?: string[] | null
           content: string
           cover_image_url?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
           is_recent?: boolean | null
-          subcategory?: string | null
+          subcategories?: string[] | null
           summary: string
           title: string
           updated_at?: string
         }
         Update: {
           author_id?: string
-          category?: string | null
+          categories?: string[] | null
           content?: string
           cover_image_url?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
           is_recent?: boolean | null
-          subcategory?: string | null
+          subcategories?: string[] | null
           summary?: string
           title?: string
           updated_at?: string

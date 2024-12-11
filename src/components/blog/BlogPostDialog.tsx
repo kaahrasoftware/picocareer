@@ -13,9 +13,9 @@ interface BlogPostDialogProps {
 }
 
 export function BlogPostDialog({ blog, isOpen, onClose }: BlogPostDialogProps) {
-  // Query for related posts based on category and subcategory
+  // Query for related posts based on categories and subcategories
   const { data: relatedPosts } = useQuery({
-    queryKey: ['related-posts', blog.id, blog.category, blog.subcategory],
+    queryKey: ['related-posts', blog.id, blog.categories, blog.subcategories],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blogs')
@@ -27,7 +27,14 @@ export function BlogPostDialog({ blog, isOpen, onClose }: BlogPostDialogProps) {
           )
         `)
         .neq('id', blog.id)
-        .or(`category.eq.${blog.category},subcategory.eq.${blog.subcategory}`)
+        .or(
+          blog.categories?.map(category => 
+            `categories.cs.{${category}}`
+          ).join(',') + ',' +
+          blog.subcategories?.map(subcategory => 
+            `subcategories.cs.{${subcategory}}`
+          ).join(',')
+        )
         .limit(3);
 
       if (error) throw error;
@@ -74,16 +81,18 @@ export function BlogPostDialog({ blog, isOpen, onClose }: BlogPostDialogProps) {
           <div dangerouslySetInnerHTML={{ __html: blog.content }} />
         </div>
 
-        {blog.category && blog.subcategory && (
-          <div className="flex gap-2 mt-4">
-            <span className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-              {blog.category}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {blog.categories?.map((category) => (
+            <span key={category} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
+              {category}
             </span>
-            <span className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-              {blog.subcategory}
+          ))}
+          {blog.subcategories?.map((subcategory) => (
+            <span key={subcategory} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
+              {subcategory}
             </span>
-          </div>
-        )}
+          ))}
+        </div>
 
         {relatedPosts && relatedPosts.length > 0 && (
           <div className="mt-8">

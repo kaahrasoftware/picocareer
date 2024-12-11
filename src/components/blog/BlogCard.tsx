@@ -36,17 +36,17 @@ export function BlogCard({ blog }: BlogCardProps) {
           <p className="text-sm text-muted-foreground line-clamp-3">
             {blog.summary}
           </p>
-          <div className="flex gap-2 mt-4">
-            {blog.category && (
-              <span className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-                {blog.category}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {blog.categories?.map((category) => (
+              <span key={category} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
+                {category}
               </span>
-            )}
-            {blog.subcategory && (
-              <span className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-                {blog.subcategory}
+            ))}
+            {blog.subcategories?.map((subcategory) => (
+              <span key={subcategory} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
+                {subcategory}
               </span>
-            )}
+            ))}
           </div>
         </CardContent>
         <CardFooter className="flex justify-between items-center">
