@@ -42,15 +42,15 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     return (
       <div className="px-4">
         <h3 className="text-lg font-semibold mb-3 text-foreground">Mentors</h3>
-        <div className={`overflow-x-auto scrollbar-hide ${shouldUseGrid ? 'w-full' : ''}`}>
+        <div className="w-full">
           <div className={`${shouldUseGrid 
             ? 'grid grid-cols-3 gap-4' 
-            : 'flex gap-4'} ${!shouldUseGrid ? 'min-w-max' : ''}`}
+            : 'flex gap-4 overflow-x-auto pb-2'}`}
           >
             {mentors.map((mentor) => (
               <Card 
                 key={mentor.id}
-                className="flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
+                className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => setSelectedProfileId(mentor.id)}
               >
                 <div className="flex items-center gap-3 mb-3">
