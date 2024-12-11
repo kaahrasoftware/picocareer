@@ -46,8 +46,15 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
               <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
               <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
             </Avatar>
-            <div>
-              <h2>{profile.full_name}</h2>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2>{profile.full_name}</h2>
+                {profile.user_type === 'mentor' && (
+                  <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                    mentor
+                  </Badge>
+                )}
+              </div>
               <p className="text-base font-normal text-gray-400">@{profile.username}</p>
             </div>
           </DialogTitle>
