@@ -11,11 +11,11 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data, isLoading } = useSearchData(query);
   
-  // Initialize empty arrays for each category
+  // Initialize empty arrays for each category with proper type checking
   const groupedResults = {
-    careers: data?.filter(r => r?.type === 'career') ?? [],
-    majors: data?.filter(r => r?.type === 'major') ?? [],
-    mentors: data?.filter(r => r?.type === 'mentor') ?? []
+    careers: (data || []).filter(item => item?.type === 'career') || [],
+    majors: (data || []).filter(item => item?.type === 'major') || [],
+    mentors: (data || []).filter(item => item?.type === 'mentor') || []
   };
 
   const getIcon = (type: string) => {
@@ -47,7 +47,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
-            items && items.length > 0 ? (
+            items.length > 0 ? (
               <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
                 {items.map((result) => (
                   <CommandItem
