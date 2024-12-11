@@ -32,11 +32,11 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   const getBadgeClass = (userType: string | null) => {
     switch (userType) {
       case 'mentor':
-        return 'shadow-[0_0_10px_rgba(139,92,246,0.5)] bg-kahra-primary text-white';
+        return 'bg-kahra-primary hover:bg-kahra-primary text-white';
       case 'student':
-        return 'shadow-[0_0_10px_rgba(34,197,94,0.5)] bg-green-600 text-white';
+        return 'bg-green-600 hover:bg-green-600 text-white';
       default:
-        return 'shadow-[0_0_10px_rgba(79,70,229,0.5)] bg-kahra-accent text-white';
+        return 'bg-kahra-accent hover:bg-kahra-accent text-white';
     }
   };
 
