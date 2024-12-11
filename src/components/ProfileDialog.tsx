@@ -11,6 +11,7 @@ import { SettingsTab } from "./profile/SettingsTab";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -19,14 +20,24 @@ interface ProfileDialogProps {
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const { toast } = useToast();
+  const [session, setSession] = useState<any>(null);
   
-  const { data: session } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    },
-  });
+  // Handle auth state changes
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', session?.user?.id],
@@ -52,8 +63,20 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
       return data;
     },
-    enabled: !!session?.user?.id && open,
+    enabled: !!session?.user?.id && open, // Only run query if we have a session and dialog is open
   });
+
+  if (!session) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] bg-kahra-darker text-white">
+          <div className="p-6 text-center">
+            <p>Please sign in to view your profile.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (isLoading) {
     return (
