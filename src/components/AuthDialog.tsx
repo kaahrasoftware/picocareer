@@ -14,16 +14,16 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-0 gap-0">
-        <div className="flex flex-col items-center p-6 pb-2">
+      <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-y-auto max-h-[90vh]">
+        <div className="flex flex-col items-center p-4">
           <img 
             src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png" 
             alt="Kahra Logo" 
-            className="w-20 h-20 mb-4"
+            className="w-16 h-16 mb-2"
           />
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold mb-1">Welcome to Kahra!</h2>
-            <p className="text-muted-foreground">
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-semibold mb-1">Welcome to Kahra!</h2>
+            <p className="text-muted-foreground text-sm">
               We're the tool that helps you prepare for a career with the right education and skills.
             </p>
           </div>
@@ -48,11 +48,11 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             },
             style: {
               container: {
-                padding: '24px',
+                padding: '16px',
               },
               button: {
                 borderRadius: '0.5rem',
-                height: '2.75rem',
+                height: '2.5rem',
                 backgroundColor: '#8B5CF6',
                 color: 'white',
                 fontSize: '0.875rem',
@@ -60,13 +60,13 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               },
               input: {
                 borderRadius: '0.5rem',
-                padding: '0.75rem 1rem',
+                padding: '0.5rem 0.75rem',
                 backgroundColor: 'transparent',
-                height: '2.75rem',
+                height: '2.5rem',
                 fontSize: '0.875rem',
               },
               message: {
-                padding: '0.5rem 0',
+                padding: '0.25rem 0',
                 fontSize: '0.875rem',
               },
               anchor: {
@@ -74,7 +74,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 fontSize: '0.875rem',
               },
               divider: {
-                margin: '1.5rem 0',
+                margin: '1rem 0',
               },
             },
           }}
