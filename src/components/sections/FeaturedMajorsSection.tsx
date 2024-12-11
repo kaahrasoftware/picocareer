@@ -11,18 +11,18 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export interface MajorCardProps {
+interface MajorCardProps {
   id: number;
   title: string;
   description: string;
   users: string;
-  image_url: string;
-  related_careers: string[];
-  required_courses: string[];
-  average_gpa: string;
+  imageUrl: string;
+  relatedCareers: string[];
+  requiredCourses: string[];
+  averageGPA: string;
   category?: string;
-  level_of_study?: string;
-  created_at?: string;
+  levelOfStudy?: string;
+  createdAt?: string;
   featured?: boolean;
 }
 
@@ -36,7 +36,21 @@ const fetchFeaturedMajors = async () => {
     throw error;
   }
 
-  return data as MajorCardProps[];
+  // Transform the data to match our component props
+  return (data || []).map(major => ({
+    id: major.id,
+    title: major.title,
+    description: major.description,
+    users: major.users,
+    imageUrl: major.image_url,
+    relatedCareers: major.related_careers,
+    requiredCourses: major.required_courses,
+    averageGPA: major.average_gpa,
+    category: major.category,
+    levelOfStudy: major.level_of_study,
+    createdAt: major.created_at,
+    featured: major.featured
+  })) as MajorCardProps[];
 };
 
 export const FeaturedMajorsSection = () => {
