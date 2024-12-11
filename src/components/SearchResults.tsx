@@ -20,16 +20,15 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     blogs: []
   };
 
-  if (Array.isArray(data)) {
-    data.forEach(item => {
-      if (item && typeof item === 'object' && 'type' in item) {
-        const category = `${item.type}s`;
-        if (category in groupedResults) {
-          groupedResults[category].push(item);
-        }
+  // Group results by type
+  data?.forEach(item => {
+    if (item?.type) {
+      const category = `${item.type}s`;
+      if (category in groupedResults) {
+        groupedResults[category].push(item);
       }
-    });
-  }
+    }
+  });
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -46,9 +45,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
-  const hasResults = Object.values(groupedResults).some(group => 
-    Array.isArray(group) && group.length > 0
-  );
+  const hasResults = Object.values(groupedResults).some(group => group.length > 0);
 
   const renderResults = () => {
     if (isLoading) {
@@ -68,14 +65,13 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
 
     return Object.entries(groupedResults).map(([category, items]) => {
-      if (!Array.isArray(items) || items.length === 0) {
-        return null;
-      }
+      if (!items?.length) return null;
 
       return (
         <CommandGroup 
           key={category} 
           heading={category.charAt(0).toUpperCase() + category.slice(1)}
+          className="px-2"
         >
           {items.map((result) => (
             <CommandItem
@@ -84,7 +80,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                 console.log("Selected:", result);
                 onClose();
               }}
-              className="flex items-center gap-2 py-2 cursor-pointer hover:bg-accent/50"
+              className="flex items-center gap-2 py-3 px-2 cursor-pointer hover:bg-accent/50 rounded-md"
             >
               {getIcon(result.type)}
               {result.type === 'mentor' ? (
