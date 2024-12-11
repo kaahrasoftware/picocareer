@@ -1,6 +1,5 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, Plus, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Home, GraduationCap, Users, Plus } from "lucide-react";
 import { useState } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 
@@ -59,10 +58,6 @@ export function MenuSidebar() {
                 <p className="text-xs text-muted-foreground">Student</p>
               </div>
             </div>
-            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
           </div>
         </div>
       </div>
