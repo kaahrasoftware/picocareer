@@ -78,32 +78,10 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               divider: {
                 margin: '1rem 0',
               },
-              // New styles for social buttons
-              socialButtons: {
-                padding: '0.5rem',
-              },
-              socialButton: {
-                height: '2.25rem',
-                fontSize: '0.875rem',
-                backgroundColor: 'transparent',
-                border: '1px solid',
-                borderColor: theme === 'dark' ? 'rgb(55, 65, 81)' : 'rgb(229, 231, 235)',
-                color: theme === 'dark' ? 'white' : 'black',
-                '&:hover': {
-                  backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                },
-              },
-              socialButtonsHolder: {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '0.5rem',
-              },
             },
           }}
           theme={theme === 'dark' ? 'dark' : 'light'}
-          providers={['google', 'facebook', 'twitter', 'apple']}
           redirectTo={window.location.origin}
-          socialLayout="horizontal"
           onError={(error) => {
             toast({
               variant: "destructive",
@@ -118,7 +96,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 password_label: 'Password',
                 button_label: 'Login',
                 loading_button_label: 'Signing in...',
-                social_provider_text: 'Or continue with',
                 link_text: "Don't have an account? Sign Up",
               },
               sign_up: {
@@ -126,7 +103,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 password_label: 'Password',
                 button_label: 'Register',
                 loading_button_label: 'Signing up...',
-                social_provider_text: 'Or continue with',
                 link_text: 'Already have an account? Login',
               },
             },
