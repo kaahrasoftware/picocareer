@@ -1,11 +1,46 @@
 import { Json } from "./auth";
 
 export interface MentorsTables {
+  mentor_availability: {
+    Row: {
+      id: string
+      profile_id: string
+      start_time: string
+      end_time: string
+      timezone: string
+      is_available: boolean | null
+      created_at: string
+      updated_at: string
+      date_available: string
+    }
+    Insert: {
+      id?: string
+      profile_id: string
+      start_time: string
+      end_time: string
+      timezone: string
+      is_available?: boolean | null
+      created_at?: string
+      updated_at?: string
+      date_available: string
+    }
+    Update: {
+      id?: string
+      profile_id?: string
+      start_time?: string
+      end_time?: string
+      timezone?: string
+      is_available?: boolean | null
+      created_at?: string
+      updated_at?: string
+      date_available?: string
+    }
+  }
   mentor_session_types: {
     Row: {
       id: string
       profile_id: string
-      type: "intro" | "quick-advice" | "walkthrough"
+      type: string
       duration: number
       price: number
       description: string | null
@@ -15,7 +50,7 @@ export interface MentorsTables {
     Insert: {
       id?: string
       profile_id: string
-      type: "intro" | "quick-advice" | "walkthrough"
+      type: string
       duration: number
       price: number
       description?: string | null
@@ -25,45 +60,10 @@ export interface MentorsTables {
     Update: {
       id?: string
       profile_id?: string
-      type?: "intro" | "quick-advice" | "walkthrough"
+      type?: string
       duration?: number
       price?: number
       description?: string | null
-      created_at?: string
-      updated_at?: string
-    }
-  }
-  mentor_availability: {
-    Row: {
-      id: string
-      profile_id: string
-      day_of_week: number
-      start_time: string
-      end_time: string
-      timezone: string
-      is_available: boolean | null
-      created_at: string
-      updated_at: string
-    }
-    Insert: {
-      id?: string
-      profile_id: string
-      day_of_week: number
-      start_time: string
-      end_time: string
-      timezone: string
-      is_available?: boolean | null
-      created_at?: string
-      updated_at?: string
-    }
-    Update: {
-      id?: string
-      profile_id?: string
-      day_of_week?: number
-      start_time?: string
-      end_time?: string
-      timezone?: string
-      is_available?: boolean | null
       created_at?: string
       updated_at?: string
     }

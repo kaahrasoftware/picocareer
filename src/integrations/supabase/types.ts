@@ -152,6 +152,36 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          industry: string | null
+          location: string | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          location?: string | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          location?: string | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       majors: {
         Row: {
           average_gpa: number | null
@@ -394,7 +424,8 @@ export type Database = {
           academic_major: string | null
           avatar_url: string | null
           bio: string | null
-          company_name: string | null
+          career_id: string | null
+          company_id: string | null
           created_at: string
           email: string
           featured: boolean | null
@@ -406,8 +437,9 @@ export type Database = {
           keywords: string[] | null
           linkedin_url: string | null
           location: string | null
+          major_id: string | null
           position: string | null
-          school_name: string | null
+          school_id: string | null
           skills: string[] | null
           tools_used: string[] | null
           updated_at: string
@@ -420,7 +452,8 @@ export type Database = {
           academic_major?: string | null
           avatar_url?: string | null
           bio?: string | null
-          company_name?: string | null
+          career_id?: string | null
+          company_id?: string | null
           created_at?: string
           email: string
           featured?: boolean | null
@@ -432,8 +465,9 @@ export type Database = {
           keywords?: string[] | null
           linkedin_url?: string | null
           location?: string | null
+          major_id?: string | null
           position?: string | null
-          school_name?: string | null
+          school_id?: string | null
           skills?: string[] | null
           tools_used?: string[] | null
           updated_at?: string
@@ -446,7 +480,8 @@ export type Database = {
           academic_major?: string | null
           avatar_url?: string | null
           bio?: string | null
-          company_name?: string | null
+          career_id?: string | null
+          company_id?: string | null
           created_at?: string
           email?: string
           featured?: boolean | null
@@ -458,8 +493,9 @@ export type Database = {
           keywords?: string[] | null
           linkedin_url?: string | null
           location?: string | null
+          major_id?: string | null
           position?: string | null
-          school_name?: string | null
+          school_id?: string | null
           skills?: string[] | null
           tools_used?: string[] | null
           updated_at?: string
@@ -467,6 +503,65 @@ export type Database = {
           username?: string | null
           website_url?: string | null
           years_of_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          created_at: string
+          id: string
+          location: string | null
+          name: string
+          type: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          name: string
+          type?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          name?: string
+          type?: string | null
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

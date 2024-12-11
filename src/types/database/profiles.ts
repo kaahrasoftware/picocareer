@@ -12,8 +12,8 @@ export interface ProfilesTables {
       created_at: string
       updated_at: string
       featured: boolean | null
-      school_name: string | null
-      company_name: string | null
+      school_id: string | null
+      company_id: string | null
       position: string | null
       highest_degree: string | null
       academic_major: string | null
@@ -25,6 +25,8 @@ export interface ProfilesTables {
       github_url: string | null
       website_url: string | null
       years_of_experience: number | null
+      major_id: string | null
+      career_id: string | null
     }
     Insert: {
       id: string
@@ -36,8 +38,8 @@ export interface ProfilesTables {
       created_at?: string
       updated_at?: string
       featured?: boolean | null
-      school_name?: string | null
-      company_name?: string | null
+      school_id?: string | null
+      company_id?: string | null
       position?: string | null
       highest_degree?: string | null
       academic_major?: string | null
@@ -49,6 +51,8 @@ export interface ProfilesTables {
       github_url?: string | null
       website_url?: string | null
       years_of_experience?: number | null
+      major_id?: string | null
+      career_id?: string | null
     }
     Update: {
       id?: string
@@ -60,8 +64,8 @@ export interface ProfilesTables {
       created_at?: string
       updated_at?: string
       featured?: boolean | null
-      school_name?: string | null
-      company_name?: string | null
+      school_id?: string | null
+      company_id?: string | null
       position?: string | null
       highest_degree?: string | null
       academic_major?: string | null
@@ -73,6 +77,8 @@ export interface ProfilesTables {
       github_url?: string | null
       website_url?: string | null
       years_of_experience?: number | null
+      major_id?: string | null
+      career_id?: string | null
     }
   }
 }
