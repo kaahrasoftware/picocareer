@@ -40,34 +40,37 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     const shouldUseGrid = mentors.length > 4;
 
     return (
-      <div className={`overflow-x-auto scrollbar-hide ${shouldUseGrid ? 'p-4' : ''}`}>
-        <div className={`${shouldUseGrid 
-          ? 'grid grid-cols-3 gap-4 min-w-max' 
-          : 'flex gap-4 p-4 min-w-max'}`}
-        >
-          {mentors.map((mentor) => (
-            <Card 
-              key={mentor.id}
-              className="flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => setSelectedProfileId(mentor.id)}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={mentor.avatar_url} alt={mentor.title} />
-                  <AvatarFallback>{mentor.title[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{mentor.title}</h4>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {mentor.description}
-                  </p>
+      <div className="px-4">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Mentors</h3>
+        <div className={`overflow-x-auto scrollbar-hide ${shouldUseGrid ? 'w-full' : ''}`}>
+          <div className={`${shouldUseGrid 
+            ? 'grid grid-cols-3 gap-4' 
+            : 'flex gap-4'} ${!shouldUseGrid ? 'min-w-max' : ''}`}
+          >
+            {mentors.map((mentor) => (
+              <Card 
+                key={mentor.id}
+                className="flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => setSelectedProfileId(mentor.id)}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={mentor.avatar_url} alt={mentor.title} />
+                    <AvatarFallback>{mentor.title[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm truncate">{mentor.title}</h4>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {mentor.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <Badge variant="secondary" className="self-start">
-                Mentor
-              </Badge>
-            </Card>
-          ))}
+                <Badge variant="secondary" className="self-start">
+                  Mentor
+                </Badge>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -94,14 +97,20 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       return mentorResults;
     }
 
-    // If no mentor results, show the regular grouped results
+    // If no mentor results, show the regular grouped results with titles
     return Object.entries(groupedResults).map(([category, items]) => (
-      <SearchResultGroup
-        key={category}
-        category={category}
-        items={items}
-        onClose={onClose}
-      />
+      items.length > 0 && (
+        <div key={category} className="px-4 mb-4">
+          <h3 className="text-lg font-semibold mb-3 text-foreground">
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </h3>
+          <SearchResultGroup
+            category={category}
+            items={items}
+            onClose={onClose}
+          />
+        </div>
+      )
     ));
   };
 
