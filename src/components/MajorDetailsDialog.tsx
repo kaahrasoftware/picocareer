@@ -26,8 +26,8 @@ interface MajorDetailsDialogProps {
 export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[85vh] p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
           {major.fieldOfStudy && (
             <Badge variant="outline" className="w-fit">
@@ -36,8 +36,8 @@ export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDi
           )}
         </DialogHeader>
         
-        <ScrollArea className="h-[60vh]">
-          <div className="space-y-6">
+        <ScrollArea className="h-[calc(85vh-120px)] px-6">
+          <div className="space-y-6 pb-6">
             <img 
               src={major.imageUrl} 
               alt={major.title} 
