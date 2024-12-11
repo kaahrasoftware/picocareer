@@ -17,19 +17,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-y-auto max-h-[90vh]">
-        <div className="flex flex-col items-center p-4">
-          <img 
-            src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png" 
-            alt="Kahra Logo" 
-            className="w-16 h-16 mb-2"
-          />
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold mb-1">Welcome to Kahra!</h2>
-            <p className="text-muted-foreground text-sm">
-              We're the tool that helps you prepare for a career with the right education and skills.
-            </p>
-          </div>
-        </div>
         <Auth
           supabaseClient={supabase}
           appearance={{
