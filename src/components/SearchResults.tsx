@@ -11,7 +11,7 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
-  const { data, isLoading } = useSearchData(query);
+  const { data = [], isLoading } = useSearchData(query);
   
   // Early return if query is too short
   if (!query || query.length <= 2) {
