@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/integrations/supabase/types/user.types";
 import {
   Carousel,
   CarouselContent,
@@ -8,86 +11,52 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const hardcodedMentors = [
-  {
-    id: "1",
-    title: "Senior Software Engineer",
-    company: "Google",
-    image_url: "/placeholder.svg",
-    name: "John Smith",
-    username: "johnsmith",
-    bio: "10+ years of experience in software development",
-    position: "Tech Lead",
-    education: "MS Computer Science",
-    sessions_held: "50",
-    stats: {
-      mentees: "100",
-      connected: "4.9",
-      recordings: "45"
-    },
-    created_at: new Date().toISOString(),
-    user_type: "mentor",
-    top_rated: true,
-    skills: ["JavaScript", "React", "Node.js", "System Design"],
-    tools: ["VS Code", "Git", "Docker", "AWS"],
-    keywords: ["web development", "system design", "mentorship"],
-    password: "123456789",
-    email: "john.smith@example.com"
-  },
-  {
-    id: "2",
-    title: "Product Design Lead",
-    company: "Apple",
-    image_url: "/placeholder.svg",
-    name: "Sarah Johnson",
-    username: "sarahj",
-    bio: "Passionate about creating intuitive user experiences",
-    position: "Design Manager",
-    education: "BFA Design",
-    sessions_held: "35",
-    stats: {
-      mentees: "75",
-      connected: "4.8",
-      recordings: "30"
-    },
-    created_at: new Date().toISOString(),
-    user_type: "mentor",
-    top_rated: true,
-    skills: ["UI/UX", "Figma", "Design Systems", "User Research"],
-    tools: ["Sketch", "Adobe XD", "InVision", "Principle"],
-    keywords: ["product design", "user research", "prototyping"],
-    password: "123456789",
-    email: "sarah.johnson@example.com"
-  },
-  {
-    id: "3",
-    title: "Data Science Manager",
-    company: "Amazon",
-    image_url: "/placeholder.svg",
-    name: "Michael Chen",
-    username: "michaelc",
-    bio: "Helping others break into data science",
-    position: "Team Lead",
-    education: "PhD Statistics",
-    sessions_held: "40",
-    stats: {
-      mentees: "85",
-      connected: "4.7",
-      recordings: "35"
-    },
-    created_at: new Date().toISOString(),
-    user_type: "mentor",
-    top_rated: true,
-    skills: ["Python", "Machine Learning", "SQL", "Deep Learning"],
-    tools: ["Jupyter", "TensorFlow", "PyTorch", "Pandas"],
-    keywords: ["data analysis", "machine learning", "statistics"],
-    password: "123456789",
-    email: "michael.chen@example.com"
+const fetchTopRatedMentors = async () => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('user_type', 'mentor')
+    .eq('top_rated', true);
+
+  if (error) {
+    throw error;
   }
-];
+
+  return data as User[];
+};
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const { data: mentors, isLoading, error } = useQuery({
+    queryKey: ['topRatedMentors'],
+    queryFn: fetchTopRatedMentors,
+  });
+
+  if (isLoading) {
+    return (
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-6">Top Rated Mentors</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-background/50 animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    console.error('Error fetching top rated mentors:', error);
+    return (
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-6">Top Rated Mentors</h2>
+        <div className="text-center text-muted-foreground">
+          Failed to load top rated mentors. Please try again later.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-16">
@@ -108,7 +77,7 @@ export const TopRatedMentorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {hardcodedMentors.map((mentor) => (
+          {mentors?.map((mentor) => (
             <CarouselItem key={mentor.id} className="basis-1/3">
               <MentorCard {...mentor} />
             </CarouselItem>

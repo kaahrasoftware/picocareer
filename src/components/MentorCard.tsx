@@ -6,12 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
 import { User } from "@/integrations/supabase/types/user.types";
 
-type MentorCardProps = Omit<User, 'password'> & {
-  id: string;
-  created_at: string | null;
-  user_type: string | null;
-  top_rated: boolean | null;
-};
+type MentorCardProps = Omit<User, 'password'>;
 
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,14 +39,14 @@ export function MentorCard(props: MentorCardProps) {
               </div>
             </div>
             <Avatar className="h-12 w-12">
-              <AvatarImage src={props.image_url} alt={props.name} />
-              <AvatarFallback>{props.name[0]}</AvatarFallback>
+              <AvatarImage src={props.image_url} alt={props.full_name} />
+              <AvatarFallback>{props.full_name[0]}</AvatarFallback>
             </Avatar>
           </div>
 
           <div className="flex justify-between items-center mt-auto">
             <div>
-              <p className="text-sm font-medium">{props.name}</p>
+              <p className="text-sm font-medium">{props.full_name}</p>
               <p className="text-xs text-muted-foreground">@{props.username}</p>
             </div>
             <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
@@ -61,7 +56,7 @@ export function MentorCard(props: MentorCardProps) {
         </div>
       </Card>
       <MentorDetailsDialog 
-        mentor={props as User}
+        mentor={props}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
