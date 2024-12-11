@@ -6,6 +6,9 @@ import { MentorCard } from "@/components/MentorCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/integrations/supabase/types/user.types";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface MentorListDialogProps {
   isOpen: boolean;
@@ -17,9 +20,12 @@ export function MentorListDialog({ isOpen, onClose, mentors: initialMentors }: M
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const [selectedEducation, setSelectedEducation] = useState<string>("");
+  const [selectedSkill, setSelectedSkill] = useState<string>("");
+  const [minSessions, setMinSessions] = useState<string>("");
+  const [showTopRatedOnly, setShowTopRatedOnly] = useState(false);
 
   const { data: filteredMentors } = useQuery({
-    queryKey: ['mentors', searchQuery, selectedCompany, selectedEducation],
+    queryKey: ['mentors', searchQuery, selectedCompany, selectedEducation, selectedSkill, minSessions, showTopRatedOnly],
     queryFn: async () => {
       let query = supabase
         .from('users')
@@ -38,6 +44,18 @@ export function MentorListDialog({ isOpen, onClose, mentors: initialMentors }: M
         query = query.eq('education', selectedEducation);
       }
 
+      if (selectedSkill) {
+        query = query.contains('skills', [selectedSkill]);
+      }
+
+      if (minSessions) {
+        query = query.gte('sessions_held', minSessions);
+      }
+
+      if (showTopRatedOnly) {
+        query = query.eq('top_rated', true);
+      }
+
       const { data } = await query;
 
       if (!data) return [];
@@ -52,9 +70,10 @@ export function MentorListDialog({ isOpen, onClose, mentors: initialMentors }: M
     initialData: initialMentors,
   });
 
-  // Get unique companies and education levels for filters
+  // Get unique values for filters
   const companies = [...new Set(initialMentors.map(mentor => mentor.company))];
   const educationLevels = [...new Set(initialMentors.filter(mentor => mentor.education).map(mentor => mentor.education as string))];
+  const allSkills = [...new Set(initialMentors.flatMap(mentor => mentor.skills || []))];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -62,18 +81,29 @@ export function MentorListDialog({ isOpen, onClose, mentors: initialMentors }: M
         <div className="space-y-4 flex-1">
           <h2 className="text-2xl font-bold">Explore All Mentors</h2>
           
-          <div className="flex gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               placeholder="Search mentors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
+              className="w-full"
             />
             
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="top-rated"
+                checked={showTopRatedOnly}
+                onCheckedChange={setShowTopRatedOnly}
+              />
+              <Label htmlFor="top-rated">Top Rated Only</Label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select
               value={selectedCompany}
               onChange={(e) => setSelectedCompany(e.target.value)}
-              className="border rounded-md px-3 py-2 bg-background"
+              className="border rounded-md px-3 py-2 bg-background w-full"
             >
               <option value="">All Companies</option>
               {companies.map((company) => (
@@ -86,7 +116,7 @@ export function MentorListDialog({ isOpen, onClose, mentors: initialMentors }: M
             <select
               value={selectedEducation}
               onChange={(e) => setSelectedEducation(e.target.value)}
-              className="border rounded-md px-3 py-2 bg-background"
+              className="border rounded-md px-3 py-2 bg-background w-full"
             >
               <option value="">All Education Levels</option>
               {educationLevels.map((education) => (
@@ -95,6 +125,29 @@ export function MentorListDialog({ isOpen, onClose, mentors: initialMentors }: M
                 </option>
               ))}
             </select>
+
+            <select
+              value={selectedSkill}
+              onChange={(e) => setSelectedSkill(e.target.value)}
+              className="border rounded-md px-3 py-2 bg-background w-full"
+            >
+              <option value="">All Skills</option>
+              {allSkills.map((skill) => (
+                <option key={skill} value={skill}>
+                  {skill}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="w-full">
+            <Input
+              type="number"
+              placeholder="Minimum sessions held"
+              value={minSessions}
+              onChange={(e) => setMinSessions(e.target.value)}
+              className="w-full md:w-1/3"
+            />
           </div>
 
           <ScrollArea className="flex-1 max-h-[60vh]">

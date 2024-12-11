@@ -20,7 +20,12 @@ type MentorCardProps = Pick<User,
   'stats' | 
   'skills' | 
   'tools' | 
-  'keywords'
+  'keywords' |
+  'created_at' |
+  'user_type' |
+  'top_rated' |
+  'email' |
+  'password'
 >;
 
 export function MentorCard(props: MentorCardProps) {
