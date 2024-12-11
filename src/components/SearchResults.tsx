@@ -11,10 +11,11 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data: results = [], isLoading } = useSearchData(query);
 
+  // Ensure we have arrays even if the filter returns undefined
   const groupedResults = {
-    careers: results.filter(r => r.type === 'career') || [],
-    majors: results.filter(r => r.type === 'major') || [],
-    mentors: results.filter(r => r.type === 'mentor') || [],
+    careers: results.filter(r => r?.type === 'career') || [],
+    majors: results.filter(r => r?.type === 'major') || [],
+    mentors: results.filter(r => r?.type === 'mentor') || [],
   };
 
   const getIcon = (type: string) => {

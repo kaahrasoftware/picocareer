@@ -57,6 +57,6 @@ export const useSearchData = (query: string) => {
       return results;
     },
     enabled: query.length > 0,
-    initialData: [] // Provide initial empty array
+    initialData: [] // Ensure we always have an array, even when the query hasn't run yet
   });
 };
