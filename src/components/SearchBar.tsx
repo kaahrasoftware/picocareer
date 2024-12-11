@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchResults } from "./SearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -7,7 +7,6 @@ interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 export const SearchBar = ({ className, ...props }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   return (
@@ -28,7 +27,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
         </Button>
       </div>
       
-      {searchQuery.length > 2 && (
+      {searchQuery && searchQuery.length > 2 && (
         <SearchResults query={debouncedSearch} onClose={() => setSearchQuery("")} />
       )}
     </div>
