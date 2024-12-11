@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, Star, MessageSquare, Calendar, Bookmark, Building2, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
+import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 
 interface MentorDetailsDialogProps {
   mentor: {
@@ -35,6 +36,7 @@ interface MentorDetailsDialogProps {
 
 export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetailsDialogProps) {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   // Helper function to validate UUID format
   function isValidUUID(uuid: string) {
@@ -122,25 +124,29 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <Button className="w-full" variant="default">
-                <MessageSquare className="mr-2" />
-                Request Chat
-              </Button>
-              <Button 
-                className="w-full" 
-                variant="secondary"
-                onClick={() => setBookingDialogOpen(true)}
-                disabled={!bookingMentor} // Disable if we don't have a valid mentor
-              >
-                <Calendar className="mr-2" />
-                Book Session
-              </Button>
-              <Button className="w-full" variant="outline">
-                <BookOpen className="mr-2" />
-                View Profile
-              </Button>
-            </div>
+          <div className="grid grid-cols-3 gap-4">
+            <Button className="w-full" variant="default">
+              <MessageSquare className="mr-2" />
+              Request Chat
+            </Button>
+            <Button 
+              className="w-full" 
+              variant="secondary"
+              onClick={() => setBookingDialogOpen(true)}
+              disabled={!bookingMentor}
+            >
+              <Calendar className="mr-2" />
+              Book Session
+            </Button>
+            <Button 
+              className="w-full" 
+              variant="outline"
+              onClick={() => mentor.id && setProfileDialogOpen(true)}
+              disabled={!mentor.id}
+            >
+              <BookOpen className="mr-2" />
+              View Profile
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -150,6 +156,14 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
           mentor={bookingMentor}
           open={bookingDialogOpen}
           onOpenChange={setBookingDialogOpen}
+        />
+      )}
+
+      {mentor.id && (
+        <ProfileDetailsDialog
+          userId={mentor.id}
+          open={profileDialogOpen}
+          onOpenChange={setProfileDialogOpen}
         />
       )}
     </>
