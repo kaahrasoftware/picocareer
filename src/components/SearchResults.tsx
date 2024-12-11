@@ -78,27 +78,42 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   };
 
   const renderCareerCards = (careers: SearchResult[]) => {
+    if (!careers.length) return (
+      <div className="px-4 mt-6">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
+        <p className="text-sm text-muted-foreground">No matching careers found</p>
+      </div>
+    );
+
+    const shouldUseGrid = careers.length > 4;
+
     return (
       <div className="px-4 mt-6">
         <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
-        {careers.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
+        <div className="w-full">
+          <div className={`${shouldUseGrid 
+            ? 'grid grid-cols-3 gap-4 place-items-center' 
+            : 'flex gap-4 justify-center'}`}
+          >
             {careers.map((career) => (
               <Card 
                 key={career.id}
-                className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => setSelectedCareerId(career.id)}
               >
-                <h4 className="font-medium text-sm mb-1">{career.title}</h4>
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {career.description}
-                </p>
+                <div className="flex-1 min-w-0 mb-3">
+                  <h4 className="font-medium text-sm mb-1">{career.title}</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {career.description}
+                  </p>
+                </div>
+                <Badge variant="secondary" className="self-start">
+                  Career
+                </Badge>
               </Card>
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No matching careers found</p>
-        )}
+        </div>
       </div>
     );
   };
