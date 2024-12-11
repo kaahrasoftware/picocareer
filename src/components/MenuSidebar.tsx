@@ -1,5 +1,5 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, BookOpen, LogOut } from "lucide-react";
+import { Home, BookOpen, Users, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
@@ -21,6 +21,7 @@ export function MenuSidebar() {
   const navigationItems = [
     { icon: Home, label: "Home", href: "/", active: window.location.pathname === "/" },
     { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
+    { icon: Users, label: "Community", href: "/community", active: window.location.pathname === "/community" },
   ];
 
   useEffect(() => {

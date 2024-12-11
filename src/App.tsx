@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
+import Community from "./pages/Community";
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/community" element={<Community />} />
           </Routes>
         </BrowserRouter>
         <Toaster />
