@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { MajorCard } from "@/components/MajorCard";
+import { MajorListDialog } from "@/components/MajorListDialog";
 import {
   Carousel,
   CarouselContent,
@@ -16,6 +18,8 @@ const featuredMajors = [
     relatedCareers: ["Data Scientist", "Business Analyst", "Research Statistician"],
     requiredCourses: ["Calculus", "Linear Algebra", "Probability Theory", "Statistical Methods"],
     averageGPA: "3.4",
+    fieldOfStudy: "stem",
+    degreeLevel: "bachelors"
   },
   {
     title: "Business Administration",
@@ -25,6 +29,8 @@ const featuredMajors = [
     relatedCareers: ["Business Manager", "Management Consultant", "Entrepreneur"],
     requiredCourses: ["Economics", "Marketing", "Finance", "Business Ethics"],
     averageGPA: "3.2",
+    fieldOfStudy: "business",
+    degreeLevel: "bachelors"
   },
   {
     title: "Nursing",
@@ -34,6 +40,8 @@ const featuredMajors = [
     relatedCareers: ["Registered Nurse", "Nurse Practitioner", "Clinical Specialist"],
     requiredCourses: ["Anatomy", "Pharmacology", "Patient Care", "Medical Ethics"],
     averageGPA: "3.5",
+    fieldOfStudy: "stem",
+    degreeLevel: "bachelors"
   },
   {
     title: "Computer Science",
@@ -43,15 +51,20 @@ const featuredMajors = [
     relatedCareers: ["Software Engineer", "Data Scientist", "Systems Architect"],
     requiredCourses: ["Programming", "Data Structures", "Algorithms", "Computer Architecture"],
     averageGPA: "3.3",
+    fieldOfStudy: "stem",
+    degreeLevel: "bachelors"
   },
 ];
 
 export const FeaturedMajorsSection = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Featured Majors</h2>
         <button 
+          onClick={() => setIsDialogOpen(true)}
           className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
         >
           View all
@@ -74,6 +87,11 @@ export const FeaturedMajorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
+      <MajorListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        majors={featuredMajors}
+      />
     </section>
   );
 };
