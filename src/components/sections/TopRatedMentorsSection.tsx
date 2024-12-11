@@ -25,9 +25,14 @@ const hardcodedMentors = [
       connected: "4.9",
       recordings: "45"
     },
-    skills: ["JavaScript", "React", "Node.js"],
-    tools: ["VS Code", "Git", "Docker"],
-    keywords: ["web development", "system design", "mentorship"]
+    created_at: new Date().toISOString(),
+    user_type: "mentor",
+    top_rated: true,
+    skills: ["JavaScript", "React", "Node.js", "System Design"],
+    tools: ["VS Code", "Git", "Docker", "AWS"],
+    keywords: ["web development", "system design", "mentorship"],
+    password: "123456789",
+    email: "john.smith@example.com"
   },
   {
     id: "2",
@@ -45,9 +50,14 @@ const hardcodedMentors = [
       connected: "4.8",
       recordings: "30"
     },
-    skills: ["UI/UX", "Figma", "Design Systems"],
-    tools: ["Sketch", "Adobe XD", "InVision"],
-    keywords: ["product design", "user research", "prototyping"]
+    created_at: new Date().toISOString(),
+    user_type: "mentor",
+    top_rated: true,
+    skills: ["UI/UX", "Figma", "Design Systems", "User Research"],
+    tools: ["Sketch", "Adobe XD", "InVision", "Principle"],
+    keywords: ["product design", "user research", "prototyping"],
+    password: "123456789",
+    email: "sarah.johnson@example.com"
   },
   {
     id: "3",
@@ -65,9 +75,14 @@ const hardcodedMentors = [
       connected: "4.7",
       recordings: "35"
     },
-    skills: ["Python", "Machine Learning", "SQL"],
-    tools: ["Jupyter", "TensorFlow", "PyTorch"],
-    keywords: ["data analysis", "machine learning", "statistics"]
+    created_at: new Date().toISOString(),
+    user_type: "mentor",
+    top_rated: true,
+    skills: ["Python", "Machine Learning", "SQL", "Deep Learning"],
+    tools: ["Jupyter", "TensorFlow", "PyTorch", "Pandas"],
+    keywords: ["data analysis", "machine learning", "statistics"],
+    password: "123456789",
+    email: "michael.chen@example.com"
   }
 ];
 
