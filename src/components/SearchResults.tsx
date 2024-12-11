@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { GraduationCap, Briefcase, Users, BookOpen } from "lucide-react";
 import { useSearchData } from "@/hooks/useSearchData";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import type { SearchResult } from "@/hooks/useSearchData";
 
 interface SearchResultsProps {
   query: string;
@@ -17,7 +18,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   }
 
   // Initialize empty arrays for each category
-  const groupedResults = {
+  const groupedResults: Record<string, SearchResult[]> = {
     careers: [],
     majors: [],
     mentors: [],
@@ -70,7 +71,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
-            items.length > 0 ? (
+            items && items.length > 0 ? (
               <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
                 {items.map((result) => (
                   <CommandItem

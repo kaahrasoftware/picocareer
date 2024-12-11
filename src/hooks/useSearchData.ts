@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SearchResult } from "@/components/SearchResults";
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  type: 'career' | 'major' | 'mentor' | 'blog';
+  description?: string;
+  avatar_url?: string;
+}
 
 export const useSearchData = (query: string) => {
   return useQuery({
