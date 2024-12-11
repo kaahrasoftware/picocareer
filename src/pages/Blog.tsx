@@ -10,6 +10,7 @@ import { useState } from "react";
 import { BlogFilters } from "@/components/blog/BlogFilters";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogPagination } from "@/components/blog/BlogPagination";
+import { GenerateContentButton } from "@/components/blog/GenerateContentButton";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -76,7 +77,10 @@ const Blog = () => {
           <div className="max-w-[1400px] mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">Blog Posts</h1>
-              <ThemeToggle />
+              <div className="flex items-center gap-4">
+                <GenerateContentButton />
+                <ThemeToggle />
+              </div>
             </div>
 
             <BlogFilters
