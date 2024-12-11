@@ -25,22 +25,11 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     blogs: []
   };
 
-  // Only process data if it exists
-  if (data) {
+  // Only process data if it exists and is an array
+  if (Array.isArray(data)) {
     data.forEach(item => {
-      switch (item.type) {
-        case 'career':
-          groupedResults.careers.push(item);
-          break;
-        case 'major':
-          groupedResults.majors.push(item);
-          break;
-        case 'mentor':
-          groupedResults.mentors.push(item);
-          break;
-        case 'blog':
-          groupedResults.blogs.push(item);
-          break;
+      if (item && groupedResults[`${item.type}s`]) {
+        groupedResults[`${item.type}s`].push(item);
       }
     });
   }
@@ -60,14 +49,16 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
+  const hasResults = Object.values(groupedResults).some(group => group.length > 0);
+
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Command className="border-none bg-transparent">
-        <CommandInput placeholder="Type to search..." value={query} />
+        <CommandInput placeholder="Type to search..." value={query} readOnly />
         
         {isLoading ? (
           <CommandEmpty>Searching...</CommandEmpty>
-        ) : (!data || data.length === 0) ? (
+        ) : !hasResults ? (
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
