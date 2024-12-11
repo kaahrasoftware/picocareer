@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
-import { Career } from "@/integrations/supabase/types/career.types";
+import { Career, careerToCareerDetails } from "@/types/career";
 
 export function CareerCard(props: Career) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const careerDetails = careerToCareerDetails(props);
 
   return (
     <>
@@ -37,7 +38,7 @@ export function CareerCard(props: Career) {
         </div>
       </Card>
       <CareerDetailsDialog 
-        career={props}
+        career={careerDetails}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />

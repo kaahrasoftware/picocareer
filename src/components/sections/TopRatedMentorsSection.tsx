@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { parseStats } from "@/types/stats";
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -30,9 +31,7 @@ export const TopRatedMentorsSection = () => {
       
       return data?.map(mentor => ({
         ...mentor,
-        stats: typeof mentor.stats === 'string' 
-          ? JSON.parse(mentor.stats)
-          : mentor.stats
+        stats: parseStats(mentor.stats)
       })) || [];
     },
   });
@@ -73,7 +72,7 @@ export const TopRatedMentorsSection = () => {
         <CarouselContent>
           {topRatedMentors?.map((mentor) => (
             <CarouselItem key={mentor.id} className="basis-1/3">
-              <MentorCard {...mentor} />
+              <MentorCard mentor={mentor} />
             </CarouselItem>
           ))}
         </CarouselContent>

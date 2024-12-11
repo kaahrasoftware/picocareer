@@ -1,5 +1,5 @@
 export interface Career {
-  id: string;
+  id: number;
   title: string;
   description: string;
   users: string;
@@ -14,16 +14,26 @@ export interface Career {
   featured?: boolean;
 }
 
-export interface CareerDetails extends Career {
+export interface CareerDetails {
+  id: number;
+  title: string;
+  description: string;
+  users: string;
+  salary: string;
   imageUrl: string;
   relatedMajors: string[];
   relatedCareers: string[];
+  skills: string[];
 }
 
-// Helper function to convert Career to CareerDetails
 export const careerToCareerDetails = (career: Career): CareerDetails => ({
-  ...career,
+  id: career.id,
+  title: career.title,
+  description: career.description,
+  users: career.users,
+  salary: career.salary,
   imageUrl: career.image_url,
   relatedMajors: career.related_majors,
   relatedCareers: career.related_careers,
+  skills: career.skills
 });
