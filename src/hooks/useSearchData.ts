@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface SearchResult {
   id: string;
   title: string;
-  type: 'career' | 'major' | 'mentor' | 'blog';
   description?: string;
+  type: 'career' | 'major' | 'mentor' | 'blog';
   avatar_url?: string;
   salary_range?: string;
   average_salary?: number;
@@ -67,6 +67,7 @@ export const useSearchData = (query: string) => {
             `description.ilike.%${query}%,` +
             `field_of_study.ilike.%${query}%,` +
             `required_courses.cs.{${query}},` +
+            `required_courses.cs.{%${query}%},` + // Added to search for partial matches in required_courses
             `keywords.cs.{${query}}`)
         .limit(3);
 
