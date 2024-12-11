@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -121,41 +121,43 @@ export function CommunityFilters({
         </Select>
 
         <Command className="rounded-lg border shadow-md">
-          <CommandGroup className="h-full overflow-auto">
-            <div className="flex flex-wrap gap-1 p-2">
-              {selectedSkills.map((skill) => (
-                <Badge
+          <CommandList>
+            <CommandGroup>
+              <div className="flex flex-wrap gap-1 p-2">
+                {selectedSkills.map((skill) => (
+                  <Badge
+                    key={skill}
+                    variant="secondary"
+                    className="mr-1 mb-1 cursor-pointer"
+                    onClick={() => onSkillsChange(selectedSkills.filter(s => s !== skill))}
+                  >
+                    {skill} ×
+                  </Badge>
+                ))}
+              </div>
+              {allSkills.map((skill) => (
+                <CommandItem
                   key={skill}
-                  variant="secondary"
-                  className="mr-1 mb-1 cursor-pointer"
-                  onClick={() => onSkillsChange(selectedSkills.filter(s => s !== skill))}
+                  onSelect={() => {
+                    if (selectedSkills.includes(skill)) {
+                      onSkillsChange(selectedSkills.filter(s => s !== skill));
+                    } else {
+                      onSkillsChange([...selectedSkills, skill]);
+                    }
+                  }}
+                  className="cursor-pointer"
                 >
-                  {skill} ×
-                </Badge>
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {skill}
+                </CommandItem>
               ))}
-            </div>
-            {allSkills.map((skill) => (
-              <CommandItem
-                key={skill}
-                onSelect={() => {
-                  if (selectedSkills.includes(skill)) {
-                    onSkillsChange(selectedSkills.filter(s => s !== skill));
-                  } else {
-                    onSkillsChange([...selectedSkills, skill]);
-                  }
-                }}
-                className="cursor-pointer"
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {skill}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+            </CommandGroup>
+          </CommandList>
         </Command>
       </div>
     </div>
