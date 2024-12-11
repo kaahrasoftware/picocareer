@@ -24,7 +24,7 @@ export const TopRatedMentorsSection = () => {
         <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
+          className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
         </button>
@@ -38,15 +38,8 @@ export const TopRatedMentorsSection = () => {
       >
         <CarouselContent>
           {mentors.map((mentor) => (
-            <CarouselItem key={mentor.name} className="basis-1/3">
-              <MentorCard 
-                title={mentor.title}
-                company={mentor.company}
-                imageUrl={mentor.imageUrl}
-                name={mentor.name}
-                stats={mentor.stats}
-                username={mentor.username}
-              />
+            <CarouselItem key={mentor.username} className="basis-1/3">
+              <MentorCard {...mentor} />
             </CarouselItem>
           ))}
         </CarouselContent>

@@ -24,7 +24,7 @@ export const FeaturedMajorsSection = () => {
         <h2 className="text-2xl font-bold">Featured Majors</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
+          className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
         </button>
@@ -39,15 +39,7 @@ export const FeaturedMajorsSection = () => {
         <CarouselContent>
           {majors.map((major) => (
             <CarouselItem key={major.title} className="basis-1/3">
-              <MajorCard 
-                title={major.title}
-                description={major.description}
-                users={major.users}
-                imageUrl={major.imageUrl}
-                relatedCareers={major.relatedCareers}
-                requiredCourses={major.requiredCourses}
-                averageGPA={major.averageGPA}
-              />
+              <MajorCard {...major} />
             </CarouselItem>
           ))}
         </CarouselContent>
