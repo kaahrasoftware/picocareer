@@ -11,34 +11,76 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          academic_major: string | null
           avatar_url: string | null
+          bio: string | null
+          company_name: string | null
           created_at: string
           email: string
+          featured: boolean | null
           full_name: string | null
+          github_url: string | null
+          highest_degree: string | null
           id: string
+          keywords: string[] | null
+          linkedin_url: string | null
+          position: string | null
+          school_name: string | null
+          skills: string[] | null
+          tools_used: string[] | null
           updated_at: string
           user_type: string | null
           username: string | null
+          website_url: string | null
+          years_of_experience: number | null
         }
         Insert: {
+          academic_major?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
           created_at?: string
           email: string
+          featured?: boolean | null
           full_name?: string | null
+          github_url?: string | null
+          highest_degree?: string | null
           id: string
+          keywords?: string[] | null
+          linkedin_url?: string | null
+          position?: string | null
+          school_name?: string | null
+          skills?: string[] | null
+          tools_used?: string[] | null
           updated_at?: string
           user_type?: string | null
           username?: string | null
+          website_url?: string | null
+          years_of_experience?: number | null
         }
         Update: {
+          academic_major?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
           created_at?: string
           email?: string
+          featured?: boolean | null
           full_name?: string | null
+          github_url?: string | null
+          highest_degree?: string | null
           id?: string
+          keywords?: string[] | null
+          linkedin_url?: string | null
+          position?: string | null
+          school_name?: string | null
+          skills?: string[] | null
+          tools_used?: string[] | null
           updated_at?: string
           user_type?: string | null
           username?: string | null
+          website_url?: string | null
+          years_of_experience?: number | null
         }
         Relationships: []
       }
