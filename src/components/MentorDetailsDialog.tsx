@@ -36,12 +36,18 @@ interface MentorDetailsDialogProps {
 export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetailsDialogProps) {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
-  // Ensure we have a valid mentor object for BookSessionDialog
-  const bookingMentor = {
-    id: mentor.id || '', // Provide a default empty string if id is undefined
+  // Helper function to validate UUID format
+  function isValidUUID(uuid: string) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  }
+
+  // Only create bookingMentor if we have a valid mentor ID
+  const bookingMentor = mentor.id && isValidUUID(mentor.id) ? {
+    id: mentor.id,
     name: mentor.name,
     imageUrl: mentor.imageUrl
-  };
+  } : null;
 
   return (
     <>
@@ -125,7 +131,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
                 className="w-full" 
                 variant="secondary"
                 onClick={() => setBookingDialogOpen(true)}
-                disabled={!mentor.id} // Disable if no mentor id is available
+                disabled={!bookingMentor} // Disable if we don't have a valid mentor
               >
                 <Calendar className="mr-2" />
                 Book Session
@@ -139,7 +145,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
         </DialogContent>
       </Dialog>
 
-      {mentor.id && (
+      {bookingMentor && (
         <BookSessionDialog
           mentor={bookingMentor}
           open={bookingDialogOpen}
