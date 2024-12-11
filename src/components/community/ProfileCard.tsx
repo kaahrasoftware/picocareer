@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Building2, GraduationCap } from "lucide-react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface ProfileCardProps {
   profile: {
