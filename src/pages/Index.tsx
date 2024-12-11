@@ -3,8 +3,13 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEffect } from "react";
+import Blog from "@/pages/Blog";
+import { useLocation } from "react-router-dom";
 
 const Index = () => {
+  const location = useLocation();
+  const showBlog = location.hash === "#blog";
+
   const companyLinks = [
     { label: "About Us", href: "#" },
     { label: "Contact Us", href: "#" },
@@ -13,7 +18,7 @@ const Index = () => {
   ];
 
   const otherLinks = [
-    { label: "Blog", href: "/blog" },
+    { label: "Blog", href: "#blog" },
     { label: "How Kahra works", href: "#" },
   ];
 
@@ -37,7 +42,7 @@ const Index = () => {
         <main className="flex-1 p-8 max-w-[1600px] mx-auto">
           <ThemeToggle />
           <div className="max-w-[1400px] mx-auto">
-            <HeroSection />
+            {showBlog ? <Blog /> : <HeroSection />}
           </div>
           
           <footer className="mt-20 border-t border-border pt-6">

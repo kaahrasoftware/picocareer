@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { useLocation } from "react-router-dom";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -15,10 +16,11 @@ export function MenuSidebar() {
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const location = useLocation();
   
   const navigationItems = [
-    { icon: Home, label: "Home", href: "/", active: true },
-    { icon: BookOpen, label: "Blog", href: "/blog" },
+    { icon: Home, label: "Home", href: "/", active: location.hash === "" },
+    { icon: BookOpen, label: "Blog", href: "#blog", active: location.hash === "#blog" },
   ];
 
   useEffect(() => {
