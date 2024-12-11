@@ -401,12 +401,14 @@ export type Database = {
           created_at: string
           email: string
           featured: boolean | null
+          fields_of_interest: string[] | null
           full_name: string | null
           github_url: string | null
           highest_degree: string | null
           id: string
           keywords: string[] | null
           linkedin_url: string | null
+          location: string | null
           position: string | null
           school_name: string | null
           skills: string[] | null
@@ -425,12 +427,14 @@ export type Database = {
           created_at?: string
           email: string
           featured?: boolean | null
+          fields_of_interest?: string[] | null
           full_name?: string | null
           github_url?: string | null
           highest_degree?: string | null
           id: string
           keywords?: string[] | null
           linkedin_url?: string | null
+          location?: string | null
           position?: string | null
           school_name?: string | null
           skills?: string[] | null
@@ -449,12 +453,14 @@ export type Database = {
           created_at?: string
           email?: string
           featured?: boolean | null
+          fields_of_interest?: string[] | null
           full_name?: string | null
           github_url?: string | null
           highest_degree?: string | null
           id?: string
           keywords?: string[] | null
           linkedin_url?: string | null
+          location?: string | null
           position?: string | null
           school_name?: string | null
           skills?: string[] | null

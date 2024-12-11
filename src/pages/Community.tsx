@@ -5,10 +5,22 @@ import { SearchBar } from "@/components/SearchBar";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [userTypeFilter, setUserTypeFilter] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState<string | null>(null);
+  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
+  const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
+  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
 
   const { data: profiles, isLoading } = useQuery({
     queryKey: ['profiles'],
@@ -23,21 +35,32 @@ export default function Community() {
     },
   });
 
+  // Extract unique values for filters
+  const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
+  const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
+  const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
+  const fields = Array.from(new Set(profiles?.flatMap(p => p.fields_of_interest || []) || [])).sort();
+  const allSkills = Array.from(new Set(profiles?.flatMap(p => p.skills || []) || [])).sort();
+
   const filteredProfiles = profiles?.filter(profile => {
     const matchesSearch = searchQuery === "" || 
       profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.academic_major?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.position?.toLowerCase().includes(searchQuery.toLowerCase());
+      profile.skills?.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      profile.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.school_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.location?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesSkill = !selectedSkill || 
-      profile.skills?.includes(selectedSkill);
+    const matchesSkill = !selectedSkill || profile.skills?.includes(selectedSkill);
+    const matchesUserType = !userTypeFilter || profile.user_type === userTypeFilter;
+    const matchesLocation = !locationFilter || profile.location === locationFilter;
+    const matchesCompany = !companyFilter || profile.company_name === companyFilter;
+    const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
+    const matchesField = !fieldFilter || profile.fields_of_interest?.includes(fieldFilter);
 
-    return matchesSearch && matchesSkill;
+    return matchesSearch && matchesSkill && matchesUserType && 
+           matchesLocation && matchesCompany && matchesSchool && matchesField;
   });
-
-  const allSkills = Array.from(new Set(
-    profiles?.flatMap(p => p.skills || []) || []
-  )).sort();
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
@@ -47,15 +70,78 @@ export default function Community() {
           Connect with students, mentors, and professionals in your field of interest.
         </p>
         
-        <div className="flex flex-col gap-4 md:flex-row md:items-center mb-6">
+        <div className="space-y-4">
           <div className="flex-1">
             <SearchBar 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, major, or position..."
+              placeholder="Search by name, skills, company, position, school, or location..."
               className="max-w-xl"
             />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <Select value={userTypeFilter || ''} onValueChange={(value) => setUserTypeFilter(value || null)}>
+              <SelectTrigger>
+                <SelectValue placeholder="User Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="mentor">Mentor</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={locationFilter || ''} onValueChange={(value) => setLocationFilter(value || null)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Locations</SelectItem>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location}>{location}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={companyFilter || ''} onValueChange={(value) => setCompanyFilter(value || null)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Companies</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company} value={company}>{company}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={schoolFilter || ''} onValueChange={(value) => setSchoolFilter(value || null)}>
+              <SelectTrigger>
+                <SelectValue placeholder="School" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Schools</SelectItem>
+                {schools.map((school) => (
+                  <SelectItem key={school} value={school}>{school}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={fieldFilter || ''} onValueChange={(value) => setFieldFilter(value || null)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Field of Interest" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Fields</SelectItem>
+                {fields.map((field) => (
+                  <SelectItem key={field} value={field}>{field}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             {allSkills.map((skill) => (
               <Badge
