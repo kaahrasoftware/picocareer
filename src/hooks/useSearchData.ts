@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface SearchResult {
   id: string;
   title: string;
-  type: 'career' | 'major' | 'mentor';
+  type: 'career' | 'major' | 'mentor' | 'blog';
   description?: string;
 }
 
@@ -12,57 +12,62 @@ export const useSearchData = (query: string) => {
   return useQuery({
     queryKey: ['search', query],
     queryFn: async (): Promise<SearchResult[]> => {
-      if (!query) return [];
+      if (!query || query.length <= 2) return [];
 
-      try {
-        const [careersResponse, majorsResponse, mentorsResponse] = await Promise.all([
-          supabase
-            .from('careers')
-            .select('id, title, description')
-            .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query}}, industry.ilike.%${query}%`)
-            .limit(5),
-          supabase
-            .from('majors')
-            .select('id, title, description')
-            .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query}}`)
-            .limit(5),
-          supabase
-            .from('profiles')
-            .select('id, full_name, position, company_name, highest_degree, skills, tools_used')
-            .eq('user_type', 'mentor')
-            .or(`full_name.ilike.%${query}%, position.ilike.%${query}%, company_name.ilike.%${query}%, highest_degree.ilike.%${query}%, skills.cs.{${query}}, tools_used.cs.{${query}}`)
-            .limit(5)
-        ]);
+      const [careersResponse, majorsResponse, mentorsResponse, blogsResponse] = await Promise.all([
+        supabase
+          .from('careers')
+          .select('id, title, description')
+          .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query}}, industry.ilike.%${query}%`)
+          .limit(3),
+        supabase
+          .from('majors')
+          .select('id, title, description')
+          .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query}}`)
+          .limit(3),
+        supabase
+          .from('profiles')
+          .select('id, full_name, position, company_name')
+          .eq('user_type', 'mentor')
+          .or(`full_name.ilike.%${query}%, position.ilike.%${query}%, company_name.ilike.%${query}%`)
+          .limit(3),
+        supabase
+          .from('blogs')
+          .select('id, title, summary')
+          .or(`title.ilike.%${query}%, summary.ilike.%${query}%`)
+          .limit(3)
+      ]);
 
-        const results: SearchResult[] = [
-          ...(careersResponse.data?.map(career => ({
-            id: career.id,
-            title: career.title,
-            description: career.description,
-            type: 'career' as const
-          })) ?? []),
-          ...(majorsResponse.data?.map(major => ({
-            id: major.id,
-            title: major.title,
-            description: major.description,
-            type: 'major' as const
-          })) ?? []),
-          ...(mentorsResponse.data?.map(mentor => ({
-            id: mentor.id,
-            title: mentor.position || 'Mentor',
-            description: `${mentor.full_name} at ${mentor.company_name}`,
-            type: 'mentor' as const
-          })) ?? [])
-        ];
+      const results: SearchResult[] = [
+        ...(careersResponse.data?.map(career => ({
+          id: career.id,
+          title: career.title,
+          description: career.description,
+          type: 'career' as const
+        })) ?? []),
+        ...(majorsResponse.data?.map(major => ({
+          id: major.id,
+          title: major.title,
+          description: major.description,
+          type: 'major' as const
+        })) ?? []),
+        ...(mentorsResponse.data?.map(mentor => ({
+          id: mentor.id,
+          title: mentor.position || 'Mentor',
+          description: `${mentor.full_name} at ${mentor.company_name}`,
+          type: 'mentor' as const
+        })) ?? []),
+        ...(blogsResponse.data?.map(blog => ({
+          id: blog.id,
+          title: blog.title,
+          description: blog.summary,
+          type: 'blog' as const
+        })) ?? [])
+      ];
 
-        return results;
-      } catch (error) {
-        console.error('Search error:', error);
-        return [];
-      }
+      return results;
     },
-    enabled: query.length > 0,
-    initialData: [], // Always return an array
-    staleTime: 1000 // Prevent too frequent refetches
+    enabled: query.length > 2,
+    staleTime: 1000 * 60 // Cache for 1 minute
   });
 };

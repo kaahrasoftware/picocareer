@@ -1,6 +1,6 @@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Card } from "@/components/ui/card";
-import { GraduationCap, Briefcase, Users } from "lucide-react";
+import { GraduationCap, Briefcase, Users, BookOpen } from "lucide-react";
 import { useSearchData } from "@/hooks/useSearchData";
 
 interface SearchResultsProps {
@@ -11,16 +11,15 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data, isLoading } = useSearchData(query);
   
-  // Don't process data if query is empty
-  if (!query) {
+  if (!query || query.length <= 2) {
     return null;
   }
 
-  // Initialize empty arrays for each category with proper type checking
   const groupedResults = {
-    careers: Array.isArray(data) ? data.filter(item => item?.type === 'career') : [],
-    majors: Array.isArray(data) ? data.filter(item => item?.type === 'major') : [],
-    mentors: Array.isArray(data) ? data.filter(item => item?.type === 'mentor') : []
+    careers: data?.filter(item => item.type === 'career') ?? [],
+    majors: data?.filter(item => item.type === 'major') ?? [],
+    mentors: data?.filter(item => item.type === 'mentor') ?? [],
+    blogs: data?.filter(item => item.type === 'blog') ?? []
   };
 
   const getIcon = (type: string) => {
@@ -31,6 +30,8 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         return <GraduationCap className="w-4 h-4 mr-2" />;
       case 'mentor':
         return <Users className="w-4 h-4 mr-2" />;
+      case 'blog':
+        return <BookOpen className="w-4 h-4 mr-2" />;
       default:
         return null;
     }
@@ -43,7 +44,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         
         {isLoading ? (
           <CommandEmpty>Searching...</CommandEmpty>
-        ) : (!Array.isArray(data) || data.length === 0) ? (
+        ) : (!data || data.length === 0) ? (
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
