@@ -11,49 +11,65 @@ import {
 
 const featuredMajors = [
   {
-    title: "Statistics",
-    description: "Statistics involves analyzing data to understand patterns, make predictions, and inform decision-making.",
-    users: "234.6K",
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
-    relatedCareers: ["Data Scientist", "Business Analyst", "Research Statistician"],
-    requiredCourses: ["Calculus", "Linear Algebra", "Probability Theory", "Statistical Methods"],
-    averageGPA: "3.4",
-    fieldOfStudy: "stem",
-    degreeLevel: "bachelors"
-  },
-  {
-    title: "Business Administration",
-    description: "Managing operations, finances, and strategies for organizational success and growth in commerce.",
-    users: "56.7M",
-    imageUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40",
-    relatedCareers: ["Business Manager", "Management Consultant", "Entrepreneur"],
-    requiredCourses: ["Economics", "Marketing", "Finance", "Business Ethics"],
-    averageGPA: "3.2",
-    fieldOfStudy: "business",
-    degreeLevel: "bachelors"
-  },
-  {
-    title: "Nursing",
-    description: "Learn to provide essential healthcare services and support patient well-being through medical expertise.",
-    users: "56.7M",
-    imageUrl: "https://images.unsplash.com/photo-1584982751601-97dcc096659c",
-    relatedCareers: ["Registered Nurse", "Nurse Practitioner", "Clinical Specialist"],
-    requiredCourses: ["Anatomy", "Pharmacology", "Patient Care", "Medical Ethics"],
-    averageGPA: "3.5",
-    fieldOfStudy: "stem",
-    degreeLevel: "bachelors"
-  },
-  {
+    id: "1",
     title: "Computer Science",
-    description: "Study algorithms, programming, and computational systems to solve complex problems.",
+    description: "Study the theory and practice of computing, programming, and software development.",
     users: "892.1K",
     imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97",
     relatedCareers: ["Software Engineer", "Data Scientist", "Systems Architect"],
-    requiredCourses: ["Programming", "Data Structures", "Algorithms", "Computer Architecture"],
+    requiredCourses: ["Data Structures", "Algorithms", "Computer Architecture", "Operating Systems"],
     averageGPA: "3.3",
-    fieldOfStudy: "stem",
-    degreeLevel: "bachelors"
+    fieldOfStudy: "STEM",
+    degreeLevel: "Bachelor's",
+    duration: "4 years",
+    careerOpportunities: ["Software Development", "AI/ML", "Cybersecurity"],
+    featured: true
   },
+  {
+    id: "2",
+    title: "Business Administration",
+    description: "Learn fundamental business principles and management strategies.",
+    users: "567.8K",
+    imageUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40",
+    relatedCareers: ["Business Analyst", "Project Manager", "Consultant"],
+    requiredCourses: ["Economics", "Finance", "Marketing", "Management"],
+    averageGPA: "3.2",
+    fieldOfStudy: "Business",
+    degreeLevel: "Bachelor's",
+    duration: "4 years",
+    careerOpportunities: ["Business Management", "Consulting", "Entrepreneurship"],
+    featured: true
+  },
+  {
+    id: "3",
+    title: "Data Science",
+    description: "Combine statistics, programming, and domain expertise to extract insights from data.",
+    users: "234.5K",
+    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
+    relatedCareers: ["Data Scientist", "Machine Learning Engineer", "Data Analyst"],
+    requiredCourses: ["Statistics", "Machine Learning", "Data Mining", "Programming"],
+    averageGPA: "3.4",
+    fieldOfStudy: "STEM",
+    degreeLevel: "Master's",
+    duration: "2 years",
+    careerOpportunities: ["Data Analysis", "Machine Learning", "Research"],
+    featured: true
+  },
+  {
+    id: "4",
+    title: "Psychology",
+    description: "Study human behavior, mental processes, and their applications.",
+    users: "456.7K",
+    imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d",
+    relatedCareers: ["Clinical Psychologist", "Counselor", "Research Psychologist"],
+    requiredCourses: ["Research Methods", "Cognitive Psychology", "Social Psychology", "Statistics"],
+    averageGPA: "3.5",
+    fieldOfStudy: "Social Sciences",
+    degreeLevel: "Bachelor's",
+    duration: "4 years",
+    careerOpportunities: ["Clinical Practice", "Research", "Counseling"],
+    featured: true
+  }
 ];
 
 export const FeaturedMajorsSection = () => {
