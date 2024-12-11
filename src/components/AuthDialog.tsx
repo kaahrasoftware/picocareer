@@ -3,6 +3,7 @@ import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useTheme } from "next-themes";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuthDialogProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface AuthDialogProps {
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { theme } = useTheme();
+  const { toast } = useToast();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,6 +84,13 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           providers={['google', 'facebook', 'twitter', 'apple']}
           redirectTo={window.location.origin}
           socialLayout="horizontal"
+          onError={(error) => {
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: error.message,
+            });
+          }}
           localization={{
             variables: {
               sign_in: {
