@@ -1,17 +1,28 @@
 import { Button } from "@/components/ui/button";
+import { MessageSquare, Calendar, BookOpen } from "lucide-react";
 
 interface MentorActionsProps {
-  id: string;
+  onBookSession: () => void;
 }
 
-export function MentorActions({ id }: MentorActionsProps) {
+export function MentorActions({ onBookSession }: MentorActionsProps) {
   return (
-    <div className="flex gap-4">
-      <Button className="flex-1" variant="default">
+    <div className="grid grid-cols-3 gap-4">
+      <Button className="w-full" variant="default">
+        <MessageSquare className="mr-2" />
+        Request Chat
+      </Button>
+      <Button 
+        className="w-full" 
+        variant="secondary"
+        onClick={onBookSession}
+      >
+        <Calendar className="mr-2" />
         Book Session
       </Button>
-      <Button className="flex-1" variant="secondary">
-        Message
+      <Button className="w-full" variant="outline">
+        <BookOpen className="mr-2" />
+        View Profile
       </Button>
     </div>
   );

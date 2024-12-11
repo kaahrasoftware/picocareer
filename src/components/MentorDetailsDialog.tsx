@@ -1,12 +1,17 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { User } from "@/types/user";
-import { parseStats } from "@/types/stats";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { MentorHeader } from "./mentor/MentorHeader";
 import { MentorInfo } from "./mentor/MentorInfo";
 import { MentorBio } from "./mentor/MentorBio";
-import { MentorStats } from "./mentor/MentorStats";
 import { MentorSkills } from "./mentor/MentorSkills";
+import { MentorStats } from "./mentor/MentorStats";
 import { MentorActions } from "./mentor/MentorActions";
+import { User } from "@/integrations/supabase/types";
 
 interface MentorDetailsDialogProps {
   mentor: User;
@@ -14,25 +19,44 @@ interface MentorDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const MentorDetailsDialog = ({
+export function MentorDetailsDialog({
   mentor,
   open,
   onOpenChange,
-}: MentorDetailsDialogProps) => {
-  const stats = parseStats(mentor.stats);
-
+}: MentorDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-kahra-darker text-white overflow-y-auto overflow-x-hidden">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">Mentor Details</DialogTitle>
+        </DialogHeader>
+
         <div className="space-y-6">
-          <MentorHeader name={mentor.name} username={mentor.username} imageUrl={mentor.image_url} />
-          <MentorInfo title={mentor.title} company={mentor.company} position={mentor.position} education={mentor.education} />
+          <MentorHeader
+            name={mentor.name}
+            imageUrl={mentor.image_url}
+          />
+
+          <MentorInfo
+            title={mentor.title}
+            company={mentor.company}
+            position={mentor.position}
+            education={mentor.education}
+          />
+
           <MentorBio bio={mentor.bio} />
-          <MentorStats stats={stats} sessions_held={mentor.sessions_held} />
-          <MentorSkills skills={mentor.skills || []} tools={mentor.tools || []} keywords={mentor.keywords || []} />
-          <MentorActions id={mentor.id} />
+
+          <MentorSkills
+            skills={mentor.skills}
+            tools={mentor.tools}
+            keywords={mentor.keywords}
+          />
+
+          <MentorStats stats={mentor.stats} />
+
+          <MentorActions mentor={mentor} />
         </div>
       </DialogContent>
     </Dialog>
   );
-};
+}
