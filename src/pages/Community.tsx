@@ -14,7 +14,7 @@ export default function Community() {
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
 
-  const { data: profiles, isLoading } = useQuery({
+  const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -23,11 +23,11 @@ export default function Community() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
-  // Extract unique values for filters
+  // Extract unique values for filters with null checks
   const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
   const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
   const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
@@ -37,19 +37,19 @@ export default function Community() {
   const filteredProfiles = profiles?.filter(profile => {
     const matchesSearch = searchQuery === "" || 
       profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.skills?.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (profile.skills || []).some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())) ||
       profile.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.school_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.location?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => profile.skills?.includes(skill));
+      selectedSkills.every(skill => (profile.skills || []).includes(skill));
     const matchesUserType = !userTypeFilter || profile.user_type === userTypeFilter;
     const matchesLocation = !locationFilter || profile.location === locationFilter;
     const matchesCompany = !companyFilter || profile.company_name === companyFilter;
     const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
-    const matchesField = !fieldFilter || profile.fields_of_interest?.includes(fieldFilter);
+    const matchesField = !fieldFilter || (profile.fields_of_interest || []).includes(fieldFilter);
 
     return matchesSearch && matchesSkills && matchesUserType && 
            matchesLocation && matchesCompany && matchesSchool && matchesField;

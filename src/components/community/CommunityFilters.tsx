@@ -30,7 +30,7 @@ interface CommunityFiltersProps {
 export function CommunityFilters({
   searchQuery,
   onSearchChange,
-  selectedSkills,
+  selectedSkills = [],
   onSkillsChange,
   userTypeFilter,
   onUserTypeChange,
@@ -42,11 +42,11 @@ export function CommunityFilters({
   onSchoolChange,
   fieldFilter,
   onFieldChange,
-  locations,
-  companies,
-  schools,
-  fields,
-  allSkills = [], // Provide default empty array
+  locations = [],
+  companies = [],
+  schools = [],
+  fields = [],
+  allSkills = [],
 }: CommunityFiltersProps) {
   return (
     <div className="space-y-4">
@@ -127,7 +127,7 @@ export function CommunityFilters({
                 <Badge
                   key={skill}
                   variant="secondary"
-                  className="mr-1 mb-1"
+                  className="mr-1 mb-1 cursor-pointer"
                   onClick={() => onSkillsChange(selectedSkills.filter(s => s !== skill))}
                 >
                   {skill} ×
