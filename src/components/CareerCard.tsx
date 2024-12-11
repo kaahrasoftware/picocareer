@@ -3,17 +3,15 @@ import { Card } from "@/components/ui/card";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
 
 interface CareerCardProps {
+  id: string;
   title: string;
   description: string;
-  users: string;
-  salary: string;
-  imageUrl: string;
-  relatedMajors: string[];
-  relatedCareers: string[];
-  skills: string[];
+  salary_range?: string;
+  average_salary?: number;
+  image_url?: string;
 }
 
-export function CareerCard(props: CareerCardProps) {
+export function CareerCard({ id, title, description, salary_range, average_salary, image_url }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -23,18 +21,17 @@ export function CareerCard(props: CareerCardProps) {
         onClick={() => setDialogOpen(true)}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/90 z-10" />
-        <img src={props.imageUrl} alt={props.title} className="w-full h-48 object-cover" />
+        <img src={image_url} alt={title} className="w-full h-48 object-cover" />
         <div className="relative z-20 p-4">
-          <h3 className="text-xl font-bold mb-2">{props.title}</h3>
-          <p className="text-sm text-muted-foreground mb-4">{props.description}</p>
+          <h3 className="text-xl font-bold mb-2">{title}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{description}</p>
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{props.users} Users</span>
-            <span>{props.salary}</span>
+            <span>{salary_range || `$${average_salary?.toLocaleString()}`}</span>
           </div>
         </div>
       </Card>
       <CareerDetailsDialog 
-        career={props}
+        careerId={id}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />

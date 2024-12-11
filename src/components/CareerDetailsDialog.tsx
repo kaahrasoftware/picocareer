@@ -5,25 +5,51 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CareerDetails {
+  id: string;
   title: string;
   description: string;
-  users: string;
-  salary: string;
-  imageUrl: string;
-  relatedMajors: string[];
-  relatedCareers: string[];
-  skills: string[];
+  salary_range: string | null;
+  image_url: string | null;
+  required_education: string[] | null;
+  required_skills: string[] | null;
+  required_tools: string[] | null;
+  job_outlook: string | null;
+  industry: string | null;
+  work_environment: string | null;
+  average_salary: number | null;
+  growth_potential: string | null;
 }
 
 interface CareerDetailsDialogProps {
-  career: CareerDetails;
+  careerId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetailsDialogProps) {
+export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
+  const { data: career, isLoading } = useQuery({
+    queryKey: ['career', careerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('*, career_major_relations(major:majors(title))')
+        .eq('id', careerId)
+        .single();
+
+      if (error) throw error;
+      return data as CareerDetails;
+    },
+    enabled: open && !!careerId,
+  });
+
+  if (!open) return null;
+  if (isLoading) return <div>Loading...</div>;
+  if (!career) return <div>Career not found</div>;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-kahra-darker">
@@ -32,47 +58,74 @@ export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetail
           <DialogDescription className="text-gray-300">{career.description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6">
-          <img src={career.imageUrl} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
+          {career.image_url && (
+            <img src={career.image_url} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
+          )}
           
           <div className="flex justify-between text-sm text-gray-400">
-            <span>{career.users} Users</span>
-            <span>{career.salary}</span>
+            <span>{career.industry}</span>
+            <span>{career.salary_range || `$${career.average_salary?.toLocaleString()}`}</span>
           </div>
 
-          <div className="space-y-4">
+          {career.required_education && career.required_education.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Related Majors</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">Required Education</h3>
               <div className="flex flex-wrap gap-2">
-                {career.relatedMajors.map((major) => (
-                  <span key={major} className="px-3 py-1 bg-kahra-primary/20 rounded-full text-sm text-white">
-                    {major}
+                {career.required_education.map((education) => (
+                  <span key={education} className="px-3 py-1 bg-kahra-primary/20 rounded-full text-sm text-white">
+                    {education}
                   </span>
                 ))}
               </div>
             </div>
+          )}
 
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Related Careers</h3>
-              <div className="flex flex-wrap gap-2">
-                {career.relatedCareers.map((relatedCareer) => (
-                  <span key={relatedCareer} className="px-3 py-1 bg-kahra-secondary/20 rounded-full text-sm text-white">
-                    {relatedCareer}
-                  </span>
-                ))}
-              </div>
-            </div>
-
+          {career.required_skills && career.required_skills.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Required Skills</h3>
               <div className="flex flex-wrap gap-2">
-                {career.skills.map((skill) => (
-                  <span key={skill} className="px-3 py-1 bg-kahra-accent/20 rounded-full text-sm text-white">
+                {career.required_skills.map((skill) => (
+                  <span key={skill} className="px-3 py-1 bg-kahra-secondary/20 rounded-full text-sm text-white">
                     {skill}
                   </span>
                 ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {career.required_tools && career.required_tools.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Required Tools</h3>
+              <div className="flex flex-wrap gap-2">
+                {career.required_tools.map((tool) => (
+                  <span key={tool} className="px-3 py-1 bg-kahra-accent/20 rounded-full text-sm text-white">
+                    {tool}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {career.job_outlook && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Job Outlook</h3>
+              <p className="text-gray-300">{career.job_outlook}</p>
+            </div>
+          )}
+
+          {career.work_environment && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Work Environment</h3>
+              <p className="text-gray-300">{career.work_environment}</p>
+            </div>
+          )}
+
+          {career.growth_potential && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Growth Potential</h3>
+              <p className="text-gray-300">{career.growth_potential}</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
