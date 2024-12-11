@@ -11,7 +11,7 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
-  const { data, isLoading } = useSearchData(query);
+  const { data = [], isLoading } = useSearchData(query);
   
   // Initialize empty arrays for each category
   const groupedResults: Record<string, SearchResult[]> = {
