@@ -8,37 +8,50 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Major } from "@/integrations/supabase/types/major.types";
 
-const FEATURED_MAJORS = [
+const FEATURED_MAJORS: Major[] = [
   {
     id: 1,
     title: "Computer Science",
     description: "Study the theory and practice of computing",
     users: "20K",
-    imageUrl: "/placeholder.svg",
-    relatedCareers: ["Software Engineer", "Data Scientist", "Systems Architect"],
-    requiredCourses: ["Algorithms", "Data Structures", "Operating Systems"],
-    averageGPA: "3.5"
+    image_url: "/placeholder.svg",
+    related_careers: ["Software Engineer", "Data Scientist", "Systems Architect"],
+    required_courses: ["Algorithms", "Data Structures", "Operating Systems"],
+    average_gpa: "3.5",
+    category: "science",
+    level_of_study: "undergraduate",
+    created_at: new Date().toISOString(),
+    featured: true
   },
   {
     id: 2,
     title: "Business Administration",
     description: "Learn fundamental business principles and management",
     users: "25K",
-    imageUrl: "/placeholder.svg",
-    relatedCareers: ["Business Analyst", "Project Manager", "Consultant"],
-    requiredCourses: ["Economics", "Marketing", "Finance"],
-    averageGPA: "3.3"
+    image_url: "/placeholder.svg",
+    related_careers: ["Business Analyst", "Project Manager", "Consultant"],
+    required_courses: ["Economics", "Marketing", "Finance"],
+    average_gpa: "3.3",
+    category: "business",
+    level_of_study: "undergraduate",
+    created_at: new Date().toISOString(),
+    featured: true
   },
   {
     id: 3,
     title: "Psychology",
     description: "Explore human behavior and mental processes",
     users: "18K",
-    imageUrl: "/placeholder.svg",
-    relatedCareers: ["Clinical Psychologist", "Counselor", "Research Analyst"],
-    requiredCourses: ["Research Methods", "Statistics", "Cognitive Psychology"],
-    averageGPA: "3.4"
+    image_url: "/placeholder.svg",
+    related_careers: ["Clinical Psychologist", "Counselor", "Research Analyst"],
+    required_courses: ["Research Methods", "Statistics", "Cognitive Psychology"],
+    average_gpa: "3.4",
+    category: "science",
+    level_of_study: "undergraduate",
+    created_at: new Date().toISOString(),
+    featured: true
   }
 ];
 

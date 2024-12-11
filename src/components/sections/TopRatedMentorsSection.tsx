@@ -32,7 +32,8 @@ const TOP_RATED_MENTORS = [
     tools: ["VS Code", "Git", "Docker"],
     keywords: ["software", "engineering", "leadership"],
     email: "john@example.com",
-    password: "123456789"
+    password: "123456789",
+    created_at: new Date().toISOString()
   },
   {
     id: "2",
@@ -56,7 +57,8 @@ const TOP_RATED_MENTORS = [
     tools: ["Jira", "Figma", "Amplitude"],
     keywords: ["product", "management", "strategy"],
     email: "sarah@example.com",
-    password: "123456789"
+    password: "123456789",
+    created_at: new Date().toISOString()
   },
   {
     id: "3",
@@ -80,7 +82,8 @@ const TOP_RATED_MENTORS = [
     tools: ["Python", "TensorFlow", "SQL"],
     keywords: ["data", "science", "analytics"],
     email: "michael@example.com",
-    password: "123456789"
+    password: "123456789",
+    created_at: new Date().toISOString()
   }
 ];
 
@@ -115,10 +118,10 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
-      <MajorListDialog
+      <MentorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        majors={[]}
+        mentors={TOP_RATED_MENTORS}
       />
     </section>
   );
