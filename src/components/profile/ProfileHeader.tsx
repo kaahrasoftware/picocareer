@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { ProfileStats } from "./ProfileStats";
 import { SkillsList } from "./SkillsList";
-import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
   id: string;
@@ -19,57 +16,12 @@ interface Profile {
   skills: string[] | null;
 }
 
-export function ProfileHeader() {
-  const [session, setSession] = useState<any>(null);
-  const { toast } = useToast();
+interface ProfileHeaderProps {
+  profile: Profile | null;
+}
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile', session?.user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session?.user?.id)
-        .maybeSingle();
-      
-      if (error) {
-        toast({
-          title: "Error fetching profile",
-          description: error.message,
-          variant: "destructive",
-        });
-        throw error;
-      }
-
-      if (!data) {
-        toast({
-          title: "Profile not found",
-          description: "Please try signing out and signing in again.",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      return data as Profile;
-    },
-    enabled: !!session?.user?.id,
-  });
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isLoading || !profile) {
+export function ProfileHeader({ profile }: ProfileHeaderProps) {
+  if (!profile) {
     return (
       <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
         <div className="animate-pulse">
