@@ -17,7 +17,7 @@ export interface User {
   title: string;
   company: string;
   image_url: string;
-  name: string;
+  full_name: string;
   username: string;
   bio: string | null;
   position: string | null;

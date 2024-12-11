@@ -3,7 +3,7 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, UserStats } from "@/integrations/supabase/types/user.types";
+import { User } from "@/integrations/supabase/types/user.types";
 
 export function ProfileTab() {
   const session = useSession();
@@ -28,7 +28,7 @@ export function ProfileTab() {
       if (!data) throw new Error('No user data found');
 
       // Convert stats from JSON to UserStats type
-      const stats: UserStats = typeof data.stats === 'string' 
+      const stats = typeof data.stats === 'string' 
         ? JSON.parse(data.stats)
         : data.stats;
 
@@ -61,7 +61,7 @@ export function ProfileTab() {
 
   const profileFields = [
     { label: "User Type", value: userData.user_type || "Not specified" },
-    { label: "Name", value: userData.name },
+    { label: "Name", value: userData.full_name },
     { label: "Username", value: userData.username },
     { label: "Title", value: userData.title },
     { label: "Company", value: userData.company },

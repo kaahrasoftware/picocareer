@@ -59,7 +59,7 @@ export function SidebarFooter() {
               <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">{userData?.name || 'loading...'}</span>
+              <span className="text-sm font-medium">{userData?.full_name || 'loading...'}</span>
               <span className="text-xs text-muted-foreground">View Profile</span>
             </div>
           </Button>
