@@ -1,7 +1,6 @@
 import { Career } from './career.types';
 import { Major } from './major.types';
 import { User } from './user.types';
-import { Story } from './story.types';
 
 export type Database = {
   public: {
@@ -22,12 +21,6 @@ export type Database = {
         Row: User;
         Insert: Partial<User>;
         Update: Partial<User>;
-        Relationships: [];
-      };
-      stories: {
-        Row: Story;
-        Insert: Partial<Story>;
-        Update: Partial<Story>;
         Relationships: [];
       };
     };
@@ -56,5 +49,47 @@ export type Tables<
       Row: infer R;
     }
     ? R
+    : never
+  : never;
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof Database['public']['Tables']
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof Database['public']['Tables']
+  ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : never;
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof Database['public']['Tables']
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof Database['public']['Tables']
+  ? Database['public']['Tables'][PublicTableNameOrOptions] extends {
+      Update: infer U;
+    }
+    ? U
     : never
   : never;

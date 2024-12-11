@@ -20,37 +20,35 @@ export const FeaturedCareersSection = () => {
       const { data, error } = await supabase
         .from('careers')
         .select('*')
-        .eq('featured', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(4);
       
-      if (error) {
-        console.error('Error fetching featured careers:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      return data || [];
+      // Map database fields to component props
+      return data?.map(career => ({
+        title: career.title,
+        description: career.description,
+        users: career.users,
+        salary: career.salary,
+        imageUrl: career.image_url,
+        relatedMajors: career.related_majors,
+        relatedCareers: career.related_careers,
+        skills: career.skills,
+        category: career.category,
+        levelOfStudy: career.level_of_study
+      }));
     },
   });
 
   if (isLoading) {
-    return (
-      <section className="mb-16">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Featured Careers</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
-          ))}
-        </div>
-      </section>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">Featured Careers</h2>
+        <h2 className="text-2xl font-bold">Featured Careers</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
           className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
@@ -65,9 +63,9 @@ export const FeaturedCareersSection = () => {
         }}
         className="w-full"
       >
-        <CarouselContent className="-ml-4">
-          {featuredCareers?.map((career) => (
-            <CarouselItem key={career.id} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+        <CarouselContent>
+          {featuredCareers?.map((career, index) => (
+            <CarouselItem key={index} className="basis-1/3">
               <CareerCard {...career} />
             </CarouselItem>
           ))}

@@ -1,7 +1,13 @@
-import { Stats } from './stats.types';
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
-export interface User {
-  id: string;
+export type User = {
+  id: number;
   title: string;
   company: string;
   image_url: string;
@@ -11,13 +17,11 @@ export interface User {
   position: string | null;
   education: string | null;
   sessions_held: string | null;
-  stats: Stats;
+  stats: Json;
   created_at: string | null;
   user_type: string | null;
   top_rated: boolean | null;
   skills: string[] | null;
   tools: string[] | null;
   keywords: string[] | null;
-  email: string | null;
-  password: string;
-}
+};

@@ -1,11 +1,11 @@
 interface MentorHeaderProps {
   name: string;
-  username?: string;
   imageUrl?: string;
   image_url?: string;
+  username?: string;
 }
 
-export function MentorHeader({ name, username, imageUrl, image_url }: MentorHeaderProps) {
+export function MentorHeader({ name, imageUrl, image_url, username }: MentorHeaderProps) {
   const avatarUrl = imageUrl || image_url;
   
   return (
@@ -15,7 +15,9 @@ export function MentorHeader({ name, username, imageUrl, image_url }: MentorHead
       </div>
       <div>
         <h2 className="text-2xl font-semibold">{name}</h2>
-        {username && <p className="text-sm text-muted-foreground">@{username}</p>}
+        {username && (
+          <p className="text-sm text-muted-foreground">@{username}</p>
+        )}
       </div>
     </div>
   );
