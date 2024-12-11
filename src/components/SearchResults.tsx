@@ -37,9 +37,14 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const renderMentorCards = (mentors: SearchResult[]) => {
     if (!mentors.length) return null;
 
+    const shouldUseGrid = mentors.length > 4;
+
     return (
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex gap-4 p-4 min-w-max">
+      <div className={`overflow-x-auto scrollbar-hide ${shouldUseGrid ? 'p-4' : ''}`}>
+        <div className={`${shouldUseGrid 
+          ? 'grid grid-cols-3 gap-4 min-w-max' 
+          : 'flex gap-4 p-4 min-w-max'}`}
+        >
           {mentors.map((mentor) => (
             <Card 
               key={mentor.id}
