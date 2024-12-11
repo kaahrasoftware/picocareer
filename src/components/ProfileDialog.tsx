@@ -48,7 +48,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          company:companies(name),
+          school:schools(name)
+        `)
         .eq('id', session.user.id)
         .single();
       
@@ -61,7 +65,12 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         throw error;
       }
 
-      return data;
+      // Transform the data to include company_name and school_name
+      return {
+        ...data,
+        company_name: data.company?.name,
+        school_name: data.school?.name
+      };
     },
     enabled: !!session?.user?.id && open, // Only run query if we have a session and dialog is open
   });
