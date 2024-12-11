@@ -57,6 +57,7 @@ export const useSearchData = (query: string) => {
       return results;
     },
     enabled: query.length > 0,
-    initialData: [] // Ensure we always have an array, even when the query hasn't run yet
+    initialData: [], // Ensure we always have an array, even when the query hasn't run yet
+    staleTime: 1000, // Add a small stale time to prevent too frequent refetches
   });
 };

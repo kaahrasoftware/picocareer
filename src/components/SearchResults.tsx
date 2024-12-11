@@ -9,13 +9,16 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
-  const { data: results = [], isLoading } = useSearchData(query);
+  const { data, isLoading } = useSearchData(query);
+  
+  // Ensure data is always an array
+  const results = Array.isArray(data) ? data : [];
 
   // Ensure we have arrays even if the filter returns undefined
   const groupedResults = {
-    careers: results.filter(r => r?.type === 'career') || [],
-    majors: results.filter(r => r?.type === 'major') || [],
-    mentors: results.filter(r => r?.type === 'mentor') || [],
+    careers: results.filter(r => r && r.type === 'career') || [],
+    majors: results.filter(r => r && r.type === 'major') || [],
+    mentors: results.filter(r => r && r.type === 'mentor') || [],
   };
 
   const getIcon = (type: string) => {
@@ -42,7 +45,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
-            items.length > 0 ? (
+            items && items.length > 0 ? (
               <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
                 {items.map((result) => (
                   <CommandItem
