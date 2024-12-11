@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { addDays, isSameDay } from "date-fns";
 
 export function useAvailableDates(mentorId: string) {
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
@@ -12,7 +13,7 @@ export function useAvailableDates(mentorId: string) {
 
       const { data: availabilityData, error } = await supabase
         .from('mentor_availability')
-        .select('day_of_week')
+        .select('day_of_week, start_time, end_time')
         .eq('profile_id', mentorId)
         .eq('is_available', true);
 
@@ -26,20 +27,39 @@ export function useAvailableDates(mentorId: string) {
         return;
       }
 
-      // Generate dates for the next 30 days where the mentor is available
+      // Generate dates for the next 90 days where the mentor is available
       const dates: Date[] = [];
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       
-      for (let i = 0; i < 30; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() + i);
+      for (let i = 0; i < 90; i++) {
+        const date = addDays(today, i);
+        const dayOfWeek = date.getDay();
         
         // Check if this day of week is in the mentor's availability
-        if (availabilityData?.some(a => a.day_of_week === date.getDay())) {
-          dates.push(date);
+        if (availabilityData?.some(a => a.day_of_week === dayOfWeek)) {
+          // Check if there's not already a booking for this date
+          const startOfDay = new Date(date);
+          startOfDay.setHours(0, 0, 0, 0);
+          const endOfDay = new Date(date);
+          endOfDay.setHours(23, 59, 59, 999);
+
+          const { data: existingBookings } = await supabase
+            .from('mentor_sessions')
+            .select('scheduled_at')
+            .eq('mentor_id', mentorId)
+            .gte('scheduled_at', startOfDay.toISOString())
+            .lte('scheduled_at', endOfDay.toISOString())
+            .neq('status', 'cancelled');
+
+          // Only add the date if there are no existing bookings
+          if (!existingBookings?.length) {
+            dates.push(date);
+          }
         }
       }
 
+      console.log("Available dates:", dates);
       setAvailableDates(dates);
     }
 

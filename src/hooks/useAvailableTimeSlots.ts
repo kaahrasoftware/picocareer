@@ -16,14 +16,14 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
     async function fetchAvailability() {
       if (!date || !mentorId) return;
 
-      console.log("Fetching availability for date:", date, "mentor:", mentorId);
+      console.log("Fetching availability for date:", format(date, "yyyy-MM-dd"), "mentor:", mentorId);
       
       const dayOfWeek = date.getDay();
       
       // First, get the mentor's availability schedule
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
-        .select('*')
+        .select('start_time, end_time')
         .eq('profile_id', mentorId)
         .eq('day_of_week', dayOfWeek)
         .eq('is_available', true);
@@ -35,6 +35,12 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
           description: "Failed to load availability",
           variant: "destructive",
         });
+        return;
+      }
+
+      if (!availabilityData?.length) {
+        console.log("No availability found for this day");
+        setAvailableTimeSlots([]);
         return;
       }
 
@@ -67,7 +73,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
 
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
-      availabilityData?.forEach((availability) => {
+      availabilityData.forEach((availability) => {
         const [startHour] = availability.start_time.split(':').map(Number);
         const [endHour] = availability.end_time.split(':').map(Number);
         

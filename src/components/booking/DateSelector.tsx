@@ -46,6 +46,9 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
       <div className="mt-4 text-sm text-gray-400">
         <p>Your timezone: {userTimezone}</p>
         <p className="mt-1">Days highlighted in green are available for booking</p>
+        {availableDates.length === 0 && (
+          <p className="mt-1 text-yellow-500">No available dates found for this mentor</p>
+        )}
       </div>
     </div>
   );
