@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, Star, MessageSquare, Calendar, Bookmark, Building2, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
@@ -124,29 +123,30 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
               </div>
             </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <Button className="w-full" variant="default">
-              <MessageSquare className="mr-2" />
-              Request Chat
-            </Button>
-            <Button 
-              className="w-full" 
-              variant="secondary"
-              onClick={() => setBookingDialogOpen(true)}
-              disabled={!bookingMentor}
-            >
-              <Calendar className="mr-2" />
-              Book Session
-            </Button>
-            <Button 
-              className="w-full" 
-              variant="outline"
-              onClick={() => mentor.id && setProfileDialogOpen(true)}
-              disabled={!mentor.id}
-            >
-              <BookOpen className="mr-2" />
-              View Profile
-            </Button>
+            <div className="grid grid-cols-3 gap-4">
+              <Button className="w-full" variant="default">
+                <MessageSquare className="mr-2" />
+                Request Chat
+              </Button>
+              <Button 
+                className="w-full" 
+                variant="secondary"
+                onClick={() => setBookingDialogOpen(true)}
+                disabled={!bookingMentor}
+              >
+                <Calendar className="mr-2" />
+                Book Session
+              </Button>
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => mentor.id && setProfileDialogOpen(true)}
+                disabled={!mentor.id}
+              >
+                <BookOpen className="mr-2" />
+                View Profile
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
