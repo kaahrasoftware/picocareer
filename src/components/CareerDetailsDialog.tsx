@@ -5,20 +5,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-interface CareerDetails {
-  title: string;
-  description: string;
-  users: string;
-  salary: string;
-  imageUrl: string;
-  relatedMajors: string[];
-  relatedCareers: string[];
-  skills: string[];
-}
+import { CareerCardProps } from "./CareerCard";
 
 interface CareerDetailsDialogProps {
-  career: CareerDetails;
+  career: CareerCardProps;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -34,7 +24,7 @@ export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetail
           <DialogDescription className="text-gray-300">{career.description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-6">
-          <img src={career.imageUrl} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
+          <img src={career.image_url} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
           
           <div className="flex justify-between text-sm text-gray-400">
             <span>{career.users} Users</span>
@@ -45,7 +35,7 @@ export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetail
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Related Majors</h3>
               <div className="flex flex-wrap gap-2">
-                {career.relatedMajors?.map((major) => (
+                {career.related_majors?.map((major) => (
                   <span key={major} className="px-3 py-1 bg-kahra-primary/20 rounded-full text-sm text-white">
                     {major}
                   </span>
@@ -56,7 +46,7 @@ export function CareerDetailsDialog({ career, open, onOpenChange }: CareerDetail
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Related Careers</h3>
               <div className="flex flex-wrap gap-2">
-                {career.relatedCareers?.map((relatedCareer) => (
+                {career.related_careers?.map((relatedCareer) => (
                   <span key={relatedCareer} className="px-3 py-1 bg-kahra-secondary/20 rounded-full text-sm text-white">
                     {relatedCareer}
                   </span>

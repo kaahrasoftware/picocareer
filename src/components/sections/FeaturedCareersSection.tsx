@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CareerCard } from "@/components/CareerCard";
+import { CareerCard, CareerCardProps } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import {
   Carousel,
@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const hardcodedCareers = [
+const hardcodedCareers: CareerCardProps[] = [
   {
     id: 1,
     title: "Software Engineer",
