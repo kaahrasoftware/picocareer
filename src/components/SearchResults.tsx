@@ -1,4 +1,4 @@
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card } from "@/components/ui/card";
 import { GraduationCap, Briefcase, Users, BookOpen } from "lucide-react";
 import { useSearchData } from "@/hooks/useSearchData";
@@ -13,7 +13,6 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   
-  // Initialize empty arrays for each category with proper type checking
   const groupedResults: Record<string, SearchResult[]> = {
     careers: [],
     majors: [],
@@ -21,7 +20,6 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     blogs: []
   };
 
-  // Only process data if it exists and is an array
   if (Array.isArray(data)) {
     data.forEach(item => {
       if (item && typeof item === 'object' && 'type' in item) {
@@ -48,7 +46,6 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
-  // Check if there are any results in any category with proper type checking
   const hasResults = Object.values(groupedResults).some(group => 
     Array.isArray(group) && group.length > 0
   );
@@ -71,7 +68,6 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
 
     return Object.entries(groupedResults).map(([category, items]) => {
-      // Skip if no items in category or items is not an array
       if (!Array.isArray(items) || items.length === 0) {
         return null;
       }
@@ -128,9 +124,9 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           readOnly
           className="h-9"
         />
-        <div className="max-h-[300px] overflow-y-auto scrollbar-thin">
+        <CommandList className="max-h-[300px] overflow-y-auto scrollbar-thin">
           {renderResults()}
-        </div>
+        </CommandList>
       </Command>
     </Card>
   );

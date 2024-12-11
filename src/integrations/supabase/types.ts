@@ -17,7 +17,6 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           id: string
-          image_url: string | null
           is_recent: boolean | null
           subcategories: string[] | null
           summary: string
@@ -31,7 +30,6 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           id?: string
-          image_url?: string | null
           is_recent?: boolean | null
           subcategories?: string[] | null
           summary: string
@@ -45,7 +43,6 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           id?: string
-          image_url?: string | null
           is_recent?: boolean | null
           subcategories?: string[] | null
           summary?: string
