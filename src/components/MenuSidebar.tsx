@@ -1,5 +1,5 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, Plus, LogOut } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
@@ -18,10 +18,6 @@ export function MenuSidebar() {
   
   const navigationItems = [
     { icon: Home, label: "Home", href: "#", active: true },
-    { icon: GraduationCap, label: "Featured Careers", href: "#" },
-    { icon: GraduationCap, label: "Featured Majors", href: "#" },
-    { icon: Users, label: "Top Rated Mentors", href: "#" },
-    { icon: Plus, label: "", href: "#" },
   ];
 
   useEffect(() => {
