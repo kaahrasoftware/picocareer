@@ -11,7 +11,9 @@ import { MentorBio } from "./mentor/MentorBio";
 import { MentorSkills } from "./mentor/MentorSkills";
 import { MentorStats } from "./mentor/MentorStats";
 import { MentorActions } from "./mentor/MentorActions";
-import { User } from "@/integrations/supabase/types";
+import { Tables } from "@/integrations/supabase/types";
+
+type User = Tables<"users">;
 
 interface MentorDetailsDialogProps {
   mentor: User;
@@ -47,14 +49,13 @@ export function MentorDetailsDialog({
           <MentorBio bio={mentor.bio} />
 
           <MentorSkills
-            skills={mentor.skills}
-            tools={mentor.tools}
-            keywords={mentor.keywords}
+            skills={mentor.skills || []}
+            tools={mentor.tools || []}
           />
 
           <MentorStats stats={mentor.stats} />
 
-          <MentorActions mentor={mentor} />
+          <MentorActions mentorId={mentor.id} />
         </div>
       </DialogContent>
     </Dialog>
