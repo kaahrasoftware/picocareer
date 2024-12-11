@@ -30,6 +30,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       if (error) throw error;
       return data;
     },
+    enabled: !!userId && open, // Only run query if userId exists and dialog is open
   });
 
   if (isLoading || !profile) {
