@@ -26,11 +26,11 @@ export const useSearchData = (query: string) => {
             `position.ilike.%${query}%,` +
             `company_name.ilike.%${query}%,` +
             `bio.ilike.%${query}%,` +
-            `location.ilike.%${query}%,` +
-            `skills.cs.{${query.toLowerCase()}},` +
-            `tools_used.cs.{${query.toLowerCase()}},` +
-            `keywords.cs.{${query.toLowerCase()}},` +
-            `fields_of_interest.cs.{${query.toLowerCase()}}`)
+            `location.ilike.%${query}%`)
+        .or('skills.cs.{' + query + '},' +
+            'tools_used.cs.{' + query + '},' +
+            'keywords.cs.{' + query + '},' +
+            'fields_of_interest.cs.{' + query + '}')
         .limit(5);
 
       if (mentorError) {
@@ -51,14 +51,16 @@ export const useSearchData = (query: string) => {
       const { data: careers } = await supabase
         .from('careers')
         .select('id, title, description')
-        .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query.toLowerCase()}}, industry.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%, description.ilike.%${query}%, industry.ilike.%${query}%`)
+        .or('required_skills.cs.{' + query + '}')
         .limit(3);
 
       // Search majors with case-insensitive search
       const { data: majors } = await supabase
         .from('majors')
         .select('id, title, description')
-        .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query.toLowerCase()}}`)
+        .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%`)
+        .or('required_courses.cs.{' + query + '}')
         .limit(3);
 
       // Search blogs with case-insensitive search
