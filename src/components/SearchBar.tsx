@@ -56,9 +56,17 @@ export const SearchBar = () => {
         .from('users')
         .select('*')
         .eq('user_type', 'mentor')
-        .or(`name.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%,position.ilike.%${searchQuery}%,education.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`)
+        .or(`full_name.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%,position.ilike.%${searchQuery}%,education.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`)
         .limit(5);
-      return data || [];
+
+      if (!data) return [];
+
+      return data.map(mentor => ({
+        ...mentor,
+        stats: typeof mentor.stats === 'string' 
+          ? JSON.parse(mentor.stats)
+          : mentor.stats
+      }));
     },
     enabled: searchQuery.length > 0,
   });
