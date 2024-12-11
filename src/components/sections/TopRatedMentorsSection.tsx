@@ -38,18 +38,14 @@ export const TopRatedMentorsSection = () => {
       >
         <CarouselContent>
           {mentors.map((mentor) => (
-            <CarouselItem key={mentor.id} className="basis-1/3">
+            <CarouselItem key={mentor.name} className="basis-1/3">
               <MentorCard 
-                title={mentor.position || "Mentor"}
-                company={mentor.company_name || ""}
-                imageUrl={mentor.avatar_url || ""}
-                name={mentor.full_name || ""}
-                stats={{
-                  mentees: `${Math.floor(Math.random() * 900 + 100)}`,
-                  connected: `${Math.floor(Math.random() * 900 + 100)}K`,
-                  recordings: `${Math.floor(Math.random() * 90 + 10)}`
-                }}
-                username={mentor.username || ""}
+                title={mentor.title}
+                company={mentor.company}
+                imageUrl={mentor.imageUrl}
+                name={mentor.name}
+                stats={mentor.stats}
+                username={mentor.username}
               />
             </CarouselItem>
           ))}
