@@ -1,12 +1,12 @@
 import { Command, CommandEmpty, CommandInput, CommandList } from "@/components/ui/command";
 import { Card } from "@/components/ui/card";
 import { useSearchData } from "@/hooks/useSearchData";
-import { SearchResultGroup } from "./search/SearchResultGroup";
 import type { SearchResult } from "@/hooks/useSearchData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
+import { CareerDetailsDialog } from "./CareerDetailsDialog";
 
 interface SearchResultsProps {
   query: string;
@@ -16,6 +16,7 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   
   const groupedResults: Record<string, SearchResult[]> = {
     mentors: [],
@@ -76,6 +77,30 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     );
   };
 
+  const renderCareerCards = (careers: SearchResult[]) => {
+    if (!careers.length) return null;
+
+    return (
+      <div className="px-4 mt-6">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
+        <div className="grid grid-cols-1 gap-4">
+          {careers.map((career) => (
+            <Card 
+              key={career.id}
+              className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => setSelectedCareerId(career.id)}
+            >
+              <h4 className="font-medium text-sm mb-1">{career.title}</h4>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {career.description}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderResults = () => {
     if (isLoading) {
       return <CommandEmpty>Searching...</CommandEmpty>;
@@ -91,27 +116,18 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
 
     // Show mentor cards at the top
     const mentorResults = renderMentorCards(groupedResults.mentors);
+    const careerResults = renderCareerCards(groupedResults.careers);
     
-    // If we have mentor results, show them, otherwise show other results
-    if (mentorResults) {
-      return mentorResults;
+    if (mentorResults || careerResults) {
+      return (
+        <>
+          {mentorResults}
+          {careerResults}
+        </>
+      );
     }
 
-    // If no mentor results, show the regular grouped results with titles
-    return Object.entries(groupedResults).map(([category, items]) => (
-      items.length > 0 && (
-        <div key={category} className="px-4 mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-foreground">
-            {category.charAt(0).toUpperCase() + category.slice(1)}
-          </h3>
-          <SearchResultGroup
-            category={category}
-            items={items}
-            onClose={onClose}
-          />
-        </div>
-      )
-    ));
+    return <CommandEmpty>No results found</CommandEmpty>;
   };
 
   return (
@@ -135,6 +151,14 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           userId={selectedProfileId}
           open={!!selectedProfileId}
           onOpenChange={(open) => !open && setSelectedProfileId(null)}
+        />
+      )}
+
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={!!selectedCareerId}
+          onOpenChange={(open) => !open && setSelectedCareerId(null)}
         />
       )}
     </>
