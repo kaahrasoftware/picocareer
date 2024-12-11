@@ -8,12 +8,16 @@ interface MainLayoutProps {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <main className="flex-1 p-8 max-w-[1600px] mx-auto">
-      <ThemeToggle />
-      <div className="max-w-[1400px] mx-auto">
-        {children}
+    <div className="flex-1 min-h-screen flex flex-col">
+      <div className="p-8 flex-1">
+        <div className="max-w-[1600px] mx-auto">
+          <ThemeToggle />
+          <div className="max-w-[1400px] mx-auto">
+            {children}
+          </div>
+        </div>
       </div>
       <Footer />
-    </main>
+    </div>
   );
 };
