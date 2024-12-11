@@ -11,7 +11,7 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   
-  // Create grouped results with null checks and ensure arrays
+  // Initialize empty arrays for each category
   const groupedResults = {
     careers: data?.filter(r => r?.type === 'career') ?? [],
     majors: data?.filter(r => r?.type === 'major') ?? [],
@@ -33,12 +33,12 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
 
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <Command className="border-none bg-transparent" shouldFilter={false}>
+      <Command className="border-none bg-transparent">
         <CommandInput placeholder="Type to search..." value={query} />
         
         {isLoading ? (
           <CommandEmpty>Searching...</CommandEmpty>
-        ) : data.length === 0 && query ? (
+        ) : (!data || data.length === 0) && query ? (
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
