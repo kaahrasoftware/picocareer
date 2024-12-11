@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
