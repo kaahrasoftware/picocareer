@@ -51,21 +51,28 @@ export const useSearchData = (query: string) => {
       const { data: careers } = await supabase
         .from('careers')
         .select('id, title, description')
-        .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query}}, industry.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%,` + 
+            `description.ilike.%${query}%,` + 
+            `industry.ilike.%${query}%,` +
+            `required_skills.cs.{${query}}`)
         .limit(3);
 
       // Search majors
       const { data: majors } = await supabase
         .from('majors')
         .select('id, title, description')
-        .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query}}`)
+        .or(`title.ilike.%${query}%,` + 
+            `description.ilike.%${query}%,` + 
+            `field_of_study.ilike.%${query}%,` +
+            `required_courses.cs.{${query}}`)
         .limit(3);
 
       // Search blogs
       const { data: blogs } = await supabase
         .from('blogs')
         .select('id, title, summary')
-        .or(`title.ilike.%${query}%, summary.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%,` + 
+            `summary.ilike.%${query}%`)
         .limit(3);
 
       const results: SearchResult[] = [
