@@ -25,13 +25,21 @@ export default function Community() {
       const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
-        .neq('id', user?.id) // Filter out current user
-        .neq('user_type', 'admin') // Filter out admin users
+        .select(`
+          *,
+          company:companies(name),
+          school:schools(name)
+        `)
+        .neq('id', user?.id)
+        .neq('user_type', 'admin')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return data.map(profile => ({
+        ...profile,
+        company_name: profile.company?.name,
+        school_name: profile.school?.name
+      }));
     },
   });
 

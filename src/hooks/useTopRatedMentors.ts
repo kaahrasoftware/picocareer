@@ -8,7 +8,10 @@ export const useTopRatedMentors = () => {
       console.log('Fetching top rated mentors...');
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          company:companies(name)
+        `)
         .eq('user_type', 'mentor')
         .eq('featured', true)
         .limit(6);
@@ -20,11 +23,10 @@ export const useTopRatedMentors = () => {
       
       console.log('Fetched mentors:', data);
       
-      // Transform the data to match the expected Mentor type
       return data.map(mentor => ({
-        id: mentor.id, // Add the ID to the transformed data
+        id: mentor.id,
         title: mentor.position || "Mentor",
-        company: mentor.company_name || "",
+        company: mentor.company?.name || "",
         imageUrl: mentor.avatar_url || "",
         name: mentor.full_name || "",
         stats: {
@@ -38,6 +40,6 @@ export const useTopRatedMentors = () => {
         position: mentor.position
       }));
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 };

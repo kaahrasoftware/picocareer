@@ -23,14 +23,22 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          company:companies(name),
+          school:schools(name)
+        `)
         .eq('id', userId)
         .single();
       
       if (error) throw error;
-      return data;
+      return {
+        ...data,
+        company_name: data.company?.name,
+        school_name: data.school?.name
+      };
     },
-    enabled: !!userId && open, // Only run query if userId exists and dialog is open
+    enabled: !!userId && open,
   });
 
   if (isLoading || !profile) {
