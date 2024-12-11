@@ -1,10 +1,18 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, Plus } from "lucide-react";
-import { useState } from "react";
+import { Home, GraduationCap, Users, Plus, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
+import { AuthDialog } from "./AuthDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "./ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Session } from "@supabase/supabase-js";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const { toast } = useToast();
   
   const navigationItems = [
     { icon: Home, label: "Home", href: "#", active: true },
@@ -13,6 +21,37 @@ export function MenuSidebar() {
     { icon: Users, label: "Top Rated Mentors", href: "#" },
     { icon: Plus, label: "", href: "#" },
   ];
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        setAuthOpen(false);
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [toast]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+  };
 
   return (
     <Sidebar side="left">
@@ -46,23 +85,43 @@ export function MenuSidebar() {
 
           {/* Footer content positioned at bottom */}
           <div className="mt-auto pt-6">
-            <div className="flex items-center gap-3 mb-4">
-              <button
-                onClick={() => setProfileOpen(true)}
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
+            {session ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={() => setProfileOpen(true)}
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
+                  >
+                    <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
+                  </button>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium">{session.user.email}</h3>
+                    <p className="text-xs text-muted-foreground">Student</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={() => setAuthOpen(true)}
               >
-                <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
-              </button>
-              <div className="flex-1">
-                <h3 className="text-sm font-medium">John Doe</h3>
-                <p className="text-xs text-muted-foreground">Student</p>
-              </div>
-            </div>
+                Sign in
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </Sidebar>
   );
 }
