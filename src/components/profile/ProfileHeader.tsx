@@ -1,17 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { ProfileAvatar } from "./ProfileAvatar";
+import { ProfileStats } from "./ProfileStats";
+import { SkillsList } from "./SkillsList";
+import { useQuery } from "@tanstack/react-query";
+
+interface Profile {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar_url: string | null;
+  academic_major: string | null;
+  school_name: string | null;
+  skills: string[] | null;
+}
 
 export function ProfileHeader() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session?.user?.id)
+        .single();
+      
+      if (error) throw error;
+      return data as Profile;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const skills = [
     { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
@@ -28,191 +63,53 @@ export function ProfileHeader() {
     { text: "Data analysis", colorClass: "bg-purple-900/50 text-purple-400" },
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
-        prevIndex + 6 >= skills.length ? 0 : prevIndex + 1
-      );
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [skills.length]);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user?.id) {
-        fetchProfile(session.user.id);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user?.id) {
-        fetchProfile(session.user.id);
-      } else {
-        setAvatarUrl(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return;
-      }
-      
-      setAvatarUrl(data?.avatar_url || null);
-    } catch (error) {
-      console.error('Error in fetchProfile:', error);
-    }
-  };
-
-  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!session?.user?.id) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to upload an avatar",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setUploading(true);
-      
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
-      }
-
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${session.user.id}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', session.user.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      setAvatarUrl(publicUrl);
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const visibleSkills = [...skills.slice(currentIndex, currentIndex + 6)];
-  if (visibleSkills.length < 6) {
-    visibleSkills.push(...skills.slice(0, 6 - visibleSkills.length));
+  if (isLoading || !profile) {
+    return (
+      <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
+        <div className="animate-pulse">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-16 h-16 bg-gray-300 rounded-full" />
+            <div className="flex-1">
+              <div className="h-6 bg-gray-300 rounded w-1/2 mb-2" />
+              <div className="h-4 bg-gray-300 rounded w-1/3" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
       <div className="flex items-start gap-3 mb-3">
-        <div className="relative group">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-yellow-400">
-            <img
-              src={avatarUrl || "/placeholder.svg"}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-            {session?.user && (
-              <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={uploadAvatar}
-                  disabled={uploading}
-                />
-                <Upload className="w-6 h-6 text-white" />
-              </label>
-            )}
-          </div>
-          {uploading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-        </div>
+        <ProfileAvatar 
+          avatarUrl={profile.avatar_url}
+          userId={profile.id}
+          onAvatarUpdate={(url) => profile.avatar_url = url}
+        />
         <div className="flex flex-col gap-1">
           <div>
-            <DialogTitle className="text-xl font-bold">Bio-Chemical Engineering</DialogTitle>
-            <p className="text-sm text-gray-400 dark:text-gray-400">NC State University</p>
+            <DialogTitle className="text-xl font-bold">
+              {profile.academic_major || "No major set"}
+            </DialogTitle>
+            <p className="text-sm text-gray-400 dark:text-gray-400">
+              {profile.school_name || "No school set"}
+            </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold">John Doe</h3>
-            <p className="text-sm text-gray-400 dark:text-gray-400">@johndoe</p>
-            <p className="text-sm text-gray-400 dark:text-gray-400">Austin, TX, USA</p>
+            <h3 className="text-lg font-semibold">{profile.full_name}</h3>
+            <p className="text-sm text-gray-400 dark:text-gray-400">@{profile.username}</p>
           </div>
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="text-center">
-          <p className="text-xl font-bold">0</p>
-          <p className="text-xs text-gray-400 dark:text-gray-400">Mentees</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-bold">495</p>
-          <p className="text-xs text-gray-400 dark:text-gray-400">K-onnected</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-bold">35</p>
-          <p className="text-xs text-gray-400 dark:text-gray-400">Recordings</p>
-        </div>
-      </div>
+      <ProfileStats 
+        menteeCount={0}
+        connectionCount={495}
+        recordingCount={35}
+      />
 
-      <ScrollArea className="w-full">
-        <div className="flex gap-2 pb-2">
-          {visibleSkills.map((skill, index) => (
-            <span
-              key={`${skill.text}-${index}`}
-              className={`px-2 py-0.5 rounded-full ${skill.colorClass} text-xs whitespace-nowrap transition-all duration-300 ease-in-out`}
-            >
-              {skill.text}
-            </span>
-          ))}
-        </div>
-      </ScrollArea>
+      <SkillsList skills={skills} />
     </div>
   );
 }
