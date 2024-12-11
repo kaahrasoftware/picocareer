@@ -29,7 +29,15 @@ export function SidebarFooter() {
       if (error) throw error;
       if (!data) throw new Error('No user data found');
       
-      return data as UserType;
+      // Convert stats from JSON to UserStats type
+      const stats = typeof data.stats === 'string' 
+        ? JSON.parse(data.stats)
+        : data.stats;
+
+      return {
+        ...data,
+        stats
+      } as UserType;
     },
     enabled: !!session?.user?.id
   });
@@ -51,7 +59,7 @@ export function SidebarFooter() {
               <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">@{userData?.username || 'loading...'}</span>
+              <span className="text-sm font-medium">{userData?.name || 'loading...'}</span>
               <span className="text-xs text-muted-foreground">View Profile</span>
             </div>
           </Button>

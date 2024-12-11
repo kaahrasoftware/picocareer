@@ -147,10 +147,10 @@ export type Database = {
           created_at: string | null
           education: string | null
           email: string | null
+          full_name: string
           id: string
           image_url: string
           keywords: string[] | null
-          name: string
           password: string
           position: string | null
           sessions_held: string | null
@@ -168,10 +168,10 @@ export type Database = {
           created_at?: string | null
           education?: string | null
           email?: string | null
+          full_name: string
           id?: string
           image_url: string
           keywords?: string[] | null
-          name: string
           password?: string
           position?: string | null
           sessions_held?: string | null
@@ -189,10 +189,10 @@ export type Database = {
           created_at?: string | null
           education?: string | null
           email?: string | null
+          full_name?: string
           id?: string
           image_url?: string
           keywords?: string[] | null
-          name?: string
           password?: string
           position?: string | null
           sessions_held?: string | null
