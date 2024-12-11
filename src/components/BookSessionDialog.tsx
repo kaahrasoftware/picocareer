@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface BookSessionDialogProps {
   mentor: {
+    id: string;
     name: string;
     imageUrl: string;
   };
@@ -15,35 +18,148 @@ interface BookSessionDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const SESSION_TYPES = [
-  { id: "intro", label: "Introduction Call" },
-  { id: "quick-advice", label: "Quick Advice" },
-  { id: "walkthrough", label: "Walk-through Session" },
-];
+interface SessionType {
+  id: string;
+  type: string;
+  duration: number;
+  price: number;
+  description: string | null;
+}
 
-// Mock available time slots - in a real app, these would come from an API
-const AVAILABLE_TIME_SLOTS = [
-  "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"
-];
+interface TimeSlot {
+  time: string;
+  available: boolean;
+}
 
 export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDialogProps) {
   const [date, setDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+  const { toast } = useToast();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const mentorTimezone = "America/Los_Angeles"; // This would come from mentor's data in a real app
 
-  const handleSubmit = () => {
-    // Here you would typically send the booking data to your backend
-    console.log({
-      mentorName: mentor.name,
-      date,
-      time: selectedTime,
-      sessionType,
-      note,
-      userTimezone,
-      mentorTimezone,
+  // Fetch session types for this mentor
+  useEffect(() => {
+    async function fetchSessionTypes() {
+      const { data, error } = await supabase
+        .from('mentor_session_types')
+        .select('*')
+        .eq('profile_id', mentor.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load session types",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSessionTypes(data);
+    }
+
+    if (open) {
+      fetchSessionTypes();
+    }
+  }, [mentor.id, open, toast]);
+
+  // Fetch available time slots when date changes
+  useEffect(() => {
+    async function fetchAvailability() {
+      if (!date) return;
+
+      const dayOfWeek = date.getDay();
+      
+      const { data: availabilityData, error } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', mentor.id)
+        .eq('day_of_week', dayOfWeek)
+        .eq('is_available', true);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load availability",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check existing bookings for this date
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data: bookingsData } = await supabase
+        .from('mentor_sessions')
+        .select('scheduled_at')
+        .eq('mentor_id', mentor.id)
+        .gte('scheduled_at', startOfDay.toISOString())
+        .lte('scheduled_at', endOfDay.toISOString())
+        .neq('status', 'cancelled');
+
+      // Generate available time slots based on availability and bookings
+      const slots: TimeSlot[] = [];
+      availabilityData?.forEach((availability) => {
+        const [startHour] = availability.start_time.split(':');
+        const [endHour] = availability.end_time.split(':');
+        
+        for (let hour = parseInt(startHour); hour < parseInt(endHour); hour++) {
+          const timeString = `${hour.toString().padStart(2, '0')}:00`;
+          const isBooked = bookingsData?.some(booking => {
+            const bookingHour = new Date(booking.scheduled_at).getHours();
+            return bookingHour === hour;
+          });
+          
+          slots.push({
+            time: timeString,
+            available: !isBooked
+          });
+        }
+      });
+
+      setAvailableTimeSlots(slots);
+    }
+
+    if (date) {
+      fetchAvailability();
+    }
+  }, [date, mentor.id, toast]);
+
+  const handleSubmit = async () => {
+    if (!date || !selectedTime || !sessionType) return;
+
+    const scheduledAt = new Date(date);
+    const [hours, minutes] = selectedTime.split(':');
+    scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    const { error } = await supabase
+      .from('mentor_sessions')
+      .insert({
+        mentor_id: mentor.id,
+        mentee_id: (await supabase.auth.getUser()).data.user?.id,
+        session_type_id: sessionType,
+        scheduled_at: scheduledAt.toISOString(),
+        notes: note,
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to book session",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Session booked successfully",
     });
     onOpenChange(false);
   };
@@ -69,7 +185,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             />
             <div className="mt-4 text-sm text-gray-400">
               <p>Your timezone: {userTimezone}</p>
-              <p>Mentor's timezone: {mentorTimezone}</p>
             </div>
           </div>
 
@@ -80,14 +195,15 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                   Available Times for {format(date, "MMMM d, yyyy")}
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {AVAILABLE_TIME_SLOTS.map((time) => (
+                  {availableTimeSlots.map((slot) => (
                     <Button
-                      key={time}
-                      variant={selectedTime === time ? "default" : "outline"}
-                      onClick={() => setSelectedTime(time)}
+                      key={slot.time}
+                      variant={selectedTime === slot.time ? "default" : "outline"}
+                      onClick={() => setSelectedTime(slot.time)}
+                      disabled={!slot.available}
                       className="w-full"
                     >
-                      {time}
+                      {slot.time}
                     </Button>
                   ))}
                 </div>
@@ -101,9 +217,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                   <SelectValue placeholder="Select session type" />
                 </SelectTrigger>
                 <SelectContent className="bg-kahra-darker border-none">
-                  {SESSION_TYPES.map((type) => (
+                  {sessionTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
-                      {type.label}
+                      {type.type} ({type.duration} min) - ${type.price}
                     </SelectItem>
                   ))}
                 </SelectContent>
