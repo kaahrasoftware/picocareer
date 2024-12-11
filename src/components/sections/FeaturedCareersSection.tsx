@@ -25,7 +25,6 @@ export const FeaturedCareersSection = () => {
       
       if (error) throw error;
       
-      // Map database fields to component props
       return data?.map(career => ({
         title: career.title,
         description: career.description,

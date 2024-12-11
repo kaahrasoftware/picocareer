@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -7,8 +9,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -24,8 +24,7 @@ export const TopRatedMentorsSection = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-
-      // Transform the data to match the expected MentorCard props
+      
       return data?.map(mentor => ({
         ...mentor,
         stats: typeof mentor.stats === 'string' 
