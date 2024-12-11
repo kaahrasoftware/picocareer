@@ -2,6 +2,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Card } from "@/components/ui/card";
 import { GraduationCap, Briefcase, Users, BookOpen } from "lucide-react";
 import { useSearchData } from "@/hooks/useSearchData";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface SearchResultsProps {
   query: string;
@@ -78,15 +79,28 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                       console.log("Selected:", result);
                       onClose();
                     }}
-                    className="cursor-pointer hover:bg-white/10 flex items-center"
+                    className="cursor-pointer hover:bg-white/10 flex items-center gap-2"
                   >
                     {getIcon(result.type)}
-                    <div>
-                      <div className="font-medium">{result.title}</div>
-                      {result.description && (
-                        <div className="text-sm text-muted-foreground">{result.description}</div>
-                      )}
-                    </div>
+                    {result.type === 'mentor' ? (
+                      <div className="flex items-center gap-3 w-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={result.avatar_url || ''} alt={result.title} />
+                          <AvatarFallback>{result.title[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{result.title}</div>
+                          <div className="text-sm text-muted-foreground">{result.description}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-medium">{result.title}</div>
+                        {result.description && (
+                          <div className="text-sm text-muted-foreground">{result.description}</div>
+                        )}
+                      </div>
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>
