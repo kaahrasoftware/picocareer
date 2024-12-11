@@ -1,16 +1,11 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, Plus, LogOut, LogIn } from "lucide-react";
+import { Home, GraduationCap, Users, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ProfileDialog } from "./ProfileDialog";
-import { AuthDialog } from "./AuthDialog";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
-  const { toast } = useToast();
   
   const navigationItems = [
     { icon: Home, label: "Home", href: "#", active: true },
@@ -39,22 +34,6 @@ export function MenuSidebar() {
     { icon: "instagram", href: "#" },
     { icon: "facebook", href: "#" },
   ];
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "You have been logged out.",
-      });
-    }
-  };
 
   return (
     <Sidebar side="left">
@@ -99,19 +78,7 @@ export function MenuSidebar() {
                 <p className="text-xs text-muted-foreground">Student</p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-              onClick={() => setAuthOpen(true)}
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-              onClick={handleLogout}
-            >
+            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10">
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
@@ -174,7 +141,6 @@ export function MenuSidebar() {
       </div>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </Sidebar>
   );
 }
