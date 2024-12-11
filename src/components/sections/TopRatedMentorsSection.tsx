@@ -7,48 +7,72 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
+const hardcodedMentors = [
+  {
+    id: "1",
+    title: "Senior Software Engineer",
+    company: "Google",
+    image_url: "/placeholder.svg",
+    name: "John Smith",
+    username: "johnsmith",
+    bio: "10+ years of experience in software development",
+    position: "Tech Lead",
+    education: "MS Computer Science",
+    sessions_held: "50",
+    stats: {
+      mentees: "100",
+      connected: "4.9",
+      recordings: "45"
+    },
+    skills: ["JavaScript", "React", "Node.js"],
+    tools: ["VS Code", "Git", "Docker"],
+    keywords: ["web development", "system design", "mentorship"]
+  },
+  {
+    id: "2",
+    title: "Product Design Lead",
+    company: "Apple",
+    image_url: "/placeholder.svg",
+    name: "Sarah Johnson",
+    username: "sarahj",
+    bio: "Passionate about creating intuitive user experiences",
+    position: "Design Manager",
+    education: "BFA Design",
+    sessions_held: "35",
+    stats: {
+      mentees: "75",
+      connected: "4.8",
+      recordings: "30"
+    },
+    skills: ["UI/UX", "Figma", "Design Systems"],
+    tools: ["Sketch", "Adobe XD", "InVision"],
+    keywords: ["product design", "user research", "prototyping"]
+  },
+  {
+    id: "3",
+    title: "Data Science Manager",
+    company: "Amazon",
+    image_url: "/placeholder.svg",
+    name: "Michael Chen",
+    username: "michaelc",
+    bio: "Helping others break into data science",
+    position: "Team Lead",
+    education: "PhD Statistics",
+    sessions_held: "40",
+    stats: {
+      mentees: "85",
+      connected: "4.7",
+      recordings: "35"
+    },
+    skills: ["Python", "Machine Learning", "SQL"],
+    tools: ["Jupyter", "TensorFlow", "PyTorch"],
+    keywords: ["data analysis", "machine learning", "statistics"]
+  }
+];
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { data: topRatedMentors, isLoading } = useQuery({
-    queryKey: ['topRatedMentors'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('user_type', 'mentor')
-        .eq('top_rated', true)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-
-      // Transform the data to match the expected MentorCard props
-      return data?.map(mentor => ({
-        ...mentor,
-        stats: typeof mentor.stats === 'string' 
-          ? JSON.parse(mentor.stats)
-          : mentor.stats
-      })) || [];
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <section className="mb-16">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
-          ))}
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="mb-16">
@@ -69,7 +93,7 @@ export const TopRatedMentorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {topRatedMentors?.map((mentor) => (
+          {hardcodedMentors.map((mentor) => (
             <CarouselItem key={mentor.id} className="basis-1/3">
               <MentorCard {...mentor} />
             </CarouselItem>

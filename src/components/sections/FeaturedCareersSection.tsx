@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Carousel,
   CarouselContent,
@@ -11,39 +9,51 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+const hardcodedCareers = [
+  {
+    title: "Software Engineer",
+    description: "Design and develop software applications and systems",
+    users: "10,000+",
+    salary: "$120,000/year",
+    imageUrl: "/placeholder.svg",
+    relatedMajors: ["Computer Science", "Software Engineering"],
+    relatedCareers: ["Web Developer", "DevOps Engineer"],
+    skills: ["JavaScript", "Python", "Problem Solving"]
+  },
+  {
+    title: "Data Scientist",
+    description: "Analyze complex data sets to help guide business decisions",
+    users: "8,000+",
+    salary: "$115,000/year",
+    imageUrl: "/placeholder.svg",
+    relatedMajors: ["Data Science", "Statistics"],
+    relatedCareers: ["Data Analyst", "Machine Learning Engineer"],
+    skills: ["Python", "SQL", "Machine Learning"]
+  },
+  {
+    title: "UX Designer",
+    description: "Create user-friendly interfaces and experiences",
+    users: "6,000+",
+    salary: "$95,000/year",
+    imageUrl: "/placeholder.svg",
+    relatedMajors: ["Design", "Psychology"],
+    relatedCareers: ["UI Designer", "Product Designer"],
+    skills: ["User Research", "Wireframing", "Prototyping"]
+  },
+  {
+    title: "Product Manager",
+    description: "Lead product development and strategy",
+    users: "7,500+",
+    salary: "$125,000/year",
+    imageUrl: "/placeholder.svg",
+    relatedMajors: ["Business", "Computer Science"],
+    relatedCareers: ["Program Manager", "Product Owner"],
+    skills: ["Strategy", "Leadership", "Analytics"]
+  }
+];
+
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { data: featuredCareers, isLoading } = useQuery({
-    queryKey: ['featuredCareers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('careers')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4);
-      
-      if (error) throw error;
-      
-      // Map database fields to component props
-      return data?.map(career => ({
-        title: career.title,
-        description: career.description,
-        users: career.users,
-        salary: career.salary,
-        imageUrl: career.image_url,
-        relatedMajors: career.related_majors,
-        relatedCareers: career.related_careers,
-        skills: career.skills,
-        category: career.category,
-        levelOfStudy: career.level_of_study
-      }));
-    },
-  });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <section className="mb-16">
@@ -64,7 +74,7 @@ export const FeaturedCareersSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {featuredCareers?.map((career, index) => (
+          {hardcodedCareers.map((career, index) => (
             <CarouselItem key={index} className="basis-1/3">
               <CareerCard {...career} />
             </CarouselItem>
@@ -76,7 +86,7 @@ export const FeaturedCareersSection = () => {
       <CareerListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        careers={featuredCareers || []}
+        careers={hardcodedCareers}
       />
     </section>
   );
