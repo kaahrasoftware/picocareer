@@ -3,19 +3,22 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { User } from "@/integrations/supabase/types/user.types";
 
 export function ProfileTab() {
   const session = useSession();
 
-  const { data: userData, isLoading } = useQuery({
+  const { data: userData, isLoading } = useQuery<User | null>({
     queryKey: ['user', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
+      
       const { data, error } = await supabase
         .from('users')
         .select()
         .eq('id', session.user.id)
-        .single();
+        .limit(1)
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching user data:', error);
