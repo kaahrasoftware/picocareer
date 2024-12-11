@@ -28,7 +28,7 @@ export function MenuSidebar() {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) {
+      if (session?.user?.id) {
         fetchProfile(session.user.id);
       }
     });
@@ -38,7 +38,7 @@ export function MenuSidebar() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) {
+      if (session?.user?.id) {
         fetchProfile(session.user.id);
         setAuthOpen(false);
         toast({
@@ -59,7 +59,7 @@ export function MenuSidebar() {
         .from('profiles')
         .select('avatar_url')
         .eq('id', userId)
-        .maybeSingle(); // Changed from single() to maybeSingle()
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching profile:', error);
@@ -73,7 +73,18 @@ export function MenuSidebar() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSession(null);
+    setAvatarUrl(null);
     toast({
       title: "Signed out",
       description: "You have been successfully signed out.",
