@@ -10,12 +10,11 @@ export const HeroSection = () => {
     <>
       {/* Header */}
       <header className="flex justify-between items-center mb-12 relative">
-        <div className="w-full max-w-2xl">
+        <div className="w-full">
           <SearchBar
-            placeholder="Search for mentors, careers, majors, or blogs..."
+            placeholder="search here..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
           />
           <SearchResults query={searchQuery} onClose={() => setSearchQuery("")} />
         </div>

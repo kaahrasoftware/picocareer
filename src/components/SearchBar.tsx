@@ -1,18 +1,23 @@
 import React from "react";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 export const SearchBar = ({ className, ...props }: SearchBarProps) => {
   return (
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-      <Input
+    <div className="relative flex items-center w-full max-w-3xl mx-auto">
+      <input
         type="search"
-        className={`pl-10 ${className}`}
+        className="w-full h-12 pl-6 pr-24 rounded-full bg-white/95 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
         {...props}
       />
+      <Button 
+        type="submit"
+        className="absolute right-1 h-10 px-6 rounded-full bg-background hover:bg-background/90 text-foreground"
+      >
+        search
+      </Button>
     </div>
   );
 };
