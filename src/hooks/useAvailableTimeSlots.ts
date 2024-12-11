@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
 
 interface TimeSlot {
   time: string;
@@ -15,16 +16,20 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
     async function fetchAvailability() {
       if (!date || !mentorId) return;
 
+      console.log("Fetching availability for date:", date, "mentor:", mentorId);
+      
       const dayOfWeek = date.getDay();
       
-      const { data: availabilityData, error } = await supabase
+      // First, get the mentor's availability schedule
+      const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('*')
         .eq('profile_id', mentorId)
         .eq('day_of_week', dayOfWeek)
         .eq('is_available', true);
 
-      if (error) {
+      if (availabilityError) {
+        console.error("Error fetching availability:", availabilityError);
         toast({
           title: "Error",
           description: "Failed to load availability",
@@ -33,13 +38,13 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         return;
       }
 
-      // Check existing bookings for this date
+      // Get existing bookings for this date
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
-      const { data: bookingsData } = await supabase
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('mentor_sessions')
         .select('scheduled_at')
         .eq('mentor_id', mentorId)
@@ -47,13 +52,26 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         .lte('scheduled_at', endOfDay.toISOString())
         .neq('status', 'cancelled');
 
-      // Generate available time slots
+      if (bookingsError) {
+        console.error("Error fetching bookings:", bookingsError);
+        toast({
+          title: "Error",
+          description: "Failed to load bookings",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Availability data:", availabilityData);
+      console.log("Bookings data:", bookingsData);
+
+      // Generate time slots based on availability
       const slots: TimeSlot[] = [];
       availabilityData?.forEach((availability) => {
-        const [startHour] = availability.start_time.split(':');
-        const [endHour] = availability.end_time.split(':');
+        const [startHour] = availability.start_time.split(':').map(Number);
+        const [endHour] = availability.end_time.split(':').map(Number);
         
-        for (let hour = parseInt(startHour); hour < parseInt(endHour); hour++) {
+        for (let hour = startHour; hour < endHour; hour++) {
           const timeString = `${hour.toString().padStart(2, '0')}:00`;
           const isBooked = bookingsData?.some(booking => {
             const bookingHour = new Date(booking.scheduled_at).getHours();
@@ -67,6 +85,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         }
       });
 
+      console.log("Generated time slots:", slots);
       setAvailableTimeSlots(slots);
     }
 
