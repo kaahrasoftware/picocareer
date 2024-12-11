@@ -12,7 +12,17 @@ export const useFeaturedMajors = () => {
         .limit(4);
 
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match the expected Major type
+      return data.map(major => ({
+        title: major.title,
+        description: major.description,
+        users: `${Math.floor(Math.random() * 900 + 100)}K`, // Placeholder
+        imageUrl: major.image_url || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97",
+        relatedCareers: major.career_opportunities || [],
+        requiredCourses: major.required_courses || [],
+        averageGPA: major.average_gpa?.toString() || "3.0+"
+      }));
     }
   });
 };
