@@ -69,13 +69,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           }}
           theme={theme === 'dark' ? 'dark' : 'light'}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: error.message,
-            });
-          }}
           localization={{
             variables: {
               sign_in: {
