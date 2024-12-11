@@ -28,7 +28,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   // Only process data if it exists and is an array
   if (Array.isArray(data)) {
     data.forEach(item => {
-      if (item && groupedResults[`${item.type}s`]) {
+      if (item && item.type && groupedResults[`${item.type}s`]) {
         groupedResults[`${item.type}s`].push(item);
       }
     });
@@ -49,7 +49,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
-  const hasResults = Object.values(groupedResults).some(group => group.length > 0);
+  const hasResults = Object.values(groupedResults).some(group => Array.isArray(group) && group.length > 0);
 
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -62,7 +62,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
-            items && items.length > 0 ? (
+            Array.isArray(items) && items.length > 0 ? (
               <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
                 {items.map((result) => (
                   <CommandItem
