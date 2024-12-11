@@ -13,11 +13,6 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   
-  // Early return if query is too short
-  if (!query || query.length <= 2) {
-    return null;
-  }
-
   // Initialize empty arrays for each category
   const groupedResults: Record<string, SearchResult[]> = {
     careers: [],
@@ -61,6 +56,14 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const renderResults = () => {
     if (isLoading) {
       return <CommandEmpty>Searching...</CommandEmpty>;
+    }
+    
+    if (!query) {
+      return <CommandEmpty>Start typing to search...</CommandEmpty>;
+    }
+    
+    if (query.length <= 2) {
+      return <CommandEmpty>Type at least 3 characters to search...</CommandEmpty>;
     }
     
     if (!hasResults) {
@@ -117,7 +120,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   };
 
   return (
-    <Card className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
+    <Card className="search-results absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
       <Command className="border-none bg-transparent">
         <CommandInput 
           placeholder="Type to search..." 

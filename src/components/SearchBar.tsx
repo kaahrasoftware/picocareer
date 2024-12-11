@@ -7,6 +7,7 @@ interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 export const SearchBar = ({ className, ...props }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   return (
@@ -17,6 +18,13 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
           className="w-full h-12 pl-6 pr-24 rounded-full bg-white/95 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={(e) => {
+            // Only hide if not clicking within the results
+            if (!e.relatedTarget?.closest('.search-results')) {
+              setIsFocused(false);
+            }
+          }}
           {...props}
         />
         <Button 
@@ -27,8 +35,14 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
         </Button>
       </div>
       
-      {searchQuery && searchQuery.length > 2 && (
-        <SearchResults query={debouncedSearch} onClose={() => setSearchQuery("")} />
+      {isFocused && (
+        <SearchResults 
+          query={debouncedSearch} 
+          onClose={() => {
+            setSearchQuery("");
+            setIsFocused(false);
+          }} 
+        />
       )}
     </div>
   );
