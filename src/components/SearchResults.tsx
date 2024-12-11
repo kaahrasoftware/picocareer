@@ -11,11 +11,16 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data, isLoading } = useSearchData(query);
   
+  // Don't process data if query is empty
+  if (!query) {
+    return null;
+  }
+
   // Initialize empty arrays for each category with proper type checking
   const groupedResults = {
-    careers: (data || []).filter(item => item?.type === 'career') || [],
-    majors: (data || []).filter(item => item?.type === 'major') || [],
-    mentors: (data || []).filter(item => item?.type === 'mentor') || []
+    careers: Array.isArray(data) ? data.filter(item => item?.type === 'career') : [],
+    majors: Array.isArray(data) ? data.filter(item => item?.type === 'major') : [],
+    mentors: Array.isArray(data) ? data.filter(item => item?.type === 'mentor') : []
   };
 
   const getIcon = (type: string) => {
@@ -31,11 +36,6 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
-  // Only render if we have a query
-  if (!query) {
-    return null;
-  }
-
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Command className="border-none bg-transparent">
@@ -43,7 +43,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         
         {isLoading ? (
           <CommandEmpty>Searching...</CommandEmpty>
-        ) : (!data || data.length === 0) ? (
+        ) : (!Array.isArray(data) || data.length === 0) ? (
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
