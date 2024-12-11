@@ -11,6 +11,7 @@ export function ProfileHeader() {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
 
   const skills = [
     { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
@@ -38,25 +39,42 @@ export function ProfileHeader() {
   }, [skills.length]);
 
   useEffect(() => {
-    fetchProfile();
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user?.id) {
+        fetchProfile(session.user.id);
+      }
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user?.id) {
+        fetchProfile(session.user.id);
+      } else {
+        setAvatarUrl(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data, error } = await supabase
         .from('profiles')
         .select('avatar_url')
-        .eq('id', user.id)
+        .eq('id', userId)
         .maybeSingle();
-
+      
       if (error) {
         console.error('Error fetching profile:', error);
         return;
       }
-
+      
       setAvatarUrl(data?.avatar_url || null);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
@@ -65,6 +83,15 @@ export function ProfileHeader() {
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      if (!session?.user?.id) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to upload an avatar",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
@@ -73,11 +100,7 @@ export function ProfileHeader() {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error('No user found');
-      
-      const filePath = `${user.id}.${fileExt}`;
+      const filePath = `${session.user.id}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -94,7 +117,7 @@ export function ProfileHeader() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
+        .eq('id', session.user.id);
 
       if (updateError) {
         throw updateError;
@@ -131,16 +154,18 @@ export function ProfileHeader() {
               alt="Profile"
               className="w-full h-full object-cover"
             />
-            <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={uploadAvatar}
-                disabled={uploading}
-              />
-              <Upload className="w-6 h-6 text-white" />
-            </label>
+            {session?.user && (
+              <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={uploadAvatar}
+                  disabled={uploading}
+                />
+                <Upload className="w-6 h-6 text-white" />
+              </label>
+            )}
           </div>
           {uploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
