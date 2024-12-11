@@ -11,6 +11,10 @@ export interface SearchResult {
   average_salary?: number;
   field_of_study?: string;
   degree_level?: string;
+  // Add missing properties for majors
+  image_url?: string;
+  required_courses?: string[];
+  average_gpa?: number;
 }
 
 export const useSearchData = (query: string) => {
