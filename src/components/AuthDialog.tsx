@@ -78,22 +78,24 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               sign_in: {
                 email_label: 'Email Address',
                 password_label: 'Password',
-                button_label: 'Login',
+                button_label: 'Sign In',
                 loading_button_label: 'Signing in...',
                 link_text: "Don't have an account? Sign up",
+                forgotten_password_label: 'Forgot your password?'
               },
               sign_up: {
                 email_label: 'Email Address',
                 password_label: 'Password',
-                button_label: 'Sign Up',
-                loading_button_label: 'Signing up...',
+                button_label: 'Create Account',
+                loading_button_label: 'Creating account...',
                 link_text: 'Already have an account? Sign in',
+                full_name_label: 'Full Name'
               },
               forgotten_password: {
                 email_label: 'Email Address',
                 button_label: 'Send Reset Instructions',
                 loading_button_label: 'Sending reset instructions...',
-                link_text: 'Back to sign in',
+                link_text: 'Back to sign in'
               },
             },
           }}

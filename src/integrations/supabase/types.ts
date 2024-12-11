@@ -105,10 +105,12 @@ export type Database = {
           company: string
           created_at: string | null
           education: string | null
+          email: string | null
           id: number
           image_url: string
           keywords: string[] | null
           name: string
+          password: string
           position: string | null
           sessions_held: string | null
           skills: string[] | null
@@ -124,10 +126,12 @@ export type Database = {
           company: string
           created_at?: string | null
           education?: string | null
+          email?: string | null
           id?: number
           image_url: string
           keywords?: string[] | null
           name: string
+          password?: string
           position?: string | null
           sessions_held?: string | null
           skills?: string[] | null
@@ -143,10 +147,12 @@ export type Database = {
           company?: string
           created_at?: string | null
           education?: string | null
+          email?: string | null
           id?: number
           image_url?: string
           keywords?: string[] | null
           name?: string
+          password?: string
           position?: string | null
           sessions_held?: string | null
           skills?: string[] | null
