@@ -59,7 +59,7 @@ export const MentorCard = ({ mentor, featured }: MentorCardProps) => {
       </Card>
 
       <MentorDetailsDialog
-        mentor={mentor}
+        mentorId={mentor.id}
         open={showDetails}
         onOpenChange={setShowDetails}
       />

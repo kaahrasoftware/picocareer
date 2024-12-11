@@ -7,18 +7,45 @@ import { MentorBio } from "./mentor/MentorBio";
 import { MentorStats } from "./mentor/MentorStats";
 import { MentorSkills } from "./mentor/MentorSkills";
 import { MentorActions } from "./mentor/MentorActions";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MentorDetailsDialogProps {
-  mentor: User;
+  mentorId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const MentorDetailsDialog = ({
-  mentor,
+  mentorId,
   open,
   onOpenChange,
 }: MentorDetailsDialogProps) => {
+  const { data: mentor, isLoading } = useQuery({
+    queryKey: ['mentor', mentorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', mentorId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Handle case where no user was found
+          return null;
+        }
+        throw error;
+      }
+
+      return data as User;
+    },
+  });
+
+  if (!mentor) {
+    return null;
+  }
+
   const stats = parseStats(mentor.stats);
 
   return (
