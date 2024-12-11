@@ -23,7 +23,10 @@ export const TopRatedMentorsSection = () => {
         .eq('top_rated', true)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching top rated mentors:', error);
+        throw error;
+      }
       
       return data?.map(mentor => ({
         ...mentor,

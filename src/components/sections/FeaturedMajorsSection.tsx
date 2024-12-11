@@ -19,17 +19,12 @@ export const FeaturedMajorsSection = () => {
         .order('created_at', { ascending: false })
         .limit(6);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching majors:', error);
+        throw error;
+      }
       
-      return data?.map(major => ({
-        title: major.title,
-        description: major.description,
-        users: major.users,
-        imageUrl: major.image_url,
-        relatedCareers: major.related_careers,
-        requiredCourses: major.required_courses,
-        averageGPA: major.average_gpa
-      })) || [];
+      return data || [];
     },
   });
 
@@ -66,8 +61,8 @@ export const FeaturedMajorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {majors?.map((major, index) => (
-            <CarouselItem key={index} className="basis-1/3">
+          {majors?.map((major) => (
+            <CarouselItem key={major.id} className="basis-1/3">
               <MajorCard {...major} />
             </CarouselItem>
           ))}

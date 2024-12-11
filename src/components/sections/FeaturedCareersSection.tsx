@@ -23,20 +23,12 @@ export const FeaturedCareersSection = () => {
         .eq('featured', true)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching featured careers:', error);
+        throw error;
+      }
       
-      return data?.map(career => ({
-        title: career.title,
-        description: career.description,
-        users: career.users,
-        salary: career.salary,
-        imageUrl: career.image_url,
-        relatedMajors: career.related_majors,
-        relatedCareers: career.related_careers,
-        skills: career.skills,
-        category: career.category,
-        levelOfStudy: career.level_of_study
-      })) || [];
+      return data || [];
     },
   });
 
@@ -74,8 +66,8 @@ export const FeaturedCareersSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {featuredCareers?.map((career, index) => (
-            <CarouselItem key={index} className="basis-1/3">
+          {featuredCareers?.map((career) => (
+            <CarouselItem key={career.id} className="basis-1/3">
               <CareerCard {...career} />
             </CarouselItem>
           ))}
