@@ -1,7 +1,6 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { StoriesSection } from "@/components/sections/StoriesSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
@@ -45,7 +44,6 @@ const Index = () => {
           <ThemeToggle />
           <div className="max-w-[1400px] mx-auto">
             <HeroSection />
-            <StoriesSection />
             <FeaturedCareersSection />
             <FeaturedMajorsSection />
             <TopRatedMentorsSection />
