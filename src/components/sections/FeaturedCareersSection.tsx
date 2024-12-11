@@ -20,8 +20,8 @@ export const FeaturedCareersSection = () => {
       const { data, error } = await supabase
         .from('careers')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4);
+        .eq('featured', true)
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       
@@ -37,12 +37,23 @@ export const FeaturedCareersSection = () => {
         skills: career.skills,
         category: career.category,
         levelOfStudy: career.level_of_study
-      }));
+      })) || [];
     },
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Careers</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </section>
+    );
   }
 
   return (
