@@ -13,6 +13,7 @@ import { BookSessionDialog } from "./BookSessionDialog";
 
 interface MentorDetailsDialogProps {
   mentor: {
+    id?: string; // Make id optional to match existing usage
     title: string;
     company: string;
     imageUrl: string;

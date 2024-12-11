@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { DateSelector } from "./booking/DateSelector";
+import { TimeSlotSelector } from "./booking/TimeSlotSelector";
+import { SessionTypeSelector } from "./booking/SessionTypeSelector";
+import { SessionNote } from "./booking/SessionNote";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -18,17 +19,17 @@ interface BookSessionDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface TimeSlot {
+  time: string;
+  available: boolean;
+}
+
 interface SessionType {
   id: string;
   type: string;
   duration: number;
   price: number;
   description: string | null;
-}
-
-interface TimeSlot {
-  time: string;
-  available: boolean;
 }
 
 export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDialogProps) {
@@ -41,7 +42,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const { toast } = useToast();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Fetch session types for this mentor
   useEffect(() => {
     async function fetchSessionTypes() {
       const { data, error } = await supabase
@@ -66,7 +66,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     }
   }, [mentor.id, open, toast]);
 
-  // Fetch available time slots when date changes
   useEffect(() => {
     async function fetchAvailability() {
       if (!date) return;
@@ -103,7 +102,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         .lte('scheduled_at', endOfDay.toISOString())
         .neq('status', 'cancelled');
 
-      // Generate available time slots based on availability and bookings
+      // Generate available time slots
       const slots: TimeSlot[] = [];
       availabilityData?.forEach((availability) => {
         const [startHour] = availability.start_time.split(':');
@@ -174,67 +173,31 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-semibold mb-2">Select Date</h4>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="bg-kahra-darker rounded-lg p-4"
-              disabled={(date) => date < new Date()}
-            />
-            <div className="mt-4 text-sm text-gray-400">
-              <p>Your timezone: {userTimezone}</p>
-            </div>
-          </div>
+          <DateSelector
+            date={date}
+            onDateSelect={setDate}
+            userTimezone={userTimezone}
+          />
 
           <div className="space-y-6">
             {date && (
-              <div>
-                <h4 className="font-semibold mb-2">
-                  Available Times for {format(date, "MMMM d, yyyy")}
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {availableTimeSlots.map((slot) => (
-                    <Button
-                      key={slot.time}
-                      variant={selectedTime === slot.time ? "default" : "outline"}
-                      onClick={() => setSelectedTime(slot.time)}
-                      disabled={!slot.available}
-                      className="w-full"
-                    >
-                      {slot.time}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <TimeSlotSelector
+                date={date}
+                availableTimeSlots={availableTimeSlots}
+                selectedTime={selectedTime}
+                onTimeSelect={setSelectedTime}
+              />
             )}
 
-            <div>
-              <h4 className="font-semibold mb-2">Session Type</h4>
-              <Select onValueChange={setSessionType}>
-                <SelectTrigger className="w-full bg-kahra-darker border-none">
-                  <SelectValue placeholder="Select session type" />
-                </SelectTrigger>
-                <SelectContent className="bg-kahra-darker border-none">
-                  {sessionTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.type} ({type.duration} min) - ${type.price}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SessionTypeSelector
+              sessionTypes={sessionTypes}
+              onSessionTypeSelect={setSessionType}
+            />
 
-            <div>
-              <h4 className="font-semibold mb-2">Note for the Meeting</h4>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Share what you'd like to discuss..."
-                className="bg-kahra-darker border-none resize-none h-32"
-              />
-            </div>
+            <SessionNote
+              note={note}
+              onNoteChange={setNote}
+            />
           </div>
         </div>
 
