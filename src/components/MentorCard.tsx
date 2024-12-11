@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
 import { User } from "@/integrations/supabase/types/user.types";
 
-type MentorCardProps = Omit<User, 'password'>;
+type MentorCardProps = Omit<User, 'password' | 'email'>;
 
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);

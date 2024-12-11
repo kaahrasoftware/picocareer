@@ -22,7 +22,15 @@ const fetchTopRatedMentors = async () => {
     throw error;
   }
 
-  return data as User[];
+  if (!data) return [];
+
+  // Convert stats from JSON to UserStats type
+  return data.map(mentor => ({
+    ...mentor,
+    stats: typeof mentor.stats === 'string' 
+      ? JSON.parse(mentor.stats)
+      : mentor.stats
+  })) as User[];
 };
 
 export const TopRatedMentorsSection = () => {

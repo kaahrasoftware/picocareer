@@ -1,7 +1,7 @@
 interface MentorSkillsProps {
   skills: string[] | null;
   tools: string[] | null;
-  keywords: string[] | null;
+  keywords?: string[] | null;
 }
 
 export function MentorSkills({ skills, tools, keywords }: MentorSkillsProps) {
@@ -29,16 +29,18 @@ export function MentorSkills({ skills, tools, keywords }: MentorSkillsProps) {
         </div>
       </div>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Keywords</h3>
-        <div className="flex flex-wrap gap-2">
-          {keywords?.map((keyword, index) => (
-            <span key={index} className="px-2 py-1 bg-primary/10 rounded-md text-sm">
-              {keyword}
-            </span>
-          ))}
+      {keywords && (
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Keywords</h3>
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword, index) => (
+              <span key={index} className="px-2 py-1 bg-primary/10 rounded-md text-sm">
+                {keyword}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
