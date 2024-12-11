@@ -36,7 +36,7 @@ export const FeaturedCareersSection = () => {
     return (
       <section className="mb-16">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Featured Careers</h2>
+          <h2 className="text-2xl font-bold text-white">Featured Careers</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
@@ -50,7 +50,7 @@ export const FeaturedCareersSection = () => {
   return (
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Featured Careers</h2>
+        <h2 className="text-2xl font-bold text-white">Featured Careers</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
           className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
@@ -65,9 +65,9 @@ export const FeaturedCareersSection = () => {
         }}
         className="w-full"
       >
-        <CarouselContent>
+        <CarouselContent className="-ml-4">
           {featuredCareers?.map((career) => (
-            <CarouselItem key={career.id} className="basis-1/3">
+            <CarouselItem key={career.id} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <CareerCard {...career} />
             </CarouselItem>
           ))}
