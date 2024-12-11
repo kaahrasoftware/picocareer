@@ -16,7 +16,7 @@ export function BlogPostDialog({ blog, isOpen, onClose }: BlogPostDialogProps) {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <BlogPostHeader blog={blog} />
         <BlogPostContent blog={blog} />
-        <RelatedPosts blog={blog} />
+        <RelatedPosts blog={blog} isOpen={isOpen} />
       </DialogContent>
     </Dialog>
   );

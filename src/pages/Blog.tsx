@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { BlogWithAuthor } from "@/types/blog";
+import { BlogWithAuthor } from "@/types/blog/types";
 import { useState } from "react";
 import { BlogFilters } from "@/components/blog/BlogFilters";
 import { BlogCard } from "@/components/blog/BlogCard";

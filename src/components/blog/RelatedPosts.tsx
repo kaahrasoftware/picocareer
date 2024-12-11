@@ -5,9 +5,10 @@ import { BlogCard } from "./BlogCard";
 
 interface RelatedPostsProps {
   blog: BlogWithAuthor;
+  isOpen: boolean;
 }
 
-export function RelatedPosts({ blog }: RelatedPostsProps) {
+export function RelatedPosts({ blog, isOpen }: RelatedPostsProps) {
   const { data: relatedPosts } = useQuery({
     queryKey: ['related-posts', blog.id, blog.categories, blog.subcategories],
     queryFn: async () => {
