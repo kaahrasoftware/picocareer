@@ -9,10 +9,6 @@ import { ProfileHeader } from "./profile/ProfileHeader";
 import { ProfileTab } from "./profile/ProfileTab";
 import { DashboardTab } from "./profile/DashboardTab";
 import { SettingsTab } from "./profile/SettingsTab";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -20,25 +16,6 @@ interface ProfileDialogProps {
 }
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
-  const { toast } = useToast();
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "You have been logged out.",
-      });
-      onOpenChange(false);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] bg-kahra-darker text-white overflow-y-auto overflow-x-hidden">
@@ -80,17 +57,6 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             </TabsContent>
           </div>
         </Tabs>
-
-        <div className="mt-6 border-t border-border pt-4">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

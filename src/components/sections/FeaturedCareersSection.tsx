@@ -9,49 +9,47 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const FEATURED_CAREERS = [
+const featuredCareers = [
   {
-    id: 1,
-    title: "Software Engineer",
-    description: "Design and develop software applications",
-    users: "15K",
-    salary: "$120K/year",
-    image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60",
-    related_majors: ["Computer Science", "Software Engineering"],
-    related_careers: ["Full Stack Developer", "DevOps Engineer"],
-    skills: ["JavaScript", "Python", "Cloud Computing"],
-    category: "technology",
-    level_of_study: "bachelor",
-    created_at: new Date().toISOString()
+    title: "Cybersecurity Analyst",
+    description: "Thrive in a cybersecurity career defending against online threats and securing information.",
+    users: "72.3K",
+    salary: "$75K - $110K",
+    imageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b",
+    relatedMajors: ["Computer Science", "Information Technology", "Network Security"],
+    relatedCareers: ["Security Engineer", "Network Administrator", "IT Consultant"],
+    skills: ["Network Security", "Cryptography", "Risk Analysis", "Security Tools"],
   },
   {
-    id: 2,
-    title: "Data Scientist",
-    description: "Analyze complex data sets to drive business decisions",
-    users: "10K",
-    salary: "$115K/year",
-    image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60",
-    related_majors: ["Data Science", "Statistics"],
-    related_careers: ["Data Analyst", "Machine Learning Engineer"],
-    skills: ["Python", "SQL", "Machine Learning"],
-    category: "technology",
-    level_of_study: "master",
-    created_at: new Date().toISOString()
+    title: "Healthcare",
+    description: "Healthcare fosters well-being through diverse services for individuals' physical and mental health needs.",
+    users: "125.2M",
+    salary: "$60K - $150K",
+    imageUrl: "https://images.unsplash.com/photo-1584982751601-97dcc096659c",
+    relatedMajors: ["Nursing", "Public Health", "Biology", "Pre-Med"],
+    relatedCareers: ["Nurse", "Medical Doctor", "Healthcare Administrator"],
+    skills: ["Patient Care", "Medical Knowledge", "Communication", "Empathy"],
   },
   {
-    id: 3,
-    title: "UX Designer",
-    description: "Create intuitive and engaging user experiences",
-    users: "8K",
-    salary: "$95K/year",
-    image_url: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&auto=format&fit=crop&q=60",
-    related_majors: ["Design", "Human-Computer Interaction"],
-    related_careers: ["UI Designer", "Product Designer"],
-    skills: ["User Research", "Wireframing", "Prototyping"],
-    category: "design",
-    level_of_study: "bachelor",
-    created_at: new Date().toISOString()
-  }
+    title: "Software Engineering",
+    description: "Build innovative solutions and shape the digital future through code and creativity.",
+    users: "754.8K",
+    salary: "$90K - $120K",
+    imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
+    relatedMajors: ["Computer Science", "Software Engineering", "Information Systems"],
+    relatedCareers: ["Full Stack Developer", "DevOps Engineer", "Mobile Developer"],
+    skills: ["Programming", "Problem Solving", "System Design", "Algorithms"],
+  },
+  {
+    title: "Accountant",
+    description: "Guide financial success through expert analysis and strategic planning.",
+    users: "432.1K",
+    salary: "$65K - $95K",
+    imageUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c",
+    relatedMajors: ["Accounting", "Finance", "Business Administration"],
+    relatedCareers: ["Financial Analyst", "Tax Advisor", "Auditor"],
+    skills: ["Financial Analysis", "Tax Laws", "Bookkeeping", "Business Acumen"],
+  },
 ];
 
 export const FeaturedCareersSection = () => {
@@ -63,7 +61,7 @@ export const FeaturedCareersSection = () => {
         <h2 className="text-2xl font-bold">Featured Careers</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-primary hover:text-primary/80 transition-colors"
+          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
         >
           View all
         </button>
@@ -76,8 +74,8 @@ export const FeaturedCareersSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {FEATURED_CAREERS.map((career) => (
-            <CarouselItem key={career.id} className="basis-1/3">
+          {featuredCareers.map((career, index) => (
+            <CarouselItem key={index} className="basis-1/3">
               <CareerCard {...career} />
             </CarouselItem>
           ))}
@@ -88,7 +86,7 @@ export const FeaturedCareersSection = () => {
       <CareerListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        careers={FEATURED_CAREERS}
+        careers={featuredCareers}
       />
     </section>
   );

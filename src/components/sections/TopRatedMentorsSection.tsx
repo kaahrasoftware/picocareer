@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
-import { MentorListDialog } from "@/components/MentorListDialog";
 import {
   Carousel,
   CarouselContent,
@@ -9,82 +8,55 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const TOP_RATED_MENTORS = [
+const topRatedMentors = [
   {
-    id: "1",
-    title: "Senior Software Engineer",
-    company: "Google",
-    image_url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60",
-    full_name: "John Smith",
-    username: "johnsmith",
-    bio: "10+ years of experience in software development",
-    position: "Tech Lead",
-    education: "MS Computer Science",
-    sessions_held: "50",
+    title: "Sr. UI/UX Designer",
+    company: "Microsoft Inc.",
+    imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+    name: "Anya Greiner",
     stats: {
-      mentees: "120",
-      connected: "95",
-      recordings: "45"
+      mentees: "495",
+      connected: "579K",
+      recordings: "57K",
     },
-    user_type: "mentor",
-    top_rated: true,
-    skills: ["React", "Node.js", "System Design"],
-    tools: ["VS Code", "Git", "Docker"],
-    keywords: ["software", "engineering", "leadership"],
-    email: "john@example.com",
-    password: "123456789",
-    created_at: new Date().toISOString()
+    username: "anyagreiner",
   },
   {
-    id: "2",
-    title: "Product Manager",
-    company: "Microsoft",
-    image_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60",
-    full_name: "Sarah Johnson",
-    username: "sarahj",
-    bio: "Experienced in product strategy and development",
-    position: "Senior PM",
-    education: "MBA",
-    sessions_held: "35",
+    title: "Chief Information Security Officer",
+    company: "Lenovo",
+    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
+    name: "Jeffrey Egoyo",
     stats: {
-      mentees: "85",
-      connected: "70",
-      recordings: "30"
+      mentees: "495",
+      connected: "579K",
+      recordings: "57K",
     },
-    user_type: "mentor",
-    top_rated: true,
-    skills: ["Product Strategy", "Agile", "User Research"],
-    tools: ["Jira", "Figma", "Amplitude"],
-    keywords: ["product", "management", "strategy"],
-    email: "sarah@example.com",
-    password: "123456789",
-    created_at: new Date().toISOString()
+    username: "jeffegoyo",
   },
   {
-    id: "3",
-    title: "Data Science Lead",
-    company: "Amazon",
-    image_url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&auto=format&fit=crop&q=60",
-    full_name: "Michael Chen",
-    username: "michaelc",
-    bio: "Expert in machine learning and data analytics",
-    position: "Technical Lead",
-    education: "PhD Statistics",
-    sessions_held: "40",
+    title: "Computer Science",
+    company: "Georgia Tech",
+    imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
+    name: "Anya Greiner",
     stats: {
-      mentees: "95",
-      connected: "80",
-      recordings: "35"
+      mentees: "495",
+      connected: "579K",
+      recordings: "57",
     },
-    user_type: "mentor",
-    top_rated: true,
-    skills: ["Machine Learning", "Python", "Statistics"],
-    tools: ["Python", "TensorFlow", "SQL"],
-    keywords: ["data", "science", "analytics"],
-    email: "michael@example.com",
-    password: "123456789",
-    created_at: new Date().toISOString()
-  }
+    username: "anyagreiner",
+  },
+  {
+    title: "Pharmacist",
+    company: "Walmart",
+    imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+    name: "Gary Greiner",
+    stats: {
+      mentees: "495",
+      connected: "579K",
+      recordings: "57K",
+    },
+    username: "garygreiner",
+  },
 ];
 
 export const TopRatedMentorsSection = () => {
@@ -96,7 +68,7 @@ export const TopRatedMentorsSection = () => {
         <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-primary hover:text-primary/80 transition-colors"
+          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
         >
           View all
         </button>
@@ -109,8 +81,8 @@ export const TopRatedMentorsSection = () => {
         className="w-full"
       >
         <CarouselContent>
-          {TOP_RATED_MENTORS.map((mentor) => (
-            <CarouselItem key={mentor.id} className="basis-1/3">
+          {topRatedMentors.map((mentor, index) => (
+            <CarouselItem key={index} className="basis-1/3">
               <MentorCard {...mentor} />
             </CarouselItem>
           ))}
@@ -118,11 +90,6 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
-      <MentorListDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        mentors={TOP_RATED_MENTORS}
-      />
     </section>
   );
 };

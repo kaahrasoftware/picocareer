@@ -9,161 +9,29 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      careers: {
+      Users: {
         Row: {
-          category: string | null
-          created_at: string | null
-          description: string
-          featured: boolean | null
+          created_at: string
+          first_name: string | null
           id: number
-          image_url: string
-          level_of_study: string | null
-          related_careers: string[]
-          related_majors: string[]
-          salary: string
-          skills: string[]
-          title: string
-          users: string
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description: string
-          featured?: boolean | null
-          id?: number
-          image_url: string
-          level_of_study?: string | null
-          related_careers?: string[]
-          related_majors?: string[]
-          salary: string
-          skills?: string[]
-          title: string
-          users: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string
-          featured?: boolean | null
-          id?: number
-          image_url?: string
-          level_of_study?: string | null
-          related_careers?: string[]
-          related_majors?: string[]
-          salary?: string
-          skills?: string[]
-          title?: string
-          users?: string
-        }
-        Relationships: []
-      }
-      majors: {
-        Row: {
-          average_gpa: string
-          category: string | null
-          created_at: string | null
-          description: string
-          featured: boolean | null
-          id: number
-          image_url: string
-          level_of_study: string | null
-          related_careers: string[]
-          required_courses: string[]
-          title: string
-          users: string
-        }
-        Insert: {
-          average_gpa: string
-          category?: string | null
-          created_at?: string | null
-          description: string
-          featured?: boolean | null
-          id?: number
-          image_url: string
-          level_of_study?: string | null
-          related_careers?: string[]
-          required_courses?: string[]
-          title: string
-          users: string
-        }
-        Update: {
-          average_gpa?: string
-          category?: string | null
-          created_at?: string | null
-          description?: string
-          featured?: boolean | null
-          id?: number
-          image_url?: string
-          level_of_study?: string | null
-          related_careers?: string[]
-          required_courses?: string[]
-          title?: string
-          users?: string
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          bio: string | null
-          company: string
-          created_at: string | null
-          education: string | null
-          email: string | null
-          full_name: string
-          id: string
-          image_url: string
-          keywords: string[] | null
+          last_name: string | null
           password: string
-          position: string | null
-          sessions_held: string | null
-          skills: string[] | null
-          stats: Json
-          title: string
-          tools: string[] | null
-          top_rated: boolean | null
-          user_type: string | null
           username: string
         }
         Insert: {
-          bio?: string | null
-          company: string
-          created_at?: string | null
-          education?: string | null
-          email?: string | null
-          full_name: string
-          id?: string
-          image_url: string
-          keywords?: string[] | null
+          created_at?: string
+          first_name?: string | null
+          id?: number
+          last_name?: string | null
           password?: string
-          position?: string | null
-          sessions_held?: string | null
-          skills?: string[] | null
-          stats?: Json
-          title: string
-          tools?: string[] | null
-          top_rated?: boolean | null
-          user_type?: string | null
-          username: string
+          username?: string
         }
         Update: {
-          bio?: string | null
-          company?: string
-          created_at?: string | null
-          education?: string | null
-          email?: string | null
-          full_name?: string
-          id?: string
-          image_url?: string
-          keywords?: string[] | null
+          created_at?: string
+          first_name?: string | null
+          id?: number
+          last_name?: string | null
           password?: string
-          position?: string | null
-          sessions_held?: string | null
-          skills?: string[] | null
-          stats?: Json
-          title?: string
-          tools?: string[] | null
-          top_rated?: boolean | null
-          user_type?: string | null
           username?: string
         }
         Relationships: []

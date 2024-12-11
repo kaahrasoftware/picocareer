@@ -1,179 +1,90 @@
-import { useState } from "react";
-import { Command } from "cmdk";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Card } from "@/components/ui/card";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
-import { MajorDetailsDialog } from "@/components/MajorDetailsDialog";
-import { MentorDetailsDialog } from "@/components/MentorDetailsDialog";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { GraduationCap, Briefcase, School, Users } from "lucide-react";
 
 interface SearchResultsProps {
   query: string;
-  isOpen: boolean;
   onClose: () => void;
-  careers?: any[];
-  majors?: any[];
-  mentors?: any[];
 }
 
-export function SearchResults({ 
-  query, 
-  isOpen, 
-  onClose,
-  careers = [],
-  majors = [],
-  mentors = []
-}: SearchResultsProps) {
-  const [selectedCareer, setSelectedCareer] = useState<any>(null);
-  const [selectedMajor, setSelectedMajor] = useState<any>(null);
-  const [selectedMentor, setSelectedMentor] = useState<any>(null);
+interface SearchResult {
+  id: string;
+  title: string;
+  type: 'career' | 'major' | 'school' | 'mentor';
+  description?: string;
+}
 
-  if (!isOpen) return null;
+export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
+  // Mock data - in a real app, this would come from your backend
+  const allResults: SearchResult[] = [
+    { id: '1', title: "Software Engineering", type: "career", description: "Design and develop software applications" },
+    { id: '2', title: "Data Science", type: "career", description: "Analyze and interpret complex data" },
+    { id: '3', title: "Computer Science", type: "major", description: "Study of computation and information" },
+    { id: '4', title: "Mathematics", type: "major", description: "Study of numbers, quantities, and shapes" },
+    { id: '5', title: "MIT", type: "school", description: "Massachusetts Institute of Technology" },
+    { id: '6', title: "Stanford", type: "school", description: "Stanford University" },
+    { id: '7', title: "John Smith", type: "mentor", description: "Senior Software Engineer at Google" },
+    { id: '8', title: "Sarah Johnson", type: "mentor", description: "Data Science Lead at Amazon" },
+  ];
+
+  const filteredResults = allResults.filter(result => 
+    result.title.toLowerCase().includes(query.toLowerCase()) ||
+    result.description?.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'career':
+        return <Briefcase className="w-4 h-4 mr-2" />;
+      case 'major':
+        return <GraduationCap className="w-4 h-4 mr-2" />;
+      case 'school':
+        return <School className="w-4 h-4 mr-2" />;
+      case 'mentor':
+        return <Users className="w-4 h-4 mr-2" />;
+      default:
+        return null;
+    }
+  };
+
+  const groupedResults = {
+    careers: filteredResults.filter(r => r.type === 'career'),
+    majors: filteredResults.filter(r => r.type === 'major'),
+    schools: filteredResults.filter(r => r.type === 'school'),
+    mentors: filteredResults.filter(r => r.type === 'mentor'),
+  };
 
   return (
-    <>
-      <Card className="absolute top-full left-0 right-0 z-50 mt-2 bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg">
-        <Command className="rounded-lg border-none bg-transparent">
-          <Command.List className="max-h-[400px] overflow-y-auto p-4">
-            {query.length > 0 ? (
-              <div className="space-y-6">
-                {/* Careers Section */}
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Careers</h3>
-                  <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex space-x-4 pb-4">
-                      {careers?.length > 0 ? (
-                        careers.map((career) => (
-                          <Card 
-                            key={career.id}
-                            className="flex-none w-[200px] cursor-pointer hover:scale-105 transition-transform"
-                            onClick={() => setSelectedCareer(career)}
-                          >
-                            <img 
-                              src={career.image_url} 
-                              alt={career.title}
-                              className="w-full h-24 object-cover rounded-t-lg"
-                            />
-                            <div className="p-3">
-                              <h4 className="font-medium truncate">{career.title}</h4>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {career.salary}
-                              </p>
-                            </div>
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No careers found
-                        </div>
-                      )}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </div>
-
-                {/* Majors Section */}
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Majors</h3>
-                  <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex space-x-4 pb-4">
-                      {majors?.length > 0 ? (
-                        majors.map((major) => (
-                          <Card 
-                            key={major.id}
-                            className="flex-none w-[200px] cursor-pointer hover:scale-105 transition-transform"
-                            onClick={() => setSelectedMajor(major)}
-                          >
-                            <img 
-                              src={major.image_url} 
-                              alt={major.title}
-                              className="w-full h-24 object-cover rounded-t-lg"
-                            />
-                            <div className="p-3">
-                              <h4 className="font-medium truncate">{major.title}</h4>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {major.users} Students
-                              </p>
-                            </div>
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No majors found
-                        </div>
-                      )}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </div>
-
-                {/* Mentors Section */}
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Mentors</h3>
-                  <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex space-x-4 pb-4">
-                      {mentors?.length > 0 ? (
-                        mentors.map((mentor) => (
-                          <Card 
-                            key={mentor.id}
-                            className="flex-none w-[200px] cursor-pointer hover:scale-105 transition-transform"
-                            onClick={() => setSelectedMentor(mentor)}
-                          >
-                            <img 
-                              src={mentor.image_url} 
-                              alt={mentor.name}
-                              className="w-full h-24 object-cover rounded-t-lg"
-                            />
-                            <div className="p-3">
-                              <h4 className="font-medium truncate">{mentor.name}</h4>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {mentor.title}
-                              </p>
-                            </div>
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No mentors found
-                        </div>
-                      )}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </div>
-              </div>
-            ) : (
-              <Command.Empty className="py-6 text-center text-muted-foreground">
-                Start typing to search...
-              </Command.Empty>
-            )}
-          </Command.List>
-        </Command>
-      </Card>
-
-      {/* Detail Dialogs */}
-      {selectedCareer && (
-        <CareerDetailsDialog
-          career={selectedCareer}
-          open={!!selectedCareer}
-          onOpenChange={() => setSelectedCareer(null)}
-        />
-      )}
-      
-      {selectedMajor && (
-        <MajorDetailsDialog
-          major={selectedMajor}
-          open={!!selectedMajor}
-          onOpenChange={() => setSelectedMajor(null)}
-        />
-      )}
-      
-      {selectedMentor && (
-        <MentorDetailsDialog
-          mentor={selectedMentor}
-          open={!!selectedMentor}
-          onOpenChange={() => setSelectedMentor(null)}
-        />
-      )}
-    </>
+    <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <Command className="border-none bg-transparent">
+        <CommandInput placeholder="Type to search..." value={query} />
+        <CommandEmpty>No results found.</CommandEmpty>
+        
+        {Object.entries(groupedResults).map(([category, results]) => 
+          results.length > 0 && (
+            <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
+              {results.map((result) => (
+                <CommandItem
+                  key={result.id}
+                  onSelect={() => {
+                    console.log("Selected:", result);
+                    onClose();
+                  }}
+                  className="cursor-pointer hover:bg-white/10 flex items-center"
+                >
+                  {getIcon(result.type)}
+                  <div>
+                    <div className="font-medium">{result.title}</div>
+                    {result.description && (
+                      <div className="text-sm text-muted-foreground">{result.description}</div>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )
+        )}
+      </Command>
+    </Card>
   );
-}
+};

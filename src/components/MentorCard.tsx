@@ -4,29 +4,19 @@ import { MentorDetailsDialog } from "./MentorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
-import { User } from "@/integrations/supabase/types/user.types";
 
-type MentorCardProps = Pick<User, 
-  'id' | 
-  'title' | 
-  'company' | 
-  'image_url' | 
-  'full_name' | 
-  'username' | 
-  'bio' | 
-  'position' | 
-  'education' | 
-  'sessions_held' | 
-  'stats' | 
-  'skills' | 
-  'tools' | 
-  'keywords' |
-  'created_at' |
-  'user_type' |
-  'top_rated' |
-  'email' |
-  'password'
->;
+interface MentorCardProps {
+  title: string;
+  company: string;
+  imageUrl: string;
+  name: string;
+  stats: {
+    mentees: string;
+    connected: string;
+    recordings: string;
+  };
+  username: string;
+}
 
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -59,14 +49,14 @@ export function MentorCard(props: MentorCardProps) {
               </div>
             </div>
             <Avatar className="h-12 w-12">
-              <AvatarImage src={props.image_url} alt={props.full_name} />
-              <AvatarFallback>{props.full_name[0]}</AvatarFallback>
+              <AvatarImage src={props.imageUrl} alt={props.name} />
+              <AvatarFallback>{props.name[0]}</AvatarFallback>
             </Avatar>
           </div>
 
           <div className="flex justify-between items-center mt-auto">
             <div>
-              <p className="text-sm font-medium">{props.full_name}</p>
+              <p className="text-sm font-medium">{props.name}</p>
               <p className="text-xs text-muted-foreground">@{props.username}</p>
             </div>
             <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
