@@ -5,6 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,81 +53,84 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-kahra-darker">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[85vh] bg-kahra-darker p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold text-white">{career.title}</DialogTitle>
           <DialogDescription className="text-gray-300">{career.description}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6">
-          {career.image_url && (
-            <img src={career.image_url} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
-          )}
-          
-          <div className="flex justify-between text-sm text-gray-400">
-            <span>{career.industry}</span>
-            <span>{career.salary_range || `$${career.average_salary?.toLocaleString()}`}</span>
+        
+        <ScrollArea className="h-[calc(85vh-120px)] px-6">
+          <div className="space-y-6 pb-6">
+            {career.image_url && (
+              <img src={career.image_url} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
+            )}
+            
+            <div className="flex justify-between text-sm text-gray-400">
+              <span>{career.industry}</span>
+              <span>{career.salary_range || `$${career.average_salary?.toLocaleString()}`}</span>
+            </div>
+
+            {career.required_education && career.required_education.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Required Education</h3>
+                <div className="flex flex-wrap gap-2">
+                  {career.required_education.map((education) => (
+                    <span key={education} className="px-3 py-1 bg-kahra-primary/20 rounded-full text-sm text-white">
+                      {education}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {career.required_skills && career.required_skills.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Required Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {career.required_skills.map((skill) => (
+                    <span key={skill} className="px-3 py-1 bg-kahra-secondary/20 rounded-full text-sm text-white">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {career.required_tools && career.required_tools.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Required Tools</h3>
+                <div className="flex flex-wrap gap-2">
+                  {career.required_tools.map((tool) => (
+                    <span key={tool} className="px-3 py-1 bg-kahra-accent/20 rounded-full text-sm text-white">
+                      {tool}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {career.job_outlook && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Job Outlook</h3>
+                <p className="text-gray-300">{career.job_outlook}</p>
+              </div>
+            )}
+
+            {career.work_environment && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Work Environment</h3>
+                <p className="text-gray-300">{career.work_environment}</p>
+              </div>
+            )}
+
+            {career.growth_potential && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Growth Potential</h3>
+                <p className="text-gray-300">{career.growth_potential}</p>
+              </div>
+            )}
           </div>
-
-          {career.required_education && career.required_education.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Required Education</h3>
-              <div className="flex flex-wrap gap-2">
-                {career.required_education.map((education) => (
-                  <span key={education} className="px-3 py-1 bg-kahra-primary/20 rounded-full text-sm text-white">
-                    {education}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {career.required_skills && career.required_skills.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Required Skills</h3>
-              <div className="flex flex-wrap gap-2">
-                {career.required_skills.map((skill) => (
-                  <span key={skill} className="px-3 py-1 bg-kahra-secondary/20 rounded-full text-sm text-white">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {career.required_tools && career.required_tools.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Required Tools</h3>
-              <div className="flex flex-wrap gap-2">
-                {career.required_tools.map((tool) => (
-                  <span key={tool} className="px-3 py-1 bg-kahra-accent/20 rounded-full text-sm text-white">
-                    {tool}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {career.job_outlook && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Job Outlook</h3>
-              <p className="text-gray-300">{career.job_outlook}</p>
-            </div>
-          )}
-
-          {career.work_environment && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Work Environment</h3>
-              <p className="text-gray-300">{career.work_environment}</p>
-            </div>
-          )}
-
-          {career.growth_potential && (
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Growth Potential</h3>
-              <p className="text-gray-300">{career.growth_potential}</p>
-            </div>
-          )}
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
