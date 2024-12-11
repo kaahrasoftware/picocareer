@@ -15,12 +15,33 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     return null;
   }
 
+  // Initialize empty arrays for each category
   const groupedResults = {
-    careers: data?.filter(item => item.type === 'career') ?? [],
-    majors: data?.filter(item => item.type === 'major') ?? [],
-    mentors: data?.filter(item => item.type === 'mentor') ?? [],
-    blogs: data?.filter(item => item.type === 'blog') ?? []
+    careers: [],
+    majors: [],
+    mentors: [],
+    blogs: []
   };
+
+  // Only process data if it exists
+  if (data) {
+    data.forEach(item => {
+      switch (item.type) {
+        case 'career':
+          groupedResults.careers.push(item);
+          break;
+        case 'major':
+          groupedResults.majors.push(item);
+          break;
+        case 'mentor':
+          groupedResults.mentors.push(item);
+          break;
+        case 'blog':
+          groupedResults.blogs.push(item);
+          break;
+      }
+    });
+  }
 
   const getIcon = (type: string) => {
     switch (type) {
