@@ -22,6 +22,8 @@ export function useSessionTypes(mentorId: string, isOpen: boolean) {
 
   useEffect(() => {
     async function fetchSessionTypes() {
+      console.log("Fetching session types for mentor:", mentorId);
+      
       if (!mentorId || !isValidUUID(mentorId)) {
         console.log("Invalid mentor ID format:", mentorId);
         toast({
@@ -47,6 +49,7 @@ export function useSessionTypes(mentorId: string, isOpen: boolean) {
         return;
       }
 
+      console.log("Fetched session types:", data);
       setSessionTypes(data);
     }
 
