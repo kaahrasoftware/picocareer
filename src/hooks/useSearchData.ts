@@ -53,6 +53,7 @@ export const useSearchData = (query: string) => {
 
       return results;
     },
-    enabled: query.length > 0
+    enabled: query.length > 0,
+    initialData: [] // Provide initial data to prevent undefined
   });
 };
