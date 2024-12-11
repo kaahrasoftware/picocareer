@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
 
-interface CareerCardProps {
+export interface CareerCardProps {
   id: string;
   title: string;
   description: string;

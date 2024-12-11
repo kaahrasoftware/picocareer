@@ -38,16 +38,14 @@ export const FeaturedCareersSection = () => {
       >
         <CarouselContent>
           {careers.map((career) => (
-            <CarouselItem key={career.title} className="basis-1/3">
+            <CarouselItem key={career.id} className="basis-1/3">
               <CareerCard 
+                id={career.id}
                 title={career.title}
                 description={career.description}
-                users={career.users}
-                salary={career.salary}
-                imageUrl={career.imageUrl}
-                relatedMajors={career.relatedMajors}
-                relatedCareers={career.relatedCareers}
-                skills={career.skills}
+                salary_range={career.salary_range}
+                average_salary={career.average_salary}
+                image_url={career.image_url}
               />
             </CarouselItem>
           ))}

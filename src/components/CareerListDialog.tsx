@@ -14,19 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CareerCard } from "@/components/CareerCard";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Career {
-  title: string;
-  description: string;
-  users: string;
-  salary: string;
-  imageUrl: string;
-  relatedMajors: string[];
-  relatedCareers: string[];
-  skills: string[];
-  category?: string;
-  levelOfStudy?: string;
-}
+type Career = Tables<"careers">;
 
 interface CareerListDialogProps {
   isOpen: boolean;
@@ -43,12 +33,14 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
 
   const filteredCareers = careers.filter((career) => {
     const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || career.category === categoryFilter;
-    const matchesSalary = salaryFilter === "all" || career.salary.includes(salaryFilter);
-    const matchesStudyLevel = studyLevelFilter === "all" || career.levelOfStudy === studyLevelFilter;
-    const matchesSkills = !skillsFilter || career.skills.some(skill => 
-      skill.toLowerCase().includes(skillsFilter.toLowerCase())
-    );
+    const matchesCategory = categoryFilter === "all" || career.industry === categoryFilter;
+    const matchesSalary = salaryFilter === "all" || (career.salary_range && career.salary_range.includes(salaryFilter));
+    const matchesStudyLevel = studyLevelFilter === "all" || 
+      (career.required_education && career.required_education.includes(studyLevelFilter));
+    const matchesSkills = !skillsFilter || 
+      (career.required_skills && career.required_skills.some(skill => 
+        skill.toLowerCase().includes(skillsFilter.toLowerCase())
+      ));
 
     return matchesSearch && matchesCategory && matchesSalary && matchesStudyLevel && matchesSkills;
   });
@@ -118,8 +110,16 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
 
           {/* Results Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCareers.map((career, index) => (
-              <CareerCard key={index} {...career} />
+            {filteredCareers.map((career) => (
+              <CareerCard 
+                key={career.id}
+                id={career.id}
+                title={career.title}
+                description={career.description}
+                salary_range={career.salary_range}
+                average_salary={career.average_salary}
+                image_url={career.image_url}
+              />
             ))}
           </div>
 
