@@ -1,4 +1,5 @@
 export interface Mentor {
+  id: string;
   title: string;
   company: string;
   imageUrl: string;

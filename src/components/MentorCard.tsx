@@ -6,6 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
 
 interface MentorCardProps {
+  id: string; // Added this required field
   title: string;
   company: string;
   imageUrl: string;
@@ -66,7 +67,15 @@ export function MentorCard(props: MentorCardProps) {
         </div>
       </Card>
       <MentorDetailsDialog 
-        mentor={props}
+        mentor={{
+          id: props.id,
+          title: props.title,
+          company: props.company,
+          imageUrl: props.imageUrl,
+          name: props.name,
+          stats: props.stats,
+          username: props.username
+        }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
