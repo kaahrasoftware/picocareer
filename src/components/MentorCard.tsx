@@ -6,21 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
 import { User } from "@/integrations/supabase/types/user.types";
 
-type MentorCardProps = Pick<User, 
-  | "title" 
-  | "company" 
-  | "image_url" 
-  | "name" 
-  | "stats" 
-  | "username" 
-  | "bio" 
-  | "position" 
-  | "education" 
-  | "sessions_held" 
-  | "skills" 
-  | "tools" 
-  | "keywords"
-> & {
+type MentorCardProps = Omit<User, 'password'> & {
   id: string;
   created_at: string | null;
   user_type: string | null;
@@ -75,7 +61,7 @@ export function MentorCard(props: MentorCardProps) {
         </div>
       </Card>
       <MentorDetailsDialog 
-        mentor={props}
+        mentor={props as User}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />

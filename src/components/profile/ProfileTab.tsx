@@ -3,15 +3,15 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User } from "@/integrations/supabase/types/user.types";
+import { User, UserStats } from "@/integrations/supabase/types/user.types";
 
 export function ProfileTab() {
   const session = useSession();
 
-  const { data: userData, isLoading } = useQuery<User | null>({
+  const { data: userData, isLoading } = useQuery<User>({
     queryKey: ['user', session?.user?.id],
     queryFn: async () => {
-      if (!session?.user?.id) return null;
+      if (!session?.user?.id) throw new Error('No user ID');
       
       const { data, error } = await supabase
         .from('users')
@@ -22,9 +22,20 @@ export function ProfileTab() {
       
       if (error) {
         console.error('Error fetching user data:', error);
-        return null;
+        throw error;
       }
-      return data;
+      
+      if (!data) throw new Error('No user data found');
+
+      // Convert stats from JSON to UserStats type
+      const stats: UserStats = typeof data.stats === 'string' 
+        ? JSON.parse(data.stats)
+        : data.stats;
+
+      return {
+        ...data,
+        stats
+      } as User;
     },
     enabled: !!session?.user?.id
   });
