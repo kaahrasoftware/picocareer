@@ -11,11 +11,11 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   
-  // Initialize empty arrays for each category and ensure data is defined
+  // Initialize empty arrays for each category
   const groupedResults = {
-    careers: Array.isArray(data) ? data.filter(r => r?.type === 'career') : [],
-    majors: Array.isArray(data) ? data.filter(r => r?.type === 'major') : [],
-    mentors: Array.isArray(data) ? data.filter(r => r?.type === 'mentor') : []
+    careers: data?.filter(r => r?.type === 'career') ?? [],
+    majors: data?.filter(r => r?.type === 'major') ?? [],
+    mentors: data?.filter(r => r?.type === 'mentor') ?? []
   };
 
   const getIcon = (type: string) => {
@@ -31,14 +31,19 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
+  // Only render if we have a query
+  if (!query) {
+    return null;
+  }
+
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <Command className="border-none bg-transparent" shouldFilter={false}>
+      <Command className="border-none bg-transparent">
         <CommandInput placeholder="Type to search..." value={query} />
         
         {isLoading ? (
           <CommandEmpty>Searching...</CommandEmpty>
-        ) : (!Array.isArray(data) || data.length === 0) && query ? (
+        ) : (data?.length === 0) ? (
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 

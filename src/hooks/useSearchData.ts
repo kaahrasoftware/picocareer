@@ -40,19 +40,19 @@ export const useSearchData = (query: string) => {
             title: career.title,
             description: career.description,
             type: 'career' as const
-          })) || []),
+          })) ?? []),
           ...(majorsResponse.data?.map(major => ({
             id: major.id,
             title: major.title,
             description: major.description,
             type: 'major' as const
-          })) || []),
+          })) ?? []),
           ...(mentorsResponse.data?.map(mentor => ({
             id: mentor.id,
             title: mentor.position || 'Mentor',
             description: `${mentor.full_name} at ${mentor.company_name}`,
             type: 'mentor' as const
-          })) || [])
+          })) ?? [])
         ];
 
         return results;
@@ -63,7 +63,6 @@ export const useSearchData = (query: string) => {
     },
     enabled: query.length > 0,
     initialData: [], // Always return an array
-    staleTime: 1000, // Prevent too frequent refetches
-    retry: false // Don't retry on failure to prevent unnecessary API calls
+    staleTime: 1000 // Prevent too frequent refetches
   });
 };
