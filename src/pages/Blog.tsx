@@ -2,16 +2,14 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { BlogWithAuthor } from "@/types/blog";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { useState } from "react";
+import { BlogFilters } from "@/components/blog/BlogFilters";
+import { BlogCard } from "@/components/blog/BlogCard";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -58,13 +56,6 @@ const Blog = () => {
     },
   });
 
-  const categories = ["Technology", "Career", "Education"];
-  const subcategories = {
-    Technology: ["Programming", "Data Science", "Web Development"],
-    Career: ["Job Search", "Interview Tips", "Career Change"],
-    Education: ["Study Tips", "College Life", "Graduate School"],
-  };
-
   // Calculate pagination values
   const totalItems = blogs?.length || 0;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
@@ -72,19 +63,9 @@ const Blog = () => {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentItems = blogs?.slice(startIndex, endIndex) || [];
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
   };
 
   return (
@@ -98,58 +79,16 @@ const Blog = () => {
               <ThemeToggle />
             </div>
 
-            <div className="grid gap-6 mb-8">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Search blogs..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select 
-                  value={selectedSubcategory} 
-                  onValueChange={setSelectedSubcategory}
-                  disabled={!selectedCategory || selectedCategory === "_all"}
-                >
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Select subcategory" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">All Subcategories</SelectItem>
-                    {selectedCategory && selectedCategory !== "_all" && 
-                      subcategories[selectedCategory as keyof typeof subcategories].map((subcategory) => (
-                        <SelectItem key={subcategory} value={subcategory}>
-                          {subcategory}
-                        </SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="recent-posts"
-                    checked={showRecentOnly}
-                    onCheckedChange={setShowRecentOnly}
-                  />
-                  <Label htmlFor="recent-posts">Recent posts only</Label>
-                </div>
-              </div>
-            </div>
+            <BlogFilters
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              selectedSubcategory={selectedSubcategory}
+              setSelectedSubcategory={setSelectedSubcategory}
+              showRecentOnly={showRecentOnly}
+              setShowRecentOnly={setShowRecentOnly}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {isLoading ? (
@@ -166,96 +105,16 @@ const Blog = () => {
                   </Card>
                 ))
               ) : currentItems.map((blog) => (
-                <Card key={blog.id} className="overflow-hidden">
-                  {blog.cover_image_url && (
-                    <div className="relative h-48 w-full">
-                      <img
-                        src={blog.cover_image_url}
-                        alt={blog.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle>{blog.title}</CardTitle>
-                    <CardDescription>
-                      By {blog.profiles?.full_name || 'Anonymous'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {blog.summary}
-                    </p>
-                    <div className="flex gap-2 mt-4">
-                      {blog.category && (
-                        <span className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-                          {blog.category}
-                        </span>
-                      )}
-                      {blog.subcategory && (
-                        <span className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-                          {blog.subcategory}
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between items-center">
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(blog.created_at).toLocaleDateString()}
-                    </p>
-                    {blog.is_recent && (
-                      <span className="text-xs px-2 py-1 bg-green-500/10 text-green-500 rounded-full">
-                        New
-                      </span>
-                    )}
-                  </CardFooter>
-                </Card>
+                <BlogCard key={blog.id} blog={blog} />
               ))}
             </div>
 
             {!isLoading && blogs && blogs.length > 0 && (
-              <div className="mt-8">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (currentPage > 1) handlePageChange(currentPage - 1);
-                        }}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                    
-                    {getPageNumbers().map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(page);
-                          }}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                        }}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
+              <BlogPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         </main>
