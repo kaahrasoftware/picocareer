@@ -18,16 +18,19 @@ export const useSearchData = (query: string) => {
         supabase
           .from('careers')
           .select('id, title, description')
-          .ilike('title', `%${query}%`),
+          .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query}}, industry.ilike.%${query}%`)
+          .limit(5),
         supabase
           .from('majors')
           .select('id, title, description')
-          .ilike('title', `%${query}%`),
+          .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query}}`)
+          .limit(5),
         supabase
           .from('profiles')
-          .select('id, full_name, position, company_name')
+          .select('id, full_name, position, company_name, skills')
           .eq('user_type', 'mentor')
-          .ilike('full_name', `%${query}%`)
+          .or(`full_name.ilike.%${query}%, position.ilike.%${query}%, company_name.ilike.%${query}%, skills.cs.{${query}}`)
+          .limit(5)
       ]);
 
       const results: SearchResult[] = [
