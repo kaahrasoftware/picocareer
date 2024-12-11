@@ -5,14 +5,20 @@ export const useTopRatedMentors = () => {
   return useQuery({
     queryKey: ['topRatedMentors'],
     queryFn: async () => {
+      console.log('Fetching top rated mentors...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_type', 'mentor')
         .eq('featured', true)
-        .limit(4);
+        .limit(6);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching mentors:', error);
+        throw error;
+      }
+      
+      console.log('Fetched mentors:', data);
       
       // Transform the data to match the expected Mentor type
       return data.map(mentor => ({
@@ -30,6 +36,7 @@ export const useTopRatedMentors = () => {
         sessionsHeld: "0",
         position: mentor.position
       }));
-    }
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
