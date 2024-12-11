@@ -15,19 +15,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-y-auto max-h-[90vh]">
-        <div className="flex flex-col items-center p-4">
-          <img 
-            src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png" 
-            alt="Kahra Logo" 
-            className="w-16 h-16 mb-2"
-          />
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold mb-1">Welcome to Kahra!</h2>
-            <p className="text-muted-foreground text-sm">
-              We're the tool that helps you prepare for a career with the right education and skills.
-            </p>
-          </div>
-        </div>
         <Auth
           supabaseClient={supabase}
           appearance={{
@@ -76,12 +63,20 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               divider: {
                 margin: '1rem 0',
               },
+              // Add styles for the links container
+              links: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '0.5rem',
+              },
             },
           }}
           theme={theme === 'dark' ? 'dark' : 'light'}
           providers={[]}
           redirectTo={window.location.origin}
           socialLayout="horizontal"
+          view="sign_in"
           localization={{
             variables: {
               sign_in: {
@@ -89,16 +84,20 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 password_label: 'Password',
                 button_label: 'Login',
                 loading_button_label: 'Signing in...',
-                social_provider_text: 'Or continue with',
-                link_text: "Don't have an account? Sign Up",
+                link_text: '',
               },
               sign_up: {
                 email_label: 'Email Address',
                 password_label: 'Password',
-                button_label: 'Register',
+                button_label: 'Sign Up',
                 loading_button_label: 'Signing up...',
-                social_provider_text: 'Or continue with',
-                link_text: 'Already have an account? Login',
+                link_text: '',
+              },
+              forgotten_password: {
+                email_label: 'Email Address',
+                button_label: 'Send Reset Instructions',
+                loading_button_label: 'Sending reset instructions...',
+                link_text: '',
               },
             },
           }}
