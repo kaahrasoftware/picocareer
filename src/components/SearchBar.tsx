@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchResults } from "./SearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
+import { Search } from "lucide-react";
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -13,26 +14,22 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
   return (
     <div className="relative w-full">
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
-        <input
-          type="search"
-          className="w-full h-12 pl-6 pr-24 rounded-full bg-white/95 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={(e) => {
-            // Only hide if not clicking within the results
-            if (!e.relatedTarget?.closest('.search-results')) {
-              setIsFocused(false);
-            }
-          }}
-          {...props}
-        />
-        <Button 
-          type="submit"
-          className="absolute right-1 h-10 px-6 rounded-full bg-background hover:bg-background/90 text-foreground"
-        >
-          search
-        </Button>
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="search"
+            className="w-full h-10 pl-9 pr-4 rounded-md bg-background border border-input text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={(e) => {
+              if (!e.relatedTarget?.closest('.search-results')) {
+                setIsFocused(false);
+              }
+            }}
+            {...props}
+          />
+        </div>
       </div>
       
       {isFocused && (
