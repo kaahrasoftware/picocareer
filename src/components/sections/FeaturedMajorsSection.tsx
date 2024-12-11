@@ -11,6 +11,21 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+export interface MajorCardProps {
+  id: number;
+  title: string;
+  description: string;
+  users: string;
+  image_url: string;
+  related_careers: string[];
+  required_courses: string[];
+  average_gpa: string;
+  category?: string;
+  level_of_study?: string;
+  created_at?: string;
+  featured?: boolean;
+}
+
 const fetchFeaturedMajors = async () => {
   const { data, error } = await supabase
     .from('majors')
@@ -21,7 +36,7 @@ const fetchFeaturedMajors = async () => {
     throw error;
   }
 
-  return data;
+  return data as MajorCardProps[];
 };
 
 export const FeaturedMajorsSection = () => {
