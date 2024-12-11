@@ -81,60 +81,60 @@ export default function Community() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Select value={userTypeFilter || ''} onValueChange={(value) => setUserTypeFilter(value || null)}>
+            <Select value={userTypeFilter || "all"} onValueChange={(value) => setUserTypeFilter(value === "all" ? null : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="User Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="student">Student</SelectItem>
                 <SelectItem value="mentor">Mentor</SelectItem>
                 <SelectItem value="professional">Professional</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={locationFilter || ''} onValueChange={(value) => setLocationFilter(value || null)}>
+            <Select value={locationFilter || "all"} onValueChange={(value) => setLocationFilter(value === "all" ? null : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 {locations.map((location) => (
                   <SelectItem key={location} value={location}>{location}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={companyFilter || ''} onValueChange={(value) => setCompanyFilter(value || null)}>
+            <Select value={companyFilter || "all"} onValueChange={(value) => setCompanyFilter(value === "all" ? null : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Company" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Companies</SelectItem>
+                <SelectItem value="all">All Companies</SelectItem>
                 {companies.map((company) => (
                   <SelectItem key={company} value={company}>{company}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={schoolFilter || ''} onValueChange={(value) => setSchoolFilter(value || null)}>
+            <Select value={schoolFilter || "all"} onValueChange={(value) => setSchoolFilter(value === "all" ? null : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="School" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Schools</SelectItem>
+                <SelectItem value="all">All Schools</SelectItem>
                 {schools.map((school) => (
                   <SelectItem key={school} value={school}>{school}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={fieldFilter || ''} onValueChange={(value) => setFieldFilter(value || null)}>
+            <Select value={fieldFilter || "all"} onValueChange={(value) => setFieldFilter(value === "all" ? null : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Field of Interest" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Fields</SelectItem>
+                <SelectItem value="all">All Fields</SelectItem>
                 {fields.map((field) => (
                   <SelectItem key={field} value={field}>{field}</SelectItem>
                 ))}
