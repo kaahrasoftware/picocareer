@@ -11,10 +11,11 @@ export interface SearchResult {
   average_salary?: number;
   field_of_study?: string;
   degree_level?: string;
-  // Add missing properties for majors
   image_url?: string;
   required_courses?: string[];
   average_gpa?: number;
+  career_opportunities?: string[];
+  duration?: string;
 }
 
 export const useSearchData = (query: string) => {
@@ -66,12 +67,12 @@ export const useSearchData = (query: string) => {
       // Search majors
       const { data: majors, error: majorError } = await supabase
         .from('majors')
-        .select('id, title, description, field_of_study, degree_level')
+        .select('*')
         .or(`title.ilike.%${query}%,` +
             `description.ilike.%${query}%,` +
             `field_of_study.ilike.%${query}%,` +
             `required_courses.cs.{${query}},` +
-            `required_courses.cs.{%${query}%},` + // Added to search for partial matches in required_courses
+            `required_courses.cs.{%${query}%},` + 
             `keywords.cs.{${query}}`)
         .limit(3);
 
@@ -99,14 +100,19 @@ export const useSearchData = (query: string) => {
         average_salary: career.average_salary
       }));
 
-      // Transform major results
+      // Transform major results with all fields
       const majorResults = (majors || []).map(major => ({
         id: major.id,
         title: major.title,
         description: major.description,
         type: 'major' as const,
         field_of_study: major.field_of_study,
-        degree_level: major.degree_level
+        degree_level: major.degree_level,
+        image_url: major.image_url,
+        required_courses: major.required_courses,
+        average_gpa: major.average_gpa,
+        career_opportunities: major.career_opportunities,
+        duration: major.duration
       }));
 
       return [...mentorResults, ...careerResults, ...majorResults];

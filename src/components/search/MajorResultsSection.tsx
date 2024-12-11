@@ -53,9 +53,9 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
           major={{
             title: selectedMajor.title,
             description: selectedMajor.description || '',
-            users: '0',
+            users: '0', // This could be updated if we track this in the database
             imageUrl: selectedMajor.image_url || '/placeholder.svg',
-            relatedCareers: [],
+            relatedCareers: selectedMajor.career_opportunities || [],
             requiredCourses: selectedMajor.required_courses || [],
             averageGPA: selectedMajor.average_gpa?.toString() || 'N/A',
             fieldOfStudy: selectedMajor.field_of_study,
