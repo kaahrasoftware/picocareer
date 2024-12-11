@@ -34,6 +34,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       )
     : [];
 
+  // Initialize groupedResults with empty arrays
   const groupedResults = {
     careers: filteredResults.filter(r => r.type === 'career') || [],
     majors: filteredResults.filter(r => r.type === 'major') || [],

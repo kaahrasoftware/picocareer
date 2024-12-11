@@ -9,6 +9,193 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      career_major_relations: {
+        Row: {
+          career_id: string
+          major_id: string
+          relevance_score: number | null
+        }
+        Insert: {
+          career_id: string
+          major_id: string
+          relevance_score?: number | null
+        }
+        Update: {
+          career_id?: string
+          major_id?: string
+          relevance_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_major_relations_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_major_relations_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      careers: {
+        Row: {
+          average_salary: number | null
+          created_at: string
+          description: string
+          featured: boolean | null
+          growth_potential: string | null
+          id: string
+          image_url: string | null
+          industry: string | null
+          job_outlook: string | null
+          keywords: string[] | null
+          required_education: string[] | null
+          required_skills: string[] | null
+          required_tools: string[] | null
+          salary_range: string | null
+          title: string
+          updated_at: string
+          work_environment: string | null
+        }
+        Insert: {
+          average_salary?: number | null
+          created_at?: string
+          description: string
+          featured?: boolean | null
+          growth_potential?: string | null
+          id?: string
+          image_url?: string | null
+          industry?: string | null
+          job_outlook?: string | null
+          keywords?: string[] | null
+          required_education?: string[] | null
+          required_skills?: string[] | null
+          required_tools?: string[] | null
+          salary_range?: string | null
+          title: string
+          updated_at?: string
+          work_environment?: string | null
+        }
+        Update: {
+          average_salary?: number | null
+          created_at?: string
+          description?: string
+          featured?: boolean | null
+          growth_potential?: string | null
+          id?: string
+          image_url?: string | null
+          industry?: string | null
+          job_outlook?: string | null
+          keywords?: string[] | null
+          required_education?: string[] | null
+          required_skills?: string[] | null
+          required_tools?: string[] | null
+          salary_range?: string | null
+          title?: string
+          updated_at?: string
+          work_environment?: string | null
+        }
+        Relationships: []
+      }
+      majors: {
+        Row: {
+          average_gpa: number | null
+          career_opportunities: string[] | null
+          created_at: string
+          degree_level: string | null
+          description: string
+          duration: string | null
+          featured: boolean | null
+          field_of_study: string | null
+          id: string
+          image_url: string | null
+          keywords: string[] | null
+          required_courses: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          average_gpa?: number | null
+          career_opportunities?: string[] | null
+          created_at?: string
+          degree_level?: string | null
+          description: string
+          duration?: string | null
+          featured?: boolean | null
+          field_of_study?: string | null
+          id?: string
+          image_url?: string | null
+          keywords?: string[] | null
+          required_courses?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          average_gpa?: number | null
+          career_opportunities?: string[] | null
+          created_at?: string
+          degree_level?: string | null
+          description?: string
+          duration?: string | null
+          featured?: boolean | null
+          field_of_study?: string | null
+          id?: string
+          image_url?: string | null
+          keywords?: string[] | null
+          required_courses?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentor_specializations: {
+        Row: {
+          career_id: string
+          major_id: string
+          profile_id: string
+          years_of_experience: number | null
+        }
+        Insert: {
+          career_id: string
+          major_id: string
+          profile_id: string
+          years_of_experience?: number | null
+        }
+        Update: {
+          career_id?: string
+          major_id?: string
+          profile_id?: string
+          years_of_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_specializations_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_specializations_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_specializations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           academic_major: string | null
