@@ -41,13 +41,13 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const getIcon = (type: string) => {
     switch (type) {
       case 'career':
-        return <Briefcase className="w-4 h-4 mr-2" />;
+        return <Briefcase className="w-4 h-4" />;
       case 'major':
-        return <GraduationCap className="w-4 h-4 mr-2" />;
+        return <GraduationCap className="w-4 h-4" />;
       case 'mentor':
-        return <Users className="w-4 h-4 mr-2" />;
+        return <Users className="w-4 h-4" />;
       case 'blog':
-        return <BookOpen className="w-4 h-4 mr-2" />;
+        return <BookOpen className="w-4 h-4" />;
       default:
         return null;
     }
@@ -77,7 +77,6 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <CommandGroup 
           key={category} 
           heading={category.charAt(0).toUpperCase() + category.slice(1)}
-          className="px-2"
         >
           {items.map((result) => (
             <CommandItem
@@ -86,25 +85,27 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                 console.log("Selected:", result);
                 onClose();
               }}
-              className="cursor-pointer hover:bg-white/10 flex items-center gap-2"
+              className="flex items-center gap-2 py-2 cursor-pointer hover:bg-accent/50"
             >
               {getIcon(result.type)}
               {result.type === 'mentor' ? (
-                <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-8 w-8">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage src={result.avatar_url || ''} alt={result.title} />
                     <AvatarFallback>{result.title[0]}</AvatarFallback>
                   </Avatar>
-                  <div>
-                    <div className="font-medium">{result.title}</div>
-                    <div className="text-sm text-muted-foreground">{result.description}</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{result.title}</span>
+                    {result.description && (
+                      <span className="text-xs text-muted-foreground">{result.description}</span>
+                    )}
                   </div>
                 </div>
               ) : (
-                <div>
-                  <div className="font-medium">{result.title}</div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{result.title}</span>
                   {result.description && (
-                    <div className="text-sm text-muted-foreground">{result.description}</div>
+                    <span className="text-xs text-muted-foreground">{result.description}</span>
                   )}
                 </div>
               )}
@@ -116,7 +117,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   };
 
   return (
-    <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <Card className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
       <Command className="border-none bg-transparent">
         <CommandInput 
           placeholder="Type to search..." 
@@ -124,7 +125,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           readOnly
           className="h-9"
         />
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="max-h-[300px] overflow-y-auto scrollbar-thin">
           {renderResults()}
         </div>
       </Command>
