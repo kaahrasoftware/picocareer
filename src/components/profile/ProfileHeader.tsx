@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function ProfileHeader() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   const skills = [
     { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
     { text: "microbiology", colorClass: "bg-indigo-900/50 text-indigo-400" },
@@ -29,6 +37,85 @@ export function ProfileHeader() {
     return () => clearInterval(interval);
   }, [skills.length]);
 
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setAvatarUrl(data?.avatar_url || null);
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+    }
+  };
+
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('No user found');
+      
+      const filePath = `${user.id}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(publicUrl);
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const visibleSkills = [...skills.slice(currentIndex, currentIndex + 6)];
   if (visibleSkills.length < 6) {
     visibleSkills.push(...skills.slice(0, 6 - visibleSkills.length));
@@ -37,17 +124,29 @@ export function ProfileHeader() {
   return (
     <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
       <div className="flex items-start gap-3 mb-3">
-        <div className="relative">
+        <div className="relative group">
           <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-yellow-400">
             <img
-              src="/placeholder.svg"
+              src={avatarUrl || "/placeholder.svg"}
               alt="Profile"
               className="w-full h-full object-cover"
             />
+            <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={uploadAvatar}
+                disabled={uploading}
+              />
+              <Upload className="w-6 h-6 text-white" />
+            </label>
           </div>
-          <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-          </div>
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <div>
