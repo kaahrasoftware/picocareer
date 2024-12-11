@@ -29,7 +29,7 @@ export function TimeSlotSelector({
     const slots: TimeSlot[] = [];
     availableTimeSlots.forEach(availability => {
       const startTime = parse(availability.time, 'HH:mm', new Date());
-      const endTime = addMinutes(startTime, 60); // Assuming 1-hour blocks from original data
+      const endTime = addMinutes(startTime, 60); // Each slot is 1 hour from the start time
 
       let currentTime = startTime;
       while (currentTime < endTime) {
