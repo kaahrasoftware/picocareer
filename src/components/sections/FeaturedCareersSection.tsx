@@ -16,10 +16,13 @@ const FEATURED_CAREERS = [
     description: "Design and develop software applications",
     users: "15K",
     salary: "$120K/year",
-    image_url: "/placeholder.svg",
+    image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60",
     related_majors: ["Computer Science", "Software Engineering"],
     related_careers: ["Full Stack Developer", "DevOps Engineer"],
     skills: ["JavaScript", "Python", "Cloud Computing"],
+    category: "technology",
+    level_of_study: "bachelor",
+    created_at: new Date().toISOString()
   },
   {
     id: 2,
@@ -27,10 +30,13 @@ const FEATURED_CAREERS = [
     description: "Analyze complex data sets to drive business decisions",
     users: "10K",
     salary: "$115K/year",
-    image_url: "/placeholder.svg",
+    image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60",
     related_majors: ["Data Science", "Statistics"],
     related_careers: ["Data Analyst", "Machine Learning Engineer"],
     skills: ["Python", "SQL", "Machine Learning"],
+    category: "technology",
+    level_of_study: "master",
+    created_at: new Date().toISOString()
   },
   {
     id: 3,
@@ -38,10 +44,13 @@ const FEATURED_CAREERS = [
     description: "Create intuitive and engaging user experiences",
     users: "8K",
     salary: "$95K/year",
-    image_url: "/placeholder.svg",
+    image_url: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&auto=format&fit=crop&q=60",
     related_majors: ["Design", "Human-Computer Interaction"],
     related_careers: ["UI Designer", "Product Designer"],
     skills: ["User Research", "Wireframing", "Prototyping"],
+    category: "design",
+    level_of_study: "bachelor",
+    created_at: new Date().toISOString()
   }
 ];
 
@@ -54,7 +63,7 @@ export const FeaturedCareersSection = () => {
         <h2 className="text-2xl font-bold">Featured Careers</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
+          className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
         </button>

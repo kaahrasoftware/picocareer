@@ -14,7 +14,7 @@ const TOP_RATED_MENTORS = [
     id: "1",
     title: "Senior Software Engineer",
     company: "Google",
-    image_url: "/placeholder.svg",
+    image_url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60",
     full_name: "John Smith",
     username: "johnsmith",
     bio: "10+ years of experience in software development",
@@ -39,7 +39,7 @@ const TOP_RATED_MENTORS = [
     id: "2",
     title: "Product Manager",
     company: "Microsoft",
-    image_url: "/placeholder.svg",
+    image_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60",
     full_name: "Sarah Johnson",
     username: "sarahj",
     bio: "Experienced in product strategy and development",
@@ -64,7 +64,7 @@ const TOP_RATED_MENTORS = [
     id: "3",
     title: "Data Science Lead",
     company: "Amazon",
-    image_url: "/placeholder.svg",
+    image_url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&auto=format&fit=crop&q=60",
     full_name: "Michael Chen",
     username: "michaelc",
     bio: "Expert in machine learning and data analytics",
@@ -96,7 +96,7 @@ export const TopRatedMentorsSection = () => {
         <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
+          className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
         </button>
