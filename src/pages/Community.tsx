@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { BlogPagination } from "@/components/blog/BlogPagination";
+import { MenuSidebar } from "@/components/MenuSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,67 +69,72 @@ export default function Community() {
   const paginatedProfiles = filteredProfiles?.slice(startIndex, startIndex + PROFILES_PER_PAGE);
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Community</h1>
-        <p className="text-muted-foreground mb-6">
-          Connect with students, mentors, and professionals in your field of interest.
-        </p>
-        
-        <CommunityFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedSkills={selectedSkills}
-          onSkillsChange={setSelectedSkills}
-          userTypeFilter={userTypeFilter}
-          onUserTypeChange={setUserTypeFilter}
-          locationFilter={locationFilter}
-          onLocationChange={setLocationFilter}
-          companyFilter={companyFilter}
-          onCompanyChange={setCompanyFilter}
-          schoolFilter={schoolFilter}
-          onSchoolChange={setSchoolFilter}
-          fieldFilter={fieldFilter}
-          onFieldChange={setFieldFilter}
-          locations={locations}
-          companies={companies}
-          schools={schools}
-          fields={fields}
-          allSkills={allSkills}
-        />
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="p-6 rounded-lg border bg-card">
-              <div className="flex items-start gap-4">
-                <Skeleton className="h-16 w-16 rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedProfiles?.map((profile) => (
-              <ProfileCard key={profile.id} profile={profile} />
-            ))}
-          </div>
-          
-          {totalPages > 1 && (
-            <BlogPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <MenuSidebar />
+        <div className="p-8 max-w-[1600px] mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-4">Community</h1>
+            <p className="text-muted-foreground mb-6">
+              Connect with students, mentors, and professionals in your field of interest.
+            </p>
+            
+            <CommunityFilters
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedSkills={selectedSkills}
+              onSkillsChange={setSelectedSkills}
+              userTypeFilter={userTypeFilter}
+              onUserTypeChange={setUserTypeFilter}
+              locationFilter={locationFilter}
+              onLocationChange={setLocationFilter}
+              companyFilter={companyFilter}
+              onCompanyChange={setCompanyFilter}
+              schoolFilter={schoolFilter}
+              onSchoolChange={setSchoolFilter}
+              fieldFilter={fieldFilter}
+              onFieldChange={setFieldFilter}
+              locations={locations}
+              companies={companies}
+              schools={schools}
+              fields={fields}
+              allSkills={allSkills}
             />
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="p-6 rounded-lg border bg-card">
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="h-16 w-16 rounded-full" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedProfiles?.map((profile) => (
+                  <ProfileCard key={profile.id} profile={profile} />
+                ))}
+              </div>
+              
+              {totalPages > 1 && (
+                <BlogPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              )}
+            </>
           )}
-        </>
-      )}
-    </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
