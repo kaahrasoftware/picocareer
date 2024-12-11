@@ -5,19 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Database } from "@/integrations/supabase/types";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-
-type BlogWithAuthor = Database['public']['Tables']['blogs']['Row'] & {
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
-};
+import { BlogWithAuthor } from "@/types/blog";
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,7 +25,7 @@ const Blog = () => {
         .from('blogs')
         .select(`
           *,
-          profiles:author_id (
+          profiles (
             full_name,
             avatar_url
           )
@@ -94,7 +87,7 @@ const Blog = () => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="_all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -111,7 +104,7 @@ const Blog = () => {
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Subcategories</SelectItem>
+                    <SelectItem value="_all">All Subcategories</SelectItem>
                     {selectedCategory && subcategories[selectedCategory as keyof typeof subcategories].map((subcategory) => (
                       <SelectItem key={subcategory} value={subcategory}>
                         {subcategory}
