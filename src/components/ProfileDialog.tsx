@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -73,7 +72,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] bg-kahra-darker text-white overflow-y-auto overflow-x-hidden">
-        <ProfileHeader />
+        <ProfileHeader profile={profile} />
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border">
@@ -99,7 +98,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
           <div className="w-full">
             <TabsContent value="profile" className="mt-4">
-              <ProfileTab />
+              <ProfileTab profile={profile} />
             </TabsContent>
 
             <TabsContent value="dashboard" className="mt-4">
