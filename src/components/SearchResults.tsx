@@ -108,7 +108,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                   </p>
                 </div>
                 <Badge variant="secondary" className="self-start">
-                  Career
+                  {career.salary_range || `$${career.average_salary?.toLocaleString()}`}
                 </Badge>
               </Card>
             ))}
