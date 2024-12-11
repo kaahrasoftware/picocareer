@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { format, parse, addMinutes } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TimeSlot {
@@ -22,6 +22,30 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
+  // Generate 15-minute time slots between start and end times
+  const generateTimeSlots = () => {
+    if (!availableTimeSlots.length) return [];
+
+    const slots: TimeSlot[] = [];
+    availableTimeSlots.forEach(availability => {
+      const startTime = parse(availability.time, 'HH:mm', new Date());
+      const endTime = addMinutes(startTime, 60); // Assuming 1-hour blocks from original data
+
+      let currentTime = startTime;
+      while (currentTime < endTime) {
+        slots.push({
+          time: format(currentTime, 'HH:mm'),
+          available: availability.available
+        });
+        currentTime = addMinutes(currentTime, 15);
+      }
+    });
+
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
   return (
     <div>
       <h4 className="font-semibold mb-2">
@@ -29,13 +53,10 @@ export function TimeSlotSelector({
       </h4>
       <ScrollArea className="h-[200px] rounded-md border border-kahra-darker">
         <div className="grid grid-cols-2 gap-2 p-4">
-          {availableTimeSlots.length > 0 ? (
-            availableTimeSlots.map((slot) => {
-              // Convert 24h format to 12h format for display
-              const [hour] = slot.time.split(':');
-              const hourNum = parseInt(hour);
+          {timeSlots.length > 0 ? (
+            timeSlots.map((slot) => {
               const displayTime = format(
-                new Date().setHours(hourNum, 0, 0),
+                parse(slot.time, 'HH:mm', new Date()),
                 'h:mm a'
               );
 
