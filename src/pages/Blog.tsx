@@ -14,8 +14,8 @@ import { BlogWithAuthor } from "@/types/blog";
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("_all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("_all");
   const [showRecentOnly, setShowRecentOnly] = useState(false);
 
   const { data: blogs, isLoading } = useQuery({
@@ -31,11 +31,11 @@ const Blog = () => {
           )
         `);
 
-      if (selectedCategory) {
+      if (selectedCategory && selectedCategory !== "_all") {
         query = query.eq('category', selectedCategory);
       }
 
-      if (selectedSubcategory) {
+      if (selectedSubcategory && selectedSubcategory !== "_all") {
         query = query.eq('subcategory', selectedSubcategory);
       }
 
@@ -98,18 +98,20 @@ const Blog = () => {
                 <Select 
                   value={selectedSubcategory} 
                   onValueChange={setSelectedSubcategory}
-                  disabled={!selectedCategory}
+                  disabled={!selectedCategory || selectedCategory === "_all"}
                 >
                   <SelectTrigger className="w-full md:w-[200px]">
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_all">All Subcategories</SelectItem>
-                    {selectedCategory && subcategories[selectedCategory as keyof typeof subcategories].map((subcategory) => (
-                      <SelectItem key={subcategory} value={subcategory}>
-                        {subcategory}
-                      </SelectItem>
-                    ))}
+                    {selectedCategory && selectedCategory !== "_all" && 
+                      subcategories[selectedCategory as keyof typeof subcategories].map((subcategory) => (
+                        <SelectItem key={subcategory} value={subcategory}>
+                          {subcategory}
+                        </SelectItem>
+                      ))
+                    }
                   </SelectContent>
                 </Select>
                 <div className="flex items-center space-x-2">
