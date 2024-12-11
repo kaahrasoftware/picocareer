@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchResults } from "./SearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -21,8 +21,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
     }
   };
 
-  // Add event listener for clicks outside
-  useState(() => {
+  useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
