@@ -18,14 +18,12 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
 
       console.log("Fetching availability for date:", format(date, "yyyy-MM-dd"), "mentor:", mentorId);
       
-      const dayOfWeek = date.getDay();
-      
-      // First, get the mentor's availability schedule
+      // Query based on the specific date instead of day_of_week
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('start_time, end_time')
         .eq('profile_id', mentorId)
-        .eq('day_of_week', dayOfWeek)
+        .eq('date_available', format(date, 'yyyy-MM-dd'))
         .eq('is_available', true);
 
       if (availabilityError) {
@@ -39,7 +37,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
       }
 
       if (!availabilityData?.length) {
-        console.log("No availability found for this day");
+        console.log("No availability found for this date");
         setAvailableTimeSlots([]);
         return;
       }
