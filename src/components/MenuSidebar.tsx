@@ -1,5 +1,5 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, LogOut } from "lucide-react";
+import { Home, BookOpen, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { useNavigate } from "react-router-dom";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -15,9 +16,11 @@ export function MenuSidebar() {
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const navigationItems = [
-    { icon: Home, label: "Home", href: "#", active: true },
+    { icon: Home, label: "Home", href: "/", active: window.location.pathname === "/" },
+    { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
   ];
 
   useEffect(() => {
@@ -105,6 +108,10 @@ export function MenuSidebar() {
                 <li key={index}>
                   <a 
                     href={item.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(item.href);
+                    }}
                     className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ${
                       item.active ? 'bg-muted text-foreground' : ''
                     }`}
