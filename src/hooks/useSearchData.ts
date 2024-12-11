@@ -7,6 +7,8 @@ export interface SearchResult {
   type: 'career' | 'major' | 'mentor' | 'blog';
   description?: string;
   avatar_url?: string;
+  salary_range?: string;
+  average_salary?: number;
 }
 
 export const useSearchData = (query: string) => {
@@ -41,7 +43,7 @@ export const useSearchData = (query: string) => {
       // Search careers
       const { data: careers, error: careerError } = await supabase
         .from('careers')
-        .select('id, title, description, industry')
+        .select('id, title, description, salary_range, average_salary, industry')
         .or(`title.ilike.%${query}%,` +
             `description.ilike.%${query}%,` +
             `industry.ilike.%${query}%,` +
@@ -69,7 +71,9 @@ export const useSearchData = (query: string) => {
         id: career.id,
         title: career.title,
         description: career.description,
-        type: 'career' as const
+        type: 'career' as const,
+        salary_range: career.salary_range,
+        average_salary: career.average_salary
       }));
 
       return [...mentorResults, ...careerResults];
