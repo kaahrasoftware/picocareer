@@ -11,12 +11,16 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BlogWithAuthor } from "@/types/blog";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 6;
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("_all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("_all");
   const [showRecentOnly, setShowRecentOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: blogs, isLoading } = useQuery({
     queryKey: ['blogs', searchQuery, selectedCategory, selectedSubcategory, showRecentOnly],
@@ -59,6 +63,28 @@ const Blog = () => {
     Technology: ["Programming", "Data Science", "Web Development"],
     Career: ["Job Search", "Interview Tips", "Career Change"],
     Education: ["Study Tips", "College Life", "Graduate School"],
+  };
+
+  // Calculate pagination values
+  const totalItems = blogs?.length || 0;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentItems = blogs?.slice(startIndex, endIndex) || [];
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
   };
 
   return (
@@ -139,7 +165,7 @@ const Blog = () => {
                     </CardContent>
                   </Card>
                 ))
-              ) : blogs?.map((blog) => (
+              ) : currentItems.map((blog) => (
                 <Card key={blog.id} className="overflow-hidden">
                   {blog.cover_image_url && (
                     <div className="relative h-48 w-full">
@@ -186,6 +212,51 @@ const Blog = () => {
                 </Card>
               ))}
             </div>
+
+            {!isLoading && blogs && blogs.length > 0 && (
+              <div className="mt-8">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 1) handlePageChange(currentPage - 1);
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {getPageNumbers().map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < totalPages) handlePageChange(currentPage + 1);
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         </main>
       </div>
