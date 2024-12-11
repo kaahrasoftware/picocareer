@@ -4,28 +4,9 @@ import { MentorDetailsDialog } from "./MentorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
+import { User } from "@/integrations/supabase/types/user.types";
 
-interface MentorCardProps {
-  title: string;
-  company: string;
-  image_url: string;
-  name: string;
-  stats: {
-    mentees: string;
-    connected: string;
-    recordings: string;
-  };
-  username: string;
-  bio?: string;
-  position?: string;
-  education?: string;
-  sessions_held?: string;
-  skills?: string[];
-  tools?: string[];
-  keywords?: string[];
-}
-
-export function MentorCard(props: MentorCardProps) {
+export function MentorCard(props: User) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (

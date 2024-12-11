@@ -6,7 +6,7 @@ import { CreateStoryDialog } from "../stories/CreateStoryDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Story } from "@/integrations/supabase/types/story.types";
 import { User } from "@/integrations/supabase/types/user.types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const StoriesSection = () => {
   const [stories, setStories] = useState<(Story & { user: User })[]>([]);
@@ -26,7 +26,19 @@ export const StoriesSection = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setStories(storiesData);
+      
+      // Parse the stats JSON for each user
+      const processedStories = storiesData.map(story => ({
+        ...story,
+        user: {
+          ...story.user,
+          stats: typeof story.user.stats === 'string' 
+            ? JSON.parse(story.user.stats)
+            : story.user.stats
+        }
+      }));
+      
+      setStories(processedStories);
     } catch (error) {
       console.error("Error fetching stories:", error);
       toast({
@@ -45,7 +57,15 @@ export const StoriesSection = () => {
         .select("*")
         .eq("id", user.id)
         .single();
-      setCurrentUser(data);
+      
+      if (data) {
+        setCurrentUser({
+          ...data,
+          stats: typeof data.stats === 'string' 
+            ? JSON.parse(data.stats)
+            : data.stats
+        });
+      }
     }
   };
 

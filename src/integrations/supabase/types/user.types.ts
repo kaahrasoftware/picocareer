@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+import { Stats } from './stats.types';
 
 export interface User {
   id: string;
@@ -17,11 +11,7 @@ export interface User {
   position: string | null;
   education: string | null;
   sessions_held: string | null;
-  stats: {
-    mentees: string;
-    connected: string;
-    recordings: string;
-  };
+  stats: Stats;
   created_at: string | null;
   user_type: string | null;
   top_rated: boolean | null;
@@ -29,4 +19,5 @@ export interface User {
   tools: string[] | null;
   keywords: string[] | null;
   email: string | null;
+  password: string;
 }
