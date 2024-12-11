@@ -9,7 +9,7 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
-  const { data = [], isLoading } = useSearchData(query);
+  const { data, isLoading } = useSearchData(query);
   
   // Initialize empty arrays for each category
   const groupedResults = {
@@ -43,7 +43,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         
         {isLoading ? (
           <CommandEmpty>Searching...</CommandEmpty>
-        ) : (data?.length === 0) ? (
+        ) : (!data || data.length === 0) ? (
           <CommandEmpty>No results found.</CommandEmpty>
         ) : (
           Object.entries(groupedResults).map(([category, items]) => 
