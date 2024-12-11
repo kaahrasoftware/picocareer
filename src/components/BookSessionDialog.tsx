@@ -60,6 +60,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             date={date}
             onDateSelect={setDate}
             userTimezone={userTimezone}
+            mentorId={mentor.id}
           />
 
           <div className="space-y-6">
