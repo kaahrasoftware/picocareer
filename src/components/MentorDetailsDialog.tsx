@@ -13,7 +13,7 @@ import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 
 interface MentorDetailsDialogProps {
   mentor: {
-    id?: string;
+    id: string; // Changed from optional to required
     title: string;
     company: string;
     imageUrl: string;
@@ -43,8 +43,8 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
     return uuidRegex.test(uuid);
   }
 
-  // Only create bookingMentor if we have a valid mentor ID
-  const bookingMentor = mentor.id && isValidUUID(mentor.id) ? {
+  // Create bookingMentor if mentor ID is valid
+  const bookingMentor = isValidUUID(mentor.id) ? {
     id: mentor.id,
     name: mentor.name,
     imageUrl: mentor.imageUrl
@@ -140,8 +140,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
               <Button 
                 className="w-full" 
                 variant="outline"
-                onClick={() => mentor.id && setProfileDialogOpen(true)}
-                disabled={!mentor.id}
+                onClick={() => setProfileDialogOpen(true)}
               >
                 <BookOpen className="mr-2" />
                 View Profile
@@ -159,13 +158,11 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
         />
       )}
 
-      {mentor.id && (
-        <ProfileDetailsDialog
-          userId={mentor.id}
-          open={profileDialogOpen}
-          onOpenChange={setProfileDialogOpen}
-        />
-      )}
+      <ProfileDetailsDialog
+        userId={mentor.id}
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+      />
     </>
   );
 }
