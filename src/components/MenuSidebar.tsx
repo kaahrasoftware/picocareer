@@ -1,10 +1,10 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, Plus, LogIn } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Home, GraduationCap, Users, Plus } from "lucide-react";
 import { useState } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
 import { useSession } from "@supabase/auth-helpers-react";
+import { SidebarFooter } from "./SidebarFooter";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -31,7 +31,7 @@ export function MenuSidebar() {
             <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
           </div>
           
-          <nav className="flex-1 mb-8">
+          <nav className="flex-1">
             <ul className="space-y-4">
               {navigationItems.map((item, index) => (
                 <li key={index}>
@@ -48,33 +48,9 @@ export function MenuSidebar() {
               ))}
             </ul>
           </nav>
-
-          <div className="mt-auto mb-8">
-            {session ? (
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setProfileOpen(true)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
-                >
-                  <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
-                </button>
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium">{session.user.email}</h3>
-                  <p className="text-xs text-muted-foreground">Student</p>
-                </div>
-              </div>
-            ) : (
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-primary hover:text-primary/90 hover:bg-primary/10"
-                onClick={() => setAuthOpen(true)}
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Login
-              </Button>
-            )}
-          </div>
         </div>
+
+        <SidebarFooter />
       </div>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
