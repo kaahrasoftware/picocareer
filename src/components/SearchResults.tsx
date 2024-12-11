@@ -11,13 +11,14 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
-  const { data = [], isLoading } = useSearchData(query);
+  const { data, isLoading } = useSearchData(query);
   
+  // Early return if query is too short
   if (!query || query.length <= 2) {
     return null;
   }
 
-  // Initialize empty arrays for each category with proper typing
+  // Initialize empty arrays for each category
   const groupedResults: Record<string, SearchResult[]> = {
     careers: [],
     majors: [],
@@ -28,10 +29,11 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   // Only process data if it exists and is an array
   if (Array.isArray(data)) {
     data.forEach(item => {
-      const type = item?.type;
-      const category = type ? `${type}s` : null;
-      if (category && groupedResults[category]) {
-        groupedResults[category].push(item);
+      if (item && typeof item === 'object' && 'type' in item) {
+        const category = `${item.type}s`;
+        if (category in groupedResults) {
+          groupedResults[category].push(item);
+        }
       }
     });
   }
@@ -122,7 +124,9 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           readOnly
           className="h-9"
         />
-        {renderResults()}
+        <div className="max-h-[300px] overflow-y-auto">
+          {renderResults()}
+        </div>
       </Command>
     </Card>
   );
