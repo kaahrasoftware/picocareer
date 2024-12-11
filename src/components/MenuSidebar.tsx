@@ -1,15 +1,16 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, GraduationCap, Users, Plus, LogIn } from "lucide-react";
+import { Home, GraduationCap, Users, Plus, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
-import { useSession } from "@supabase/auth-helpers-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const session = useSession();
+  const { toast } = useToast();
   
   const navigationItems = [
     { icon: Home, label: "Home", href: "#", active: true },
@@ -38,6 +39,22 @@ export function MenuSidebar() {
     { icon: "instagram", href: "#" },
     { icon: "facebook", href: "#" },
   ];
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "You have been logged out.",
+      });
+    }
+  };
 
   return (
     <Sidebar side="left">
@@ -70,29 +87,34 @@ export function MenuSidebar() {
           </nav>
 
           <div className="mt-auto mb-8">
-            {session ? (
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setProfileOpen(true)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
-                >
-                  <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
-                </button>
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium">{session.user.email}</h3>
-                  <p className="text-xs text-muted-foreground">Student</p>
-                </div>
-              </div>
-            ) : (
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-primary hover:text-primary/90 hover:bg-primary/10"
-                onClick={() => setAuthOpen(true)}
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
               >
-                <LogIn className="w-4 h-4 mr-2" />
-                Login
-              </Button>
-            )}
+                <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
+              </button>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium">John Doe</h3>
+                <p className="text-xs text-muted-foreground">Student</p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+              onClick={() => setAuthOpen(true)}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Login
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
           </div>
 
           <div className="border-t border-border pt-6">

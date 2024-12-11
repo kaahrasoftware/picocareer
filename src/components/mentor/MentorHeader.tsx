@@ -1,24 +1,27 @@
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Bookmark } from "lucide-react";
+
 interface MentorHeaderProps {
   name: string;
-  imageUrl?: string;
-  image_url?: string;
-  username?: string;
+  username: string;
+  image_url: string;
 }
 
-export function MentorHeader({ name, imageUrl, image_url, username }: MentorHeaderProps) {
-  const avatarUrl = imageUrl || image_url;
-  
+export function MentorHeader({ name, username, image_url }: MentorHeaderProps) {
   return (
     <div className="flex items-center gap-4">
-      <div className="w-16 h-16 rounded-full overflow-hidden">
-        <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+      <Avatar className="h-16 w-16">
+        <AvatarImage src={image_url} alt={name} />
+        <AvatarFallback>{name[0]}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <h2 className="text-2xl font-bold">{name}</h2>
+        <p className="text-base font-normal text-gray-400">@{username}</p>
       </div>
-      <div>
-        <h2 className="text-2xl font-semibold">{name}</h2>
-        {username && (
-          <p className="text-sm text-muted-foreground">@{username}</p>
-        )}
-      </div>
+      <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Bookmark className="h-5 w-5" />
+      </Button>
     </div>
   );
 }
