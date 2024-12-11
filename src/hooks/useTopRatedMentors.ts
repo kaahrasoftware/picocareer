@@ -22,6 +22,7 @@ export const useTopRatedMentors = () => {
       
       // Transform the data to match the expected Mentor type
       return data.map(mentor => ({
+        id: mentor.id, // Add the ID to the transformed data
         title: mentor.position || "Mentor",
         company: mentor.company_name || "",
         imageUrl: mentor.avatar_url || "",

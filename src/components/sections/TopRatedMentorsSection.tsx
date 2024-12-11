@@ -38,7 +38,7 @@ export const TopRatedMentorsSection = () => {
       >
         <CarouselContent>
           {mentors.map((mentor) => (
-            <CarouselItem key={mentor.username} className="basis-1/3">
+            <CarouselItem key={mentor.id} className="basis-1/3">
               <MentorCard {...mentor} />
             </CarouselItem>
           ))}
