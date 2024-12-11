@@ -14,6 +14,8 @@ interface Profile {
   avatar_url: string | null;
   academic_major: string | null;
   school_name: string | null;
+  position: string | null;
+  company_name: string | null;
   skills: string[] | null;
 }
 
@@ -83,20 +85,11 @@ export function ProfileHeader() {
     );
   }
 
-  const skills = [
-    { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
-    { text: "microbiology", colorClass: "bg-indigo-900/50 text-indigo-400" },
-    { text: "Bioreactor", colorClass: "bg-blue-900/50 text-blue-400" },
-    { text: "Genetic engineering", colorClass: "bg-red-900/50 text-red-400" },
-    { text: "GMP", colorClass: "bg-yellow-900/50 text-yellow-400" },
-    { text: "MATLAB", colorClass: "bg-purple-900/50 text-purple-400" },
-    { text: "AutoCAD", colorClass: "bg-gray-900/50 text-gray-400" },
-    { text: "Computational modeling", colorClass: "bg-yellow-900/50 text-yellow-400" },
-    { text: "Mathematical modeling", colorClass: "bg-blue-900/50 text-blue-400" },
-    { text: "Engineer-in-Training", colorClass: "bg-gray-900/50 text-gray-400" },
-    { text: "Six Sigma", colorClass: "bg-orange-900/50 text-orange-400" },
-    { text: "Data analysis", colorClass: "bg-purple-900/50 text-purple-400" },
-  ];
+  // Determine primary and secondary display text
+  const primaryText = profile.position || profile.academic_major || "No position/major set";
+  const secondaryText = profile.position 
+    ? profile.company_name || "No company set"
+    : profile.school_name || "No school set";
 
   return (
     <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
@@ -109,10 +102,10 @@ export function ProfileHeader() {
         <div className="flex flex-col gap-1">
           <div>
             <DialogTitle className="text-xl font-bold">
-              {profile.academic_major || "No major set"}
+              {primaryText}
             </DialogTitle>
             <p className="text-sm text-gray-400 dark:text-gray-400">
-              {profile.school_name || "No school set"}
+              {secondaryText}
             </p>
           </div>
           <div>
@@ -128,7 +121,7 @@ export function ProfileHeader() {
         recordingCount={35}
       />
 
-      <SkillsList skills={skills} />
+      <SkillsList />
     </div>
   );
 }
