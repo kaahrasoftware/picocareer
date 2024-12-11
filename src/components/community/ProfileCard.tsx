@@ -28,6 +28,17 @@ export function ProfileCard({ profile }: ProfileCardProps) {
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
+  const getBadgeClass = (userType: string | null) => {
+    switch (userType) {
+      case 'mentor':
+        return 'shadow-[0_0_10px_rgba(139,92,246,0.5)] bg-kahra-primary text-white';
+      case 'student':
+        return 'shadow-[0_0_10px_rgba(220,38,38,0.5)] bg-kahra-secondary text-white';
+      default:
+        return 'shadow-[0_0_10px_rgba(79,70,229,0.5)] bg-kahra-accent text-white';
+    }
+  };
+
   return (
     <>
       <Card className="p-6 hover:shadow-lg transition-shadow duration-200">
@@ -39,7 +50,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold truncate">{profile.full_name}</h3>
-              <Badge variant="outline" className="capitalize">
+              <Badge className={cn("capitalize", getBadgeClass(profile.user_type))}>
                 {profile.user_type || 'student'}
               </Badge>
             </div>

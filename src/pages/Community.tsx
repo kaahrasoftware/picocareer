@@ -17,9 +17,11 @@ export default function Community() {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .neq('id', user?.id) // Filter out current user
         .order('created_at', { ascending: false });
       
       if (error) throw error;
