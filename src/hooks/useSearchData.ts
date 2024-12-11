@@ -15,6 +15,8 @@ export const useSearchData = (query: string) => {
     queryFn: async (): Promise<SearchResult[]> => {
       if (!query || query.length <= 2) return [];
 
+      console.log('Searching with query:', query);
+
       // Search mentors with expanded criteria
       const { data: mentors, error: mentorError } = await supabase
         .from('profiles')
