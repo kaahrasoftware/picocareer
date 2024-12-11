@@ -78,25 +78,27 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   };
 
   const renderCareerCards = (careers: SearchResult[]) => {
-    if (!careers.length) return null;
-
     return (
       <div className="px-4 mt-6">
         <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
-        <div className="grid grid-cols-1 gap-4">
-          {careers.map((career) => (
-            <Card 
-              key={career.id}
-              className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => setSelectedCareerId(career.id)}
-            >
-              <h4 className="font-medium text-sm mb-1">{career.title}</h4>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {career.description}
-              </p>
-            </Card>
-          ))}
-        </div>
+        {careers.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4">
+            {careers.map((career) => (
+              <Card 
+                key={career.id}
+                className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => setSelectedCareerId(career.id)}
+              >
+                <h4 className="font-medium text-sm mb-1">{career.title}</h4>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {career.description}
+                </p>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No matching careers found</p>
+        )}
       </div>
     );
   };
