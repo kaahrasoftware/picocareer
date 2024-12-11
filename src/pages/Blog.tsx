@@ -29,8 +29,8 @@ interface Blog {
 const Blog = () => {
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [showRecentOnly, setShowRecentOnly] = useState(false);
 
   const { data: blogs = [], isLoading } = useQuery({
@@ -50,11 +50,11 @@ const Blog = () => {
         query = query.or(`title.ilike.%${searchQuery}%,summary.ilike.%${searchQuery}%`);
       }
 
-      if (selectedCategory) {
+      if (selectedCategory !== "all") {
         query = query.eq('category', selectedCategory);
       }
 
-      if (selectedSubcategory) {
+      if (selectedSubcategory !== "all") {
         query = query.eq('subcategory', selectedSubcategory);
       }
 
@@ -100,9 +100,9 @@ const Blog = () => {
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>
+                <SelectItem key={category} value={category.toLowerCase().replace(/\s+/g, '-')}>
                   {category}
                 </SelectItem>
               ))}
@@ -113,9 +113,9 @@ const Blog = () => {
               <SelectValue placeholder="Subcategory" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Subcategories</SelectItem>
+              <SelectItem value="all">All Subcategories</SelectItem>
               {subcategories.map((subcategory) => (
-                <SelectItem key={subcategory} value={subcategory}>
+                <SelectItem key={subcategory} value={subcategory.toLowerCase().replace(/\s+/g, '-')}>
                   {subcategory}
                 </SelectItem>
               ))}
