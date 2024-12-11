@@ -5,11 +5,34 @@ import { useState } from "react";
 import { AuthDialog } from "./AuthDialog";
 import { ProfileDialog } from "./ProfileDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { User as UserType } from "@/integrations/supabase/types/user.types";
 
 export function SidebarFooter() {
   const session = useSession();
   const [authOpen, setAuthOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const { data: userData } = useQuery<UserType>({
+    queryKey: ['user', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) throw new Error('No user ID');
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select()
+        .eq('id', session.user.id)
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (!data) throw new Error('No user data found');
+      
+      return data as UserType;
+    },
+    enabled: !!session?.user?.id
+  });
 
   if (session) {
     return (
@@ -28,7 +51,7 @@ export function SidebarFooter() {
               <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">{session.user.email}</span>
+              <span className="text-sm font-medium">@{userData?.username || 'loading...'}</span>
               <span className="text-xs text-muted-foreground">View Profile</span>
             </div>
           </Button>
