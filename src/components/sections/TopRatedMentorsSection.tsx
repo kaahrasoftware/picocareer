@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
+import { MentorListDialog } from "@/components/MentorListDialog";
 import {
   Carousel,
   CarouselContent,
@@ -20,6 +21,9 @@ const topRatedMentors = [
       recordings: "57K",
     },
     username: "anyagreiner",
+    education: "Master's",
+    sessionsHeld: "120",
+    position: "Senior",
   },
   {
     title: "Chief Information Security Officer",
@@ -32,6 +36,9 @@ const topRatedMentors = [
       recordings: "57K",
     },
     username: "jeffegoyo",
+    education: "PhD",
+    sessionsHeld: "85",
+    position: "Principal",
   },
   {
     title: "Computer Science",
@@ -44,6 +51,9 @@ const topRatedMentors = [
       recordings: "57",
     },
     username: "anyagreiner",
+    education: "PhD",
+    sessionsHeld: "45",
+    position: "Lead",
   },
   {
     title: "Pharmacist",
@@ -56,6 +66,9 @@ const topRatedMentors = [
       recordings: "57K",
     },
     username: "garygreiner",
+    education: "Bachelor's",
+    sessionsHeld: "25",
+    position: "Senior",
   },
 ];
 
@@ -90,6 +103,11 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
+      <MentorListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        mentors={topRatedMentors}
+      />
     </section>
   );
 };
