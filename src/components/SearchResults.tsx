@@ -44,8 +44,8 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <h3 className="text-lg font-semibold mb-3 text-foreground">Mentors</h3>
         <div className="w-full">
           <div className={`${shouldUseGrid 
-            ? 'grid grid-cols-3 gap-4' 
-            : 'flex gap-4 overflow-x-auto pb-2'}`}
+            ? 'grid grid-cols-3 gap-4 place-items-center' 
+            : 'flex gap-4 justify-center'}`}
           >
             {mentors.map((mentor) => (
               <Card 
