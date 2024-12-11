@@ -5,6 +5,8 @@ import { SearchResultGroup } from "./search/SearchResultGroup";
 import type { SearchResult } from "@/hooks/useSearchData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 
 interface SearchResultsProps {
   query: string;
@@ -13,6 +15,7 @@ interface SearchResultsProps {
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   
   const groupedResults: Record<string, SearchResult[]> = {
     mentors: [],
@@ -41,6 +44,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
             <Card 
               key={mentor.id}
               className="flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => setSelectedProfileId(mentor.id)}
             >
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-10 w-10">
@@ -97,18 +101,28 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   };
 
   return (
-    <Card className="search-results absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
-      <Command className="border-none bg-transparent">
-        <CommandInput 
-          placeholder="Type to search..." 
-          value={query}
-          readOnly
-          className="h-9"
+    <>
+      <Card className="search-results absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
+        <Command className="border-none bg-transparent">
+          <CommandInput 
+            placeholder="Type to search..." 
+            value={query}
+            readOnly
+            className="h-9"
+          />
+          <CommandList className="max-h-[500px] overflow-y-auto scrollbar-hide">
+            {renderResults()}
+          </CommandList>
+        </Command>
+      </Card>
+
+      {selectedProfileId && (
+        <ProfileDetailsDialog
+          userId={selectedProfileId}
+          open={!!selectedProfileId}
+          onOpenChange={(open) => !open && setSelectedProfileId(null)}
         />
-        <CommandList className="max-h-[500px] overflow-y-auto scrollbar-hide">
-          {renderResults()}
-        </CommandList>
-      </Command>
-    </Card>
+      )}
+    </>
   );
 };
