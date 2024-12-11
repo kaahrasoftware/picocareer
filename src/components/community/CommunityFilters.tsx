@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchBar } from "@/components/SearchBar";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface CommunityFiltersProps {
   searchQuery: string;
@@ -51,10 +51,24 @@ export function CommunityFilters({
 }: CommunityFiltersProps) {
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+  const commandRef = useRef<HTMLDivElement>(null);
 
   const filteredSkills = allSkills.filter(skill => 
     skill.toLowerCase().includes(skillSearchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
+        setIsSkillsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -128,7 +142,7 @@ export function CommunityFilters({
           </SelectContent>
         </Select>
 
-        <Command className="rounded-lg border shadow-md">
+        <Command className="rounded-lg border shadow-md" ref={commandRef}>
           <CommandInput 
             placeholder="Search skills..." 
             value={skillSearchQuery}
