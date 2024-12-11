@@ -54,19 +54,21 @@ export function MenuSidebar() {
   }, [toast]);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return;
-    }
-    
-    if (data) {
-      setAvatarUrl(data.avatar_url);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId)
+        .maybeSingle(); // Changed from single() to maybeSingle()
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+      
+      setAvatarUrl(data?.avatar_url || null);
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
     }
   };
 
