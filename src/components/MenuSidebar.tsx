@@ -18,7 +18,7 @@ export function MenuSidebar() {
   return (
     <Sidebar side="left">
       <div className="flex flex-col h-full bg-background border-r border-border">
-        <div className="p-6">
+        <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
               <img src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png" alt="Logo" className="w-6 h-6" />
@@ -27,7 +27,7 @@ export function MenuSidebar() {
             <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
           </div>
           
-          <nav className="flex-1 mb-8">
+          <nav className="flex-1">
             <ul className="space-y-4">
               {navigationItems.map((item, index) => (
                 <li key={index}>
@@ -45,7 +45,8 @@ export function MenuSidebar() {
             </ul>
           </nav>
 
-          <div className="mt-auto mb-8">
+          {/* Footer content positioned at bottom */}
+          <div className="mt-auto pt-6">
             <div className="flex items-center gap-3 mb-4">
               <button
                 onClick={() => setProfileOpen(true)}
