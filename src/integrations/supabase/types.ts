@@ -421,7 +421,7 @@ export type Database = {
       }
       profiles: {
         Row: {
-          academic_major: string | null
+          academic_major_id: string | null
           avatar_url: string | null
           bio: string | null
           career_id: string | null
@@ -449,7 +449,7 @@ export type Database = {
           years_of_experience: number | null
         }
         Insert: {
-          academic_major?: string | null
+          academic_major_id?: string | null
           avatar_url?: string | null
           bio?: string | null
           career_id?: string | null
@@ -477,7 +477,7 @@ export type Database = {
           years_of_experience?: number | null
         }
         Update: {
-          academic_major?: string | null
+          academic_major_id?: string | null
           avatar_url?: string | null
           bio?: string | null
           career_id?: string | null
@@ -506,6 +506,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "profiles_academic_major_id_fkey"
+            columns: ["academic_major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_career_id_fkey"
             columns: ["career_id"]
             isOneToOne: false
@@ -531,6 +538,13 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_temp_major_id_fkey"
+            columns: ["academic_major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
             referencedColumns: ["id"]
           },
         ]

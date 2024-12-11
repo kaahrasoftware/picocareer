@@ -16,7 +16,7 @@ export interface ProfilesTables {
       company_id: string | null
       position: string | null
       highest_degree: string | null
-      academic_major: string | null
+      academic_major_id: string | null
       skills: string[] | null
       tools_used: string[] | null
       keywords: string[] | null
@@ -42,7 +42,7 @@ export interface ProfilesTables {
       company_id?: string | null
       position?: string | null
       highest_degree?: string | null
-      academic_major?: string | null
+      academic_major_id?: string | null
       skills?: string[] | null
       tools_used?: string[] | null
       keywords?: string[] | null
@@ -68,7 +68,7 @@ export interface ProfilesTables {
       company_id?: string | null
       position?: string | null
       highest_degree?: string | null
-      academic_major?: string | null
+      academic_major_id?: string | null
       skills?: string[] | null
       tools_used?: string[] | null
       keywords?: string[] | null

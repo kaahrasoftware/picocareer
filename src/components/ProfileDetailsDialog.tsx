@@ -26,7 +26,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         .select(`
           *,
           company:companies(name),
-          school:schools(name)
+          school:schools(name),
+          academic_major:majors(title)
         `)
         .eq('id', userId)
         .single();
@@ -35,7 +36,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       return {
         ...data,
         company_name: data.company?.name,
-        school_name: data.school?.name
+        school_name: data.school?.name,
+        academic_major: data.academic_major?.title
       };
     },
     enabled: !!userId && open,
@@ -82,22 +84,17 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
               </div>
             )}
 
-            {(profile.school_name || profile.academic_major || profile.highest_degree) && (
+            {(profile.academic_major || profile.academic_major || profile.highest_degree) && (
               <div className="bg-kahra-darker rounded-lg p-4 space-y-3">
                 <h4 className="font-semibold">Education</h4>
-                {profile.school_name && (
+                {profile.academic_major && (
                   <div className="flex items-center gap-2 text-gray-400">
                     <GraduationCap size={16} />
-                    <span>{profile.school_name}</span>
+                    <span>{profile.academic_major}</span>
                   </div>
                 )}
-                {profile.academic_major && (
-                  <Badge variant="outline" className="mr-2">
-                    {profile.academic_major}
-                  </Badge>
-                )}
                 {profile.highest_degree && (
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="mr-2">
                     {profile.highest_degree}
                   </Badge>
                 )}
