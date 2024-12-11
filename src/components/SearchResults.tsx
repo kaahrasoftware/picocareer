@@ -124,7 +124,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           readOnly
           className="h-9"
         />
-        <CommandList className="max-h-[300px] overflow-y-auto scrollbar-thin">
+        <CommandList className="max-h-[500px] overflow-y-auto scrollbar-thin">
           {renderResults()}
         </CommandList>
       </Command>
