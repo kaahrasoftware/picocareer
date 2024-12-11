@@ -5,6 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Database } from "@/integrations/supabase/types";
+
+type BlogWithAuthor = Database['public']['Tables']['blogs']['Row'] & {
+  profiles: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+};
 
 const Blog = () => {
   const { data: blogs, isLoading } = useQuery({
@@ -18,11 +26,10 @@ const Blog = () => {
             full_name,
             avatar_url
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
 
       if (error) throw error;
-      return data;
+      return data as BlogWithAuthor[];
     },
   });
 
