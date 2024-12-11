@@ -27,10 +27,19 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     { id: '8', title: "Sarah Johnson", type: "mentor", description: "Data Science Lead at Amazon" },
   ];
 
-  const filteredResults = allResults.filter(result => 
-    result.title.toLowerCase().includes(query.toLowerCase()) ||
-    result.description?.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredResults = query 
+    ? allResults.filter(result => 
+        result.title.toLowerCase().includes(query.toLowerCase()) ||
+        result.description?.toLowerCase().includes(query.toLowerCase())
+      )
+    : [];
+
+  const groupedResults = {
+    careers: filteredResults.filter(r => r.type === 'career'),
+    majors: filteredResults.filter(r => r.type === 'major'),
+    schools: filteredResults.filter(r => r.type === 'school'),
+    mentors: filteredResults.filter(r => r.type === 'mentor'),
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -47,13 +56,6 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
-  const groupedResults = {
-    careers: filteredResults.filter(r => r.type === 'career'),
-    majors: filteredResults.filter(r => r.type === 'major'),
-    schools: filteredResults.filter(r => r.type === 'school'),
-    mentors: filteredResults.filter(r => r.type === 'mentor'),
-  };
-
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Command className="border-none bg-transparent">
@@ -61,7 +63,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <CommandEmpty>No results found.</CommandEmpty>
         
         {Object.entries(groupedResults).map(([category, results]) => 
-          results.length > 0 && (
+          results && results.length > 0 ? (
             <CommandGroup key={category} heading={category.charAt(0).toUpperCase() + category.slice(1)}>
               {results.map((result) => (
                 <CommandItem
@@ -82,7 +84,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                 </CommandItem>
               ))}
             </CommandGroup>
-          )
+          ) : null
         )}
       </Command>
     </Card>
