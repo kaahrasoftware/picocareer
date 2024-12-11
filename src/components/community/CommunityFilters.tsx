@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchBar } from "@/components/SearchBar";
+import { useState } from "react";
 
 interface CommunityFiltersProps {
   searchQuery: string;
@@ -48,6 +49,13 @@ export function CommunityFilters({
   fields = [],
   allSkills = [],
 }: CommunityFiltersProps) {
+  const [skillSearchQuery, setSkillSearchQuery] = useState("");
+  const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+
+  const filteredSkills = allSkills.filter(skill => 
+    skill.toLowerCase().includes(skillSearchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex-1">
@@ -121,43 +129,55 @@ export function CommunityFilters({
         </Select>
 
         <Command className="rounded-lg border shadow-md">
-          <CommandList>
-            <CommandGroup>
-              <div className="flex flex-wrap gap-1 p-2">
-                {selectedSkills.map((skill) => (
-                  <Badge
+          <CommandInput 
+            placeholder="Search skills..." 
+            value={skillSearchQuery}
+            onValueChange={setSkillSearchQuery}
+            onFocus={() => setIsSkillsOpen(true)}
+          />
+          {isSkillsOpen && (
+            <CommandList>
+              <CommandGroup>
+                <div className="flex flex-wrap gap-1 p-2">
+                  {selectedSkills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      variant="secondary"
+                      className="mr-1 mb-1 cursor-pointer"
+                      onClick={() => onSkillsChange(selectedSkills.filter(s => s !== skill))}
+                    >
+                      {skill} ×
+                    </Badge>
+                  ))}
+                </div>
+                {filteredSkills.length === 0 && (
+                  <CommandEmpty>No skills found.</CommandEmpty>
+                )}
+                {filteredSkills.map((skill) => (
+                  <CommandItem
                     key={skill}
-                    variant="secondary"
-                    className="mr-1 mb-1 cursor-pointer"
-                    onClick={() => onSkillsChange(selectedSkills.filter(s => s !== skill))}
+                    onSelect={() => {
+                      if (selectedSkills.includes(skill)) {
+                        onSkillsChange(selectedSkills.filter(s => s !== skill));
+                      } else {
+                        onSkillsChange([...selectedSkills, skill]);
+                      }
+                      setSkillSearchQuery("");
+                    }}
+                    className="cursor-pointer"
                   >
-                    {skill} ×
-                  </Badge>
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {skill}
+                  </CommandItem>
                 ))}
-              </div>
-              {allSkills.map((skill) => (
-                <CommandItem
-                  key={skill}
-                  onSelect={() => {
-                    if (selectedSkills.includes(skill)) {
-                      onSkillsChange(selectedSkills.filter(s => s !== skill));
-                    } else {
-                      onSkillsChange([...selectedSkills, skill]);
-                    }
-                  }}
-                  className="cursor-pointer"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {skill}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
+              </CommandGroup>
+            </CommandList>
+          )}
         </Command>
       </div>
     </div>
