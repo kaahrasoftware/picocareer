@@ -2,14 +2,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { BlogWithAuthor } from "@/types/blog/types";
 import { useState } from "react";
 import { BlogFilters } from "@/components/blog/BlogFilters";
-import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogPagination } from "@/components/blog/BlogPagination";
+import { BlogGrid } from "@/components/blog/BlogGrid";
+import { BlogHeader } from "@/components/blog/BlogHeader";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -74,10 +72,7 @@ const Blog = () => {
         <MenuSidebar />
         <main className="flex-1 p-8">
           <div className="max-w-[1400px] mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold">Blog Posts</h1>
-              <ThemeToggle />
-            </div>
+            <BlogHeader />
 
             <BlogFilters
               searchQuery={searchQuery}
@@ -90,24 +85,7 @@ const Blog = () => {
               setShowRecentOnly={setShowRecentOnly}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {isLoading ? (
-                Array(6).fill(0).map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <Skeleton className="h-48 w-full" />
-                    <CardHeader>
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-24 w-full" />
-                    </CardContent>
-                  </Card>
-                ))
-              ) : currentItems.map((blog) => (
-                <BlogCard key={blog.id} blog={blog} />
-              ))}
-            </div>
+            <BlogGrid blogs={currentItems} isLoading={isLoading} />
 
             {!isLoading && blogs && blogs.length > 0 && (
               <BlogPagination
