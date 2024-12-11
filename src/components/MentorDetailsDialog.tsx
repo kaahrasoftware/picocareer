@@ -13,7 +13,7 @@ import { BookSessionDialog } from "./BookSessionDialog";
 
 interface MentorDetailsDialogProps {
   mentor: {
-    id?: string; // Make id optional to match existing usage
+    id?: string;
     title: string;
     company: string;
     imageUrl: string;
@@ -35,6 +35,13 @@ interface MentorDetailsDialogProps {
 
 export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetailsDialogProps) {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+
+  // Ensure we have a valid mentor object for BookSessionDialog
+  const bookingMentor = {
+    id: mentor.id || '', // Provide a default empty string if id is undefined
+    name: mentor.name,
+    imageUrl: mentor.imageUrl
+  };
 
   return (
     <>
@@ -118,6 +125,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
                 className="w-full" 
                 variant="secondary"
                 onClick={() => setBookingDialogOpen(true)}
+                disabled={!mentor.id} // Disable if no mentor id is available
               >
                 <Calendar className="mr-2" />
                 Book Session
@@ -131,11 +139,13 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
         </DialogContent>
       </Dialog>
 
-      <BookSessionDialog
-        mentor={mentor}
-        open={bookingDialogOpen}
-        onOpenChange={setBookingDialogOpen}
-      />
+      {mentor.id && (
+        <BookSessionDialog
+          mentor={bookingMentor}
+          open={bookingDialogOpen}
+          onOpenChange={setBookingDialogOpen}
+        />
+      )}
     </>
   );
 }

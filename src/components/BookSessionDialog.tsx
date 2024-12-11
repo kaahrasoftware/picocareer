@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { DateSelector } from "./booking/DateSelector";
@@ -44,6 +43,15 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   useEffect(() => {
     async function fetchSessionTypes() {
+      if (!mentor.id) {
+        toast({
+          title: "Error",
+          description: "Invalid mentor ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('mentor_session_types')
         .select('*')
@@ -61,14 +69,14 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       setSessionTypes(data);
     }
 
-    if (open) {
+    if (open && mentor.id) {
       fetchSessionTypes();
     }
   }, [mentor.id, open, toast]);
 
   useEffect(() => {
     async function fetchAvailability() {
-      if (!date) return;
+      if (!date || !mentor.id) return;
 
       const dayOfWeek = date.getDay();
       
@@ -125,13 +133,13 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       setAvailableTimeSlots(slots);
     }
 
-    if (date) {
+    if (date && mentor.id) {
       fetchAvailability();
     }
   }, [date, mentor.id, toast]);
 
   const handleSubmit = async () => {
-    if (!date || !selectedTime || !sessionType) return;
+    if (!date || !selectedTime || !sessionType || !mentor.id) return;
 
     const scheduledAt = new Date(date);
     const [hours, minutes] = selectedTime.split(':');
@@ -207,7 +215,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!date || !selectedTime || !sessionType}
+            disabled={!date || !selectedTime || !sessionType || !mentor.id}
           >
             Book Session
           </Button>
