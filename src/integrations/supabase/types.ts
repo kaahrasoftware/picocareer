@@ -156,7 +156,7 @@ export type Database = {
       mentor_availability: {
         Row: {
           created_at: string
-          day_of_week: number
+          date_available: string
           end_time: string
           id: string
           is_available: boolean | null
@@ -167,7 +167,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          day_of_week: number
+          date_available: string
           end_time: string
           id?: string
           is_available?: boolean | null
@@ -178,7 +178,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          day_of_week?: number
+          date_available?: string
           end_time?: string
           id?: string
           is_available?: boolean | null
