@@ -17,7 +17,7 @@ export const useSearchData = (query: string) => {
 
       console.log('Searching with query:', query);
 
-      // Search mentors with expanded criteria
+      // Search mentors with expanded criteria and case-insensitive search
       const { data: mentors, error: mentorError } = await supabase
         .from('profiles')
         .select('id, full_name, position, company_name, avatar_url, bio')
@@ -27,10 +27,10 @@ export const useSearchData = (query: string) => {
             `company_name.ilike.%${query}%,` +
             `bio.ilike.%${query}%,` +
             `location.ilike.%${query}%,` +
-            `skills.cs.{${query}},` +
-            `tools_used.cs.{${query}},` +
-            `keywords.cs.{${query}},` +
-            `fields_of_interest.cs.{${query}}`)
+            `skills.cs.{${query.toLowerCase()}},` +
+            `tools_used.cs.{${query.toLowerCase()}},` +
+            `keywords.cs.{${query.toLowerCase()}},` +
+            `fields_of_interest.cs.{${query.toLowerCase()}}`)
         .limit(5);
 
       if (mentorError) {
@@ -47,21 +47,21 @@ export const useSearchData = (query: string) => {
         avatar_url: mentor.avatar_url
       }));
 
-      // Search careers
+      // Search careers with case-insensitive search
       const { data: careers } = await supabase
         .from('careers')
         .select('id, title, description')
-        .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query}}, industry.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%, description.ilike.%${query}%, required_skills.cs.{${query.toLowerCase()}}, industry.ilike.%${query}%`)
         .limit(3);
 
-      // Search majors
+      // Search majors with case-insensitive search
       const { data: majors } = await supabase
         .from('majors')
         .select('id, title, description')
-        .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query}}`)
+        .or(`title.ilike.%${query}%, description.ilike.%${query}%, field_of_study.ilike.%${query}%, required_courses.cs.{${query.toLowerCase()}}`)
         .limit(3);
 
-      // Search blogs
+      // Search blogs with case-insensitive search
       const { data: blogs } = await supabase
         .from('blogs')
         .select('id, title, summary')
