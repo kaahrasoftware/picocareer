@@ -13,7 +13,7 @@ interface SearchResultsProps {
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   
-  // Initialize empty arrays for each category
+  // Initialize empty arrays for each category with proper type checking
   const groupedResults: Record<string, SearchResult[]> = {
     careers: [],
     majors: [],
@@ -48,7 +48,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
   };
 
-  // Check if there are any results in any category
+  // Check if there are any results in any category with proper type checking
   const hasResults = Object.values(groupedResults).some(group => 
     Array.isArray(group) && group.length > 0
   );
@@ -71,7 +71,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     }
 
     return Object.entries(groupedResults).map(([category, items]) => {
-      // Skip if no items in category
+      // Skip if no items in category or items is not an array
       if (!Array.isArray(items) || items.length === 0) {
         return null;
       }
@@ -95,7 +95,7 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={result.avatar_url || ''} alt={result.title} />
-                    <AvatarFallback>{result.title[0]}</AvatarFallback>
+                    <AvatarFallback>{result.title?.[0] || '?'}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">{result.title}</span>
