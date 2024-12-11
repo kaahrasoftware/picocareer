@@ -79,7 +79,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             },
           }}
           theme={theme === 'dark' ? 'dark' : 'light'}
-          providers={['google', 'facebook', 'twitter', 'apple']}
+          providers={[]}
           redirectTo={window.location.origin}
           socialLayout="horizontal"
           localization={{
