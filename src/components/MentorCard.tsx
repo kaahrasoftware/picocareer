@@ -1,9 +1,10 @@
-import { User, parseUserStats } from "@/types/user";
+import { User } from "@/types/user";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { MentorDetailsDialog } from "@/components/MentorDetailsDialog";
+import { parseStats } from "@/types/stats";
 
 interface MentorCardProps {
   mentor: User;
@@ -12,7 +13,7 @@ interface MentorCardProps {
 
 export const MentorCard = ({ mentor, featured }: MentorCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
-  const stats = parseUserStats(mentor.stats);
+  const stats = parseStats(mentor.stats);
 
   return (
     <>
