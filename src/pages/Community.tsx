@@ -28,7 +28,8 @@ export default function Community() {
         .select(`
           *,
           company:companies(name),
-          school:schools(name)
+          school:schools(name),
+          academic_major:majors(title)
         `)
         .neq('id', user?.id)
         .neq('user_type', 'admin')
@@ -38,7 +39,8 @@ export default function Community() {
       return data.map(profile => ({
         ...profile,
         company_name: profile.company?.name,
-        school_name: profile.school?.name
+        school_name: profile.school?.name,
+        academic_major: profile.academic_major?.title || null
       }));
     },
   });
