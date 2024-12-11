@@ -27,9 +27,9 @@ export const useSearchData = (query: string) => {
           .limit(5),
         supabase
           .from('profiles')
-          .select('id, full_name, position, company_name, skills')
+          .select('id, full_name, position, company_name, highest_degree, skills, tools_used')
           .eq('user_type', 'mentor')
-          .or(`full_name.ilike.%${query}%, position.ilike.%${query}%, company_name.ilike.%${query}%, skills.cs.{${query}}`)
+          .or(`full_name.ilike.%${query}%, position.ilike.%${query}%, company_name.ilike.%${query}%, highest_degree.ilike.%${query}%, skills.cs.{${query}}, tools_used.cs.{${query}}`)
           .limit(5)
       ]);
 

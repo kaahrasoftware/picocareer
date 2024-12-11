@@ -13,6 +13,7 @@ export const SearchBar = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setShowResults(false);
+        setSearchQuery("");
       }
     };
 
@@ -26,11 +27,6 @@ export const SearchBar = () => {
     const value = e.target.value;
     setSearchQuery(value);
     setShowResults(true);
-  };
-
-  const handleClose = () => {
-    setShowResults(false);
-    setSearchQuery("");
   };
 
   return (
@@ -49,7 +45,7 @@ export const SearchBar = () => {
       >
         <Search className="h-4 w-4" />
       </Button>
-      {showResults && <SearchResults query={searchQuery} onClose={handleClose} />}
+      {showResults && <SearchResults query={searchQuery} onClose={() => setShowResults(false)} />}
     </div>
   );
 };
