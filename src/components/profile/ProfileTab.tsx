@@ -1,33 +1,68 @@
 import React from "react";
+import { useSession } from "@supabase/auth-helpers-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ProfileTab() {
+  const session = useSession();
+
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ['user', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 px-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return <div className="px-2 text-muted-foreground">No profile data available.</div>;
+  }
+
+  const profileFields = [
+    { label: "User Type", value: userData.user_type || "Not specified" },
+    { label: "Name", value: userData.name },
+    { label: "Username", value: userData.username },
+    { label: "Title", value: userData.title },
+    { label: "Company", value: userData.company },
+    { label: "Position", value: userData.position || "Not specified" },
+    { label: "Education", value: userData.education || "Not specified" },
+    { label: "Bio", value: userData.bio || "No bio provided" },
+    { label: "Sessions Held", value: userData.sessions_held || "0" },
+  ];
+
   return (
     <div className="space-y-6 px-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <p className="text-gray-400 dark:text-gray-400">Profile type:</p>
-          <p>Student</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-400 dark:text-gray-400">First Name:</p>
-          <p>John</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-400 dark:text-gray-400">Last Name:</p>
-          <p>Doe</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-400 dark:text-gray-400">School:</p>
-          <p>North Carolina State University</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-400 dark:text-gray-400">Major:</p>
-          <p>Biochemical Engineering</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-gray-400 dark:text-gray-400">Location:</p>
-          <p>Austin, Texas, USA</p>
-        </div>
+        {profileFields.map((field, index) => (
+          <div key={index} className="space-y-2">
+            <p className="text-gray-400 dark:text-gray-400">{field.label}:</p>
+            <p className="break-words">{field.value}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
