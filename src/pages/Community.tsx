@@ -1,20 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileCard } from "@/components/community/ProfileCard";
-import { SearchBar } from "@/components/SearchBar";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { CommunityFilters } from "@/components/community/CommunityFilters";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,116 +63,27 @@ export default function Community() {
           Connect with students, mentors, and professionals in your field of interest.
         </p>
         
-        <div className="space-y-4">
-          <div className="flex-1">
-            <SearchBar 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, skills, company, position, school, or location..."
-              className="max-w-xl"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Select value={userTypeFilter || "all"} onValueChange={(value) => setUserTypeFilter(value === "all" ? null : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="User Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="student">Student</SelectItem>
-                <SelectItem value="mentor">Mentor</SelectItem>
-                <SelectItem value="professional">Professional</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={locationFilter || "all"} onValueChange={(value) => setLocationFilter(value === "all" ? null : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={companyFilter || "all"} onValueChange={(value) => setCompanyFilter(value === "all" ? null : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Company" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                {companies.map((company) => (
-                  <SelectItem key={company} value={company}>{company}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={schoolFilter || "all"} onValueChange={(value) => setSchoolFilter(value === "all" ? null : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="School" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Schools</SelectItem>
-                {schools.map((school) => (
-                  <SelectItem key={school} value={school}>{school}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={fieldFilter || "all"} onValueChange={(value) => setFieldFilter(value === "all" ? null : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Field of Interest" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Fields</SelectItem>
-                {fields.map((field) => (
-                  <SelectItem key={field} value={field}>{field}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Command className="rounded-lg border shadow-md">
-              <CommandGroup className="h-full overflow-auto">
-                <div className="flex flex-wrap gap-1 p-2">
-                  {selectedSkills.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="secondary"
-                      className="mr-1 mb-1"
-                      onClick={() => setSelectedSkills(selectedSkills.filter(s => s !== skill))}
-                    >
-                      {skill} ×
-                    </Badge>
-                  ))}
-                </div>
-                {allSkills.map((skill) => (
-                  <CommandItem
-                    key={skill}
-                    onSelect={() => {
-                      if (selectedSkills.includes(skill)) {
-                        setSelectedSkills(selectedSkills.filter(s => s !== skill));
-                      } else {
-                        setSelectedSkills([...selectedSkills, skill]);
-                      }
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {skill}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </div>
-        </div>
+        <CommunityFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedSkills={selectedSkills}
+          onSkillsChange={setSelectedSkills}
+          userTypeFilter={userTypeFilter}
+          onUserTypeChange={setUserTypeFilter}
+          locationFilter={locationFilter}
+          onLocationChange={setLocationFilter}
+          companyFilter={companyFilter}
+          onCompanyChange={setCompanyFilter}
+          schoolFilter={schoolFilter}
+          onSchoolChange={setSchoolFilter}
+          fieldFilter={fieldFilter}
+          onFieldChange={setFieldFilter}
+          locations={locations}
+          companies={companies}
+          schools={schools}
+          fields={fields}
+          allSkills={allSkills}
+        />
       </div>
 
       {isLoading ? (
