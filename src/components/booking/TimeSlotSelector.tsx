@@ -1,6 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { format, parse, addMinutes } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { TimeSlotsGrid } from "./TimeSlotsGrid";
 
 interface TimeSlot {
   time: string;
@@ -51,34 +50,11 @@ export function TimeSlotSelector({
       <h4 className="font-semibold mb-2">
         Available Times for {format(date, "MMMM d, yyyy")}
       </h4>
-      <ScrollArea className="h-[200px] rounded-md border border-kahra-darker">
-        <div className="grid grid-cols-2 gap-2 p-4">
-          {timeSlots.length > 0 ? (
-            timeSlots.map((slot) => {
-              const displayTime = format(
-                parse(slot.time, 'HH:mm', new Date()),
-                'h:mm a'
-              );
-
-              return (
-                <Button
-                  key={slot.time}
-                  variant={selectedTime === slot.time ? "default" : "outline"}
-                  onClick={() => onTimeSelect(slot.time)}
-                  disabled={!slot.available}
-                  className={`w-full ${!slot.available ? 'opacity-50' : ''}`}
-                >
-                  {displayTime}
-                </Button>
-              );
-            })
-          ) : (
-            <div className="col-span-2 text-center text-gray-500 py-4">
-              No available time slots for this date
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      <TimeSlotsGrid
+        timeSlots={timeSlots}
+        selectedTime={selectedTime}
+        onTimeSelect={onTimeSelect}
+      />
     </div>
   );
 }
