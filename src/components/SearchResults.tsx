@@ -35,10 +35,10 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     : [];
 
   const groupedResults = {
-    careers: filteredResults.filter(r => r.type === 'career'),
-    majors: filteredResults.filter(r => r.type === 'major'),
-    schools: filteredResults.filter(r => r.type === 'school'),
-    mentors: filteredResults.filter(r => r.type === 'mentor'),
+    careers: filteredResults.filter(r => r.type === 'career') || [],
+    majors: filteredResults.filter(r => r.type === 'major') || [],
+    schools: filteredResults.filter(r => r.type === 'school') || [],
+    mentors: filteredResults.filter(r => r.type === 'mentor') || [],
   };
 
   const getIcon = (type: string) => {
@@ -58,9 +58,9 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
 
   return (
     <Card className="absolute top-full mt-2 w-full z-50 border border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <Command className="border-none bg-transparent">
+      <Command className="border-none bg-transparent" shouldFilter={false}>
         <CommandInput placeholder="Type to search..." value={query} />
-        <CommandEmpty>No results found.</CommandEmpty>
+        {filteredResults.length === 0 && query && <CommandEmpty>No results found.</CommandEmpty>}
         
         {Object.entries(groupedResults).map(([category, results]) => 
           results && results.length > 0 ? (
