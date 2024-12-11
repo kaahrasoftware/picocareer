@@ -47,7 +47,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
             <MentorHeader 
               name={mentor.name}
               username={mentor.username}
-              image_url={mentor.image_url}
+              imageUrl={mentor.image_url}
             />
           </DialogHeader>
 

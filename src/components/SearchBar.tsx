@@ -11,7 +11,6 @@ export const SearchBar = () => {
   const [showResults, setShowResults] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
-  // Handle clicking outside of search bar
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
@@ -56,14 +55,7 @@ export const SearchBar = () => {
         .from('users')
         .select('*')
         .eq('user_type', 'mentor')
-        .or(`
-          name.ilike.%${searchQuery}%,
-          company.ilike.%${searchQuery}%,
-          title.ilike.%${searchQuery}%,
-          position.ilike.%${searchQuery}%,
-          education.ilike.%${searchQuery}%,
-          bio.ilike.%${searchQuery}%
-        `)
+        .or(`name.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%,position.ilike.%${searchQuery}%,education.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`)
         .limit(5);
       return data || [];
     },
