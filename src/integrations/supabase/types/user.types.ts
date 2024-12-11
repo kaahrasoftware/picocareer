@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type User = {
+export interface User {
   id: number;
   title: string;
   company: string;
@@ -24,4 +24,4 @@ export type User = {
   skills: string[] | null;
   tools: string[] | null;
   keywords: string[] | null;
-};
+}

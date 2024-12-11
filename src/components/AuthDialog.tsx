@@ -88,7 +88,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 button_label: 'Create Account',
                 loading_button_label: 'Creating account...',
                 link_text: 'Already have an account? Sign in',
-                full_name_label: 'Full Name',
+                email_input_placeholder: 'Enter your email',
+                password_input_placeholder: 'Create a password',
               },
               forgotten_password: {
                 email_label: 'Email Address',
