@@ -59,16 +59,12 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               anchor: {
                 color: '#DC2626',
                 fontSize: '0.875rem',
+                textDecoration: 'none',
+                marginTop: '0.5rem',
+                display: 'inline-block',
               },
               divider: {
                 margin: '1rem 0',
-              },
-              // Add styles for the links container
-              links: {
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '0.5rem',
               },
             },
           }}
@@ -84,20 +80,20 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 password_label: 'Password',
                 button_label: 'Login',
                 loading_button_label: 'Signing in...',
-                link_text: '',
+                link_text: "Don't have an account? Sign up",
               },
               sign_up: {
                 email_label: 'Email Address',
                 password_label: 'Password',
                 button_label: 'Sign Up',
                 loading_button_label: 'Signing up...',
-                link_text: '',
+                link_text: 'Already have an account? Sign in',
               },
               forgotten_password: {
                 email_label: 'Email Address',
                 button_label: 'Send Reset Instructions',
                 loading_button_label: 'Sending reset instructions...',
-                link_text: '',
+                link_text: 'Back to sign in',
               },
             },
           }}
