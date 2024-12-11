@@ -24,6 +24,8 @@ serve(async (req) => {
     
     Use HTML tags for structure (<h2>, <p>, <ul>, etc). Make the content informative, engaging, and around 1000-1500 words.`;
 
+    console.log('Generating content for title:', title);
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -42,6 +44,8 @@ serve(async (req) => {
 
     const data = await response.json();
     const generatedContent = data.choices[0].message.content;
+
+    console.log('Successfully generated content');
 
     return new Response(JSON.stringify({ content: generatedContent }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
