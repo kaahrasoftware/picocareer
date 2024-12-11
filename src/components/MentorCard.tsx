@@ -6,7 +6,22 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
 import { User } from "@/integrations/supabase/types/user.types";
 
-type MentorCardProps = Pick<User, 'id' | 'title' | 'company' | 'image_url' | 'full_name' | 'username' | 'bio' | 'position' | 'education' | 'sessions_held' | 'stats' | 'skills' | 'tools' | 'keywords'>;
+type MentorCardProps = Pick<User, 
+  'id' | 
+  'title' | 
+  'company' | 
+  'image_url' | 
+  'full_name' | 
+  'username' | 
+  'bio' | 
+  'position' | 
+  'education' | 
+  'sessions_held' | 
+  'stats' | 
+  'skills' | 
+  'tools' | 
+  'keywords'
+>;
 
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);

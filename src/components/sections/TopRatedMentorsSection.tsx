@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
+import { MentorListDialog } from "@/components/MentorListDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/integrations/supabase/types/user.types";
 import {
   Carousel,
   CarouselContent,
@@ -24,13 +24,12 @@ const fetchTopRatedMentors = async () => {
 
   if (!data) return [];
 
-  // Convert stats from JSON to UserStats type
   return data.map(mentor => ({
     ...mentor,
     stats: typeof mentor.stats === 'string' 
       ? JSON.parse(mentor.stats)
       : mentor.stats
-  })) as User[];
+  }));
 };
 
 export const TopRatedMentorsSection = () => {
@@ -94,6 +93,13 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
+      {mentors && (
+        <MentorListDialog
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          mentors={mentors}
+        />
+      )}
     </section>
   );
 };
