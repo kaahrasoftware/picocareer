@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProfileCard } from "@/components/community/ProfileCard";
 import { SearchBar } from "@/components/SearchBar";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -12,10 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [userTypeFilter, setUserTypeFilter] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
@@ -51,14 +54,15 @@ export default function Community() {
       profile.school_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.location?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesSkill = !selectedSkill || profile.skills?.includes(selectedSkill);
+    const matchesSkills = selectedSkills.length === 0 || 
+      selectedSkills.every(skill => profile.skills?.includes(skill));
     const matchesUserType = !userTypeFilter || profile.user_type === userTypeFilter;
     const matchesLocation = !locationFilter || profile.location === locationFilter;
     const matchesCompany = !companyFilter || profile.company_name === companyFilter;
     const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
     const matchesField = !fieldFilter || profile.fields_of_interest?.includes(fieldFilter);
 
-    return matchesSearch && matchesSkill && matchesUserType && 
+    return matchesSearch && matchesSkills && matchesUserType && 
            matchesLocation && matchesCompany && matchesSchool && matchesField;
   });
 
@@ -140,19 +144,44 @@ export default function Community() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
 
-          <div className="flex flex-wrap gap-2">
-            {allSkills.map((skill) => (
-              <Badge
-                key={skill}
-                variant={selectedSkill === skill ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setSelectedSkill(selectedSkill === skill ? null : skill)}
-              >
-                {skill}
-              </Badge>
-            ))}
+            <Command className="rounded-lg border shadow-md">
+              <CommandGroup className="h-full overflow-auto">
+                <div className="flex flex-wrap gap-1 p-2">
+                  {selectedSkills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      variant="secondary"
+                      className="mr-1 mb-1"
+                      onClick={() => setSelectedSkills(selectedSkills.filter(s => s !== skill))}
+                    >
+                      {skill} ×
+                    </Badge>
+                  ))}
+                </div>
+                {allSkills.map((skill) => (
+                  <CommandItem
+                    key={skill}
+                    onSelect={() => {
+                      if (selectedSkills.includes(skill)) {
+                        setSelectedSkills(selectedSkills.filter(s => s !== skill));
+                      } else {
+                        setSelectedSkills([...selectedSkills, skill]);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {skill}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
           </div>
         </div>
       </div>
