@@ -5,6 +5,7 @@ import { ProfileAvatar } from "./ProfileAvatar";
 import { ProfileStats } from "./ProfileStats";
 import { SkillsList } from "./SkillsList";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
   id: string;
@@ -18,6 +19,7 @@ interface Profile {
 
 export function ProfileHeader() {
   const [session, setSession] = useState<any>(null);
+  const { toast } = useToast();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', session?.user?.id],
@@ -26,9 +28,26 @@ export function ProfileHeader() {
         .from('profiles')
         .select('*')
         .eq('id', session?.user?.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error fetching profile",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      if (!data) {
+        toast({
+          title: "Profile not found",
+          description: "Please try signing out and signing in again.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       return data as Profile;
     },
     enabled: !!session?.user?.id,
@@ -48,21 +67,6 @@ export function ProfileHeader() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const skills = [
-    { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
-    { text: "microbiology", colorClass: "bg-indigo-900/50 text-indigo-400" },
-    { text: "Bioreactor", colorClass: "bg-blue-900/50 text-blue-400" },
-    { text: "Genetic engineering", colorClass: "bg-red-900/50 text-red-400" },
-    { text: "GMP", colorClass: "bg-yellow-900/50 text-yellow-400" },
-    { text: "MATLAB", colorClass: "bg-purple-900/50 text-purple-400" },
-    { text: "AutoCAD", colorClass: "bg-gray-900/50 text-gray-400" },
-    { text: "Computational modeling", colorClass: "bg-yellow-900/50 text-yellow-400" },
-    { text: "Mathematical modeling", colorClass: "bg-blue-900/50 text-blue-400" },
-    { text: "Engineer-in-Training", colorClass: "bg-gray-900/50 text-gray-400" },
-    { text: "Six Sigma", colorClass: "bg-orange-900/50 text-orange-400" },
-    { text: "Data analysis", colorClass: "bg-purple-900/50 text-purple-400" },
-  ];
-
   if (isLoading || !profile) {
     return (
       <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
@@ -78,6 +82,21 @@ export function ProfileHeader() {
       </div>
     );
   }
+
+  const skills = [
+    { text: "biochemical engineering", colorClass: "bg-green-900/50 text-green-400" },
+    { text: "microbiology", colorClass: "bg-indigo-900/50 text-indigo-400" },
+    { text: "Bioreactor", colorClass: "bg-blue-900/50 text-blue-400" },
+    { text: "Genetic engineering", colorClass: "bg-red-900/50 text-red-400" },
+    { text: "GMP", colorClass: "bg-yellow-900/50 text-yellow-400" },
+    { text: "MATLAB", colorClass: "bg-purple-900/50 text-purple-400" },
+    { text: "AutoCAD", colorClass: "bg-gray-900/50 text-gray-400" },
+    { text: "Computational modeling", colorClass: "bg-yellow-900/50 text-yellow-400" },
+    { text: "Mathematical modeling", colorClass: "bg-blue-900/50 text-blue-400" },
+    { text: "Engineer-in-Training", colorClass: "bg-gray-900/50 text-gray-400" },
+    { text: "Six Sigma", colorClass: "bg-orange-900/50 text-orange-400" },
+    { text: "Data analysis", colorClass: "bg-purple-900/50 text-purple-400" },
+  ];
 
   return (
     <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
