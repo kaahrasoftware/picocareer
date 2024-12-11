@@ -7,11 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
   
   const navigationItems = [
@@ -26,6 +28,9 @@ export function MenuSidebar() {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) {
+        fetchProfile(session.user.id);
+      }
     });
 
     // Listen for auth changes
@@ -34,16 +39,36 @@ export function MenuSidebar() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
+        fetchProfile(session.user.id);
         setAuthOpen(false);
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
+      } else {
+        setAvatarUrl(null);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [toast]);
+
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+    
+    if (data) {
+      setAvatarUrl(data.avatar_url);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -83,7 +108,6 @@ export function MenuSidebar() {
             </ul>
           </nav>
 
-          {/* Footer content positioned at bottom */}
           <div className="mt-auto pt-6">
             {session ? (
               <>
@@ -92,7 +116,12 @@ export function MenuSidebar() {
                     onClick={() => setProfileOpen(true)}
                     className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
                   >
-                    <img src="/placeholder.svg" alt="User" className="w-8 h-8 rounded-full" />
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
+                      <AvatarFallback className="bg-muted">
+                        {session.user.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
                   </button>
                   <div className="flex-1">
                     <h3 className="text-sm font-medium">{session.user.email}</h3>
