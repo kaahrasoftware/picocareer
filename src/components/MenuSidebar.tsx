@@ -102,14 +102,14 @@ export function MenuSidebar() {
   return (
     <div className={`fixed left-0 top-0 h-screen flex flex-col bg-background border-r border-border sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
       {/* Logo Section */}
-      <div className="p-3 border-b border-border">
-        <div className="flex items-center gap-2">
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-3">
           <img 
             src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" 
             alt="Logo" 
-            className="w-7 h-7" 
+            className="w-8 h-8" 
           />
-          <h2 className={`text-lg font-bold transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+          <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
             PicoCareer
           </h2>
         </div>
@@ -120,7 +120,7 @@ export function MenuSidebar() {
         variant="ghost" 
         size="icon" 
         onClick={toggleSidebar}
-        className="absolute right-1.5 top-14 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute right-2 top-16 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
       </Button>
@@ -131,8 +131,8 @@ export function MenuSidebar() {
         <div className="flex-1 min-h-[60px]" />
         
         {/* Navigation Menu - centered in the remaining space */}
-        <nav className="flex-1 px-2">
-          <ul className="space-y-2">
+        <nav className="flex-1 p-4">
+          <ul className="space-y-4">
             {navigationItems.map((item) => (
               <NavigationItem
                 key={item.label}
@@ -147,7 +147,7 @@ export function MenuSidebar() {
         <div className="flex-1 min-h-[60px]" />
 
         {/* User Section at bottom */}
-        <div className="p-3 border-t border-border">
+        <div className="p-4 border-t border-border">
           <UserSection
             session={session}
             avatarUrl={avatarUrl}
