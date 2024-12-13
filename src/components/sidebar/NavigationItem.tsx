@@ -25,7 +25,7 @@ export function NavigationItem({ icon: Icon, label, href, active, isCollapsed }:
         }`}
         data-sidebar="menu-button"
       >
-        <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-2">
+        <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-3">
           <Icon className="w-5 h-5" />
         </div>
         <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
