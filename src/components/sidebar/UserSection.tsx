@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Session } from "@supabase/supabase-js";
@@ -59,11 +59,14 @@ export function UserSection({
 
   return (
     <Button
-      className="w-full"
+      className="w-full justify-start"
       onClick={onAuthClick}
       data-sidebar="menu-button"
     >
-      <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+      <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-1">
+        <LogIn className="h-4 w-4" />
+      </div>
+      <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
         Sign in
       </span>
     </Button>
