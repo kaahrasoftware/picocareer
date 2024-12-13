@@ -15,6 +15,7 @@ export function MenuSidebar() {
   const [authOpen, setAuthOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -91,91 +92,95 @@ export function MenuSidebar() {
     });
   };
 
-  return (
-    <Sidebar side="left" className="group" data-collapsible="icon">
-      <div className="flex flex-col h-full bg-background border-r border-border relative">
-        <div className="p-6 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" alt="Logo" className="w-6 h-6" />
-              <h2 className="text-xl font-bold transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">PicoCareer</h2>
-            </div>
-            <SidebarTrigger 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <ChevronLeft className="w-4 h-4 transition-transform duration-200 group-data-[state=collapsed]:rotate-180" />
-            </SidebarTrigger>
-          </div>
-          
-          <nav className="flex-1">
-            <ul className="space-y-4">
-              {navigationItems.map((item, index) => (
-                <li key={index}>
-                  <a 
-                    href={item.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(item.href);
-                    }}
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ${
-                      item.active ? 'bg-muted text-foreground' : ''
-                    }`}
-                    data-sidebar="menu-button"
-                  >
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0 whitespace-nowrap">{item.label}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
-          <div className="mt-auto pt-6">
-            {session?.user ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <button
-                    onClick={() => setProfileOpen(true)}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
-                      <AvatarFallback className="bg-muted">
-                        {session.user.email?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                  <div className="flex-1 transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">
-                    <h3 className="text-sm font-medium truncate">{session.user.email}</h3>
-                    <p className="text-xs text-muted-foreground">Student</p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={handleSignOut}
+  return (
+    <div className={`flex flex-col h-full bg-background border-r border-border relative sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
+      <div className="p-6 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <img src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" alt="Logo" className="w-6 h-6" />
+            <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'hidden' : 'block'}`}>PicoCareer</h2>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleSidebar}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
+          </Button>
+        </div>
+        
+        <nav className="flex-1">
+          <ul className="space-y-4">
+            {navigationItems.map((item) => (
+              <li key={item.label}>
+                <a 
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(item.href);
+                  }}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ${
+                    item.active ? 'bg-muted text-foreground' : ''
+                  }`}
                   data-sidebar="menu-button"
                 >
-                  <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">Sign out</span>
-                </Button>
-              </>
-            ) : (
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="mt-auto pt-6">
+          {session?.user ? (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <button
+                  onClick={() => setProfileOpen(true)}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
+                >
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
+                    <AvatarFallback className="bg-muted">
+                      {session.user.email?.[0]?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+                <div className={`flex-1 ${isCollapsed ? 'hidden' : 'block'}`}>
+                  <h3 className="text-sm font-medium truncate">{session.user.email}</h3>
+                  <p className="text-xs text-muted-foreground">Student</p>
+                </div>
+              </div>
               <Button
-                className="w-full"
-                onClick={() => setAuthOpen(true)}
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleSignOut}
                 data-sidebar="menu-button"
               >
-                <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">Sign in</span>
+                <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span>Sign out</span>
               </Button>
-            )}
-          </div>
+            </>
+          ) : (
+            <Button
+              className="w-full"
+              onClick={() => setAuthOpen(true)}
+              data-sidebar="menu-button"
+            >
+              <span>Sign in</span>
+            </Button>
+          )}
         </div>
       </div>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
-    </Sidebar>
+    </div>
   );
 }
