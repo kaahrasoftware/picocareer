@@ -92,7 +92,7 @@ export function MenuSidebar() {
   };
 
   return (
-    <Sidebar side="left">
+    <Sidebar side="left" className="group">
       <div className="flex flex-col h-full bg-background border-r border-border relative">
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-8">
