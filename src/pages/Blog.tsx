@@ -55,7 +55,12 @@ const Blog = () => {
         const { data, error } = await query;
 
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
+        }
+
+        if (!data) {
+          throw new Error('No data returned from Supabase');
         }
 
         return data as BlogWithAuthor[];
@@ -69,6 +74,8 @@ const Blog = () => {
         throw error;
       }
     },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Calculate pagination values
