@@ -57,7 +57,7 @@ export function MenuSidebar() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, email')
         .eq('id', userId)
         .maybeSingle();
       
@@ -126,7 +126,7 @@ export function MenuSidebar() {
           </nav>
 
           <div className="mt-auto pt-6">
-            {session ? (
+            {session?.user ? (
               <>
                 <div className="flex items-center gap-3 mb-4">
                   <button
@@ -136,7 +136,7 @@ export function MenuSidebar() {
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
                       <AvatarFallback className="bg-muted">
-                        {session.user.email?.charAt(0).toUpperCase() || 'U'}
+                        {session.user.email?.[0]?.toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </button>
