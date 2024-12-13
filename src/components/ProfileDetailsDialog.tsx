@@ -49,7 +49,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-kahra-dark text-white">
+      <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-picocareer-dark text-white">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold flex items-center gap-4">
             <Avatar className="h-16 w-16">
