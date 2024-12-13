@@ -17,7 +17,7 @@ const Index = () => {
 
   const otherLinks = [
     { label: "Blog", href: "#" },
-    { label: "How Kahra works", href: "#" },
+    { label: "How PicoCareer works", href: "#" },
   ];
 
   const socialLinks = [
