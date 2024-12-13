@@ -13,7 +13,7 @@ export function SessionNote({ note, onNoteChange }: SessionNoteProps) {
         value={note}
         onChange={(e) => onNoteChange(e.target.value)}
         placeholder="Share what you'd like to discuss..."
-        className="bg-kahra-darker border-none resize-none h-32"
+        className="bg-picocareer-darker border-none resize-none h-32"
       />
     </div>
   );

@@ -52,7 +52,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        kahra: {
+        picocareer: {
           dark: "#1A1F2C",
           darker: "#151821",
           primary: "#8B5CF6",
