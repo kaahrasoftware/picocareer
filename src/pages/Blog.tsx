@@ -9,6 +9,7 @@ import { BlogPagination } from "@/components/blog/BlogPagination";
 import { BlogGrid } from "@/components/blog/BlogGrid";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { Footer } from "@/components/Footer";
+import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -19,40 +20,55 @@ const Blog = () => {
   const [showRecentOnly, setShowRecentOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: blogs, isLoading } = useQuery({
+  const { data: blogs, isLoading, error } = useQuery({
     queryKey: ['blogs', searchQuery, selectedCategory, selectedSubcategory, showRecentOnly],
     queryFn: async () => {
-      let query = supabase
-        .from('blogs')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            avatar_url
-          )
-        `);
+      try {
+        console.log('Fetching blogs with query:', { searchQuery, selectedCategory, selectedSubcategory, showRecentOnly });
+        
+        let query = supabase
+          .from('blogs')
+          .select(`
+            *,
+            profiles (
+              full_name,
+              avatar_url
+            )
+          `);
 
-      if (selectedCategory && selectedCategory !== "_all") {
-        query = query.eq('category', selectedCategory);
+        if (selectedCategory && selectedCategory !== "_all") {
+          query = query.contains('categories', [selectedCategory]);
+        }
+
+        if (selectedSubcategory && selectedSubcategory !== "_all") {
+          query = query.contains('subcategories', [selectedSubcategory]);
+        }
+
+        if (showRecentOnly) {
+          query = query.eq('is_recent', true);
+        }
+
+        if (searchQuery) {
+          query = query.ilike('title', `%${searchQuery}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+
+        console.log('Fetched blogs:', data);
+        return data as BlogWithAuthor[];
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
+        toast.error('Failed to fetch blogs. Please try again.');
+        throw error;
       }
-
-      if (selectedSubcategory && selectedSubcategory !== "_all") {
-        query = query.eq('subcategory', selectedSubcategory);
-      }
-
-      if (showRecentOnly) {
-        query = query.eq('is_recent', true);
-      }
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as BlogWithAuthor[];
     },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Calculate pagination values
@@ -66,6 +82,10 @@ const Blog = () => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (error) {
+    console.error('Query error:', error);
+  }
 
   return (
     <SidebarProvider>
