@@ -103,14 +103,19 @@
   transition: all 0.2s ease-in-out;
 }
 
-/* Ensure main content adjusts to sidebar */
-#root > div > main {
+/* Layout structure */
+.app-layout {
+  @apply min-h-screen flex w-full bg-background text-foreground;
+}
+
+.main-content {
+  @apply flex-1;
   margin-left: var(--sidebar-width);
   transition: margin-left 0.2s ease-in-out;
   width: calc(100% - var(--sidebar-width));
 }
 
-.sidebar-collapsed ~ main {
+.app-layout .sidebar-collapsed ~ .main-content {
   margin-left: 5rem;
   width: calc(100% - 5rem);
 }

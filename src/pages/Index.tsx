@@ -16,18 +16,20 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background text-foreground">
+      <div className="app-layout">
         <MenuSidebar />
-        <main className="flex-1 p-8">
-          <div className="max-w-[1400px] mx-auto">
-            <ThemeToggle />
-            <HeroSection />
-            <FeaturedCareersSection />
-            <FeaturedMajorsSection />
-            <TopRatedMentorsSection />
-            <Footer />
+        <div className="main-content">
+          <div className="p-8">
+            <div className="max-w-[1400px] mx-auto">
+              <ThemeToggle />
+              <HeroSection />
+              <FeaturedCareersSection />
+              <FeaturedMajorsSection />
+              <TopRatedMentorsSection />
+              <Footer />
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     </SidebarProvider>
   );

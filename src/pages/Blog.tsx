@@ -89,36 +89,38 @@ const Blog = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background text-foreground">
+      <div className="app-layout">
         <MenuSidebar />
-        <main className="flex-1 p-8">
-          <div className="max-w-[1400px] mx-auto">
-            <BlogHeader />
+        <div className="main-content">
+          <div className="p-8">
+            <div className="max-w-[1400px] mx-auto">
+              <BlogHeader />
 
-            <BlogFilters
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              selectedSubcategory={selectedSubcategory}
-              setSelectedSubcategory={setSelectedSubcategory}
-              showRecentOnly={showRecentOnly}
-              setShowRecentOnly={setShowRecentOnly}
-            />
-
-            <BlogGrid blogs={currentItems} isLoading={isLoading} />
-
-            {!isLoading && blogs && blogs.length > 0 && (
-              <BlogPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
+              <BlogFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                selectedSubcategory={selectedSubcategory}
+                setSelectedSubcategory={setSelectedSubcategory}
+                showRecentOnly={showRecentOnly}
+                setShowRecentOnly={setShowRecentOnly}
               />
-            )}
 
-            <Footer />
+              <BlogGrid blogs={currentItems} isLoading={isLoading} />
+
+              {!isLoading && blogs && blogs.length > 0 && (
+                <BlogPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              )}
+
+              <Footer />
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     </SidebarProvider>
   );
