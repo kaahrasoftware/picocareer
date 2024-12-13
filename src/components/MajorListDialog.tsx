@@ -58,7 +58,7 @@ export const MajorListDialog = ({ isOpen, onClose, majors }: MajorListDialogProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Explore All Majors</DialogTitle>
         </DialogHeader>

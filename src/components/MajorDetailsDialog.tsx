@@ -26,7 +26,7 @@ interface MajorDetailsDialogProps {
 export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] p-0">
+      <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
           {major.fieldOfStudy && (
