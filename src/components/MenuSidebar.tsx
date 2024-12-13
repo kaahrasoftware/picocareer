@@ -102,8 +102,8 @@ export function MenuSidebar() {
   return (
     <div className={`fixed left-0 top-0 h-screen flex flex-col bg-background border-r border-border sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
       {/* Logo Section */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
+      <div className={`p-4 border-b border-border ${isCollapsed ? 'flex justify-center' : ''}`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img 
             src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" 
             alt="Logo" 

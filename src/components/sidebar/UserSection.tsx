@@ -23,7 +23,7 @@ export function UserSection({
   if (session?.user) {
     return (
       <>
-        <div className="flex items-center gap-3 mb-4">
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} mb-4`}>
           <button
             onClick={onProfileClick}
             className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
@@ -42,14 +42,14 @@ export function UserSection({
         </div>
         <Button
           variant="outline"
-          className="w-full justify-start"
+          className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`}
           onClick={onSignOut}
           data-sidebar="menu-button"
         >
-          <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-1">
+          <div className={`flex items-center justify-center w-5 min-w-[1.25rem] ${isCollapsed ? 'mx-auto' : 'ml-1'}`}>
             <LogOut className="h-4 w-4" />
           </div>
-          <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+          <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100 ml-3'}`}>
             Sign out
           </span>
         </Button>
@@ -59,14 +59,14 @@ export function UserSection({
 
   return (
     <Button
-      className="w-full justify-start"
+      className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`}
       onClick={onAuthClick}
       data-sidebar="menu-button"
     >
-      <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-1">
+      <div className={`flex items-center justify-center w-5 min-w-[1.25rem] ${isCollapsed ? 'mx-auto' : 'ml-1'}`}>
         <LogIn className="h-4 w-4" />
       </div>
-      <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+      <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100 ml-3'}`}>
         Sign in
       </span>
     </Button>
