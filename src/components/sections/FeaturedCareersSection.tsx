@@ -29,30 +29,32 @@ export const FeaturedCareersSection = () => {
           View all
         </button>
       </div>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        className="w-full"
-      >
-        <CarouselContent>
-          {careers.map((career) => (
-            <CarouselItem key={career.id} className="basis-1/3">
-              <CareerCard 
-                id={career.id}
-                title={career.title}
-                description={career.description}
-                salary_range={career.salary_range}
-                average_salary={career.average_salary}
-                image_url={career.image_url}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
+      <div className="relative">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full"
+        >
+          <CarouselContent>
+            {careers.map((career) => (
+              <CarouselItem key={career.id} className="basis-1/3">
+                <CareerCard 
+                  id={career.id}
+                  title={career.title}
+                  description={career.description}
+                  salary_range={career.salary_range}
+                  average_salary={career.average_salary}
+                  image_url={career.image_url}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
+        </Carousel>
+      </div>
       <CareerListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
