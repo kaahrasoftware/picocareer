@@ -530,13 +530,6 @@ export type Database = {
             referencedRelation: "schools"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "profiles_temp_major_id_fkey"
-            columns: ["academic_major_id"]
-            isOneToOne: false
-            referencedRelation: "majors"
-            referencedColumns: ["id"]
-          },
         ]
       }
       schools: {
