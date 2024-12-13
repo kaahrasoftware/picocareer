@@ -1,5 +1,4 @@
-import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, BookOpen, Users, LogOut, ChevronLeft } from "lucide-react";
+import { Home, BookOpen, Users, ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
@@ -7,8 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { useNavigate } from "react-router-dom";
+import { NavigationItem } from "./sidebar/NavigationItem";
+import { UserSection } from "./sidebar/UserSection";
+
+const navigationItems = [
+  { icon: Home, label: "Home", href: "/", active: window.location.pathname === "/" },
+  { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
+  { icon: Users, label: "Community", href: "/community", active: window.location.pathname === "/community" },
+];
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -16,26 +21,16 @@ export function MenuSidebar() {
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    // Initialize from localStorage, default to false if not set
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  const navigationItems = [
-    { icon: Home, label: "Home", href: "/", active: window.location.pathname === "/" },
-    { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
-    { icon: Users, label: "Community", href: "/community", active: window.location.pathname === "/community" },
-  ];
-
-  // Save collapsed state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
   }, [isCollapsed]);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user?.id) {
@@ -43,7 +38,6 @@ export function MenuSidebar() {
       }
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -126,73 +120,24 @@ export function MenuSidebar() {
         <nav className="flex-1">
           <ul className="space-y-4">
             {navigationItems.map((item) => (
-              <li key={item.label}>
-                <a 
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(item.href);
-                  }}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group ${
-                    item.active ? 'bg-muted text-foreground' : ''
-                  }`}
-                  data-sidebar="menu-button"
-                >
-                  <div className="flex items-center justify-center w-5 min-w-[1.25rem]">
-                    <item.icon className="w-5 h-5" />
-                  </div>
-                  <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                    {item.label}
-                  </span>
-                </a>
-              </li>
+              <NavigationItem
+                key={item.label}
+                {...item}
+                isCollapsed={isCollapsed}
+              />
             ))}
           </ul>
         </nav>
 
         <div className="mt-auto pt-6">
-          {session?.user ? (
-            <>
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setProfileOpen(true)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
-                >
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
-                    <AvatarFallback className="bg-muted">
-                      {session.user.email?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-                <div className={`flex-1 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                  <h3 className="text-sm font-medium truncate">{session.user.email}</h3>
-                  <p className="text-xs text-muted-foreground">Student</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleSignOut}
-                data-sidebar="menu-button"
-              >
-                <div className="flex items-center justify-center w-5 min-w-[1.25rem]">
-                  <LogOut className="h-4 w-4" />
-                </div>
-                <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                  Sign out
-                </span>
-              </Button>
-            </>
-          ) : (
-            <Button
-              className="w-full"
-              onClick={() => setAuthOpen(true)}
-              data-sidebar="menu-button"
-            >
-              <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>Sign in</span>
-            </Button>
-          )}
+          <UserSection
+            session={session}
+            avatarUrl={avatarUrl}
+            isCollapsed={isCollapsed}
+            onSignOut={handleSignOut}
+            onProfileClick={() => setProfileOpen(true)}
+            onAuthClick={() => setAuthOpen(true)}
+          />
         </div>
       </div>
 
