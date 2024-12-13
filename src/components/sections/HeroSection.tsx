@@ -14,7 +14,7 @@ export const HeroSection = () => {
       {/* Hero Section */}
       <section className="text-center mb-16">
         <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-kahra-secondary to-kahra-primary bg-clip-text text-transparent">
-          Welcome to PicoCareer!
+          Welcome to Kahra!
         </h1>
         <Slides />
       </section>
