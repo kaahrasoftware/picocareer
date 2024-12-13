@@ -18,9 +18,9 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <MenuSidebar />
-        <main className="flex-1 p-8 max-w-[1600px] mx-auto">
-          <ThemeToggle />
+        <main className="flex-1 p-8">
           <div className="max-w-[1400px] mx-auto">
+            <ThemeToggle />
             <HeroSection />
             <FeaturedCareersSection />
             <FeaturedMajorsSection />

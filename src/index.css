@@ -104,11 +104,13 @@
 }
 
 /* Ensure main content adjusts to sidebar */
-main {
+#root > div > main {
   margin-left: var(--sidebar-width);
   transition: margin-left 0.2s ease-in-out;
+  width: calc(100% - var(--sidebar-width));
 }
 
 .sidebar-collapsed ~ main {
   margin-left: 5rem;
+  width: calc(100% - 5rem);
 }
