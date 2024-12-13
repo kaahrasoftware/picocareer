@@ -138,7 +138,9 @@ export function MenuSidebar() {
                   }`}
                   data-sidebar="menu-button"
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <div className="flex items-center justify-center w-5">
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                  </div>
                   <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{item.label}</span>
                 </a>
               </li>
@@ -172,8 +174,10 @@ export function MenuSidebar() {
                 onClick={handleSignOut}
                 data-sidebar="menu-button"
               >
-                <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>Sign out</span>
+                <div className="flex items-center justify-center w-5">
+                  <LogOut className="h-4 w-4 flex-shrink-0" />
+                </div>
+                <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>Sign out</span>
               </Button>
             </>
           ) : (
