@@ -7,9 +7,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star } from "lucide-react";
+import { BookOpen, Users, Star, Building2, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
+import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 
 interface MentorDetailsDialogProps {
   mentor: {
@@ -31,6 +32,7 @@ interface MentorDetailsDialogProps {
 
 export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetailsDialogProps) {
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <>
@@ -57,7 +59,10 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-semibold mb-1">{mentor.title}</h3>
-              <p className="text-muted-foreground">{mentor.company}</p>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Building2 size={16} />
+                <span>{mentor.company}</span>
+              </div>
             </div>
 
             <div className="flex gap-6 text-sm text-muted-foreground">
@@ -75,12 +80,21 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
               </div>
             </div>
 
-            <Button 
-              className="w-full"
-              onClick={() => setBookingOpen(true)}
-            >
-              Book a Session
-            </Button>
+            <div className="flex gap-4">
+              <Button 
+                className="flex-1"
+                onClick={() => setBookingOpen(true)}
+              >
+                Book a Session
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex-1"
+                onClick={() => setProfileOpen(true)}
+              >
+                View Full Profile
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -93,6 +107,12 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
         }}
         open={bookingOpen}
         onOpenChange={setBookingOpen}
+      />
+
+      <ProfileDetailsDialog
+        userId={mentor.id}
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
       />
     </>
   );
