@@ -15,7 +15,11 @@ export function MenuSidebar() {
   const [authOpen, setAuthOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    // Initialize from localStorage, default to false if not set
+    const saved = localStorage.getItem('sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -24,6 +28,11 @@ export function MenuSidebar() {
     { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
     { icon: Users, label: "Community", href: "/community", active: window.location.pathname === "/community" },
   ];
+
+  // Save collapsed state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
 
   useEffect(() => {
     // Get initial session
