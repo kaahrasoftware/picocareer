@@ -103,27 +103,27 @@ export function MenuSidebar() {
     <div className={`fixed left-0 top-0 h-screen flex flex-col bg-background border-r border-border sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
       {/* Logo Section */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" 
-              alt="Logo" 
-              className="w-8 h-8" 
-            />
-            <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-              PicoCareer
-            </h2>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleSidebar}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
-          </Button>
+        <div className="flex items-center gap-3">
+          <img 
+            src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" 
+            alt="Logo" 
+            className="w-8 h-8" 
+          />
+          <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+            PicoCareer
+          </h2>
         </div>
       </div>
+
+      {/* Toggle Button */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={toggleSidebar}
+        className="absolute right-2 top-16 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
+      </Button>
 
       {/* Main Sidebar Content */}
       <div className="flex-1 p-4 flex flex-col">
