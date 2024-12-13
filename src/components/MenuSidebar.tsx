@@ -126,8 +126,8 @@ export function MenuSidebar() {
       </Button>
 
       {/* Main Sidebar Content */}
-      <div className="flex-1 p-4 flex flex-col">
-        <nav className="flex-1">
+      <div className="flex-1 flex flex-col justify-center">
+        <nav className="p-4">
           <ul className="space-y-4">
             {navigationItems.map((item) => (
               <NavigationItem
@@ -139,7 +139,8 @@ export function MenuSidebar() {
           </ul>
         </nav>
 
-        <div className="mt-auto pt-6">
+        {/* User Section at bottom */}
+        <div className="mt-auto p-4">
           <UserSection
             session={session}
             avatarUrl={avatarUrl}
