@@ -49,7 +49,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-picocareer-dark text-white border border-picocareer-darker">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold flex items-center gap-4">
             <Avatar className="h-16 w-16">
@@ -65,7 +65,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                   </Badge>
                 )}
               </div>
-              <p className="text-base font-normal text-gray-400">@{profile.username}</p>
+              <p className="text-base font-normal text-muted-foreground">@{profile.username}</p>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -74,7 +74,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           <div className="space-y-6 pb-6">
             {(profile.company_name || profile.position) && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-400">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Building2 size={16} />
                   <span>{profile.company_name}</span>
                 </div>
@@ -85,10 +85,10 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
             )}
 
             {(profile.academic_major || profile.academic_major || profile.highest_degree) && (
-              <div className="bg-picocareer-darker rounded-lg p-4 space-y-3">
+              <div className="bg-muted rounded-lg p-4 space-y-3">
                 <h4 className="font-semibold">Education</h4>
                 {profile.academic_major && (
-                  <div className="flex items-center gap-2 text-gray-400">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <GraduationCap size={16} />
                     <span>{profile.academic_major}</span>
                   </div>
@@ -102,14 +102,14 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
             )}
 
             {profile.bio && (
-              <div className="bg-picocareer-darker rounded-lg p-4">
+              <div className="bg-muted rounded-lg p-4">
                 <h4 className="font-semibold mb-2">About</h4>
-                <p className="text-gray-400">{profile.bio}</p>
+                <p className="text-muted-foreground">{profile.bio}</p>
               </div>
             )}
 
             {(profile.skills?.length > 0 || profile.tools_used?.length > 0) && (
-              <div className="bg-picocareer-darker rounded-lg p-4 space-y-4">
+              <div className="bg-muted rounded-lg p-4 space-y-4">
                 {profile.skills?.length > 0 && (
                   <div>
                     <h4 className="font-semibold mb-2">Skills</h4>
@@ -139,7 +139,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
             )}
 
             {(profile.linkedin_url || profile.github_url || profile.website_url) && (
-              <div className="bg-picocareer-darker rounded-lg p-4">
+              <div className="bg-muted rounded-lg p-4">
                 <h4 className="font-semibold mb-2">Links</h4>
                 <div className="space-y-2">
                   {profile.linkedin_url && (
@@ -147,7 +147,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                       href={profile.linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Link size={16} />
                       <span>LinkedIn</span>
@@ -158,7 +158,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                       href={profile.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Github size={16} />
                       <span>GitHub</span>
@@ -169,7 +169,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                       href={profile.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Globe size={16} />
                       <span>Website</span>
