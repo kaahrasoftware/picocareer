@@ -92,10 +92,9 @@ const Blog = () => {
       <div className="app-layout">
         <MenuSidebar />
         <div className="main-content">
-          <div className="p-8">
-            <div className="max-w-[1400px] mx-auto">
+          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+            <div className="space-y-8">
               <BlogHeader />
-
               <BlogFilters
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -106,9 +105,7 @@ const Blog = () => {
                 showRecentOnly={showRecentOnly}
                 setShowRecentOnly={setShowRecentOnly}
               />
-
               <BlogGrid blogs={currentItems} isLoading={isLoading} />
-
               {!isLoading && blogs && blogs.length > 0 && (
                 <BlogPagination
                   currentPage={currentPage}
@@ -116,7 +113,6 @@ const Blog = () => {
                   onPageChange={handlePageChange}
                 />
               )}
-
               <Footer />
             </div>
           </div>

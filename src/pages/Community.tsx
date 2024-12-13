@@ -88,10 +88,10 @@ export default function Community() {
       <div className="app-layout">
         <MenuSidebar />
         <div className="main-content">
-          <div className="p-8">
-            <div className="max-w-[1400px] mx-auto">
-              <h1 className="text-3xl font-bold mb-4">Community</h1>
-              <p className="text-muted-foreground mb-6">
+          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+            <div className="space-y-8">
+              <h1 className="text-3xl font-bold">Community</h1>
+              <p className="text-muted-foreground">
                 Connect with students, mentors, and professionals in your field of interest.
               </p>
               
@@ -148,7 +148,6 @@ export default function Community() {
                   )}
                 </>
               )}
-
               <Footer />
             </div>
           </div>
