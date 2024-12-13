@@ -9,6 +9,7 @@ import { BlogPagination } from "@/components/blog/BlogPagination";
 import { BlogGrid } from "@/components/blog/BlogGrid";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -19,40 +20,54 @@ const Blog = () => {
   const [showRecentOnly, setShowRecentOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const { data: blogs, isLoading } = useQuery({
+  const { data: blogs, isLoading, error } = useQuery({
     queryKey: ['blogs', searchQuery, selectedCategory, selectedSubcategory, showRecentOnly],
     queryFn: async () => {
-      let query = supabase
-        .from('blogs')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            avatar_url
-          )
-        `);
+      try {
+        let query = supabase
+          .from('blogs')
+          .select(`
+            *,
+            profiles (
+              full_name,
+              avatar_url
+            )
+          `);
 
-      if (selectedCategory && selectedCategory !== "_all") {
-        query = query.eq('category', selectedCategory);
+        if (selectedCategory && selectedCategory !== "_all") {
+          query = query.contains('categories', [selectedCategory]);
+        }
+
+        if (selectedSubcategory && selectedSubcategory !== "_all") {
+          query = query.contains('subcategories', [selectedSubcategory]);
+        }
+
+        if (showRecentOnly) {
+          query = query.eq('is_recent', true);
+        }
+
+        if (searchQuery) {
+          query = query.ilike('title', `%${searchQuery}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          throw error;
+        }
+
+        return data as BlogWithAuthor[];
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load blogs. Please try again later.",
+        });
+        throw error;
       }
-
-      if (selectedSubcategory && selectedSubcategory !== "_all") {
-        query = query.eq('subcategory', selectedSubcategory);
-      }
-
-      if (showRecentOnly) {
-        query = query.eq('is_recent', true);
-      }
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as BlogWithAuthor[];
     },
   });
 
@@ -107,7 +122,11 @@ const Blog = () => {
               setShowRecentOnly={setShowRecentOnly}
             />
 
-            <BlogGrid blogs={currentItems} isLoading={isLoading} />
+            <BlogGrid 
+              blogs={currentItems} 
+              isLoading={isLoading} 
+              error={error as Error} 
+            />
 
             {!isLoading && blogs && blogs.length > 0 && (
               <BlogPagination
