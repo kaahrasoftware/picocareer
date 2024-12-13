@@ -125,9 +125,13 @@ export function MenuSidebar() {
         <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
       </Button>
 
-      {/* Main Sidebar Content */}
-      <div className="flex-1 flex flex-col justify-center">
-        <nav className="p-4">
+      {/* Main Content Container with flex-1 to take remaining space */}
+      <div className="flex-1 flex flex-col">
+        {/* Spacer to push content down */}
+        <div className="flex-1 min-h-[60px]" />
+        
+        {/* Navigation Menu - centered in the remaining space */}
+        <nav className="flex-1 p-4">
           <ul className="space-y-4">
             {navigationItems.map((item) => (
               <NavigationItem
@@ -138,9 +142,12 @@ export function MenuSidebar() {
             ))}
           </ul>
         </nav>
+        
+        {/* Spacer to push content up */}
+        <div className="flex-1 min-h-[60px]" />
 
         {/* User Section at bottom */}
-        <div className="mt-auto p-4">
+        <div className="p-4 border-t border-border">
           <UserSection
             session={session}
             avatarUrl={avatarUrl}
