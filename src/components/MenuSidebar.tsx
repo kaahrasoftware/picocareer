@@ -97,12 +97,12 @@ export function MenuSidebar() {
   };
 
   return (
-    <div className={`flex flex-col h-full bg-background border-r border-border relative sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
+    <div className={`fixed left-0 top-0 h-screen flex flex-col bg-background border-r border-border sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
       <div className="p-6 flex flex-col h-full">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-[32px]">
             <img src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" alt="Logo" className="w-6 h-6" />
-            <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'hidden' : 'block'}`}>PicoCareer</h2>
+            <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>PicoCareer</h2>
           </div>
           <Button 
             variant="ghost" 
@@ -130,7 +130,7 @@ export function MenuSidebar() {
                   data-sidebar="menu-button"
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  <span>{item.label}</span>
+                  <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{item.label}</span>
                 </a>
               </li>
             ))}
@@ -152,7 +152,7 @@ export function MenuSidebar() {
                     </AvatarFallback>
                   </Avatar>
                 </button>
-                <div className={`flex-1 ${isCollapsed ? 'hidden' : 'block'}`}>
+                <div className={`flex-1 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
                   <h3 className="text-sm font-medium truncate">{session.user.email}</h3>
                   <p className="text-xs text-muted-foreground">Student</p>
                 </div>
@@ -164,7 +164,7 @@ export function MenuSidebar() {
                 data-sidebar="menu-button"
               >
                 <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span>Sign out</span>
+                <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>Sign out</span>
               </Button>
             </>
           ) : (
@@ -173,7 +173,7 @@ export function MenuSidebar() {
               onClick={() => setAuthOpen(true)}
               data-sidebar="menu-button"
             >
-              <span>Sign in</span>
+              <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>Sign in</span>
             </Button>
           )}
         </div>
