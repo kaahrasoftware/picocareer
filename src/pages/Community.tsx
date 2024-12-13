@@ -23,7 +23,7 @@ export default function Community() {
     queryKey: ['profiles'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select(`
           *,
@@ -31,9 +31,15 @@ export default function Community() {
           school:schools(name),
           academic_major:majors!profiles_academic_major_id_fkey(title)
         `)
-        .neq('id', user?.id)
         .neq('user_type', 'admin')
         .order('created_at', { ascending: false });
+
+      // Only filter out current user if they are authenticated
+      if (user?.id) {
+        query = query.neq('id', user.id);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data.map(profile => ({
