@@ -8,12 +8,21 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface CareerDetailsDialogProps {
   careerId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+type CareerWithMajors = Tables<"careers"> & {
+  career_major_relations: {
+    major: {
+      title: string;
+    };
+  }[];
+};
 
 export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
   const { data: career, isLoading } = useQuery({
@@ -26,7 +35,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         .single();
 
       if (error) throw error;
-      return data as CareerDetails;
+      return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
   });
