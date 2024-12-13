@@ -437,7 +437,6 @@ export type Database = {
           keywords: string[] | null
           linkedin_url: string | null
           location: string | null
-          major_id: string | null
           position: string | null
           school_id: string | null
           skills: string[] | null
@@ -465,7 +464,6 @@ export type Database = {
           keywords?: string[] | null
           linkedin_url?: string | null
           location?: string | null
-          major_id?: string | null
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
@@ -493,7 +491,6 @@ export type Database = {
           keywords?: string[] | null
           linkedin_url?: string | null
           location?: string | null
-          major_id?: string | null
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
@@ -524,13 +521,6 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_major_id_fkey"
-            columns: ["major_id"]
-            isOneToOne: false
-            referencedRelation: "majors"
             referencedColumns: ["id"]
           },
           {
