@@ -17,7 +17,7 @@ const Index = () => {
 
   const otherLinks = [
     { label: "Blog", href: "#" },
-    { label: "How Kahra works", href: "#" },
+    { label: "How PicoCareer works", href: "#" },
   ];
 
   const socialLinks = [
@@ -37,20 +37,23 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <MenuSidebar />
-        <main className="flex-1 p-8 max-w-[1600px] mx-auto">
+        <main className="flex-1 p-8 pb-0 max-w-[1600px] mx-auto flex flex-col">
           <ThemeToggle />
-          <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-[1400px] mx-auto flex-1">
             <HeroSection />
             <FeaturedCareersSection />
             <FeaturedMajorsSection />
             <TopRatedMentorsSection />
           </div>
           
-          <footer className="mt-20 border-t border-border pt-6">
-            <div className="max-w-[1400px] mx-auto">
-              <div className="grid grid-cols-2 gap-4 mb-6">
+          <footer className="mt-20 border-t border-border py-6 w-full bg-background">
+            <div className="max-w-[1400px] mx-auto px-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Company</h4>
+                  <div className="flex items-center gap-2 mb-4">
+                    <img src="/lovable-uploads/6f705328-5601-4634-bc3b-3332403dd398.png" alt="PicoCareer Logo" className="w-8 h-8" />
+                    <h4 className="text-lg font-semibold">PicoCareer</h4>
+                  </div>
                   <ul className="space-y-2">
                     {companyLinks.map((link, index) => (
                       <li key={index}>
@@ -62,7 +65,7 @@ const Index = () => {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Other Links</h4>
+                  <h4 className="text-sm font-medium mb-4">Other Links</h4>
                   <ul className="space-y-2">
                     {otherLinks.map((link, index) => (
                       <li key={index}>

@@ -97,7 +97,7 @@ export function MenuSidebar() {
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png" alt="Logo" className="w-6 h-6" />
+              <img src="/lovable-uploads/6f705328-5601-4634-bc3b-3332403dd398.png" alt="PicoCareer Logo" className="w-6 h-6" />
               <h2 className="text-xl font-bold">Explore</h2>
             </div>
             <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
