@@ -89,8 +89,7 @@
 }
 
 /* Keep icons visible in collapsed state */
-[data-state=collapsed] [data-sidebar=menu-button] svg,
-[data-state=collapsed] [data-sidebar=trigger] svg {
+[data-state=collapsed] [data-sidebar=menu-button] svg {
   margin: 0;
 }
 

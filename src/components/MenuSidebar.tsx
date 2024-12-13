@@ -92,7 +92,7 @@ export function MenuSidebar() {
   };
 
   return (
-    <Sidebar side="left" className="group">
+    <Sidebar side="left" className="group" data-collapsible="icon">
       <div className="flex flex-col h-full bg-background border-r border-border relative">
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-8">
@@ -121,6 +121,7 @@ export function MenuSidebar() {
                     className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ${
                       item.active ? 'bg-muted text-foreground' : ''
                     }`}
+                    data-sidebar="menu-button"
                   >
                     <item.icon className="w-5 h-5 flex-shrink-0" />
                     <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0 whitespace-nowrap">{item.label}</span>
@@ -154,6 +155,7 @@ export function MenuSidebar() {
                   variant="outline"
                   className="w-full justify-start"
                   onClick={handleSignOut}
+                  data-sidebar="menu-button"
                 >
                   <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
                   <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">Sign out</span>
@@ -163,6 +165,7 @@ export function MenuSidebar() {
               <Button
                 className="w-full"
                 onClick={() => setAuthOpen(true)}
+                data-sidebar="menu-button"
               >
                 <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">Sign in</span>
               </Button>
