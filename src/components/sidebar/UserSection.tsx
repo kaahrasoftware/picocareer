@@ -23,12 +23,12 @@ export function UserSection({
   if (session?.user) {
     return (
       <>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <button
             onClick={onProfileClick}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
           >
-            <Avatar className="w-8 h-8">
+            <Avatar className="w-7 h-7">
               <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
               <AvatarFallback className="bg-muted">
                 {session.user.email?.[0]?.toUpperCase() || 'U'}
@@ -46,10 +46,10 @@ export function UserSection({
           onClick={onSignOut}
           data-sidebar="menu-button"
         >
-          <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-1">
+          <div className="flex items-center justify-center w-5 min-w-[1.25rem]">
             <LogOut className="h-4 w-4" />
           </div>
-          <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+          <span className={`ml-2 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
             Sign out
           </span>
         </Button>
@@ -63,10 +63,10 @@ export function UserSection({
       onClick={onAuthClick}
       data-sidebar="menu-button"
     >
-      <div className="flex items-center justify-center w-5 min-w-[1.25rem] ml-1">
+      <div className="flex items-center justify-center w-5 min-w-[1.25rem]">
         <LogIn className="h-4 w-4" />
       </div>
-      <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+      <span className={`ml-2 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
         Sign in
       </span>
     </Button>
