@@ -22,7 +22,7 @@ export function MenuSidebar() {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   const navigationItems = [
     { icon: Home, label: "Home", href: "/", active: window.location.pathname === "/" },
     { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
@@ -133,15 +133,17 @@ export function MenuSidebar() {
                     e.preventDefault();
                     navigate(item.href);
                   }}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group ${
                     item.active ? 'bg-muted text-foreground' : ''
                   }`}
                   data-sidebar="menu-button"
                 >
-                  <div className="flex items-center justify-center w-5">
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <div className="flex items-center justify-center w-5 min-w-[1.25rem]">
+                    <item.icon className="w-5 h-5" />
                   </div>
-                  <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{item.label}</span>
+                  <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                    {item.label}
+                  </span>
                 </a>
               </li>
             ))}
@@ -174,10 +176,12 @@ export function MenuSidebar() {
                 onClick={handleSignOut}
                 data-sidebar="menu-button"
               >
-                <div className="flex items-center justify-center w-5">
-                  <LogOut className="h-4 w-4 flex-shrink-0" />
+                <div className="flex items-center justify-center w-5 min-w-[1.25rem]">
+                  <LogOut className="h-4 w-4" />
                 </div>
-                <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>Sign out</span>
+                <span className={`ml-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                  Sign out
+                </span>
               </Button>
             </>
           ) : (
