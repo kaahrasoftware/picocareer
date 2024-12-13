@@ -1,5 +1,5 @@
 import { Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
-import { Home, BookOpen, Users, LogOut } from "lucide-react";
+import { Home, BookOpen, Users, LogOut, ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
@@ -94,16 +94,18 @@ export function MenuSidebar() {
   return (
     <Sidebar side="left">
       <div className="flex flex-col h-full bg-background border-r border-border relative">
-        <SidebarTrigger 
-          className="absolute -right-10 top-6 z-50 bg-background border border-border rounded-r-lg p-2 shadow-md hover:bg-muted transition-colors"
-          aria-label="Toggle sidebar"
-        />
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
               <img src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" alt="Logo" className="w-6 h-6" />
-              <h2 className="text-xl font-bold">PicoCareer</h2>
+              <h2 className="text-xl font-bold transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">PicoCareer</h2>
             </div>
+            <SidebarTrigger 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              <ChevronLeft className="w-4 h-4 transition-transform duration-200 group-data-[state=collapsed]:rotate-180" />
+            </SidebarTrigger>
           </div>
           
           <nav className="flex-1">
@@ -120,8 +122,8 @@ export function MenuSidebar() {
                       item.active ? 'bg-muted text-foreground' : ''
                     }`}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0 whitespace-nowrap">{item.label}</span>
                   </a>
                 </li>
               ))}
@@ -134,7 +136,7 @@ export function MenuSidebar() {
                 <div className="flex items-center gap-3 mb-4">
                   <button
                     onClick={() => setProfileOpen(true)}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden"
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
                   >
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={avatarUrl || ''} alt={session.user.email || 'User'} />
@@ -143,8 +145,8 @@ export function MenuSidebar() {
                       </AvatarFallback>
                     </Avatar>
                   </button>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium">{session.user.email}</h3>
+                  <div className="flex-1 transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">
+                    <h3 className="text-sm font-medium truncate">{session.user.email}</h3>
                     <p className="text-xs text-muted-foreground">Student</p>
                   </div>
                 </div>
@@ -153,8 +155,8 @@ export function MenuSidebar() {
                   className="w-full justify-start"
                   onClick={handleSignOut}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">Sign out</span>
                 </Button>
               </>
             ) : (
@@ -162,7 +164,7 @@ export function MenuSidebar() {
                 className="w-full"
                 onClick={() => setAuthOpen(true)}
               >
-                Sign in
+                <span className="transition-opacity duration-200 group-data-[state=collapsed]:opacity-0">Sign in</span>
               </Button>
             )}
           </div>

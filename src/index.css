@@ -68,3 +68,16 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Add transitions for sidebar collapse */
+[data-collapsible=icon] {
+  width: 5rem !important;
+  min-width: 5rem !important;
+  transition: width 0.2s ease-in-out;
+}
+
+[data-state=expanded] {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  transition: width 0.2s ease-in-out;
+}
