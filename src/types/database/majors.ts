@@ -2,14 +2,14 @@ export interface Major {
   id: string;
   title: string;
   description: string;
-  image_url: string | null;
+  image_url: string;
   created_at: string;
   updated_at: string;
-  featured: boolean | null;
-  field_of_study: string | null;
-  required_courses: string[] | null;
-  degree_level: string | null;
-  duration: string | null;
-  career_opportunities: string[] | null;
-  keywords: string[] | null;
+  featured: boolean;
+  field_of_study: string;
+  required_courses: string[];
+  degree_level: string;
+  duration: string;
+  career_opportunities: string[];
+  keywords: string[];
 }
