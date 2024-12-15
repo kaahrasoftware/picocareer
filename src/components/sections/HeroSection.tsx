@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 export const HeroSection = () => {
-  const { onAuthClick } = useAuth();
+  const { onAuthClick, onMentorAuthClick } = useAuth();
 
   return (
     <>
@@ -30,7 +30,7 @@ export const HeroSection = () => {
           <Button 
             variant="secondary"
             className="px-8"
-            onClick={() => onAuthClick('mentor')}
+            onClick={onMentorAuthClick}
           >
             Become a Mentor
           </Button>
