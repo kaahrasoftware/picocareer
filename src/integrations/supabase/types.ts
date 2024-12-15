@@ -184,7 +184,6 @@ export type Database = {
       }
       majors: {
         Row: {
-          average_gpa: number | null
           career_opportunities: string[] | null
           created_at: string
           degree_level: string | null
@@ -200,7 +199,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          average_gpa?: number | null
           career_opportunities?: string[] | null
           created_at?: string
           degree_level?: string | null
@@ -216,7 +214,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          average_gpa?: number | null
           career_opportunities?: string[] | null
           created_at?: string
           degree_level?: string | null
