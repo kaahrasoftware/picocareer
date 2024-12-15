@@ -4,20 +4,18 @@ import type { Major } from "@/types/database/majors";
 import type { Career } from "@/types/database/careers";
 import type { Profile } from "@/types/database/profiles";
 
-export type SearchResult = (Career | Major | Profile) & {
-  type: "career" | "major" | "mentor";
-};
+export type SearchResult = (
+  | (Career & { type: "career" })
+  | (Major & { type: "major" })
+  | (Profile & { type: "mentor" })
+);
 
 export function useSearchData(query: string) {
   return useQuery({
     queryKey: ["search", query],
     queryFn: async () => {
       if (!query.trim()) {
-        return {
-          careers: [] as SearchResult[],
-          majors: [] as SearchResult[],
-          mentors: [] as SearchResult[],
-        };
+        return [] as SearchResult[];
       }
 
       const searchQuery = `%${query.toLowerCase()}%`;
@@ -35,7 +33,7 @@ export function useSearchData(query: string) {
           .limit(5),
         supabase
           .from("profiles")
-          .select("*")
+          .select("*, company:companies(name)")
           .eq("user_type", "mentor")
           .or(`full_name.ilike.${searchQuery},position.ilike.${searchQuery}`)
           .limit(5),
@@ -58,13 +56,11 @@ export function useSearchData(query: string) {
       const mentors = (mentorsResponse.data || []).map((mentor) => ({
         ...mentor,
         type: "mentor" as const,
+        title: mentor.full_name,
+        description: mentor.position,
       }));
 
-      return {
-        careers,
-        majors,
-        mentors,
-      };
+      return [...careers, ...majors, ...mentors] as SearchResult[];
     },
     enabled: !!query,
   });

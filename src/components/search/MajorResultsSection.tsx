@@ -53,13 +53,13 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
           major={{
             title: selectedMajor.title,
             description: selectedMajor.description || '',
-            users: '0', // This could be updated if we track this in the database
+            users: '0',
             imageUrl: selectedMajor.image_url || '/placeholder.svg',
-            relatedCareers: selectedMajor.career_opportunities || [],
-            requiredCourses: selectedMajor.required_courses || [],
-            averageGPA: selectedMajor.average_gpa?.toString() || 'N/A',
-            fieldOfStudy: selectedMajor.field_of_study,
-            degreeLevel: selectedMajor.degree_level
+            relatedCareers: 'career_opportunities' in selectedMajor ? selectedMajor.career_opportunities || [] : [],
+            requiredCourses: 'required_courses' in selectedMajor ? selectedMajor.required_courses || [] : [],
+            averageGPA: 'N/A',
+            fieldOfStudy: 'field_of_study' in selectedMajor ? selectedMajor.field_of_study : undefined,
+            degreeLevel: 'degree_level' in selectedMajor ? selectedMajor.degree_level : undefined
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}

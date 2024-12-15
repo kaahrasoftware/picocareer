@@ -19,9 +19,9 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   
   const groupedResults = {
-    mentors: data.filter(item => item?.type === 'mentor'),
-    careers: data.filter(item => item?.type === 'career'),
-    majors: data.filter(item => item?.type === 'major')
+    mentors: data.filter(item => item.type === 'mentor'),
+    careers: data.filter(item => item.type === 'career'),
+    majors: data.filter(item => item.type === 'major')
   };
 
   const renderResults = () => {
@@ -54,9 +54,11 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       />
     ];
     
-    const hasResults = sections.some(section => section.props.mentors?.length > 0 || 
-                                              section.props.careers?.length > 0 || 
-                                              section.props.majors?.length > 0);
+    const hasResults = sections.some(section => 
+      section.props.mentors?.length > 0 || 
+      section.props.careers?.length > 0 || 
+      section.props.majors?.length > 0
+    );
 
     return hasResults ? sections : <CommandEmpty>No results found</CommandEmpty>;
   };
