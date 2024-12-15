@@ -9,14 +9,28 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import type { Major } from "@/types/database/majors";
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: majors = [], isLoading } = useFeaturedMajors();
+  const { data: majorsData = [], isLoading } = useFeaturedMajors();
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  // Transform the majors data to match the expected format
+  const majors = majorsData.map((major: Major) => ({
+    title: major.title,
+    description: major.description,
+    imageUrl: major.image_url || '',
+    users: '0',
+    relatedCareers: major.career_opportunities || [],
+    requiredCourses: major.required_courses || [],
+    averageGPA: 'N/A',
+    fieldOfStudy: major.field_of_study,
+    degreeLevel: major.degree_level
+  }));
 
   return (
     <section className="mb-16">
@@ -53,4 +67,4 @@ export const FeaturedMajorsSection = () => {
       />
     </section>
   );
-};
+}

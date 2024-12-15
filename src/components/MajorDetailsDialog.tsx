@@ -11,11 +11,11 @@ interface MajorDetailsDialogProps {
   major: {
     title: string;
     description: string;
-    users: string;
-    imageUrl: string;
-    relatedCareers: string[];
-    requiredCourses: string[];
-    averageGPA: string;
+    users?: string;
+    imageUrl?: string;
+    relatedCareers?: string[];
+    requiredCourses?: string[];
+    averageGPA?: string;
     fieldOfStudy?: string;
     degreeLevel?: string;
   };
@@ -24,16 +24,14 @@ interface MajorDetailsDialogProps {
 }
 
 export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDialogProps) {
-  // Ensure we have default values for arrays to prevent map errors
-  const requiredCourses = major?.requiredCourses || [];
-  const relatedCareers = major?.relatedCareers || [];
+  if (!major) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-2xl font-bold">{major?.title}</DialogTitle>
-          {major?.fieldOfStudy && (
+          <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
+          {major.fieldOfStudy && (
             <Badge variant="outline" className="w-fit">
               {major.fieldOfStudy}
             </Badge>
@@ -42,7 +40,7 @@ export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDi
         
         <ScrollArea className="h-[calc(85vh-120px)] px-6">
           <div className="space-y-6 pb-6">
-            {major?.imageUrl && (
+            {major.imageUrl && (
               <img 
                 src={major.imageUrl} 
                 alt={major.title} 
@@ -52,32 +50,32 @@ export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDi
             
             <div>
               <h4 className="text-lg font-semibold mb-2">About this Major</h4>
-              <p className="text-muted-foreground">{major?.description}</p>
+              <p className="text-muted-foreground">{major.description}</p>
             </div>
 
-            {major?.degreeLevel && (
+            {major.degreeLevel && (
               <div>
                 <h4 className="text-lg font-semibold mb-2">Degree Level</h4>
                 <Badge variant="secondary">{major.degreeLevel}</Badge>
               </div>
             )}
             
-            {requiredCourses.length > 0 && (
+            {major.requiredCourses && major.requiredCourses.length > 0 && (
               <div>
                 <h4 className="text-lg font-semibold mb-2">Required Courses</h4>
                 <div className="flex flex-wrap gap-2">
-                  {requiredCourses.map((course, index) => (
+                  {major.requiredCourses.map((course, index) => (
                     <Badge key={index} variant="outline">{course}</Badge>
                   ))}
                 </div>
               </div>
             )}
 
-            {relatedCareers.length > 0 && (
+            {major.relatedCareers && major.relatedCareers.length > 0 && (
               <div>
                 <h4 className="text-lg font-semibold mb-2">Career Opportunities</h4>
                 <div className="flex flex-wrap gap-2">
-                  {relatedCareers.map((career, index) => (
+                  {major.relatedCareers.map((career, index) => (
                     <Badge key={index} variant="secondary">{career}</Badge>
                   ))}
                 </div>
@@ -85,8 +83,8 @@ export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDi
             )}
 
             <div className="flex justify-between items-center text-sm text-muted-foreground border-t pt-4">
-              <span>Average GPA: {major?.averageGPA || 'N/A'}</span>
-              <span>{major?.users || '0'} Active Students</span>
+              <span>Average GPA: {major.averageGPA || 'N/A'}</span>
+              <span>{major.users || '0'} Active Students</span>
             </div>
           </div>
         </ScrollArea>

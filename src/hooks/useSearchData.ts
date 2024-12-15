@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Career } from "@/types/database/careers";
 import type { Major } from "@/types/database/majors";
+import type { Career } from "@/types/database/careers";
 import type { Profile } from "@/types/database/profiles";
 
 export type SearchResult = (Career | Major | Profile) & {
@@ -14,9 +14,9 @@ export function useSearchData(query: string) {
     queryFn: async () => {
       if (!query.trim()) {
         return {
-          careers: [],
-          majors: [],
-          mentors: [],
+          careers: [] as SearchResult[],
+          majors: [] as SearchResult[],
+          mentors: [] as SearchResult[],
         };
       }
 
