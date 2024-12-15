@@ -55,10 +55,9 @@ export default {
         picocareer: {
           dark: "#1A1F2C",
           darker: "#151821",
-          primary: "#221F26",    // Dark navy blue for headings
-          secondary: "#73B7B8",  // Teal color for buttons/accents
+          primary: "#8B5CF6",
+          secondary: "#DC2626",
           accent: "#4F46E5",
-          text: "#4A5568",       // Slate color for body text
         },
       },
       borderRadius: {
