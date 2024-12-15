@@ -5,11 +5,11 @@ export interface Major {
   image_url: string | null;
   created_at: string;
   updated_at: string;
-  featured: boolean | null;
+  featured: boolean;
   field_of_study: string | null;
-  required_courses: string[] | null;
+  required_courses: string[];
   degree_level: string | null;
   duration: string | null;
-  career_opportunities: string[] | null;
-  keywords: string[] | null;
+  career_opportunities: string[];
+  keywords: string[];
 }
