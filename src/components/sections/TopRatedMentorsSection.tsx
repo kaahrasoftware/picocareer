@@ -54,10 +54,10 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
-      <MajorListDialog
+      <MentorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        majors={mentors}
+        mentors={mentors}
       />
     </section>
   );
