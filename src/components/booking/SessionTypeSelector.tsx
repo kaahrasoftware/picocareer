@@ -18,10 +18,10 @@ export function SessionTypeSelector({ sessionTypes, onSessionTypeSelect }: Sessi
     <div>
       <h4 className="font-semibold mb-2">Session Type</h4>
       <Select onValueChange={onSessionTypeSelect}>
-        <SelectTrigger className="w-full bg-picocareer-darker border-none">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Select session type" />
         </SelectTrigger>
-        <SelectContent className="bg-picocareer-darker border-none">
+        <SelectContent>
           {sessionTypes.map((type) => (
             <SelectItem key={type.id} value={type.id}>
               {type.type} ({type.duration} min) - ${type.price}
