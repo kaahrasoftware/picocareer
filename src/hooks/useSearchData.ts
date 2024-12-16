@@ -1,14 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Major } from "@/types/database/majors";
-import type { Career } from "@/types/database/careers";
-import type { Profile } from "@/types/database/profiles";
+import type { SearchResult } from "@/types/search";
 
-export type SearchResult = (
-  | (Career & { type: "career" })
-  | (Major & { type: "major" })
-  | (Profile & { type: "mentor" })
-);
+export { type SearchResult };
 
 export function useSearchData(query: string) {
   return useQuery({
@@ -46,22 +40,29 @@ export function useSearchData(query: string) {
       const careers = (careersResponse.data || []).map((career) => ({
         ...career,
         type: "career" as const,
+        title: career.title,
+        description: career.description,
       }));
 
       const majors = (majorsResponse.data || []).map((major) => ({
         ...major,
         type: "major" as const,
+        title: major.title,
+        description: major.description,
       }));
 
       const mentors = (mentorsResponse.data || []).map((mentor) => ({
         ...mentor,
         type: "mentor" as const,
-        title: mentor.full_name,
-        description: mentor.position,
+        title: mentor.full_name || "Unknown",
+        description: mentor.position || "Mentor",
+        image_url: mentor.avatar_url,
       }));
 
       return [...careers, ...majors, ...mentors] as SearchResult[];
     },
     enabled: !!query,
+    staleTime: 1000 * 60, // Cache for 1 minute to help prevent rate limiting
+    retry: false, // Don't retry failed requests to help prevent rate limiting
   });
 }

@@ -12,30 +12,40 @@ interface AuthDialogProps {
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   React.useEffect(() => {
-    // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let timeoutId: NodeJS.Timeout;
+
+    const checkSession = async () => {
+      if (isRefreshing) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         onOpenChange(false);
       }
-    });
+    };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN') {
         onOpenChange(false);
         toast({
           title: "Welcome!",
           description: "You have successfully signed in.",
         });
+      } else if (event === 'TOKEN_REFRESHED') {
+        setIsRefreshing(false);
       }
     });
 
+    // Check session less frequently
+    timeoutId = setInterval(checkSession, 5000);
+
     return () => {
       subscription.unsubscribe();
+      clearInterval(timeoutId);
     };
-  }, [onOpenChange, toast]);
+  }, [onOpenChange, toast, isRefreshing]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,8 +68,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             variables: {
               default: {
                 colors: {
-                  brand: 'rgb(147, 51, 234)',
-                  brandAccent: 'rgb(126, 34, 206)',
+                  brand: 'rgb(14, 165, 233)',
+                  brandAccent: 'rgb(0, 35, 102)',
                 },
               },
             },
