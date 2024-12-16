@@ -14,8 +14,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const lastCheckRef = React.useRef<number>(0);
-  const CHECK_INTERVAL = 300000; // 5 minutes interval
-  const DEBOUNCE_DELAY = 2000; // 2 seconds debounce
+  const CHECK_INTERVAL = 600000; // 10 minutes interval
+  const DEBOUNCE_DELAY = 5000; // 5 seconds debounce
 
   React.useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -23,7 +23,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     
     const checkSession = async () => {
       const now = Date.now();
-      // Prevent checking if component unmounted, already refreshing, or if it's too soon
       if (!isComponentMounted || isRefreshing || now - lastCheckRef.current < CHECK_INTERVAL) {
         return;
       }
@@ -31,16 +30,21 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       try {
         setIsRefreshing(true);
         lastCheckRef.current = now;
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session check failed:', error);
+          return;
+        }
         
         if (session && isComponentMounted) {
           onOpenChange(false);
         }
-      } catch (error) {
-        console.error('Session check failed:', error);
       } finally {
-        // Debounce the refresh state reset
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        
         timeoutId = setTimeout(() => {
           if (isComponentMounted) {
             setIsRefreshing(false);
@@ -61,17 +65,18 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       }
     };
 
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Initial check with delay to prevent immediate rate limiting
-    const initialCheckTimeout = setTimeout(checkSession, 1000);
+    // Initial check with a significant delay
+    const initialCheckTimeout = setTimeout(checkSession, 5000);
 
-    // Set up interval with a longer delay
+    // Set up interval
     const intervalId = setInterval(checkSession, CHECK_INTERVAL);
 
     return () => {
       isComponentMounted = false;
-      subscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
       clearInterval(intervalId);
       clearTimeout(timeoutId);
       clearTimeout(initialCheckTimeout);
