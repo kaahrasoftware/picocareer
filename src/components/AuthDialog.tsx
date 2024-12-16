@@ -14,23 +14,31 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const lastCheckRef = React.useRef<number>(0);
-  const CHECK_INTERVAL = 60000; // 1 minute
+  const CHECK_INTERVAL = 60000; // 1 minute interval
+  const DEBOUNCE_DELAY = 1000; // 1 second debounce
 
   React.useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const checkSession = async () => {
       const now = Date.now();
+      // Prevent checking if we're already refreshing or if it's too soon
       if (isRefreshing || now - lastCheckRef.current < CHECK_INTERVAL) {
         return;
       }
 
-      lastCheckRef.current = now;
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        onOpenChange(false);
+      try {
+        lastCheckRef.current = now;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          onOpenChange(false);
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const handleAuthChange = async (event: string, session: any) => {
       if (event === 'SIGNED_IN') {
         onOpenChange(false);
         toast({
@@ -38,19 +46,26 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           description: "You have successfully signed in.",
         });
       } else if (event === 'TOKEN_REFRESHED') {
-        setIsRefreshing(false);
+        // Debounce the refresh state reset
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setIsRefreshing(false);
+        }, DEBOUNCE_DELAY);
       }
-    });
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     // Initial check
     checkSession();
 
-    // Periodic check with a longer interval
+    // Set up interval with a longer delay
     const intervalId = setInterval(checkSession, CHECK_INTERVAL);
 
     return () => {
       subscription.unsubscribe();
       clearInterval(intervalId);
+      clearTimeout(timeoutId);
     };
   }, [onOpenChange, toast, isRefreshing]);
 
