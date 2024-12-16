@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
@@ -57,6 +57,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogTitle className="sr-only">Authentication</DialogTitle>
         <div className="flex flex-col items-center gap-4 py-4">
           <img
             src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png"

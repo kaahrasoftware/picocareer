@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/hooks/useSearchData";
+import { isMentorResult } from "@/types/search";
 
 interface MentorResultsSectionProps {
   mentors: SearchResult[];
@@ -9,9 +10,11 @@ interface MentorResultsSectionProps {
 }
 
 export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsSectionProps) => {
-  if (!mentors.length) return null;
+  const validMentors = mentors.filter(isMentorResult);
+  
+  if (!validMentors.length) return null;
 
-  const shouldUseGrid = mentors.length > 4;
+  const shouldUseGrid = validMentors.length > 4;
 
   return (
     <div className="px-4">
@@ -21,7 +24,7 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
           ? 'grid grid-cols-3 gap-4 place-items-center' 
           : 'flex gap-4 justify-center'}`}
         >
-          {mentors.map((mentor) => (
+          {validMentors.map((mentor) => (
             <Card 
               key={mentor.id}
               className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"

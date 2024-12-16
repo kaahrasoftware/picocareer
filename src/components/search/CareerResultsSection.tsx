@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/hooks/useSearchData";
+import { isCareerResult } from "@/types/search";
 
 interface CareerResultsSectionProps {
   careers: SearchResult[];
@@ -8,14 +9,16 @@ interface CareerResultsSectionProps {
 }
 
 export const CareerResultsSection = ({ careers, onSelectCareer }: CareerResultsSectionProps) => {
-  if (!careers.length) return (
+  const validCareers = careers.filter(isCareerResult);
+
+  if (!validCareers.length) return (
     <div className="px-4 mt-6">
       <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
       <p className="text-sm text-muted-foreground">No matching careers found</p>
     </div>
   );
 
-  const shouldUseGrid = careers.length > 4;
+  const shouldUseGrid = validCareers.length > 4;
 
   return (
     <div className="px-4 mt-6">
@@ -25,7 +28,7 @@ export const CareerResultsSection = ({ careers, onSelectCareer }: CareerResultsS
           ? 'grid grid-cols-3 gap-4 place-items-center' 
           : 'flex gap-4 justify-center'}`}
         >
-          {careers.map((career) => (
+          {validCareers.map((career) => (
             <Card 
               key={career.id}
               className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
