@@ -48,7 +48,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-picocareer-dark text-white max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Book a Session with {mentor.name}
