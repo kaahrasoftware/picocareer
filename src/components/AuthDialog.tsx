@@ -13,13 +13,17 @@ interface AuthDialogProps {
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const lastCheckRef = React.useRef<number>(0);
+  const CHECK_INTERVAL = 30000; // 30 seconds
 
   React.useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
     const checkSession = async () => {
-      if (isRefreshing) return;
+      const now = Date.now();
+      if (isRefreshing || now - lastCheckRef.current < CHECK_INTERVAL) {
+        return;
+      }
 
+      lastCheckRef.current = now;
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         onOpenChange(false);
@@ -38,12 +42,15 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       }
     });
 
-    // Check session less frequently
-    timeoutId = setInterval(checkSession, 5000);
+    // Initial check
+    checkSession();
+
+    // Periodic check with a longer interval
+    const intervalId = setInterval(checkSession, CHECK_INTERVAL);
 
     return () => {
       subscription.unsubscribe();
-      clearInterval(timeoutId);
+      clearInterval(intervalId);
     };
   }, [onOpenChange, toast, isRefreshing]);
 
