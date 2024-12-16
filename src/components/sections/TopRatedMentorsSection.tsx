@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export const TopRatedMentorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -34,6 +35,13 @@ export const TopRatedMentorsSection = () => {
           align: "start",
           loop: true,
         }}
+        plugins={[
+          Autoplay({
+            delay: 6000,
+            stopOnInteraction: true,
+            stopOnMouseEnter: true,
+          }),
+        ]}
         className="w-full"
       >
         <CarouselContent>
@@ -46,10 +54,10 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
-      <MentorListDialog
+      <MajorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        mentors={mentors}
+        majors={mentors}
       />
     </section>
   );

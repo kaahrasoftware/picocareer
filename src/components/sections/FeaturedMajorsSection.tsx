@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 import type { Major } from "@/types/database/majors";
 
 export const FeaturedMajorsSection = () => {
@@ -48,6 +49,13 @@ export const FeaturedMajorsSection = () => {
           align: "start",
           loop: true,
         }}
+        plugins={[
+          Autoplay({
+            delay: 5000,
+            stopOnInteraction: true,
+            stopOnMouseEnter: true,
+          }),
+        ]}
         className="w-full"
       >
         <CarouselContent>

@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -24,7 +25,7 @@ export const FeaturedCareersSection = () => {
         <h2 className="text-2xl font-bold">Featured Careers</h2>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="text-kahra-primary hover:text-kahra-primary/80 transition-colors"
+          className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
         </button>
@@ -35,19 +36,19 @@ export const FeaturedCareersSection = () => {
             align: "start",
             loop: true,
           }}
+          plugins={[
+            Autoplay({
+              delay: 4000,
+              stopOnInteraction: true,
+              stopOnMouseEnter: true,
+            }),
+          ]}
           className="w-full"
         >
           <CarouselContent>
             {careers.map((career) => (
               <CarouselItem key={career.id} className="basis-1/3">
-                <CareerCard 
-                  id={career.id}
-                  title={career.title}
-                  description={career.description}
-                  salary_range={career.salary_range}
-                  average_salary={career.average_salary}
-                  image_url={career.image_url}
-                />
+                <CareerCard {...career} />
               </CarouselItem>
             ))}
           </CarouselContent>
