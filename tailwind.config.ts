@@ -53,11 +53,11 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         picocareer: {
-          dark: "#1A1F2C",
-          darker: "#151821",
-          primary: "#8B5CF6",
-          secondary: "#DC2626",
-          accent: "#4F46E5",
+          dark: "#002366", // Navy blue from logo
+          darker: "#001947",
+          primary: "#0EA5E9", // Cyan blue from logo
+          secondary: "#002366", // Navy blue as secondary
+          accent: "#0284C7",
         },
       },
       borderRadius: {
