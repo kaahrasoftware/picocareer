@@ -55,6 +55,8 @@ export function useSearchData(query: string) {
         image_url: major.image_url,
         field_of_study: major.field_of_study,
         degree_level: major.degree_level,
+        career_opportunities: major.career_opportunities || [],
+        required_courses: major.required_courses || [],
       }));
 
       const mentors: MentorSearchResult[] = (mentorsResponse.data || []).map((mentor) => ({

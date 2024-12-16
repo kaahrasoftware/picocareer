@@ -20,6 +20,8 @@ export interface MajorSearchResult extends BaseSearchResult {
   type: "major";
   field_of_study: string | null;
   degree_level: string | null;
+  career_opportunities: string[];
+  required_courses: string[];
 }
 
 export interface MentorSearchResult extends BaseSearchResult {
@@ -29,3 +31,16 @@ export interface MentorSearchResult extends BaseSearchResult {
 }
 
 export type SearchResult = CareerSearchResult | MajorSearchResult | MentorSearchResult;
+
+// Type guards
+export const isCareerResult = (result: SearchResult): result is CareerSearchResult => {
+  return result.type === "career";
+};
+
+export const isMajorResult = (result: SearchResult): result is MajorSearchResult => {
+  return result.type === "major";
+};
+
+export const isMentorResult = (result: SearchResult): result is MentorSearchResult => {
+  return result.type === "mentor";
+};

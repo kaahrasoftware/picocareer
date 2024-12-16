@@ -14,7 +14,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const lastCheckRef = React.useRef<number>(0);
-  const CHECK_INTERVAL = 30000; // 30 seconds
+  const CHECK_INTERVAL = 60000; // 1 minute
 
   React.useEffect(() => {
     const checkSession = async () => {
