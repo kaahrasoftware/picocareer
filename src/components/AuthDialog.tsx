@@ -14,60 +14,69 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const lastCheckRef = React.useRef<number>(0);
-  const CHECK_INTERVAL = 60000; // 1 minute interval
-  const DEBOUNCE_DELAY = 1000; // 1 second debounce
+  const CHECK_INTERVAL = 300000; // 5 minutes interval
+  const DEBOUNCE_DELAY = 2000; // 2 seconds debounce
 
   React.useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    let isComponentMounted = true;
     
     const checkSession = async () => {
       const now = Date.now();
-      // Prevent checking if we're already refreshing or if it's too soon
-      if (isRefreshing || now - lastCheckRef.current < CHECK_INTERVAL) {
+      // Prevent checking if component unmounted, already refreshing, or if it's too soon
+      if (!isComponentMounted || isRefreshing || now - lastCheckRef.current < CHECK_INTERVAL) {
         return;
       }
 
       try {
+        setIsRefreshing(true);
         lastCheckRef.current = now;
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        
+        if (session && isComponentMounted) {
           onOpenChange(false);
         }
       } catch (error) {
         console.error('Session check failed:', error);
+      } finally {
+        // Debounce the refresh state reset
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (isComponentMounted) {
+            setIsRefreshing(false);
+          }
+        }, DEBOUNCE_DELAY);
       }
     };
 
-    const handleAuthChange = async (event: string, session: any) => {
+    const handleAuthChange = (event: string, session: any) => {
+      if (!isComponentMounted) return;
+
       if (event === 'SIGNED_IN') {
         onOpenChange(false);
         toast({
           title: "Welcome!",
           description: "You have successfully signed in.",
         });
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Debounce the refresh state reset
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          setIsRefreshing(false);
-        }, DEBOUNCE_DELAY);
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Initial check
-    checkSession();
+    // Initial check with delay to prevent immediate rate limiting
+    const initialCheckTimeout = setTimeout(checkSession, 1000);
 
     // Set up interval with a longer delay
     const intervalId = setInterval(checkSession, CHECK_INTERVAL);
 
     return () => {
+      isComponentMounted = false;
       subscription.unsubscribe();
       clearInterval(intervalId);
       clearTimeout(timeoutId);
+      clearTimeout(initialCheckTimeout);
     };
-  }, [onOpenChange, toast, isRefreshing]);
+  }, [onOpenChange, toast]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
