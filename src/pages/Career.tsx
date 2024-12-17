@@ -16,6 +16,7 @@ export default function CareerPage() {
   const [industryFilter, setIndustryFilter] = useState<string | null>(null);
   const [salaryFilter, setSalaryFilter] = useState<string | null>(null);
   const [educationFilter, setEducationFilter] = useState<string | null>(null);
+  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const CAREERS_PER_PAGE = 15;
   const { toast } = useToast();
@@ -60,6 +61,7 @@ export default function CareerPage() {
   const salaryRanges = Array.from(new Set(careers?.map(c => c.salary_range).filter(Boolean) || [])).sort();
   const educationLevels = Array.from(new Set(careers?.flatMap(c => c.required_education || []) || [])).sort();
   const allSkills = Array.from(new Set(careers?.flatMap(c => c.required_skills || []) || [])).sort();
+  const fields = Array.from(new Set(careers?.map(c => c.industry).filter(Boolean) || [])).sort();
 
   const filteredCareers = careers?.filter(career => {
     const searchableFields = [
@@ -80,9 +82,10 @@ export default function CareerPage() {
     const matchesSalary = !salaryFilter || career.salary_range === salaryFilter;
     const matchesEducation = !educationFilter || 
       (career.required_education || []).includes(educationFilter);
+    const matchesField = !fieldFilter || career.industry === fieldFilter;
 
     return matchesSearch && matchesSkills && matchesIndustry && 
-           matchesSalary && matchesEducation;
+           matchesSalary && matchesEducation && matchesField;
   });
 
   // Calculate pagination
@@ -110,10 +113,12 @@ export default function CareerPage() {
                 onCompanyChange={setSalaryFilter}
                 schoolFilter={educationFilter}
                 onSchoolChange={setEducationFilter}
+                fieldFilter={fieldFilter}
+                onFieldChange={setFieldFilter}
                 locations={industries}
                 companies={salaryRanges}
                 schools={educationLevels}
-                fields={[]}
+                fields={fields}
                 allSkills={allSkills}
               />
 
