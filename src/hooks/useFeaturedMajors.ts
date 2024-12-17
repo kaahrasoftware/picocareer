@@ -16,7 +16,16 @@ export function useFeaturedMajors() {
         throw error;
       }
 
-      return data as Major[];
+      // Transform the data to include all required fields
+      const transformedData: Major[] = data.map(major => ({
+        ...major,
+        image_url: null,
+        field_of_study: null,
+        required_courses: [],
+        degree_level: major.degree_levels?.[0] || null
+      }));
+
+      return transformedData;
     },
   });
 }

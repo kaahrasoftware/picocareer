@@ -2,14 +2,9 @@ export interface Major {
   id: string;
   title: string;
   description: string;
-  image_url: string | null;
   created_at: string;
   updated_at: string;
   featured: boolean | null;
-  field_of_study: string | null;
-  required_courses: string[] | null;
-  degree_level: string | null;
-  career_opportunities: string[] | null;
   learning_objectives: string[] | null;
   common_courses: string[] | null;
   interdisciplinary_connections: string[] | null;
@@ -20,15 +15,21 @@ export interface Major {
   gpa_expectations: number | null;
   transferable_skills: string[] | null;
   tools_knowledge: string[] | null;
-  tuition_and_fees: number | null;
-  potential_salary: number | null;
-  intensity: number | null;
+  tuition_and_fees: string | null;
+  potential_salary: string | null;
   passion_for_subject: string | null;
   skill_match: string[] | null;
   professional_associations: string[] | null;
   global_applicability: string | null;
   common_difficulties: string[] | null;
-  stress_levels: number | null;
-  dropout_rates: number | null;
+  career_opportunities: string[] | null;
+  intensity: string | null;
+  stress_level: string | null;
+  dropout_rates: string | null;
   majors_to_consider_switching_to: string[] | null;
+  // Adding fields that were missing but referenced in the code
+  image_url?: string | null;
+  field_of_study?: string | null;
+  required_courses?: string[] | null;
+  degree_level?: string | null;
 }

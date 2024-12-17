@@ -52,11 +52,11 @@ export function useSearchData(query: string) {
         type: "major",
         title: major.title,
         description: major.description,
-        image_url: major.image_url,
-        field_of_study: major.field_of_study,
-        degree_level: major.degree_level,
+        image_url: null,
+        field_of_study: null,
+        degree_level: major.degree_levels?.[0] || null,
         career_opportunities: major.career_opportunities || [],
-        required_courses: major.required_courses || [],
+        required_courses: major.common_courses || []
       }));
 
       const mentors: MentorSearchResult[] = (mentorsResponse.data || []).map((mentor) => ({
