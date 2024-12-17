@@ -60,11 +60,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     }
   };
 
-  const handleSignIn = async (formType: 'mentee' | 'mentor') => {
-    setActiveForm(formType);
-    // The user type will be validated by the database trigger we created
-  };
-
   React.useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     let isComponentMounted = true;
@@ -158,8 +153,15 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   },
                 }}
                 providers={[]}
-                onSubmit={() => handleSignIn('mentee')}
                 view="sign_in"
+                localization={{
+                  variables: {
+                    sign_in: {
+                      button_label: "Sign in as Mentee"
+                    }
+                  }
+                }}
+                onlyThirdPartyProviders={false}
               />
             </div>
 
@@ -182,8 +184,15 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   },
                 }}
                 providers={[]}
-                onSubmit={() => handleSignIn('mentor')}
                 view="sign_in"
+                localization={{
+                  variables: {
+                    sign_in: {
+                      button_label: "Sign in as Mentor"
+                    }
+                  }
+                }}
+                onlyThirdPartyProviders={false}
               />
             </div>
           </div>
