@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, Users, Star } from "lucide-react";
 
 interface MentorCardProps {
-  id: string; // Added this required field
+  id: string;
   title: string;
   company: string;
   imageUrl: string;
@@ -16,7 +16,6 @@ interface MentorCardProps {
     connected: string;
     recordings: string;
   };
-  username: string;
 }
 
 export function MentorCard(props: MentorCardProps) {
@@ -58,7 +57,6 @@ export function MentorCard(props: MentorCardProps) {
           <div className="flex justify-between items-center mt-auto">
             <div>
               <p className="text-sm font-medium">{props.name}</p>
-              <p className="text-xs text-muted-foreground">@{props.username}</p>
             </div>
             <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
               mentor
@@ -73,8 +71,7 @@ export function MentorCard(props: MentorCardProps) {
           company: props.company,
           imageUrl: props.imageUrl,
           name: props.name,
-          stats: props.stats,
-          username: props.username
+          stats: props.stats
         }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}

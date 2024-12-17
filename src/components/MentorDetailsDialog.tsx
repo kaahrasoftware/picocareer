@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star, Building2, GraduationCap } from "lucide-react";
+import { BookOpen, Users, Star, Building2 } from "lucide-react";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
@@ -24,7 +24,6 @@ interface MentorDetailsDialogProps {
       connected: string;
       recordings: string;
     };
-    username: string;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,7 +50,6 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
                     mentor
                   </Badge>
                 </div>
-                <p className="text-base font-normal text-muted-foreground">@{mentor.username}</p>
               </div>
             </DialogTitle>
           </DialogHeader>

@@ -442,7 +442,6 @@ export type Database = {
           tools_used: string[] | null
           updated_at: string
           user_type: string | null
-          username: string | null
           website_url: string | null
           years_of_experience: number | null
         }
@@ -471,7 +470,6 @@ export type Database = {
           tools_used?: string[] | null
           updated_at?: string
           user_type?: string | null
-          username?: string | null
           website_url?: string | null
           years_of_experience?: number | null
         }
@@ -500,7 +498,6 @@ export type Database = {
           tools_used?: string[] | null
           updated_at?: string
           user_type?: string | null
-          username?: string | null
           website_url?: string | null
           years_of_experience?: number | null
         }
