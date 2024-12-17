@@ -18,6 +18,11 @@ interface MajorCardProps {
 export function MajorCard(props: MajorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Function to get first two items of an array
+  const getFirstTwo = (arr: string[] | undefined) => {
+    return arr ? arr.slice(0, 2) : [];
+  };
+
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -52,7 +57,7 @@ export function MajorCard(props: MajorCardProps) {
                 <span className="text-sm font-medium text-foreground">Key Skills</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {props.skill_match.map((skill, index) => (
+                {getFirstTwo(props.skill_match).map((skill, index) => (
                   <Badge 
                     key={index}
                     variant="secondary"
@@ -61,6 +66,11 @@ export function MajorCard(props: MajorCardProps) {
                     {skill}
                   </Badge>
                 ))}
+                {props.skill_match.length > 2 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{props.skill_match.length - 2} more
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -73,7 +83,7 @@ export function MajorCard(props: MajorCardProps) {
                 <span className="text-sm font-medium text-foreground">Tools & Technologies</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {props.tools_knowledge.map((tool, index) => (
+                {getFirstTwo(props.tools_knowledge).map((tool, index) => (
                   <Badge 
                     key={index}
                     variant="secondary"
@@ -82,6 +92,11 @@ export function MajorCard(props: MajorCardProps) {
                     {tool}
                   </Badge>
                 ))}
+                {props.tools_knowledge.length > 2 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{props.tools_knowledge.length - 2} more
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -94,7 +109,7 @@ export function MajorCard(props: MajorCardProps) {
                 <span className="text-sm font-medium text-foreground">Common Courses</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {props.common_courses.map((course, index) => (
+                {getFirstTwo(props.common_courses).map((course, index) => (
                   <Badge 
                     key={index}
                     variant="secondary"
@@ -103,6 +118,11 @@ export function MajorCard(props: MajorCardProps) {
                     {course}
                   </Badge>
                 ))}
+                {props.common_courses.length > 2 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{props.common_courses.length - 2} more
+                  </span>
+                )}
               </div>
             </div>
           )}
