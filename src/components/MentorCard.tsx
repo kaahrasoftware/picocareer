@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { MentorDetailsDialog } from "./MentorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star } from "lucide-react";
+import { BookOpen, Users, Star, Award } from "lucide-react";
 
 interface MentorCardProps {
   id: string;
@@ -16,6 +16,7 @@ interface MentorCardProps {
     connected: string;
     recordings: string;
   };
+  top_mentor?: boolean;
 }
 
 export function MentorCard(props: MentorCardProps) {
@@ -58,9 +59,16 @@ export function MentorCard(props: MentorCardProps) {
             <div>
               <p className="text-sm font-medium">{props.name}</p>
             </div>
-            <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-              mentor
-            </Badge>
+            {props.top_mentor ? (
+              <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
+                <Award className="h-3 w-3" />
+                Top Mentor
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                mentor
+              </Badge>
+            )}
           </div>
         </div>
       </Card>
@@ -71,7 +79,8 @@ export function MentorCard(props: MentorCardProps) {
           company: props.company,
           imageUrl: props.imageUrl,
           name: props.name,
-          stats: props.stats
+          stats: props.stats,
+          top_mentor: props.top_mentor
         }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}

@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star, Building2 } from "lucide-react";
+import { BookOpen, Users, Star, Building2, Award } from "lucide-react";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
@@ -24,6 +24,7 @@ interface MentorDetailsDialogProps {
       connected: string;
       recordings: string;
     };
+    top_mentor?: boolean;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,9 +47,16 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-bold">{mentor.name}</h2>
-                  <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-                    mentor
-                  </Badge>
+                  {mentor.top_mentor ? (
+                    <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
+                      <Award className="h-3 w-3" />
+                      Top Mentor
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                      mentor
+                    </Badge>
+                  )}
                 </div>
               </div>
             </DialogTitle>
