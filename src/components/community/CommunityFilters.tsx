@@ -8,8 +8,6 @@ interface CommunityFiltersProps {
   onSearchChange: (value: string) => void;
   selectedSkills: string[];
   onSkillsChange: (skills: string[]) => void;
-  userTypeFilter: string | null;
-  onUserTypeChange: (value: string | null) => void;
   locationFilter: string | null;
   onLocationChange: (value: string | null) => void;
   companyFilter: string | null;
@@ -30,8 +28,6 @@ export function CommunityFilters({
   onSearchChange,
   selectedSkills,
   onSkillsChange,
-  userTypeFilter,
-  onUserTypeChange,
   locationFilter,
   onLocationChange,
   companyFilter,
@@ -55,14 +51,7 @@ export function CommunityFilters({
         <SearchInput value={searchQuery} onChange={onSearchChange} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <SelectFilter
-          value={userTypeFilter}
-          onValueChange={onUserTypeChange}
-          placeholder="User Type"
-          options={["student", "mentor", "professional"]}
-        />
-
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <SelectFilter
           value={locationFilter}
           onValueChange={onLocationChange}
