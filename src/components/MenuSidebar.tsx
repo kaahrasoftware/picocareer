@@ -26,7 +26,7 @@ export function MenuSidebar() {
             </li>
             <li>
               <Link 
-                to="/community" 
+                to="/mentor" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Find a Mentor

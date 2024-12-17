@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
-import Community from "./pages/Community";
+import Mentor from "./pages/Mentor";
 import { MenuSidebar } from "./components/MenuSidebar";
 import { Footer } from "./components/Footer";
 
@@ -28,7 +28,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/blog" element={<Blog />} />
-                <Route path="/community" element={<Community />} />
+                <Route path="/mentor" element={<Mentor />} />
               </Routes>
             </main>
             <Footer />
