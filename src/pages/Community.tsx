@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [userTypeFilter, setUserTypeFilter] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
@@ -36,7 +35,7 @@ export default function Community() {
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title)
           `)
-          .eq('user_type', 'mentor')  // Added filter for mentor user type
+          .eq('user_type', 'mentor')
           .order('created_at', { ascending: false });
 
         if (user?.id) {
@@ -82,24 +81,35 @@ export default function Community() {
   const allSkills = Array.from(new Set(profiles?.flatMap(p => p.skills || []) || [])).sort();
 
   const filteredProfiles = profiles?.filter(profile => {
+    const searchableFields = [
+      profile.first_name,
+      profile.last_name,
+      profile.full_name,
+      profile.position,
+      profile.highest_degree,
+      profile.bio,
+      profile.location,
+      profile.company_name,
+      profile.school_name,
+      profile.academic_major,
+      ...(profile.keywords || []),
+      ...(profile.skills || []),
+      ...(profile.tools_used || []),
+      ...(profile.fields_of_interest || [])
+    ].filter(Boolean).map(field => field.toLowerCase());
+
     const matchesSearch = searchQuery === "" || 
-      profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (profile.skills || []).some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      profile.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.school_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.location?.toLowerCase().includes(searchQuery.toLowerCase());
+      searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
 
     const matchesSkills = selectedSkills.length === 0 || 
       selectedSkills.every(skill => (profile.skills || []).includes(skill));
-    const matchesUserType = !userTypeFilter || profile.user_type === userTypeFilter;
     const matchesLocation = !locationFilter || profile.location === locationFilter;
     const matchesCompany = !companyFilter || profile.company_name === companyFilter;
     const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
     const matchesField = !fieldFilter || (profile.fields_of_interest || []).includes(fieldFilter);
 
-    return matchesSearch && matchesSkills && matchesUserType && 
-           matchesLocation && matchesCompany && matchesSchool && matchesField;
+    return matchesSearch && matchesSkills && matchesLocation && 
+           matchesCompany && matchesSchool && matchesField;
   });
 
   // Calculate pagination
@@ -115,17 +125,12 @@ export default function Community() {
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
               <h1 className="text-3xl font-bold">Community</h1>
-              <p className="text-muted-foreground">
-                Connect with students, mentors, and professionals in your field of interest.
-              </p>
               
               <CommunityFilters
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 selectedSkills={selectedSkills}
                 onSkillsChange={setSelectedSkills}
-                userTypeFilter={userTypeFilter}
-                onUserTypeChange={setUserTypeFilter}
                 locationFilter={locationFilter}
                 onLocationChange={setLocationFilter}
                 companyFilter={companyFilter}
