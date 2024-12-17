@@ -32,6 +32,7 @@ interface MentorDetailsDialogProps {
     location?: string;
     bio?: string;
     skills?: string[];
+    tools?: string[];
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -85,7 +86,7 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
                 </div>
               </div>
 
-              <ProfileSkills skills={profileData.skills} />
+              <ProfileSkills skills={profileData.skills} tools={mentor.tools || []} />
 
               <div className="flex justify-center">
                 <Button 
