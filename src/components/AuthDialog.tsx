@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useToast } from "@/hooks/use-toast";
 import { AuthDialogHeader } from "./auth/AuthDialogHeader";
 import { SignUpForm } from "./auth/SignUpForm";
-import { Separator } from "./ui/separator";
-import { MenteeSignInForm } from "./auth/MenteeSignInForm";
-import { MentorSignInForm } from "./auth/MentorSignInForm";
 
 interface AuthDialogProps {
   open: boolean;
@@ -38,8 +37,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
         data: {
           full_name: formData.fullName,
           position: formData.position,
-          user_type: formData.userType,
-          intended_user_type: formData.userType === 'mentor' ? 'mentor' : 'student'
+          user_type: formData.userType
         }
       }
     });
@@ -122,7 +120,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="sr-only">Authentication</DialogTitle>
         <AuthDialogHeader isSignUp={isSignUp} />
 
@@ -134,24 +132,33 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             onSignInClick={() => setIsSignUp(false)}
           />
         ) : (
-          <div className="flex gap-8">
-            <MenteeSignInForm />
-            <Separator orientation="vertical" />
-            <MentorSignInForm />
-          </div>
-        )}
-
-        {!isSignUp && (
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            Don't have an account?{" "}
-            <button
-              type="button"
-              onClick={() => setIsSignUp(true)}
-              className="text-primary hover:underline"
-            >
-              Sign Up
-            </button>
-          </p>
+          <>
+            <Auth
+              supabaseClient={supabase}
+              appearance={{
+                theme: ThemeSupa,
+                variables: {
+                  default: {
+                    colors: {
+                      brand: 'rgb(14, 165, 233)',
+                      brandAccent: 'rgb(0, 35, 102)',
+                    },
+                  },
+                },
+              }}
+              providers={[]}
+            />
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={() => setIsSignUp(true)}
+                className="text-primary hover:underline"
+              >
+                Sign Up
+              </button>
+            </p>
+          </>
         )}
       </DialogContent>
     </Dialog>
