@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { MentorDetailsDialog } from "./MentorDetailsDialog";
+import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
@@ -109,16 +109,8 @@ export function MentorCard(props: MentorCardProps) {
         </div>
       </Card>
 
-      <MentorDetailsDialog 
-        mentor={{
-          id: props.id,
-          title: props.title,
-          company: props.company,
-          imageUrl: props.imageUrl,
-          name: props.name,
-          stats: props.stats,
-          top_mentor: props.top_mentor
-        }}
+      <ProfileDetailsDialog
+        userId={props.id}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
