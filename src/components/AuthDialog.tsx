@@ -147,6 +147,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 },
               }}
               providers={[]}
+              view="sign_in"
+              showLinks={false}
             />
             <p className="text-center text-sm text-muted-foreground mt-4">
               Don't have an account?{" "}
