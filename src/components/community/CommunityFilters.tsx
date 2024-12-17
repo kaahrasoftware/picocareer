@@ -1,9 +1,7 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
-import { Check, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { SelectFilter } from "./filters/SelectFilter";
+import { SkillsFilter } from "./filters/SkillsFilter";
+import { SearchInput } from "./filters/SearchInput";
 
 interface CommunityFiltersProps {
   searchQuery: string;
@@ -30,7 +28,7 @@ interface CommunityFiltersProps {
 export function CommunityFilters({
   searchQuery,
   onSearchChange,
-  selectedSkills = [],
+  selectedSkills,
   onSkillsChange,
   userTypeFilter,
   onUserTypeChange,
@@ -42,160 +40,66 @@ export function CommunityFilters({
   onSchoolChange,
   fieldFilter,
   onFieldChange,
-  locations = [],
-  companies = [],
-  schools = [],
-  fields = [],
-  allSkills = [],
+  locations,
+  companies,
+  schools,
+  fields,
+  allSkills,
 }: CommunityFiltersProps) {
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
-  const commandRef = useRef<HTMLDivElement>(null);
-
-  const filteredSkills = allSkills.filter(skill => 
-    skill.toLowerCase().includes(skillSearchQuery.toLowerCase())
-  );
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
-        setIsSkillsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   return (
     <div className="space-y-4">
       <div className="flex-1">
-        <div className="relative w-full max-w-xl">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name, skills, company, position, school, or location..."
-            className="w-full h-10 pl-9 pr-4 rounded-md bg-background border border-input text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          />
-        </div>
+        <SearchInput value={searchQuery} onChange={onSearchChange} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Select value={userTypeFilter || "all"} onValueChange={(value) => onUserTypeChange(value === "all" ? null : value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="User Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="mentor">Mentor</SelectItem>
-            <SelectItem value="professional">Professional</SelectItem>
-          </SelectContent>
-        </Select>
+        <SelectFilter
+          value={userTypeFilter}
+          onValueChange={onUserTypeChange}
+          placeholder="User Type"
+          options={["student", "mentor", "professional"]}
+        />
 
-        <Select value={locationFilter || "all"} onValueChange={(value) => onLocationChange(value === "all" ? null : value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Location" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Locations</SelectItem>
-            {locations.map((location) => (
-              <SelectItem key={location} value={location}>{location}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectFilter
+          value={locationFilter}
+          onValueChange={onLocationChange}
+          placeholder="Location"
+          options={locations}
+        />
 
-        <Select value={companyFilter || "all"} onValueChange={(value) => onCompanyChange(value === "all" ? null : value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Company" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Companies</SelectItem>
-            {companies.map((company) => (
-              <SelectItem key={company} value={company}>{company}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectFilter
+          value={companyFilter}
+          onValueChange={onCompanyChange}
+          placeholder="Company"
+          options={companies}
+        />
 
-        <Select value={schoolFilter || "all"} onValueChange={(value) => onSchoolChange(value === "all" ? null : value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="School" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Schools</SelectItem>
-            {schools.map((school) => (
-              <SelectItem key={school} value={school}>{school}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectFilter
+          value={schoolFilter}
+          onValueChange={onSchoolChange}
+          placeholder="School"
+          options={schools}
+        />
 
-        <Select value={fieldFilter || "all"} onValueChange={(value) => onFieldChange(value === "all" ? null : value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Field of Interest" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Fields</SelectItem>
-            {fields.map((field) => (
-              <SelectItem key={field} value={field}>{field}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectFilter
+          value={fieldFilter}
+          onValueChange={onFieldChange}
+          placeholder="Field of Interest"
+          options={fields}
+        />
 
-        <Command className="rounded-lg border shadow-md" ref={commandRef}>
-          <CommandInput 
-            placeholder="Search skills..." 
-            value={skillSearchQuery}
-            onValueChange={setSkillSearchQuery}
-            onFocus={() => setIsSkillsOpen(true)}
-          />
-          {isSkillsOpen && (
-            <CommandList>
-              <CommandGroup>
-                <div className="flex flex-wrap gap-1 p-2">
-                  {selectedSkills.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="secondary"
-                      className="mr-1 mb-1 cursor-pointer"
-                      onClick={() => onSkillsChange(selectedSkills.filter(s => s !== skill))}
-                    >
-                      {skill} ×
-                    </Badge>
-                  ))}
-                </div>
-                {filteredSkills.length === 0 && (
-                  <CommandEmpty>No skills found.</CommandEmpty>
-                )}
-                {filteredSkills.map((skill) => (
-                  <CommandItem
-                    key={skill}
-                    onSelect={() => {
-                      if (selectedSkills.includes(skill)) {
-                        onSkillsChange(selectedSkills.filter(s => s !== skill));
-                      } else {
-                        onSkillsChange([...selectedSkills, skill]);
-                      }
-                      setSkillSearchQuery("");
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedSkills.includes(skill) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {skill}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          )}
-        </Command>
+        <SkillsFilter
+          selectedSkills={selectedSkills}
+          onSkillsChange={onSkillsChange}
+          allSkills={allSkills}
+          skillSearchQuery={skillSearchQuery}
+          onSkillSearchChange={setSkillSearchQuery}
+          isOpen={isSkillsOpen}
+          onOpenChange={setIsSkillsOpen}
+        />
       </div>
     </div>
   );
