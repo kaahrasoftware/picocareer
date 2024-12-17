@@ -85,9 +85,9 @@ export function MenuSidebar() {
       <div className="container h-full mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img 
-            src="/lovable-uploads/d6bd8d63-8ea3-433f-a766-b056fda20667.png" 
+            src="/lovable-uploads/2b1bee0a-4952-41f3-8220-963b51130b04.png" 
             alt="PicoCareer Logo" 
-            className="h-10" 
+            className="h-8" 
           />
         </div>
 
