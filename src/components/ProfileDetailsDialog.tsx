@@ -58,8 +58,17 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-          <DialogHeader className="p-6 pb-0">
-            <ProfileHeader profile={profile} />
+          <DialogHeader className="p-6 pb-0 flex justify-between items-start">
+            <div className="flex-1">
+              <ProfileHeader profile={profile} />
+            </div>
+            <Button 
+              size="lg"
+              onClick={() => setBookingOpen(true)}
+              className="ml-4"
+            >
+              Book a Session
+            </Button>
           </DialogHeader>
 
           <ScrollArea className="h-[calc(85vh-120px)] px-6">
@@ -110,16 +119,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                 github_url={profile.github_url}
                 website_url={profile.website_url}
               />
-
-              <div className="flex justify-center">
-                <Button 
-                  size="lg"
-                  onClick={() => setBookingOpen(true)}
-                  className="w-full md:w-auto"
-                >
-                  Book a Session
-                </Button>
-              </div>
             </div>
           </ScrollArea>
         </DialogContent>
