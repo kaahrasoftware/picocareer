@@ -32,4 +32,6 @@ export interface Major {
   field_of_study?: string | null;
   required_courses?: string[] | null;
   degree_level?: string | null;
+  // Adding the new profiles_count field
+  profiles_count?: number | null;
 }
