@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MajorDetailsDialog } from "./MajorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, DollarSign, BookOpen, Wrench, Lightbulb } from "lucide-react";
+import { GraduationCap, DollarSign, BookOpen, Wrench, Lightbulb, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MajorCardProps {
@@ -13,6 +13,7 @@ interface MajorCardProps {
   skill_match?: string[];
   tools_knowledge?: string[];
   common_courses?: string[];
+  profiles_count?: number;
 }
 
 export function MajorCard(props: MajorCardProps) {
@@ -21,6 +22,15 @@ export function MajorCard(props: MajorCardProps) {
   // Function to get first three items of an array
   const getFirstThree = (arr: string[] | undefined) => {
     return arr ? arr.slice(0, 3) : [];
+  };
+
+  // Function to format profile count
+  const formatProfileCount = (count: number | undefined) => {
+    if (!count) return "0";
+    if (count < 1000) return count.toString();
+    if (count < 1000000) return (count / 1000).toFixed(1) + "K";
+    if (count < 1000000000) return (count / 1000000).toFixed(1) + "M";
+    return (count / 1000000000).toFixed(1) + "T";
   };
 
   return (
@@ -34,7 +44,13 @@ export function MajorCard(props: MajorCardProps) {
               <GraduationCap className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg mb-2 text-foreground">{props.title}</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-lg text-foreground">{props.title}</h3>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <span>{formatProfileCount(props.profiles_count)}</span>
+                </div>
+              </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{props.description}</p>
             </div>
           </div>
