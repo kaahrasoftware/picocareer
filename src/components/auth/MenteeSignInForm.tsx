@@ -29,10 +29,11 @@ export function MenteeSignInForm() {
           }
         }}
         onlyThirdPartyProviders={false}
-        authOptions={{
-          meta: {
+        redirectTo={window.location.origin}
+        queryParams={{
+          user_metadata: JSON.stringify({
             intended_user_type: 'student'
-          }
+          })
         }}
       />
     </div>
