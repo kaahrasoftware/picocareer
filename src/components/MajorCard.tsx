@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MajorDetailsDialog } from "./MajorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, DollarSign, BookOpen, Tool, Lightbulb } from "lucide-react";
+import { GraduationCap, DollarSign, BookOpen, Wrench, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MajorCardProps {
@@ -69,7 +69,7 @@ export function MajorCard(props: MajorCardProps) {
           {props.tools_knowledge && props.tools_knowledge.length > 0 && (
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Tool className="h-4 w-4 text-primary" />
+                <Wrench className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-foreground">Tools & Technologies</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
