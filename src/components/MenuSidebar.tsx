@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
 import { supabase } from "@/integrations/supabase/client";
