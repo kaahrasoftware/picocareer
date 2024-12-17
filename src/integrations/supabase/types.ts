@@ -268,6 +268,7 @@ export type Database = {
           passion_for_subject: string | null
           potential_salary: string | null
           professional_associations: string[] | null
+          profiles_count: number | null
           skill_match: string[] | null
           stress_level: string | null
           title: string
@@ -298,6 +299,7 @@ export type Database = {
           passion_for_subject?: string | null
           potential_salary?: string | null
           professional_associations?: string[] | null
+          profiles_count?: number | null
           skill_match?: string[] | null
           stress_level?: string | null
           title: string
@@ -328,6 +330,7 @@ export type Database = {
           passion_for_subject?: string | null
           potential_salary?: string | null
           professional_associations?: string[] | null
+          profiles_count?: number | null
           skill_match?: string[] | null
           stress_level?: string | null
           title?: string
@@ -675,7 +678,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_profiles_with_majors: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       session_type: "intro" | "quick-advice" | "walkthrough"

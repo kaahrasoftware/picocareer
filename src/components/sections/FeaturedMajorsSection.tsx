@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MajorCard } from "@/components/MajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
 import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
@@ -11,10 +11,26 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import type { Major } from "@/types/database/majors";
+import { supabase } from "@/integrations/supabase/client";
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: majorsData = [], isLoading } = useFeaturedMajors();
+  const { data: majorsData = [], isLoading, refetch } = useFeaturedMajors();
+
+  // Set up real-time updates for profile counts
+  useEffect(() => {
+    // Initial fetch
+    refetch();
+
+    // Set up interval for periodic updates
+    const intervalId = setInterval(() => {
+      console.log("Refreshing majors data...");
+      refetch();
+    }, 10000); // Refresh every 10 seconds
+
+    // Clean up on unmount
+    return () => clearInterval(intervalId);
+  }, [refetch]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -25,7 +41,7 @@ export const FeaturedMajorsSection = () => {
     title: major.title,
     description: major.description,
     imageUrl: major.image_url || '',
-    users: '0',
+    users: major.profiles_count?.toString() || '0',
     relatedCareers: major.career_opportunities || [],
     requiredCourses: major.required_courses || [],
     averageGPA: 'N/A',
