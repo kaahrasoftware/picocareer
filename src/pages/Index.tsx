@@ -3,7 +3,6 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
-import { Footer } from "@/components/Footer";
 import { useEffect } from "react";
 
 const Index = () => {
@@ -22,7 +21,6 @@ const Index = () => {
               <FeaturedCareersSection />
               <FeaturedMajorsSection />
               <TopRatedMentorsSection />
-              <Footer />
             </div>
           </div>
         </div>

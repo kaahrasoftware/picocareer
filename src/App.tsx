@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Blog from "./pages/Blog";
 import Community from "./pages/Community";
 import { MenuSidebar } from "./components/MenuSidebar";
+import { Footer } from "./components/Footer";
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -21,15 +22,16 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <div className="min-h-screen">
+          <div className="min-h-screen flex flex-col">
             <MenuSidebar /> {/* Fixed position header */}
-            <div className="pt-16"> {/* Added padding-top to account for fixed header */}
+            <main className="flex-1 pt-16"> {/* Added padding-top to account for fixed header */}
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/community" element={<Community />} />
               </Routes>
-            </div>
+            </main>
+            <Footer />
           </div>
           <Toaster />
           <Sonner />
