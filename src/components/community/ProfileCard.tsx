@@ -33,19 +33,20 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   const getBadgeClass = (userType: string | null) => {
     switch (userType) {
       case 'mentor':
-        return 'bg-kahra-primary hover:bg-kahra-primary text-white';
+        return 'bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90';
       case 'student':
-        return 'bg-green-600 hover:bg-green-600 text-white';
+        return 'bg-gradient-to-r from-green-500/80 to-green-600 text-white hover:from-green-500 hover:to-green-500/90';
       default:
-        return 'bg-kahra-accent hover:bg-kahra-accent text-white';
+        return 'bg-gradient-to-r from-secondary/80 to-secondary text-white hover:from-secondary hover:to-secondary/90';
     }
   };
 
   return (
     <>
-      <Card className="p-6 hover:shadow-lg transition-shadow duration-200">
-        <div className="flex items-start gap-4">
-          <Avatar className="h-16 w-16">
+      <Card className="group relative overflow-hidden p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative flex items-start gap-4">
+          <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
             <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || 'User'} />
             <AvatarFallback>{profile.full_name?.[0] || 'U'}</AvatarFallback>
           </Avatar>
@@ -56,13 +57,13 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                 {profile.user_type || 'student'}
               </Badge>
               {profile.top_mentor && (
-                <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
+                <Badge className="bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 text-yellow-700 hover:from-yellow-500/30 hover:to-yellow-400/30 flex items-center gap-1">
                   <Award className="h-3 w-3" />
                   Top
                 </Badge>
               )}
             </div>
-            <p className="text-sm font-medium mb-1 truncate">{displayTitle}</p>
+            <p className="text-sm font-medium mb-1 truncate text-foreground/90">{displayTitle}</p>
             <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
               {profile.position ? (
                 <Building2 className="h-3 w-3" />
@@ -71,21 +72,28 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               )}
               <span className="truncate">{displaySubtitle}</span>
             </div>
-            <div className="flex flex-wrap gap-1 mb-4">
+            <div className="flex flex-wrap gap-1.5 mb-4">
               {profile.skills?.slice(0, 3).map((skill) => (
-                <Badge key={skill} variant="secondary" className="text-xs">
+                <Badge 
+                  key={skill} 
+                  variant="secondary" 
+                  className="text-xs bg-muted/50 hover:bg-muted transition-colors"
+                >
                   {skill}
                 </Badge>
               ))}
               {(profile.skills?.length || 0) > 3 && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs bg-muted/50 hover:bg-muted transition-colors"
+                >
                   +{(profile.skills?.length || 0) - 3} more
                 </Badge>
               )}
             </div>
             <Button 
               variant="outline" 
-              className="w-full"
+              className="w-full bg-background hover:bg-muted/50 transition-colors"
               onClick={() => setShowDetails(true)}
             >
               View Profile
