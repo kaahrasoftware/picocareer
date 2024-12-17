@@ -30,11 +30,9 @@ export function MentorSignInForm() {
         }}
         onlyThirdPartyProviders={false}
         redirectTo={window.location.origin}
-        queryParams={{
-          user_metadata: JSON.stringify({
-            intended_user_type: 'mentor',
-            user_type: 'mentor'
-          })
+        additionalData={{
+          user_type: 'mentor',
+          intended_user_type: 'mentor'
         }}
       />
     </div>
