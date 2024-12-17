@@ -2,18 +2,13 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MajorDetailsDialog } from "./MajorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
+import { GraduationCap, DollarSign, BookOpen, Tool, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MajorCardProps {
+  id?: string;
   title: string;
   description: string;
-  users?: string;
-  imageUrl?: string;
-  relatedCareers?: string[];
-  requiredCourses?: string[];
-  averageGPA?: string;
-  image_url?: string;
-  field_of_study?: string;
-  degree_level?: string;
   potential_salary?: string;
   skill_match?: string[];
   tools_knowledge?: string[];
@@ -23,96 +18,117 @@ interface MajorCardProps {
 export function MajorCard(props: MajorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Transform the data to match the expected format
-  const majorData = {
-    title: props.title,
-    description: props.description,
-    users: props.users || '0',
-    imageUrl: props.imageUrl || props.image_url || '',
-    relatedCareers: props.relatedCareers || [],
-    requiredCourses: props.requiredCourses || [],
-    averageGPA: props.averageGPA || 'N/A',
-    fieldOfStudy: props.field_of_study,
-    degreeLevel: props.degree_level,
-    potentialSalary: props.potential_salary || 'N/A',
-    skillMatch: props.skill_match || [],
-    toolsKnowledge: props.tools_knowledge || [],
-    commonCourses: props.common_courses || []
-  };
-
   return (
     <>
-      <Card 
-        className="relative p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 hover:border-primary space-y-4"
-        onClick={() => setDialogOpen(true)}
-      >
-        {/* Title and Description Section */}
-        <div className="space-y-2">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{majorData.title}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{majorData.description}</p>
-        </div>
-
-        {/* Potential Salary Section */}
-        <div className="bg-primary/10 rounded-lg p-3">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Potential Salary</p>
-          <p className="text-lg font-bold text-primary">{majorData.potentialSalary}</p>
-        </div>
-
-        {/* Skills Section */}
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Skills</p>
-          <div className="flex flex-wrap gap-2">
-            {majorData.skillMatch?.map((skill, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] dark:bg-[#2A3428] dark:text-[#A1B99D]"
-              >
-                {skill}
-              </Badge>
-            ))}
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative flex flex-col h-full">
+          {/* Header Section with Title and Basic Info */}
+          <div className="flex items-start gap-4 mb-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg mb-2 text-foreground">{props.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">{props.description}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Tools Section */}
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tools & Technologies</p>
-          <div className="flex flex-wrap gap-2">
-            {majorData.toolsKnowledge?.map((tool, index) => (
-              <Badge 
-                key={index} 
-                variant="outline" 
-                className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] dark:bg-[#1E2A3D] dark:text-[#9FB7D4] border-none"
-              >
-                {tool}
-              </Badge>
-            ))}
+          {/* Potential Salary Section */}
+          {props.potential_salary && (
+            <div className="mb-4 flex items-center gap-2 text-foreground/90">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                Potential Salary: {props.potential_salary}
+              </span>
+            </div>
+          )}
+
+          {/* Skills Section */}
+          {props.skill_match && props.skill_match.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">Key Skills</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {props.skill_match.map((skill, index) => (
+                  <Badge 
+                    key={index}
+                    variant="secondary"
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9] dark:bg-[#2A3428] dark:text-[#A1B99D]"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tools Section */}
+          {props.tools_knowledge && props.tools_knowledge.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Tool className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">Tools & Technologies</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {props.tools_knowledge.map((tool, index) => (
+                  <Badge 
+                    key={index}
+                    variant="secondary"
+                    className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9] dark:bg-[#1E2A3D] dark:text-[#9FB7D4]"
+                  >
+                    {tool}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Common Courses Section */}
+          {props.common_courses && props.common_courses.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">Common Courses</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {props.common_courses.map((course, index) => (
+                  <Badge 
+                    key={index}
+                    variant="secondary"
+                    className="text-xs bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]"
+                  >
+                    {course}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* View Details Button */}
+          <div className="mt-auto pt-4">
+            <Button 
+              variant="outline"
+              className="w-full bg-background hover:bg-muted/50 transition-colors"
+              onClick={() => setDialogOpen(true)}
+            >
+              View Details
+            </Button>
           </div>
-        </div>
-
-        {/* Common Courses Section */}
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Common Courses</p>
-          <div className="flex flex-wrap gap-2">
-            {majorData.commonCourses?.map((course, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]"
-              >
-                {course}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Users Count */}
-        <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400">
-          <span>{majorData.users} Users</span>
         </div>
       </Card>
-      <MajorDetailsDialog 
-        major={majorData}
+
+      <MajorDetailsDialog
+        major={{
+          ...props,
+          imageUrl: '',
+          users: '0',
+          relatedCareers: [],
+          requiredCourses: [],
+          averageGPA: 'N/A',
+        }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
