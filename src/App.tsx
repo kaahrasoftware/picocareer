@@ -22,9 +22,9 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen w-full">
             <MenuSidebar />
-            <main className="flex-1 pt-16">
+            <main className="w-full pt-16">
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/blog" element={<Blog />} />

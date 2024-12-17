@@ -82,15 +82,9 @@
 
 /* Layout structure */
 .app-layout {
-  @apply min-h-screen flex w-full bg-background;
+  @apply min-h-screen flex flex-col w-full;
 }
 
 .main-content {
   @apply flex-1 w-full;
-  margin-left: var(--sidebar-width);
-  transition: margin-left 0.2s ease-in-out;
-}
-
-.app-layout .sidebar-collapsed ~ .main-content {
-  margin-left: 5rem;
 }
