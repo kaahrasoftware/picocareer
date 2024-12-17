@@ -4,10 +4,8 @@ import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AuthDialogHeader } from "./auth/AuthDialogHeader";
+import { SignUpForm } from "./auth/SignUpForm";
 
 interface AuthDialogProps {
   open: boolean;
@@ -124,96 +122,15 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="sr-only">Authentication</DialogTitle>
-        <div className="flex flex-col items-center gap-4 py-4">
-          <img
-            src="/lovable-uploads/6acdf1f4-1127-4008-b833-3b68780f1741.png"
-            alt="Logo"
-            className="w-12 h-12"
-          />
-          <h2 className="text-2xl font-bold">Welcome Back</h2>
-          <p className="text-muted-foreground text-center">
-            {isSignUp ? "Create your account" : "Sign in to continue your journey"}
-          </p>
-        </div>
+        <AuthDialogHeader isSignUp={isSignUp} />
 
         {isSignUp ? (
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="position">Position/Role</Label>
-              <Input
-                id="position"
-                type="text"
-                value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                placeholder="e.g., Student, Software Engineer, etc."
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>User Type</Label>
-              <RadioGroup
-                value={formData.userType}
-                onValueChange={(value) => setFormData({ ...formData, userType: value })}
-                className="flex gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="student" id="student" />
-                  <Label htmlFor="student">Student</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="mentor" id="mentor" />
-                  <Label htmlFor="mentor">Mentor</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <Button type="submit" className="w-full">Sign Up</Button>
-            
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setIsSignUp(false)}
-                className="text-primary hover:underline"
-              >
-                Sign In
-              </button>
-            </p>
-          </form>
+          <SignUpForm
+            formData={formData}
+            onFormDataChange={(newData) => setFormData({ ...formData, ...newData })}
+            onSubmit={handleSignUp}
+            onSignInClick={() => setIsSignUp(false)}
+          />
         ) : (
           <>
             <Auth
