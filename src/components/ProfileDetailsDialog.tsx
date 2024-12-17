@@ -57,7 +57,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+        <DialogContent className="max-w-2xl h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
           <DialogHeader className="p-6 pb-0">
             <div className="relative">
               <ProfileHeader profile={profile} />
@@ -71,7 +71,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
             </div>
           </DialogHeader>
 
-          <ScrollArea className="h-[calc(85vh-120px)] px-6">
+          <ScrollArea className="flex-1 px-6">
             <div className="space-y-6 pb-6">
               <ProfileBio bio={profile.bio} />
               
