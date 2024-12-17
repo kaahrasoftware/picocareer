@@ -13,7 +13,7 @@ export function SearchInput({ value, onChange }: SearchInputProps) {
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search by name, skills, company, position, school, or location..."
+        placeholder="Find mentors by name, location, skills, company, position or education..."
         className="w-full h-10 pl-9 pr-4 rounded-md bg-background border border-input text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
       />
     </div>
