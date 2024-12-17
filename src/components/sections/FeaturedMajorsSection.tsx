@@ -50,7 +50,8 @@ export const FeaturedMajorsSection = () => {
     potential_salary: major.potential_salary,
     skill_match: major.skill_match,
     tools_knowledge: major.tools_knowledge,
-    common_courses: major.common_courses
+    common_courses: major.common_courses,
+    profiles_count: major.profiles_count || 0
   }));
 
   console.log("Transformed majors data:", majors); // Debug log
