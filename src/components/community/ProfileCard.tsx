@@ -19,6 +19,7 @@ interface ProfileCardProps {
     skills: string[] | null;
     user_type: string | null;
     top_mentor: boolean | null;
+    bio: string | null;
   };
 }
 
@@ -58,25 +59,37 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               )}
               <span className="truncate">{displaySubtitle}</span>
             </div>
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {profile.skills?.slice(0, 3).map((skill) => (
-                <Badge 
-                  key={skill} 
-                  variant="secondary" 
-                  className="text-xs bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  {skill}
-                </Badge>
-              ))}
-              {(profile.skills?.length || 0) > 3 && (
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  +{(profile.skills?.length || 0) - 3} more
-                </Badge>
-              )}
-            </div>
+            
+            {profile.bio && (
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+              </div>
+            )}
+
+            {profile.skills?.length > 0 && (
+              <div className="space-y-3 mb-4">
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.skills.slice(0, 3).map((skill) => (
+                    <Badge 
+                      key={skill} 
+                      variant="secondary" 
+                      className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                  {(profile.skills?.length || 0) > 3 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                    >
+                      +{(profile.skills?.length || 0) - 3} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+
             <Button 
               variant="outline" 
               className="w-full bg-background hover:bg-muted/50 transition-colors"
