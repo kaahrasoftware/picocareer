@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -64,6 +65,41 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           <ScrollArea className="h-[calc(85vh-120px)] px-6">
             <div className="space-y-6 pb-6">
               <ProfileBio bio={profile.bio} />
+              
+              {/* Keywords Section */}
+              {profile.keywords && profile.keywords.length > 0 && (
+                <div className="bg-muted rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Keywords</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.keywords.map((keyword, index) => (
+                      <Badge 
+                        key={index}
+                        className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                      >
+                        {keyword}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fields of Interest Section */}
+              {profile.fields_of_interest && profile.fields_of_interest.length > 0 && (
+                <div className="bg-muted rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Fields of Interest</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.fields_of_interest.map((field, index) => (
+                      <Badge 
+                        key={index}
+                        className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                      >
+                        {field}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <ProfileSkills skills={profile.skills} tools={profile.tools_used} />
               <ProfileEducation 
                 academic_major={profile.academic_major} 
