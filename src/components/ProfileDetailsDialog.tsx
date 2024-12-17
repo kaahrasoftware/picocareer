@@ -65,7 +65,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                   </Badge>
                 )}
               </div>
-              <p className="text-base font-normal text-muted-foreground">@{profile.username}</p>
             </div>
           </DialogTitle>
         </DialogHeader>

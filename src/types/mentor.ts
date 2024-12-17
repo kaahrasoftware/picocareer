@@ -9,7 +9,6 @@ export interface Mentor {
     connected: string;
     recordings: string;
   };
-  username: string;
   education?: string;
   sessionsHeld?: string;
   position?: string;

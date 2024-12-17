@@ -34,7 +34,6 @@ export const useTopRatedMentors = () => {
           connected: `${Math.floor(Math.random() * 900 + 100)}K`,
           recordings: `${Math.floor(Math.random() * 90 + 10)}`
         },
-        username: mentor.username || "",
         education: mentor.highest_degree,
         sessionsHeld: "0",
         position: mentor.position
