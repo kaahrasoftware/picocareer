@@ -58,7 +58,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               {profile.top_mentor && (
                 <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
                   <Award className="h-3 w-3" />
-                  Top Mentor
+                  Top
                 </Badge>
               )}
             </div>
