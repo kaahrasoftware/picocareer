@@ -30,17 +30,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
-  const getBadgeClass = (userType: string | null) => {
-    switch (userType) {
-      case 'mentor':
-        return 'bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90';
-      case 'student':
-        return 'bg-gradient-to-r from-green-500/80 to-green-600 text-white hover:from-green-500 hover:to-green-500/90';
-      default:
-        return 'bg-gradient-to-r from-secondary/80 to-secondary text-white hover:from-secondary hover:to-secondary/90';
-    }
-  };
-
   return (
     <>
       <Card className="group relative overflow-hidden p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
@@ -51,18 +40,15 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <AvatarFallback>{profile.full_name?.[0] || 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold truncate">{profile.full_name}</h3>
-              <Badge className={cn("capitalize", getBadgeClass(profile.user_type))}>
-                {profile.user_type || 'student'}
-              </Badge>
+            <div className="flex items-center gap-2 mb-2">
               {profile.top_mentor && (
-                <Badge className="bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 text-yellow-700 hover:from-yellow-500/30 hover:to-yellow-400/30 flex items-center gap-1">
+                <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
                   <Award className="h-3 w-3" />
-                  Top
+                  Top Mentor
                 </Badge>
               )}
             </div>
+            <h3 className="font-semibold truncate mb-2">{profile.full_name}</h3>
             <p className="text-sm font-medium mb-1 truncate text-foreground/90">{displayTitle}</p>
             <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
               {profile.position ? (
