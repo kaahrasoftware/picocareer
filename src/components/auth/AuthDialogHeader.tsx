@@ -14,7 +14,9 @@ export function AuthDialogHeader({ isSignUp }: AuthDialogHeaderProps) {
       />
       <h2 className="text-2xl font-bold">PicoCareer</h2>
       <p className="text-muted-foreground text-center">
-        {isSignUp ? "Create your mentee account" : "Sign in to continue your journey"}
+        {isSignUp ? "Create your " : "Sign in to continue your journey"}
+        {isSignUp && <span className="font-bold">mentee</span>}
+        {isSignUp && " account"}
       </p>
     </div>
   );
