@@ -7,6 +7,7 @@ import { useState } from "react";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
 import Mentor from "./pages/Mentor";
+import Career from "./pages/Career";
 import { MenuSidebar } from "./components/MenuSidebar";
 import { Footer } from "./components/Footer";
 
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/mentor" element={<Mentor />} />
+                <Route path="/career" element={<Career />} />
               </Routes>
             </main>
             <Footer />
