@@ -43,28 +43,31 @@ export function MajorCard(props: MajorCardProps) {
   return (
     <>
       <Card 
-        className="relative p-6 group cursor-pointer transition-all duration-300 hover:scale-105 bg-card hover:bg-card/80"
+        className="relative p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 hover:border-primary"
         onClick={() => setDialogOpen(true)}
       >
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-xl font-bold mb-2">{majorData.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">{majorData.description}</p>
+        <div className="space-y-5">
+          {/* Title and Description Section */}
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{majorData.title}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{majorData.description}</p>
           </div>
 
+          {/* Potential Salary Section */}
           {majorData.potentialSalary && (
-            <div>
-              <p className="text-sm font-semibold mb-1">Potential Salary</p>
-              <p className="text-primary">{majorData.potentialSalary}</p>
+            <div className="bg-primary/10 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Potential Salary</p>
+              <p className="text-lg font-bold text-primary">{majorData.potentialSalary}</p>
             </div>
           )}
 
+          {/* Skills Section */}
           {majorData.skillMatch && majorData.skillMatch.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold mb-1">Key Skills</p>
-              <div className="flex flex-wrap gap-1">
-                {majorData.skillMatch.slice(0, 3).map((skill, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Skills</p>
+              <div className="flex flex-wrap gap-2">
+                {majorData.skillMatch.slice(0, 4).map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="bg-secondary/20 text-secondary hover:bg-secondary/30">
                     {skill}
                   </Badge>
                 ))}
@@ -72,12 +75,13 @@ export function MajorCard(props: MajorCardProps) {
             </div>
           )}
 
+          {/* Tools Section */}
           {majorData.toolsKnowledge && majorData.toolsKnowledge.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold mb-1">Tools & Technologies</p>
-              <div className="flex flex-wrap gap-1">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tools & Technologies</p>
+              <div className="flex flex-wrap gap-2">
                 {majorData.toolsKnowledge.slice(0, 3).map((tool, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
                     {tool}
                   </Badge>
                 ))}
@@ -85,12 +89,13 @@ export function MajorCard(props: MajorCardProps) {
             </div>
           )}
 
+          {/* Common Courses Section */}
           {majorData.commonCourses && majorData.commonCourses.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold mb-1">Common Courses</p>
-              <div className="flex flex-wrap gap-1">
-                {majorData.commonCourses.slice(0, 2).map((course, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Common Courses</p>
+              <div className="flex flex-wrap gap-2">
+                {majorData.commonCourses.slice(0, 3).map((course, index) => (
+                  <Badge key={index} variant="secondary" className="bg-accent text-accent-foreground hover:bg-accent/80">
                     {course}
                   </Badge>
                 ))}
@@ -98,7 +103,8 @@ export function MajorCard(props: MajorCardProps) {
             </div>
           )}
 
-          <div className="flex justify-end text-sm text-muted-foreground mt-4">
+          {/* Users Count */}
+          <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400 mt-4">
             <span>{majorData.users} Users</span>
           </div>
         </div>
