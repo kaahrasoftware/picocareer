@@ -40,7 +40,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           full_name: formData.fullName,
           position: formData.position,
           user_type: formData.userType,
-          intended_user_type: activeForm
+          intended_user_type: activeForm === 'mentor' ? 'mentor' : 'student'
         }
       }
     });
@@ -162,6 +162,11 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   }
                 }}
                 onlyThirdPartyProviders={false}
+                options={{
+                  meta: {
+                    intended_user_type: 'student'
+                  }
+                }}
               />
             </div>
 
@@ -193,6 +198,11 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   }
                 }}
                 onlyThirdPartyProviders={false}
+                options={{
+                  meta: {
+                    intended_user_type: 'mentor'
+                  }
+                }}
               />
             </div>
           </div>
