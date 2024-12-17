@@ -425,7 +425,6 @@ export type Database = {
           company_id: string | null
           created_at: string
           email: string
-          featured: boolean | null
           fields_of_interest: string[] | null
           first_name: string | null
           full_name: string | null
@@ -440,6 +439,7 @@ export type Database = {
           school_id: string | null
           skills: string[] | null
           tools_used: string[] | null
+          top_mentor: boolean | null
           updated_at: string
           user_type: string | null
           website_url: string | null
@@ -453,7 +453,6 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email: string
-          featured?: boolean | null
           fields_of_interest?: string[] | null
           first_name?: string | null
           full_name?: string | null
@@ -468,6 +467,7 @@ export type Database = {
           school_id?: string | null
           skills?: string[] | null
           tools_used?: string[] | null
+          top_mentor?: boolean | null
           updated_at?: string
           user_type?: string | null
           website_url?: string | null
@@ -481,7 +481,6 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email?: string
-          featured?: boolean | null
           fields_of_interest?: string[] | null
           first_name?: string | null
           full_name?: string | null
@@ -496,6 +495,7 @@ export type Database = {
           school_id?: string | null
           skills?: string[] | null
           tools_used?: string[] | null
+          top_mentor?: boolean | null
           updated_at?: string
           user_type?: string | null
           website_url?: string | null

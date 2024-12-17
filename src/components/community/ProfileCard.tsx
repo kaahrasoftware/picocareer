@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, GraduationCap } from "lucide-react";
+import { Building2, GraduationCap, Award } from "lucide-react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ interface ProfileCardProps {
     school_name: string | null;
     skills: string[] | null;
     user_type: string | null;
+    top_mentor: boolean | null;
   };
 }
 
@@ -54,6 +55,12 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               <Badge className={cn("capitalize", getBadgeClass(profile.user_type))}>
                 {profile.user_type || 'student'}
               </Badge>
+              {profile.top_mentor && (
+                <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
+                  <Award className="h-3 w-3" />
+                  Top Mentor
+                </Badge>
+              )}
             </div>
             <p className="text-sm font-medium mb-1 truncate">{displayTitle}</p>
             <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
