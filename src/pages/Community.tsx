@@ -7,6 +7,7 @@ import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,37 +19,61 @@ export default function Community() {
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PROFILES_PER_PAGE = 15;
+  const { toast } = useToast();
 
-  const { data: profiles = [], isLoading } = useQuery({
+  const { data: profiles = [], isLoading, error } = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
+      console.log('Fetching profiles...');
       const { data: { user } } = await supabase.auth.getUser();
-      let query = supabase
-        .from('profiles')
-        .select(`
-          *,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title)
-        `)
-        .neq('user_type', 'admin')
-        .order('created_at', { ascending: false });
+      
+      try {
+        let query = supabase
+          .from('profiles')
+          .select(`
+            *,
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title)
+          `)
+          .neq('user_type', 'admin')
+          .order('created_at', { ascending: false });
 
-      if (user?.id) {
-        query = query.neq('id', user.id);
+        if (user?.id) {
+          query = query.neq('id', user.id);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+
+        console.log('Profiles fetched successfully:', data?.length);
+        return data.map(profile => ({
+          ...profile,
+          company_name: profile.company?.name,
+          school_name: profile.school?.name,
+          academic_major: profile.academic_major?.title || null
+        }));
+      } catch (err) {
+        console.error('Error in profiles query:', err);
+        toast({
+          title: "Error loading profiles",
+          description: "There was an error loading the community profiles. Please try again later.",
+          variant: "destructive",
+        });
+        throw err;
       }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data.map(profile => ({
-        ...profile,
-        company_name: profile.company?.name,
-        school_name: profile.school?.name,
-        academic_major: profile.academic_major?.title || null
-      }));
     },
+    retry: 2,
+    retryDelay: 1000,
   });
+
+  if (error) {
+    console.error('React Query error:', error);
+  }
 
   const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
   const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
@@ -116,7 +141,17 @@ export default function Community() {
                 allSkills={allSkills}
               />
 
-              {isLoading ? (
+              {error ? (
+                <div className="text-center py-8">
+                  <p className="text-destructive">Failed to load community profiles.</p>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-4 text-primary hover:underline"
+                  >
+                    Try refreshing the page
+                  </button>
+                </div>
+              ) : isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
                     <div key={i} className="p-6 rounded-lg border bg-card">
