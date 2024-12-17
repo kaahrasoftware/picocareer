@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, GraduationCap, Award } from "lucide-react";
+import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { useState } from "react";
 
@@ -19,6 +19,7 @@ interface ProfileCardProps {
     user_type: string | null;
     top_mentor: boolean | null;
     bio: string | null;
+    location: string | null;
   };
 }
 
@@ -52,13 +53,21 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               </div>
               <h3 className="font-semibold truncate mb-2">{profile.full_name}</h3>
               <p className="text-sm font-medium mb-1 truncate text-foreground/90">{displayTitle}</p>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                {profile.position ? (
-                  <Building2 className="h-3 w-3" />
-                ) : (
-                  <GraduationCap className="h-3 w-3" />
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  {profile.position ? (
+                    <Building2 className="h-3 w-3 flex-shrink-0" />
+                  ) : (
+                    <GraduationCap className="h-3 w-3 flex-shrink-0" />
+                  )}
+                  <span className="truncate">{displaySubtitle}</span>
+                </div>
+                {profile.location && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{profile.location}</span>
+                  </div>
                 )}
-                <span className="truncate">{displaySubtitle}</span>
               </div>
             </div>
           </div>
