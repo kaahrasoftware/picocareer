@@ -43,70 +43,72 @@ export function MajorCard(props: MajorCardProps) {
   return (
     <>
       <Card 
-        className="relative p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 hover:border-primary"
+        className="relative p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 hover:border-primary space-y-4"
         onClick={() => setDialogOpen(true)}
       >
-        <div className="space-y-4">
-          {/* Title and Description Section */}
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{majorData.title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{majorData.description}</p>
+        {/* Title and Description Section */}
+        <div className="space-y-2">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{majorData.title}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{majorData.description}</p>
+        </div>
+
+        {/* Potential Salary Section */}
+        <div className="bg-primary/10 rounded-lg p-3">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Potential Salary</p>
+          <p className="text-lg font-bold text-primary">{majorData.potentialSalary}</p>
+        </div>
+
+        {/* Skills Section */}
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Skills</p>
+          <div className="flex flex-wrap gap-2">
+            {majorData.skillMatch?.map((skill, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] dark:bg-[#2A3428] dark:text-[#A1B99D]"
+              >
+                {skill}
+              </Badge>
+            ))}
           </div>
+        </div>
 
-          {/* Potential Salary Section */}
-          {majorData.potentialSalary && (
-            <div className="bg-primary/10 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Potential Salary</p>
-              <p className="text-lg font-bold text-primary">{majorData.potentialSalary}</p>
-            </div>
-          )}
-
-          {/* Skills Section */}
-          {majorData.skillMatch && majorData.skillMatch.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Skills</p>
-              <div className="flex flex-wrap gap-2">
-                {majorData.skillMatch.slice(0, 4).map((skill, index) => (
-                  <Badge key={index} variant="secondary" className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] dark:bg-[#2A3428] dark:text-[#A1B99D]">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tools Section */}
-          {majorData.toolsKnowledge && majorData.toolsKnowledge.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tools & Technologies</p>
-              <div className="flex flex-wrap gap-2">
-                {majorData.toolsKnowledge.slice(0, 3).map((tool, index) => (
-                  <Badge key={index} variant="outline" className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] dark:bg-[#1E2A3D] dark:text-[#9FB7D4] border-none">
-                    {tool}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Common Courses Section */}
-          {majorData.commonCourses && majorData.commonCourses.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Common Courses</p>
-              <div className="flex flex-wrap gap-2">
-                {majorData.commonCourses.slice(0, 3).map((course, index) => (
-                  <Badge key={index} variant="secondary" className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]">
-                    {course}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Users Count */}
-          <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400">
-            <span>{majorData.users} Users</span>
+        {/* Tools Section */}
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tools & Technologies</p>
+          <div className="flex flex-wrap gap-2">
+            {majorData.toolsKnowledge?.map((tool, index) => (
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] dark:bg-[#1E2A3D] dark:text-[#9FB7D4] border-none"
+              >
+                {tool}
+              </Badge>
+            ))}
           </div>
+        </div>
+
+        {/* Common Courses Section */}
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Common Courses</p>
+          <div className="flex flex-wrap gap-2">
+            {majorData.commonCourses?.map((course, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]"
+              >
+                {course}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Users Count */}
+        <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400">
+          <span>{majorData.users} Users</span>
         </div>
       </Card>
       <MajorDetailsDialog 
