@@ -66,12 +66,16 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         throw error;
       }
 
-      return {
+      // Transform the data to match the expected shape
+      const transformedData = {
         ...data,
         company_name: data.company?.name,
         school_name: data.school?.name,
-        academic_major: data.academic_major?.title
+        academic_major: data.academic_major?.title,
+        full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null
       };
+
+      return transformedData;
     },
     enabled: !!session?.user?.id && open,
   });
