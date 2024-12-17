@@ -30,7 +30,7 @@ export function MenteeSignInForm() {
         }}
         onlyThirdPartyProviders={false}
         redirectTo={window.location.origin}
-        additionalData={{
+        queryParams={{
           user_type: 'student',
           intended_user_type: 'student'
         }}

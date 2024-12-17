@@ -30,7 +30,7 @@ export function MentorSignInForm() {
         }}
         onlyThirdPartyProviders={false}
         redirectTo={window.location.origin}
-        additionalData={{
+        queryParams={{
           user_type: 'mentor',
           intended_user_type: 'mentor'
         }}
