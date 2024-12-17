@@ -19,28 +19,6 @@ export function SignUpForm({ formData, onFormDataChange, onSubmit, onSignInClick
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => onFormDataChange({ email: e.target.value })}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={formData.password}
-          onChange={(e) => onFormDataChange({ password: e.target.value })}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="firstName">First Name</Label>
         <Input
           id="firstName"
@@ -48,6 +26,7 @@ export function SignUpForm({ formData, onFormDataChange, onSubmit, onSignInClick
           value={formData.firstName}
           onChange={(e) => onFormDataChange({ firstName: e.target.value })}
           required
+          placeholder="Enter your first name"
         />
       </div>
 
@@ -59,6 +38,31 @@ export function SignUpForm({ formData, onFormDataChange, onSubmit, onSignInClick
           value={formData.lastName}
           onChange={(e) => onFormDataChange({ lastName: e.target.value })}
           required
+          placeholder="Enter your last name"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => onFormDataChange({ email: e.target.value })}
+          required
+          placeholder="Enter your email"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={formData.password}
+          onChange={(e) => onFormDataChange({ password: e.target.value })}
+          required
+          placeholder="Create a password"
         />
       </div>
 
