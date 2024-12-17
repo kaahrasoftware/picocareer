@@ -184,48 +184,21 @@ export type Database = {
       }
       majors: {
         Row: {
-          career_opportunities: string[] | null
           created_at: string
-          degree_level: string | null
-          description: string
-          duration: string | null
           featured: boolean | null
-          field_of_study: string | null
           id: string
-          image_url: string | null
-          keywords: string[] | null
-          required_courses: string[] | null
-          title: string
           updated_at: string
         }
         Insert: {
-          career_opportunities?: string[] | null
           created_at?: string
-          degree_level?: string | null
-          description: string
-          duration?: string | null
           featured?: boolean | null
-          field_of_study?: string | null
           id?: string
-          image_url?: string | null
-          keywords?: string[] | null
-          required_courses?: string[] | null
-          title: string
           updated_at?: string
         }
         Update: {
-          career_opportunities?: string[] | null
           created_at?: string
-          degree_level?: string | null
-          description?: string
-          duration?: string | null
           featured?: boolean | null
-          field_of_study?: string | null
           id?: string
-          image_url?: string | null
-          keywords?: string[] | null
-          required_courses?: string[] | null
-          title?: string
           updated_at?: string
         }
         Relationships: []
