@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
 import { MentorListDialog } from "@/components/MentorListDialog";
 import { useTopRatedMentors } from "@/hooks/useTopRatedMentors";
+import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -12,7 +13,6 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 
 export const TopRatedMentorsSection = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: mentors = [], isLoading } = useTopRatedMentors();
 
   if (isLoading) {
@@ -23,12 +23,12 @@ export const TopRatedMentorsSection = () => {
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
-        <button 
-          onClick={() => setIsDialogOpen(true)}
+        <Link 
+          to="/mentor"
           className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
-        </button>
+        </Link>
       </div>
       <Carousel
         opts={{
@@ -54,11 +54,6 @@ export const TopRatedMentorsSection = () => {
         <CarouselPrevious className="hidden md:flex" />
         <CarouselNext className="hidden md:flex" />
       </Carousel>
-      <MentorListDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        mentors={mentors}
-      />
     </section>
   );
 };
