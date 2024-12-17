@@ -34,6 +34,14 @@ export function MenuSidebar() {
             </li>
             <li>
               <Link 
+                to="/program" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Programs
+              </Link>
+            </li>
+            <li>
+              <Link 
                 to="/mentor" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
