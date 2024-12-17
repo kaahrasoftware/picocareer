@@ -16,6 +16,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -147,19 +148,32 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 },
               }}
               providers={[]}
-              view="sign_in"
+              view={isResetPassword ? "magic_link" : "sign_in"}
               showLinks={false}
             />
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Don't have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setIsSignUp(true)}
-                className="text-primary hover:underline"
-              >
-                Sign Up
-              </button>
-            </p>
+            <div className="space-y-4 mt-4">
+              <p className="text-center text-sm text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => setIsResetPassword(!isResetPassword)}
+                  className="text-primary hover:underline"
+                >
+                  {isResetPassword ? "Back to Sign In" : "Forgot Password?"}
+                </button>
+              </p>
+              {!isResetPassword && (
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(true)}
+                    className="text-primary hover:underline"
+                  >
+                    Sign Up
+                  </button>
+                </p>
+              )}
+            </div>
           </>
         )}
       </DialogContent>
