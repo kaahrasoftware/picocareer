@@ -2,15 +2,12 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface SignUpFormProps {
   formData: {
     email: string;
     password: string;
     fullName: string;
-    position: string;
-    userType: string;
   };
   onFormDataChange: (data: Partial<SignUpFormProps['formData']>) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -51,36 +48,6 @@ export function SignUpForm({ formData, onFormDataChange, onSubmit, onSignInClick
           onChange={(e) => onFormDataChange({ fullName: e.target.value })}
           required
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="position">Position/Role</Label>
-        <Input
-          id="position"
-          type="text"
-          value={formData.position}
-          onChange={(e) => onFormDataChange({ position: e.target.value })}
-          placeholder="e.g., Student, Software Engineer, etc."
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>User Type</Label>
-        <RadioGroup
-          value={formData.userType}
-          onValueChange={(value) => onFormDataChange({ userType: value })}
-          className="flex gap-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="student" id="student" />
-            <Label htmlFor="student">Student</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="mentor" id="mentor" />
-            <Label htmlFor="mentor">Mentor</Label>
-          </div>
-        </RadioGroup>
       </div>
 
       <Button type="submit" className="w-full">Sign Up</Button>
