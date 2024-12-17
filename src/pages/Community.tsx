@@ -7,7 +7,6 @@ import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { Footer } from "@/components/Footer";
 
 export default function Community() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -148,7 +147,6 @@ export default function Community() {
                   )}
                 </>
               )}
-              <Footer />
             </div>
           </div>
         </div>

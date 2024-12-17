@@ -8,7 +8,6 @@ import { BlogFilters } from "@/components/blog/BlogFilters";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { BlogGrid } from "@/components/blog/BlogGrid";
 import { BlogHeader } from "@/components/blog/BlogHeader";
-import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 6;
@@ -113,7 +112,6 @@ const Blog = () => {
                   onPageChange={handlePageChange}
                 />
               )}
-              <Footer />
             </div>
           </div>
         </div>
