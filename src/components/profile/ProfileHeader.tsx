@@ -7,7 +7,7 @@ import { SkillsList } from "./SkillsList";
 interface Profile {
   id: string;
   full_name: string;
-  username: string;
+  email: string;
   avatar_url: string | null;
   academic_major: string | null;
   school_name: string | null;
@@ -62,7 +62,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           </div>
           <div>
             <h3 className="text-lg font-semibold">{profile.full_name}</h3>
-            <p className="text-sm text-gray-400 dark:text-gray-400">@{profile.username}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-400">{profile.email}</p>
           </div>
         </div>
       </div>
