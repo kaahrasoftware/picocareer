@@ -12,6 +12,8 @@ interface ProfileHeaderProps {
     academic_major?: string | null;
     location?: string | null;
     top_mentor?: boolean | null;
+    keywords?: string[] | null;
+    fields_of_interest?: string[] | null;
   };
 }
 
@@ -31,7 +33,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <div className="flex items-center gap-2 mb-2">
           <h2 className="text-2xl font-bold">{profile.full_name}</h2>
           {profile.top_mentor ? (
-            <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
+            <Badge className="bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1">
               <Award className="h-3 w-3" />
               Top Mentor
             </Badge>
@@ -58,6 +60,40 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             </div>
           )}
         </div>
+        
+        {/* Keywords Section */}
+        {profile.keywords && profile.keywords.length > 0 && (
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-1.5">
+              {profile.keywords.map((keyword, index) => (
+                <Badge 
+                  key={index}
+                  variant="secondary" 
+                  className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                >
+                  {keyword}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Fields of Interest Section */}
+        {profile.fields_of_interest && profile.fields_of_interest.length > 0 && (
+          <div className="mt-2">
+            <div className="flex flex-wrap gap-1.5">
+              {profile.fields_of_interest.map((field, index) => (
+                <Badge 
+                  key={index}
+                  variant="secondary" 
+                  className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                >
+                  {field}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
