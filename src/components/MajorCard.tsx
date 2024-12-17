@@ -54,46 +54,54 @@ export function MajorCard(props: MajorCardProps) {
           </div>
 
           {/* Potential Salary Section */}
-          <div className="bg-primary/10 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Potential Salary</p>
-            <p className="text-lg font-bold text-primary">{majorData.potentialSalary}</p>
-          </div>
+          {majorData.potentialSalary && (
+            <div className="bg-primary/10 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Potential Salary</p>
+              <p className="text-lg font-bold text-primary">{majorData.potentialSalary}</p>
+            </div>
+          )}
 
           {/* Skills Section */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Skills</p>
-            <div className="flex flex-wrap gap-2">
-              {majorData.skillMatch.slice(0, 4).map((skill, index) => (
-                <Badge key={index} variant="secondary" className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] dark:bg-[#2A3428] dark:text-[#A1B99D]">
-                  {skill}
-                </Badge>
-              ))}
+          {majorData.skillMatch && majorData.skillMatch.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Skills</p>
+              <div className="flex flex-wrap gap-2">
+                {majorData.skillMatch.slice(0, 4).map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] dark:bg-[#2A3428] dark:text-[#A1B99D]">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Tools Section */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tools & Technologies</p>
-            <div className="flex flex-wrap gap-2">
-              {majorData.toolsKnowledge.slice(0, 3).map((tool, index) => (
-                <Badge key={index} variant="outline" className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] dark:bg-[#1E2A3D] dark:text-[#9FB7D4] border-none">
-                  {tool}
-                </Badge>
-              ))}
+          {majorData.toolsKnowledge && majorData.toolsKnowledge.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Tools & Technologies</p>
+              <div className="flex flex-wrap gap-2">
+                {majorData.toolsKnowledge.slice(0, 3).map((tool, index) => (
+                  <Badge key={index} variant="outline" className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] dark:bg-[#1E2A3D] dark:text-[#9FB7D4] border-none">
+                    {tool}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Common Courses Section */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Common Courses</p>
-            <div className="flex flex-wrap gap-2">
-              {majorData.commonCourses.slice(0, 3).map((course, index) => (
-                <Badge key={index} variant="secondary" className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]">
-                  {course}
-                </Badge>
-              ))}
+          {majorData.commonCourses && majorData.commonCourses.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Common Courses</p>
+              <div className="flex flex-wrap gap-2">
+                {majorData.commonCourses.slice(0, 3).map((course, index) => (
+                  <Badge key={index} variant="secondary" className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]">
+                    {course}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Users Count */}
           <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400">
