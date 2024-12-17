@@ -2,15 +2,18 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star, Building2, Award } from "lucide-react";
+import { Building2, Award } from "lucide-react";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
+import { ProfileHeader } from "./profile-details/ProfileHeader";
+import { ProfileBio } from "./profile-details/ProfileBio";
+import { ProfileSkills } from "./profile-details/ProfileSkills";
 
 interface MentorDetailsDialogProps {
   mentor: {
@@ -25,6 +28,10 @@ interface MentorDetailsDialogProps {
       recordings: string;
     };
     top_mentor?: boolean;
+    position?: string;
+    location?: string;
+    bio?: string;
+    skills?: string[];
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,74 +41,63 @@ export function MentorDetailsDialog({ mentor, open, onOpenChange }: MentorDetail
   const [bookingOpen, setBookingOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // Transform mentor data to match profile format
+  const profileData = {
+    id: mentor.id,
+    full_name: mentor.name,
+    avatar_url: mentor.imageUrl,
+    position: mentor.position || mentor.title,
+    company_name: mentor.company,
+    location: mentor.location,
+    top_mentor: mentor.top_mentor,
+    bio: mentor.bio,
+    skills: mentor.skills || [],
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
-                <AvatarFallback>{mentor.name[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold">{mentor.name}</h2>
-                  {mentor.top_mentor ? (
-                    <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
-                      <Award className="h-3 w-3" />
-                      Top Mentor
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-                      mentor
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+          <DialogHeader className="p-6 pb-0">
+            <ProfileHeader profile={profileData} />
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-1">{mentor.title}</h3>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Building2 size={16} />
-                <span>{mentor.company}</span>
+          <ScrollArea className="h-[calc(85vh-120px)] px-6">
+            <div className="space-y-6 pb-6">
+              <ProfileBio bio={profileData.bio} />
+              
+              {/* Stats Section */}
+              <div className="bg-muted rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Stats</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Mentees</p>
+                    <p className="text-lg font-semibold">{mentor.stats.mentees}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Connected</p>
+                    <p className="text-lg font-semibold">{mentor.stats.connected}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Recordings</p>
+                    <p className="text-lg font-semibold">{mentor.stats.recordings}</p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Users size={16} />
-                <span>{mentor.stats.mentees} mentees</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star size={16} />
-                <span>{mentor.stats.connected} connected</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BookOpen size={16} />
-                <span>{mentor.stats.recordings} recordings</span>
-              </div>
-            </div>
+              <ProfileSkills skills={profileData.skills} />
 
-            <div className="flex gap-4">
-              <Button 
-                className="flex-1"
-                onClick={() => setBookingOpen(true)}
-              >
-                Book a Session
-              </Button>
-              <Button 
-                variant="outline"
-                className="flex-1"
-                onClick={() => setProfileOpen(true)}
-              >
-                View Full Profile
-              </Button>
+              <div className="flex justify-center">
+                <Button 
+                  size="lg"
+                  onClick={() => setBookingOpen(true)}
+                  className="w-full md:w-auto"
+                >
+                  Book a Session
+                </Button>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
