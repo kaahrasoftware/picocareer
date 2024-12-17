@@ -14,7 +14,8 @@ export const useTopRatedMentors = () => {
         `)
         .eq('user_type', 'mentor')
         .eq('top_mentor', true)
-        .limit(6);
+        .order('random()')  // This will randomize the results
+        .limit(10);        // Increased to 10 mentors
 
       if (error) {
         console.error('Error fetching mentors:', error);
