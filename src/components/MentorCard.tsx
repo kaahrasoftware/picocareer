@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { MentorDetailsDialog } from "./MentorDetailsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, Star, Award } from "lucide-react";
+import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MentorCardProps {
   id: string;
@@ -17,6 +18,10 @@ interface MentorCardProps {
     recordings: string;
   };
   top_mentor?: boolean;
+  position?: string;
+  location?: string;
+  bio?: string;
+  skills?: string[];
 }
 
 export function MentorCard(props: MentorCardProps) {
@@ -24,54 +29,86 @@ export function MentorCard(props: MentorCardProps) {
 
   return (
     <>
-      <Card 
-        className="relative overflow-hidden group cursor-pointer transition-all duration-300 hover:scale-105 bg-card border p-4"
-        onClick={() => setDialogOpen(true)}
-      >
-        <div className="flex flex-col h-full">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold mb-1">{props.title}</h3>
-            <p className="text-sm text-muted-foreground">{props.company}</p>
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Users size={14} />
-                <span>{props.stats.mentees}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Star size={14} />
-                <span>{props.stats.connected}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <BookOpen size={14} />
-                <span>{props.stats.recordings}</span>
-              </div>
-            </div>
-            <Avatar className="h-12 w-12">
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative flex flex-col h-full">
+          {/* Header Section with Avatar and Basic Info */}
+          <div className="flex items-start gap-4 mb-4">
+            <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
               <AvatarImage src={props.imageUrl} alt={props.name} />
               <AvatarFallback>{props.name[0]}</AvatarFallback>
             </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                {props.top_mentor && (
+                  <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
+                    <Award className="h-3 w-3" />
+                    Top Mentor
+                  </Badge>
+                )}
+              </div>
+              <h3 className="font-semibold truncate mb-2">{props.name}</h3>
+              <p className="text-sm font-medium mb-1 truncate text-foreground/90">{props.title || props.position}</p>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Building2 className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{props.company}</span>
+                </div>
+                {props.location && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{props.location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-between items-center mt-auto">
-            <div>
-              <p className="text-sm font-medium">{props.name}</p>
+          {/* Bio Section */}
+          {props.bio && (
+            <div className="w-full mb-4">
+              <p className="text-sm text-muted-foreground line-clamp-2">{props.bio}</p>
             </div>
-            {props.top_mentor ? (
-              <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 flex items-center gap-1">
-                <Award className="h-3 w-3" />
-                Top Mentor
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-                mentor
-              </Badge>
-            )}
+          )}
+
+          {/* Skills Section */}
+          {props.skills?.length > 0 && (
+            <div className="w-full mb-4">
+              <div className="flex flex-wrap gap-1.5">
+                {props.skills.slice(0, 5).map((skill) => (
+                  <Badge 
+                    key={skill} 
+                    variant="secondary" 
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+                {(props.skills?.length || 0) > 5 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                  >
+                    +{(props.skills?.length || 0) - 5} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Button Section */}
+          <div className="mt-auto w-full">
+            <Button 
+              variant="outline" 
+              className="w-full bg-background hover:bg-muted/50 transition-colors"
+              onClick={() => setDialogOpen(true)}
+            >
+              View Profile
+            </Button>
           </div>
         </div>
       </Card>
+
       <MentorDetailsDialog 
         mentor={{
           id: props.id,
