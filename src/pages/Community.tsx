@@ -36,7 +36,7 @@ export default function Community() {
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title)
           `)
-          .neq('user_type', 'admin')
+          .eq('user_type', 'mentor')  // Added filter for mentor user type
           .order('created_at', { ascending: false });
 
         if (user?.id) {
