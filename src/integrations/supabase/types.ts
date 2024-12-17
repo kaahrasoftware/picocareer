@@ -247,21 +247,105 @@ export type Database = {
       }
       majors: {
         Row: {
+          affiliated_programs: string[] | null
+          career_opportunities: string[] | null
+          certifications_to_consider: string[] | null
+          common_courses: string[] | null
+          common_difficulties: string[] | null
           created_at: string
+          degree_level: string | null
+          degree_levels: string[] | null
+          description: string
+          dropout_rates: number | null
           featured: boolean | null
+          field_of_study: string | null
+          global_applicability: string | null
+          gpa_expectations: number | null
           id: string
+          image_url: string | null
+          intensity: number | null
+          interdisciplinary_connections: string[] | null
+          job_prospects: string | null
+          learning_objectives: string[] | null
+          majors_to_consider_switching_to: string[] | null
+          passion_for_subject: string | null
+          potential_salary: number | null
+          professional_associations: string[] | null
+          required_courses: string[] | null
+          skill_match: string[] | null
+          stress_levels: number | null
+          title: string
+          tools_knowledge: string[] | null
+          transferable_skills: string[] | null
+          tuition_and_fees: number | null
           updated_at: string
         }
         Insert: {
+          affiliated_programs?: string[] | null
+          career_opportunities?: string[] | null
+          certifications_to_consider?: string[] | null
+          common_courses?: string[] | null
+          common_difficulties?: string[] | null
           created_at?: string
+          degree_level?: string | null
+          degree_levels?: string[] | null
+          description: string
+          dropout_rates?: number | null
           featured?: boolean | null
+          field_of_study?: string | null
+          global_applicability?: string | null
+          gpa_expectations?: number | null
           id?: string
+          image_url?: string | null
+          intensity?: number | null
+          interdisciplinary_connections?: string[] | null
+          job_prospects?: string | null
+          learning_objectives?: string[] | null
+          majors_to_consider_switching_to?: string[] | null
+          passion_for_subject?: string | null
+          potential_salary?: number | null
+          professional_associations?: string[] | null
+          required_courses?: string[] | null
+          skill_match?: string[] | null
+          stress_levels?: number | null
+          title: string
+          tools_knowledge?: string[] | null
+          transferable_skills?: string[] | null
+          tuition_and_fees?: number | null
           updated_at?: string
         }
         Update: {
+          affiliated_programs?: string[] | null
+          career_opportunities?: string[] | null
+          certifications_to_consider?: string[] | null
+          common_courses?: string[] | null
+          common_difficulties?: string[] | null
           created_at?: string
+          degree_level?: string | null
+          degree_levels?: string[] | null
+          description?: string
+          dropout_rates?: number | null
           featured?: boolean | null
+          field_of_study?: string | null
+          global_applicability?: string | null
+          gpa_expectations?: number | null
           id?: string
+          image_url?: string | null
+          intensity?: number | null
+          interdisciplinary_connections?: string[] | null
+          job_prospects?: string | null
+          learning_objectives?: string[] | null
+          majors_to_consider_switching_to?: string[] | null
+          passion_for_subject?: string | null
+          potential_salary?: number | null
+          professional_associations?: string[] | null
+          required_courses?: string[] | null
+          skill_match?: string[] | null
+          stress_levels?: number | null
+          title?: string
+          tools_knowledge?: string[] | null
+          transferable_skills?: string[] | null
+          tuition_and_fees?: number | null
           updated_at?: string
         }
         Relationships: []
