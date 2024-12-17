@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useToast } from "@/hooks/use-toast";
 import { AuthDialogHeader } from "./auth/AuthDialogHeader";
 import { SignUpForm } from "./auth/SignUpForm";
 import { Separator } from "./ui/separator";
+import { MenteeSignInForm } from "./auth/MenteeSignInForm";
+import { MentorSignInForm } from "./auth/MentorSignInForm";
 
 interface AuthDialogProps {
   open: boolean;
@@ -17,7 +17,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [activeForm, setActiveForm] = useState<'mentee' | 'mentor'>('mentee');
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -40,7 +39,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           full_name: formData.fullName,
           position: formData.position,
           user_type: formData.userType,
-          intended_user_type: activeForm === 'mentor' ? 'mentor' : 'student'
+          intended_user_type: formData.userType === 'mentor' ? 'mentor' : 'student'
         }
       }
     });
@@ -136,75 +135,9 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           />
         ) : (
           <div className="flex gap-8">
-            {/* Mentee Sign In Form */}
-            <div className="flex-1 p-6 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-center">I'm a mentee</h3>
-              <Auth
-                supabaseClient={supabase}
-                appearance={{
-                  theme: ThemeSupa,
-                  variables: {
-                    default: {
-                      colors: {
-                        brand: 'rgb(14, 165, 233)',
-                        brandAccent: 'rgb(0, 35, 102)',
-                      },
-                    },
-                  },
-                }}
-                providers={[]}
-                view="sign_in"
-                localization={{
-                  variables: {
-                    sign_in: {
-                      button_label: "Sign in as Mentee"
-                    }
-                  }
-                }}
-                onlyThirdPartyProviders={false}
-                options={{
-                  meta: {
-                    intended_user_type: 'student'
-                  }
-                }}
-              />
-            </div>
-
+            <MenteeSignInForm />
             <Separator orientation="vertical" />
-
-            {/* Mentor Sign In Form */}
-            <div className="flex-1 p-6 border rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-center">I'm a mentor</h3>
-              <Auth
-                supabaseClient={supabase}
-                appearance={{
-                  theme: ThemeSupa,
-                  variables: {
-                    default: {
-                      colors: {
-                        brand: 'rgb(14, 165, 233)',
-                        brandAccent: 'rgb(0, 35, 102)',
-                      },
-                    },
-                  },
-                }}
-                providers={[]}
-                view="sign_in"
-                localization={{
-                  variables: {
-                    sign_in: {
-                      button_label: "Sign in as Mentor"
-                    }
-                  }
-                }}
-                onlyThirdPartyProviders={false}
-                options={{
-                  meta: {
-                    intended_user_type: 'mentor'
-                  }
-                }}
-              />
-            </div>
+            <MentorSignInForm />
           </div>
         )}
 
