@@ -4,7 +4,6 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
 import { useEffect } from "react";
 
@@ -19,9 +18,8 @@ const Index = () => {
       <div className="app-layout">
         <MenuSidebar />
         <div className="main-content">
-          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-            <div className="space-y-8">
-              <ThemeToggle />
+          <div className="container mx-auto px-4 md:px-8 py-8">
+            <div className="max-w-6xl mx-auto space-y-8">
               <HeroSection />
               <FeaturedCareersSection />
               <FeaturedMajorsSection />

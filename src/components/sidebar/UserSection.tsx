@@ -1,7 +1,7 @@
-import { LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Session } from "@supabase/supabase-js";
+import { LogOut } from "lucide-react";
 
 interface UserSectionProps {
   session: Session | null;
@@ -59,16 +59,10 @@ export function UserSection({
 
   return (
     <Button
-      className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`}
+      className="px-6"
       onClick={onAuthClick}
-      data-sidebar="menu-button"
     >
-      <div className={`flex items-center justify-center w-5 min-w-[1.25rem] ${isCollapsed ? 'mx-auto' : 'ml-1'}`}>
-        <LogIn className="h-4 w-4" />
-      </div>
-      <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100 ml-3'}`}>
-        Sign in
-      </span>
+      Sign in
     </Button>
   );
 }
