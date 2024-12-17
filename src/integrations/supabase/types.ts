@@ -253,31 +253,27 @@ export type Database = {
           common_courses: string[] | null
           common_difficulties: string[] | null
           created_at: string
-          degree_level: string | null
           degree_levels: string[] | null
           description: string
-          dropout_rates: number | null
+          dropout_rates: string | null
           featured: boolean | null
-          field_of_study: string | null
           global_applicability: string | null
           gpa_expectations: number | null
           id: string
-          image_url: string | null
-          intensity: number | null
+          intensity: string | null
           interdisciplinary_connections: string[] | null
           job_prospects: string | null
           learning_objectives: string[] | null
           majors_to_consider_switching_to: string[] | null
           passion_for_subject: string | null
-          potential_salary: number | null
+          potential_salary: string | null
           professional_associations: string[] | null
-          required_courses: string[] | null
           skill_match: string[] | null
-          stress_levels: number | null
+          stress_level: string | null
           title: string
           tools_knowledge: string[] | null
           transferable_skills: string[] | null
-          tuition_and_fees: number | null
+          tuition_and_fees: string | null
           updated_at: string
         }
         Insert: {
@@ -287,31 +283,27 @@ export type Database = {
           common_courses?: string[] | null
           common_difficulties?: string[] | null
           created_at?: string
-          degree_level?: string | null
           degree_levels?: string[] | null
           description: string
-          dropout_rates?: number | null
+          dropout_rates?: string | null
           featured?: boolean | null
-          field_of_study?: string | null
           global_applicability?: string | null
           gpa_expectations?: number | null
           id?: string
-          image_url?: string | null
-          intensity?: number | null
+          intensity?: string | null
           interdisciplinary_connections?: string[] | null
           job_prospects?: string | null
           learning_objectives?: string[] | null
           majors_to_consider_switching_to?: string[] | null
           passion_for_subject?: string | null
-          potential_salary?: number | null
+          potential_salary?: string | null
           professional_associations?: string[] | null
-          required_courses?: string[] | null
           skill_match?: string[] | null
-          stress_levels?: number | null
+          stress_level?: string | null
           title: string
           tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
-          tuition_and_fees?: number | null
+          tuition_and_fees?: string | null
           updated_at?: string
         }
         Update: {
@@ -321,31 +313,27 @@ export type Database = {
           common_courses?: string[] | null
           common_difficulties?: string[] | null
           created_at?: string
-          degree_level?: string | null
           degree_levels?: string[] | null
           description?: string
-          dropout_rates?: number | null
+          dropout_rates?: string | null
           featured?: boolean | null
-          field_of_study?: string | null
           global_applicability?: string | null
           gpa_expectations?: number | null
           id?: string
-          image_url?: string | null
-          intensity?: number | null
+          intensity?: string | null
           interdisciplinary_connections?: string[] | null
           job_prospects?: string | null
           learning_objectives?: string[] | null
           majors_to_consider_switching_to?: string[] | null
           passion_for_subject?: string | null
-          potential_salary?: number | null
+          potential_salary?: string | null
           professional_associations?: string[] | null
-          required_courses?: string[] | null
           skill_match?: string[] | null
-          stress_levels?: number | null
+          stress_level?: string | null
           title?: string
           tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
-          tuition_and_fees?: number | null
+          tuition_and_fees?: string | null
           updated_at?: string
         }
         Relationships: []
