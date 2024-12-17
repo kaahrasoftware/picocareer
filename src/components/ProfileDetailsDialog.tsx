@@ -58,17 +58,17 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-          <DialogHeader className="p-6 pb-0 flex justify-between items-start">
-            <div className="flex-1">
+          <DialogHeader className="p-6 pb-0">
+            <div className="relative">
               <ProfileHeader profile={profile} />
+              <Button 
+                size="lg"
+                onClick={() => setBookingOpen(true)}
+                className="absolute right-0 top-16"
+              >
+                Book a Session
+              </Button>
             </div>
-            <Button 
-              size="lg"
-              onClick={() => setBookingOpen(true)}
-              className="ml-4"
-            >
-              Book a Session
-            </Button>
           </DialogHeader>
 
           <ScrollArea className="h-[calc(85vh-120px)] px-6">
