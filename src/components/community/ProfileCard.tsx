@@ -32,11 +32,11 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
   return (
     <>
-      <Card className="group relative overflow-hidden p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
         <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="relative flex flex-col gap-4">
+        <div className="relative flex flex-col h-full">
           {/* Header Section with Avatar and Basic Info */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 mb-4">
             <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
               <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || 'User'} />
               <AvatarFallback>{profile.full_name?.[0] || 'U'}</AvatarFallback>
@@ -65,16 +65,16 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
           {/* Bio Section */}
           {profile.bio && (
-            <div className="w-full">
+            <div className="w-full mb-4">
               <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
             </div>
           )}
 
           {/* Skills Section */}
           {profile.skills?.length > 0 && (
-            <div className="w-full">
+            <div className="w-full mb-4">
               <div className="flex flex-wrap gap-1.5">
-                {profile.skills.slice(0, 3).map((skill) => (
+                {profile.skills.slice(0, 5).map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
@@ -83,20 +83,20 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                     {skill}
                   </Badge>
                 ))}
-                {(profile.skills?.length || 0) > 3 && (
+                {(profile.skills?.length || 0) > 5 && (
                   <Badge 
                     variant="secondary" 
                     className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
                   >
-                    +{(profile.skills?.length || 0) - 3} more
+                    +{(profile.skills?.length || 0) - 5} more
                   </Badge>
                 )}
               </div>
             </div>
           )}
 
-          {/* Button Section */}
-          <div className="w-full">
+          {/* Button Section - Now at the bottom */}
+          <div className="mt-auto w-full">
             <Button 
               variant="outline" 
               className="w-full bg-background hover:bg-muted/50 transition-colors"
