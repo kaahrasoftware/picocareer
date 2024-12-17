@@ -32,7 +32,8 @@ export function MenteeSignInForm() {
         redirectTo={window.location.origin}
         queryParams={{
           user_metadata: JSON.stringify({
-            intended_user_type: 'student'
+            intended_user_type: 'student',
+            user_type: 'student'
           })
         }}
       />
