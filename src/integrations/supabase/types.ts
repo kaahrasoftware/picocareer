@@ -427,11 +427,13 @@ export type Database = {
           email: string
           featured: boolean | null
           fields_of_interest: string[] | null
+          first_name: string | null
           full_name: string | null
           github_url: string | null
           highest_degree: string | null
           id: string
           keywords: string[] | null
+          last_name: string | null
           linkedin_url: string | null
           location: string | null
           position: string | null
@@ -454,11 +456,13 @@ export type Database = {
           email: string
           featured?: boolean | null
           fields_of_interest?: string[] | null
+          first_name?: string | null
           full_name?: string | null
           github_url?: string | null
           highest_degree?: string | null
           id: string
           keywords?: string[] | null
+          last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
           position?: string | null
@@ -481,11 +485,13 @@ export type Database = {
           email?: string
           featured?: boolean | null
           fields_of_interest?: string[] | null
+          first_name?: string | null
           full_name?: string | null
           github_url?: string | null
           highest_degree?: string | null
           id?: string
           keywords?: string[] | null
+          last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
           position?: string | null

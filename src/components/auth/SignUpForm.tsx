@@ -7,7 +7,8 @@ interface SignUpFormProps {
   formData: {
     email: string;
     password: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
   };
   onFormDataChange: (data: Partial<SignUpFormProps['formData']>) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -40,12 +41,23 @@ export function SignUpForm({ formData, onFormDataChange, onSubmit, onSignInClick
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+        <Label htmlFor="firstName">First Name</Label>
         <Input
-          id="fullName"
+          id="firstName"
           type="text"
-          value={formData.fullName}
-          onChange={(e) => onFormDataChange({ fullName: e.target.value })}
+          value={formData.firstName}
+          onChange={(e) => onFormDataChange({ firstName: e.target.value })}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="lastName">Last Name</Label>
+        <Input
+          id="lastName"
+          type="text"
+          value={formData.lastName}
+          onChange={(e) => onFormDataChange({ lastName: e.target.value })}
           required
         />
       </div>

@@ -20,7 +20,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    fullName: "",
+    firstName: "",
+    lastName: "",
   });
   const lastCheckRef = React.useRef<number>(0);
   const CHECK_INTERVAL = 600000; // 10 minutes interval
@@ -34,7 +35,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       password: formData.password,
       options: {
         data: {
-          full_name: formData.fullName,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
           user_type: 'student'
         }
       }
