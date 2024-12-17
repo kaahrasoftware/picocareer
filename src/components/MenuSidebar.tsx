@@ -26,18 +26,18 @@ export function MenuSidebar() {
             </li>
             <li>
               <Link 
-                to="/blog" 
+                to="/community" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                Blog
+                Find a Mentor
               </Link>
             </li>
             <li>
               <Link 
-                to="/community" 
+                to="/blog" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                Community
+                Blog
               </Link>
             </li>
           </ul>
