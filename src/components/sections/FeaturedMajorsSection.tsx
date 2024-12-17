@@ -30,8 +30,14 @@ export const FeaturedMajorsSection = () => {
     requiredCourses: major.required_courses || [],
     averageGPA: 'N/A',
     fieldOfStudy: major.field_of_study,
-    degreeLevel: major.degree_level
+    degreeLevel: major.degree_level,
+    potential_salary: major.potential_salary,
+    skill_match: major.skill_match,
+    tools_knowledge: major.tools_knowledge,
+    common_courses: major.common_courses
   }));
+
+  console.log("Transformed majors data:", majors); // Debug log
 
   return (
     <section className="mb-16">
