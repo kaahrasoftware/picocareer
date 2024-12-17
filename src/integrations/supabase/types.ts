@@ -94,59 +94,122 @@ export type Database = {
       }
       careers: {
         Row: {
+          affiliated_programs: string[] | null
           average_salary: number | null
+          certifications_to_consider: string[] | null
+          common_courses: string[] | null
+          common_difficulties: string[] | null
           created_at: string
+          degree_levels: string[] | null
           description: string
+          dropout_rates: number | null
           featured: boolean | null
+          global_applicability: string | null
+          gpa_expectations: number | null
           growth_potential: string | null
           id: string
           image_url: string | null
           industry: string | null
+          intensity: number | null
+          interdisciplinary_connections: string[] | null
           job_outlook: string | null
+          job_prospects: string | null
           keywords: string[] | null
+          learning_objectives: string[] | null
+          majors_to_consider_switching_to: string[] | null
+          passion_for_subject: string | null
+          potential_salary: number | null
+          professional_associations: string[] | null
           required_education: string[] | null
           required_skills: string[] | null
           required_tools: string[] | null
           salary_range: string | null
+          skill_match: string[] | null
+          stress_levels: number | null
           title: string
+          tools_knowledge: string[] | null
+          transferable_skills: string[] | null
+          tuition_and_fees: number | null
           updated_at: string
           work_environment: string | null
         }
         Insert: {
+          affiliated_programs?: string[] | null
           average_salary?: number | null
+          certifications_to_consider?: string[] | null
+          common_courses?: string[] | null
+          common_difficulties?: string[] | null
           created_at?: string
+          degree_levels?: string[] | null
           description: string
+          dropout_rates?: number | null
           featured?: boolean | null
+          global_applicability?: string | null
+          gpa_expectations?: number | null
           growth_potential?: string | null
           id?: string
           image_url?: string | null
           industry?: string | null
+          intensity?: number | null
+          interdisciplinary_connections?: string[] | null
           job_outlook?: string | null
+          job_prospects?: string | null
           keywords?: string[] | null
+          learning_objectives?: string[] | null
+          majors_to_consider_switching_to?: string[] | null
+          passion_for_subject?: string | null
+          potential_salary?: number | null
+          professional_associations?: string[] | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
+          skill_match?: string[] | null
+          stress_levels?: number | null
           title: string
+          tools_knowledge?: string[] | null
+          transferable_skills?: string[] | null
+          tuition_and_fees?: number | null
           updated_at?: string
           work_environment?: string | null
         }
         Update: {
+          affiliated_programs?: string[] | null
           average_salary?: number | null
+          certifications_to_consider?: string[] | null
+          common_courses?: string[] | null
+          common_difficulties?: string[] | null
           created_at?: string
+          degree_levels?: string[] | null
           description?: string
+          dropout_rates?: number | null
           featured?: boolean | null
+          global_applicability?: string | null
+          gpa_expectations?: number | null
           growth_potential?: string | null
           id?: string
           image_url?: string | null
           industry?: string | null
+          intensity?: number | null
+          interdisciplinary_connections?: string[] | null
           job_outlook?: string | null
+          job_prospects?: string | null
           keywords?: string[] | null
+          learning_objectives?: string[] | null
+          majors_to_consider_switching_to?: string[] | null
+          passion_for_subject?: string | null
+          potential_salary?: number | null
+          professional_associations?: string[] | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
+          skill_match?: string[] | null
+          stress_levels?: number | null
           title?: string
+          tools_knowledge?: string[] | null
+          transferable_skills?: string[] | null
+          tuition_and_fees?: number | null
           updated_at?: string
           work_environment?: string | null
         }
