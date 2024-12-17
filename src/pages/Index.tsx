@@ -15,8 +15,8 @@ const Index = () => {
     <SidebarProvider>
       <div className="app-layout">
         <div className="main-content">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col items-center">
-            <div className="w-full max-w-6xl space-y-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+            <div className="w-full space-y-8">
               <HeroSection />
               <FeaturedCareersSection />
               <FeaturedMajorsSection />
