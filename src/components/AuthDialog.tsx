@@ -166,7 +166,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                     onClick={() => setIsSignUp(true)}
                     className="text-primary hover:underline"
                   >
-                    Sign Up
+                    Sign Up as a mentee
                   </button>
                 </p>
               )}
