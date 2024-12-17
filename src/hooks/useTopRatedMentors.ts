@@ -13,7 +13,7 @@ export const useTopRatedMentors = () => {
           company:companies(name)
         `)
         .eq('user_type', 'mentor')
-        .eq('featured', true)
+        .eq('top_mentor', true)
         .limit(6);
 
       if (error) {
