@@ -7,6 +7,7 @@ import { useState } from "react";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
 import Community from "./pages/Community";
+import { MenuSidebar } from "./components/MenuSidebar";
 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
@@ -20,11 +21,14 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/community" element={<Community />} />
-          </Routes>
+          <div className="min-h-screen pt-16"> {/* Added padding-top to account for fixed header */}
+            <MenuSidebar />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/community" element={<Community />} />
+            </Routes>
+          </div>
         </BrowserRouter>
         <Toaster />
         <Sonner />

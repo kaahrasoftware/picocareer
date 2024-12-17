@@ -1,34 +1,19 @@
-import { Home, BookOpen, Users, ChevronLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ProfileDialog } from "./ProfileDialog";
 import { AuthDialog } from "./AuthDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
-import { NavigationItem } from "./sidebar/NavigationItem";
 import { UserSection } from "./sidebar/UserSection";
-
-const navigationItems = [
-  { icon: Home, label: "Home", href: "/", active: window.location.pathname === "/" },
-  { icon: BookOpen, label: "Blog", href: "/blog", active: window.location.pathname === "/blog" },
-  { icon: Users, label: "Community", href: "/community", active: window.location.pathname === "/community" },
-];
+import { Link } from "react-router-dom";
 
 export function MenuSidebar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebar-collapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
   const { toast } = useToast();
-
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
-  }, [isCollapsed]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -95,63 +80,54 @@ export function MenuSidebar() {
     });
   };
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
   return (
-    <div className={`fixed left-0 top-0 h-screen flex flex-col bg-background border-r border-border sidebar-transition ${isCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}>
-      {/* Logo Section */}
-      <div className={`p-4 border-b border-border ${isCollapsed ? 'flex justify-center' : ''}`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+    <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+      <div className="container h-full mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <img 
             src="/lovable-uploads/17542041-7873-4c47-be52-385972798475.png" 
             alt="Logo" 
             className="w-8 h-8" 
           />
-          <h2 className={`text-xl font-bold transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+          <h2 className="text-xl font-bold">
             PicoCareer
           </h2>
         </div>
-      </div>
 
-      {/* Toggle Button */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={toggleSidebar}
-        className="absolute right-2 top-16 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
-      </Button>
-
-      {/* Main Content Container with flex-1 to take remaining space */}
-      <div className="flex-1 flex flex-col">
-        {/* Spacer to push content down */}
-        <div className="flex-1 min-h-[60px]" />
-        
-        {/* Navigation Menu - centered in the remaining space */}
-        <nav className="flex-1 p-4">
-          <ul className="space-y-4">
-            {navigationItems.map((item) => (
-              <NavigationItem
-                key={item.label}
-                {...item}
-                isCollapsed={isCollapsed}
-              />
-            ))}
+        <nav className="flex-1 flex justify-center">
+          <ul className="flex gap-8">
+            <li>
+              <Link 
+                to="/" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/blog" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Blog
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/community" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Community
+              </Link>
+            </li>
           </ul>
         </nav>
-        
-        {/* Spacer to push content up */}
-        <div className="flex-1 min-h-[60px]" />
 
-        {/* User Section at bottom */}
-        <div className="p-4 border-t border-border">
+        <div className="flex items-center gap-4">
           <UserSection
             session={session}
             avatarUrl={avatarUrl}
-            isCollapsed={isCollapsed}
+            isCollapsed={false}
             onSignOut={handleSignOut}
             onProfileClick={() => setProfileOpen(true)}
             onAuthClick={() => setAuthOpen(true)}
@@ -161,6 +137,6 @@ export function MenuSidebar() {
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
-    </div>
+    </header>
   );
 }
