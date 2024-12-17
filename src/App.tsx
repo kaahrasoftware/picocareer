@@ -21,17 +21,19 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <div className="min-h-screen pt-16"> {/* Added padding-top to account for fixed header */}
-            <MenuSidebar />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/community" element={<Community />} />
-            </Routes>
+          <div className="min-h-screen">
+            <MenuSidebar /> {/* Fixed position header */}
+            <div className="pt-16"> {/* Added padding-top to account for fixed header */}
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/community" element={<Community />} />
+              </Routes>
+            </div>
           </div>
+          <Toaster />
+          <Sonner />
         </BrowserRouter>
-        <Toaster />
-        <Sonner />
       </QueryClientProvider>
     </React.StrictMode>
   );
