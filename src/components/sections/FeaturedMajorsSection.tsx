@@ -11,24 +11,17 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import type { Major } from "@/types/database/majors";
-import { supabase } from "@/integrations/supabase/client";
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: majorsData = [], isLoading, refetch } = useFeaturedMajors();
 
-  // Set up real-time updates for profile counts
   useEffect(() => {
-    // Initial fetch
     refetch();
-
-    // Set up interval for periodic updates
     const intervalId = setInterval(() => {
       console.log("Refreshing majors data...");
       refetch();
-    }, 10000); // Refresh every 10 seconds
-
-    // Clean up on unmount
+    }, 10000);
     return () => clearInterval(intervalId);
   }, [refetch]);
 
@@ -36,25 +29,20 @@ export const FeaturedMajorsSection = () => {
     return <div>Loading...</div>;
   }
 
-  // Transform the majors data to match the expected format
   const majors = majorsData.map((major: Major) => ({
     title: major.title,
     description: major.description,
-    imageUrl: major.image_url || '',
     users: major.profiles_count?.toString() || '0',
     relatedCareers: major.career_opportunities || [],
-    requiredCourses: major.required_courses || [],
-    averageGPA: 'N/A',
-    fieldOfStudy: major.field_of_study,
-    degreeLevel: major.degree_level,
+    requiredCourses: major.common_courses || [],
+    averageGPA: major.gpa_expectations?.toString() || 'N/A',
+    fieldOfStudy: major.degree_levels?.join(", ") || 'N/A',
     potential_salary: major.potential_salary,
     skill_match: major.skill_match,
     tools_knowledge: major.tools_knowledge,
     common_courses: major.common_courses,
     profiles_count: major.profiles_count || 0
   }));
-
-  console.log("Transformed majors data:", majors); // Debug log
 
   return (
     <section className="mb-16">

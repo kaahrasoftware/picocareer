@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { SearchResult } from "@/hooks/useSearchData";
+import type { SearchResult } from "@/types/search";
 import { useState } from "react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { isMajorResult } from "@/types/search";
@@ -43,7 +43,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
                 </p>
               </div>
               <Badge variant="secondary" className="self-start">
-                {major.field_of_study || major.degree_levels.join(", ") || 'Major'}
+                {major.degree_levels?.join(", ") || 'Major'}
               </Badge>
             </Card>
           ))}
@@ -60,7 +60,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             updated_at: new Date().toISOString(),
             featured: false,
             learning_objectives: [],
-            common_courses: selectedMajor.required_courses || [],
+            common_courses: selectedMajor.common_courses || [],
             interdisciplinary_connections: [],
             job_prospects: null,
             certifications_to_consider: [],
@@ -69,7 +69,6 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             gpa_expectations: null,
             transferable_skills: [],
             tools_knowledge: [],
-            tuition_and_fees: null,
             potential_salary: null,
             passion_for_subject: null,
             skill_match: [],
