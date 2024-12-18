@@ -94,122 +94,65 @@ export type Database = {
       }
       careers: {
         Row: {
-          affiliated_programs: string[] | null
-          average_salary: number | null
-          certifications_to_consider: string[] | null
-          common_courses: string[] | null
-          common_difficulties: string[] | null
+          careers_to_consider_switching_to: string[] | null
           created_at: string
-          degree_levels: string[] | null
           description: string
-          dropout_rates: number | null
           featured: boolean | null
-          global_applicability: string | null
-          gpa_expectations: number | null
           growth_potential: string | null
           id: string
           image_url: string | null
           industry: string | null
-          intensity: number | null
-          interdisciplinary_connections: string[] | null
           job_outlook: string | null
-          job_prospects: string | null
           keywords: string[] | null
-          learning_objectives: string[] | null
-          majors_to_consider_switching_to: string[] | null
-          passion_for_subject: string | null
-          potential_salary: number | null
-          professional_associations: string[] | null
           required_education: string[] | null
           required_skills: string[] | null
           required_tools: string[] | null
           salary_range: string | null
-          skill_match: string[] | null
           stress_levels: number | null
           title: string
-          tools_knowledge: string[] | null
           transferable_skills: string[] | null
-          tuition_and_fees: number | null
           updated_at: string
           work_environment: string | null
         }
         Insert: {
-          affiliated_programs?: string[] | null
-          average_salary?: number | null
-          certifications_to_consider?: string[] | null
-          common_courses?: string[] | null
-          common_difficulties?: string[] | null
+          careers_to_consider_switching_to?: string[] | null
           created_at?: string
-          degree_levels?: string[] | null
           description: string
-          dropout_rates?: number | null
           featured?: boolean | null
-          global_applicability?: string | null
-          gpa_expectations?: number | null
           growth_potential?: string | null
           id?: string
           image_url?: string | null
           industry?: string | null
-          intensity?: number | null
-          interdisciplinary_connections?: string[] | null
           job_outlook?: string | null
-          job_prospects?: string | null
           keywords?: string[] | null
-          learning_objectives?: string[] | null
-          majors_to_consider_switching_to?: string[] | null
-          passion_for_subject?: string | null
-          potential_salary?: number | null
-          professional_associations?: string[] | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
-          skill_match?: string[] | null
           stress_levels?: number | null
           title: string
-          tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
-          tuition_and_fees?: number | null
           updated_at?: string
           work_environment?: string | null
         }
         Update: {
-          affiliated_programs?: string[] | null
-          average_salary?: number | null
-          certifications_to_consider?: string[] | null
-          common_courses?: string[] | null
-          common_difficulties?: string[] | null
+          careers_to_consider_switching_to?: string[] | null
           created_at?: string
-          degree_levels?: string[] | null
           description?: string
-          dropout_rates?: number | null
           featured?: boolean | null
-          global_applicability?: string | null
-          gpa_expectations?: number | null
           growth_potential?: string | null
           id?: string
           image_url?: string | null
           industry?: string | null
-          intensity?: number | null
-          interdisciplinary_connections?: string[] | null
           job_outlook?: string | null
-          job_prospects?: string | null
           keywords?: string[] | null
-          learning_objectives?: string[] | null
-          majors_to_consider_switching_to?: string[] | null
-          passion_for_subject?: string | null
-          potential_salary?: number | null
-          professional_associations?: string[] | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
-          skill_match?: string[] | null
           stress_levels?: number | null
           title?: string
-          tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
-          tuition_and_fees?: number | null
           updated_at?: string
           work_environment?: string | null
         }
@@ -220,7 +163,6 @@ export type Database = {
           created_at: string
           id: string
           industry: string | null
-          location: string | null
           name: string
           updated_at: string
           website: string | null
@@ -229,7 +171,6 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
-          location?: string | null
           name: string
           updated_at?: string
           website?: string | null
@@ -238,7 +179,6 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
-          location?: string | null
           name?: string
           updated_at?: string
           website?: string | null
@@ -274,7 +214,6 @@ export type Database = {
           title: string
           tools_knowledge: string[] | null
           transferable_skills: string[] | null
-          tuition_and_fees: string | null
           updated_at: string
         }
         Insert: {
@@ -305,7 +244,6 @@ export type Database = {
           title: string
           tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
-          tuition_and_fees?: string | null
           updated_at?: string
         }
         Update: {
@@ -336,7 +274,6 @@ export type Database = {
           title?: string
           tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
-          tuition_and_fees?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -552,7 +489,7 @@ export type Database = {
           tools_used: string[] | null
           top_mentor: boolean | null
           updated_at: string
-          user_type: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
           website_url: string | null
           years_of_experience: number | null
         }
@@ -580,7 +517,7 @@ export type Database = {
           tools_used?: string[] | null
           top_mentor?: boolean | null
           updated_at?: string
-          user_type?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
           years_of_experience?: number | null
         }
@@ -608,7 +545,7 @@ export type Database = {
           tools_used?: string[] | null
           top_mentor?: boolean | null
           updated_at?: string
-          user_type?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
           years_of_experience?: number | null
         }
@@ -647,27 +584,27 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          location: string | null
+          location: Database["public"]["Enums"]["states"] | null
           name: string
-          type: string | null
+          type: Database["public"]["Enums"]["school_type"] | null
           updated_at: string
           website: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          location?: string | null
+          location?: Database["public"]["Enums"]["states"] | null
           name: string
-          type?: string | null
+          type?: Database["public"]["Enums"]["school_type"] | null
           updated_at?: string
           website?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          location?: string | null
+          location?: Database["public"]["Enums"]["states"] | null
           name?: string
-          type?: string | null
+          type?: Database["public"]["Enums"]["school_type"] | null
           updated_at?: string
           website?: string | null
         }
@@ -684,7 +621,65 @@ export type Database = {
       }
     }
     Enums: {
-      session_type: "intro" | "quick-advice" | "walkthrough"
+      school_type: "High School" | "Community College" | "University" | "Other"
+      session_type:
+        | "Introduction"
+        | "Quick-Advice"
+        | "Walkthrough"
+        | "Group (2-3 Mentees)"
+        | "Group (4-6 Mentees)"
+      states:
+        | "Alabama - AL"
+        | "Alaska - AK"
+        | "Arizona - AZ"
+        | "Arkansas - AR"
+        | "California - CA"
+        | "Colorado - CO"
+        | "Connecticut - CT"
+        | "Delaware - DE"
+        | "Florida - FL"
+        | "Georgia - GA"
+        | "Hawaii - HI"
+        | "Idaho - ID"
+        | "Illinois - IL"
+        | "Indiana - IN"
+        | "Iowa - IA"
+        | "Kansas - KS"
+        | "Kentucky - KY"
+        | "Louisiana - LA"
+        | "Maine - ME"
+        | "Maryland - MD"
+        | "Massachusetts - MA"
+        | "Michigan - MI"
+        | "Minnesota - MN"
+        | "Mississippi - MS"
+        | "Missouri - MO"
+        | "Montana - MT"
+        | "Nebraska - NE"
+        | "Nevada - NV"
+        | "New Hampshire - NH"
+        | "New Jersey - NJ"
+        | "New Mexico - NM"
+        | "New York - NY"
+        | "North Carolina - NC"
+        | "North Dakota - ND"
+        | "Ohio - OH"
+        | "Oklahoma - OK"
+        | "Oregon - OR"
+        | "Pennsylvania - PA"
+        | "Rhode Island - RI"
+        | "South Carolina - SC"
+        | "South Dakota - SD"
+        | "Tennessee - TN"
+        | "Texas - TX"
+        | "Utah - UT"
+        | "Vermont - VT"
+        | "Virginia - VA"
+        | "Washington - WA"
+        | "West Virginia - WV"
+        | "Wisconsin - WI"
+        | "Wyoming - WY"
+      user_type: "mentor" | "mentee"
     }
     CompositeTypes: {
       [_ in never]: never
