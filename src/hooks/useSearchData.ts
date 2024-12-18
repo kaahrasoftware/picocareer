@@ -11,7 +11,7 @@ export function useSearchData(searchTerm: string) {
       if (!searchTerm) return [];
 
       const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
-        // Search majors with expanded field search
+        // Majors search
         supabase
           .from("majors")
           .select(`
@@ -34,12 +34,11 @@ export function useSearchData(searchTerm: string) {
             majors_to_consider_switching_to
           `)
           .or(
-            // Text fields use ilike
             `title.ilike.%${searchTerm}%,` +
             `description.ilike.%${searchTerm}%,` +
             `job_prospects.ilike.%${searchTerm}%`
           )
-          // Array fields need to be filtered in a different way
+          // Array field searches
           .or(`degree_levels.cs.{${searchTerm}}`)
           .or(`career_opportunities.cs.{${searchTerm}}`)
           .or(`common_courses.cs.{${searchTerm}}`)
@@ -55,7 +54,7 @@ export function useSearchData(searchTerm: string) {
           .or(`majors_to_consider_switching_to.cs.{${searchTerm}}`)
           .limit(5),
 
-        // Search careers
+        // Careers search
         supabase
           .from("careers")
           .select(`
@@ -67,7 +66,7 @@ export function useSearchData(searchTerm: string) {
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(5),
 
-        // Search mentor profiles with expanded fields
+        // Mentors search with additional fields
         supabase
           .from("profiles")
           .select(`
@@ -78,15 +77,15 @@ export function useSearchData(searchTerm: string) {
             avatar_url,
             position,
             highest_degree,
+            bio,
+            location,
             skills,
             tools_used,
             keywords,
-            bio,
-            location,
             fields_of_interest,
-            company:company_id(name),
-            school:school_id(name),
-            academic_major:academic_major_id(title)
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title)
           `)
           .eq('user_type', 'mentor')
           .or(
@@ -98,6 +97,11 @@ export function useSearchData(searchTerm: string) {
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%`
           )
+          // Array field searches
+          .or(`skills.cs.{${searchTerm}}`)
+          .or(`tools_used.cs.{${searchTerm}}`)
+          .or(`keywords.cs.{${searchTerm}}`)
+          .or(`fields_of_interest.cs.{${searchTerm}}`)
           .limit(5)
       ]);
 
