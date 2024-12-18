@@ -34,34 +34,34 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
-          <div className="flex items-center justify-between mb-2">
-            <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
-            <div className="flex items-center gap-4">
-              {major.potential_salary && (
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant="outline" className="bg-[#F2FCE2] text-[#4B5563]">
-                    {major.potential_salary}
-                  </Badge>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {formatProfileCount(major.profiles_count)} Users
-                </span>
-              </div>
-            </div>
-          </div>
+          <DialogTitle className="text-2xl font-bold mb-4">{major.title}</DialogTitle>
+          
           {major.degree_levels && major.degree_levels.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-4">
               {major.degree_levels.map((level, index) => (
-                <Badge key={index} variant="outline" className="bg-[#F2FCE2] text-[#4B5563]">
+                <Badge key={index} variant="outline" className="bg-[#D3E4FD] text-[#4B5563]">
                   {level}
                 </Badge>
               ))}
             </div>
           )}
+
+          <div className="flex items-center gap-4 border-t border-border pt-4">
+            {major.potential_salary && (
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <Badge variant="outline" className="bg-[#D3E4FD] text-[#4B5563]">
+                  {major.potential_salary}
+                </Badge>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">
+                {formatProfileCount(major.profiles_count)} Users
+              </span>
+            </div>
+          </div>
         </DialogHeader>
         
         <ScrollArea className="h-[calc(85vh-120px)] px-6">
