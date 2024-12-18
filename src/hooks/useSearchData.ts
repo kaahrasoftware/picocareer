@@ -34,23 +34,25 @@ export function useSearchData(searchTerm: string) {
             majors_to_consider_switching_to
           `)
           .or(
+            // Text fields use ilike
             `title.ilike.%${searchTerm}%,` +
             `description.ilike.%${searchTerm}%,` +
-            `learning_objectives.ilike.%${searchTerm}%,` +
-            `common_courses.ilike.%${searchTerm}%,` +
-            `interdisciplinary_connections.ilike.%${searchTerm}%,` +
-            `job_prospects.ilike.%${searchTerm}%,` +
-            `certifications_to_consider.ilike.%${searchTerm}%,` +
-            `degree_levels.ilike.%${searchTerm}%,` +
-            `affiliated_programs.ilike.%${searchTerm}%,` +
-            `transferable_skills.ilike.%${searchTerm}%,` +
-            `tools_knowledge.ilike.%${searchTerm}%,` +
-            `skill_match.ilike.%${searchTerm}%,` +
-            `professional_associations.ilike.%${searchTerm}%,` +
-            `common_difficulties.ilike.%${searchTerm}%,` +
-            `majors_to_consider_switching_to.ilike.%${searchTerm}%,` +
-            `career_opportunities.ilike.%${searchTerm}%`
+            `job_prospects.ilike.%${searchTerm}%`
           )
+          // Array fields need to be filtered in a different way
+          .or(`degree_levels.cs.{${searchTerm}}`)
+          .or(`career_opportunities.cs.{${searchTerm}}`)
+          .or(`common_courses.cs.{${searchTerm}}`)
+          .or(`learning_objectives.cs.{${searchTerm}}`)
+          .or(`interdisciplinary_connections.cs.{${searchTerm}}`)
+          .or(`certifications_to_consider.cs.{${searchTerm}}`)
+          .or(`affiliated_programs.cs.{${searchTerm}}`)
+          .or(`transferable_skills.cs.{${searchTerm}}`)
+          .or(`tools_knowledge.cs.{${searchTerm}}`)
+          .or(`skill_match.cs.{${searchTerm}}`)
+          .or(`professional_associations.cs.{${searchTerm}}`)
+          .or(`common_difficulties.cs.{${searchTerm}}`)
+          .or(`majors_to_consider_switching_to.cs.{${searchTerm}}`)
           .limit(5),
 
         // Search careers
