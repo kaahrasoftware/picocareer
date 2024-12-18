@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/hooks/useSearchData";
 import { useState } from "react";
-import { MajorDetailsDialog } from "@/components/MajorDetailsDialog";
+import { MajorDetails } from "@/components/MajorDetails";
 import { isMajorResult } from "@/types/search";
 
 interface MajorResultsSectionProps {
@@ -51,7 +51,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
       </div>
 
       {selectedMajor && isMajorResult(selectedMajor) && (
-        <MajorDetailsDialog
+        <MajorDetails
           major={{
             id: selectedMajor.id,
             title: selectedMajor.title,
