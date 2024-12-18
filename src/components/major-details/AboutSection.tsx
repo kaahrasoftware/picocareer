@@ -2,10 +2,11 @@ import { Lightbulb, GraduationCap, Link as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 
 interface AboutSectionProps {
   description: string;
@@ -21,6 +22,7 @@ export function AboutSection({
   majorId
 }: AboutSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const mentorsPerPage = 8;
 
   const { data: mentors } = useQuery({
@@ -37,12 +39,13 @@ export function AboutSection({
         `)
         .eq('academic_major_id', majorId)
         .eq('user_type', 'mentor')
-        .range((currentPage - 1) * mentorsPerPage, currentPage * mentorsPerPage - 1);
+        .range((currentPage - 1) * mentorsPerPage, currentPage * mentorsPerPage - 1)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!majorId
+    enabled: !!majorId,
   });
 
   const { data: totalCount } = useQuery({
@@ -57,13 +60,13 @@ export function AboutSection({
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!majorId
+    enabled: !!majorId,
   });
 
   const totalPages = Math.ceil((totalCount || 0) / mentorsPerPage);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {mentors && mentors.length > 0 && (
         <div>
           <h5 className="text-sm font-medium mb-3">Mentors with this major</h5>
@@ -72,7 +75,10 @@ export function AboutSection({
               <div className="flex gap-4 px-4">
                 {mentors.map((mentor) => (
                   <div key={mentor.id} className="flex flex-col items-center space-y-2">
-                    <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+                    <Avatar 
+                      className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] cursor-pointer"
+                      onClick={() => setSelectedMentorId(mentor.id)}
+                    >
                       <AvatarImage src={mentor.avatar_url || ''} alt={mentor.full_name || ''} />
                       <AvatarFallback>{mentor.full_name?.[0] || '?'}</AvatarFallback>
                     </Avatar>
@@ -158,6 +164,14 @@ export function AboutSection({
           </div>
         )}
       </div>
+
+      {selectedMentorId && (
+        <ProfileDetailsDialog
+          userId={selectedMentorId}
+          open={!!selectedMentorId}
+          onOpenChange={(open) => !open && setSelectedMentorId(null)}
+        />
+      )}
     </div>
   );
 }
