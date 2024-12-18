@@ -11,7 +11,7 @@ export function useSearchData(searchTerm: string) {
       if (!searchTerm) return [];
 
       const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
-        // Search majors
+        // Search majors with expanded field search
         supabase
           .from("majors")
           .select(`
@@ -20,9 +20,37 @@ export function useSearchData(searchTerm: string) {
             description,
             degree_levels,
             career_opportunities,
-            common_courses
+            common_courses,
+            learning_objectives,
+            interdisciplinary_connections,
+            job_prospects,
+            certifications_to_consider,
+            affiliated_programs,
+            transferable_skills,
+            tools_knowledge,
+            skill_match,
+            professional_associations,
+            common_difficulties,
+            majors_to_consider_switching_to
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .or(
+            `title.ilike.%${searchTerm}%,` +
+            `description.ilike.%${searchTerm}%,` +
+            `learning_objectives.ilike.%${searchTerm}%,` +
+            `common_courses.ilike.%${searchTerm}%,` +
+            `interdisciplinary_connections.ilike.%${searchTerm}%,` +
+            `job_prospects.ilike.%${searchTerm}%,` +
+            `certifications_to_consider.ilike.%${searchTerm}%,` +
+            `degree_levels.ilike.%${searchTerm}%,` +
+            `affiliated_programs.ilike.%${searchTerm}%,` +
+            `transferable_skills.ilike.%${searchTerm}%,` +
+            `tools_knowledge.ilike.%${searchTerm}%,` +
+            `skill_match.ilike.%${searchTerm}%,` +
+            `professional_associations.ilike.%${searchTerm}%,` +
+            `common_difficulties.ilike.%${searchTerm}%,` +
+            `majors_to_consider_switching_to.ilike.%${searchTerm}%,` +
+            `career_opportunities.ilike.%${searchTerm}%`
+          )
           .limit(5),
 
         // Search careers
