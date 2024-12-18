@@ -4,6 +4,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface AboutSectionProps {
   description: string;
@@ -18,8 +20,11 @@ export function AboutSection({
   interdisciplinary_connections,
   majorId
 }: AboutSectionProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const mentorsPerPage = 8;
+
   const { data: mentors } = useQuery({
-    queryKey: ['major-mentors', majorId],
+    queryKey: ['major-mentors', majorId, currentPage],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -32,13 +37,30 @@ export function AboutSection({
         `)
         .eq('academic_major_id', majorId)
         .eq('user_type', 'mentor')
-        .limit(10);
+        .range((currentPage - 1) * mentorsPerPage, currentPage * mentorsPerPage - 1);
 
       if (error) throw error;
       return data;
     },
     enabled: !!majorId
   });
+
+  const { data: totalCount } = useQuery({
+    queryKey: ['major-mentors-count', majorId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('academic_major_id', majorId)
+        .eq('user_type', 'mentor');
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!majorId
+  });
+
+  const totalPages = Math.ceil((totalCount || 0) / mentorsPerPage);
 
   return (
     <div className="space-y-6">
@@ -67,6 +89,29 @@ export function AboutSection({
               ))}
             </div>
           </ScrollArea>
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
