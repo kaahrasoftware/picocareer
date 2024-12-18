@@ -31,7 +31,7 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
         <h4 className="text-sm font-medium">{title}</h4>
       </div>
       <div className="flex flex-wrap gap-2">
-        {items.slice(0, 5).map((item, index) => (
+        {items.slice(0, 2).map((item, index) => (
           <Badge
             key={index}
             variant="outline"
@@ -40,6 +40,14 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
             {item}
           </Badge>
         ))}
+        {items.length > 2 && (
+          <Badge
+            variant="outline"
+            className={badgeStyle}
+          >
+            +{items.length - 2} more
+          </Badge>
+        )}
       </div>
     </div>
   );
