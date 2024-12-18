@@ -1,7 +1,7 @@
 import { CommandItem } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Briefcase, GraduationCap, Users, BookOpen } from "lucide-react";
-import type { SearchResult } from "@/hooks/useSearchData";
+import type { SearchResult } from "@/types/search";
 
 interface SearchResultItemProps {
   result: SearchResult;

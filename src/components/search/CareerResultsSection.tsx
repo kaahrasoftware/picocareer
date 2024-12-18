@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { SearchResult } from "@/hooks/useSearchData";
+import type { SearchResult } from "@/types/search";
 import { isCareerResult } from "@/types/search";
 
 interface CareerResultsSectionProps {

@@ -14,7 +14,7 @@ import type { Major } from "@/types/database/majors";
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: majorsData = [], isLoading, refetch } = useFeaturedMajors();
+  const { data: majors = [], isLoading, refetch } = useFeaturedMajors();
 
   useEffect(() => {
     refetch();
@@ -28,21 +28,6 @@ export const FeaturedMajorsSection = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
-  const majors = majorsData.map((major: Major) => ({
-    title: major.title,
-    description: major.description,
-    users: major.profiles_count?.toString() || '0',
-    relatedCareers: major.career_opportunities || [],
-    requiredCourses: major.common_courses || [],
-    averageGPA: major.gpa_expectations?.toString() || 'N/A',
-    fieldOfStudy: major.degree_levels?.join(", ") || 'N/A',
-    potential_salary: major.potential_salary,
-    skill_match: major.skill_match,
-    tools_knowledge: major.tools_knowledge,
-    common_courses: major.common_courses,
-    profiles_count: major.profiles_count || 0
-  }));
 
   return (
     <section className="mb-16">
@@ -71,7 +56,7 @@ export const FeaturedMajorsSection = () => {
       >
         <CarouselContent>
           {majors.map((major) => (
-            <CarouselItem key={major.title} className="basis-1/3">
+            <CarouselItem key={major.id} className="basis-1/3">
               <MajorCard {...major} />
             </CarouselItem>
           ))}
