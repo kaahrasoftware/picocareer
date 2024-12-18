@@ -79,6 +79,9 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             intensity: null,
             stress_level: null,
             dropout_rates: null,
+            tuition_and_fees: null,
+            majors_to_consider_switching_to: [],
+            common_courses: [],
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}

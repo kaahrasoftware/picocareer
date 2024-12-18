@@ -56,7 +56,7 @@ export function useSearchData(query: string) {
         title: major.title,
         description: major.description,
         image_url: major.image_url || null,
-        field_of_study: null, // This field doesn't exist in the database
+        field_of_study: null,
         degree_levels: major.degree_levels || [],
         career_opportunities: major.career_opportunities || [],
         required_courses: major.common_courses || [],

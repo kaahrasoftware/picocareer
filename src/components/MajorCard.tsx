@@ -92,6 +92,9 @@ export function MajorCard(props: MajorCardProps) {
           intensity: null,
           stress_level: null,
           dropout_rates: null,
+          tuition_and_fees: null,
+          majors_to_consider_switching_to: [],
+          common_courses: [],
         }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
