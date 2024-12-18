@@ -1,10 +1,3 @@
-import { 
-  Globe, 
-  AlertTriangle, 
-  Heart,
-  Award,
-  Building 
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface AdditionalInfoProps {
@@ -28,36 +21,31 @@ export function AdditionalInfo({
 }: AdditionalInfoProps) {
   return (
     <div className="space-y-4">
-      <h4 className="text-lg font-semibold flex items-center gap-2">
-        <Globe className="h-5 w-5 text-primary" />
+      <h4 className="text-lg font-semibold">
         Additional Information
       </h4>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {intensity && (
-          <div className="flex items-start gap-2 text-sm">
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+          <div className="text-sm">
             <span><strong>Intensity Level:</strong> {intensity}</span>
           </div>
         )}
 
         {passion_for_subject && (
-          <div className="flex items-start gap-2 text-sm">
-            <Heart className="h-5 w-5 text-red-500" />
+          <div className="text-sm">
             <span><strong>Passion Rating:</strong> {passion_for_subject}</span>
           </div>
         )}
 
         {stress_level && (
-          <div className="flex items-start gap-2 text-sm">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+          <div className="text-sm">
             <span><strong>Stress Level:</strong> {stress_level}</span>
           </div>
         )}
 
         {dropout_rates && (
-          <div className="flex items-start gap-2 text-sm">
-            <Building className="h-5 w-5 text-primary" />
+          <div className="text-sm">
             <span><strong>Dropout Rate:</strong> {dropout_rates}</span>
           </div>
         )}
