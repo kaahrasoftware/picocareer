@@ -47,7 +47,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
           {major.degree_levels && major.degree_levels.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {major.degree_levels.map((level, index) => (
-                <Badge key={index} variant="outline" className="bg-[#D3E4FD] text-[#4B5563]">
+                <Badge key={index} variant="outline" className="bg-[#FFDEE2] text-[#4B5563]">
                   {level}
                 </Badge>
               ))}
@@ -57,7 +57,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
           {major.potential_salary && (
             <div className="flex items-center gap-2 border-t border-border pt-4">
               <DollarSign className="h-4 w-4 text-primary" />
-              <Badge variant="outline" className="bg-[#D3E4FD] text-[#4B5563]">
+              <Badge variant="outline" className="bg-[#FFDEE2] text-[#4B5563]">
                 {major.potential_salary}
               </Badge>
             </div>
