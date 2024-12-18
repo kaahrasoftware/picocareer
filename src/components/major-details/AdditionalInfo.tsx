@@ -35,29 +35,29 @@ export function AdditionalInfo({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {intensity && (
-          <div className="flex items-center gap-2 text-sm">
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+          <div className="flex items-start gap-2 text-sm">
+            <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
             <span><strong>Intensity Level:</strong> {intensity}</span>
           </div>
         )}
 
         {passion_for_subject && (
-          <div className="flex items-center gap-2 text-sm">
-            <Heart className="h-5 w-5 text-red-500" />
+          <div className="flex items-start gap-2 text-sm">
+            <Heart className="h-5 w-5 text-red-500 mt-0.5" />
             <span><strong>Passion Rating:</strong> {passion_for_subject}</span>
           </div>
         )}
 
         {stress_level && (
-          <div className="flex items-center gap-2 text-sm">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+          <div className="flex items-start gap-2 text-sm">
+            <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
             <span><strong>Stress Level:</strong> {stress_level}</span>
           </div>
         )}
 
         {dropout_rates && (
-          <div className="flex items-center gap-2 text-sm">
-            <Building className="h-5 w-5 text-primary" />
+          <div className="flex items-start gap-2 text-sm">
+            <Building className="h-5 w-5 text-primary mt-0.5" />
             <span><strong>Dropout Rate:</strong> {dropout_rates}</span>
           </div>
         )}
