@@ -37,28 +37,28 @@ export function AdditionalInfo({
         {intensity && (
           <div className="flex items-center gap-2 text-sm">
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            <span>Intensity Level: {intensity}</span>
+            <span><strong>Intensity Level:</strong> {intensity}</span>
           </div>
         )}
 
         {passion_for_subject && (
           <div className="flex items-center gap-2 text-sm">
             <Heart className="h-4 w-4 text-red-500" />
-            <span>Passion Rating: {passion_for_subject}</span>
+            <span><strong>Passion Rating:</strong> {passion_for_subject}</span>
           </div>
         )}
 
         {stress_level && (
           <div className="flex items-center gap-2 text-sm">
             <AlertTriangle className="h-4 w-4 text-orange-500" />
-            <span>Stress Level: {stress_level}</span>
+            <span><strong>Stress Level:</strong> {stress_level}</span>
           </div>
         )}
 
         {dropout_rates && (
           <div className="flex items-center gap-2 text-sm">
             <Building className="h-4 w-4 text-primary" />
-            <span>Dropout Rate: {dropout_rates}</span>
+            <span><strong>Dropout Rate:</strong> {dropout_rates}</span>
           </div>
         )}
       </div>
