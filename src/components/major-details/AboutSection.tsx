@@ -1,4 +1,4 @@
-import { Lightbulb, GraduationCap, Link as LinkIcon } from "lucide-react";
+import { Lightbulb, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -146,8 +146,7 @@ export function AboutSection({
 
         {interdisciplinary_connections && interdisciplinary_connections.length > 0 && (
           <div className="mt-4">
-            <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <LinkIcon className="h-4 w-4 text-primary" />
+            <h5 className="text-sm font-medium mb-2">
               Interdisciplinary Connections
             </h5>
             <div className="flex flex-wrap gap-2">
