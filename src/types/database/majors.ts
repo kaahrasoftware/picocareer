@@ -27,11 +27,10 @@ export interface Major {
   stress_level: string | null;
   dropout_rates: string | null;
   majors_to_consider_switching_to: string[] | null;
-  // Adding fields that were missing but referenced in the code
   image_url?: string | null;
   field_of_study?: string | null;
   required_courses?: string[] | null;
   degree_level?: string | null;
-  // Adding the new profiles_count field
   profiles_count?: number | null;
+  relatedCareers?: string[] | null; // Added to fix MajorCard error
 }

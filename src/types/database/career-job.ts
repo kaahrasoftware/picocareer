@@ -7,4 +7,5 @@ export interface CareerJob {
   potential_salary: number | null;
   professional_associations: string[] | null;
   global_applicability: string | null;
+  tuition_and_fees: number | null;
 }

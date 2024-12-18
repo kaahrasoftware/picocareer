@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Career } from "@/types/database/careers";
+import type { Major } from "@/types/database/majors";
+import type { Profile } from "@/types/database/profiles";
 import type { SearchResult, CareerSearchResult, MajorSearchResult, MentorSearchResult } from "@/types/search";
 
 export { type SearchResult };
@@ -37,7 +40,7 @@ export function useSearchData(query: string) {
       if (majorsResponse.error) throw majorsResponse.error;
       if (mentorsResponse.error) throw mentorsResponse.error;
 
-      const careers: CareerSearchResult[] = (careersResponse.data || []).map((career) => ({
+      const careers: CareerSearchResult[] = (careersResponse.data || []).map((career: Career) => ({
         id: career.id,
         type: "career",
         title: career.title,
@@ -47,19 +50,19 @@ export function useSearchData(query: string) {
         average_salary: career.average_salary,
       }));
 
-      const majors: MajorSearchResult[] = (majorsResponse.data || []).map((major) => ({
+      const majors: MajorSearchResult[] = (majorsResponse.data || []).map((major: Major) => ({
         id: major.id,
         type: "major",
         title: major.title,
         description: major.description,
-        image_url: null,
-        field_of_study: null,
-        degree_level: major.degree_levels?.[0] || null,
+        image_url: major.image_url,
+        field_of_study: major.field_of_study,
+        degree_level: major.degree_level,
         career_opportunities: major.career_opportunities || [],
-        required_courses: major.common_courses || []
+        required_courses: major.required_courses || []
       }));
 
-      const mentors: MentorSearchResult[] = (mentorsResponse.data || []).map((mentor) => ({
+      const mentors: MentorSearchResult[] = (mentorsResponse.data || []).map((mentor: Profile) => ({
         id: mentor.id,
         type: "mentor",
         title: mentor.full_name || "Unknown",
