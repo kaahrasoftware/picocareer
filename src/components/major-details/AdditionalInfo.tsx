@@ -1,4 +1,3 @@
-import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface AdditionalInfoProps {
@@ -22,8 +21,7 @@ export function AdditionalInfo({
 }: AdditionalInfoProps) {
   return (
     <div className="space-y-4">
-      <h4 className="text-lg font-semibold flex items-center gap-2">
-        <Info className="h-5 w-5 text-primary" />
+      <h4 className="text-lg font-semibold">
         Additional Information
       </h4>
 
