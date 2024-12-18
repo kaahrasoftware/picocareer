@@ -59,6 +59,7 @@ export function MajorDetailsDialog({ major, open, onOpenChange }: MajorDetailsDi
             <AboutSection 
               description={major.description}
               learning_objectives={major.learning_objectives}
+              interdisciplinary_connections={major.interdisciplinary_connections}
             />
 
             <AcademicRequirements 
