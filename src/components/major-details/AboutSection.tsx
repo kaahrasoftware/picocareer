@@ -49,7 +49,7 @@ export function AboutSection({
             <div className="flex gap-4">
               {mentors.map((mentor) => (
                 <div key={mentor.id} className="flex flex-col items-center space-y-2">
-                  <Avatar className="h-16 w-16">
+                  <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                     <AvatarImage src={mentor.avatar_url || ''} alt={mentor.full_name || ''} />
                     <AvatarFallback>{mentor.full_name?.[0] || '?'}</AvatarFallback>
                   </Avatar>
