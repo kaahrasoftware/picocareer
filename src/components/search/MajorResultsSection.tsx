@@ -81,6 +81,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             stress_level: null,
             dropout_rates: null,
             majors_to_consider_switching_to: [],
+            profiles_count: 0,
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}
