@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MajorDetailsDialog } from "./MajorDetailsDialog";
+import { MajorDetails } from "./MajorDetails";
 import { MajorHeader } from "./major/MajorHeader";
 import { MajorSalary } from "./major/MajorSalary";
 import { MajorSkillsList } from "./major/MajorSkillsList";
@@ -66,7 +66,7 @@ export function MajorCard(props: MajorCardProps) {
         </div>
       </Card>
 
-      <MajorDetailsDialog
+      <MajorDetails
         major={{
           id: props.id || '',
           title: props.title,
