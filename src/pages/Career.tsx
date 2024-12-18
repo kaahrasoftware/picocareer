@@ -1,180 +1,173 @@
+import { useState } from "react";
+import { CareerCard } from "@/components/CareerCard";
+import { CareerListDialog } from "@/components/CareerListDialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CareerCard } from "@/components/CareerCard";
-import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CommunityFilters } from "@/components/community/CommunityFilters";
-import { BlogPagination } from "@/components/blog/BlogPagination";
-import { MenuSidebar } from "@/components/MenuSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { useToast } from "@/hooks/use-toast";
-import type { Career } from "@/types/database/careers";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function CareerPage() {
+export default function Career() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [industryFilter, setIndustryFilter] = useState<string | null>(null);
-  const [salaryFilter, setSalaryFilter] = useState<string | null>(null);
-  const [educationFilter, setEducationFilter] = useState<string | null>(null);
-  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const CAREERS_PER_PAGE = 15;
-  const { toast } = useToast();
+  const [industryFilter, setIndustryFilter] = useState("all");
+  const [salaryFilter, setSalaryFilter] = useState("all");
 
-  const { data: careers = [], isLoading, error } = useQuery({
-    queryKey: ['careers'],
+  const { data: careers = [], isLoading } = useQuery({
+    queryKey: ["careers"],
     queryFn: async () => {
-      console.log('Fetching careers...');
-      
-      try {
-        const { data, error } = await supabase
-          .from('careers')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
+      const { data, error } = await supabase
+        .from("careers")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-        console.log('Careers fetched successfully:', data?.length);
-        return data;
-      } catch (err) {
-        console.error('Error in careers query:', err);
-        toast({
-          title: "Error loading careers",
-          description: "There was an error loading the careers. Please try again later.",
-          variant: "destructive",
-        });
-        throw err;
-      }
+      if (error) throw error;
+      return data;
     },
-    retry: 2,
-    retryDelay: 1000,
   });
 
-  if (error) {
-    console.error('React Query error:', error);
-  }
+  const filteredCareers = careers.filter((career) => {
+    const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesIndustry = industryFilter === "all" || career.industry === industryFilter;
+    const matchesSalary =
+      salaryFilter === "all" ||
+      (career.salary_range && career.salary_range.includes(salaryFilter));
 
-  const industries = Array.from(new Set(careers?.map(c => c.industry).filter(Boolean) || [])).sort();
-  const salaryRanges = Array.from(new Set(careers?.map(c => c.salary_range).filter(Boolean) || [])).sort();
-  const educationLevels = Array.from(new Set(careers?.flatMap(c => c.required_education || []) || [])).sort();
-  const allSkills = Array.from(new Set(careers?.flatMap(c => c.required_skills || []) || [])).sort();
-  const fields = Array.from(new Set(careers?.map(c => c.industry).filter(Boolean) || [])).sort();
-
-  const filteredCareers = careers?.filter(career => {
-    const searchableFields = [
-      career.title,
-      career.description,
-      career.industry,
-      ...(career.required_skills || []),
-      ...(career.required_tools || []),
-      ...(career.keywords || [])
-    ].filter(Boolean).map(field => field.toLowerCase());
-
-    const matchesSearch = searchQuery === "" || 
-      searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
-
-    const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => (career.required_skills || []).includes(skill));
-    const matchesIndustry = !industryFilter || career.industry === industryFilter;
-    const matchesSalary = !salaryFilter || career.salary_range === salaryFilter;
-    const matchesEducation = !educationFilter || 
-      (career.required_education || []).includes(educationFilter);
-    const matchesField = !fieldFilter || career.industry === fieldFilter;
-
-    return matchesSearch && matchesSkills && matchesIndustry && 
-           matchesSalary && matchesEducation && matchesField;
+    return matchesSearch && matchesIndustry && matchesSalary;
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil((filteredCareers?.length || 0) / CAREERS_PER_PAGE);
-  const startIndex = (currentPage - 1) * CAREERS_PER_PAGE;
-  const paginatedCareers = filteredCareers?.slice(startIndex, startIndex + CAREERS_PER_PAGE);
-
-  return (
-    <SidebarProvider>
-      <div className="app-layout">
-        <MenuSidebar />
-        <div className="main-content">
-          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-            <div className="space-y-8">
-              <h1 className="text-3xl font-bold">PicoCareer Careers</h1>
-              
-              <CommunityFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedSkills={selectedSkills}
-                onSkillsChange={setSelectedSkills}
-                locationFilter={industryFilter}
-                onLocationChange={setIndustryFilter}
-                companyFilter={salaryFilter}
-                onCompanyChange={setSalaryFilter}
-                schoolFilter={educationFilter}
-                onSchoolChange={setEducationFilter}
-                fieldFilter={fieldFilter}
-                onFieldChange={setFieldFilter}
-                locations={industries}
-                companies={salaryRanges}
-                schools={educationLevels}
-                fields={fields}
-                allSkills={allSkills}
-              />
-
-              {error ? (
-                <div className="text-center py-8">
-                  <p className="text-destructive">Failed to load careers.</p>
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className="mt-4 text-primary hover:underline"
-                  >
-                    Try refreshing the page
-                  </button>
-                </div>
-              ) : isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="p-6 rounded-lg border bg-card">
-                      <div className="flex items-start gap-4">
-                        <Skeleton className="h-16 w-16 rounded-lg" />
-                        <div className="flex-1">
-                          <Skeleton className="h-4 w-3/4 mb-2" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedCareers?.map((career) => (
-                      <CareerCard 
-                        key={career.id}
-                        id={career.id}
-                        title={career.title}
-                        description={career.description}
-                        salary_range={career.salary_range}
-                        average_salary={career.average_salary}
-                        image_url={career.image_url}
-                      />
-                    ))}
-                  </div>
-                  
-                  {totalPages > 1 && (
-                    <BlogPagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
-                  )}
-                </>
-              )}
-            </div>
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-64" />
+            ))}
           </div>
         </div>
       </div>
-    </SidebarProvider>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col space-y-8">
+        {/* Featured Careers Section */}
+        <section>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Featured Careers</h2>
+            <button 
+              onClick={() => setIsDialogOpen(true)}
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              View all
+            </button>
+          </div>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 5000,
+                stopOnInteraction: true,
+                stopOnMouseEnter: true,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {careers.map((career) => (
+                <CarouselItem key={career.id} className="basis-1/3">
+                  <CareerCard
+                    id={career.id}
+                    title={career.title}
+                    description={career.description}
+                    salary_range={career.salary_range}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+        </section>
+
+        {/* Search and Filter Section */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Explore Careers</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Input
+              placeholder="Search careers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Select value={industryFilter} onValueChange={setIndustryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Industry" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Industries</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="healthcare">Healthcare</SelectItem>
+                <SelectItem value="finance">Finance</SelectItem>
+                <SelectItem value="education">Education</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={salaryFilter} onValueChange={setSalaryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Salary Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Ranges</SelectItem>
+                <SelectItem value="0-50K">$0 - $50K</SelectItem>
+                <SelectItem value="50K-100K">$50K - $100K</SelectItem>
+                <SelectItem value="100K+">$100K+</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCareers.map((career) => (
+              <CareerCard
+                key={career.id}
+                id={career.id}
+                title={career.title}
+                description={career.description}
+                salary_range={career.salary_range}
+              />
+            ))}
+          </div>
+          {filteredCareers.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No careers found matching your filters.
+            </div>
+          )}
+        </section>
+      </div>
+
+      <CareerListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        careers={careers}
+      />
+    </div>
   );
 }

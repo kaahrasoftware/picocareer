@@ -40,9 +40,11 @@ export const CareerResultsSection = ({ careers, onSelectCareer }: CareerResultsS
                   {career.description}
                 </p>
               </div>
-              <Badge variant="secondary" className="self-start">
-                {career.salary_range || `$${career.average_salary?.toLocaleString()}`}
-              </Badge>
+              {career.salary_range && (
+                <Badge variant="secondary" className="self-start">
+                  {career.salary_range}
+                </Badge>
+              )}
             </Card>
           ))}
         </div>

@@ -117,8 +117,6 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
                 title={career.title}
                 description={career.description}
                 salary_range={career.salary_range}
-                average_salary={career.average_salary}
-                image_url={career.image_url}
               />
             ))}
           </div>
