@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, DollarSign } from "lucide-react";
+import { Users } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { AboutSection } from "./major-details/AboutSection";
 import { AcademicRequirements } from "./major-details/AcademicRequirements";
@@ -35,22 +35,19 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
       <DialogContent className="max-w-4xl max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
           <div className="flex items-center justify-between mb-2">
-            <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-2">
+              <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
               {major.potential_salary && (
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant="outline" className="bg-[#F2FCE2] text-[#4B5563]">
-                    {major.potential_salary}
-                  </Badge>
-                </div>
+                <Badge variant="outline" className="bg-[#FFDEE2] text-[#4B5563] self-start">
+                  {major.potential_salary}
+                </Badge>
               )}
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {formatProfileCount(major.profiles_count)} Users
-                </span>
-              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {formatProfileCount(major.profiles_count)} Users
+              </span>
             </div>
           </div>
           {major.degree_levels && major.degree_levels.length > 0 && (
