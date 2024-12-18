@@ -60,6 +60,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
               description={major.description}
               learning_objectives={major.learning_objectives}
               interdisciplinary_connections={major.interdisciplinary_connections}
+              majorId={major.id}
             />
 
             <AcademicRequirements 
