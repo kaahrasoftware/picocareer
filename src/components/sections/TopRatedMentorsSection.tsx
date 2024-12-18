@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
-import { MentorListDialog } from "@/components/MentorListDialog";
 import { useTopRatedMentors } from "@/hooks/useTopRatedMentors";
 import { Link } from "react-router-dom";
 import {
@@ -20,6 +18,10 @@ export const TopRatedMentorsSection = () => {
   }
 
   const mentors = data?.mentors || [];
+
+  if (mentors.length === 0) {
+    return null;
+  }
 
   return (
     <section className="mb-16">

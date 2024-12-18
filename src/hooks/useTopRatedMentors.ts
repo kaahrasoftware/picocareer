@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Profile } from "@/types/database/profiles";
+import type { Mentor } from "@/types/mentor";
 
 export function useTopRatedMentors(page = 1, limit = 6) {
   return useQuery({
@@ -19,9 +19,7 @@ export function useTopRatedMentors(page = 1, limit = 6) {
           position,
           bio,
           skills,
-          tools_used,
           company:companies(name),
-          school:schools(name),
           academic_major:majors!profiles_academic_major_id_fkey(title)
         `, { count: 'exact' })
         .eq('user_type', 'mentor')
@@ -47,8 +45,11 @@ export function useTopRatedMentors(page = 1, limit = 6) {
           connected: "0",
           recordings: "0"
         },
+        top_mentor: true,
         education: profile.academic_major?.title || '',
-      }));
+        bio: profile.bio || '',
+        skills: profile.skills || []
+      })) as Mentor[];
 
       return {
         mentors,
