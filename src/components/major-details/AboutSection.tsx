@@ -67,26 +67,28 @@ export function AboutSection({
       {mentors && mentors.length > 0 && (
         <div>
           <h5 className="text-sm font-medium mb-3">Mentors with this major</h5>
-          <ScrollArea className="w-full whitespace-nowrap pb-2">
-            <div className="flex gap-4 justify-center px-4 min-w-full">
-              {mentors.map((mentor) => (
-                <div key={mentor.id} className="flex flex-col items-center space-y-2">
-                  <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]">
-                    <AvatarImage src={mentor.avatar_url || ''} alt={mentor.full_name || ''} />
-                    <AvatarFallback>{mentor.full_name?.[0] || '?'}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center">
-                    <p className="text-sm font-medium truncate max-w-[120px]">
-                      {mentor.full_name}
-                    </p>
-                    {mentor.position && (
-                      <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                        {mentor.position}
+          <ScrollArea className="w-full pb-2">
+            <div className="flex justify-center min-w-full py-2">
+              <div className="flex gap-4 px-4">
+                {mentors.map((mentor) => (
+                  <div key={mentor.id} className="flex flex-col items-center space-y-2">
+                    <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+                      <AvatarImage src={mentor.avatar_url || ''} alt={mentor.full_name || ''} />
+                      <AvatarFallback>{mentor.full_name?.[0] || '?'}</AvatarFallback>
+                    </Avatar>
+                    <div className="text-center">
+                      <p className="text-sm font-medium truncate max-w-[120px]">
+                        {mentor.full_name}
                       </p>
-                    )}
+                      {mentor.position && (
+                        <p className="text-xs text-muted-foreground truncate max-w-[120px]">
+                          {mentor.position}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </ScrollArea>
           {totalPages > 1 && (
