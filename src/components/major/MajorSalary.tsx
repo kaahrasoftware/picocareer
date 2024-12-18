@@ -1,18 +1,16 @@
 import { DollarSign } from "lucide-react";
 
 interface MajorSalaryProps {
-  potentialSalary?: string;
+  potentialSalary?: string | null;
 }
 
 export function MajorSalary({ potentialSalary }: MajorSalaryProps) {
   if (!potentialSalary) return null;
 
   return (
-    <div className="mb-4 flex items-center gap-2 text-foreground/90">
-      <DollarSign className="h-4 w-4 text-primary" />
-      <span className="text-sm font-medium">
-        Potential Salary: {potentialSalary}
-      </span>
+    <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+      <DollarSign className="h-4 w-4" />
+      <span>Potential Salary: {potentialSalary}</span>
     </div>
   );
 }

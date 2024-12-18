@@ -15,6 +15,23 @@ interface MajorCardProps {
   tools_knowledge?: string[];
   common_courses?: string[];
   profiles_count?: number;
+  degree_levels?: string[];
+  learning_objectives?: string[];
+  interdisciplinary_connections?: string[];
+  job_prospects?: string;
+  certifications_to_consider?: string[];
+  affiliated_programs?: string[];
+  gpa_expectations?: number;
+  transferable_skills?: string[];
+  passion_for_subject?: string;
+  professional_associations?: string[];
+  global_applicability?: string;
+  common_difficulties?: string[];
+  career_opportunities?: string[];
+  intensity?: string;
+  stress_level?: string;
+  dropout_rates?: string;
+  majors_to_consider_switching_to?: string[];
 }
 
 export function MajorCard(props: MajorCardProps) {
@@ -74,28 +91,27 @@ export function MajorCard(props: MajorCardProps) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           featured: false,
-          learning_objectives: [],
+          learning_objectives: props.learning_objectives || [],
           common_courses: props.common_courses || [],
-          interdisciplinary_connections: [],
-          job_prospects: null,
-          certifications_to_consider: [],
-          degree_levels: [],
-          affiliated_programs: [],
-          gpa_expectations: null,
-          transferable_skills: [],
+          interdisciplinary_connections: props.interdisciplinary_connections || [],
+          job_prospects: props.job_prospects || null,
+          certifications_to_consider: props.certifications_to_consider || [],
+          degree_levels: props.degree_levels || [],
+          affiliated_programs: props.affiliated_programs || [],
+          gpa_expectations: props.gpa_expectations || null,
+          transferable_skills: props.transferable_skills || [],
           tools_knowledge: props.tools_knowledge || [],
-          tuition_and_fees: null,
           potential_salary: props.potential_salary || null,
-          passion_for_subject: null,
+          passion_for_subject: props.passion_for_subject || null,
           skill_match: props.skill_match || [],
-          professional_associations: [],
-          global_applicability: null,
-          common_difficulties: [],
-          career_opportunities: [],
-          intensity: null,
-          stress_level: null,
-          dropout_rates: null,
-          majors_to_consider_switching_to: [],
+          professional_associations: props.professional_associations || [],
+          global_applicability: props.global_applicability || null,
+          common_difficulties: props.common_difficulties || [],
+          career_opportunities: props.career_opportunities || [],
+          intensity: props.intensity || null,
+          stress_level: props.stress_level || null,
+          dropout_rates: props.dropout_rates || null,
+          majors_to_consider_switching_to: props.majors_to_consider_switching_to || [],
           profiles_count: props.profiles_count,
         }}
         open={dialogOpen}
