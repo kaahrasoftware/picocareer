@@ -37,21 +37,37 @@ export function useSearchData(searchTerm: string) {
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(5),
 
-        // Search mentor profiles
+        // Search mentor profiles with expanded fields
         supabase
           .from("profiles")
           .select(`
             id,
+            first_name,
+            last_name,
             full_name,
             avatar_url,
             position,
-            bio,
+            highest_degree,
             skills,
+            tools_used,
+            keywords,
+            bio,
+            location,
+            fields_of_interest,
             company:company_id(name),
-            school:school_id(name)
+            school:school_id(name),
+            academic_major:academic_major_id(title)
           `)
           .eq('user_type', 'mentor')
-          .or(`full_name.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
+          .or(
+            `first_name.ilike.%${searchTerm}%,` +
+            `last_name.ilike.%${searchTerm}%,` +
+            `full_name.ilike.%${searchTerm}%,` +
+            `position.ilike.%${searchTerm}%,` +
+            `highest_degree.ilike.%${searchTerm}%,` +
+            `bio.ilike.%${searchTerm}%,` +
+            `location.ilike.%${searchTerm}%`
+          )
           .limit(5)
       ]);
 
@@ -82,11 +98,22 @@ export function useSearchData(searchTerm: string) {
       const mentorResults: SearchResult[] = (mentorsResponse.data || []).map(mentor => ({
         id: mentor.id,
         type: "mentor" as const,
-        title: mentor.full_name || '',
-        description: mentor.position || '',
+        title: mentor.full_name || `${mentor.first_name} ${mentor.last_name}`.trim(),
+        description: [
+          mentor.position,
+          mentor.highest_degree,
+          mentor.location,
+          mentor.company?.name,
+          mentor.school?.name,
+          mentor.academic_major?.title
+        ].filter(Boolean).join(' • '),
         avatar_url: mentor.avatar_url,
         position: mentor.position,
-        company_name: mentor.company?.name
+        company_name: mentor.company?.name,
+        skills: mentor.skills,
+        tools: mentor.tools_used,
+        keywords: mentor.keywords,
+        fields_of_interest: mentor.fields_of_interest
       }));
 
       // Combine all results
