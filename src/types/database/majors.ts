@@ -15,7 +15,6 @@ export interface Major {
   gpa_expectations: number | null;
   transferable_skills: string[] | null;
   tools_knowledge: string[] | null;
-  tuition_and_fees: string | null;
   potential_salary: string | null;
   passion_for_subject: string | null;
   skill_match: string[] | null;
@@ -27,10 +26,5 @@ export interface Major {
   stress_level: string | null;
   dropout_rates: string | null;
   majors_to_consider_switching_to: string[] | null;
-  image_url?: string | null;
-  field_of_study?: string | null;
-  required_courses?: string[] | null;
-  degree_level?: string | null;
   profiles_count?: number | null;
-  relatedCareers?: string[] | null; // Added to fix MajorCard error
 }

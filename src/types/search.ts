@@ -5,7 +5,8 @@ import type { Profile } from "./database/profiles";
 interface BaseSearchResult {
   id: string;
   title: string;
-  description: string | null;
+  description: string;
+  type: "career" | "major" | "mentor";
 }
 
 export interface CareerSearchResult extends BaseSearchResult {
@@ -15,10 +16,9 @@ export interface CareerSearchResult extends BaseSearchResult {
 
 export interface MajorSearchResult extends BaseSearchResult {
   type: "major";
-  field_of_study: string | null;
-  degree_levels: string[];
-  career_opportunities: string[];
-  required_courses: string[];
+  degree_levels: string[] | null;
+  career_opportunities: string[] | null;
+  common_courses: string[] | null;
 }
 
 export interface MentorSearchResult extends BaseSearchResult {

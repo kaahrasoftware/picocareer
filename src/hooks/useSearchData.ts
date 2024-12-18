@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Major } from "@/types/database/majors";
-
-export type SearchResult = Major;
+import type { SearchResult } from "@/types/search";
 
 export function useSearchData(searchTerm: string) {
   return useQuery({
@@ -12,36 +10,7 @@ export function useSearchData(searchTerm: string) {
 
       const { data: majors, error: majorsError } = await supabase
         .from("majors")
-        .select(`
-          id,
-          title,
-          description,
-          created_at,
-          updated_at,
-          featured,
-          learning_objectives,
-          common_courses,
-          interdisciplinary_connections,
-          job_prospects,
-          certifications_to_consider,
-          degree_levels,
-          affiliated_programs,
-          gpa_expectations,
-          transferable_skills,
-          tools_knowledge,
-          potential_salary,
-          passion_for_subject,
-          skill_match,
-          professional_associations,
-          global_applicability,
-          common_difficulties,
-          career_opportunities,
-          intensity,
-          stress_level,
-          dropout_rates,
-          majors_to_consider_switching_to,
-          profiles_count
-        `)
+        .select("*")
         .textSearch("title", searchTerm)
         .limit(10);
 
@@ -50,7 +19,16 @@ export function useSearchData(searchTerm: string) {
         throw majorsError;
       }
 
-      return majors || [];
+      // Transform majors data to match SearchResult type
+      return (majors || []).map(major => ({
+        id: major.id,
+        type: "major" as const,
+        title: major.title,
+        description: major.description,
+        degree_levels: major.degree_levels,
+        career_opportunities: major.career_opportunities,
+        common_courses: major.common_courses
+      }));
     },
     enabled: searchTerm.length > 0,
   });
