@@ -43,7 +43,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
                 </p>
               </div>
               <Badge variant="secondary" className="self-start">
-                {major.field_of_study || major.degree_level || 'Major'}
+                {major.field_of_study || major.degree_levels.join(", ") || 'Major'}
               </Badge>
             </Card>
           ))}
@@ -56,10 +56,29 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             id: selectedMajor.id,
             title: selectedMajor.title,
             description: selectedMajor.description,
-            image_url: selectedMajor.image_url,
+            image_url: selectedMajor.image_url || '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             featured: false,
+            learning_objectives: [],
+            interdisciplinary_connections: [],
+            job_prospects: null,
+            certifications_to_consider: [],
+            degree_levels: [],
+            affiliated_programs: [],
+            gpa_expectations: null,
+            transferable_skills: [],
+            tools_knowledge: [],
+            potential_salary: null,
+            passion_for_subject: null,
+            skill_match: [],
+            professional_associations: [],
+            global_applicability: null,
+            common_difficulties: [],
+            career_opportunities: [],
+            intensity: null,
+            stress_level: null,
+            dropout_rates: null,
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}

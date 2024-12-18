@@ -45,9 +45,9 @@ export function useSearchData(query: string) {
         type: "career",
         title: career.title,
         description: career.description,
-        image_url: career.image_url,
+        image_url: career.image_url || null,
         salary_range: career.salary_range,
-        average_salary: career.average_salary,
+        average_salary: career.average_salary || null,
       }));
 
       const majors: MajorSearchResult[] = (majorsResponse.data || []).map((major) => ({
@@ -55,9 +55,9 @@ export function useSearchData(query: string) {
         type: "major",
         title: major.title,
         description: major.description,
-        image_url: major.image_url,
-        field_of_study: major.field_of_study,
-        degree_level: major.degree_level,
+        image_url: major.image_url || null,
+        field_of_study: null, // This field doesn't exist in the database
+        degree_levels: major.degree_levels || [],
         career_opportunities: major.career_opportunities || [],
         required_courses: major.common_courses || [],
       }));

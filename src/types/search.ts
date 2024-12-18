@@ -2,7 +2,6 @@ import type { Career } from "./database/careers";
 import type { Major } from "./database/majors";
 import type { Profile } from "./database/profiles";
 
-// Base interface for all search results
 interface BaseSearchResult {
   id: string;
   title: string;
@@ -19,7 +18,7 @@ export interface CareerSearchResult extends BaseSearchResult {
 export interface MajorSearchResult extends BaseSearchResult {
   type: "major";
   field_of_study: string | null;
-  degree_level: string | null;
+  degree_levels: string[];
   career_opportunities: string[];
   required_courses: string[];
 }
