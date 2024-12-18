@@ -1,4 +1,4 @@
-import { Lightbulb, GraduationCap } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -132,8 +132,7 @@ export function AboutSection({
         
         {learning_objectives && learning_objectives.length > 0 && (
           <div className="mt-4">
-            <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-primary" />
+            <h5 className="text-sm font-medium mb-2">
               Learning Objectives
             </h5>
             <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
