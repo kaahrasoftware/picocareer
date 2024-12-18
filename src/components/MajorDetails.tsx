@@ -50,19 +50,27 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
               </span>
             </div>
           </div>
-          {major.degree_levels && major.degree_levels.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {major.degree_levels.map((level, index) => (
-                <Badge key={index} variant="outline" className="bg-[#F2FCE2] text-[#4B5563]">
-                  {level}
-                </Badge>
-              ))}
-            </div>
-          )}
         </DialogHeader>
         
         <ScrollArea className="h-[calc(85vh-120px)] px-6">
           <div className="space-y-6 pb-6">
+            {major.degree_levels && major.degree_levels.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-lg font-semibold">Degree Levels</h4>
+                <div className="flex flex-wrap gap-2">
+                  {major.degree_levels.map((level, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="outline"
+                      className="bg-[#F2FCE2] text-[#4B5563]"
+                    >
+                      {level}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <AboutSection 
               description={major.description}
               learning_objectives={major.learning_objectives}
