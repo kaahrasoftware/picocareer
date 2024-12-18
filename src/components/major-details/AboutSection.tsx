@@ -68,7 +68,7 @@ export function AboutSection({
         <div>
           <h5 className="text-sm font-medium mb-3">Mentors with this major</h5>
           <ScrollArea className="w-full whitespace-nowrap pb-2">
-            <div className="flex gap-4">
+            <div className="flex gap-4 justify-center px-4 min-w-full">
               {mentors.map((mentor) => (
                 <div key={mentor.id} className="flex flex-col items-center space-y-2">
                   <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]">
