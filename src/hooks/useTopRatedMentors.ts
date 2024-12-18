@@ -35,13 +35,23 @@ export function useTopRatedMentors(page = 1, limit = 6) {
       }
 
       console.log('Top rated mentors fetched:', data?.length, 'Total:', count);
+      
+      const mentors = data.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || '',
+        title: profile.position || '',
+        company: profile.company?.name || '',
+        imageUrl: profile.avatar_url || '',
+        stats: {
+          mentees: "0",
+          connected: "0",
+          recordings: "0"
+        },
+        education: profile.academic_major?.title || '',
+      }));
+
       return {
-        mentors: data.map(profile => ({
-          ...profile,
-          company_name: profile.company?.name,
-          school_name: profile.school?.name,
-          academic_major: profile.academic_major?.title || null
-        })) as Profile[],
+        mentors,
         totalCount: count || 0,
         totalPages: Math.ceil((count || 0) / limit)
       };

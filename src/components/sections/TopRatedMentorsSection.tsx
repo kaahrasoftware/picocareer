@@ -13,11 +13,13 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 
 export const TopRatedMentorsSection = () => {
-  const { data: mentors = [], isLoading } = useTopRatedMentors();
+  const { data, isLoading } = useTopRatedMentors();
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  const mentors = data?.mentors || [];
 
   return (
     <section className="mb-16">
