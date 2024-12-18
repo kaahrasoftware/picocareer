@@ -69,11 +69,10 @@ export function MajorCard(props: MajorCardProps) {
       <MajorDetailsDialog
         major={{
           ...props,
-          imageUrl: '',
-          users: '0',
-          relatedCareers: [],
-          requiredCourses: [],
-          averageGPA: 'N/A',
+          image_url: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          featured: false,
         }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}

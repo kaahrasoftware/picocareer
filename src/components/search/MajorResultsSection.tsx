@@ -53,15 +53,13 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
       {selectedMajor && isMajorResult(selectedMajor) && (
         <MajorDetailsDialog
           major={{
+            id: selectedMajor.id,
             title: selectedMajor.title,
-            description: selectedMajor.description || '',
-            users: '0',
-            imageUrl: selectedMajor.image_url || '/placeholder.svg',
-            relatedCareers: selectedMajor.career_opportunities || [],
-            requiredCourses: selectedMajor.required_courses || [],
-            averageGPA: 'N/A',
-            fieldOfStudy: selectedMajor.field_of_study || undefined,
-            degreeLevel: selectedMajor.degree_level || undefined
+            description: selectedMajor.description,
+            image_url: selectedMajor.image_url,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            featured: false,
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}

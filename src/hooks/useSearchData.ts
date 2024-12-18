@@ -40,7 +40,7 @@ export function useSearchData(query: string) {
       if (majorsResponse.error) throw majorsResponse.error;
       if (mentorsResponse.error) throw mentorsResponse.error;
 
-      const careers: CareerSearchResult[] = (careersResponse.data || []).map((career: Career) => ({
+      const careers: CareerSearchResult[] = (careersResponse.data || []).map((career) => ({
         id: career.id,
         type: "career",
         title: career.title,
@@ -50,7 +50,7 @@ export function useSearchData(query: string) {
         average_salary: career.average_salary,
       }));
 
-      const majors: MajorSearchResult[] = (majorsResponse.data || []).map((major: Major) => ({
+      const majors: MajorSearchResult[] = (majorsResponse.data || []).map((major) => ({
         id: major.id,
         type: "major",
         title: major.title,
@@ -59,10 +59,10 @@ export function useSearchData(query: string) {
         field_of_study: major.field_of_study,
         degree_level: major.degree_level,
         career_opportunities: major.career_opportunities || [],
-        required_courses: major.required_courses || []
+        required_courses: major.common_courses || [],
       }));
 
-      const mentors: MentorSearchResult[] = (mentorsResponse.data || []).map((mentor: Profile) => ({
+      const mentors: MentorSearchResult[] = (mentorsResponse.data || []).map((mentor) => ({
         id: mentor.id,
         type: "mentor",
         title: mentor.full_name || "Unknown",
@@ -75,8 +75,8 @@ export function useSearchData(query: string) {
       return [...careers, ...majors, ...mentors];
     },
     enabled: !!query,
-    staleTime: 1000 * 60, // Cache for 1 minute
-    retry: false, // Don't retry failed requests
-    refetchOnWindowFocus: false, // Prevent excessive refetching
+    staleTime: 1000 * 60,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }
