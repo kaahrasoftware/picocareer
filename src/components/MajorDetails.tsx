@@ -47,7 +47,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
           {major.degree_levels && major.degree_levels.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {major.degree_levels.map((level, index) => (
-                <Badge key={index} variant="outline" className="bg-[#FFDEE2] text-[#4B5563]">
+                <Badge key={index} variant="outline" className="bg-[#F2FCE2] text-[#4B5563]">
                   {level}
                 </Badge>
               ))}
