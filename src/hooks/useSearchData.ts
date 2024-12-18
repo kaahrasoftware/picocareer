@@ -19,8 +19,7 @@ export function useSearchData(searchTerm: string) {
           description,
           degree_levels,
           career_opportunities,
-          common_courses,
-          potential_salary
+          common_courses
         `)
         .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
         .limit(5);
@@ -58,16 +57,11 @@ export function useSearchData(searchTerm: string) {
           position,
           bio,
           skills,
-          company:company_id(name),
-          school:school_id(name)
+          company:companies(name),
+          school:schools(name)
         `)
         .eq('user_type', 'mentor')
-        .or(`
-          full_name.ilike.%${searchTerm}%,
-          position.ilike.%${searchTerm}%,
-          bio.ilike.%${searchTerm}%,
-          skills.cs.{${searchTerm}}
-        `)
+        .or(`full_name.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
         .limit(5);
 
       if (mentorsError) {
