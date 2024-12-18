@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users } from "lucide-react";
+import { Users, DollarSign } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { AboutSection } from "./major-details/AboutSection";
 import { AcademicRequirements } from "./major-details/AcademicRequirements";
@@ -36,11 +36,21 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         <DialogHeader className="p-6 pb-0">
           <div className="flex items-center justify-between mb-2">
             <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {formatProfileCount(major.profiles_count)} Users
-              </span>
+            <div className="flex items-center gap-4">
+              {major.potential_salary && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="outline" className="bg-[#F2FCE2] text-[#4B5563]">
+                    {major.potential_salary}
+                  </Badge>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {formatProfileCount(major.profiles_count)} Users
+                </span>
+              </div>
             </div>
           </div>
           {major.degree_levels && major.degree_levels.length > 0 && (
@@ -73,7 +83,6 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
               career_opportunities={major.career_opportunities}
               professional_associations={major.professional_associations}
               global_applicability={major.global_applicability}
-              potential_salary={major.potential_salary}
             />
 
             <SkillsAndTools 
