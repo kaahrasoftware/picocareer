@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { SearchResult } from "@/types/search";
 
+export type { SearchResult };
+
 export function useSearchData(searchTerm: string) {
   return useQuery({
     queryKey: ["search", searchTerm],
