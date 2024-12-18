@@ -39,7 +39,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                {formatProfileCount(major.profiles_count)} Active Students
+                {formatProfileCount(major.profiles_count)} Users
               </span>
             </div>
           </div>
