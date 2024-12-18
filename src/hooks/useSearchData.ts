@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Career } from "@/types/database/careers";
-import type { Major } from "@/types/database/majors";
-import type { Profile } from "@/types/database/profiles";
 import type { SearchResult, CareerSearchResult, MajorSearchResult, MentorSearchResult } from "@/types/search";
 
 export { type SearchResult };
@@ -45,9 +42,7 @@ export function useSearchData(query: string) {
         type: "career",
         title: career.title,
         description: career.description,
-        image_url: career.image_url || null,
         salary_range: career.salary_range,
-        average_salary: career.average_salary || null,
       }));
 
       const majors: MajorSearchResult[] = (majorsResponse.data || []).map((major) => ({
@@ -55,7 +50,6 @@ export function useSearchData(query: string) {
         type: "major",
         title: major.title,
         description: major.description,
-        image_url: major.image_url || null,
         field_of_study: null,
         degree_levels: major.degree_levels || [],
         career_opportunities: major.career_opportunities || [],
@@ -67,7 +61,6 @@ export function useSearchData(query: string) {
         type: "mentor",
         title: mentor.full_name || "Unknown",
         description: mentor.position || "Mentor",
-        image_url: mentor.avatar_url,
         avatar_url: mentor.avatar_url,
         position: mentor.position,
       }));

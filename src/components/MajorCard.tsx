@@ -68,12 +68,14 @@ export function MajorCard(props: MajorCardProps) {
 
       <MajorDetailsDialog
         major={{
-          ...props,
-          image_url: '',
+          id: props.id || '',
+          title: props.title,
+          description: props.description,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           featured: false,
           learning_objectives: [],
+          common_courses: props.common_courses || [],
           interdisciplinary_connections: [],
           job_prospects: null,
           certifications_to_consider: [],
@@ -81,10 +83,11 @@ export function MajorCard(props: MajorCardProps) {
           affiliated_programs: [],
           gpa_expectations: null,
           transferable_skills: [],
-          tools_knowledge: [],
-          potential_salary: null,
+          tools_knowledge: props.tools_knowledge || [],
+          tuition_and_fees: null,
+          potential_salary: props.potential_salary || null,
           passion_for_subject: null,
-          skill_match: [],
+          skill_match: props.skill_match || [],
           professional_associations: [],
           global_applicability: null,
           common_difficulties: [],
@@ -92,9 +95,8 @@ export function MajorCard(props: MajorCardProps) {
           intensity: null,
           stress_level: null,
           dropout_rates: null,
-          tuition_and_fees: null,
           majors_to_consider_switching_to: [],
-          common_courses: [],
+          profiles_count: props.profiles_count,
         }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}

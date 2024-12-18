@@ -6,13 +6,11 @@ interface BaseSearchResult {
   id: string;
   title: string;
   description: string | null;
-  image_url?: string | null;
 }
 
 export interface CareerSearchResult extends BaseSearchResult {
   type: "career";
   salary_range: string | null;
-  average_salary: number | null;
 }
 
 export interface MajorSearchResult extends BaseSearchResult {
