@@ -14,18 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MajorCard } from "@/components/MajorCard";
-
-interface Major {
-  title: string;
-  description: string;
-  users: string;
-  imageUrl: string;
-  relatedCareers: string[];
-  requiredCourses: string[];
-  averageGPA: string;
-  fieldOfStudy?: string;
-  degreeLevel?: string;
-}
+import type { Major } from "@/types/database/majors";
 
 interface MajorListDialogProps {
   isOpen: boolean;
@@ -42,14 +31,14 @@ export const MajorListDialog = ({ isOpen, onClose, majors }: MajorListDialogProp
 
   const filteredMajors = majors.filter((major) => {
     const matchesSearch = major.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesField = fieldFilter === "all" || major.fieldOfStudy === fieldFilter;
+    const matchesField = fieldFilter === "all" || (major.degree_levels || []).includes(fieldFilter);
     const matchesGPA = gpaFilter === "all" || (
-      gpaFilter === "3.5+" ? parseFloat(major.averageGPA) >= 3.5 :
-      gpaFilter === "3.0-3.5" ? parseFloat(major.averageGPA) >= 3.0 && parseFloat(major.averageGPA) < 3.5 :
-      parseFloat(major.averageGPA) < 3.0
+      gpaFilter === "3.5+" ? (major.gpa_expectations || 0) >= 3.5 :
+      gpaFilter === "3.0-3.5" ? (major.gpa_expectations || 0) >= 3.0 && (major.gpa_expectations || 0) < 3.5 :
+      (major.gpa_expectations || 0) < 3.0
     );
-    const matchesDegreeLevel = degreeLevelFilter === "all" || major.degreeLevel === degreeLevelFilter;
-    const matchesCourse = !courseFilter || major.requiredCourses.some(course => 
+    const matchesDegreeLevel = degreeLevelFilter === "all" || (major.degree_levels || []).includes(degreeLevelFilter);
+    const matchesCourse = !courseFilter || (major.common_courses || []).some(course => 
       course.toLowerCase().includes(courseFilter.toLowerCase())
     );
 
@@ -79,10 +68,10 @@ export const MajorListDialog = ({ isOpen, onClose, majors }: MajorListDialogProp
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Fields</SelectItem>
-                <SelectItem value="stem">STEM</SelectItem>
-                <SelectItem value="humanities">Humanities</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-                <SelectItem value="arts">Arts</SelectItem>
+                <SelectItem value="STEM">STEM</SelectItem>
+                <SelectItem value="Humanities">Humanities</SelectItem>
+                <SelectItem value="Business">Business</SelectItem>
+                <SelectItem value="Arts">Arts</SelectItem>
               </SelectContent>
             </Select>
 
@@ -104,10 +93,10 @@ export const MajorListDialog = ({ isOpen, onClose, majors }: MajorListDialogProp
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="associates">Associate's</SelectItem>
-                <SelectItem value="bachelors">Bachelor's</SelectItem>
-                <SelectItem value="masters">Master's</SelectItem>
-                <SelectItem value="doctorate">Doctorate</SelectItem>
+                <SelectItem value="Associate's">Associate's</SelectItem>
+                <SelectItem value="Bachelor's">Bachelor's</SelectItem>
+                <SelectItem value="Master's">Master's</SelectItem>
+                <SelectItem value="Doctorate">Doctorate</SelectItem>
               </SelectContent>
             </Select>
 
@@ -121,8 +110,8 @@ export const MajorListDialog = ({ isOpen, onClose, majors }: MajorListDialogProp
 
           {/* Results Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMajors.map((major, index) => (
-              <MajorCard key={index} {...major} />
+            {filteredMajors.map((major) => (
+              <MajorCard key={major.id} {...major} />
             ))}
           </div>
 
