@@ -19,12 +19,15 @@ export default function AuthPage() {
       }
       
       // Handle auth errors
-      if (event === 'USER_ERROR') {
-        toast({
-          title: "Account already exists",
-          description: "Please sign in instead or use a different email address.",
-          variant: "destructive",
-        });
+      if (event === 'SIGNED_OUT') {
+        const error = new URL(window.location.href).searchParams.get('error_description');
+        if (error?.includes('User already registered')) {
+          toast({
+            title: "Account already exists",
+            description: "Please sign in instead or use a different email address.",
+            variant: "destructive",
+          });
+        }
       }
     });
 
