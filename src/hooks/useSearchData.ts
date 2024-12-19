@@ -64,7 +64,7 @@ export function useSearchData(searchTerm: string) {
             `last_name.ilike.%${searchTerm}%,` +
             `full_name.ilike.%${searchTerm}%,` +
             `position.ilike.%${searchTerm}%,` +
-            `highest_degree::text.ilike.%${searchTerm}%,` +
+            `(highest_degree).ilike.%${searchTerm}%,` +
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%,` +
             `skills.cs.{${searchTerm}},` +
