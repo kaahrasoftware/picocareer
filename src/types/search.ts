@@ -25,7 +25,6 @@ export interface MentorSearchResult extends BaseSearchResult {
   type: "mentor";
   avatar_url: string | null;
   position: string | null;
-  top_mentor: boolean | null;
 }
 
 export type SearchResult = CareerSearchResult | MajorSearchResult | MentorSearchResult;
