@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, MessageCircle, Share2, MoreVertical, ChevronUp, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface VideoData {
   id: string;
   title: string;
   author: string;
+  authorAvatar?: string;
   likes: number;
   comments: number;
   videoUrl: string;
@@ -18,6 +20,7 @@ const VideoPage = () => {
       id: "1",
       title: "Why Did Man United Sign Pogba?",
       author: "@pitchsidechat",
+      authorAvatar: "/placeholder.svg",
       likes: 88000,
       comments: 1235,
       videoUrl: "/placeholder-video.mp4"
@@ -26,6 +29,7 @@ const VideoPage = () => {
       id: "2",
       title: "The Rise of Erling Haaland",
       author: "@footballinsights",
+      authorAvatar: "/placeholder.svg",
       likes: 120000,
       comments: 2100,
       videoUrl: "/placeholder-video.mp4"
@@ -34,6 +38,7 @@ const VideoPage = () => {
       id: "3",
       title: "Messi's Journey to World Cup Glory",
       author: "@soccerlegends",
+      authorAvatar: "/placeholder.svg",
       likes: 250000,
       comments: 5400,
       videoUrl: "/placeholder-video.mp4"
@@ -97,7 +102,13 @@ const VideoPage = () => {
             
             {/* Overlay Text */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
-              <h2 className="text-foreground text-lg font-semibold mb-2">{currentVideo.title}</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-foreground text-lg font-semibold">{currentVideo.title}</h2>
+                <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg">
+                  <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
+                  <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
+                </Avatar>
+              </div>
               <p className="text-muted-foreground text-sm">{currentVideo.author}</p>
             </div>
 
