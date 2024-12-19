@@ -37,7 +37,7 @@ export function useSearchData(searchTerm: string) {
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(5),
 
-        // Search mentor profiles with expanded fields - removed limit
+        // Search mentor profiles with expanded fields
         supabase
           .from("profiles")
           .select(`
@@ -54,6 +54,7 @@ export function useSearchData(searchTerm: string) {
             bio,
             location,
             fields_of_interest,
+            top_mentor,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title)
@@ -111,6 +112,7 @@ export function useSearchData(searchTerm: string) {
         ].filter(Boolean).join(' • '),
         avatar_url: mentor.avatar_url,
         position: mentor.position,
+        top_mentor: mentor.top_mentor,
         company_name: mentor.company?.name,
         skills: mentor.skills,
         tools: mentor.tools_used,
