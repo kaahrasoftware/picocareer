@@ -10,27 +10,23 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.onAuthStateChange((event, session) => {
+    // Check if user is already logged in and listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate("/");
       }
-    });
-
-    // Listen for auth errors
-    const handleAuthError = (error: any) => {
-      if (error?.message?.includes('User already registered')) {
+      
+      // Handle auth errors
+      if (event === 'USER_ERROR') {
         toast({
           title: "Account already exists",
           description: "Please sign in instead or use a different email address.",
           variant: "destructive",
         });
       }
-    };
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onError(handleAuthError);
+    });
 
     return () => {
       subscription.unsubscribe();
