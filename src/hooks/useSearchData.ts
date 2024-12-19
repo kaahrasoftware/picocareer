@@ -67,11 +67,11 @@ export function useSearchData(searchTerm: string) {
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%`
           )
-          // Use array_to_string for array fields to enable text search
-          .or(`array_to_string(skills, ',') ilike '%${searchTerm}%'`)
-          .or(`array_to_string(tools_used, ',') ilike '%${searchTerm}%'`)
-          .or(`array_to_string(keywords, ',') ilike '%${searchTerm}%'`)
-          .or(`array_to_string(fields_of_interest, ',') ilike '%${searchTerm}%'`)
+          // Filter for array fields using contains operator
+          .or(`skills.cs.{${searchTerm}}`)
+          .or(`tools_used.cs.{${searchTerm}}`)
+          .or(`keywords.cs.{${searchTerm}}`)
+          .or(`fields_of_interest.cs.{${searchTerm}}`)
           .limit(5)
       ]);
 
