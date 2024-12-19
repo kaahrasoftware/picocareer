@@ -66,10 +66,10 @@ export function useSearchData(searchTerm: string) {
             `position.ilike.%${searchTerm}%,` +
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%,` +
-            `skills.cs.{${searchTerm}},` +
-            `tools_used.cs.{${searchTerm}},` +
-            `keywords.cs.{${searchTerm}},` +
-            `fields_of_interest.cs.{${searchTerm}}`
+            `skills::text ILIKE ANY (array['%${searchTerm}%']),` +
+            `tools_used::text ILIKE ANY (array['%${searchTerm}%']),` +
+            `keywords::text ILIKE ANY (array['%${searchTerm}%']),` +
+            `fields_of_interest::text ILIKE ANY (array['%${searchTerm}%'])`
           )
           .limit(5)
       ]);
