@@ -1,6 +1,6 @@
 import { CommandGroup } from "@/components/ui/command";
 import { SearchResultItem } from "./SearchResultItem";
-import type { SearchResult } from "@/types/search/types";
+import type { SearchResult } from "@/hooks/useSearchData";
 
 interface SearchResultGroupProps {
   category: string;
