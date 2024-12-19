@@ -8,163 +8,145 @@ export function useSearchData(searchTerm: string) {
   return useQuery({
     queryKey: ["search", searchTerm],
     queryFn: async (): Promise<SearchResult[]> => {
-      try {
-        if (!searchTerm || searchTerm.length <= 2) return [];
+      if (!searchTerm) return [];
 
-        const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
-          // Majors search
-          supabase
-            .from("majors")
-            .select(`
-              id,
-              title,
-              description,
-              degree_levels,
-              career_opportunities,
-              common_courses,
-              learning_objectives,
-              interdisciplinary_connections,
-              job_prospects,
-              certifications_to_consider,
-              affiliated_programs,
-              transferable_skills,
-              tools_knowledge,
-              skill_match,
-              professional_associations,
-              common_difficulties,
-              majors_to_consider_switching_to
-            `)
-            .or(
-              `title.ilike.%${searchTerm}%,` +
-              `description.ilike.%${searchTerm}%,` +
-              `job_prospects.ilike.%${searchTerm}%`
-            )
-            .or(`degree_levels.cs.{${searchTerm}}`)
-            .or(`career_opportunities.cs.{${searchTerm}}`)
-            .or(`common_courses.cs.{${searchTerm}}`)
-            .or(`learning_objectives.cs.{${searchTerm}}`)
-            .or(`interdisciplinary_connections.cs.{${searchTerm}}`)
-            .or(`certifications_to_consider.cs.{${searchTerm}}`)
-            .or(`affiliated_programs.cs.{${searchTerm}}`)
-            .or(`transferable_skills.cs.{${searchTerm}}`)
-            .or(`tools_knowledge.cs.{${searchTerm}}`)
-            .or(`skill_match.cs.{${searchTerm}}`)
-            .or(`professional_associations.cs.{${searchTerm}}`)
-            .or(`common_difficulties.cs.{${searchTerm}}`)
-            .or(`majors_to_consider_switching_to.cs.{${searchTerm}}`)
-            .limit(5),
+      const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
+        // Search majors with expanded field search
+        supabase
+          .from("majors")
+          .select(`
+            id,
+            title,
+            description,
+            degree_levels,
+            career_opportunities,
+            common_courses,
+            learning_objectives,
+            interdisciplinary_connections,
+            job_prospects,
+            certifications_to_consider,
+            affiliated_programs,
+            transferable_skills,
+            tools_knowledge,
+            skill_match,
+            professional_associations,
+            common_difficulties,
+            majors_to_consider_switching_to
+          `)
+          .or(
+            `title.ilike.%${searchTerm}%,` +
+            `description.ilike.%${searchTerm}%,` +
+            `learning_objectives.ilike.%${searchTerm}%,` +
+            `common_courses.ilike.%${searchTerm}%,` +
+            `interdisciplinary_connections.ilike.%${searchTerm}%,` +
+            `job_prospects.ilike.%${searchTerm}%,` +
+            `certifications_to_consider.ilike.%${searchTerm}%,` +
+            `degree_levels.ilike.%${searchTerm}%,` +
+            `affiliated_programs.ilike.%${searchTerm}%,` +
+            `transferable_skills.ilike.%${searchTerm}%,` +
+            `tools_knowledge.ilike.%${searchTerm}%,` +
+            `skill_match.ilike.%${searchTerm}%,` +
+            `professional_associations.ilike.%${searchTerm}%,` +
+            `common_difficulties.ilike.%${searchTerm}%,` +
+            `majors_to_consider_switching_to.ilike.%${searchTerm}%,` +
+            `career_opportunities.ilike.%${searchTerm}%`
+          )
+          .limit(5),
 
-          // Careers search
-          supabase
-            .from("careers")
-            .select(`
-              id,
-              title,
-              description,
-              salary_range
-            `)
-            .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-            .limit(5),
+        // Search careers
+        supabase
+          .from("careers")
+          .select(`
+            id,
+            title,
+            description,
+            salary_range
+          `)
+          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .limit(5),
 
-          // Mentors search
-          supabase
-            .from("profiles")
-            .select(`
-              id,
-              first_name,
-              last_name,
-              full_name,
-              avatar_url,
-              position,
-              highest_degree,
-              bio,
-              location,
-              skills,
-              tools_used,
-              keywords,
-              fields_of_interest,
-              company:companies(name),
-              school:schools(name),
-              academic_major:majors!profiles_academic_major_id_fkey(title)
-            `)
-            .eq('user_type', 'mentor')
-            .or(
-              `first_name.ilike.%${searchTerm}%,` +
-              `last_name.ilike.%${searchTerm}%,` +
-              `full_name.ilike.%${searchTerm}%,` +
-              `position.ilike.%${searchTerm}%,` +
-              `highest_degree.ilike.%${searchTerm}%,` +
-              `bio.ilike.%${searchTerm}%,` +
-              `location.ilike.%${searchTerm}%`
-            )
-            .or(`skills.cs.{${searchTerm}}`)
-            .or(`tools_used.cs.{${searchTerm}}`)
-            .or(`keywords.cs.{${searchTerm}}`)
-            .or(`fields_of_interest.cs.{${searchTerm}}`)
-            .limit(5)
-        ]);
+        // Search mentor profiles with expanded fields
+        supabase
+          .from("profiles")
+          .select(`
+            id,
+            first_name,
+            last_name,
+            full_name,
+            avatar_url,
+            position,
+            highest_degree,
+            skills,
+            tools_used,
+            keywords,
+            bio,
+            location,
+            fields_of_interest,
+            company:company_id(name),
+            school:school_id(name),
+            academic_major:academic_major_id(title)
+          `)
+          .eq('user_type', 'mentor')
+          .or(
+            `first_name.ilike.%${searchTerm}%,` +
+            `last_name.ilike.%${searchTerm}%,` +
+            `full_name.ilike.%${searchTerm}%,` +
+            `position.ilike.%${searchTerm}%,` +
+            `highest_degree.ilike.%${searchTerm}%,` +
+            `bio.ilike.%${searchTerm}%,` +
+            `location.ilike.%${searchTerm}%`
+          )
+          .limit(5)
+      ]);
 
-        // Handle any errors
-        if (majorsResponse.error) throw majorsResponse.error;
-        if (careersResponse.error) throw careersResponse.error;
-        if (mentorsResponse.error) throw mentorsResponse.error;
+      // Handle any errors
+      if (majorsResponse.error) throw majorsResponse.error;
+      if (careersResponse.error) throw careersResponse.error;
+      if (mentorsResponse.error) throw mentorsResponse.error;
 
-        // Transform and combine results
-        const majorResults: SearchResult[] = (majorsResponse.data || []).map(major => ({
-          id: major.id,
-          type: "major" as const,
-          title: major.title,
-          description: major.description,
-          degree_levels: major.degree_levels,
-          career_opportunities: major.career_opportunities,
-          common_courses: major.common_courses
-        }));
+      // Transform and combine results
+      const majorResults: SearchResult[] = (majorsResponse.data || []).map(major => ({
+        id: major.id,
+        type: "major" as const,
+        title: major.title,
+        description: major.description,
+        degree_levels: major.degree_levels,
+        career_opportunities: major.career_opportunities,
+        common_courses: major.common_courses
+      }));
 
-        const careerResults: SearchResult[] = (careersResponse.data || []).map(career => ({
-          id: career.id,
-          type: "career" as const,
-          title: career.title,
-          description: career.description,
-          salary_range: career.salary_range
-        }));
+      const careerResults: SearchResult[] = (careersResponse.data || []).map(career => ({
+        id: career.id,
+        type: "career" as const,
+        title: career.title,
+        description: career.description,
+        salary_range: career.salary_range
+      }));
 
-        const mentorResults: SearchResult[] = (mentorsResponse.data || []).map(mentor => {
-          // Safely access nested properties
-          const companyName = mentor.company?.[0]?.name || null;
-          const schoolName = mentor.school?.[0]?.name || null;
-          const academicMajorTitle = mentor.academic_major?.[0]?.title || null;
+      const mentorResults: SearchResult[] = (mentorsResponse.data || []).map(mentor => ({
+        id: mentor.id,
+        type: "mentor" as const,
+        title: mentor.full_name || `${mentor.first_name} ${mentor.last_name}`.trim(),
+        description: [
+          mentor.position,
+          mentor.highest_degree,
+          mentor.location,
+          mentor.company?.name,
+          mentor.school?.name,
+          mentor.academic_major?.title
+        ].filter(Boolean).join(' • '),
+        avatar_url: mentor.avatar_url,
+        position: mentor.position,
+        company_name: mentor.company?.name,
+        skills: mentor.skills,
+        tools: mentor.tools_used,
+        keywords: mentor.keywords,
+        fields_of_interest: mentor.fields_of_interest
+      }));
 
-          return {
-            id: mentor.id,
-            type: "mentor" as const,
-            title: mentor.full_name || `${mentor.first_name} ${mentor.last_name}`.trim(),
-            description: [
-              mentor.position,
-              mentor.highest_degree,
-              mentor.location,
-              companyName,
-              schoolName,
-              academicMajorTitle
-            ].filter(Boolean).join(' • '),
-            avatar_url: mentor.avatar_url,
-            position: mentor.position,
-            company_name: companyName,
-            skills: mentor.skills,
-            tools: mentor.tools_used,
-            keywords: mentor.keywords,
-            fields_of_interest: mentor.fields_of_interest
-          };
-        });
-
-        // Combine all results
-        return [...majorResults, ...careerResults, ...mentorResults];
-      } catch (error) {
-        console.error('Search error:', error);
-        throw error;
-      }
+      // Combine all results
+      return [...majorResults, ...careerResults, ...mentorResults];
     },
     enabled: searchTerm.length > 2, // Only search when there are at least 3 characters
-    retry: 2, // Retry failed requests up to 2 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
 }
