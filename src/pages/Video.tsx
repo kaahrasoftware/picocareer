@@ -83,7 +83,7 @@ const VideoPage = () => {
           </Button>
         </div>
 
-        <div className="relative w-full max-w-[350px] h-[80%] bg-card rounded-lg overflow-hidden shadow-xl">
+        <div className="relative w-full max-w-[350px] h-[90%] bg-card rounded-lg overflow-hidden shadow-xl">
           {/* Video Content */}
           <div className="relative h-full">
             <video 
