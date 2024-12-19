@@ -64,7 +64,7 @@ export function useSearchData(searchTerm: string) {
             `last_name.ilike.%${searchTerm}%,` +
             `full_name.ilike.%${searchTerm}%,` +
             `position.ilike.%${searchTerm}%,` +
-            `highest_degree.eq.${searchTerm},` + // Changed to use exact match for enum
+            // Remove highest_degree from the OR clause since it's an enum
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%,` +
             `skills.cs.{${searchTerm}},` +
