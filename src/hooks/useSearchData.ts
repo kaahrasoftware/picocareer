@@ -37,7 +37,7 @@ export function useSearchData(searchTerm: string) {
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(5),
 
-        // Search mentor profiles with expanded fields
+        // Search mentor profiles with expanded fields - removed limit
         supabase
           .from("profiles")
           .select(`
@@ -71,7 +71,6 @@ export function useSearchData(searchTerm: string) {
             `keywords.cs.{${searchTerm}},` +
             `fields_of_interest.cs.{${searchTerm}}`
           )
-          .limit(5)
       ]);
 
       // Handle any errors
