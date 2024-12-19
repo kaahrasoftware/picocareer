@@ -45,12 +45,10 @@ const VideoPage = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setTransitionDirection('up');
+    setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
     setTimeout(() => {
-      setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
-      setTimeout(() => {
-        setIsTransitioning(false);
-        setTransitionDirection(null);
-      }, 50);
+      setIsTransitioning(false);
+      setTransitionDirection(null);
     }, 300);
   };
 
@@ -58,12 +56,10 @@ const VideoPage = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setTransitionDirection('down');
+    setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
     setTimeout(() => {
-      setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
-      setTimeout(() => {
-        setIsTransitioning(false);
-        setTransitionDirection(null);
-      }, 50);
+      setIsTransitioning(false);
+      setTransitionDirection(null);
     }, 300);
   };
 
@@ -78,9 +74,9 @@ const VideoPage = () => {
       clearTimeout(timeoutId);
       
       timeoutId = setTimeout(() => {
-        if (event.deltaY > 0) {
+        if (event.deltaY < 0) {
           handleNextVideo();
-        } else if (event.deltaY < 0) {
+        } else if (event.deltaY > 0) {
           handlePreviousVideo();
         }
       }, 50);
@@ -112,7 +108,7 @@ const VideoPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
+            className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
             onClick={handlePreviousVideo}
             disabled={isTransitioning}
           >
@@ -121,7 +117,7 @@ const VideoPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
+            className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
             onClick={handleNextVideo}
             disabled={isTransitioning}
           >

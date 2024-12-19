@@ -9,15 +9,15 @@ interface VideoPlayerProps {
 
 export const VideoPlayer = ({ video, isTransitioning, transitionDirection }: VideoPlayerProps) => {
   const getTransitionClass = () => {
-    if (!isTransitioning) return '';
+    if (!isTransitioning) return 'translate-y-0';
     return transitionDirection === 'up' ? '-translate-y-full' : 'translate-y-full';
   };
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full">
       <video 
         key={video.id}
-        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${getTransitionClass()}`}
+        className={`w-full h-full object-cover transition-transform duration-300 ${getTransitionClass()}`}
         src={video.videoUrl}
         loop
         autoPlay
