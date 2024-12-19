@@ -1,5 +1,3 @@
-import type { Database } from "@/integrations/supabase/types";
-
 export type SearchResultBase = {
   id: string;
   type: 'major' | 'career' | 'mentor';

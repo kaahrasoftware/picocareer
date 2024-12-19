@@ -8,15 +8,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
   auth: {
     autoRefreshToken: false,
     persistSession: false,
-    detectSessionInUrl: false,
-    flowType: 'implicit'
-  },
-  global: {
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
-    }
+    detectSessionInUrl: false
   }
 });
