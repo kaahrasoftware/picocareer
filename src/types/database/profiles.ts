@@ -26,7 +26,7 @@ export interface Profile {
   career_id: string | null;
   // Include joined fields as optional
   company_name?: string | null;
-  school_name?: string | null;
-  academic_major: string | null; // Changed from optional to required
+  school_name: string | null; // Changed from optional to required
+  academic_major: string | null;
   top_mentor?: boolean | null;
 }
