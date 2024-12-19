@@ -51,12 +51,9 @@ export default function AuthPage() {
             },
           }}
           view="sign_up"
-          options={{
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-              first_name: "",
-              last_name: "",
-            }
+          data={{
+            first_name: "",
+            last_name: "",
           }}
         />
       </div>
