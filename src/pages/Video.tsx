@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, MessageCircle, Share2, MoreVertical, ChevronUp, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
@@ -54,6 +54,30 @@ const VideoPage = () => {
   const handlePreviousVideo = () => {
     setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
   };
+
+  // Add wheel event handler
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      // Prevent default scrolling behavior
+      event.preventDefault();
+      
+      // Scroll up (negative deltaY) -> next video
+      // Scroll down (positive deltaY) -> previous video
+      if (event.deltaY < 0) {
+        handleNextVideo();
+      } else if (event.deltaY > 0) {
+        handlePreviousVideo();
+      }
+    };
+
+    // Add event listener to the window
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const currentVideo = videos[currentVideoIndex];
 
