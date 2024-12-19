@@ -51,29 +51,12 @@ export default function AuthPage() {
             },
           }}
           view="sign_up"
-          additionalData={{
-            first_name: "",
-            last_name: "",
-          }}
-          extendedSignUp={{
-            first_name: {
-              label: "First Name",
-              placeholder: "Enter your first name",
-              type: "text",
-              required: true,
-            },
-            last_name: {
-              label: "Last Name",
-              placeholder: "Enter your last name",
-              type: "text",
-              required: true,
-            },
-            password_confirmation: {
-              label: "Confirm Password",
-              placeholder: "Confirm your password",
-              type: "password",
-              required: true,
-            },
+          options={{
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              first_name: "",
+              last_name: "",
+            }
           }}
         />
       </div>
