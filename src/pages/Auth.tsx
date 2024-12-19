@@ -35,6 +35,46 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
+          localization={{
+            variables: {
+              sign_up: {
+                email_label: "Email",
+                password_label: "Password",
+                email_input_placeholder: "Your email address",
+                password_input_placeholder: "Your password",
+                button_label: "Sign up",
+                loading_button_label: "Signing up ...",
+                social_provider_text: "Sign in with {{provider}}",
+                link_text: "Don't have an account? Sign up",
+                confirmation_text: "Check your email for the confirmation link",
+              },
+            },
+          }}
+          view="sign_up"
+          additionalData={{
+            first_name: "",
+            last_name: "",
+          }}
+          extendedSignUp={{
+            first_name: {
+              label: "First Name",
+              placeholder: "Enter your first name",
+              type: "text",
+              required: true,
+            },
+            last_name: {
+              label: "Last Name",
+              placeholder: "Enter your last name",
+              type: "text",
+              required: true,
+            },
+            password_confirmation: {
+              label: "Confirm Password",
+              placeholder: "Confirm your password",
+              type: "password",
+              required: true,
+            },
+          }}
         />
       </div>
     </div>
