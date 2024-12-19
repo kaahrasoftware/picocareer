@@ -65,12 +65,12 @@ export function useSearchData(searchTerm: string) {
             `full_name.ilike.%${searchTerm}%,` +
             `position.ilike.%${searchTerm}%,` +
             `bio.ilike.%${searchTerm}%,` +
-            `location.ilike.%${searchTerm}%,` +
-            `skills::text ILIKE ANY (array['%${searchTerm}%']),` +
-            `tools_used::text ILIKE ANY (array['%${searchTerm}%']),` +
-            `keywords::text ILIKE ANY (array['%${searchTerm}%']),` +
-            `fields_of_interest::text ILIKE ANY (array['%${searchTerm}%'])`
+            `location.ilike.%${searchTerm}%`
           )
+          .or(`skills::text.ilike.%${searchTerm}%`)
+          .or(`tools_used::text.ilike.%${searchTerm}%`)
+          .or(`keywords::text.ilike.%${searchTerm}%`)
+          .or(`fields_of_interest::text.ilike.%${searchTerm}%`)
           .limit(5)
       ]);
 
