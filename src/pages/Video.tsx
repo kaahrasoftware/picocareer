@@ -46,38 +46,51 @@ const VideoPage = () => {
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleNextVideo = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
+    setTimeout(() => setIsTransitioning(false), 300); // Match this with CSS transition duration
   };
 
   const handlePreviousVideo = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
+    setTimeout(() => setIsTransitioning(false), 300); // Match this with CSS transition duration
   };
 
-  // Add wheel event handler
+  // Add wheel event handler with debounce
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const handleWheel = (event: WheelEvent) => {
-      // Prevent default scrolling behavior
       event.preventDefault();
       
-      // Scroll up (negative deltaY) -> next video
-      // Scroll down (positive deltaY) -> previous video
-      if (event.deltaY < 0) {
-        handleNextVideo();
-      } else if (event.deltaY > 0) {
-        handlePreviousVideo();
-      }
+      if (isTransitioning) return;
+
+      // Clear any existing timeout
+      clearTimeout(timeoutId);
+      
+      // Set a new timeout
+      timeoutId = setTimeout(() => {
+        if (event.deltaY < 0) {
+          handleNextVideo();
+        } else if (event.deltaY > 0) {
+          handlePreviousVideo();
+        }
+      }, 50); // Small delay to prevent rapid scrolling
     };
 
-    // Add event listener to the window
     window.addEventListener('wheel', handleWheel, { passive: false });
 
-    // Cleanup
     return () => {
       window.removeEventListener('wheel', handleWheel);
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isTransitioning]);
 
   const currentVideo = videos[currentVideoIndex];
 
@@ -99,6 +112,7 @@ const VideoPage = () => {
             size="icon"
             className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
             onClick={handlePreviousVideo}
+            disabled={isTransitioning}
           >
             <ChevronUp className="h-6 w-6" />
           </Button>
@@ -107,6 +121,7 @@ const VideoPage = () => {
             size="icon"
             className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
             onClick={handleNextVideo}
+            disabled={isTransitioning}
           >
             <ChevronDown className="h-6 w-6" />
           </Button>
@@ -119,7 +134,7 @@ const VideoPage = () => {
             <div className="relative h-full">
               <video 
                 key={currentVideo.id}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
                 src={currentVideo.videoUrl}
                 loop
                 autoPlay
