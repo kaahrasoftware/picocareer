@@ -9,7 +9,7 @@ interface VideoPlayerProps {
 
 export const VideoPlayer = ({ video, isTransitioning, transitionDirection }: VideoPlayerProps) => {
   const getTransitionClass = () => {
-    if (!isTransitioning) return 'translate-y-0';
+    if (!isTransitioning) return '';
     return transitionDirection === 'up' ? '-translate-y-full' : 'translate-y-full';
   };
 
@@ -17,7 +17,7 @@ export const VideoPlayer = ({ video, isTransitioning, transitionDirection }: Vid
     <div className="relative h-full">
       <video 
         key={video.id}
-        className={`w-full h-full object-cover transition-transform duration-300 ${getTransitionClass()}`}
+        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ${getTransitionClass()}`}
         src={video.videoUrl}
         loop
         autoPlay

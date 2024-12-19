@@ -45,10 +45,12 @@ const VideoPage = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setTransitionDirection('up');
-    setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
     setTimeout(() => {
-      setIsTransitioning(false);
-      setTransitionDirection(null);
+      setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setTransitionDirection(null);
+      }, 50);
     }, 300);
   };
 
@@ -56,10 +58,12 @@ const VideoPage = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setTransitionDirection('down');
-    setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
     setTimeout(() => {
-      setIsTransitioning(false);
-      setTransitionDirection(null);
+      setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setTransitionDirection(null);
+      }, 50);
     }, 300);
   };
 
