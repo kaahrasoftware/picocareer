@@ -51,10 +51,6 @@ export default function AuthPage() {
             },
           }}
           view="sign_up"
-          data={{
-            first_name: "",
-            last_name: "",
-          }}
         />
       </div>
     </div>
