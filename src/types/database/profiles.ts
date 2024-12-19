@@ -8,7 +8,6 @@ export interface Profile {
   email: string;
   created_at: string;
   updated_at: string;
-  featured: boolean | null;
   school_id: string | null;
   company_id: string | null;
   position: string | null;
@@ -22,10 +21,9 @@ export interface Profile {
   github_url: string | null;
   website_url: string | null;
   years_of_experience: number | null;
-  major_id: string | null;
-  career_id: string | null;
   location: string | null;
   fields_of_interest: string[] | null;
+  career_id: string | null;
   // Include joined fields
   company_name?: string | null;
   school_name?: string | null;

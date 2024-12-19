@@ -38,9 +38,7 @@ export default function Profile() {
         ...data,
         company_name: data.company?.name ?? null,
         school_name: data.school?.name ?? null,
-        academic_major: data.academic_major?.title ?? null,
-        featured: data.featured ?? null,
-        major_id: data.major_id ?? null
+        academic_major: data.academic_major?.title ?? null
       };
 
       return transformedProfile;
