@@ -67,10 +67,10 @@ export function useSearchData(searchTerm: string) {
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%`
           )
-          .or(`skills::text.ilike.%${searchTerm}%`)
-          .or(`tools_used::text.ilike.%${searchTerm}%`)
-          .or(`keywords::text.ilike.%${searchTerm}%`)
-          .or(`fields_of_interest::text.ilike.%${searchTerm}%`)
+          .or(`skills.cs.{%${searchTerm}%}`)
+          .or(`tools_used.cs.{%${searchTerm}%}`)
+          .or(`keywords.cs.{%${searchTerm}%}`)
+          .or(`fields_of_interest.cs.{%${searchTerm}%}`)
           .limit(5)
       ]);
 
