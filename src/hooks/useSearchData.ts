@@ -11,7 +11,7 @@ export function useSearchData(searchTerm: string) {
       if (!searchTerm) return [];
 
       const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
-        // Search majors with expanded field search
+        // Majors search
         supabase
           .from("majors")
           .select(`
@@ -36,24 +36,25 @@ export function useSearchData(searchTerm: string) {
           .or(
             `title.ilike.%${searchTerm}%,` +
             `description.ilike.%${searchTerm}%,` +
-            `learning_objectives.ilike.%${searchTerm}%,` +
-            `common_courses.ilike.%${searchTerm}%,` +
-            `interdisciplinary_connections.ilike.%${searchTerm}%,` +
-            `job_prospects.ilike.%${searchTerm}%,` +
-            `certifications_to_consider.ilike.%${searchTerm}%,` +
-            `degree_levels.ilike.%${searchTerm}%,` +
-            `affiliated_programs.ilike.%${searchTerm}%,` +
-            `transferable_skills.ilike.%${searchTerm}%,` +
-            `tools_knowledge.ilike.%${searchTerm}%,` +
-            `skill_match.ilike.%${searchTerm}%,` +
-            `professional_associations.ilike.%${searchTerm}%,` +
-            `common_difficulties.ilike.%${searchTerm}%,` +
-            `majors_to_consider_switching_to.ilike.%${searchTerm}%,` +
-            `career_opportunities.ilike.%${searchTerm}%`
+            `job_prospects.ilike.%${searchTerm}%`
           )
+          // Array field searches
+          .or(`degree_levels.cs.{${searchTerm}}`)
+          .or(`career_opportunities.cs.{${searchTerm}}`)
+          .or(`common_courses.cs.{${searchTerm}}`)
+          .or(`learning_objectives.cs.{${searchTerm}}`)
+          .or(`interdisciplinary_connections.cs.{${searchTerm}}`)
+          .or(`certifications_to_consider.cs.{${searchTerm}}`)
+          .or(`affiliated_programs.cs.{${searchTerm}}`)
+          .or(`transferable_skills.cs.{${searchTerm}}`)
+          .or(`tools_knowledge.cs.{${searchTerm}}`)
+          .or(`skill_match.cs.{${searchTerm}}`)
+          .or(`professional_associations.cs.{${searchTerm}}`)
+          .or(`common_difficulties.cs.{${searchTerm}}`)
+          .or(`majors_to_consider_switching_to.cs.{${searchTerm}}`)
           .limit(5),
 
-        // Search careers
+        // Careers search
         supabase
           .from("careers")
           .select(`
@@ -65,7 +66,7 @@ export function useSearchData(searchTerm: string) {
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
           .limit(5),
 
-        // Search mentor profiles with expanded fields
+        // Mentors search with additional fields
         supabase
           .from("profiles")
           .select(`
@@ -76,15 +77,15 @@ export function useSearchData(searchTerm: string) {
             avatar_url,
             position,
             highest_degree,
+            bio,
+            location,
             skills,
             tools_used,
             keywords,
-            bio,
-            location,
             fields_of_interest,
-            company:company_id(name),
-            school:school_id(name),
-            academic_major:academic_major_id(title)
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title)
           `)
           .eq('user_type', 'mentor')
           .or(
@@ -96,6 +97,11 @@ export function useSearchData(searchTerm: string) {
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%`
           )
+          // Array field searches
+          .or(`skills.cs.{${searchTerm}}`)
+          .or(`tools_used.cs.{${searchTerm}}`)
+          .or(`keywords.cs.{${searchTerm}}`)
+          .or(`fields_of_interest.cs.{${searchTerm}}`)
           .limit(5)
       ]);
 
