@@ -27,6 +27,6 @@ export interface Profile {
   // Include joined fields as optional
   company_name?: string | null;
   school_name?: string | null;
-  academic_major?: string | null;
+  academic_major: string | null; // Changed from optional to required
   top_mentor?: boolean | null;
 }
