@@ -90,7 +90,7 @@ const VideoPage = () => {
 
         <div className="flex items-center gap-4">
           {/* Video Container */}
-          <div className="relative w-full max-w-[350px] h-[90%] bg-card rounded-lg overflow-hidden shadow-xl">
+          <div className="relative w-full max-w-[350px] h-[90vh] bg-card rounded-lg overflow-hidden shadow-xl">
             {/* Video Content */}
             <div className="relative h-full">
               <video 
@@ -116,7 +116,7 @@ const VideoPage = () => {
             </div>
           </div>
 
-          {/* Action Buttons - Now next to the video container */}
+          {/* Action Buttons */}
           <div className="flex flex-col gap-4 items-center">
             <div className="flex flex-col items-center gap-0.5">
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
