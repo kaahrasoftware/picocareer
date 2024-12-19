@@ -7,7 +7,7 @@ export const HeroSection = () => {
       {/* Header */}
       <header className="flex justify-between items-center mb-12 relative">
         <div className="w-full">
-          <SearchBar placeholder="search here..." />
+          <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
         </div>
       </header>
 
