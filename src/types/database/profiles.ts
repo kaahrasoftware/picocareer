@@ -24,8 +24,9 @@ export interface Profile {
   location: string | null;
   fields_of_interest: string[] | null;
   career_id: string | null;
-  // Include joined fields
+  // Include joined fields as optional
   company_name?: string | null;
   school_name?: string | null;
   academic_major?: string | null;
+  top_mentor?: boolean | null;
 }
