@@ -17,7 +17,7 @@ export default function Community() {
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const PROFILES_PER_PAGE = 15;
+  const PROFILES_PER_PAGE = 12; // Updated to show 12 profiles per page
   const { toast } = useToast();
 
   const { data: profiles = [], isLoading, error } = useQuery({
@@ -179,11 +179,13 @@ export default function Community() {
                   </div>
                   
                   {totalPages > 1 && (
-                    <BlogPagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
+                    <div className="mt-8">
+                      <BlogPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                      />
+                    </div>
                   )}
                 </>
               )}
