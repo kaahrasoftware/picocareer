@@ -24,7 +24,7 @@ export function useSearchData(searchTerm: string) {
             career_opportunities,
             common_courses
           `)
-          .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`)
+          .or(`lower(title).ilike.%${searchTermLower}%,lower(description).ilike.%${searchTermLower}%`)
           .limit(5),
 
         // Search careers
@@ -36,7 +36,7 @@ export function useSearchData(searchTerm: string) {
             description,
             salary_range
           `)
-          .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`)
+          .or(`lower(title).ilike.%${searchTermLower}%,lower(description).ilike.%${searchTermLower}%`)
           .limit(5),
 
         // Search mentor profiles with expanded fields
@@ -62,13 +62,13 @@ export function useSearchData(searchTerm: string) {
           `)
           .eq('user_type', 'mentor')
           .or(
-            `first_name.ilike.%${searchTermLower}%,` +
-            `last_name.ilike.%${searchTermLower}%,` +
-            `full_name.ilike.%${searchTermLower}%,` +
-            `position.ilike.%${searchTermLower}%,` +
+            `lower(first_name).ilike.%${searchTermLower}%,` +
+            `lower(last_name).ilike.%${searchTermLower}%,` +
+            `lower(full_name).ilike.%${searchTermLower}%,` +
+            `lower(position).ilike.%${searchTermLower}%,` +
             // Remove highest_degree from the OR clause since it's an enum
-            `bio.ilike.%${searchTermLower}%,` +
-            `location.ilike.%${searchTermLower}%,` +
+            `lower(bio).ilike.%${searchTermLower}%,` +
+            `lower(location).ilike.%${searchTermLower}%,` +
             `skills.cs.{${searchTermLower}},` +
             `keywords.cs.{${searchTermLower}},` +
             `tools_used.cs.{${searchTermLower}},` +
