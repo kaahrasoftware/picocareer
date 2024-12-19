@@ -106,10 +106,6 @@ const VideoPage = () => {
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-foreground text-lg font-semibold">{currentVideo.title}</h2>
-                  <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg">
-                    <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
-                    <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
-                  </Avatar>
                 </div>
                 <p className="text-muted-foreground text-sm">{currentVideo.author}</p>
               </div>
@@ -118,6 +114,11 @@ const VideoPage = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-4 items-center">
+            <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg mb-4">
+              <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
+              <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
+            </Avatar>
+
             <div className="flex flex-col items-center gap-0.5">
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
                 <ThumbsUp className="h-5 w-5 text-primary" />
