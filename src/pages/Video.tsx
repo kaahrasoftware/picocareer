@@ -52,8 +52,8 @@ const VideoPage = () => {
   const currentVideo = videos[currentVideoIndex];
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background">
-      <div className="relative w-full max-w-[400px] h-[calc(100vh-4rem)] bg-card rounded-lg overflow-hidden shadow-xl">
+    <div className="flex justify-center items-center h-[calc(100vh-4rem)] bg-background overflow-hidden">
+      <div className="relative w-full max-w-[400px] h-full bg-card rounded-lg overflow-hidden shadow-xl">
         {/* Navigation Buttons */}
         <Button
           variant="ghost"
