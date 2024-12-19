@@ -25,7 +25,14 @@ export const searchMentors = async (searchTerm: string): Promise<MentorSearchRes
       academic_major:majors!profiles_academic_major_id_fkey(title)
     `)
     .eq('user_type', 'mentor')
-    .or(`first_name.ilike.%${searchTermLower}%,last_name.ilike.%${searchTermLower}%,full_name.ilike.%${searchTermLower}%,position.ilike.%${searchTermLower}%,bio.ilike.%${searchTermLower}%,location.ilike.%${searchTermLower}%`)
+    .or(`
+      lower(first_name).ilike.%${searchTermLower}%,
+      lower(last_name).ilike.%${searchTermLower}%,
+      lower(full_name).ilike.%${searchTermLower}%,
+      lower(position).ilike.%${searchTermLower}%,
+      lower(bio).ilike.%${searchTermLower}%,
+      lower(location).ilike.%${searchTermLower}%
+    `)
     .limit(5);
 
   if (error) throw error;
