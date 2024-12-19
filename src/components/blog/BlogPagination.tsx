@@ -16,9 +16,9 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
   };
 
   return (
-    <div className="mt-8">
+    <div className="mt-4">
       <Pagination>
-        <PaginationContent>
+        <PaginationContent className="gap-1">
           <PaginationItem>
             <PaginationPrevious 
               href="#" 
@@ -26,8 +26,10 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
                 e.preventDefault();
                 if (currentPage > 1) onPageChange(currentPage - 1);
               }}
-              className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-            />
+              className={`h-8 min-w-8 px-2 ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+            >
+              <span className="sr-only">Previous</span>
+            </PaginationPrevious>
           </PaginationItem>
           
           {getPageNumbers().map((page) => (
@@ -39,6 +41,7 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
                   onPageChange(page);
                 }}
                 isActive={currentPage === page}
+                className="h-8 min-w-8 px-2"
               >
                 {page}
               </PaginationLink>
@@ -52,8 +55,10 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
                 e.preventDefault();
                 if (currentPage < totalPages) onPageChange(currentPage + 1);
               }}
-              className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-            />
+              className={`h-8 min-w-8 px-2 ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
+            >
+              <span className="sr-only">Next</span>
+            </PaginationNext>
           </PaginationItem>
         </PaginationContent>
       </Pagination>
