@@ -8,8 +8,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
   auth: {
     autoRefreshToken: false,
     persistSession: false,
-    detectSessionInUrl: false,
-    flowType: 'implicit'
+    detectSessionInUrl: false
   },
   global: {
     headers: {
