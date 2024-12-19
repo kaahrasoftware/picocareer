@@ -74,9 +74,9 @@ const VideoPage = () => {
       clearTimeout(timeoutId);
       
       timeoutId = setTimeout(() => {
-        if (event.deltaY < 0) {
+        if (event.deltaY > 0) {
           handleNextVideo();
-        } else if (event.deltaY > 0) {
+        } else if (event.deltaY < 0) {
           handlePreviousVideo();
         }
       }, 50);
@@ -108,7 +108,7 @@ const VideoPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
+            className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
             onClick={handlePreviousVideo}
             disabled={isTransitioning}
           >
@@ -117,7 +117,7 @@ const VideoPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
+            className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
             onClick={handleNextVideo}
             disabled={isTransitioning}
           >
