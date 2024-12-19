@@ -3,9 +3,11 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -14,7 +16,26 @@ export default function AuthPage() {
         navigate("/");
       }
     });
-  }, [navigate]);
+
+    // Listen for auth errors
+    const handleAuthError = (error: any) => {
+      if (error?.message?.includes('User already registered')) {
+        toast({
+          title: "Account already exists",
+          description: "Please sign in instead or use a different email address.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onError(handleAuthError);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
