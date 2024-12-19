@@ -128,26 +128,33 @@ export function useSearchData(searchTerm: string) {
           salary_range: career.salary_range
         }));
 
-        const mentorResults: SearchResult[] = (mentorsResponse.data || []).map(mentor => ({
-          id: mentor.id,
-          type: "mentor" as const,
-          title: mentor.full_name || `${mentor.first_name} ${mentor.last_name}`.trim(),
-          description: [
-            mentor.position,
-            mentor.highest_degree,
-            mentor.location,
-            mentor.company?.name,
-            mentor.school?.name,
-            mentor.academic_major?.title
-          ].filter(Boolean).join(' • '),
-          avatar_url: mentor.avatar_url,
-          position: mentor.position,
-          company_name: mentor.company?.name,
-          skills: mentor.skills,
-          tools: mentor.tools_used,
-          keywords: mentor.keywords,
-          fields_of_interest: mentor.fields_of_interest
-        }));
+        const mentorResults: SearchResult[] = (mentorsResponse.data || []).map(mentor => {
+          // Safely access nested properties
+          const companyName = mentor.company?.[0]?.name || null;
+          const schoolName = mentor.school?.[0]?.name || null;
+          const academicMajorTitle = mentor.academic_major?.[0]?.title || null;
+
+          return {
+            id: mentor.id,
+            type: "mentor" as const,
+            title: mentor.full_name || `${mentor.first_name} ${mentor.last_name}`.trim(),
+            description: [
+              mentor.position,
+              mentor.highest_degree,
+              mentor.location,
+              companyName,
+              schoolName,
+              academicMajorTitle
+            ].filter(Boolean).join(' • '),
+            avatar_url: mentor.avatar_url,
+            position: mentor.position,
+            company_name: companyName,
+            skills: mentor.skills,
+            tools: mentor.tools_used,
+            keywords: mentor.keywords,
+            fields_of_interest: mentor.fields_of_interest
+          };
+        });
 
         // Combine all results
         return [...majorResults, ...careerResults, ...mentorResults];
@@ -157,5 +164,7 @@ export function useSearchData(searchTerm: string) {
       }
     },
     enabled: searchTerm.length > 2, // Only search when there are at least 3 characters
+    retry: 2, // Retry failed requests up to 2 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
 }
