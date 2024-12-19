@@ -64,13 +64,12 @@ export function useSearchData(searchTerm: string) {
             `last_name.ilike.%${searchTerm}%,` +
             `full_name.ilike.%${searchTerm}%,` +
             `position.ilike.%${searchTerm}%,` +
-            // Remove highest_degree from the OR clause since it's an enum
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%,` +
-            `skills.cs.{${searchTerm}},` +
-            `keywords.cs.{${searchTerm}},` +
-            `tools_used.cs.{${searchTerm}},` +
-            `fields_of_interest.cs.{${searchTerm}}`
+            `skills.cs.{"%${searchTerm}%"},` +
+            `tools_used.cs.{"%${searchTerm}%"},` +
+            `keywords.cs.{"%${searchTerm}%"},` +
+            `fields_of_interest.cs.{"%${searchTerm}%"}`
           )
           .limit(5)
       ]);
