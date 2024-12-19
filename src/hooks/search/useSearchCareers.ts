@@ -12,7 +12,7 @@ export const searchCareers = async (searchTerm: string): Promise<CareerSearchRes
       description,
       salary_range
     `)
-    .or(`lower(title).ilike.%${searchTermLower}%,lower(description).ilike.%${searchTermLower}%`)
+    .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`)
     .limit(5);
 
   if (error) throw error;

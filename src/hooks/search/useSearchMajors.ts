@@ -14,7 +14,7 @@ export const searchMajors = async (searchTerm: string): Promise<MajorSearchResul
       career_opportunities,
       common_courses
     `)
-    .or(`lower(title).ilike.%${searchTermLower}%,lower(description).ilike.%${searchTermLower}%`)
+    .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`)
     .limit(5);
 
   if (error) throw error;
