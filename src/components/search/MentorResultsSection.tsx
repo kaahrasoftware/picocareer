@@ -3,6 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/types/search";
 import { isMentorResult } from "@/types/search";
+import { useState } from "react";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 
 interface MentorResultsSectionProps {
   mentors: SearchResult[];
@@ -10,24 +12,27 @@ interface MentorResultsSectionProps {
 }
 
 export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsSectionProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const MENTORS_PER_PAGE = 6;
   const validMentors = mentors.filter(isMentorResult);
   
   if (!validMentors.length) return null;
 
-  const shouldUseGrid = validMentors.length > 4;
+  const totalPages = Math.ceil(validMentors.length / MENTORS_PER_PAGE);
+  const startIndex = (currentPage - 1) * MENTORS_PER_PAGE;
+  const paginatedMentors = validMentors.slice(startIndex, startIndex + MENTORS_PER_PAGE);
 
   return (
     <div className="px-4">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Mentors</h3>
+      <h3 className="text-lg font-semibold mb-3 text-foreground">
+        Mentors ({validMentors.length} results)
+      </h3>
       <div className="w-full">
-        <div className={`${shouldUseGrid 
-          ? 'grid grid-cols-3 gap-4 place-items-center' 
-          : 'flex gap-4 justify-center'}`}
-        >
-          {validMentors.map((mentor) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 place-items-center">
+          {paginatedMentors.map((mentor) => (
             <Card 
               key={mentor.id}
-              className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
+              className="flex-shrink-0 flex flex-col p-4 w-full max-w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => onSelectMentor(mentor.id)}
             >
               <div className="flex items-center gap-3 mb-3">
@@ -48,6 +53,16 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
             </Card>
           ))}
         </div>
+        
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <BlogPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
