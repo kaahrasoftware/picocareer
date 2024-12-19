@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, MessageCircle, Share2, MoreVertical, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
-interface VideoData {
-  id: string;
-  title: string;
-  author: string;
-  authorAvatar?: string;
-  likes: number;
-  comments: number;
-  videoUrl: string;
-}
+import { VideoPlayer } from "@/components/video/VideoPlayer";
+import { VideoActions } from "@/components/video/VideoActions";
+import { VideoData } from "@/types/video";
 
 const VideoPage = () => {
   const videos: VideoData[] = [
@@ -47,22 +39,30 @@ const VideoPage = () => {
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState<'up' | 'down' | null>(null);
 
   const handleNextVideo = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
+    setTransitionDirection('up');
     setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
-    setTimeout(() => setIsTransitioning(false), 300); // Match this with CSS transition duration
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setTransitionDirection(null);
+    }, 300);
   };
 
   const handlePreviousVideo = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
+    setTransitionDirection('down');
     setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
-    setTimeout(() => setIsTransitioning(false), 300); // Match this with CSS transition duration
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setTransitionDirection(null);
+    }, 300);
   };
 
-  // Add wheel event handler with debounce
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
@@ -71,17 +71,15 @@ const VideoPage = () => {
       
       if (isTransitioning) return;
 
-      // Clear any existing timeout
       clearTimeout(timeoutId);
       
-      // Set a new timeout
       timeoutId = setTimeout(() => {
         if (event.deltaY < 0) {
           handleNextVideo();
         } else if (event.deltaY > 0) {
           handlePreviousVideo();
         }
-      }, 50); // Small delay to prevent rapid scrolling
+      }, 50);
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
@@ -130,68 +128,15 @@ const VideoPage = () => {
         <div className="flex items-center gap-4">
           {/* Video Container */}
           <div className="relative w-full max-w-[350px] h-[80vh] bg-card rounded-lg overflow-hidden shadow-xl">
-            {/* Video Content */}
-            <div className="relative h-full">
-              <video 
-                key={currentVideo.id}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
-                src={currentVideo.videoUrl}
-                loop
-                autoPlay
-                muted
-              />
-              
-              {/* Overlay Text */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-foreground text-lg font-semibold">{currentVideo.title}</h2>
-                </div>
-                <p className="text-muted-foreground text-sm">{currentVideo.author}</p>
-              </div>
-            </div>
+            <VideoPlayer 
+              video={currentVideo}
+              isTransitioning={isTransitioning}
+              transitionDirection={transitionDirection}
+            />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-4 items-center">
-            <div className="flex flex-col items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-                <ThumbsUp className="h-5 w-5 text-primary" />
-              </Button>
-              <span className="text-foreground text-xs">{currentVideo.likes > 1000 ? `${Math.floor(currentVideo.likes/1000)}K` : currentVideo.likes}</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-                <ThumbsDown className="h-5 w-5 text-primary" />
-              </Button>
-              <span className="text-foreground text-xs">Dislike</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-                <MessageCircle className="h-5 w-5 text-primary" />
-              </Button>
-              <span className="text-foreground text-xs">{currentVideo.comments}</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-                <Share2 className="h-5 w-5 text-primary" />
-              </Button>
-              <span className="text-foreground text-xs">Share</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-                <MoreVertical className="h-5 w-5 text-primary" />
-              </Button>
-            </div>
-
-            <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg mt-4">
-              <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
-              <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
-            </Avatar>
-          </div>
+          <VideoActions video={currentVideo} />
         </div>
       </div>
     </div>
