@@ -30,30 +30,32 @@ export const TopRatedMentorsSection = () => {
           View all
         </Link>
       </div>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        plugins={[
-          Autoplay({
-            delay: 6000,
-            stopOnInteraction: true,
-            stopOnMouseEnter: true,
-          }),
-        ]}
-        className="w-full"
-      >
-        <CarouselContent>
-          {mentors.map((mentor) => (
-            <CarouselItem key={mentor.id} className="basis-1/3">
-              <MentorCard {...mentor} />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
+      <div className="relative -mx-12">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          plugins={[
+            Autoplay({
+              delay: 6000,
+              stopOnInteraction: true,
+              stopOnMouseEnter: true,
+            }),
+          ]}
+          className="w-full"
+        >
+          <CarouselContent>
+            {mentors.map((mentor) => (
+              <CarouselItem key={mentor.id} className="basis-1/3">
+                <MentorCard {...mentor} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex absolute -left-6 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselNext className="hidden md:flex absolute -right-6 top-1/2 -translate-y-1/2 h-8 w-8" />
+        </Carousel>
+      </div>
     </section>
   );
 };
