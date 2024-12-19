@@ -14,10 +14,10 @@ export const VideoPlayer = ({ video, isTransitioning, transitionDirection }: Vid
   };
 
   return (
-    <div className="relative h-full overflow-hidden">
+    <div className="relative h-full">
       <video 
         key={video.id}
-        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out ${getTransitionClass()}`}
+        className={`w-full h-full object-cover transition-transform duration-300 ${getTransitionClass()}`}
         src={video.videoUrl}
         loop
         autoPlay
@@ -25,7 +25,7 @@ export const VideoPlayer = ({ video, isTransitioning, transitionDirection }: Vid
       />
       
       {/* Overlay Text */}
-      <div className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent transition-transform duration-300 ease-out ${getTransitionClass()}`}>
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-foreground text-lg font-semibold">{video.title}</h2>
         </div>
