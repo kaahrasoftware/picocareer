@@ -90,7 +90,7 @@ const VideoPage = () => {
 
         <div className="flex items-center gap-4">
           {/* Video Container */}
-          <div className="relative w-full max-w-[350px] h-[90vh] bg-card rounded-lg overflow-hidden shadow-xl">
+          <div className="relative w-full max-w-[350px] h-[80vh] bg-card rounded-lg overflow-hidden shadow-xl">
             {/* Video Content */}
             <div className="relative h-full">
               <video 
