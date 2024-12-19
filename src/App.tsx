@@ -10,6 +10,7 @@ import Mentor from "./pages/Mentor";
 import Career from "./pages/Career";
 import Program from "./pages/Program";
 import Video from "./pages/Video";
+import Auth from "./pages/Auth";
 import { MenuSidebar } from "./components/MenuSidebar";
 import { Footer } from "./components/Footer";
 
@@ -17,11 +18,12 @@ import { Footer } from "./components/Footer";
 const AppContent = () => {
   const location = useLocation();
   const isVideoPage = location.pathname === '/video';
+  const isAuthPage = location.pathname === '/auth';
 
   return (
     <div className="min-h-screen w-full">
-      <MenuSidebar />
-      <main className="w-full pt-16">
+      {!isAuthPage && <MenuSidebar />}
+      <main className={`w-full ${!isAuthPage ? 'pt-16' : ''}`}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/blog" element={<Blog />} />
@@ -29,9 +31,10 @@ const AppContent = () => {
           <Route path="/career" element={<Career />} />
           <Route path="/program" element={<Program />} />
           <Route path="/video" element={<Video />} />
+          <Route path="/auth" element={<Auth />} />
         </Routes>
       </main>
-      {!isVideoPage && <Footer />}
+      {!isVideoPage && !isAuthPage && <Footer />}
     </div>
   );
 };
