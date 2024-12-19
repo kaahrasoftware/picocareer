@@ -54,9 +54,9 @@ export function useSearchData(searchTerm: string) {
             bio,
             location,
             fields_of_interest,
-            company:company_id(name),
-            school:school_id(name),
-            academic_major:academic_major_id(title)
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title)
           `)
           .eq('user_type', 'mentor')
           .or(
@@ -66,7 +66,11 @@ export function useSearchData(searchTerm: string) {
             `position.ilike.%${searchTerm}%,` +
             `highest_degree.ilike.%${searchTerm}%,` +
             `bio.ilike.%${searchTerm}%,` +
-            `location.ilike.%${searchTerm}%`
+            `location.ilike.%${searchTerm}%,` +
+            `skills.cs.{${searchTerm}},` +
+            `keywords.cs.{${searchTerm}},` +
+            `tools_used.cs.{${searchTerm}},` +
+            `fields_of_interest.cs.{${searchTerm}}`
           )
           .limit(5)
       ]);
