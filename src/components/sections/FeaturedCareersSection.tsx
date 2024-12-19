@@ -47,7 +47,7 @@ export const FeaturedCareersSection = () => {
         >
           <CarouselContent className="-ml-4">
             {careers.map((career) => (
-              <CarouselItem key={career.id} className="pl-4 basis-1/3 md:basis-1/3 lg:basis-1/4">
+              <CarouselItem key={career.id} className="pl-4 basis-full md:basis-1/3">
                 <CareerCard {...career} />
               </CarouselItem>
             ))}

@@ -10,7 +10,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import type { Major } from "@/types/database/majors";
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -57,7 +56,7 @@ export const FeaturedMajorsSection = () => {
         >
           <CarouselContent className="-ml-4">
             {majors.map((major) => (
-              <CarouselItem key={major.id} className="pl-4 basis-1/3 md:basis-1/3 lg:basis-1/4">
+              <CarouselItem key={major.id} className="pl-4 basis-full md:basis-1/3">
                 <MajorCard {...major} />
               </CarouselItem>
             ))}
