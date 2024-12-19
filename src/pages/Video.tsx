@@ -55,8 +55,10 @@ const VideoPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden">
       {/* Search Bar */}
-      <div className="w-full max-w-3xl mx-auto pt-6 px-4">
-        <SearchBar placeholder="Search for videos..." />
+      <div className="w-full px-8 pt-6">
+        <div className="w-[280px]">
+          <SearchBar placeholder="Search for videos..." />
+        </div>
       </div>
 
       {/* Video Container */}
