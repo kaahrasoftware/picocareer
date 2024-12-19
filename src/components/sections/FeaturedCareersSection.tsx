@@ -9,7 +9,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -36,13 +35,6 @@ export const FeaturedCareersSection = () => {
             align: "start",
             loop: true,
           }}
-          plugins={[
-            Autoplay({
-              delay: 4000,
-              stopOnInteraction: true,
-              stopOnMouseEnter: true,
-            }),
-          ]}
           className="w-full px-8"
         >
           <CarouselContent className="-ml-4">

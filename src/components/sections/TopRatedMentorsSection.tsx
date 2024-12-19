@@ -10,7 +10,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 
 export const TopRatedMentorsSection = () => {
   const { data: mentors = [], isLoading } = useTopRatedMentors();
@@ -36,13 +35,6 @@ export const TopRatedMentorsSection = () => {
             align: "start",
             loop: true,
           }}
-          plugins={[
-            Autoplay({
-              delay: 6000,
-              stopOnInteraction: true,
-              stopOnMouseEnter: true,
-            }),
-          ]}
           className="w-full px-8"
         >
           <CarouselContent className="-ml-4">
