@@ -11,6 +11,7 @@ import Career from "./pages/Career";
 import Program from "./pages/Program";
 import Video from "./pages/Video";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import { MenuSidebar } from "./components/MenuSidebar";
 import { Footer } from "./components/Footer";
 
@@ -32,6 +33,7 @@ const AppContent = () => {
           <Route path="/program" element={<Program />} />
           <Route path="/video" element={<Video />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
       {!isVideoPage && !isAuthPage && <Footer />}
