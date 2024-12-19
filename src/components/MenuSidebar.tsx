@@ -103,7 +103,7 @@ export function MenuSidebar() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
