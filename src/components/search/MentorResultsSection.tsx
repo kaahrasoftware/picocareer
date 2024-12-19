@@ -5,6 +5,7 @@ import type { SearchResult } from "@/types/search";
 import { isMentorResult } from "@/types/search";
 import { useState } from "react";
 import { BlogPagination } from "@/components/blog/BlogPagination";
+import { Award } from "lucide-react";
 
 interface MentorResultsSectionProps {
   mentors: SearchResult[];
@@ -47,9 +48,18 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
                   </p>
                 </div>
               </div>
-              <Badge variant="secondary" className="self-start">
-                Mentor
-              </Badge>
+              <div className="flex gap-2">
+                {mentor.top_mentor ? (
+                  <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
+                    <Award className="h-3 w-3" />
+                    Top Mentor
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">
+                    Mentor
+                  </Badge>
+                )}
+              </div>
             </Card>
           ))}
         </div>
