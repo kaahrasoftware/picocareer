@@ -24,4 +24,10 @@ export interface Profile {
   years_of_experience: number | null;
   major_id: string | null;
   career_id: string | null;
+  location: string | null;
+  fields_of_interest: string[] | null;
+  // Include joined fields
+  company_name?: string | null;
+  school_name?: string | null;
+  academic_major?: string | null;
 }

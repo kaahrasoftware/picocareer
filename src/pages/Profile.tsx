@@ -7,6 +7,7 @@ import { ProfileTab } from "@/components/profile/ProfileTab";
 import { SettingsTab } from "@/components/profile/SettingsTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
+import type { Profile } from "@/types/database/profiles";
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -23,15 +24,24 @@ export default function Profile() {
         .from('profiles')
         .select(`
           *,
-          academic_major: majors (title),
-          school: schools (name),
-          company: companies (name)
+          academic_major:majors!profiles_academic_major_id_fkey(title),
+          school:schools(name),
+          company:companies(name)
         `)
         .eq('id', session.user.id)
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Transform the data to match our Profile type
+      const transformedProfile: Profile = {
+        ...data,
+        company_name: data.company?.name,
+        school_name: data.school?.name,
+        academic_major: data.academic_major?.title
+      };
+
+      return transformedProfile;
     },
   });
 
