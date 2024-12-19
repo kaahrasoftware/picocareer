@@ -477,7 +477,7 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           github_url: string | null
-          highest_degree: string | null
+          highest_degree: Database["public"]["Enums"]["degree"] | null
           id: string
           keywords: string[] | null
           last_name: string | null
@@ -505,7 +505,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           github_url?: string | null
-          highest_degree?: string | null
+          highest_degree?: Database["public"]["Enums"]["degree"] | null
           id: string
           keywords?: string[] | null
           last_name?: string | null
@@ -533,7 +533,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           github_url?: string | null
-          highest_degree?: string | null
+          highest_degree?: Database["public"]["Enums"]["degree"] | null
           id?: string
           keywords?: string[] | null
           last_name?: string | null
@@ -621,6 +621,14 @@ export type Database = {
       }
     }
     Enums: {
+      degree:
+        | "No Degree"
+        | "High School"
+        | "Associate"
+        | "Bachelor"
+        | "Master"
+        | "MD"
+        | "PhD"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
         | "Introduction"
