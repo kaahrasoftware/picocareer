@@ -58,18 +58,18 @@ const VideoPage = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
+          className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
           onClick={handlePreviousVideo}
         >
-          <ChevronUp className="h-6 w-6 text-white" />
+          <ChevronUp className="h-6 w-6" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
+          className="rounded-full bg-picocareer-primary/20 hover:bg-picocareer-primary/40 backdrop-blur-sm text-picocareer-dark"
           onClick={handleNextVideo}
         >
-          <ChevronDown className="h-6 w-6 text-white" />
+          <ChevronDown className="h-6 w-6" />
         </Button>
       </div>
 
