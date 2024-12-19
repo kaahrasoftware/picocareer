@@ -743,6 +743,7 @@ export type Database = {
           description: string | null
           duration: number
           id: string
+          tags: string[]
           thumbnail_url: string | null
           title: string
           total_views: number
@@ -756,6 +757,7 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          tags?: string[]
           thumbnail_url?: string | null
           title: string
           total_views?: number
@@ -769,6 +771,7 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          tags?: string[]
           thumbnail_url?: string | null
           title?: string
           total_views?: number
