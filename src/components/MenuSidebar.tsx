@@ -56,6 +56,14 @@ export function MenuSidebar() {
                 Blog
               </Link>
             </li>
+            <li>
+              <Link 
+                to="/video" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Videos
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

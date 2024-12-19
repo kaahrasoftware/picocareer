@@ -9,6 +9,7 @@ import Blog from "./pages/Blog";
 import Mentor from "./pages/Mentor";
 import Career from "./pages/Career";
 import Program from "./pages/Program";
+import Video from "./pages/Video";
 import { MenuSidebar } from "./components/MenuSidebar";
 import { Footer } from "./components/Footer";
 
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/mentor" element={<Mentor />} />
                 <Route path="/career" element={<Career />} />
                 <Route path="/program" element={<Program />} />
+                <Route path="/video" element={<Video />} />
               </Routes>
             </main>
             <Footer />
