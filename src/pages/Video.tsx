@@ -53,6 +53,26 @@ const VideoPage = () => {
 
   return (
     <div className="flex justify-center items-center h-[calc(100vh-4rem)] bg-background overflow-hidden">
+      {/* Navigation Buttons - Now outside the video container */}
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-20">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
+          onClick={handlePreviousVideo}
+        >
+          <ChevronUp className="h-6 w-6 text-white" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
+          onClick={handleNextVideo}
+        >
+          <ChevronDown className="h-6 w-6 text-white" />
+        </Button>
+      </div>
+
       <div className="relative w-full max-w-[400px] h-full bg-card rounded-lg overflow-hidden shadow-xl">
         {/* Video Content */}
         <div className="relative h-full">
@@ -69,26 +89,6 @@ const VideoPage = () => {
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
             <h2 className="text-foreground text-lg font-semibold mb-2">{currentVideo.title}</h2>
             <p className="text-muted-foreground text-sm">{currentVideo.author}</p>
-          </div>
-
-          {/* Navigation Buttons - Moved to right side */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-20">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
-              onClick={handlePreviousVideo}
-            >
-              <ChevronUp className="h-6 w-6 text-white" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm"
-              onClick={handleNextVideo}
-            >
-              <ChevronDown className="h-6 w-6 text-white" />
-            </Button>
           </div>
 
           {/* Right Side Actions */}
