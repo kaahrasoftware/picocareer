@@ -40,30 +40,32 @@ export const FeaturedMajorsSection = () => {
           View all
         </button>
       </div>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        plugins={[
-          Autoplay({
-            delay: 5000,
-            stopOnInteraction: true,
-            stopOnMouseEnter: true,
-          }),
-        ]}
-        className="w-full"
-      >
-        <CarouselContent>
-          {majors.map((major) => (
-            <CarouselItem key={major.id} className="basis-1/3">
-              <MajorCard {...major} />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
+      <div className="relative -mx-8">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          plugins={[
+            Autoplay({
+              delay: 5000,
+              stopOnInteraction: true,
+              stopOnMouseEnter: true,
+            }),
+          ]}
+          className="w-full px-8"
+        >
+          <CarouselContent className="-ml-4">
+            {majors.map((major) => (
+              <CarouselItem key={major.id} className="pl-4 basis-1/3 md:basis-1/3 lg:basis-1/4">
+                <MajorCard {...major} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+        </Carousel>
+      </div>
       <MajorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
@@ -71,4 +73,4 @@ export const FeaturedMajorsSection = () => {
       />
     </section>
   );
-}
+};

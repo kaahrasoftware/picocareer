@@ -30,7 +30,7 @@ export const FeaturedCareersSection = () => {
           View all
         </button>
       </div>
-      <div className="relative">
+      <div className="relative -mx-8">
         <Carousel
           opts={{
             align: "start",
@@ -43,17 +43,17 @@ export const FeaturedCareersSection = () => {
               stopOnMouseEnter: true,
             }),
           ]}
-          className="w-full"
+          className="w-full px-8"
         >
-          <CarouselContent>
+          <CarouselContent className="-ml-4">
             {careers.map((career) => (
-              <CarouselItem key={career.id} className="basis-1/3">
+              <CarouselItem key={career.id} className="pl-4 basis-1/3 md:basis-1/3 lg:basis-1/4">
                 <CareerCard {...career} />
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex" />
-          <CarouselNext className="hidden md:flex" />
+          <CarouselPrevious className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
         </Carousel>
       </div>
       <CareerListDialog
