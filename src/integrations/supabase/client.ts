@@ -5,6 +5,13 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false // Since we're running in public-only mode
+    persistSession: false, // Since we're running in public-only mode
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  },
+  global: {
+    headers: {
+      'apikey': supabaseAnonKey
+    }
   }
 });
