@@ -88,67 +88,69 @@ const VideoPage = () => {
           </Button>
         </div>
 
-        {/* Video Container */}
-        <div className="relative w-full max-w-[350px] h-[90%] bg-card rounded-lg overflow-hidden shadow-xl">
-          {/* Video Content */}
-          <div className="relative h-full">
-            <video 
-              key={currentVideo.id}
-              className="w-full h-full object-cover"
-              src={currentVideo.videoUrl}
-              loop
-              autoPlay
-              muted
-            />
-            
-            {/* Overlay Text */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-foreground text-lg font-semibold">{currentVideo.title}</h2>
-                <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg">
-                  <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
-                  <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
-                </Avatar>
+        <div className="flex items-center gap-4">
+          {/* Video Container */}
+          <div className="relative w-full max-w-[350px] h-[90%] bg-card rounded-lg overflow-hidden shadow-xl">
+            {/* Video Content */}
+            <div className="relative h-full">
+              <video 
+                key={currentVideo.id}
+                className="w-full h-full object-cover"
+                src={currentVideo.videoUrl}
+                loop
+                autoPlay
+                muted
+              />
+              
+              {/* Overlay Text */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/90 to-transparent">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-foreground text-lg font-semibold">{currentVideo.title}</h2>
+                  <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg">
+                    <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
+                    <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
+                  </Avatar>
+                </div>
+                <p className="text-muted-foreground text-sm">{currentVideo.author}</p>
               </div>
-              <p className="text-muted-foreground text-sm">{currentVideo.author}</p>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons - Now outside the video container */}
-        <div className="fixed right-8 top-1/2 translate-y-[calc(50%+4rem)] flex flex-col gap-4 items-center z-20">
-          <div className="flex flex-col items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-              <ThumbsUp className="h-5 w-5 text-primary" />
-            </Button>
-            <span className="text-foreground text-xs">{currentVideo.likes > 1000 ? `${Math.floor(currentVideo.likes/1000)}K` : currentVideo.likes}</span>
-          </div>
+          {/* Action Buttons - Now next to the video container */}
+          <div className="flex flex-col gap-4 items-center">
+            <div className="flex flex-col items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
+                <ThumbsUp className="h-5 w-5 text-primary" />
+              </Button>
+              <span className="text-foreground text-xs">{currentVideo.likes > 1000 ? `${Math.floor(currentVideo.likes/1000)}K` : currentVideo.likes}</span>
+            </div>
 
-          <div className="flex flex-col items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-              <ThumbsDown className="h-5 w-5 text-primary" />
-            </Button>
-            <span className="text-foreground text-xs">Dislike</span>
-          </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
+                <ThumbsDown className="h-5 w-5 text-primary" />
+              </Button>
+              <span className="text-foreground text-xs">Dislike</span>
+            </div>
 
-          <div className="flex flex-col items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-              <MessageCircle className="h-5 w-5 text-primary" />
-            </Button>
-            <span className="text-foreground text-xs">{currentVideo.comments}</span>
-          </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
+                <MessageCircle className="h-5 w-5 text-primary" />
+              </Button>
+              <span className="text-foreground text-xs">{currentVideo.comments}</span>
+            </div>
 
-          <div className="flex flex-col items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-              <Share2 className="h-5 w-5 text-primary" />
-            </Button>
-            <span className="text-foreground text-xs">Share</span>
-          </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
+                <Share2 className="h-5 w-5 text-primary" />
+              </Button>
+              <span className="text-foreground text-xs">Share</span>
+            </div>
 
-          <div className="flex flex-col items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
-              <MoreVertical className="h-5 w-5 text-primary" />
-            </Button>
+            <div className="flex flex-col items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
+                <MoreVertical className="h-5 w-5 text-primary" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
