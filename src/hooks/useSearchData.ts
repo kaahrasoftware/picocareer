@@ -10,6 +10,8 @@ export function useSearchData(searchTerm: string) {
     queryFn: async (): Promise<SearchResult[]> => {
       if (!searchTerm) return [];
 
+      const searchTermLower = searchTerm.toLowerCase();
+
       const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
         // Search majors
         supabase
@@ -22,7 +24,7 @@ export function useSearchData(searchTerm: string) {
             career_opportunities,
             common_courses
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`)
           .limit(5),
 
         // Search careers
@@ -34,7 +36,7 @@ export function useSearchData(searchTerm: string) {
             description,
             salary_range
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`)
           .limit(5),
 
         // Search mentor profiles with expanded fields
@@ -60,17 +62,17 @@ export function useSearchData(searchTerm: string) {
           `)
           .eq('user_type', 'mentor')
           .or(
-            `first_name.ilike.%${searchTerm}%,` +
-            `last_name.ilike.%${searchTerm}%,` +
-            `full_name.ilike.%${searchTerm}%,` +
-            `position.ilike.%${searchTerm}%,` +
+            `first_name.ilike.%${searchTermLower}%,` +
+            `last_name.ilike.%${searchTermLower}%,` +
+            `full_name.ilike.%${searchTermLower}%,` +
+            `position.ilike.%${searchTermLower}%,` +
             // Remove highest_degree from the OR clause since it's an enum
-            `bio.ilike.%${searchTerm}%,` +
-            `location.ilike.%${searchTerm}%,` +
-            `skills.cs.{${searchTerm}},` +
-            `keywords.cs.{${searchTerm}},` +
-            `tools_used.cs.{${searchTerm}},` +
-            `fields_of_interest.cs.{${searchTerm}}`
+            `bio.ilike.%${searchTermLower}%,` +
+            `location.ilike.%${searchTermLower}%,` +
+            `skills.cs.{${searchTermLower}},` +
+            `keywords.cs.{${searchTermLower}},` +
+            `tools_used.cs.{${searchTermLower}},` +
+            `fields_of_interest.cs.{${searchTermLower}}`
           )
           .limit(5)
       ]);
