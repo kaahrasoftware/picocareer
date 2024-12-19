@@ -114,11 +114,6 @@ const VideoPage = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-4 items-center">
-            <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg mb-4">
-              <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
-              <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
-            </Avatar>
-
             <div className="flex flex-col items-center gap-0.5">
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
                 <ThumbsUp className="h-5 w-5 text-primary" />
@@ -152,6 +147,11 @@ const VideoPage = () => {
                 <MoreVertical className="h-5 w-5 text-primary" />
               </Button>
             </div>
+
+            <Avatar className="h-10 w-10 ring-2 ring-background/20 shadow-lg mt-4">
+              <AvatarImage src={currentVideo.authorAvatar} alt={currentVideo.author} />
+              <AvatarFallback>{currentVideo.author[0]}</AvatarFallback>
+            </Avatar>
           </div>
         </div>
       </div>
