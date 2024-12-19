@@ -67,10 +67,11 @@ export function useSearchData(searchTerm: string) {
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%`
           )
-          .or(`skills.cs.{%${searchTerm}%}`)
-          .or(`tools_used.cs.{%${searchTerm}%}`)
-          .or(`keywords.cs.{%${searchTerm}%}`)
-          .or(`fields_of_interest.cs.{%${searchTerm}%}`)
+          // Use array containment with case-insensitive pattern matching for array fields
+          .or(`skills::text[] && array['%${searchTerm}%']`)
+          .or(`tools_used::text[] && array['%${searchTerm}%']`)
+          .or(`keywords::text[] && array['%${searchTerm}%']`)
+          .or(`fields_of_interest::text[] && array['%${searchTerm}%']`)
           .limit(5)
       ]);
 
