@@ -113,7 +113,7 @@ const VideoPage = () => {
             </div>
 
             {/* Right Side Actions */}
-            <div className="absolute right-3 bottom-20 flex flex-col gap-4 items-center">
+            <div className="absolute right-3 bottom-28 flex flex-col gap-4 items-center">
               <div className="flex flex-col items-center gap-0.5">
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-sm">
                   <ThumbsUp className="h-5 w-5 text-primary" />
