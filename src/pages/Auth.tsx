@@ -42,10 +42,13 @@ export default function AuthPage() {
           title: "Password recovery email sent",
           description: "Check your email for the password reset link.",
         });
-      } else if (event === 'AUTH_ERROR') {
+      }
+
+      // Handle any errors through the session object instead of AUTH_ERROR event
+      if (session?.error) {
         toast({
           title: "Authentication Error",
-          description: "There was an error during authentication. Please try again.",
+          description: session.error.message || "There was an error during authentication. Please try again.",
           variant: "destructive",
         });
       }
