@@ -104,8 +104,12 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       <div className="relative w-20 h-20 group">
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
         <div className="absolute inset-[3px] rounded-full bg-background" />
-        <Avatar className="h-16 w-16 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || ''} />
+        <Avatar className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <AvatarImage 
+            src={profile.avatar_url || ''} 
+            alt={profile.full_name || ''} 
+            className="object-cover w-full h-full"
+          />
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
         </Avatar>
         
