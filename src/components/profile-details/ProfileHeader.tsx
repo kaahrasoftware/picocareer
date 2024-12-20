@@ -12,10 +12,12 @@ interface ProfileHeaderProps {
     academic_major?: string | null;
     location?: string | null;
     top_mentor?: boolean | null;
-  };
+  } | null;
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
+  if (!profile) return null;
+
   const displayTitle = profile.position || profile.academic_major || "No position/major set";
   const displaySubtitle = profile.position 
     ? profile.company_name || "No company set"

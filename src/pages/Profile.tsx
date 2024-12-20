@@ -42,20 +42,19 @@ export default function Profile() {
         location,
         fields_of_interest,
         user_type,
-        academic_major:majors!profiles_academic_major_id_fkey(title),
-        school:schools(name)
+        academic_major:academic_major_id(title),
+        school:school_id(name),
+        company:company_id(name)
       `;
 
       // Additional fields for mentors
       const mentorFields = `
         highest_degree,
-        company:companies(name),
-        career:careers(title),
+        position,
         years_of_experience,
         keywords,
         skills,
         tools_used,
-        position,
         top_mentor
       `;
 
@@ -67,7 +66,6 @@ export default function Profile() {
         .single();
 
       if (error) throw error;
-
       if (!data) throw new Error('No profile data found');
 
       // Transform the data to match our Profile type
