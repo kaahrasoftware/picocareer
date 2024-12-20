@@ -11,11 +11,16 @@ import {
 } from "@/components/ui/select";
 import type { Major } from "@/types/database/majors";
 
+interface Company {
+  id: string;
+  name: string;
+}
+
 interface ProfileEditFormProps {
   formData: {
     bio: string;
     position: string;
-    company_name: string;
+    company_id: string;
     years_of_experience: number;
     skills: string;
     tools_used: string;
@@ -33,6 +38,7 @@ interface ProfileEditFormProps {
   setIsEditing: (value: boolean) => void;
   isMentee: boolean;
   majors: Pick<Major, 'id' | 'title'>[];
+  companies: Company[];
 }
 
 const degreeOptions = [
@@ -52,7 +58,8 @@ export function ProfileEditForm({
   handleSubmit, 
   setIsEditing,
   isMentee,
-  majors
+  majors,
+  companies
 }: ProfileEditFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -94,13 +101,21 @@ export function ProfileEditForm({
 
             <div>
               <label className="text-sm font-medium">Company</label>
-              <Input
-                name="company_name"
-                value={formData.company_name}
-                onChange={handleInputChange}
-                className="mt-1"
-                placeholder="Company name"
-              />
+              <Select 
+                value={formData.company_id} 
+                onValueChange={(value) => handleSelectChange?.('company_id', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your company" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -223,17 +238,17 @@ export function ProfileEditForm({
             placeholder="https://yourwebsite.com"
           />
         </div>
-      </div>
 
-      <div className="flex gap-4">
-        <Button type="submit" variant="default">Save Changes</Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => setIsEditing(false)}
-        >
-          Cancel
-        </Button>
+        <div className="flex gap-4">
+          <Button type="submit" variant="default">Save Changes</Button>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setIsEditing(false)}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     </form>
   );

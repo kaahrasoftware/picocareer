@@ -21,7 +21,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
   const [formData, setFormData] = useState({
     bio: profile?.bio || "",
     position: profile?.position || "",
-    company_name: profile?.company_name || "",
+    company_id: profile?.company_id || "",
     years_of_experience: profile?.years_of_experience || 0,
     skills: profile?.skills?.join(", ") || "",
     tools_used: profile?.tools_used?.join(", ") || "",
@@ -51,6 +51,20 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     }
   });
 
+  // Fetch all companies
+  const { data: companies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   if (!profile) return null;
   
   const isMentee = profile.user_type === 'mentee';
@@ -73,7 +87,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         .update({
           bio: formData.bio,
           position: formData.position,
-          company_name: formData.company_name,
+          company_id: formData.company_id || null,
           years_of_experience: parseInt(formData.years_of_experience.toString()),
           skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
           tools_used: formData.tools_used.split(",").map(s => s.trim()).filter(Boolean),
@@ -116,6 +130,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         setIsEditing={setIsEditing}
         isMentee={isMentee}
         majors={majors || []}
+        companies={companies || []}
       />
     );
   }
