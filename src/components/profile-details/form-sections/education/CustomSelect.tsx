@@ -49,7 +49,7 @@ export function CustomSelect({
       // First, check if the entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id, ' + titleField)
+        .select(`id, ${titleField}`)
         .eq(titleField, customValue)
         .maybeSingle();
 
@@ -63,7 +63,7 @@ export function CustomSelect({
         return;
       }
 
-      if (existingData) {
+      if (existingData && 'id' in existingData) {
         // If it exists, use the existing entry
         handleSelectChange(fieldName, existingData.id);
         setShowCustomInput(false);
@@ -101,7 +101,7 @@ export function CustomSelect({
         return;
       }
 
-      if (data) {
+      if (data && 'id' in data) {
         handleSelectChange(fieldName, data.id);
         setShowCustomInput(false);
         setCustomValue("");
