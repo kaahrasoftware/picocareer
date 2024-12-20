@@ -7,6 +7,7 @@ import { ProfileTab } from "@/components/profile/ProfileTab";
 import { SettingsTab } from "@/components/profile/SettingsTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
+import { MentorTab } from "@/components/profile/MentorTab";
 import type { Profile } from "@/types/database/profiles";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -109,10 +110,11 @@ export default function ProfilePage() {
         <ProfileHeader profile={profile} />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="mentor">Mentor</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -126,6 +128,10 @@ export default function ProfilePage() {
 
           <TabsContent value="calendar">
             <CalendarTab />
+          </TabsContent>
+
+          <TabsContent value="mentor">
+            <MentorTab profile={profile} />
           </TabsContent>
 
           <TabsContent value="settings">
