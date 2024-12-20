@@ -8,15 +8,26 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type TableName = 'majors' | 'schools' | 'companies';
+type FieldName = 'academic_major_id' | 'school_id' | 'company_id';
+type TitleField = 'title' | 'name';
 
 interface CustomSelectProps {
   value: string;
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
   handleSelectChange: (name: string, value: string) => void;
-  tableName: 'majors' | 'schools' | 'companies';
-  fieldName: 'academic_major_id' | 'school_id' | 'company_id';
-  titleField: 'title' | 'name';
+  tableName: TableName;
+  fieldName: FieldName;
+  titleField: TitleField;
+}
+
+type InsertData = {
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+  companies: Database['public']['Tables']['companies']['Insert'];
 }
 
 export function CustomSelect({ 
@@ -34,13 +45,11 @@ export function CustomSelect({
   const handleCustomSubmit = async () => {
     try {
       // First, check if the entry already exists
-      const { data: existingData, error: existingError } = await supabase
+      const { data: existingData } = await supabase
         .from(tableName)
         .select('id, ' + titleField)
         .eq(titleField, customValue)
         .maybeSingle();
-
-      if (existingError) throw existingError;
 
       if (existingData) {
         // If it exists, use the existing entry
@@ -51,22 +60,22 @@ export function CustomSelect({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: Record<string, any> = {};
+      let insertData: InsertData[TableName];
       
       if (tableName === 'majors') {
         insertData = {
           title: customValue,
           description: `Custom major: ${customValue}`
-        };
-      } else if (tableName === 'schools' || tableName === 'companies') {
+        } as InsertData['majors'];
+      } else {
         insertData = {
           name: customValue
-        };
+        } as InsertData['schools'] | InsertData['companies'];
       }
 
       const { data, error } = await supabase
         .from(tableName)
-        .insert([insertData])
+        .insert(insertData)
         .select(`id, ${titleField}`)
         .single();
 
