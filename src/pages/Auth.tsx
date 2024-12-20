@@ -19,15 +19,12 @@ export default function AuthPage() {
       }
       
       // Handle auth errors
-      if (event === 'SIGNED_OUT') {
-        const error = new URL(window.location.href).searchParams.get('error_description');
-        if (error?.includes('User already registered')) {
-          toast({
-            title: "Account already exists",
-            description: "Please sign in instead or use a different email address.",
-            variant: "destructive",
-          });
-        }
+      if (event === 'USER_EXISTS') {
+        toast({
+          title: "Account already exists",
+          description: "Please sign in instead or use a different email address.",
+          variant: "destructive",
+        });
       }
     });
 
@@ -55,22 +52,15 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
-          localization={{
-            variables: {
-              sign_up: {
-                email_label: "Email",
-                password_label: "Password",
-                email_input_placeholder: "Your email address",
-                password_input_placeholder: "Your password",
-                button_label: "Sign up",
-                loading_button_label: "Signing up ...",
-                social_provider_text: "Sign in with {{provider}}",
-                link_text: "Don't have an account? Sign up",
-                confirmation_text: "Check your email for the confirmation link",
-              },
-            },
+          onError={(error) => {
+            if (error.message.includes('User already registered')) {
+              toast({
+                title: "Account already exists",
+                description: "Please sign in instead or use a different email address.",
+                variant: "destructive",
+              });
+            }
           }}
-          view="sign_up"
         />
       </div>
     </div>

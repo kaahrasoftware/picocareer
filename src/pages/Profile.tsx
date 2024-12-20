@@ -11,7 +11,7 @@ import type { Profile } from "@/types/database/profiles";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function Profile() {
+export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,7 +32,6 @@ export default function Profile() {
 
     checkAuth();
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -61,56 +60,69 @@ export default function Profile() {
 
       const isMentee = userTypeData?.user_type === 'mentee';
 
-      // Define base fields that both types share
-      const baseQuery = `
-        id,
-        avatar_url,
-        first_name,
-        last_name,
-        bio,
-        linkedin_url,
-        github_url,
-        website_url,
-        location,
-        fields_of_interest,
-        user_type,
-        company:companies(name),
-        school:schools(name),
-        academic_major:majors(title)
-      `;
-
-      // Additional fields for mentors
-      const mentorFields = `
-        highest_degree,
-        position,
-        years_of_experience,
-        keywords,
-        skills,
-        tools_used,
-        top_mentor
-      `;
-
-      // Select fields based on user type
-      const { data, error } = await supabase
+      // Define the base query
+      let query = supabase
         .from('profiles')
-        .select(isMentee ? baseQuery : `${baseQuery}, ${mentorFields}`)
+        .select(`
+          id,
+          avatar_url,
+          first_name,
+          last_name,
+          bio,
+          linkedin_url,
+          github_url,
+          website_url,
+          location,
+          fields_of_interest,
+          user_type,
+          company:companies(name),
+          school:schools(name),
+          academic_major:majors(title)
+        `);
+
+      // Add additional fields for mentors
+      if (!isMentee) {
+        query = query.select(`
+          id,
+          avatar_url,
+          first_name,
+          last_name,
+          bio,
+          linkedin_url,
+          github_url,
+          website_url,
+          location,
+          fields_of_interest,
+          user_type,
+          company:companies(name),
+          school:schools(name),
+          academic_major:majors(title),
+          highest_degree,
+          position,
+          years_of_experience,
+          keywords,
+          skills,
+          tools_used,
+          top_mentor
+        `);
+      }
+
+      const { data, error } = await query
         .eq('id', session.user.id)
         .maybeSingle();
 
       if (error) throw error;
       if (!data) throw new Error('No profile data found');
 
-      // Transform the data to match our Profile type
-      const transformedProfile: Profile = {
+      return {
         ...data,
         company_name: data.company?.name ?? null,
         school_name: data.school?.name ?? null,
         academic_major: data.academic_major?.title ?? null,
         full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null
-      };
-
-      return transformedProfile;
+      } as Profile;
     },
+    retry: false
   });
 
   if (isLoading) {
