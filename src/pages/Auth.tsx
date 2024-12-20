@@ -13,19 +13,34 @@ export default function AuthPage() {
     // Check if user is already logged in
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        toast({
+          title: "Welcome!",
+          description: "You have successfully signed in.",
+        });
         navigate("/");
+      } else if (event === 'USER_DELETED') {
+        toast({
+          variant: "destructive",
+          title: "Account deleted",
+          description: "Your account has been deleted.",
+        });
+      } else if (event === 'SIGNED_OUT') {
+        toast({
+          title: "Signed out",
+          description: "You have been signed out.",
+        });
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md bg-card border border-border rounded-lg p-6 shadow-lg">
         <h1 className="text-2xl font-semibold text-center mb-6">Welcome to PicoCareer</h1>
         <Auth
@@ -39,16 +54,29 @@ export default function AuthPage() {
                   brandAccent: 'rgb(var(--picocareer-primary) / 0.8)',
                 }
               }
+            },
+            className: {
+              container: 'auth-container',
+              button: 'auth-button',
+              input: 'auth-input',
             }
           }}
           theme="dark"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
+          onError={(error) => {
+            console.error('Auth error:', error);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: error.message || "An error occurred during authentication.",
+            });
+          }}
           localization={{
             variables: {
               sign_up: {
                 email_label: "Email",
-                password_label: "Password",
+                password_label: "Password (minimum 6 characters)",
                 button_label: "Sign up",
                 loading_button_label: "Signing up...",
                 social_provider_text: "Sign up with {{provider}}",
