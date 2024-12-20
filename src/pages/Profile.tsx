@@ -74,9 +74,9 @@ export default function Profile() {
         location,
         fields_of_interest,
         user_type,
-        company:company_id (name),
-        school:school_id (name),
-        academic_major:academic_major_id (title)
+        company:companies(name),
+        school:schools(name),
+        academic_major:majors(title)
       `;
 
       // Additional fields for mentors
