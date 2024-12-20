@@ -127,7 +127,9 @@ export function MenuSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/50 to-primary animate-pulse" />
+                  <div className="absolute inset-[2px] rounded-full bg-background" />
+                  <Avatar className="h-9 w-9 relative">
                     <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || user.email || ''} />
                     <AvatarFallback>{profile?.full_name?.[0] || user.email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
