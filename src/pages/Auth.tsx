@@ -64,7 +64,7 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
-          redirectTo={`${window.location.origin}/auth/callback`}
+          redirectTo={`${window.location.origin}/auth`}
         />
       </div>
     </div>
