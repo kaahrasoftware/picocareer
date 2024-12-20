@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,9 +8,41 @@ import { SettingsTab } from "@/components/profile/SettingsTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
 import type { Profile } from "@/types/database/profiles";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("profile");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to view your profile",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
