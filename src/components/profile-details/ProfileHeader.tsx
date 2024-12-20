@@ -28,7 +28,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       <div className="relative">
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
         <div className="absolute inset-[4px] rounded-full bg-background" />
-        <Avatar className="h-24 w-24 relative">
+        <Avatar className="h-20 w-20 relative">
           <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || ''} />
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
         </Avatar>
