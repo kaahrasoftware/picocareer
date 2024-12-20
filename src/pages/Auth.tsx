@@ -42,6 +42,18 @@ export default function Auth() {
     };
   }, [navigate, toast]);
 
+  const handleError = (error: AuthError) => {
+    let description = error.message;
+    if (error.message.includes("invalid_credentials")) {
+      description = "Invalid email or password. Please try again.";
+    }
+    toast({
+      title: "Authentication error",
+      description,
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="container relative min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md space-y-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-8 rounded-lg border border-border/50">
@@ -67,13 +79,7 @@ export default function Auth() {
           }}
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
-          onError={(error: AuthError) => {
-            toast({
-              title: "Authentication error",
-              description: error.message,
-              variant: "destructive",
-            });
-          }}
+          onError={handleError}
         />
       </div>
     </div>
