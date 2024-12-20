@@ -3,9 +3,8 @@ import { ProfileBio } from "@/components/profile-details/ProfileBio";
 import { ProfileEducation } from "@/components/profile-details/ProfileEducation";
 import { ProfileLinks } from "@/components/profile-details/ProfileLinks";
 import { ProfileSkills } from "@/components/profile-details/ProfileSkills";
+import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
@@ -77,121 +76,13 @@ export function ProfileTab({ profile }: ProfileTabProps) {
 
   if (isEditing) {
     return (
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Bio</label>
-            <Textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleInputChange}
-              className="mt-1"
-            />
-          </div>
-
-          {!isMentee && (
-            <>
-              <div>
-                <label className="text-sm font-medium">Position</label>
-                <Input
-                  name="position"
-                  value={formData.position}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Years of Experience</label>
-                <Input
-                  name="years_of_experience"
-                  type="number"
-                  value={formData.years_of_experience}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Skills (comma-separated)</label>
-                <Input
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  placeholder="React, TypeScript, Node.js"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Tools (comma-separated)</label>
-                <Input
-                  name="tools_used"
-                  value={formData.tools_used}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  placeholder="VS Code, Git, Docker"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Keywords (comma-separated)</label>
-                <Input
-                  name="keywords"
-                  value={formData.keywords}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  placeholder="web development, backend, frontend"
-                />
-              </div>
-            </>
-          )}
-
-          <div>
-            <label className="text-sm font-medium">LinkedIn URL</label>
-            <Input
-              name="linkedin_url"
-              value={formData.linkedin_url}
-              onChange={handleInputChange}
-              className="mt-1"
-              type="url"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">GitHub URL</label>
-            <Input
-              name="github_url"
-              value={formData.github_url}
-              onChange={handleInputChange}
-              className="mt-1"
-              type="url"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Website URL</label>
-            <Input
-              name="website_url"
-              value={formData.website_url}
-              onChange={handleInputChange}
-              className="mt-1"
-              type="url"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-4">
-          <Button type="submit">Save Changes</Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => setIsEditing(false)}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
+      <ProfileEditForm
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+        setIsEditing={setIsEditing}
+        isMentee={isMentee}
+      />
     );
   }
 
@@ -204,7 +95,12 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           github_url={profile.github_url}
           website_url={profile.website_url}
         />
-        <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+        <Button 
+          onClick={() => setIsEditing(true)}
+          className="w-full"
+        >
+          Edit Profile
+        </Button>
       </div>
 
       <div className="space-y-6">
