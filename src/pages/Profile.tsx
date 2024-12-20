@@ -20,14 +20,49 @@ export default function Profile() {
         throw new Error('No authenticated user');
       }
 
+      // First, get the user type
+      const { data: userTypeData } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+
+      const isMentee = userTypeData?.user_type === 'mentee';
+
+      // Define the base fields that both types share
+      const baseFields = `
+        id,
+        avatar_url,
+        first_name,
+        last_name,
+        bio,
+        linkedin_url,
+        github_url,
+        website_url,
+        location,
+        fields_of_interest,
+        user_type,
+        academic_major:majors!profiles_academic_major_id_fkey(title),
+        school:schools(name)
+      `;
+
+      // Additional fields for mentors
+      const mentorFields = `
+        highest_degree,
+        company:companies(name),
+        career:careers(title),
+        years_of_experience,
+        keywords,
+        skills,
+        tools_used,
+        position,
+        top_mentor
+      `;
+
+      // Select fields based on user type
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          school:schools(name),
-          company:companies(name)
-        `)
+        .select(isMentee ? baseFields : `${baseFields}, ${mentorFields}`)
         .eq('id', session.user.id)
         .single();
 
@@ -38,7 +73,8 @@ export default function Profile() {
         ...data,
         company_name: data.company?.name ?? null,
         school_name: data.school?.name ?? null,
-        academic_major: data.academic_major?.title ?? null
+        academic_major: data.academic_major?.title ?? null,
+        full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null
       };
 
       return transformedProfile;
@@ -54,33 +90,35 @@ export default function Profile() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <ProfileHeader profile={profile} />
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="bg-background/60 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
+        <ProfileHeader profile={profile} />
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="profile" className="mt-6">
-          <ProfileTab profile={profile} />
-        </TabsContent>
+          <TabsContent value="profile" className="space-y-6">
+            <ProfileTab profile={profile} />
+          </TabsContent>
 
-        <TabsContent value="dashboard" className="mt-6">
-          <DashboardTab />
-        </TabsContent>
+          <TabsContent value="dashboard">
+            <DashboardTab />
+          </TabsContent>
 
-        <TabsContent value="calendar" className="mt-6">
-          <CalendarTab />
-        </TabsContent>
+          <TabsContent value="calendar">
+            <CalendarTab />
+          </TabsContent>
 
-        <TabsContent value="settings" className="mt-6">
-          <SettingsTab />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="settings">
+            <SettingsTab />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
