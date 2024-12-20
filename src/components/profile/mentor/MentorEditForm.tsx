@@ -54,12 +54,19 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
     e.preventDefault();
 
     try {
-      // Update session types - filter out temporary IDs for new entries
+      // First, delete existing session types for this profile
+      const { error: deleteError } = await supabase
+        .from('mentor_session_types')
+        .delete()
+        .eq('profile_id', profile.id);
+
+      if (deleteError) throw deleteError;
+
+      // Then insert new session types
       const { error: sessionError } = await supabase
         .from('mentor_session_types')
-        .upsert(
+        .insert(
           sessionTypes.map(session => ({
-            ...(session.id ? { id: session.id } : {}), // Only include id if it exists
             profile_id: profile.id,
             type: session.type,
             duration: session.duration,
