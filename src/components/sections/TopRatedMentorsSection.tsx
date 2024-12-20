@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
 import { MentorListDialog } from "@/components/MentorListDialog";
 import { useTopRatedMentors } from "@/hooks/useTopRatedMentors";
-import { Link } from "react-router-dom";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Carousel,
   CarouselContent,
@@ -11,10 +11,15 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export const TopRatedMentorsSection = () => {
-  const { data: mentors = [], isLoading } = useTopRatedMentors();
+interface TopRatedMentorsSectionProps {
+  initialMentors?: Tables<"profiles">[];
+}
 
-  if (isLoading) {
+export const TopRatedMentorsSection = ({ initialMentors }: TopRatedMentorsSectionProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: mentors = initialMentors ?? [], isLoading } = useTopRatedMentors();
+
+  if (isLoading && !initialMentors) {
     return <div>Loading...</div>;
   }
 
@@ -22,12 +27,12 @@ export const TopRatedMentorsSection = () => {
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
-        <Link 
-          to="/mentor"
+        <button 
+          onClick={() => setIsDialogOpen(true)}
           className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
-        </Link>
+        </button>
       </div>
       <div className="relative -mx-8">
         <Carousel
@@ -48,6 +53,11 @@ export const TopRatedMentorsSection = () => {
           <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
         </Carousel>
       </div>
+      <MentorListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        mentors={mentors}
+      />
     </section>
   );
 };
