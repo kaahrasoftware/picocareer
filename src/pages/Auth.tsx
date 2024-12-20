@@ -75,13 +75,6 @@ export default function AuthPage() {
           theme="dark"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
-          onError={(error) => {
-            toast({
-              title: "Authentication Error",
-              description: error.message,
-              variant: "destructive",
-            });
-          }}
           localization={{
             variables: {
               sign_up: {
