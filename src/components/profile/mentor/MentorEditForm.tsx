@@ -14,28 +14,38 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/types/database/profiles";
 
+type SessionType = "Introduction" | "Quick-Advice" | "Walkthrough" | "Group (2-3 Mentees)" | "Group (4-6 Mentees)";
+
+interface SessionTypeData {
+  id: string;
+  type: SessionType;
+  duration: number;
+  price: number;
+  description: string | null;
+}
+
+interface SpecializationData {
+  career: { title: string; id: string } | null;
+  major: { title: string; id: string } | null;
+  years_of_experience: number;
+}
+
 interface MentorEditFormProps {
   profile: Profile;
   mentorData: {
-    sessionTypes: Array<{
-      id: string;
-      type: string;
-      duration: number;
-      price: number;
-      description: string | null;
-    }>;
-    specializations: Array<{
-      career: { title: string } | null;
-      major: { title: string } | null;
-      years_of_experience: number;
-    }>;
+    sessionTypes: SessionTypeData[];
+    specializations: SpecializationData[];
   } | null;
   setIsEditing: (value: boolean) => void;
 }
 
 export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEditFormProps) {
-  const [sessionTypes, setSessionTypes] = useState(mentorData?.sessionTypes || []);
-  const [specializations, setSpecializations] = useState(mentorData?.specializations || []);
+  const [sessionTypes, setSessionTypes] = useState<SessionTypeData[]>(
+    mentorData?.sessionTypes || []
+  );
+  const [specializations, setSpecializations] = useState<SpecializationData[]>(
+    mentorData?.specializations || []
+  );
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -48,7 +58,8 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
         .from('mentor_session_types')
         .upsert(sessionTypes.map(session => ({
           ...session,
-          profile_id: profile.id
+          profile_id: profile.id,
+          type: session.type as SessionType
         })));
 
       if (sessionError) throw sessionError;
@@ -57,8 +68,10 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
       const { error: specError } = await supabase
         .from('mentor_specializations')
         .upsert(specializations.map(spec => ({
-          ...spec,
-          profile_id: profile.id
+          profile_id: profile.id,
+          career_id: spec.career?.id || '',
+          major_id: spec.major?.id || '',
+          years_of_experience: spec.years_of_experience
         })));
 
       if (specError) throw specError;
@@ -72,6 +85,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
       
       setIsEditing(false);
     } catch (error) {
+      console.error('Error updating mentor details:', error);
       toast({
         title: "Error",
         description: "Failed to update mentor details",
@@ -80,16 +94,24 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
     }
   };
 
+  const sessionTypeOptions: SessionType[] = [
+    "Introduction",
+    "Quick-Advice",
+    "Walkthrough",
+    "Group (2-3 Mentees)",
+    "Group (4-6 Mentees)"
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Session Types */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Session Types</h3>
         {sessionTypes.map((session, index) => (
-          <div key={index} className="space-y-4 p-4 border rounded-lg">
+          <div key={session.id || index} className="space-y-4 p-4 border rounded-lg">
             <Select
               value={session.type}
-              onValueChange={(value) => {
+              onValueChange={(value: SessionType) => {
                 const newTypes = [...sessionTypes];
                 newTypes[index] = { ...newTypes[index], type: value };
                 setSessionTypes(newTypes);
@@ -99,11 +121,11 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
                 <SelectValue placeholder="Select session type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Introduction">Introduction</SelectItem>
-                <SelectItem value="Quick-Advice">Quick Advice</SelectItem>
-                <SelectItem value="Walkthrough">Walkthrough</SelectItem>
-                <SelectItem value="Group (2-3 Mentees)">Group (2-3 Mentees)</SelectItem>
-                <SelectItem value="Group (4-6 Mentees)">Group (4-6 Mentees)</SelectItem>
+                {sessionTypeOptions.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -144,10 +166,11 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
           type="button"
           variant="outline"
           onClick={() => setSessionTypes([...sessionTypes, {
+            id: `temp-${Date.now()}`,
             type: "Introduction",
             duration: 30,
             price: 0,
-            description: "",
+            description: null
           }])}
         >
           Add Session Type
