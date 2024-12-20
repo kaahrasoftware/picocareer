@@ -3,7 +3,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -22,30 +22,6 @@ export default function AuthPage() {
       subscription.unsubscribe();
     };
   }, [navigate]);
-
-  const handleError = (error: Error) => {
-    console.error('Auth error:', error);
-    
-    if (error.message.includes('User already registered')) {
-      toast({
-        title: "Account already exists",
-        description: "Please sign in instead or use a different email address.",
-        variant: "destructive",
-      });
-    } else if (error.message.includes('Invalid login credentials')) {
-      toast({
-        title: "Invalid credentials",
-        description: "Please check your email and password.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Authentication error",
-        description: "An error occurred during authentication. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -67,7 +43,6 @@ export default function AuthPage() {
           theme="dark"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
-          onError={handleError}
           localization={{
             variables: {
               sign_up: {
