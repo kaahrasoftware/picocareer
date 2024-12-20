@@ -16,7 +16,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -51,7 +50,6 @@ export default function ProfilePage() {
         throw new Error('No authenticated user');
       }
 
-      // First, get the user type
       const { data: userTypeData } = await supabase
         .from('profiles')
         .select('user_type')
@@ -60,67 +58,39 @@ export default function ProfilePage() {
 
       const isMentee = userTypeData?.user_type === 'mentee';
 
-      // Define the base query
-      let query = supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
-          id,
-          avatar_url,
-          first_name,
-          last_name,
-          bio,
-          linkedin_url,
-          github_url,
-          website_url,
-          location,
-          fields_of_interest,
-          user_type,
+          *,
           company:companies(name),
           school:schools(name),
           academic_major:majors(title)
-        `);
-
-      // Add additional fields for mentors
-      if (!isMentee) {
-        query = query.select(`
-          id,
-          avatar_url,
-          first_name,
-          last_name,
-          bio,
-          linkedin_url,
-          github_url,
-          website_url,
-          location,
-          fields_of_interest,
-          user_type,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors(title),
-          highest_degree,
-          position,
-          years_of_experience,
-          keywords,
-          skills,
-          tools_used,
-          top_mentor
-        `);
-      }
-
-      const { data, error } = await query
+        `)
         .eq('id', session.user.id)
         .maybeSingle();
 
       if (error) throw error;
       if (!data) throw new Error('No profile data found');
 
-      return {
+      const profileData: Profile = {
         ...data,
         company_name: data.company?.name ?? null,
         school_name: data.school?.name ?? null,
         academic_major: data.academic_major?.title ?? null,
-        full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null
-      } as Profile;
+        full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null,
+        email: data.email || '',
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString(),
+        school_id: data.school_id || null,
+        company_id: data.company_id || null,
+        career_id: data.career_id || null,
+        academic_major_id: data.academic_major_id || null,
+        user_type: data.user_type || 'mentee',
+        highest_degree: data.highest_degree || null,
+        top_mentor: data.top_mentor || false
+      };
+
+      return profileData;
     },
     retry: false
   });
