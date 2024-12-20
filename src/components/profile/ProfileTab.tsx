@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import type { Database } from "@/integrations/supabase/types";
+
+type DegreeType = Database['public']['Enums']['degree'];
 
 interface ProfileTabProps {
   profile: Profile | null;
@@ -31,7 +34,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     linkedin_url: profile?.linkedin_url || "",
     github_url: profile?.github_url || "",
     website_url: profile?.website_url || "",
-    highest_degree: profile?.highest_degree || "No Degree",
+    highest_degree: (profile?.highest_degree as DegreeType) || "No Degree",
     academic_major_id: profile?.academic_major_id || "",
     location: profile?.location || "",
   });
@@ -67,6 +70,20 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     }
   });
 
+  // Fetch all schools
+  const { data: schools } = useQuery({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   if (!profile) return null;
   
   const isMentee = profile.user_type === 'mentee';
@@ -87,13 +104,17 @@ export function ProfileTab({ profile }: ProfileTabProps) {
       const { error } = await supabase
         .from('profiles')
         .update({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           bio: formData.bio,
           position: formData.position,
           company_id: formData.company_id || null,
+          school_id: formData.school_id || null,
           years_of_experience: parseInt(formData.years_of_experience.toString()),
           skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
           tools_used: formData.tools_used.split(",").map(s => s.trim()).filter(Boolean),
           keywords: formData.keywords.split(",").map(s => s.trim()).filter(Boolean),
+          fields_of_interest: formData.fields_of_interest.split(",").map(s => s.trim()).filter(Boolean),
           linkedin_url: formData.linkedin_url,
           github_url: formData.github_url,
           website_url: formData.website_url,
