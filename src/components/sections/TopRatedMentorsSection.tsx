@@ -17,7 +17,7 @@ interface TopRatedMentorsSectionProps {
 
 export const TopRatedMentorsSection = ({ initialMentors }: TopRatedMentorsSectionProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: mentors = initialMentors ?? [], isLoading } = useTopRatedMentors();
+  const { data: mentors = [], isLoading } = useTopRatedMentors();
 
   if (isLoading && !initialMentors) {
     return <div>Loading...</div>;
