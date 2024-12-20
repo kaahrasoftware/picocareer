@@ -44,13 +44,15 @@ export default function AuthPage() {
           description: "Check your email for the password reset link.",
         });
       }
-    }, (error: AuthError) => {
-      // Handle authentication errors
-      toast({
-        title: "Authentication Error",
-        description: error.message || "There was an error during authentication. Please try again.",
-        variant: "destructive",
-      });
+
+      // Handle any authentication errors
+      if (session?.error) {
+        toast({
+          title: "Authentication Error",
+          description: session.error.message || "There was an error during authentication. Please try again.",
+          variant: "destructive",
+        });
+      }
     });
 
     return () => {
