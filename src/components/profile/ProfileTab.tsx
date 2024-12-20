@@ -10,8 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 
-type DegreeType = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
-
 interface ProfileTabProps {
   profile: Profile | null;
 }
@@ -19,21 +17,25 @@ interface ProfileTabProps {
 export function ProfileTab({ profile }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
+    first_name: profile?.first_name || "",
+    last_name: profile?.last_name || "",
     bio: profile?.bio || "",
     position: profile?.position || "",
     company_id: profile?.company_id || "",
+    school_id: profile?.school_id || "",
     years_of_experience: profile?.years_of_experience || 0,
     skills: profile?.skills?.join(", ") || "",
     tools_used: profile?.tools_used?.join(", ") || "",
     keywords: profile?.keywords?.join(", ") || "",
+    fields_of_interest: profile?.fields_of_interest?.join(", ") || "",
     linkedin_url: profile?.linkedin_url || "",
     github_url: profile?.github_url || "",
     website_url: profile?.website_url || "",
-    highest_degree: (profile?.highest_degree as DegreeType) || "No Degree",
+    highest_degree: profile?.highest_degree || "No Degree",
     academic_major_id: profile?.academic_major_id || "",
     location: profile?.location || "",
   });
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -131,6 +133,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         isMentee={isMentee}
         majors={majors || []}
         companies={companies || []}
+        schools={schools || []}
       />
     );
   }
@@ -138,61 +141,76 @@ export function ProfileTab({ profile }: ProfileTabProps) {
   return (
     <div className="flex flex-col space-y-6 max-w-3xl mx-auto">
       <div className="space-y-6">
-        <ProfileBio bio={profile.bio} />
-        <ProfileLinks
-          linkedin_url={profile.linkedin_url}
-          github_url={profile.github_url}
-          website_url={profile.website_url}
-        />
-        <Button 
-          onClick={() => setIsEditing(true)}
-          className="w-full"
-        >
-          Edit Profile
-        </Button>
-      </div>
+        {/* Personal Information */}
+        <div className="bg-muted rounded-lg p-4">
+          <h4 className="font-semibold mb-2">Personal Information</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <p className="text-muted-foreground">
+              <span className="font-medium">First Name:</span> {profile?.first_name}
+            </p>
+            <p className="text-muted-foreground">
+              <span className="font-medium">Last Name:</span> {profile?.last_name}
+            </p>
+          </div>
+        </div>
 
-      <div className="space-y-6">
-        <ProfileEducation
-          academic_major={profile.academic_major}
-          highest_degree={isMentee ? null : profile.highest_degree}
+        <ProfileBio bio={profile?.bio} />
+        
+        <ProfileEducation 
+          academic_major={profile?.academic_major}
+          highest_degree={profile?.highest_degree}
+          school_name={profile?.school_name}
         />
-        {profile.location && (
+
+        {profile?.location && (
           <div className="bg-muted rounded-lg p-4">
             <h4 className="font-semibold mb-2">Location</h4>
             <p className="text-muted-foreground">{profile.location}</p>
           </div>
         )}
-      </div>
 
-      <div className="space-y-6">
-        {!isMentee && profile.skills && profile.skills.length > 0 && (
-          <ProfileSkills
-            skills={profile.skills}
-            tools={profile.tools_used}
-            keywords={profile.keywords}
-          />
-        )}
         {!isMentee && (
           <div className="bg-muted rounded-lg p-4 space-y-3">
             <h4 className="font-semibold">Professional Experience</h4>
-            {profile.position && (
+            {profile?.position && (
               <div className="text-muted-foreground">
                 <span className="font-medium">Position:</span> {profile.position}
               </div>
             )}
-            {profile.company_name && (
+            {profile?.company_name && (
               <div className="text-muted-foreground">
                 <span className="font-medium">Company:</span> {profile.company_name}
               </div>
             )}
-            {profile.years_of_experience !== null && (
+            {profile?.years_of_experience !== null && (
               <div className="text-muted-foreground">
                 <span className="font-medium">Years of Experience:</span> {profile.years_of_experience}
               </div>
             )}
           </div>
         )}
+
+        {!isMentee && profile?.skills && profile?.skills.length > 0 && (
+          <ProfileSkills
+            skills={profile.skills}
+            tools={profile.tools_used}
+            keywords={profile.keywords}
+            fieldsOfInterest={profile.fields_of_interest}
+          />
+        )}
+
+        <ProfileLinks
+          linkedin_url={profile?.linkedin_url}
+          github_url={profile?.github_url}
+          website_url={profile?.website_url}
+        />
+
+        <Button 
+          onClick={() => setIsEditing(true)}
+          className="w-full"
+        >
+          Edit Profile
+        </Button>
       </div>
     </div>
   );

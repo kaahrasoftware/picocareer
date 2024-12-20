@@ -4,10 +4,11 @@ interface ProfileSkillsProps {
   skills: string[] | null;
   tools: string[] | null;
   keywords?: string[] | null;
+  fieldsOfInterest?: string[] | null;
 }
 
-export function ProfileSkills({ skills, tools, keywords }: ProfileSkillsProps) {
-  if (!skills?.length && !tools?.length && !keywords?.length) return null;
+export function ProfileSkills({ skills, tools, keywords, fieldsOfInterest }: ProfileSkillsProps) {
+  if (!skills?.length && !tools?.length && !keywords?.length && !fieldsOfInterest?.length) return null;
 
   return (
     <div className="bg-muted rounded-lg p-4 space-y-4">
@@ -53,6 +54,22 @@ export function ProfileSkills({ skills, tools, keywords }: ProfileSkillsProps) {
                 className="bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
               >
                 {keyword}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {fieldsOfInterest?.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-2">Fields of Interest</h4>
+          <div className="flex flex-wrap gap-2">
+            {fieldsOfInterest.map((field, index) => (
+              <Badge 
+                key={index} 
+                className="bg-[#E2D4F0] text-[#4B5563] hover:bg-[#D4C4E3] transition-colors border border-[#D4C4E3]"
+              >
+                {field}
               </Badge>
             ))}
           </div>
