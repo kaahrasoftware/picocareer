@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -43,15 +44,13 @@ export default function AuthPage() {
           description: "Check your email for the password reset link.",
         });
       }
-
-      // Handle any errors through the session object instead of AUTH_ERROR event
-      if (session?.error) {
-        toast({
-          title: "Authentication Error",
-          description: session.error.message || "There was an error during authentication. Please try again.",
-          variant: "destructive",
-        });
-      }
+    }, (error: AuthError) => {
+      // Handle authentication errors
+      toast({
+        title: "Authentication Error",
+        description: error.message || "There was an error during authentication. Please try again.",
+        variant: "destructive",
+      });
     });
 
     return () => {
