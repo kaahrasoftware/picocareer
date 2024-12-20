@@ -11,19 +11,29 @@ export default function AuthPage() {
 
   const createProfile = async (userId: string, email: string) => {
     try {
-      const { error } = await supabase.from('profiles').insert({
-        id: userId,
-        email: email,
-        user_type: 'mentee'
-      });
+      // First check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
 
-      if (error) {
-        console.error('Error creating profile:', error);
-        toast({
-          title: "Profile Creation Failed",
-          description: "There was an error creating your profile. Please try again.",
-          variant: "destructive",
+      // If profile doesn't exist, create it
+      if (!existingProfile) {
+        const { error } = await supabase.from('profiles').insert({
+          id: userId,
+          email: email,
+          user_type: 'mentee'
         });
+
+        if (error) {
+          console.error('Error creating profile:', error);
+          toast({
+            title: "Profile Creation Failed",
+            description: "There was an error creating your profile. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error('Error in createProfile:', error);
