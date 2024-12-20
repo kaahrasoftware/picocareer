@@ -25,10 +25,14 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
   return (
     <div className="flex items-center gap-4">
-      <Avatar className="h-16 w-16">
-        <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || ''} />
-        <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
-      </Avatar>
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
+        <div className="absolute inset-[3px] rounded-full bg-background" />
+        <Avatar className="h-16 w-16 relative">
+          <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || ''} />
+          <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
+        </Avatar>
+      </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
           <h2 className="text-2xl font-bold">{profile.full_name}</h2>
