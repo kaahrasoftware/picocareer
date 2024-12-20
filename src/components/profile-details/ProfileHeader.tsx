@@ -108,7 +108,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           <AvatarImage 
             src={profile.avatar_url || ''} 
             alt={profile.full_name || ''} 
-            className="object-cover w-full h-full"
+            className="object-contain p-1"
           />
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
         </Avatar>
