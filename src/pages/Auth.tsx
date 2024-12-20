@@ -23,6 +23,30 @@ export default function AuthPage() {
     };
   }, [navigate]);
 
+  const handleError = (error: Error) => {
+    console.error('Auth error:', error);
+    
+    if (error.message.includes('User already registered')) {
+      toast({
+        title: "Account already exists",
+        description: "Please sign in instead or use a different email address.",
+        variant: "destructive",
+      });
+    } else if (error.message.includes('Invalid login credentials')) {
+      toast({
+        title: "Invalid credentials",
+        description: "Please check your email and password.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Authentication error",
+        description: "An error occurred during authentication. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card border border-border rounded-lg p-6 shadow-lg">
@@ -42,7 +66,8 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
-          redirectTo={window.location.origin}
+          redirectTo={`${window.location.origin}/auth/callback`}
+          onError={handleError}
           localization={{
             variables: {
               sign_up: {
