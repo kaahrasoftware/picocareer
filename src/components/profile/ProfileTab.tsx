@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileTabProps {
   profile: Profile | null;
@@ -28,6 +29,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     website_url: profile?.website_url || "",
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   if (!profile) return null;
   
@@ -63,6 +65,9 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
+      
+      // Invalidate and refetch the profile query
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
       
       setIsEditing(false);
     } catch (error) {
