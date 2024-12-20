@@ -11,6 +11,13 @@ export default function AuthPage() {
 
   useEffect(() => {
     // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+
+    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -24,6 +31,16 @@ export default function AuthPage() {
         toast({
           title: "Signed out",
           description: "You have been signed out.",
+        });
+      } else if (event === 'USER_UPDATED') {
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        });
+      } else if (event === 'PASSWORD_RECOVERY') {
+        toast({
+          title: "Password recovery email sent",
+          description: "Check your email for the password reset link.",
         });
       }
     });
@@ -58,6 +75,13 @@ export default function AuthPage() {
           theme="dark"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
+          onError={(error) => {
+            toast({
+              title: "Authentication Error",
+              description: error.message,
+              variant: "destructive",
+            });
+          }}
           localization={{
             variables: {
               sign_up: {
