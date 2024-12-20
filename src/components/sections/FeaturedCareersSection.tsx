@@ -2,7 +2,6 @@ import { useState } from "react";
 import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import { useFeaturedCareers } from "@/hooks/useFeaturedCareers";
-import type { Tables } from "@/integrations/supabase/types";
 import {
   Carousel,
   CarouselContent,
@@ -11,15 +10,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-interface FeaturedCareersSectionProps {
-  initialCareers?: Tables<"careers">[];
-}
-
-export const FeaturedCareersSection = ({ initialCareers }: FeaturedCareersSectionProps) => {
+export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: careers = initialCareers ?? [], isLoading } = useFeaturedCareers();
+  const { data: careers = [], isLoading } = useFeaturedCareers();
 
-  if (isLoading && !initialCareers) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 

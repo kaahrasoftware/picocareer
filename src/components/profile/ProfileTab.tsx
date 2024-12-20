@@ -20,75 +20,74 @@ interface ProfileTabProps {
 export function ProfileTab({ profile }: ProfileTabProps) {
   const isMentee = profile?.user_type === 'mentee';
 
-  const InfoField = ({ label, value }: { label: string; value: string | number | undefined }) => (
-    <div className="bg-muted/50 rounded-lg p-4 space-y-1 hover:bg-muted/70 transition-colors">
-      <p className="text-sm text-muted-foreground font-medium">{label}</p>
-      <p className="text-foreground">{value || 'Not set'}</p>
-    </div>
-  );
-
   return (
-    <div className="space-y-8 px-4 py-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InfoField label="Profile type" value={profile?.user_type || 'Not set'} />
-        <InfoField label="Full Name" value={profile?.full_name} />
-        
+    <div className="space-y-6 px-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <p className="text-gray-400">Profile type:</p>
+          <p>{profile?.user_type || 'Not set'}</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-gray-400">Full Name:</p>
+          <p>{profile?.full_name || 'Not set'}</p>
+        </div>
         {!isMentee && profile?.academic_major && (
-          <InfoField label="Major" value={profile.academic_major} />
+          <div className="space-y-2">
+            <p className="text-gray-400">Major:</p>
+            <p>{profile.academic_major || 'Not set'}</p>
+          </div>
         )}
-        
-        <InfoField label="School" value={profile?.school_name} />
-        
+        <div className="space-y-2">
+          <p className="text-gray-400">School:</p>
+          <p>{profile?.school_name || 'Not set'}</p>
+        </div>
         {!isMentee && (
           <>
-            <InfoField label="Position" value={profile?.position} />
-            <InfoField label="Company" value={profile?.company_name} />
-            <InfoField label="Highest Degree" value={profile?.highest_degree} />
-            <InfoField label="Years of Experience" value={profile?.years_of_experience} />
+            <div className="space-y-2">
+              <p className="text-gray-400">Position:</p>
+              <p>{profile?.position || 'Not set'}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-gray-400">Company:</p>
+              <p>{profile?.company_name || 'Not set'}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-gray-400">Highest Degree:</p>
+              <p>{profile?.highest_degree || 'Not set'}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-gray-400">Years of Experience:</p>
+              <p>{profile?.years_of_experience || 'Not set'}</p>
+            </div>
           </>
         )}
-      </div>
-
-      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-        <p className="text-sm text-muted-foreground font-medium">Bio</p>
-        <p className="text-foreground/90 leading-relaxed">
-          {profile?.bio || 'No bio available'}
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">External Links</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {profile?.linkedin_url && (
-            <a 
-              href={profile.linkedin_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="bg-muted/50 rounded-lg p-4 hover:bg-muted/70 transition-colors text-center text-primary hover:text-primary/80"
-            >
-              LinkedIn Profile
+        <div className="col-span-2 space-y-2">
+          <p className="text-gray-400">Bio:</p>
+          <p className="text-sm">{profile?.bio || 'No bio available'}</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-gray-400">LinkedIn:</p>
+          <p>{profile?.linkedin_url ? (
+            <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+              View Profile
             </a>
-          )}
-          {profile?.github_url && (
-            <a 
-              href={profile.github_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="bg-muted/50 rounded-lg p-4 hover:bg-muted/70 transition-colors text-center text-primary hover:text-primary/80"
-            >
-              GitHub Profile
+          ) : 'Not set'}</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-gray-400">GitHub:</p>
+          <p>{profile?.github_url ? (
+            <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+              View Profile
             </a>
-          )}
-          {profile?.website_url && (
-            <a 
-              href={profile.website_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="bg-muted/50 rounded-lg p-4 hover:bg-muted/70 transition-colors text-center text-primary hover:text-primary/80"
-            >
-              Personal Website
+          ) : 'Not set'}</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-gray-400">Website:</p>
+          <p>{profile?.website_url ? (
+            <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+              Visit Website
             </a>
-          )}
+          ) : 'Not set'}</p>
         </div>
       </div>
     </div>

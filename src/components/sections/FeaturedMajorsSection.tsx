@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MajorCard } from "@/components/MajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
 import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
-import type { Tables } from "@/integrations/supabase/types";
 import {
   Carousel,
   CarouselContent,
@@ -11,15 +10,20 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-interface FeaturedMajorsSectionProps {
-  initialMajors?: Tables<"majors">[];
-}
-
-export const FeaturedMajorsSection = ({ initialMajors }: FeaturedMajorsSectionProps) => {
+export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: majors = initialMajors ?? [], isLoading } = useFeaturedMajors();
+  const { data: majors = [], isLoading, refetch } = useFeaturedMajors();
 
-  if (isLoading && !initialMajors) {
+  useEffect(() => {
+    refetch();
+    const intervalId = setInterval(() => {
+      console.log("Refreshing majors data...");
+      refetch();
+    }, 10000);
+    return () => clearInterval(intervalId);
+  }, [refetch]);
+
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
