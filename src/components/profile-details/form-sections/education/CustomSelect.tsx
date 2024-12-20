@@ -31,6 +31,11 @@ type InsertData = {
   companies: Database['public']['Tables']['companies']['Insert'];
 }
 
+interface TableRecord {
+  id: string;
+  [key: string]: any;
+}
+
 export function CustomSelect({ 
   value, 
   options, 
@@ -64,8 +69,9 @@ export function CustomSelect({
       }
 
       if (existingData && 'id' in existingData) {
+        const record = existingData as TableRecord;
         // If it exists, use the existing entry
-        handleSelectChange(fieldName, existingData.id);
+        handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
@@ -102,7 +108,8 @@ export function CustomSelect({
       }
 
       if (data && 'id' in data) {
-        handleSelectChange(fieldName, data.id);
+        const record = data as TableRecord;
+        handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
       }
