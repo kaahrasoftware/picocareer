@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient } from "@tanstack/react-query";
 
+type DegreeType = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
+
 interface ProfileTabProps {
   profile: Profile | null;
 }
@@ -27,7 +29,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     linkedin_url: profile?.linkedin_url || "",
     github_url: profile?.github_url || "",
     website_url: profile?.website_url || "",
-    highest_degree: profile?.highest_degree || "No Degree",
+    highest_degree: (profile?.highest_degree as DegreeType) || "No Degree",
     academic_major: profile?.academic_major || "",
     location: profile?.location || "",
   });
@@ -64,7 +66,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           linkedin_url: formData.linkedin_url,
           github_url: formData.github_url,
           website_url: formData.website_url,
-          highest_degree: formData.highest_degree,
+          highest_degree: formData.highest_degree as DegreeType,
           academic_major: formData.academic_major,
           location: formData.location,
         })
