@@ -34,3 +34,11 @@ export interface Career {
   created_at: string | null;
   updated_at: string | null;
 }
+
+export interface CareerWithMajors extends Career {
+  career_major_relations: {
+    major: {
+      title: string;
+    };
+  }[];
+}

@@ -1,3 +1,6 @@
+```typescript
+import type { Database as DatabaseGenerated } from './types.generated';
+
 export type Json =
   | string
   | number
@@ -6,371 +9,369 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database extends DatabaseGenerated {
   public: {
     Tables: {
+      blogs: {
+        Row: {
+          id: string;
+          title: string;
+          content: string;
+          summary: string | null;
+          author_id: string | null;
+          categories: string[] | null;
+          subcategories: string[] | null;
+          published: boolean | null;
+          featured: boolean | null;
+          is_recent: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          content: string;
+          summary?: string | null;
+          author_id?: string | null;
+          categories?: string[] | null;
+          subcategories?: string[] | null;
+          published?: boolean | null;
+          featured?: boolean | null;
+          is_recent?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          content?: string;
+          summary?: string | null;
+          author_id?: string | null;
+          categories?: string[] | null;
+          subcategories?: string[] | null;
+          published?: boolean | null;
+          featured?: boolean | null;
+          is_recent?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blogs_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
       careers: {
         Row: {
-          affiliated_programs: string[] | null
-          average_salary: number | null
-          certifications_to_consider: string[] | null
-          common_courses: string[] | null
-          common_difficulties: string[] | null
-          created_at: string | null
-          degree_levels: string[] | null
-          description: string | null
-          dropout_rates: number | null
-          featured: boolean | null
-          global_applicability: string | null
-          growth_potential: string | null
-          id: string
-          image_url: string | null
-          industry: string | null
-          intensity: number | null
-          job_prospects: string | null
-          learning_objectives: string[] | null
-          majors_to_consider_switching_to: string[] | null
-          passion_for_subject: string | null
-          potential_salary: number | null
-          professional_associations: string[] | null
-          required_education: string[] | null
-          required_skills: string[] | null
-          required_tools: string[] | null
-          salary_range: string | null
-          skill_match: string[] | null
-          stress_levels: number | null
-          title: string
-          tools_knowledge: string[] | null
-          transferable_skills: string[] | null
-          tuition_and_fees: number | null
-          updated_at: string | null
-          work_environment: string | null
-        }
+          id: string;
+          title: string;
+          description: string | null;
+          industry: string | null;
+          salary_range: string | null;
+          average_salary: number | null;
+          potential_salary: number | null;
+          tuition_and_fees: number | null;
+          intensity: number | null;
+          stress_levels: number | null;
+          dropout_rates: number | null;
+          required_education: string[] | null;
+          degree_levels: string[] | null;
+          learning_objectives: string[] | null;
+          common_courses: string[] | null;
+          required_skills: string[] | null;
+          required_tools: string[] | null;
+          tools_knowledge: string[] | null;
+          transferable_skills: string[] | null;
+          skill_match: string[] | null;
+          professional_associations: string[] | null;
+          common_difficulties: string[] | null;
+          certifications_to_consider: string[] | null;
+          affiliated_programs: string[] | null;
+          majors_to_consider_switching_to: string[] | null;
+          job_prospects: string | null;
+          work_environment: string | null;
+          growth_potential: string | null;
+          passion_for_subject: string | null;
+          global_applicability: string | null;
+          image_url: string | null;
+          featured: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
         Insert: {
-          affiliated_programs?: string[] | null
-          average_salary?: number | null
-          certifications_to_consider?: string[] | null
-          common_courses?: string[] | null
-          common_difficulties?: string[] | null
-          created_at?: string | null
-          degree_levels?: string[] | null
-          description?: string | null
-          dropout_rates?: number | null
-          featured?: boolean | null
-          global_applicability?: string | null
-          growth_potential?: string | null
-          id?: string
-          image_url?: string | null
-          industry?: string | null
-          intensity?: number | null
-          job_prospects?: string | null
-          learning_objectives?: string[] | null
-          majors_to_consider_switching_to?: string[] | null
-          passion_for_subject?: string | null
-          potential_salary?: number | null
-          professional_associations?: string[] | null
-          required_education?: string[] | null
-          required_skills?: string[] | null
-          required_tools?: string[] | null
-          salary_range?: string | null
-          skill_match?: string[] | null
-          stress_levels?: number | null
-          title: string
-          tools_knowledge?: string[] | null
-          transferable_skills?: string[] | null
-          tuition_and_fees?: number | null
-          updated_at?: string | null
-          work_environment?: string | null
-        }
+          id?: string;
+          title: string;
+          description?: string | null;
+          industry?: string | null;
+          salary_range?: string | null;
+          average_salary?: number | null;
+          potential_salary?: number | null;
+          tuition_and_fees?: number | null;
+          intensity?: number | null;
+          stress_levels?: number | null;
+          dropout_rates?: number | null;
+          required_education?: string[] | null;
+          degree_levels?: string[] | null;
+          learning_objectives?: string[] | null;
+          common_courses?: string[] | null;
+          required_skills?: string[] | null;
+          required_tools?: string[] | null;
+          tools_knowledge?: string[] | null;
+          transferable_skills?: string[] | null;
+          skill_match?: string[] | null;
+          professional_associations?: string[] | null;
+          common_difficulties?: string[] | null;
+          certifications_to_consider?: string[] | null;
+          affiliated_programs?: string[] | null;
+          majors_to_consider_switching_to?: string[] | null;
+          job_prospects?: string | null;
+          work_environment?: string | null;
+          growth_potential?: string | null;
+          passion_for_subject?: string | null;
+          global_applicability?: string | null;
+          image_url?: string | null;
+          featured?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
         Update: {
-          affiliated_programs?: string[] | null
-          average_salary?: number | null
-          certifications_to_consider?: string[] | null
-          common_courses?: string[] | null
-          common_difficulties?: string[] | null
-          created_at?: string | null
-          degree_levels?: string[] | null
-          description?: string | null
-          dropout_rates?: number | null
-          featured?: boolean | null
-          global_applicability?: string | null
-          growth_potential?: string | null
-          id?: string
-          image_url?: string | null
-          industry?: string | null
-          intensity?: number | null
-          job_prospects?: string | null
-          learning_objectives?: string[] | null
-          majors_to_consider_switching_to?: string[] | null
-          passion_for_subject?: string | null
-          potential_salary?: number | null
-          professional_associations?: string[] | null
-          required_education?: string[] | null
-          required_skills?: string[] | null
-          required_tools?: string[] | null
-          salary_range?: string | null
-          skill_match?: string[] | null
-          stress_levels?: number | null
-          title?: string
-          tools_knowledge?: string[] | null
-          transferable_skills?: string[] | null
-          tuition_and_fees?: number | null
-          updated_at?: string | null
-          work_environment?: string | null
-        }
-        Relationships: []
-      }
-      mentor_availability: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          industry?: string | null;
+          salary_range?: string | null;
+          average_salary?: number | null;
+          potential_salary?: number | null;
+          tuition_and_fees?: number | null;
+          intensity?: number | null;
+          stress_levels?: number | null;
+          dropout_rates?: number | null;
+          required_education?: string[] | null;
+          degree_levels?: string[] | null;
+          learning_objectives?: string[] | null;
+          common_courses?: string[] | null;
+          required_skills?: string[] | null;
+          required_tools?: string[] | null;
+          tools_knowledge?: string[] | null;
+          transferable_skills?: string[] | null;
+          skill_match?: string[] | null;
+          professional_associations?: string[] | null;
+          common_difficulties?: string[] | null;
+          certifications_to_consider?: string[] | null;
+          affiliated_programs?: string[] | null;
+          majors_to_consider_switching_to?: string[] | null;
+          job_prospects?: string | null;
+          work_environment?: string | null;
+          growth_potential?: string | null;
+          passion_for_subject?: string | null;
+          global_applicability?: string | null;
+          image_url?: string | null;
+          featured?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      majors: {
         Row: {
-          created_at: string | null
-          date_available: string
-          end_time: string
-          id: string
-          is_available: boolean | null
-          profile_id: string | null
-          start_time: string
-          timezone: string
-          updated_at: string | null
-        }
+          id: string;
+          title: string;
+          description: string | null;
+          featured: boolean | null;
+          learning_objectives: string[] | null;
+          common_courses: string[] | null;
+          interdisciplinary_connections: string[] | null;
+          job_prospects: string | null;
+          certifications_to_consider: string[] | null;
+          degree_levels: string[] | null;
+          affiliated_programs: string[] | null;
+          gpa_expectations: number | null;
+          transferable_skills: string[] | null;
+          tools_knowledge: string[] | null;
+          potential_salary: string | null;
+          passion_for_subject: string | null;
+          skill_match: string[] | null;
+          professional_associations: string[] | null;
+          global_applicability: string | null;
+          common_difficulties: string[] | null;
+          career_opportunities: string[] | null;
+          intensity: string | null;
+          stress_level: string | null;
+          dropout_rates: string | null;
+          majors_to_consider_switching_to: string[] | null;
+          profiles_count: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          date_available: string
-          end_time: string
-          id?: string
-          is_available?: boolean | null
-          profile_id?: string | null
-          start_time: string
-          timezone: string
-          updated_at?: string | null
-        }
+          id?: string;
+          title: string;
+          description?: string | null;
+          featured?: boolean | null;
+          learning_objectives?: string[] | null;
+          common_courses?: string[] | null;
+          interdisciplinary_connections?: string[] | null;
+          job_prospects?: string | null;
+          certifications_to_consider?: string[] | null;
+          degree_levels?: string[] | null;
+          affiliated_programs?: string[] | null;
+          gpa_expectations?: number | null;
+          transferable_skills?: string[] | null;
+          tools_knowledge?: string[] | null;
+          potential_salary?: string | null;
+          passion_for_subject?: string | null;
+          skill_match?: string[] | null;
+          professional_associations?: string[] | null;
+          global_applicability?: string | null;
+          common_difficulties?: string[] | null;
+          career_opportunities?: string[] | null;
+          intensity?: string | null;
+          stress_level?: string | null;
+          dropout_rates?: string | null;
+          majors_to_consider_switching_to?: string[] | null;
+          profiles_count?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          date_available?: string
-          end_time?: string
-          id?: string
-          is_available?: boolean | null
-          profile_id?: string | null
-          start_time?: string
-          timezone?: string
-          updated_at?: string | null
-        }
+          id?: string;
+          title?: string;
+          description?: string | null;
+          featured?: boolean | null;
+          learning_objectives?: string[] | null;
+          common_courses?: string[] | null;
+          interdisciplinary_connections?: string[] | null;
+          job_prospects?: string | null;
+          certifications_to_consider?: string[] | null;
+          degree_levels?: string[] | null;
+          affiliated_programs?: string[] | null;
+          gpa_expectations?: number | null;
+          transferable_skills?: string[] | null;
+          tools_knowledge?: string[] | null;
+          potential_salary?: string | null;
+          passion_for_subject?: string | null;
+          skill_match?: string[] | null;
+          professional_associations?: string[] | null;
+          global_applicability?: string | null;
+          common_difficulties?: string[] | null;
+          career_opportunities?: string[] | null;
+          intensity?: string | null;
+          stress_level?: string | null;
+          dropout_rates?: string | null;
+          majors_to_consider_switching_to?: string[] | null;
+          profiles_count?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      companies: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      schools: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      career_major_relations: {
+        Row: {
+          id: string;
+          career_id: string;
+          major_id: string;
+          relevance_score: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          career_id: string;
+          major_id: string;
+          relevance_score?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          career_id?: string;
+          major_id?: string;
+          relevance_score?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "mentor_availability_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "career_major_relations_career_id_fkey"
+            columns: ["career_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mentor_session_types: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          duration: number
-          id: string
-          price: number
-          profile_id: string | null
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          duration: number
-          id?: string
-          price: number
-          profile_id?: string | null
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          duration?: number
-          id?: string
-          price?: number
-          profile_id?: string | null
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mentor_session_types_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mentor_sessions: {
-        Row: {
-          created_at: string | null
-          id: string
-          mentee_id: string | null
-          mentor_id: string | null
-          notes: string | null
-          scheduled_at: string
-          session_type_id: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          mentee_id?: string | null
-          mentor_id?: string | null
-          notes?: string | null
-          scheduled_at: string
-          session_type_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          mentee_id?: string | null
-          mentor_id?: string | null
-          notes?: string | null
-          scheduled_at?: string
-          session_type_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mentor_sessions_mentee_id_fkey"
-            columns: ["mentee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "careers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "mentor_sessions_mentor_id_fkey"
-            columns: ["mentor_id"]
+            foreignKeyName: "career_major_relations_major_id_fkey"
+            columns: ["major_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "majors"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mentor_sessions_session_type_id_fkey"
-            columns: ["session_type_id"]
-            isOneToOne: false
-            referencedRelation: "mentor_session_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          academic_major_id: string | null
-          avatar_url: string | null
-          bio: string | null
-          career_id: string | null
-          company_id: string | null
-          created_at: string | null
-          email: string | null
-          fields_of_interest: string[] | null
-          first_name: string | null
-          full_name: string | null
-          github_url: string | null
-          highest_degree: string | null
-          id: string
-          keywords: string[] | null
-          last_name: string | null
-          linkedin_url: string | null
-          location: string | null
-          position: string | null
-          school_id: string | null
-          skills: string[] | null
-          tools_used: string[] | null
-          top_mentor: boolean | null
-          updated_at: string | null
-          user_type: string | null
-          website_url: string | null
-          years_of_experience: number | null
-        }
-        Insert: {
-          academic_major_id?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          career_id?: string | null
-          company_id?: string | null
-          created_at?: string | null
-          email?: string | null
-          fields_of_interest?: string[] | null
-          first_name?: string | null
-          full_name?: string | null
-          github_url?: string | null
-          highest_degree?: string | null
-          id: string
-          keywords?: string[] | null
-          last_name?: string | null
-          linkedin_url?: string | null
-          location?: string | null
-          position?: string | null
-          school_id?: string | null
-          skills?: string[] | null
-          tools_used?: string[] | null
-          top_mentor?: boolean | null
-          updated_at?: string | null
-          user_type?: string | null
-          website_url?: string | null
-          years_of_experience?: number | null
-        }
-        Update: {
-          academic_major_id?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          career_id?: string | null
-          company_id?: string | null
-          created_at?: string | null
-          email?: string | null
-          fields_of_interest?: string[] | null
-          first_name?: string | null
-          full_name?: string | null
-          github_url?: string | null
-          highest_degree?: string | null
-          id?: string
-          keywords?: string[] | null
-          last_name?: string | null
-          linkedin_url?: string | null
-          location?: string | null
-          position?: string | null
-          school_id?: string | null
-          skills?: string[] | null
-          tools_used?: string[] | null
-          top_mentor?: boolean | null
-          updated_at?: string | null
-          user_type?: string | null
-          website_url?: string | null
-          years_of_experience?: number | null
-        }
-        Relationships: []
-      }
-    }
+          }
+        ];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      [_ in never]: never;
+    };
+  };
 }
-
-type PublicSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
   PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
@@ -379,86 +380,59 @@ export type Tables<
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+      Database["public"]["Views"])
+  ? (Database["public"]["Tables"] &
+      Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+      Row: infer R;
+    }
+    ? R
     : never
+  : never;
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+    | keyof Database["public"]["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+      Insert: infer I;
+    }
+    ? I
     : never
+  : never;
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+    | keyof Database["public"]["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+      Update: infer U;
+    }
+    ? U
     : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
-    | { schema: keyof Database },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  : never;
+```
