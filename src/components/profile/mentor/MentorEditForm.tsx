@@ -13,11 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/types/database/profiles";
+import type { Database } from "@/integrations/supabase/types";
 
-type SessionType = "Introduction" | "Quick-Advice" | "Walkthrough" | "Group (2-3 Mentees)" | "Group (4-6 Mentees)";
+type SessionType = Database["public"]["Enums"]["session_type"];
 
 interface SessionTypeData {
-  id: string;
+  id?: string;
   type: SessionType;
   duration: number;
   price: number;
@@ -53,14 +54,19 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
     e.preventDefault();
 
     try {
-      // Update session types
+      // Update session types - filter out temporary IDs for new entries
       const { error: sessionError } = await supabase
         .from('mentor_session_types')
-        .upsert(sessionTypes.map(session => ({
-          ...session,
-          profile_id: profile.id,
-          type: session.type as SessionType
-        })));
+        .upsert(
+          sessionTypes.map(session => ({
+            ...(session.id ? { id: session.id } : {}), // Only include id if it exists
+            profile_id: profile.id,
+            type: session.type,
+            duration: session.duration,
+            price: session.price,
+            description: session.description
+          }))
+        );
 
       if (sessionError) throw sessionError;
 
@@ -108,7 +114,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Session Types</h3>
         {sessionTypes.map((session, index) => (
-          <div key={session.id || index} className="space-y-4 p-4 border rounded-lg">
+          <div key={index} className="space-y-4 p-4 border rounded-lg">
             <Select
               value={session.type}
               onValueChange={(value: SessionType) => {
@@ -134,7 +140,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
               value={session.duration}
               onChange={(e) => {
                 const newTypes = [...sessionTypes];
-                newTypes[index] = { ...newTypes[index], duration: parseInt(e.target.value) };
+                newTypes[index] = { ...newTypes[index], duration: parseInt(e.target.value) || 0 };
                 setSessionTypes(newTypes);
               }}
               placeholder="Duration (minutes)"
@@ -145,7 +151,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
               value={session.price}
               onChange={(e) => {
                 const newTypes = [...sessionTypes];
-                newTypes[index] = { ...newTypes[index], price: parseInt(e.target.value) };
+                newTypes[index] = { ...newTypes[index], price: parseInt(e.target.value) || 0 };
                 setSessionTypes(newTypes);
               }}
               placeholder="Price ($)"
@@ -166,7 +172,6 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
           type="button"
           variant="outline"
           onClick={() => setSessionTypes([...sessionTypes, {
-            id: `temp-${Date.now()}`,
             type: "Introduction",
             duration: 30,
             price: 0,
