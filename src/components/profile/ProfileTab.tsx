@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 type DegreeType = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
 
@@ -30,11 +30,26 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     github_url: profile?.github_url || "",
     website_url: profile?.website_url || "",
     highest_degree: (profile?.highest_degree as DegreeType) || "No Degree",
-    academic_major: profile?.academic_major || "",
+    academic_major_id: profile?.academic_major_id || "",
     location: profile?.location || "",
   });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch all majors
+  const { data: majors } = useQuery({
+    queryKey: ['majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   if (!profile) return null;
   
@@ -67,7 +82,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           github_url: formData.github_url,
           website_url: formData.website_url,
           highest_degree: formData.highest_degree as DegreeType,
-          academic_major: formData.academic_major,
+          academic_major_id: formData.academic_major_id,
           location: formData.location,
         })
         .eq('id', profile.id);
@@ -79,7 +94,6 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         description: "Your profile has been successfully updated.",
       });
       
-      // Invalidate and refetch the profile query
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
       
       setIsEditing(false);
@@ -101,6 +115,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         handleSubmit={handleSubmit}
         setIsEditing={setIsEditing}
         isMentee={isMentee}
+        majors={majors || []}
       />
     );
   }

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Profile } from "@/types/database/profiles";
+import type { Major } from "@/types/database/majors";
 
 interface ProfileEditFormProps {
   formData: {
@@ -24,7 +24,7 @@ interface ProfileEditFormProps {
     github_url: string;
     website_url: string;
     highest_degree: "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
-    academic_major: string;
+    academic_major_id: string;
     location: string;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -32,6 +32,7 @@ interface ProfileEditFormProps {
   handleSubmit: (e: React.FormEvent) => void;
   setIsEditing: (value: boolean) => void;
   isMentee: boolean;
+  majors: Pick<Major, 'id' | 'title'>[];
 }
 
 const degreeOptions = [
@@ -50,7 +51,8 @@ export function ProfileEditForm({
   handleSelectChange,
   handleSubmit, 
   setIsEditing,
-  isMentee 
+  isMentee,
+  majors
 }: ProfileEditFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -134,13 +136,21 @@ export function ProfileEditForm({
 
             <div>
               <label className="text-sm font-medium">Academic Major</label>
-              <Input
-                name="academic_major"
-                value={formData.academic_major}
-                onChange={handleInputChange}
-                className="mt-1"
-                placeholder="Your field of study"
-              />
+              <Select 
+                value={formData.academic_major_id} 
+                onValueChange={(value) => handleSelectChange?.('academic_major_id', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your major" />
+                </SelectTrigger>
+                <SelectContent>
+                  {majors.map((major) => (
+                    <SelectItem key={major.id} value={major.id}>
+                      {major.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
