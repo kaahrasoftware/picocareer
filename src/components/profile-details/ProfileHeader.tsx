@@ -26,12 +26,12 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   return (
     <div className="flex items-center gap-6 ml-6">
       <div className="relative w-20 h-20">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary blur-[2px]" />
+        <div className="absolute inset-[3px] rounded-full bg-background" />
         <Avatar className="h-16 w-16 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || ''} />
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
         </Avatar>
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary blur-[2px]" />
-        <div className="absolute inset-[3px] rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
