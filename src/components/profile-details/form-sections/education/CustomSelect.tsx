@@ -36,7 +36,7 @@ export function CustomSelect({
       // First, check if the entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id')
+        .select('id, ' + titleField)
         .eq(titleField, customValue)
         .maybeSingle();
 
@@ -51,17 +51,14 @@ export function CustomSelect({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData;
+      let insertData: Record<string, any> = {};
+      
       if (tableName === 'majors') {
         insertData = {
           title: customValue,
           description: `Custom major: ${customValue}`
         };
-      } else if (tableName === 'schools') {
-        insertData = {
-          name: customValue
-        };
-      } else if (tableName === 'companies') {
+      } else if (tableName === 'schools' || tableName === 'companies') {
         insertData = {
           name: customValue
         };
