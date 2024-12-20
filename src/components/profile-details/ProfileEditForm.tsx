@@ -2,6 +2,13 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileEditFormProps {
@@ -16,16 +23,32 @@ interface ProfileEditFormProps {
     linkedin_url: string;
     github_url: string;
     website_url: string;
+    highest_degree: string;
+    academic_major: string;
+    location: string;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSelectChange?: (name: string, value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
   setIsEditing: (value: boolean) => void;
   isMentee: boolean;
 }
 
+const degreeOptions = [
+  "No Degree",
+  "High School",
+  "Associate's",
+  "Bachelor's",
+  "Master's",
+  "Doctorate",
+  "Professional Degree",
+  "Other"
+];
+
 export function ProfileEditForm({ 
   formData, 
   handleInputChange, 
+  handleSelectChange,
   handleSubmit, 
   setIsEditing,
   isMentee 
@@ -44,6 +67,17 @@ export function ProfileEditForm({
           />
         </div>
 
+        <div>
+          <label className="text-sm font-medium">Location</label>
+          <Input
+            name="location"
+            value={formData.location}
+            onChange={handleInputChange}
+            className="mt-1"
+            placeholder="City, Country"
+          />
+        </div>
+
         {!isMentee && (
           <>
             <div>
@@ -58,6 +92,17 @@ export function ProfileEditForm({
             </div>
 
             <div>
+              <label className="text-sm font-medium">Company</label>
+              <Input
+                name="company_name"
+                value={formData.company_name}
+                onChange={handleInputChange}
+                className="mt-1"
+                placeholder="Company name"
+              />
+            </div>
+
+            <div>
               <label className="text-sm font-medium">Years of Experience</label>
               <Input
                 name="years_of_experience"
@@ -66,6 +111,36 @@ export function ProfileEditForm({
                 onChange={handleInputChange}
                 className="mt-1"
                 min="0"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Highest Degree</label>
+              <Select 
+                value={formData.highest_degree} 
+                onValueChange={(value) => handleSelectChange?.('highest_degree', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your highest degree" />
+                </SelectTrigger>
+                <SelectContent>
+                  {degreeOptions.map((degree) => (
+                    <SelectItem key={degree} value={degree}>
+                      {degree}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Academic Major</label>
+              <Input
+                name="academic_major"
+                value={formData.academic_major}
+                onChange={handleInputChange}
+                className="mt-1"
+                placeholder="Your field of study"
               />
             </div>
 

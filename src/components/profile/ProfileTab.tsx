@@ -27,6 +27,9 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     linkedin_url: profile?.linkedin_url || "",
     github_url: profile?.github_url || "",
     website_url: profile?.website_url || "",
+    highest_degree: profile?.highest_degree || "No Degree",
+    academic_major: profile?.academic_major || "",
+    location: profile?.location || "",
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,6 +40,10 @@ export function ProfileTab({ profile }: ProfileTabProps) {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -56,6 +63,8 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           linkedin_url: formData.linkedin_url,
           github_url: formData.github_url,
           website_url: formData.website_url,
+          highest_degree: formData.highest_degree,
+          location: formData.location,
         })
         .eq('id', profile.id);
 
@@ -84,6 +93,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
       <ProfileEditForm
         formData={formData}
         handleInputChange={handleInputChange}
+        handleSelectChange={handleSelectChange}
         handleSubmit={handleSubmit}
         setIsEditing={setIsEditing}
         isMentee={isMentee}
