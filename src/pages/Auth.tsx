@@ -46,24 +46,11 @@ export default function AuthPage() {
             variables: {
               default: {
                 colors: {
-                  brand: 'hsl(var(--primary))',
-                  brandAccent: 'hsl(var(--secondary))',
+                  brand: '#0EA5E9', // Cyan blue from logo
+                  brandAccent: '#002366', // Navy blue from logo
                   brandButtonText: 'white',
-                  defaultButtonBackground: 'hsl(var(--primary))',
-                  defaultButtonBackgroundHover: 'hsl(var(--secondary))',
-                  inputBackground: 'transparent',
-                  inputBorder: 'hsl(var(--border))',
-                  inputBorderHover: 'hsl(var(--ring))',
-                  inputBorderFocus: 'hsl(var(--ring))',
                 }
               }
-            },
-            className: {
-              button: 'bg-primary hover:bg-secondary text-white transition-colors',
-              container: 'text-foreground',
-              label: 'text-foreground',
-              input: 'bg-background border-border',
-              divider: 'bg-border',
             }
           }}
           theme="dark"
