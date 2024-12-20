@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
 
 type TableName = 'majors' | 'schools' | 'companies';
 type FieldName = 'academic_major_id' | 'school_id' | 'company_id';
@@ -41,15 +42,26 @@ export function CustomSelect({
 }: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
+  const { toast } = useToast();
 
   const handleCustomSubmit = async () => {
     try {
       // First, check if the entry already exists
-      const { data: existingData } = await supabase
+      const { data: existingData, error: existingError } = await supabase
         .from(tableName)
         .select('id, ' + titleField)
         .eq(titleField, customValue)
         .maybeSingle();
+
+      if (existingError) {
+        console.error('Error checking existing entry:', existingError);
+        toast({
+          title: "Error",
+          description: "Failed to check for existing entry. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (existingData) {
         // If it exists, use the existing entry
@@ -79,7 +91,15 @@ export function CustomSelect({
         .select(`id, ${titleField}`)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error(`Failed to add new ${tableName}:`, error);
+        toast({
+          title: "Error",
+          description: `Failed to add new ${tableName}. Please try again.`,
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (data) {
         handleSelectChange(fieldName, data.id);
@@ -88,6 +108,11 @@ export function CustomSelect({
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to add new ${tableName}. Please try again.`,
+        variant: "destructive",
+      });
     }
   };
 
