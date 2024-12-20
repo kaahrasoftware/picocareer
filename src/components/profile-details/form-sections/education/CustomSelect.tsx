@@ -14,8 +14,8 @@ interface CustomSelectProps {
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
   handleSelectChange: (name: string, value: string) => void;
-  tableName: 'majors' | 'schools';
-  fieldName: 'academic_major_id' | 'school_id';
+  tableName: 'majors' | 'schools' | 'companies';
+  fieldName: 'academic_major_id' | 'school_id' | 'company_id';
   titleField: 'title' | 'name';
 }
 
@@ -33,12 +33,14 @@ export function CustomSelect({
 
   const handleCustomSubmit = async () => {
     try {
+      const insertData = {
+        [titleField]: customValue,
+        ...(tableName === 'majors' ? { description: `Custom ${titleField}: ${customValue}` } : {})
+      };
+
       const { data, error } = await supabase
         .from(tableName)
-        .insert([{ 
-          [titleField]: customValue,
-          ...(tableName === 'majors' ? { description: `Custom ${titleField}: ${customValue}` } : {})
-        }])
+        .insert([insertData])
         .select(`id, ${titleField}`)
         .single();
 
