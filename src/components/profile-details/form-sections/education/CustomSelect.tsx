@@ -33,10 +33,25 @@ export function CustomSelect({
 
   const handleCustomSubmit = async () => {
     try {
-      const insertData = {
-        [titleField]: customValue,
-        ...(tableName === 'majors' ? { description: `Custom ${titleField}: ${customValue}` } : {})
+      let insertData: Record<string, any> = {
+        [titleField]: customValue
       };
+
+      // Add specific fields based on table type
+      if (tableName === 'majors') {
+        insertData = {
+          title: customValue,
+          description: `Custom major: ${customValue}`
+        };
+      } else if (tableName === 'schools') {
+        insertData = {
+          name: customValue
+        };
+      } else if (tableName === 'companies') {
+        insertData = {
+          name: customValue
+        };
+      }
 
       const { data, error } = await supabase
         .from(tableName)
