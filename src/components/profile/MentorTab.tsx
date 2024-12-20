@@ -6,6 +6,23 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentorEditForm } from "./mentor/MentorEditForm";
 import { MentorDetails } from "./mentor/MentorDetails";
 import type { Profile } from "@/types/database/profiles";
+import type { Database } from "@/integrations/supabase/types";
+
+type SessionType = Database["public"]["Enums"]["session_type"];
+
+interface SessionTypeData {
+  id: string;
+  type: SessionType;
+  duration: number;
+  price: number;
+  description: string | null;
+}
+
+interface SpecializationData {
+  career: { title: string; id: string } | null;
+  major: { title: string; id: string } | null;
+  years_of_experience: number;
+}
 
 interface MentorTabProps {
   profile: Profile | null;
@@ -30,8 +47,8 @@ export function MentorTab({ profile }: MentorTabProps) {
           .from('mentor_specializations')
           .select(`
             *,
-            career:careers(title),
-            major:majors(title)
+            career:careers(id, title),
+            major:majors(id, title)
           `)
           .eq('profile_id', profile.id)
       ]);
@@ -39,9 +56,16 @@ export function MentorTab({ profile }: MentorTabProps) {
       if (sessionTypesResponse.error) throw sessionTypesResponse.error;
       if (specializationsResponse.error) throw specializationsResponse.error;
 
+      // Transform the data to match our expected types
+      const formattedSpecializations: SpecializationData[] = specializationsResponse.data.map(spec => ({
+        career: spec.career ? { id: spec.career.id, title: spec.career.title } : null,
+        major: spec.major ? { id: spec.major.id, title: spec.major.title } : null,
+        years_of_experience: spec.years_of_experience
+      }));
+
       return {
-        sessionTypes: sessionTypesResponse.data,
-        specializations: specializationsResponse.data
+        sessionTypes: sessionTypesResponse.data as SessionTypeData[],
+        specializations: formattedSpecializations
       };
     },
     enabled: !!profile?.id && profile.user_type === 'mentor'
