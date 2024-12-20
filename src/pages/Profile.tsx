@@ -29,7 +29,7 @@ export default function Profile() {
 
       const isMentee = userTypeData?.user_type === 'mentee';
 
-      // Define the base fields that both types share
+      // Define base fields that both types share
       const baseFields = `
         id,
         avatar_url,
