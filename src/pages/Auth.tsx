@@ -23,7 +23,7 @@ export default function AuthPage() {
     };
   }, [navigate]);
 
-  const handleAuthError = (error: Error) => {
+  const handleError = (error: Error) => {
     console.error('Auth error:', error);
     
     if (error.message.includes('User already registered')) {
@@ -67,7 +67,6 @@ export default function AuthPage() {
           theme="dark"
           providers={["google", "github"]}
           redirectTo={window.location.origin}
-          onError={handleAuthError}
           localization={{
             variables: {
               sign_up: {
