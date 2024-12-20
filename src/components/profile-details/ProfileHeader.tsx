@@ -40,15 +40,16 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}${fileExt ? `.${fileExt}` : ''}`;
+      // Create a folder with the user's ID and store the avatar inside
+      const filePath = `${profile.id}/avatar.${fileExt}`;
 
       // If there's an existing avatar, delete it first
       if (profile.avatar_url) {
-        const oldFileName = profile.avatar_url.split('/').pop();
-        if (oldFileName) {
+        const oldFilePath = new URL(profile.avatar_url).pathname.split('/').slice(-2).join('/');
+        if (oldFilePath) {
           const { error: deleteError } = await supabase.storage
             .from('avatars')
-            .remove([oldFileName]);
+            .remove([oldFilePath]);
           
           if (deleteError) {
             console.error('Error deleting old avatar:', deleteError);
@@ -59,7 +60,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { 
+        .upload(filePath, file, { 
           upsert: true,
           contentType: file.type
         });
@@ -69,7 +70,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       // Update profile
       const { error: updateError } = await supabase
