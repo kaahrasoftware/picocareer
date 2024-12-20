@@ -33,11 +33,23 @@ export function CustomSelect({
 
   const handleCustomSubmit = async () => {
     try {
-      let insertData: Record<string, any> = {
-        [titleField]: customValue
-      };
+      // First, check if the entry already exists
+      const { data: existingData } = await supabase
+        .from(tableName)
+        .select('id')
+        .eq(titleField, customValue)
+        .single();
 
-      // Add specific fields based on table type
+      if (existingData) {
+        // If it exists, use the existing entry
+        handleSelectChange(fieldName, existingData.id);
+        setShowCustomInput(false);
+        setCustomValue("");
+        return;
+      }
+
+      // If it doesn't exist, create a new entry
+      let insertData;
       if (tableName === 'majors') {
         insertData = {
           title: customValue,
