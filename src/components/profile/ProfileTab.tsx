@@ -56,6 +56,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         .update({
           bio: formData.bio,
           position: formData.position,
+          company_name: formData.company_name,
           years_of_experience: parseInt(formData.years_of_experience.toString()),
           skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
           tools_used: formData.tools_used.split(",").map(s => s.trim()).filter(Boolean),
@@ -64,6 +65,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           github_url: formData.github_url,
           website_url: formData.website_url,
           highest_degree: formData.highest_degree,
+          academic_major: formData.academic_major,
           location: formData.location,
         })
         .eq('id', profile.id);

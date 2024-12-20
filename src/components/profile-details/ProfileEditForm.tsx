@@ -23,7 +23,7 @@ interface ProfileEditFormProps {
     linkedin_url: string;
     github_url: string;
     website_url: string;
-    highest_degree: string;
+    highest_degree: "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
     academic_major: string;
     location: string;
   };
@@ -37,13 +37,12 @@ interface ProfileEditFormProps {
 const degreeOptions = [
   "No Degree",
   "High School",
-  "Associate's",
-  "Bachelor's",
-  "Master's",
-  "Doctorate",
-  "Professional Degree",
-  "Other"
-];
+  "Associate",
+  "Bachelor",
+  "Master",
+  "MD",
+  "PhD"
+] as const;
 
 export function ProfileEditForm({ 
   formData, 
