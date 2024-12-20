@@ -3,10 +3,11 @@ import { Badge } from "@/components/ui/badge";
 interface ProfileSkillsProps {
   skills: string[] | null;
   tools: string[] | null;
+  keywords?: string[] | null;
 }
 
-export function ProfileSkills({ skills, tools }: ProfileSkillsProps) {
-  if (!skills?.length && !tools?.length) return null;
+export function ProfileSkills({ skills, tools, keywords }: ProfileSkillsProps) {
+  if (!skills?.length && !tools?.length && !keywords?.length) return null;
 
   return (
     <div className="bg-muted rounded-lg p-4 space-y-4">
@@ -36,6 +37,22 @@ export function ProfileSkills({ skills, tools }: ProfileSkillsProps) {
                 className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
               >
                 {tool}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {keywords?.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-2">Keywords</h4>
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword, index) => (
+              <Badge 
+                key={index} 
+                className="bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
+              >
+                {keyword}
               </Badge>
             ))}
           </div>
