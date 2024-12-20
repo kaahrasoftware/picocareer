@@ -5,7 +5,7 @@ import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSecti
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 import { useEffect } from "react";
 
-const Index = () => {
+export default function Index() {
   // Set dark theme by default
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -27,6 +27,4 @@ const Index = () => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default Index;
+}
