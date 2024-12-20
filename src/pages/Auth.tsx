@@ -1,38 +1,29 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
+import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import type { AuthError } from "@supabase/supabase-js";
 
-export default function Auth() {
+export default function AuthPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if user is already logged in
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
+      if (event === 'SIGNED_IN' && session) {
         toast({
-          title: "Signed in successfully",
-          description: "Welcome back!",
+          title: "Welcome!",
+          description: "You have successfully signed in.",
         });
         navigate("/");
-      }
-
-      if (event === "SIGNED_OUT") {
+      } else if (event === 'SIGNED_OUT') {
         toast({
           title: "Signed out",
-          description: "Come back soon!",
-        });
-      }
-
-      if (event === "PASSWORD_RECOVERY") {
-        toast({
-          title: "Password recovery initiated",
-          description: "Check your email for the recovery link.",
+          description: "You have been signed out.",
         });
       }
     });
@@ -42,44 +33,51 @@ export default function Auth() {
     };
   }, [navigate, toast]);
 
-  const handleError = (error: AuthError) => {
-    let description = error.message;
-    if (error.message.includes("invalid_credentials")) {
-      description = "Invalid email or password. Please try again.";
-    }
-    toast({
-      title: "Authentication error",
-      description,
-      variant: "destructive",
-    });
-  };
-
   return (
-    <div className="container relative min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md space-y-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-8 rounded-lg border border-border/50">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Welcome</h1>
-          <p className="text-sm text-muted-foreground">
-            Sign in to your account or create a new one
-          </p>
-        </div>
-
-        <SupabaseAuth
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md bg-card border border-border rounded-lg p-6 shadow-lg">
+        <h1 className="text-2xl font-semibold text-center mb-6">Welcome to PicoCareer</h1>
+        <Auth
           supabaseClient={supabase}
           appearance={{
             theme: ThemeSupa,
             variables: {
               default: {
                 colors: {
-                  brand: 'rgb(var(--primary))',
-                  brandAccent: 'rgb(var(--primary))',
-                },
+                  brand: 'rgb(var(--picocareer-primary))',
+                  brandAccent: 'rgb(var(--picocareer-primary) / 0.8)',
+                }
+              }
+            },
+            className: {
+              container: 'auth-container',
+              button: 'auth-button',
+              input: 'auth-input',
+            }
+          }}
+          theme="dark"
+          providers={["google", "github"]}
+          redirectTo={`${window.location.origin}/auth/callback`}
+          localization={{
+            variables: {
+              sign_up: {
+                email_label: "Email",
+                password_label: "Password (minimum 6 characters)",
+                button_label: "Sign up",
+                loading_button_label: "Signing up...",
+                social_provider_text: "Sign up with {{provider}}",
+                link_text: "Don't have an account? Sign up",
+              },
+              sign_in: {
+                email_label: "Email",
+                password_label: "Password",
+                button_label: "Sign in",
+                loading_button_label: "Signing in...",
+                social_provider_text: "Sign in with {{provider}}",
+                link_text: "Already have an account? Sign in",
               },
             },
           }}
-          providers={["google", "github"]}
-          redirectTo={`${window.location.origin}/auth/callback`}
-          onError={handleError}
         />
       </div>
     </div>

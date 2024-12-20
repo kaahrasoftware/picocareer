@@ -1,17 +1,18 @@
-import type { Profile } from "@/types/database/profiles";
-
-export interface BlogWithAuthor {
+export type BlogWithAuthor = {
   id: string;
   title: string;
+  summary: string;
   content: string;
-  summary: string | null;
-  author_id: string | null;
+  author_id: string;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
   categories: string[] | null;
   subcategories: string[] | null;
-  published: boolean | null;
-  featured: boolean | null;
   is_recent: boolean | null;
-  created_at: string | null;
-  updated_at: string | null;
-  author?: Profile | null;
-}
+  cover_image_url: string | null;
+  profiles: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+};
