@@ -24,11 +24,11 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     : profile.school_name || "No school set";
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-6 ml-6">
       <div className="relative">
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-        <div className="absolute inset-[3px] rounded-full bg-background" />
-        <Avatar className="h-16 w-16 relative">
+        <div className="absolute inset-[4px] rounded-full bg-background" />
+        <Avatar className="h-24 w-24 relative">
           <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || ''} />
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
         </Avatar>
