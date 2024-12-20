@@ -1,5 +1,4 @@
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 interface PersonalInfoSectionProps {
   firstName: string;
@@ -13,9 +12,8 @@ export function PersonalInfoSection({ firstName, lastName, handleInputChange }: 
       <h3 className="text-lg font-semibold">Personal Information</h3>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="first_name">First Name</Label>
+          <label className="text-sm font-medium">First Name</label>
           <Input
-            id="first_name"
             name="first_name"
             value={firstName}
             onChange={handleInputChange}
@@ -24,9 +22,8 @@ export function PersonalInfoSection({ firstName, lastName, handleInputChange }: 
           />
         </div>
         <div>
-          <Label htmlFor="last_name">Last Name</Label>
+          <label className="text-sm font-medium">Last Name</label>
           <Input
-            id="last_name"
             name="last_name"
             value={lastName}
             onChange={handleInputChange}
