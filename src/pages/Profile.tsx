@@ -42,9 +42,9 @@ export default function Profile() {
         location,
         fields_of_interest,
         user_type,
-        academic_major:academic_major_id(title),
-        school:school_id(name),
-        company:company_id(name)
+        company:company_id (name),
+        school:school_id (name),
+        academic_major:academic_major_id (title)
       `;
 
       // Additional fields for mentors
@@ -63,7 +63,7 @@ export default function Profile() {
         .from('profiles')
         .select(isMentee ? baseQuery : `${baseQuery}, ${mentorFields}`)
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       if (!data) throw new Error('No profile data found');
