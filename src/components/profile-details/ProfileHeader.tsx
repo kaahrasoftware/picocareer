@@ -4,6 +4,7 @@ import { Building2, GraduationCap, Award, MapPin, Upload } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileHeaderProps {
   profile: {
@@ -22,6 +23,7 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   if (!profile) return null;
 
@@ -40,10 +42,8 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      // Create a folder with the user's ID and store the avatar inside
       const filePath = `${profile.id}/avatar.${fileExt}`;
 
-      // If there's an existing avatar, delete it first
       if (profile.avatar_url) {
         const oldFilePath = new URL(profile.avatar_url).pathname.split('/').slice(-2).join('/');
         if (oldFilePath) {
@@ -57,7 +57,6 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         }
       }
 
-      // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
@@ -67,12 +66,10 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -80,13 +77,13 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       if (updateError) throw updateError;
 
+      // Invalidate and refetch profile query
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
-
-      // Force reload the page to update the avatar
-      window.location.reload();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -113,7 +110,6 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
         </Avatar>
         
-        {/* Upload overlay */}
         <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
           <input
             type="file"
