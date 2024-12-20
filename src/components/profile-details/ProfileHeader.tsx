@@ -40,6 +40,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
+      // Use user ID in the file path to comply with RLS policies
       const filePath = `${profile.id}.${fileExt}`;
 
       // If there's an existing avatar, delete it first
