@@ -1,0 +1,111 @@
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+
+interface CustomSelectProps {
+  value: string;
+  options: Array<{ id: string; title?: string; name?: string }>;
+  placeholder: string;
+  handleSelectChange: (name: string, value: string) => void;
+  tableName: 'majors' | 'schools';
+  fieldName: 'academic_major_id' | 'school_id';
+  titleField: 'title' | 'name';
+}
+
+export function CustomSelect({ 
+  value, 
+  options, 
+  placeholder, 
+  handleSelectChange,
+  tableName,
+  fieldName,
+  titleField,
+}: CustomSelectProps) {
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customValue, setCustomValue] = useState("");
+
+  const handleCustomSubmit = async () => {
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert([{ 
+          [titleField]: customValue,
+          ...(tableName === 'majors' ? { description: `Custom ${titleField}: ${customValue}` } : {})
+        }])
+        .select(`id, ${titleField}`)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        handleSelectChange(fieldName, data.id);
+        setShowCustomInput(false);
+        setCustomValue("");
+      }
+    } catch (error) {
+      console.error(`Failed to add new ${tableName}:`, error);
+    }
+  };
+
+  return (
+    <div>
+      <label className="text-sm font-medium">{placeholder}</label>
+      {!showCustomInput ? (
+        <Select 
+          value={value} 
+          onValueChange={(value) => {
+            if (value === "other") {
+              setShowCustomInput(true);
+            } else {
+              handleSelectChange(fieldName, value);
+            }
+          }}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder={`Select your ${placeholder.toLowerCase()}`} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option[titleField]}
+              </SelectItem>
+            ))}
+            <SelectItem value="other">Other (Add New)</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <div className="space-y-2">
+          <Input
+            value={customValue}
+            onChange={(e) => setCustomValue(e.target.value)}
+            placeholder={`Enter ${placeholder.toLowerCase()}`}
+            className="mt-1"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleCustomSubmit}
+              className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCustomInput(false)}
+              className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
