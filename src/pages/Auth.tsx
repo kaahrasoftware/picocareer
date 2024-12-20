@@ -20,12 +20,6 @@ export default function AuthPage() {
           description: "You have successfully signed in.",
         });
         navigate("/");
-      } else if (event === 'USER_DELETED') {
-        toast({
-          variant: "destructive",
-          title: "Account deleted",
-          description: "Your account has been deleted.",
-        });
       } else if (event === 'SIGNED_OUT') {
         toast({
           title: "Signed out",
@@ -64,14 +58,6 @@ export default function AuthPage() {
           theme="dark"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
-          onError={(error) => {
-            console.error('Auth error:', error);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: error.message || "An error occurred during authentication.",
-            });
-          }}
           localization={{
             variables: {
               sign_up: {
