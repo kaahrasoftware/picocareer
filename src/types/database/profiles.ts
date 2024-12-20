@@ -1,18 +1,16 @@
 export interface Profile {
   id: string;
-  full_name: string | null;
   first_name: string | null;
   last_name: string | null;
+  full_name: string | null;
+  email: string | null;
   avatar_url: string | null;
-  user_type: string | null;
-  email: string;
-  created_at: string;
-  updated_at: string;
-  school_id: string | null;
-  company_id: string | null;
   position: string | null;
   highest_degree: string | null;
   academic_major_id: string | null;
+  school_id: string | null;
+  company_id: string | null;
+  career_id: string | null;
   skills: string[] | null;
   tools_used: string[] | null;
   keywords: string[] | null;
@@ -23,10 +21,12 @@ export interface Profile {
   years_of_experience: number | null;
   location: string | null;
   fields_of_interest: string[] | null;
-  career_id: string | null;
-  // Include joined fields as required
-  company_name: string | null; // Changed from optional to required
-  school_name: string | null;
-  academic_major: string | null;
-  top_mentor?: boolean | null;
+  user_type: string | null;
+  top_mentor: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+  // Include joined fields
+  company_name?: string | null;
+  school_name?: string | null;
+  academic_major?: string | null;
 }
