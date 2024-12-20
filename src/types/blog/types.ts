@@ -1,6 +1,6 @@
-import type { Profile } from "@/types/database/profile";
+import type { Profile } from "@/types/database/profiles";
 
-export interface Blog {
+export interface BlogWithAuthor {
   id: string;
   title: string;
   content: string;
@@ -13,8 +13,5 @@ export interface Blog {
   is_recent: boolean | null;
   created_at: string | null;
   updated_at: string | null;
-}
-
-export interface BlogWithAuthor extends Blog {
-  profiles?: Profile | null;
+  author?: Profile | null;
 }
