@@ -24,16 +24,24 @@ export default function AuthPage() {
   }, [navigate]);
 
   const handleAuthError = (error: Error) => {
+    console.error('Auth error:', error);
+    
     if (error.message.includes('User already registered')) {
       toast({
         title: "Account already exists",
         description: "Please sign in instead or use a different email address.",
         variant: "destructive",
       });
+    } else if (error.message.includes('Invalid login credentials')) {
+      toast({
+        title: "Invalid credentials",
+        description: "Please check your email and password.",
+        variant: "destructive",
+      });
     } else {
       toast({
         title: "Authentication error",
-        description: error.message,
+        description: "An error occurred during authentication. Please try again.",
         variant: "destructive",
       });
     }
@@ -58,6 +66,8 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
+          redirectTo={window.location.origin}
+          onError={handleAuthError}
           localization={{
             variables: {
               sign_up: {
@@ -78,7 +88,6 @@ export default function AuthPage() {
               },
             },
           }}
-          onError={handleAuthError}
         />
       </div>
     </div>
