@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileHeader } from "@/components/profile-details/ProfileHeader";
 import { ProfileTab } from "@/components/profile/ProfileTab";
 import { SettingsTab } from "@/components/profile/SettingsTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
@@ -30,7 +30,7 @@ export default function Profile() {
       const isMentee = userTypeData?.user_type === 'mentee';
 
       // Define base fields that both types share
-      const baseFields = `
+      const baseQuery = `
         id,
         avatar_url,
         first_name,
@@ -62,11 +62,13 @@ export default function Profile() {
       // Select fields based on user type
       const { data, error } = await supabase
         .from('profiles')
-        .select(isMentee ? baseFields : `${baseFields}, ${mentorFields}`)
+        .select(isMentee ? baseQuery : `${baseQuery}, ${mentorFields}`)
         .eq('id', session.user.id)
         .single();
 
       if (error) throw error;
+
+      if (!data) throw new Error('No profile data found');
 
       // Transform the data to match our Profile type
       const transformedProfile: Profile = {
