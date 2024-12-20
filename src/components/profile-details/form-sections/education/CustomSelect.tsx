@@ -34,11 +34,13 @@ export function CustomSelect({
   const handleCustomSubmit = async () => {
     try {
       // First, check if the entry already exists
-      const { data: existingData } = await supabase
+      const { data: existingData, error: existingError } = await supabase
         .from(tableName)
         .select('id')
         .eq(titleField, customValue)
-        .single();
+        .maybeSingle();
+
+      if (existingError) throw existingError;
 
       if (existingData) {
         // If it exists, use the existing entry
