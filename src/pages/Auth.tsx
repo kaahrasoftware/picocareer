@@ -10,6 +10,7 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if user is already logged in
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
