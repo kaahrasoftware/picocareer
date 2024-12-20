@@ -13,25 +13,32 @@ export default function AuthPage() {
     // Check if user is already logged in and listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         navigate("/");
-      }
-      
-      // Handle auth errors
-      if (event === 'USER_EXISTS') {
-        toast({
-          title: "Account already exists",
-          description: "Please sign in instead or use a different email address.",
-          variant: "destructive",
-        });
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate]);
+
+  const handleError = (error: Error) => {
+    if (error.message.includes('User already registered')) {
+      toast({
+        title: "Account already exists",
+        description: "Please sign in instead or use a different email address.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Authentication error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -52,15 +59,7 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
-          onError={(error) => {
-            if (error.message.includes('User already registered')) {
-              toast({
-                title: "Account already exists",
-                description: "Please sign in instead or use a different email address.",
-                variant: "destructive",
-              });
-            }
-          }}
+          onError={handleError}
         />
       </div>
     </div>
