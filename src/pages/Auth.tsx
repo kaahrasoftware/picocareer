@@ -25,11 +25,56 @@ export default function AuthPage() {
           title: "Signed out",
           description: "You have been signed out.",
         });
+      } else if (event === 'USER_UPDATED') {
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        });
+      } else if (event === 'PASSWORD_RECOVERY') {
+        toast({
+          title: "Password recovery",
+          description: "Check your email for password reset instructions.",
+        });
+      } else if (event === 'USER_DELETED') {
+        toast({
+          title: "Account deleted",
+          description: "Your account has been deleted successfully.",
+        });
+        navigate("/");
       }
     });
 
+    // Handle auth error events
+    const handleAuthError = (error: Error) => {
+      console.error('Auth error:', error);
+      
+      if (error.message.includes('invalid_credentials')) {
+        toast({
+          variant: "destructive",
+          title: "Invalid credentials",
+          description: "Please check your email and password and try again.",
+        });
+      } else if (error.message.includes('Email not confirmed')) {
+        toast({
+          variant: "destructive",
+          title: "Email not confirmed",
+          description: "Please check your email and confirm your account before signing in.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Authentication error",
+          description: "An error occurred during authentication. Please try again.",
+        });
+      }
+    };
+
+    // Subscribe to auth error events
+    const errorSubscription = supabase.auth.onError(handleAuthError);
+
     return () => {
       subscription.unsubscribe();
+      errorSubscription.unsubscribe();
     };
   }, [navigate, toast]);
 
