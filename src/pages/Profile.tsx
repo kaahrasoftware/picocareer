@@ -64,7 +64,7 @@ export default function ProfilePage() {
           *,
           company:companies(name),
           school:schools(name),
-          academic_major:majors(title)
+          academic_major:majors!profiles_academic_major_id_fkey(title)
         `)
         .eq('id', session.user.id)
         .maybeSingle();
