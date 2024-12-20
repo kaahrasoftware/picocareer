@@ -40,30 +40,36 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      // Use user ID in the file path to comply with RLS policies
-      const filePath = `${profile.id}.${fileExt}`;
+      const fileName = `${profile.id}${fileExt ? `.${fileExt}` : ''}`;
 
       // If there's an existing avatar, delete it first
       if (profile.avatar_url) {
-        const oldFilePath = profile.avatar_url.split('/').pop();
-        if (oldFilePath) {
-          await supabase.storage
+        const oldFileName = profile.avatar_url.split('/').pop();
+        if (oldFileName) {
+          const { error: deleteError } = await supabase.storage
             .from('avatars')
-            .remove([oldFilePath]);
+            .remove([oldFileName]);
+          
+          if (deleteError) {
+            console.error('Error deleting old avatar:', deleteError);
+          }
         }
       }
 
       // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(fileName, file, { 
+          upsert: true,
+          contentType: file.type
+        });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       // Update profile
       const { error: updateError } = await supabase
@@ -86,6 +92,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         description: error.message,
         variant: "destructive",
       });
+      console.error('Error uploading avatar:', error);
     } finally {
       setUploading(false);
     }
