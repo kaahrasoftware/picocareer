@@ -127,7 +127,7 @@ export function MenuSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-12 w-12 rounded-full">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary animate-pulse" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
                   <div className="absolute inset-[3px] rounded-full bg-background" />
                   <Avatar className="h-10 w-10 relative">
                     <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || user.email || ''} />
