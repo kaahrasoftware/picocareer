@@ -32,16 +32,6 @@ export default function AuthPage() {
           title: "Signed out",
           description: "You have been signed out.",
         });
-      } else if (event === 'USER_UPDATED') {
-        toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully.",
-        });
-      } else if (event === 'PASSWORD_RECOVERY') {
-        toast({
-          title: "Password recovery email sent",
-          description: "Check your email for the password reset link.",
-        });
       }
     });
 
@@ -75,26 +65,6 @@ export default function AuthPage() {
           theme="dark"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/auth/callback`}
-          localization={{
-            variables: {
-              sign_up: {
-                email_label: "Email",
-                password_label: "Password (minimum 6 characters)",
-                button_label: "Sign up",
-                loading_button_label: "Signing up...",
-                social_provider_text: "Sign up with {{provider}}",
-                link_text: "Don't have an account? Sign up",
-              },
-              sign_in: {
-                email_label: "Email",
-                password_label: "Password",
-                button_label: "Sign in",
-                loading_button_label: "Signing in...",
-                social_provider_text: "Sign in with {{provider}}",
-                link_text: "Already have an account? Sign in",
-              },
-            },
-          }}
         />
       </div>
     </div>
