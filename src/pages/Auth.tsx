@@ -42,6 +42,12 @@ export default function AuthPage() {
           title: "Password recovery email sent",
           description: "Check your email for the password reset link.",
         });
+      } else if (event === 'AUTH_ERROR') {
+        toast({
+          title: "Authentication Error",
+          description: "There was an error during authentication. Please try again.",
+          variant: "destructive",
+        });
       }
     });
 
