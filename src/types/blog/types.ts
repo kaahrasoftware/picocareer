@@ -1,18 +1,20 @@
-export type BlogWithAuthor = {
+export interface Blog {
   id: string;
   title: string;
-  summary: string;
   content: string;
+  summary: string;
   author_id: string;
-  image_url: string | null;
+  categories: string[];
+  subcategories: string[];
+  published: boolean;
+  featured: boolean;
   created_at: string;
   updated_at: string;
-  categories: string[] | null;
-  subcategories: string[] | null;
-  is_recent: boolean | null;
-  cover_image_url: string | null;
+}
+
+export interface BlogWithAuthor extends Blog {
   profiles: {
-    full_name: string | null;
+    full_name: string;
     avatar_url: string | null;
-  } | null;
-};
+  };
+}
