@@ -27,11 +27,6 @@ export default function AuthPage() {
           description: "You have successfully signed in.",
         });
         navigate("/");
-      } else if (event === 'SIGNED_OUT') {
-        toast({
-          title: "Signed out",
-          description: "You have been signed out.",
-        });
       }
     });
 
@@ -55,11 +50,6 @@ export default function AuthPage() {
                   brandAccent: 'rgb(var(--picocareer-primary) / 0.8)',
                 }
               }
-            },
-            className: {
-              container: 'auth-container',
-              button: 'auth-button',
-              input: 'auth-input',
             }
           }}
           theme="dark"
