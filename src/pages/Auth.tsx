@@ -9,6 +9,27 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const createProfile = async (userId: string, email: string) => {
+    try {
+      const { error } = await supabase.from('profiles').insert({
+        id: userId,
+        email: email,
+        user_type: 'mentee'
+      });
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        toast({
+          title: "Profile Creation Failed",
+          description: "There was an error creating your profile. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error in createProfile:', error);
+    }
+  };
+
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -20,8 +41,11 @@ export default function AuthPage() {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        // Try to create profile when user signs in
+        await createProfile(session.user.id, session.user.email || '');
+        
         toast({
           title: "Welcome!",
           description: "You have successfully signed in.",
