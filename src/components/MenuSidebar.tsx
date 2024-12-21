@@ -3,13 +3,24 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell, BellDot } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
@@ -54,6 +65,37 @@ export function MenuSidebar() {
     },
     enabled: !!session?.user?.id
   });
+
+  // Fetch notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('profile_id', session.user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    if (!session?.user?.id) return;
+
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notificationId);
+
+    queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -127,7 +169,71 @@ export function MenuSidebar() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-4 ml-auto">
+          {session?.user && (
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  {unreadCount > 0 ? (
+                    <>
+                      <BellDot className="h-5 w-5" />
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {unreadCount}
+                      </Badge>
+                    </>
+                  ) : (
+                    <Bell className="h-5 w-5" />
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Notifications</SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+                  {notifications.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">
+                      No notifications yet
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 rounded-lg border ${
+                            notification.read ? 'bg-background' : 'bg-muted'
+                          }`}
+                          onClick={() => handleMarkAsRead(notification.id)}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="font-medium">{notification.title}</h4>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {notification.message}
+                          </p>
+                          {notification.action_url && (
+                            <Link
+                              to={notification.action_url}
+                              className="text-sm text-primary hover:underline mt-2 block"
+                            >
+                              View details
+                            </Link>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </SheetContent>
+            </Sheet>
+          )}
+
           {session?.user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

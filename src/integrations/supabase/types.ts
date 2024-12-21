@@ -503,6 +503,50 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          message: string
+          profile_id: string
+          read: boolean | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          profile_id: string
+          read?: boolean | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          profile_id?: string
+          read?: boolean | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           academic_major_id: string | null
@@ -836,6 +880,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clean_old_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       match_profiles_with_majors: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -881,6 +929,12 @@ export type Database = {
         | "Ewe"
         | "Twi"
         | "Anufo"
+      notification_type:
+        | "session_booked"
+        | "session_cancelled"
+        | "session_reminder"
+        | "profile_update"
+        | "mentor_request"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
         | "Introduction"
