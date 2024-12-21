@@ -2,8 +2,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -11,10 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Get initial session and listen for auth changes
   const { data: session } = useQuery({
@@ -22,7 +21,20 @@ export function MenuSidebar() {
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session;
-    }
+    },
+    staleTime: Infinity,
+  });
+
+  // Set up auth state listener
+  useQuery({
+    queryKey: ['auth-listener'],
+    queryFn: async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        queryClient.setQueryData(['auth-session'], session);
+      });
+      return subscription;
+    },
+    staleTime: Infinity,
   });
 
   // Fetch user profile data only if we have a session
@@ -45,6 +57,7 @@ export function MenuSidebar() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     navigate("/");
   };
 
