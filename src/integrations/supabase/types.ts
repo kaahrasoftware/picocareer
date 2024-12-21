@@ -888,6 +888,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      schedule_notification: {
+        Args: {
+          p_notifications: Json[]
+          p_scheduled_for: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       degree:
