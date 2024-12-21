@@ -14,7 +14,6 @@ import Video from '@/pages/Video';
 import Auth from '@/pages/Auth';
 import Profile from '@/pages/Profile';
 
-// Wrapper component to conditionally render footer
 const AppContent = () => {
   const location = useLocation();
   const isVideoPage = location.pathname === '/video';
@@ -43,7 +42,6 @@ const AppContent = () => {
   );
 };
 
-// Export the component as default
 export default function App() {
   return <AppContent />;
 }
