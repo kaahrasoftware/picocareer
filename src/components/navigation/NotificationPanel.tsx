@@ -76,8 +76,11 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             Notifications
-            <Badge variant="secondary" className="ml-2">
-              {localNotifications.length}
+            <Badge 
+              variant="destructive" 
+              className="ml-2"
+            >
+              {localNotifications.filter(n => !n.read).length}
             </Badge>
           </SheetTitle>
         </SheetHeader>
