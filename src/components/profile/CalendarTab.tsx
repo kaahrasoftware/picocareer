@@ -11,6 +11,25 @@ import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
 import { EventList, Event } from "./calendar/EventList";
 import { format } from "date-fns";
 
+interface BookedSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: {
+    id: string;
+    full_name: string;
+  };
+  mentee: {
+    id: string;
+    full_name: string;
+  };
+  session_type: {
+    type: string;
+    duration: number;
+  };
+}
+
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
@@ -83,8 +102,8 @@ export function CalendarTab() {
           scheduled_at,
           status,
           notes,
-          mentor:mentor_id(full_name),
-          mentee:mentee_id(full_name),
+          mentor:mentor_id(id, full_name),
+          mentee:mentee_id(id, full_name),
           session_type:session_type_id(type, duration)
         `)
         .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
@@ -94,14 +113,16 @@ export function CalendarTab() {
       if (error) throw error;
 
       // Convert sessions to calendar events format
-      return sessions.map(session => ({
+      return (sessions as BookedSession[]).map(session => ({
         id: session.id,
-        title: `Session with ${session.mentor.full_name === session.mentee.full_name ? 'you' : 
-          session.mentor_id === session.user.id ? session.mentee.full_name : session.mentor.full_name}`,
+        title: `Session with ${session.mentor.id === session.mentee.id ? 'you' : 
+          session.mentor.id === session.user.id ? session.mentee.full_name : session.mentor.full_name}`,
         description: session.notes || `${session.session_type.type} session`,
         start_time: session.scheduled_at,
         end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session'
+        event_type: 'session',
+        created_at: new Date().toISOString(), // Add required Event properties
+        updated_at: new Date().toISOString()
       }));
     },
     enabled: !!session?.user?.id && !!selectedDate,
