@@ -108,8 +108,13 @@ export default function CareerUpload() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Upload Career Information</h1>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Upload Career Information</h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Add a new career path to help guide others in their professional journey.
+        </p>
+      </div>
       <ContentUploadForm 
         fields={careerFormFields}
         onSubmit={handleSubmit}
