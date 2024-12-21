@@ -11,6 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "./ImageUpload";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FormFieldProps {
   control: any;
@@ -18,10 +25,20 @@ interface FormFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree";
   bucket?: string;
   required?: boolean;
 }
+
+const degreeOptions = [
+  "No Degree",
+  "High School",
+  "Associate",
+  "Bachelor",
+  "Master",
+  "MD",
+  "PhD"
+] as const;
 
 export function FormField({ 
   control, 
@@ -56,7 +73,23 @@ export function FormField({
             {required && <span className="text-red-500 ml-1">*</span>}
           </FormLabel>
           <FormControl>
-            {type === "textarea" ? (
+            {type === "degree" ? (
+              <Select
+                value={field.value || ""}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={placeholder || "Select a degree"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {degreeOptions.map((degree) => (
+                    <SelectItem key={degree} value={degree}>
+                      {degree}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : type === "textarea" ? (
               <Textarea {...field} placeholder={placeholder} />
             ) : type === "checkbox" ? (
               <div className="flex flex-row items-start space-x-3 space-y-0">
