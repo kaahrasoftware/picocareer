@@ -112,7 +112,7 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     <div className="relative w-20 h-20 group">
       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
       <div className="absolute inset-[3px] rounded-full bg-background" />
-      <div className="absolute inset-[3px] rounded-full overflow-hidden">
+      <div className="absolute inset-[6px] rounded-full overflow-hidden">
         <Avatar className="h-full w-full">
           <AvatarImage 
             src={profile.avatar_url || ''} 
