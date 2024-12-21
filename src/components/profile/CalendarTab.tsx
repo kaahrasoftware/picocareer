@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -25,14 +25,28 @@ export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // First, get the authenticated user's session
+  // Get initial session and listen for auth changes
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session;
-    }
+    },
+    staleTime: Infinity,
+  });
+
+  // Set up auth state listener
+  useQuery({
+    queryKey: ['auth-listener'],
+    queryFn: async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        queryClient.setQueryData(['auth-session'], session);
+      });
+      return subscription;
+    },
+    staleTime: Infinity,
   });
 
   // Then, get the user's profile type only if we have a session
@@ -50,7 +64,8 @@ export function CalendarTab() {
       if (error) throw error;
       return data;
     },
-    enabled: !!session?.user?.id
+    enabled: !!session?.user?.id,
+    staleTime: Infinity,
   });
 
   // Finally, get calendar events for the selected date
@@ -74,7 +89,8 @@ export function CalendarTab() {
       if (error) throw error;
       return data as CalendarEvent[];
     },
-    enabled: !!selectedDate
+    enabled: !!selectedDate,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const isMentor = profile?.user_type === 'mentor';
