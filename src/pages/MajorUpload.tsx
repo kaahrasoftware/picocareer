@@ -40,9 +40,10 @@ export default function MajorUpload() {
       // Validate required fields
       if (!data.title?.trim() || !data.description?.trim()) {
         toast({
-          title: "Error",
+          title: "Missing Required Fields",
           description: "Title and description are required fields",
           variant: "destructive",
+          duration: 5000,
         });
         return;
       }
@@ -57,18 +58,20 @@ export default function MajorUpload() {
       if (searchError) {
         console.error('Error checking existing major:', searchError);
         toast({
-          title: "Error",
+          title: "Database Error",
           description: "Failed to check for existing major. Please try again.",
           variant: "destructive",
+          duration: 5000,
         });
         return;
       }
 
       if (existingMajor) {
         toast({
-          title: "Major Already Exists",
+          title: "Duplicate Major Found",
           description: `A major titled "${data.title}" already exists in the database.`,
           variant: "destructive",
+          duration: 5000,
         });
         return;
       }
@@ -104,12 +107,21 @@ export default function MajorUpload() {
         .from('majors')
         .insert([processedData]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        toast({
+          title: "Upload Failed",
+          description: "Failed to upload major information. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        throw insertError;
+      }
 
       toast({
-        title: "Success",
-        description: `Major "${data.title}" has been uploaded successfully!`,
+        title: "Upload Successful! 🎉",
+        description: `Major "${data.title}" has been added to the database.`,
         variant: "default",
+        duration: 5000,
       });
       
       // Reset the form by refreshing the page
@@ -120,6 +132,7 @@ export default function MajorUpload() {
         title: "Error",
         description: error.message || "Failed to upload major information. Please try again.",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };

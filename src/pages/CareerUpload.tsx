@@ -40,9 +40,10 @@ export default function CareerUpload() {
       // Validate required fields
       if (!data.title?.trim() || !data.description?.trim()) {
         toast({
-          title: "Error",
+          title: "Missing Required Fields",
           description: "Title and description are required fields",
           variant: "destructive",
+          duration: 5000,
         });
         return;
       }
@@ -57,18 +58,20 @@ export default function CareerUpload() {
       if (searchError) {
         console.error('Error checking existing career:', searchError);
         toast({
-          title: "Error",
+          title: "Database Error",
           description: "Failed to check for existing career. Please try again.",
           variant: "destructive",
+          duration: 5000,
         });
         return;
       }
 
       if (existingCareer) {
         toast({
-          title: "Career Already Exists",
+          title: "Duplicate Career Found",
           description: `A career titled "${data.title}" already exists in the database.`,
           variant: "destructive",
+          duration: 5000,
         });
         return;
       }
@@ -98,12 +101,21 @@ export default function CareerUpload() {
         .from('careers')
         .insert([processedData]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        toast({
+          title: "Upload Failed",
+          description: "Failed to upload career information. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        throw insertError;
+      }
 
       toast({
-        title: "Success",
-        description: `Career "${data.title}" has been uploaded successfully!`,
+        title: "Upload Successful! 🎉",
+        description: `Career "${data.title}" has been added to the database.`,
         variant: "default",
+        duration: 5000,
       });
       
       // Reset the form by refreshing the page
@@ -114,6 +126,7 @@ export default function CareerUpload() {
         title: "Error",
         description: error.message || "Failed to upload career information. Please try again.",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };
