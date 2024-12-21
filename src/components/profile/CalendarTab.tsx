@@ -19,11 +19,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useSessionEvents } from "@/hooks/useSessionEvents";
+import { CalendarEvent } from "@/types/calendar";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<any>(null);
+  const [selectedSession, setSelectedSession] = useState<CalendarEvent | null>(null);
   const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -75,56 +77,11 @@ export function CalendarTab() {
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Get calendar events
-  const { data: events = [], isLoading: isEventsLoading } = useQuery({
-    queryKey: ['calendar_events', selectedDate],
-    queryFn: async () => {
-      if (!selectedDate || !session?.user?.id) return [];
-
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      // First get the mentor sessions with explicit column selection for profiles
-      const { data: sessions, error: sessionsError } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          scheduled_at,
-          status,
-          notes,
-          mentor:mentor_id(id:id, full_name:full_name),
-          mentee:mentee_id(id:id, full_name:full_name),
-          session_type:session_type_id(type, duration)
-        `)
-        .gte('scheduled_at', startOfDay.toISOString())
-        .lte('scheduled_at', endOfDay.toISOString())
-        .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`);
-
-      if (sessionsError) throw sessionsError;
-
-      // Convert sessions to calendar events
-      const sessionEvents = sessions.map(session => ({
-        id: session.id,
-        title: `Session with ${session.mentor.id === session.user?.id ? session.mentee.full_name : session.mentor.full_name}`,
-        description: `${session.session_type.type} (${session.session_type.duration} minutes)`,
-        start_time: session.scheduled_at,
-        end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session' as const,
-        status: session.status,
-        notes: session.notes,
-        session_details: session
-      }));
-
-      return sessionEvents;
-    },
-    enabled: !!selectedDate && !!session?.user?.id,
-  });
+  // Get calendar events using our custom hook
+  const { data: events = [], isLoading: isEventsLoading } = useSessionEvents(selectedDate, session?.user?.id);
 
   const handleCancelSession = async () => {
-    if (!selectedSession) return;
+    if (!selectedSession?.session_details) return;
 
     try {
       // Update the session status in the database
@@ -134,7 +91,7 @@ export function CalendarTab() {
           status: 'cancelled',
           notes: cancellationNote 
         })
-        .eq('id', selectedSession.id);
+        .eq('id', selectedSession.session_details.id);
 
       if (error) throw error;
 
@@ -300,7 +257,7 @@ export function CalendarTab() {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedSession && (
+          {selectedSession?.session_details && (
             <div className="space-y-4">
               <div>
                 <h4 className="font-medium">Session Type</h4>
