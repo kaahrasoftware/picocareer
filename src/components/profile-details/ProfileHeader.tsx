@@ -77,8 +77,12 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       if (updateError) throw updateError;
 
-      // Invalidate and refetch profile query
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      // Update the profile data in the cache
+      const currentProfile = queryClient.getQueryData(['profile']);
+      queryClient.setQueryData(['profile'], {
+        ...currentProfile,
+        avatar_url: publicUrl
+      });
 
       toast({
         title: "Success",

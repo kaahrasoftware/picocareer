@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileAvatarProps {
   profile: {
@@ -26,6 +27,7 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
+  const queryClient = useQueryClient();
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
     width: 100,
@@ -97,6 +99,10 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
       setUploading(true);
       const croppedBlob = await getCroppedImage();
       await onAvatarUpdate(croppedBlob);
+      
+      // Invalidate profile queries to trigger a refetch
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      
       setCropDialogOpen(false);
       setSelectedImage(null);
     } catch (error) {
