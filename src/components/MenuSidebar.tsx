@@ -2,116 +2,22 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { NotificationPanel } from "./navigation/NotificationPanel";
 import { UserMenu } from "./navigation/UserMenu";
 import { MainNavigation } from "./navigation/MainNavigation";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
-  // Get initial session and listen for auth changes
-  const { data: session, isError } = useQuery({
-    queryKey: ['auth-session'],
-    queryFn: async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        return session;
-      } catch (error: any) {
-        console.error('Error fetching session:', error);
-        toast({
-          title: "Authentication Error",
-          description: "Please try signing in again",
-          variant: "destructive",
-        });
-        return null;
-      }
-    },
-    retry: false,
-    staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
-  });
-
-  // Set up auth state listener
-  useQuery({
-    queryKey: ['auth-listener'],
-    queryFn: async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          queryClient.removeQueries({ queryKey: ['auth-session'] });
-          queryClient.removeQueries({ queryKey: ['profile'] });
-          queryClient.removeQueries({ queryKey: ['notifications'] });
-          navigate("/auth");
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          queryClient.setQueryData(['auth-session'], session);
-        }
-      });
-      return subscription;
-    },
-    staleTime: Infinity,
-  });
-
-  // Fetch user profile data only if we have a session
-  const { data: profile } = useQuery({
-    queryKey: ['profile', session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-      return data;
-    },
-    enabled: !!session?.user?.id,
-    retry: 1,
-  });
-
-  // Fetch notifications with improved error handling and retry logic
-  const { data: notifications = [], error: notificationError } = useQuery({
-    queryKey: ['notifications', session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return [];
-      
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('profile_id', session.user.id)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Error fetching notifications:', error);
-          throw error;
-        }
-        return data || [];
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
-        // Let React Query handle the retry
-        throw error;
-      }
-    },
-    enabled: !!session?.user?.id,
-    retry: 3, // Retry up to 3 times
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    refetchInterval: 30000, // Refetch every 30 seconds
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to load notifications. Please try again later.",
-        variant: "destructive",
-      });
-    },
-  });
+  const { session, isError } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { data: notifications = [] } = useNotifications(session);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
