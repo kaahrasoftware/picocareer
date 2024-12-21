@@ -48,16 +48,26 @@ export default function MajorUpload() {
       }
 
       // Check if major with same title exists
-      const { data: existingMajor } = await supabase
+      const { data: existingMajor, error: searchError } = await supabase
         .from('majors')
         .select('title')
         .ilike('title', data.title.trim())
         .maybeSingle();
 
-      if (existingMajor) {
+      if (searchError) {
+        console.error('Error checking existing major:', searchError);
         toast({
           title: "Error",
-          description: "A major with this title already exists",
+          description: "Failed to check for existing major. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingMajor) {
+        toast({
+          title: "Major Already Exists",
+          description: `A major titled "${data.title}" already exists in the database.`,
           variant: "destructive",
         });
         return;
@@ -90,15 +100,16 @@ export default function MajorUpload() {
         dropout_rates: data.dropout_rates || null
       };
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('majors')
         .insert([processedData]);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       toast({
         title: "Success",
-        description: "Major information has been uploaded successfully",
+        description: `Major "${data.title}" has been uploaded successfully!`,
+        variant: "default",
       });
       
       // Reset the form by refreshing the page

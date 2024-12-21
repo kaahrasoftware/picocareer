@@ -48,16 +48,26 @@ export default function CareerUpload() {
       }
 
       // Check if career with same title exists
-      const { data: existingCareer } = await supabase
+      const { data: existingCareer, error: searchError } = await supabase
         .from('careers')
         .select('title')
         .ilike('title', data.title.trim())
         .maybeSingle();
 
-      if (existingCareer) {
+      if (searchError) {
+        console.error('Error checking existing career:', searchError);
         toast({
           title: "Error",
-          description: "A career with this title already exists",
+          description: "Failed to check for existing career. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingCareer) {
+        toast({
+          title: "Career Already Exists",
+          description: `A career titled "${data.title}" already exists in the database.`,
           variant: "destructive",
         });
         return;
@@ -84,15 +94,16 @@ export default function CareerUpload() {
           data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : []
       };
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('careers')
         .insert([processedData]);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       toast({
         title: "Success",
-        description: "Career information has been uploaded successfully",
+        description: `Career "${data.title}" has been uploaded successfully!`,
+        variant: "default",
       });
       
       // Reset the form by refreshing the page
