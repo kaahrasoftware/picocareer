@@ -26,7 +26,10 @@ export function ProfileEducation({ academic_major, highest_degree, school_name }
         </div>
       )}
       {highest_degree && (
-        <Badge variant="outline" className="mr-2">
+        <Badge 
+          variant="outline" 
+          className="mr-2 bg-picocareer-primary/10 text-picocareer-primary border-picocareer-primary/20 hover:bg-picocareer-primary/20"
+        >
           {highest_degree}
         </Badge>
       )}
