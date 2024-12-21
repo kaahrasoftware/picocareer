@@ -37,6 +37,21 @@ export function EventList({ events, availability = [], isMentor = false }: Event
     }
   };
 
+  const formatTimeString = (timeStr: string) => {
+    try {
+      // Check if the timeStr includes date information
+      if (timeStr.includes('T') || timeStr.includes('-')) {
+        return format(new Date(timeStr), 'h:mm a');
+      }
+      
+      // Handle time-only strings (HH:mm format)
+      return format(parse(timeStr, 'HH:mm', new Date()), 'h:mm a');
+    } catch (error) {
+      console.error('Error formatting time:', timeStr, error);
+      return timeStr; // Return original string if formatting fails
+    }
+  };
+
   if (events.length === 0 && (!isMentor || availability.length === 0)) {
     return <p className="text-muted-foreground">No events scheduled for this day.</p>;
   }
@@ -51,7 +66,7 @@ export function EventList({ events, availability = [], isMentor = false }: Event
           <div className="flex justify-between items-start">
             <h4 className="font-medium">{event.title}</h4>
             <span className="text-sm text-muted-foreground">
-              {format(new Date(event.start_time), 'h:mm a')}
+              {formatTimeString(event.start_time)}
             </span>
           </div>
           {event.description && (
@@ -70,8 +85,7 @@ export function EventList({ events, availability = [], isMentor = false }: Event
           <div className="flex justify-between items-start">
             <h4 className="font-medium">Available for Booking</h4>
             <span className="text-sm text-muted-foreground">
-              {format(parse(slot.start_time, 'HH:mm', new Date()), 'h:mm a')} - 
-              {format(parse(slot.end_time, 'HH:mm', new Date()), 'h:mm a')}
+              {formatTimeString(slot.start_time)} - {formatTimeString(slot.end_time)}
             </span>
           </div>
         </div>
