@@ -66,7 +66,8 @@ export function MenuSidebar() {
       if (error) throw error;
       return data;
     },
-    enabled: !!session?.user?.id
+    enabled: !!session?.user?.id,
+    refetchInterval: 30000 // Refetch every 30 seconds
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
