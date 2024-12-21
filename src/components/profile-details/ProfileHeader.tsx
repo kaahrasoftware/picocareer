@@ -17,6 +17,7 @@ interface ProfileHeaderProps {
     academic_major?: string | null;
     location?: string | null;
     top_mentor?: boolean | null;
+    user_type?: string | null;
   } | null;
 }
 
@@ -135,15 +136,17 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
           <h2 className="text-2xl font-bold">{profile.full_name}</h2>
-          {profile.top_mentor ? (
-            <Badge className="bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1">
-              <Award className="h-3 w-3" />
-              Top Mentor
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-              mentor
-            </Badge>
+          {profile.user_type === 'mentor' && (
+            profile.top_mentor ? (
+              <Badge className="bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1">
+                <Award className="h-3 w-3" />
+                Top Mentor
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                mentor
+              </Badge>
+            )
           )}
         </div>
         <p className="text-lg font-medium text-foreground/90">{displayTitle}</p>
