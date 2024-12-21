@@ -41,6 +41,22 @@ export default function CareerUpload() {
 
   const onSubmit = async (data: CareerFormData) => {
     try {
+      // Check if career with same title exists
+      const { data: existingCareer } = await supabase
+        .from('careers')
+        .select('id, title')
+        .ilike('title', data.title)
+        .single();
+
+      if (existingCareer) {
+        toast({
+          title: "Error",
+          description: `A career with the title "${data.title}" already exists.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Convert string arrays to actual arrays
       const processedData = {
         ...data,

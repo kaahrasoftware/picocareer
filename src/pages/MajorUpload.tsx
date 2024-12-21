@@ -49,6 +49,22 @@ export default function MajorUpload() {
 
   const onSubmit = async (data: MajorFormData) => {
     try {
+      // Check if major with same title exists
+      const { data: existingMajor } = await supabase
+        .from('majors')
+        .select('id, title')
+        .ilike('title', data.title)
+        .single();
+
+      if (existingMajor) {
+        toast({
+          title: "Error",
+          description: `A major with the title "${data.title}" already exists.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Convert string arrays to actual arrays
       const processedData = {
         ...data,
