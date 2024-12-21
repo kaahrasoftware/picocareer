@@ -37,9 +37,21 @@ export default function CareerUpload() {
 
   const handleSubmit = async (data: any) => {
     try {
+      // Process array fields
+      const processedData = {
+        ...data,
+        required_education: data.required_education ? data.required_education.split(',').map((item: string) => item.trim()) : [],
+        required_skills: data.required_skills ? data.required_skills.split(',').map((item: string) => item.trim()) : [],
+        required_tools: data.required_tools ? data.required_tools.split(',').map((item: string) => item.trim()) : [],
+        keywords: data.keywords ? data.keywords.split(',').map((item: string) => item.trim()) : [],
+        transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map((item: string) => item.trim()) : [],
+        careers_to_consider_switching_to: data.careers_to_consider_switching_to ? 
+          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : []
+      };
+
       const { error } = await supabase
         .from('careers')
-        .insert([data]);
+        .insert([processedData]);
 
       if (error) throw error;
 
@@ -47,11 +59,13 @@ export default function CareerUpload() {
         title: "Success",
         description: "Career information has been uploaded successfully",
       });
-    } catch (error) {
+      
+      navigate('/career');
+    } catch (error: any) {
       console.error('Error uploading career:', error);
       toast({
         title: "Error",
-        description: "Failed to upload career information. Please try again.",
+        description: error.message || "Failed to upload career information. Please try again.",
         variant: "destructive",
       });
     }
