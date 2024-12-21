@@ -30,6 +30,12 @@ interface NotificationPanelProps {
 
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
+  const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
+
+  // Update local state when props change
+  if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
+    setLocalNotifications(notifications);
+  }
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => 
@@ -38,6 +44,12 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   };
 
   const toggleReadStatus = async (notification: Notification) => {
+    // Update local state immediately for better UX
+    setLocalNotifications(prev => prev.map(n => 
+      n.id === notification.id ? { ...n, read: !n.read } : n
+    ));
+    
+    // Call the parent handler to update the database
     onMarkAsRead(notification.id);
   };
 
@@ -65,18 +77,18 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
           <SheetTitle className="flex items-center gap-2">
             Notifications
             <Badge variant="secondary" className="ml-2">
-              {notifications.length}
+              {localNotifications.length}
             </Badge>
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
-          {notifications.length === 0 ? (
+          {localNotifications.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">
               No notifications yet
             </p>
           ) : (
             <div className="space-y-4">
-              {notifications.map((notification) => {
+              {localNotifications.map((notification) => {
                 const isExpanded = expandedIds.includes(notification.id);
                 return (
                   <div
