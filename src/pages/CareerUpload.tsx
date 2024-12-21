@@ -47,6 +47,22 @@ export default function CareerUpload() {
         return;
       }
 
+      // Check if career with same title exists
+      const { data: existingCareer } = await supabase
+        .from('careers')
+        .select('title')
+        .ilike('title', data.title.trim())
+        .maybeSingle();
+
+      if (existingCareer) {
+        toast({
+          title: "Error",
+          description: "A career with this title already exists",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Process array fields and ensure they're not undefined
       const processedData = {
         title: data.title.trim(),

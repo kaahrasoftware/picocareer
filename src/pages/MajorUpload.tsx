@@ -47,10 +47,25 @@ export default function MajorUpload() {
         return;
       }
 
+      // Check if major with same title exists
+      const { data: existingMajor } = await supabase
+        .from('majors')
+        .select('title')
+        .ilike('title', data.title.trim())
+        .maybeSingle();
+
+      if (existingMajor) {
+        toast({
+          title: "Error",
+          description: "A major with this title already exists",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const processedData = {
         title: data.title.trim(),
         description: data.description.trim(),
-        image_url: data.image_url || null,
         featured: data.featured || false,
         learning_objectives: data.learning_objectives ? data.learning_objectives.split(',').map((item: string) => item.trim()) : [],
         common_courses: data.common_courses ? data.common_courses.split(',').map((item: string) => item.trim()) : [],
