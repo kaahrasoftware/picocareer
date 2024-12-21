@@ -81,8 +81,8 @@ export function CalendarTab() {
           id,
           scheduled_at,
           status,
-          mentor:mentor_id(full_name),
-          mentee:mentee_id(full_name),
+          mentor:mentor_id(id, full_name),
+          mentee:mentee_id(id, full_name),
           session_type:session_type_id(type, duration)
         `)
         .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
@@ -94,11 +94,11 @@ export function CalendarTab() {
       // Convert sessions to calendar events format
       return sessions.map(session => ({
         id: session.id,
-        title: `Session with ${session.mentor.full_name === profile?.full_name ? session.mentee.full_name : session.mentor.full_name}`,
+        title: `Session with ${session.mentor.id === session.user?.id ? session.mentee.full_name : session.mentor.full_name}`,
         description: `${session.session_type.type} (${session.session_type.duration} minutes)`,
         start_time: session.scheduled_at,
         end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session',
+        event_type: 'session' as const,
         created_at: session.scheduled_at,
         updated_at: session.scheduled_at
       }));
