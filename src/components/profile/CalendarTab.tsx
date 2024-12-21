@@ -11,24 +11,6 @@ import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
 import { EventList } from "./calendar/EventList";
 import { format } from "date-fns";
 
-type CalendarEvent = {
-  id: string;
-  title: string;
-  description: string | null;
-  start_time: string;
-  end_time: string;
-  event_type: 'session' | 'webinar' | 'holiday';
-  created_at: string;
-  updated_at: string;
-}
-
-type Availability = {
-  date_available: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-}
-
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
@@ -40,21 +22,10 @@ export function CalendarTab() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session');
       return session;
     },
-    staleTime: Infinity,
-  });
-
-  // Set up auth state listener
-  useQuery({
-    queryKey: ['auth-listener'],
-    queryFn: async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        queryClient.setQueryData(['auth-session'], session);
-      });
-      return subscription;
-    },
-    staleTime: Infinity,
+    retry: false
   });
 
   // Then, get the user's profile type only if we have a session
@@ -67,17 +38,16 @@ export function CalendarTab() {
         .from('profiles')
         .select('user_type')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
     },
     enabled: !!session?.user?.id,
-    staleTime: Infinity,
   });
 
   // Get mentor availability
-  const { data: availability, isLoading: isAvailabilityLoading } = useQuery({
+  const { data: availability = [], isLoading: isAvailabilityLoading } = useQuery({
     queryKey: ['mentor_availability', session?.user?.id, selectedDate],
     queryFn: async () => {
       if (!session?.user?.id || !selectedDate) return [];
@@ -89,13 +59,13 @@ export function CalendarTab() {
         .eq('date_available', format(selectedDate, 'yyyy-MM-dd'));
 
       if (error) throw error;
-      return data as Availability[];
+      return data;
     },
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Finally, get calendar events for the selected date
-  const { data: events, isLoading: isEventsLoading } = useQuery<CalendarEvent[]>({
+  // Get calendar events
+  const { data: events = [], isLoading: isEventsLoading } = useQuery({
     queryKey: ['calendar_events', selectedDate],
     queryFn: async () => {
       if (!selectedDate) return [];
@@ -113,21 +83,13 @@ export function CalendarTab() {
         .lte('end_time', endOfDay.toISOString());
 
       if (error) throw error;
-      return data as CalendarEvent[];
+      return data;
     },
     enabled: !!selectedDate,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const isMentor = profile?.user_type === 'mentor';
   const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || isAvailabilityLoading;
-
-  // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
-    return availability?.some(slot => 
-      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
-    );
-  };
 
   if (isLoading) {
     return (
@@ -136,6 +98,21 @@ export function CalendarTab() {
       </div>
     );
   }
+
+  if (!session) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-muted-foreground">Please sign in to view your calendar.</p>
+      </div>
+    );
+  }
+
+  // Function to determine if a date has availability set
+  const hasAvailability = (date: Date) => {
+    return availability?.some(slot => 
+      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -191,7 +168,7 @@ export function CalendarTab() {
                   </Badge>
                 )}
               </div>
-              <EventList events={events || []} availability={availability || []} isMentor={isMentor} />
+              <EventList events={events} availability={availability} isMentor={isMentor} />
             </div>
           )}
         </div>
@@ -205,7 +182,6 @@ export function CalendarTab() {
                 title: "Availability set",
                 description: "Your availability has been updated successfully.",
               });
-              // Invalidate the availability query to refresh the data
               queryClient.invalidateQueries({ queryKey: ['mentor_availability'] });
             }}
           />

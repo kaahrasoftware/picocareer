@@ -1,5 +1,5 @@
 import React from "react";
-import { format, parse } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 
 interface Event {
   id: string;
@@ -39,16 +39,35 @@ export function EventList({ events, availability = [], isMentor = false }: Event
 
   const formatTimeString = (timeStr: string) => {
     try {
-      // Check if the timeStr includes date information
-      if (timeStr.includes('T') || timeStr.includes('-')) {
-        return format(new Date(timeStr), 'h:mm a');
+      // Handle ISO datetime strings
+      if (timeStr.includes('T')) {
+        const date = new Date(timeStr);
+        if (isValid(date)) {
+          return format(date, 'h:mm a');
+        }
       }
       
-      // Handle time-only strings (HH:mm format)
-      return format(parse(timeStr, 'HH:mm', new Date()), 'h:mm a');
+      // Handle date strings (YYYY-MM-DD)
+      if (timeStr.includes('-') && timeStr.length === 10) {
+        const date = new Date(timeStr);
+        if (isValid(date)) {
+          return format(date, 'h:mm a');
+        }
+      }
+      
+      // Handle time-only strings (HH:mm)
+      if (timeStr.match(/^\d{2}:\d{2}$/)) {
+        const date = parse(timeStr, 'HH:mm', new Date());
+        if (isValid(date)) {
+          return format(date, 'h:mm a');
+        }
+      }
+      
+      console.error('Invalid time format:', timeStr);
+      return timeStr; // Return original string if all parsing attempts fail
     } catch (error) {
       console.error('Error formatting time:', timeStr, error);
-      return timeStr; // Return original string if formatting fails
+      return timeStr;
     }
   };
 
