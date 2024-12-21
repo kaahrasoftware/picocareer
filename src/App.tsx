@@ -9,6 +9,7 @@ import Blog from "./pages/Blog";
 import Mentor from "./pages/Mentor";
 import Career from "./pages/Career";
 import CareerUpload from "./pages/CareerUpload";
+import MajorUpload from "./pages/MajorUpload";
 import Program from "./pages/Program";
 import Video from "./pages/Video";
 import Auth from "./pages/Auth";
@@ -32,6 +33,7 @@ const AppContent = () => {
           <Route path="/mentor" element={<Mentor />} />
           <Route path="/career" element={<Career />} />
           <Route path="/career-upload" element={<CareerUpload />} />
+          <Route path="/major-upload" element={<MajorUpload />} />
           <Route path="/program" element={<Program />} />
           <Route path="/video" element={<Video />} />
           <Route path="/auth" element={<Auth />} />
