@@ -58,8 +58,16 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         body: { sessionId: sessionResult.sessionId }
       });
 
-      if (notificationError) {
-        console.error('Error scheduling notifications:', notificationError);
+      // Send confirmation emails
+      const { error: emailError } = await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: sessionResult.sessionId,
+          type: 'confirmation'
+        }
+      });
+
+      if (notificationError || emailError) {
+        console.error('Error with notifications/emails:', { notificationError, emailError });
         toast({
           title: "Session Booked",
           description: "Session booked successfully, but there was an issue sending notifications.",

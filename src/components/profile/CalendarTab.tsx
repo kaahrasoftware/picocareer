@@ -118,6 +118,18 @@ export function CalendarTab() {
 
       if (notificationError) throw notificationError;
 
+      // Send cancellation emails
+      const { error: emailError } = await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: selectedSession.session_details.id,
+          type: 'cancellation'
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending cancellation emails:', emailError);
+      }
+
       toast({
         title: "Session cancelled",
         description: "The session has been cancelled and notifications have been sent.",
