@@ -42,21 +42,25 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${profile.id}/avatar.${fileExt}`;
+      const fileName = `avatar.${fileExt}`;
+      const filePath = `${profile.id}/${fileName}`;
 
+      // Delete old avatar if it exists
       if (profile.avatar_url) {
-        const oldFilePath = new URL(profile.avatar_url).pathname.split('/').slice(-2).join('/');
-        if (oldFilePath) {
-          const { error: deleteError } = await supabase.storage
-            .from('avatars')
-            .remove([oldFilePath]);
-          
-          if (deleteError) {
-            console.error('Error deleting old avatar:', deleteError);
+        try {
+          const oldFilePath = profile.avatar_url.split('/').slice(-2).join('/');
+          if (oldFilePath) {
+            await supabase.storage
+              .from('avatars')
+              .remove([oldFilePath]);
           }
+        } catch (deleteError) {
+          console.error('Error deleting old avatar:', deleteError);
+          // Continue with upload even if delete fails
         }
       }
 
+      // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
@@ -66,10 +70,12 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
+      // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -104,7 +110,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <Avatar className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <AvatarImage 
             src={profile.avatar_url || ''} 
-            alt={profile.full_name || ''} 
+            alt={profile.full_name || ''}
             className="object-contain p-1"
           />
           <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
