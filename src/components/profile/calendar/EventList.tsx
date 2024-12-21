@@ -8,8 +8,8 @@ export interface Event {
   start_time: string;
   end_time: string;
   event_type: 'session' | 'webinar' | 'holiday';
-  created_at: string;
-  updated_at: string;
+  status?: string;
+  session_details?: any;
 }
 
 interface Availability {
@@ -23,10 +23,15 @@ interface EventListProps {
   events: Event[];
   availability?: Availability[];
   isMentor?: boolean;
+  onEventClick?: (event: Event) => void;
 }
 
-export function EventList({ events, availability = [], isMentor = false }: EventListProps) {
-  const getEventColor = (type: Event['event_type']) => {
+export function EventList({ events, availability = [], isMentor = false, onEventClick }: EventListProps) {
+  const getEventColor = (type: Event['event_type'], status?: string) => {
+    if (type === 'session' && status === 'cancelled') {
+      return 'border-red-500/20 bg-red-500/10';
+    }
+    
     switch (type) {
       case 'session':
         return 'border-blue-500/20 bg-blue-500/10';
@@ -65,7 +70,6 @@ export function EventList({ events, availability = [], isMentor = false }: Event
         }
       }
       
-      console.error('Invalid time format:', timeStr);
       return timeStr; // Return original string if all parsing attempts fail
     } catch (error) {
       console.error('Error formatting time:', timeStr, error);
@@ -82,7 +86,8 @@ export function EventList({ events, availability = [], isMentor = false }: Event
       {events.map((event) => (
         <div
           key={event.id}
-          className={`p-3 rounded-lg border ${getEventColor(event.event_type)}`}
+          className={`p-3 rounded-lg border ${getEventColor(event.event_type, event.status)} cursor-pointer hover:opacity-80 transition-opacity`}
+          onClick={() => onEventClick?.(event)}
         >
           <div className="flex justify-between items-start">
             <h4 className="font-medium">{event.title}</h4>
@@ -94,6 +99,11 @@ export function EventList({ events, availability = [], isMentor = false }: Event
             <p className="text-sm text-muted-foreground mt-1">
               {event.description}
             </p>
+          )}
+          {event.status === 'cancelled' && (
+            <span className="text-sm text-red-500 mt-1 block">
+              Cancelled
+            </span>
           )}
         </div>
       ))}
