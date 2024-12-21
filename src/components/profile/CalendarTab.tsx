@@ -166,6 +166,10 @@ export function CalendarTab() {
     );
   };
 
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedSession(event);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -224,7 +228,7 @@ export function CalendarTab() {
                 events={events} 
                 availability={availability} 
                 isMentor={isMentor}
-                onEventClick={(event) => setSelectedSession(event)}
+                onEventClick={handleEventClick}
               />
             </div>
           )}

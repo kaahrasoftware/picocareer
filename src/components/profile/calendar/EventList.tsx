@@ -7,7 +7,7 @@ export interface Event {
   description: string | null;
   start_time: string;
   end_time: string;
-  event_type: 'session' | 'webinar' | 'holiday';
+  event_type: 'session';
   status?: string;
   session_details?: any;
 }
@@ -35,10 +35,6 @@ export function EventList({ events, availability = [], isMentor = false, onEvent
     switch (type) {
       case 'session':
         return 'border-blue-500/20 bg-blue-500/10';
-      case 'webinar':
-        return 'border-green-500/20 bg-green-500/10';
-      case 'holiday':
-        return 'border-yellow-500/20 bg-yellow-500/10';
       default:
         return 'border-gray-500/20 bg-gray-500/10';
     }
