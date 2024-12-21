@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileAvatarProps {
   profile: {
@@ -22,12 +23,15 @@ interface ProfileAvatarProps {
   onAvatarUpdate: (croppedBlob: Blob) => Promise<void>;
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
+
 export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
     width: 100,
@@ -40,6 +44,27 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     if (!event.target.files || event.target.files.length === 0) return;
     
     const file = event.target.files[0];
+
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const reader = new FileReader();
     
     reader.onload = () => {
@@ -89,7 +114,7 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
           resolve(blob);
         },
         'image/jpeg',
-        1
+        0.9 // Slightly reduce quality to ensure smaller file size
       );
     });
   };
@@ -98,15 +123,27 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     try {
       setUploading(true);
       const croppedBlob = await getCroppedImage();
+      
+      // Check if the cropped image is within size limits
+      if (croppedBlob.size > MAX_FILE_SIZE) {
+        toast({
+          title: "Image too large",
+          description: "The cropped image is too large. Please try a smaller selection or image.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       await onAvatarUpdate(croppedBlob);
-      
-      // Invalidate profile queries to trigger a refetch
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
-      
       setCropDialogOpen(false);
       setSelectedImage(null);
     } catch (error) {
       console.error('Error saving avatar:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile picture. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
