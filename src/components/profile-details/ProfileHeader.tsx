@@ -79,10 +79,10 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       if (updateError) throw updateError;
 
       // Update the profile data in the cache
-      const currentProfile = queryClient.getQueryData(['profile']) as Profile | undefined;
-      if (currentProfile) {
+      const currentProfile = queryClient.getQueryData(['profile']);
+      if (currentProfile && typeof currentProfile === 'object') {
         queryClient.setQueryData(['profile'], {
-          ...currentProfile,
+          ...(currentProfile as object),
           avatar_url: publicUrl
         });
       }
