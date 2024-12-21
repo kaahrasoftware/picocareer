@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
 import { EventList } from "./calendar/EventList";
+import { format } from "date-fns";
 
 type CalendarEvent = {
   id: string;
@@ -19,6 +20,13 @@ type CalendarEvent = {
   event_type: 'session' | 'webinar' | 'holiday';
   created_at: string;
   updated_at: string;
+}
+
+type Availability = {
+  date_available: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
 }
 
 export function CalendarTab() {
@@ -68,6 +76,24 @@ export function CalendarTab() {
     staleTime: Infinity,
   });
 
+  // Get mentor availability
+  const { data: availability, isLoading: isAvailabilityLoading } = useQuery({
+    queryKey: ['mentor_availability', session?.user?.id, selectedDate],
+    queryFn: async () => {
+      if (!session?.user?.id || !selectedDate) return [];
+
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('date_available, start_time, end_time, is_available')
+        .eq('profile_id', session.user.id)
+        .eq('date_available', format(selectedDate, 'yyyy-MM-dd'));
+
+      if (error) throw error;
+      return data as Availability[];
+    },
+    enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
+  });
+
   // Finally, get calendar events for the selected date
   const { data: events, isLoading: isEventsLoading } = useQuery<CalendarEvent[]>({
     queryKey: ['calendar_events', selectedDate],
@@ -94,7 +120,14 @@ export function CalendarTab() {
   });
 
   const isMentor = profile?.user_type === 'mentor';
-  const isLoading = isSessionLoading || isProfileLoading || isEventsLoading;
+  const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || isAvailabilityLoading;
+
+  // Function to determine if a date has availability set
+  const hasAvailability = (date: Date) => {
+    return availability?.some(slot => 
+      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
+    );
+  };
 
   if (isLoading) {
     return (
@@ -126,6 +159,15 @@ export function CalendarTab() {
             selected={selectedDate}
             onSelect={setSelectedDate}
             className="rounded-md border bg-kahra-darker"
+            modifiers={{
+              hasAvailability: (date) => hasAvailability(date)
+            }}
+            modifiersStyles={{
+              hasAvailability: {
+                border: '2px solid #22c55e',
+                borderRadius: '4px'
+              }
+            }}
           />
           
           {selectedDate && (
@@ -143,8 +185,13 @@ export function CalendarTab() {
                 <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                   Holidays
                 </Badge>
+                {isMentor && (
+                  <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+                    Available
+                  </Badge>
+                )}
               </div>
-              <EventList events={events || []} />
+              <EventList events={events || []} availability={availability || []} isMentor={isMentor} />
             </div>
           )}
         </div>
@@ -158,6 +205,8 @@ export function CalendarTab() {
                 title: "Availability set",
                 description: "Your availability has been updated successfully.",
               });
+              // Invalidate the availability query to refresh the data
+              queryClient.invalidateQueries({ queryKey: ['mentor_availability'] });
             }}
           />
         )}

@@ -1,5 +1,5 @@
 import React from "react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 
 interface Event {
   id: string;
@@ -10,11 +10,20 @@ interface Event {
   event_type: 'session' | 'webinar' | 'holiday';
 }
 
-interface EventListProps {
-  events: Event[];
+interface Availability {
+  date_available: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
 }
 
-export function EventList({ events }: EventListProps) {
+interface EventListProps {
+  events: Event[];
+  availability?: Availability[];
+  isMentor?: boolean;
+}
+
+export function EventList({ events, availability = [], isMentor = false }: EventListProps) {
   const getEventColor = (type: Event['event_type']) => {
     switch (type) {
       case 'session':
@@ -28,7 +37,7 @@ export function EventList({ events }: EventListProps) {
     }
   };
 
-  if (events.length === 0) {
+  if (events.length === 0 && (!isMentor || availability.length === 0)) {
     return <p className="text-muted-foreground">No events scheduled for this day.</p>;
   }
 
@@ -50,6 +59,21 @@ export function EventList({ events }: EventListProps) {
               {event.description}
             </p>
           )}
+        </div>
+      ))}
+
+      {isMentor && availability.map((slot, index) => (
+        <div
+          key={`${slot.date_available}-${slot.start_time}-${index}`}
+          className="p-3 rounded-lg border border-purple-500/20 bg-purple-500/10"
+        >
+          <div className="flex justify-between items-start">
+            <h4 className="font-medium">Available for Booking</h4>
+            <span className="text-sm text-muted-foreground">
+              {format(parse(slot.start_time, 'HH:mm', new Date()), 'h:mm a')} - 
+              {format(parse(slot.end_time, 'HH:mm', new Date()), 'h:mm a')}
+            </span>
+          </div>
         </div>
       ))}
     </div>

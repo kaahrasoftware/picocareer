@@ -315,10 +315,12 @@ export type Database = {
         Row: {
           created_at: string
           date_available: string
+          day_of_week: number | null
           end_time: string
           id: string
           is_available: boolean | null
           profile_id: string
+          recurring: boolean | null
           start_time: string
           timezone: string
           updated_at: string
@@ -326,10 +328,12 @@ export type Database = {
         Insert: {
           created_at?: string
           date_available: string
+          day_of_week?: number | null
           end_time: string
           id?: string
           is_available?: boolean | null
           profile_id: string
+          recurring?: boolean | null
           start_time: string
           timezone: string
           updated_at?: string
@@ -337,10 +341,12 @@ export type Database = {
         Update: {
           created_at?: string
           date_available?: string
+          day_of_week?: number | null
           end_time?: string
           id?: string
           is_available?: boolean | null
           profile_id?: string
+          recurring?: boolean | null
           start_time?: string
           timezone?: string
           updated_at?: string
