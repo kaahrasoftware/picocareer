@@ -15,40 +15,32 @@ import { useQuery } from "@tanstack/react-query";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fetch user profile data
-  const { data: profile } = useQuery({
-    queryKey: ['profile', user?.id],
+  // Get initial session and listen for auth changes
+  const { data: session } = useQuery({
+    queryKey: ['auth-session'],
     queryFn: async () => {
-      if (!user?.id) return null;
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    }
+  });
+
+  // Fetch user profile data only if we have a session
+  const { data: profile } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
       
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', session.user.id)
         .single();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!session?.user?.id
   });
 
   const handleSignOut = async () => {
@@ -123,15 +115,15 @@ export function MenuSidebar() {
         </nav>
 
         <div className="flex items-center gap-2 ml-auto">
-          {user ? (
+          {session?.user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-12 w-12 rounded-full p-0 border-0 hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
                   <div className="absolute inset-[3px] rounded-full bg-background" />
                   <Avatar className="h-10 w-10 relative">
-                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || user.email || ''} />
-                    <AvatarFallback>{profile?.full_name?.[0] || user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || session.user.email || ''} />
+                    <AvatarFallback>{profile?.full_name?.[0] || session.user.email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
