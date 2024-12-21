@@ -6,27 +6,48 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NotificationPanel } from "./navigation/NotificationPanel";
 import { UserMenu } from "./navigation/UserMenu";
 import { MainNavigation } from "./navigation/MainNavigation";
+import { useToast } from "@/hooks/use-toast";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Get initial session and listen for auth changes
-  const { data: session } = useQuery({
+  const { data: session, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        return session;
+      } catch (error: any) {
+        console.error('Error fetching session:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try signing in again",
+          variant: "destructive",
+        });
+        return null;
+      }
     },
-    staleTime: Infinity,
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
   });
 
   // Set up auth state listener
   useQuery({
     queryKey: ['auth-listener'],
     queryFn: async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        queryClient.setQueryData(['auth-session'], session);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          queryClient.setQueryData(['auth-session'], null);
+          queryClient.removeQueries(['profile']);
+          queryClient.removeQueries(['notifications']);
+          navigate("/auth");
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          queryClient.setQueryData(['auth-session'], session);
+        }
       });
       return subscription;
     },
@@ -45,10 +66,14 @@ export function MenuSidebar() {
         .eq('id', session.user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
       return data;
     },
-    enabled: !!session?.user?.id
+    enabled: !!session?.user?.id,
+    retry: 1,
   });
 
   // Fetch notifications
@@ -63,11 +88,15 @@ export function MenuSidebar() {
         .eq('profile_id', session.user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return [];
+      }
       return data;
     },
     enabled: !!session?.user?.id,
-    refetchInterval: 30000 // Refetch every 30 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 1,
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -75,19 +104,60 @@ export function MenuSidebar() {
   const handleMarkAsRead = async (notificationId: string) => {
     if (!session?.user?.id) return;
 
-    await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', notificationId);
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
 
-    queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    navigate("/");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      queryClient.clear();
+      navigate("/auth");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+
+  // If there's an auth error, show sign in button
+  if (isError) {
+    return (
+      <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+        <div className="container h-full mx-auto flex items-center justify-between px-4">
+          <Link to="/">
+            <img 
+              src="/lovable-uploads/2b1bee0a-4952-41f3-8220-963b51130b04.png" 
+              alt="PicoCareer Logo" 
+              className="h-10"
+            />
+          </Link>
+          <Button 
+            variant="default" 
+            onClick={() => navigate("/auth")}
+            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+          >
+            Sign in
+          </Button>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
