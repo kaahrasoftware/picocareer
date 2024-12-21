@@ -11,6 +11,7 @@ interface ContentUploadFormProps {
     type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image";
     placeholder?: string;
     description?: string;
+    bucket?: string;
   }>;
   onSubmit: (data: any) => Promise<void>;
 }
