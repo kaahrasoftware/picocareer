@@ -37,9 +37,47 @@ export default function MajorUpload() {
 
   const handleSubmit = async (data: any) => {
     try {
+      // Validate required fields
+      if (!data.title?.trim() || !data.description?.trim()) {
+        toast({
+          title: "Error",
+          description: "Title and description are required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const processedData = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        image_url: data.image_url || null,
+        featured: data.featured || false,
+        learning_objectives: data.learning_objectives ? data.learning_objectives.split(',').map((item: string) => item.trim()) : [],
+        common_courses: data.common_courses ? data.common_courses.split(',').map((item: string) => item.trim()) : [],
+        interdisciplinary_connections: data.interdisciplinary_connections ? data.interdisciplinary_connections.split(',').map((item: string) => item.trim()) : [],
+        job_prospects: data.job_prospects || null,
+        certifications_to_consider: data.certifications_to_consider ? data.certifications_to_consider.split(',').map((item: string) => item.trim()) : [],
+        degree_levels: data.degree_levels ? data.degree_levels.split(',').map((item: string) => item.trim()) : [],
+        affiliated_programs: data.affiliated_programs ? data.affiliated_programs.split(',').map((item: string) => item.trim()) : [],
+        gpa_expectations: data.gpa_expectations ? parseFloat(data.gpa_expectations) : null,
+        transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map((item: string) => item.trim()) : [],
+        tools_knowledge: data.tools_knowledge ? data.tools_knowledge.split(',').map((item: string) => item.trim()) : [],
+        potential_salary: data.potential_salary || null,
+        passion_for_subject: data.passion_for_subject || null,
+        skill_match: data.skill_match ? data.skill_match.split(',').map((item: string) => item.trim()) : [],
+        professional_associations: data.professional_associations ? data.professional_associations.split(',').map((item: string) => item.trim()) : [],
+        global_applicability: data.global_applicability || null,
+        common_difficulties: data.common_difficulties ? data.common_difficulties.split(',').map((item: string) => item.trim()) : [],
+        majors_to_consider_switching_to: data.majors_to_consider_switching_to ? data.majors_to_consider_switching_to.split(',').map((item: string) => item.trim()) : [],
+        career_opportunities: data.career_opportunities ? data.career_opportunities.split(',').map((item: string) => item.trim()) : [],
+        intensity: data.intensity || null,
+        stress_level: data.stress_level || null,
+        dropout_rates: data.dropout_rates || null
+      };
+
       const { error } = await supabase
         .from('majors')
-        .insert([data]);
+        .insert([processedData]);
 
       if (error) throw error;
 
@@ -47,11 +85,14 @@ export default function MajorUpload() {
         title: "Success",
         description: "Major information has been uploaded successfully",
       });
-    } catch (error) {
+      
+      // Reset the form by refreshing the page
+      window.location.reload();
+    } catch (error: any) {
       console.error('Error uploading major:', error);
       toast({
         title: "Error",
-        description: "Failed to upload major information. Please try again.",
+        description: error.message || "Failed to upload major information. Please try again.",
         variant: "destructive",
       });
     }

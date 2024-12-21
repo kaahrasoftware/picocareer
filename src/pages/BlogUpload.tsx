@@ -15,7 +15,7 @@ export default function BlogUpload() {
       if (!session) {
         toast({
           title: "Authentication required",
-          description: "Please sign in to upload blog posts",
+          description: "Please sign in to upload blog content",
           variant: "destructive",
         });
         navigate("/auth");
@@ -37,40 +37,28 @@ export default function BlogUpload() {
 
   const handleSubmit = async (data: any) => {
     try {
-      // Check if blog with same title exists
-      const { data: existingBlog } = await supabase
-        .from('blogs')
-        .select('id, title')
-        .ilike('title', data.title)
-        .single();
-
-      if (existingBlog) {
+      // Validate required fields
+      if (!data.title?.trim() || !data.summary?.trim() || !data.content?.trim()) {
         toast({
           title: "Error",
-          description: `A blog post with the title "${data.title}" already exists.`,
+          description: "Title, summary, and content are required fields",
           variant: "destructive",
         });
         return;
       }
 
-      // Get the current user's ID
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to create a blog post.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (!user) throw new Error("User not authenticated");
 
-      // Process array fields
       const processedData = {
-        ...data,
-        author_id: user.id,
-        categories: data.categories?.split(',').map((item: string) => item.trim()),
-        subcategories: data.subcategories?.split(',').map((item: string) => item.trim()),
+        title: data.title.trim(),
+        summary: data.summary.trim(),
+        content: data.content.trim(),
+        cover_image_url: data.cover_image_url || null,
+        categories: data.categories ? data.categories.split(',').map((item: string) => item.trim()) : [],
+        subcategories: data.subcategories ? data.subcategories.split(',').map((item: string) => item.trim()) : [],
+        is_recent: data.is_recent || false,
+        author_id: user.id
       };
 
       const { error } = await supabase
@@ -83,11 +71,14 @@ export default function BlogUpload() {
         title: "Success",
         description: "Blog post has been uploaded successfully",
       });
-    } catch (error) {
+      
+      // Reset the form by refreshing the page
+      window.location.reload();
+    } catch (error: any) {
       console.error('Error uploading blog:', error);
       toast({
         title: "Error",
-        description: "Failed to upload blog post. Please try again.",
+        description: error.message || "Failed to upload blog post. Please try again.",
         variant: "destructive",
       });
     }
