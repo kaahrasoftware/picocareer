@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { MainNavigation } from "@/components/navigation/MainNavigation";
 import { Outlet } from "react-router-dom";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -15,16 +16,18 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider defaultTheme="dark" attribute="class">
-          <div className="flex h-screen">
-            <AppSidebar />
-            <MenuSidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <MainNavigation />
-              <main className="flex-1 overflow-y-auto bg-background">
-                <Outlet />
-              </main>
+          <SidebarProvider>
+            <div className="flex h-screen">
+              <AppSidebar />
+              <MenuSidebar />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <MainNavigation />
+                <main className="flex-1 overflow-y-auto bg-background">
+                  <Outlet />
+                </main>
+              </div>
             </div>
-          </div>
+          </SidebarProvider>
           <Toaster />
         </ThemeProvider>
       </BrowserRouter>
