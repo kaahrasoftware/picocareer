@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProfileAvatar } from "./ProfileAvatar";
+import type { Profile } from "@/types/database/profiles";
 
 interface ProfileHeaderProps {
   profile: {
@@ -78,11 +79,13 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       if (updateError) throw updateError;
 
       // Update the profile data in the cache
-      const currentProfile = queryClient.getQueryData(['profile']);
-      queryClient.setQueryData(['profile'], {
-        ...currentProfile,
-        avatar_url: publicUrl
-      });
+      const currentProfile = queryClient.getQueryData(['profile']) as Profile | undefined;
+      if (currentProfile) {
+        queryClient.setQueryData(['profile'], {
+          ...currentProfile,
+          avatar_url: publicUrl
+        });
+      }
 
       toast({
         title: "Success",
