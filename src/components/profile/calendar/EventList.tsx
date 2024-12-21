@@ -1,13 +1,15 @@
 import React from "react";
 import { format, parse, isValid } from "date-fns";
 
-interface Event {
+export interface Event {
   id: string;
   title: string;
   description: string | null;
   start_time: string;
   end_time: string;
   event_type: 'session' | 'webinar' | 'holiday';
+  created_at: string;
+  updated_at: string;
 }
 
 interface Availability {

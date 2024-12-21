@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
-import { EventList } from "./calendar/EventList";
+import { EventList, Event } from "./calendar/EventList";
 import { format } from "date-fns";
 
 export function CalendarTab() {
@@ -80,7 +80,8 @@ export function CalendarTab() {
         .from('calendar_events')
         .select('*')
         .gte('start_time', startOfDay.toISOString())
-        .lte('end_time', endOfDay.toISOString());
+        .lte('end_time', endOfDay.toISOString())
+        .returns<Event[]>();
 
       if (error) throw error;
       return data;
