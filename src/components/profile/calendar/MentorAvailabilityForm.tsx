@@ -80,6 +80,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
           availableTimeSlots={timeSlots}
           selectedTime={selectedTime}
           onTimeSelect={setSelectedTime}
+          selectedSessionType={undefined}
         />
       )}
 

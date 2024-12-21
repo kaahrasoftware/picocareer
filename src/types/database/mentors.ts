@@ -1,5 +1,13 @@
 import { Json } from "./auth";
 
+export interface SessionType {
+  id: string;
+  type: string;
+  duration: number;
+  price: number;
+  description: string | null;
+}
+
 export interface MentorsTables {
   mentor_availability: {
     Row: {
