@@ -527,6 +527,7 @@ export type Database = {
           skills: string[] | null
           tools_used: string[] | null
           top_mentor: boolean | null
+          total_booked_sessions: number | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
           website_url: string | null
@@ -555,6 +556,7 @@ export type Database = {
           skills?: string[] | null
           tools_used?: string[] | null
           top_mentor?: boolean | null
+          total_booked_sessions?: number | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
@@ -583,6 +585,7 @@ export type Database = {
           skills?: string[] | null
           tools_used?: string[] | null
           top_mentor?: boolean | null
+          total_booked_sessions?: number | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
