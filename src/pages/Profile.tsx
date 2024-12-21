@@ -11,6 +11,7 @@ import { MentorTab } from "@/components/profile/MentorTab";
 import type { Profile } from "@/types/database/profiles";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -105,40 +106,42 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="bg-background/60 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
-        <ProfileHeader profile={profile} />
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="mentor">Mentor</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+    <SidebarProvider>
+      <div className="container mx-auto px-4 py-8 max-w-5xl w-full">
+        <div className="bg-background/60 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
+          <ProfileHeader profile={profile} />
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="mentor">Mentor</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="profile" className="space-y-6">
-            <ProfileTab profile={profile} />
-          </TabsContent>
+            <TabsContent value="profile" className="space-y-6">
+              <ProfileTab profile={profile} />
+            </TabsContent>
 
-          <TabsContent value="dashboard">
-            <DashboardTab />
-          </TabsContent>
+            <TabsContent value="dashboard">
+              <DashboardTab />
+            </TabsContent>
 
-          <TabsContent value="calendar">
-            <CalendarTab />
-          </TabsContent>
+            <TabsContent value="calendar">
+              <CalendarTab />
+            </TabsContent>
 
-          <TabsContent value="mentor">
-            <MentorTab profile={profile} />
-          </TabsContent>
+            <TabsContent value="mentor">
+              <MentorTab profile={profile} />
+            </TabsContent>
 
-          <TabsContent value="settings">
-            <SettingsTab />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="settings">
+              <SettingsTab />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
