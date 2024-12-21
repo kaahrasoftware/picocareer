@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 interface BookSessionParams {
   mentorId: string;
@@ -9,40 +8,48 @@ interface BookSessionParams {
   note: string;
 }
 
-export function useBookSession() {
-  const { toast } = useToast();
+interface BookSessionResult {
+  success: boolean;
+  sessionId?: string;
+  error?: string;
+}
 
-  const bookSession = async ({ mentorId, date, selectedTime, sessionTypeId, note }: BookSessionParams) => {
-    if (!date || !selectedTime || !sessionTypeId || !mentorId) return false;
+export function useBookSession() {
+  const bookSession = async ({ mentorId, date, selectedTime, sessionTypeId, note }: BookSessionParams): Promise<BookSessionResult> => {
+    if (!date || !selectedTime || !sessionTypeId || !mentorId) {
+      return { success: false, error: "Missing required fields" };
+    }
 
     const scheduledAt = new Date(date);
     const [hours, minutes] = selectedTime.split(':');
     scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    const { error } = await supabase
-      .from('mentor_sessions')
-      .insert({
-        mentor_id: mentorId,
-        mentee_id: (await supabase.auth.getUser()).data.user?.id,
-        session_type_id: sessionTypeId,
-        scheduled_at: scheduledAt.toISOString(),
-        notes: note,
-      });
+    try {
+      const { data: session, error } = await supabase
+        .from('mentor_sessions')
+        .insert({
+          mentor_id: mentorId,
+          mentee_id: (await supabase.auth.getUser()).data.user?.id,
+          session_type_id: sessionTypeId,
+          scheduled_at: scheduledAt.toISOString(),
+          notes: note,
+        })
+        .select()
+        .single();
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to book session",
-        variant: "destructive",
-      });
-      return false;
+      if (error) throw error;
+
+      return { 
+        success: true, 
+        sessionId: session.id 
+      };
+    } catch (error: any) {
+      console.error('Error booking session:', error);
+      return { 
+        success: false, 
+        error: error.message 
+      };
     }
-
-    toast({
-      title: "Success",
-      description: "Session booked successfully",
-    });
-    return true;
   };
 
   return bookSession;

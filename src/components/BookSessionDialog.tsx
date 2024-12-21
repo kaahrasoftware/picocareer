@@ -8,6 +8,8 @@ import { SessionNote } from "./booking/SessionNote";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useBookSession } from "@/hooks/useBookSession";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -24,7 +26,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { toast } = useToast();
 
   const sessionTypes = useSessionTypes(mentor.id, open);
   const availableTimeSlots = useAvailableTimeSlots(date, mentor.id);
@@ -34,17 +38,51 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   const handleSubmit = async () => {
     if (!date || !selectedTime || !sessionType || !mentor.id) return;
+    
+    setIsSubmitting(true);
+    try {
+      const sessionResult = await bookSession({
+        mentorId: mentor.id,
+        date,
+        selectedTime,
+        sessionTypeId: sessionType,
+        note,
+      });
 
-    const success = await bookSession({
-      mentorId: mentor.id,
-      date,
-      selectedTime,
-      sessionTypeId: sessionType,
-      note,
-    });
+      if (!sessionResult.success) {
+        throw new Error(sessionResult.error || 'Failed to book session');
+      }
 
-    if (success) {
+      // Schedule notifications and send confirmation emails
+      const { error: notificationError } = await supabase.functions.invoke('schedule-session-notifications', {
+        body: { sessionId: sessionResult.sessionId }
+      });
+
+      if (notificationError) {
+        console.error('Error scheduling notifications:', notificationError);
+        toast({
+          title: "Session Booked",
+          description: "Session booked successfully, but there was an issue sending notifications.",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Session Booked",
+          description: "Session booked successfully! Check your email for confirmation details.",
+          variant: "default"
+        });
+      }
+
       onOpenChange(false);
+    } catch (error) {
+      console.error('Error booking session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to book session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,9 +132,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!date || !selectedTime || !sessionType || !mentor.id}
+            disabled={!date || !selectedTime || !sessionType || !mentor.id || isSubmitting}
           >
-            Book Session
+            {isSubmitting ? "Booking..." : "Book Session"}
           </Button>
         </div>
       </DialogContent>
