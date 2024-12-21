@@ -10,6 +10,17 @@ import { useToast } from "@/hooks/use-toast";
 import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
 import { EventList } from "./calendar/EventList";
 
+type CalendarEvent = {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  event_type: 'session' | 'webinar' | 'holiday';
+  created_at: string;
+  updated_at: string;
+}
+
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [showAvailabilityForm, setShowAvailabilityForm] = React.useState(false);
@@ -32,7 +43,7 @@ export function CalendarTab() {
     }
   });
 
-  const { data: events } = useQuery({
+  const { data: events } = useQuery<CalendarEvent[]>({
     queryKey: ['calendar_events', selectedDate],
     queryFn: async () => {
       if (!selectedDate) return [];
@@ -50,7 +61,7 @@ export function CalendarTab() {
         .lte('end_time', endOfDay.toISOString());
 
       if (error) throw error;
-      return data;
+      return data as CalendarEvent[];
     },
     enabled: !!selectedDate
   });
