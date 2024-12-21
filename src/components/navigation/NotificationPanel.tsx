@@ -9,8 +9,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot } from "lucide-react";
+import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 interface Notification {
   id: string;
@@ -28,6 +29,14 @@ interface NotificationPanelProps {
 }
 
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -47,44 +56,85 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="w-[400px] bg-zinc-950 text-zinc-50">
         <SheetHeader>
-          <SheetTitle>Notifications</SheetTitle>
+          <SheetTitle className="text-zinc-50 flex items-center gap-2">
+            Notifications
+            <Badge variant="secondary" className="ml-2">
+              {notifications.length}
+            </Badge>
+          </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
           {notifications.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
+            <p className="text-center text-zinc-400 py-4">
               No notifications yet
             </p>
           ) : (
             <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg border ${
-                    notification.read ? 'bg-background' : 'bg-muted'
-                  }`}
-                  onClick={() => onMarkAsRead(notification.id)}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-medium">{notification.title}</h4>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(notification.created_at), 'MMM d, h:mm a')}
-                    </span>
+              {notifications.map((notification) => {
+                const isExpanded = expandedIds.includes(notification.id);
+                return (
+                  <div
+                    key={notification.id}
+                    className={`p-4 rounded-lg border border-zinc-800 transition-colors ${
+                      notification.read ? 'bg-zinc-900' : 'bg-zinc-900/50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-zinc-50 flex items-center gap-2">
+                            {notification.title}
+                            {notification.read && (
+                              <CircleCheck className="h-4 w-4 text-green-500" />
+                            )}
+                          </h4>
+                          <span className="text-xs text-zinc-400">
+                            {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                          </span>
+                        </div>
+                        <p className={`text-sm text-zinc-400 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                          {notification.message}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-zinc-400 hover:text-zinc-50"
+                        onClick={() => toggleExpand(notification.id)}
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4 mr-1" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 mr-1" />
+                        )}
+                        {isExpanded ? 'Show less' : 'Read more'}
+                      </Button>
+                      {!notification.read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-zinc-400 hover:text-zinc-50"
+                          onClick={() => onMarkAsRead(notification.id)}
+                        >
+                          Mark as read
+                        </Button>
+                      )}
+                    </div>
+                    {notification.action_url && isExpanded && (
+                      <Link
+                        to={notification.action_url}
+                        className="text-sm text-primary hover:underline mt-2 block"
+                      >
+                        View details
+                      </Link>
+                    )}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {notification.message}
-                  </p>
-                  {notification.action_url && (
-                    <Link
-                      to={notification.action_url}
-                      className="text-sm text-primary hover:underline mt-2 block"
-                    >
-                      View details
-                    </Link>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>
