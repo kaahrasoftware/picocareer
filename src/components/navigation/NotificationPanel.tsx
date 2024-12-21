@@ -99,9 +99,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                               onClick={() => toggleReadStatus(notification)}
                             >
                               {notification.read ? (
-                                <CircleCheck className="h-4 w-4 text-green-500" />
+                                <CircleCheck className="h-4 w-4 text-emerald-500" />
                               ) : (
-                                <CircleDot className="h-4 w-4 text-blue-500" />
+                                <CircleDot className="h-4 w-4 text-sky-500" />
                               )}
                             </Button>
                           </h4>
@@ -118,7 +118,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-zinc-400 hover:text-zinc-50"
+                        className="text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
                         onClick={() => toggleExpand(notification.id)}
                       >
                         {isExpanded ? (
@@ -131,7 +131,10 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-zinc-400 hover:text-zinc-50"
+                        className={notification.read ? 
+                          "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10" :
+                          "text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+                        }
                         onClick={() => toggleReadStatus(notification)}
                       >
                         {notification.read ? 'Mark as unread' : 'Mark as read'}
