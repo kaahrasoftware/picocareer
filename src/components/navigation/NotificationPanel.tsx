@@ -9,7 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck } from "lucide-react";
+import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck, CircleDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
@@ -35,6 +35,10 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     setExpandedIds(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
+  };
+
+  const toggleReadStatus = async (notification: Notification) => {
+    onMarkAsRead(notification.id);
   };
 
   return (
@@ -88,9 +92,18 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-zinc-50 flex items-center gap-2">
                             {notification.title}
-                            {notification.read && (
-                              <CircleCheck className="h-4 w-4 text-green-500" />
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0 hover:bg-transparent"
+                              onClick={() => toggleReadStatus(notification)}
+                            >
+                              {notification.read ? (
+                                <CircleCheck className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <CircleDot className="h-4 w-4 text-blue-500" />
+                              )}
+                            </Button>
                           </h4>
                           <span className="text-xs text-zinc-400">
                             {format(new Date(notification.created_at), 'MMM d, h:mm a')}
@@ -115,16 +128,14 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                         )}
                         {isExpanded ? 'Show less' : 'Read more'}
                       </Button>
-                      {!notification.read && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-zinc-400 hover:text-zinc-50"
-                          onClick={() => onMarkAsRead(notification.id)}
-                        >
-                          Mark as read
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-zinc-400 hover:text-zinc-50"
+                        onClick={() => toggleReadStatus(notification)}
+                      >
+                        {notification.read ? 'Mark as unread' : 'Mark as read'}
+                      </Button>
                     </div>
                     {notification.action_url && isExpanded && (
                       <Link
