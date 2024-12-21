@@ -42,8 +42,8 @@ export function MenuSidebar() {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
           queryClient.setQueryData(['auth-session'], null);
-          queryClient.removeQueries(['profile']);
-          queryClient.removeQueries(['notifications']);
+          queryClient.removeQueries({ queryKey: ['profile'] });
+          queryClient.removeQueries({ queryKey: ['notifications'] });
           navigate("/auth");
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           queryClient.setQueryData(['auth-session'], session);
