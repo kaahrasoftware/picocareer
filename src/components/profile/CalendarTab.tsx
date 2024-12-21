@@ -26,7 +26,7 @@ export function CalendarTab() {
   const [showAvailabilityForm, setShowAvailabilityForm] = React.useState(false);
   const { toast } = useToast();
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -43,7 +43,7 @@ export function CalendarTab() {
     }
   });
 
-  const { data: events } = useQuery<CalendarEvent[]>({
+  const { data: events, isLoading: isEventsLoading } = useQuery<CalendarEvent[]>({
     queryKey: ['calendar_events', selectedDate],
     queryFn: async () => {
       if (!selectedDate) return [];
@@ -65,6 +65,14 @@ export function CalendarTab() {
     },
     enabled: !!selectedDate
   });
+
+  if (isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const isMentor = profile?.user_type === 'mentor';
 
@@ -108,7 +116,13 @@ export function CalendarTab() {
                   Holidays
                 </Badge>
               </div>
-              <EventList events={events || []} />
+              {isEventsLoading ? (
+                <div className="flex items-center justify-center h-24">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <EventList events={events || []} />
+              )}
             </div>
           )}
         </div>
