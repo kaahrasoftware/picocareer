@@ -5,6 +5,16 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import ReactCrop, { type Crop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ProfileHeaderProps {
   profile: {
@@ -23,6 +33,16 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const [uploading, setUploading] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
+  const [crop, setCrop] = useState<Crop>({
+    unit: '%',
+    width: 100,
+    height: 100,
+    x: 0,
+    y: 0,
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -33,17 +53,78 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
+    }
+
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      setSelectedImage(reader.result as string);
+      setCropDialogOpen(true);
+    };
+    
+    reader.readAsDataURL(file);
+  };
+
+  const getCroppedImage = (): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      if (!imageRef || !crop) {
+        reject(new Error('No image or crop data'));
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const scaleX = imageRef.naturalWidth / imageRef.width;
+      const scaleY = imageRef.naturalHeight / imageRef.height;
+      
+      canvas.width = crop.width * scaleX;
+      canvas.height = crop.height * scaleY;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('No 2d context'));
+        return;
+      }
+
+      ctx.drawImage(
+        imageRef,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width * scaleX,
+        crop.height * scaleY
+      );
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Canvas is empty'));
+            return;
+          }
+          resolve(blob);
+        },
+        'image/jpeg',
+        1
+      );
+    });
+  };
+
+  const handleAvatarUpload = async () => {
     try {
       setUploading(true);
 
-      if (!event.target.files || event.target.files.length === 0) {
+      if (!selectedImage || !imageRef) {
         throw new Error('Please select an image to upload.');
       }
 
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `avatar.${fileExt}`;
+      const croppedBlob = await getCroppedImage();
+      const fileName = `avatar.jpg`;
       const filePath = `${profile.id}/${fileName}`;
 
       // Delete old avatar if it exists
@@ -57,16 +138,15 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           }
         } catch (deleteError) {
           console.error('Error deleting old avatar:', deleteError);
-          // Continue with upload even if delete fails
         }
       }
 
       // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
+        .upload(filePath, croppedBlob, { 
           upsert: true,
-          contentType: file.type
+          contentType: 'image/jpeg'
         });
 
       if (uploadError) throw uploadError;
@@ -91,6 +171,9 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         title: "Success",
         description: "Profile picture updated successfully",
       });
+
+      setCropDialogOpen(false);
+      setSelectedImage(null);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -104,69 +187,109 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   };
 
   return (
-    <div className="flex items-center gap-6 ml-6">
-      <div className="relative w-20 h-20 group">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-        <div className="absolute inset-[3px] rounded-full bg-background" />
-        <Avatar className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <AvatarImage 
-            src={profile.avatar_url || ''} 
-            alt={profile.full_name || ''}
-            className="object-contain p-1"
-          />
-          <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
-        </Avatar>
-        
-        <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarUpload}
-            disabled={uploading}
-          />
-          {uploading ? (
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Upload className="w-6 h-6 text-white" />
-          )}
-        </label>
+    <>
+      <div className="flex items-center gap-6 ml-6">
+        <div className="relative w-20 h-20 group">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
+          <div className="absolute inset-[3px] rounded-full bg-background" />
+          <Avatar className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <AvatarImage 
+              src={profile.avatar_url || ''} 
+              alt={profile.full_name || ''}
+              className="object-contain p-1"
+            />
+            <AvatarFallback>{profile.full_name?.[0]}</AvatarFallback>
+          </Avatar>
+          
+          <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+              disabled={uploading}
+            />
+            {uploading ? (
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Upload className="w-6 h-6 text-white" />
+            )}
+          </label>
+        </div>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="text-2xl font-bold">{profile.full_name}</h2>
+            {profile.user_type === 'mentor' && (
+              profile.top_mentor ? (
+                <Badge className="bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1">
+                  <Award className="h-3 w-3" />
+                  Top Mentor
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                  mentor
+                </Badge>
+              )
+            )}
+          </div>
+          <p className="text-lg font-medium text-foreground/90">{displayTitle}</p>
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              {profile.position ? (
+                <Building2 className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <GraduationCap className="h-4 w-4 flex-shrink-0" />
+              )}
+              <span>{displaySubtitle}</span>
+            </div>
+            {profile.location && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <span>{profile.location}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-2xl font-bold">{profile.full_name}</h2>
-          {profile.user_type === 'mentor' && (
-            profile.top_mentor ? (
-              <Badge className="bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1">
-                <Award className="h-3 w-3" />
-                Top Mentor
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
-                mentor
-              </Badge>
-            )
-          )}
-        </div>
-        <p className="text-lg font-medium text-foreground/90">{displayTitle}</p>
-        <div className="flex flex-col gap-1 mt-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            {profile.position ? (
-              <Building2 className="h-4 w-4 flex-shrink-0" />
-            ) : (
-              <GraduationCap className="h-4 w-4 flex-shrink-0" />
-            )}
-            <span>{displaySubtitle}</span>
-          </div>
-          {profile.location && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 flex-shrink-0" />
-              <span>{profile.location}</span>
+      <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Crop Profile Picture</DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <div className="relative max-h-[500px] overflow-auto">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                aspect={1}
+                circularCrop
+              >
+                <img
+                  src={selectedImage}
+                  alt="Crop preview"
+                  onLoad={(e) => setImageRef(e.currentTarget)}
+                />
+              </ReactCrop>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCropDialogOpen(false);
+                setSelectedImage(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAvatarUpload} disabled={uploading}>
+              {uploading ? 'Uploading...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
