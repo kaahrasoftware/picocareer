@@ -87,7 +87,7 @@ export function CalendarTab() {
       const endOfDay = new Date(selectedDate);
       endOfDay.setHours(23, 59, 59, 999);
 
-      // First get the mentor sessions
+      // First get the mentor sessions with explicit column selection for profiles
       const { data: sessions, error: sessionsError } = await supabase
         .from('mentor_sessions')
         .select(`
@@ -95,8 +95,8 @@ export function CalendarTab() {
           scheduled_at,
           status,
           notes,
-          mentor:mentor_id(id, full_name),
-          mentee:mentee_id(id, full_name),
+          mentor:mentor_id(id:id, full_name:full_name),
+          mentee:mentee_id(id:id, full_name:full_name),
           session_type:session_type_id(type, duration)
         `)
         .gte('scheduled_at', startOfDay.toISOString())
@@ -115,7 +115,7 @@ export function CalendarTab() {
         event_type: 'session' as const,
         status: session.status,
         notes: session.notes,
-        session_details: session // Keep the full session details for the dialog
+        session_details: session
       }));
 
       return sessionEvents;
@@ -144,13 +144,13 @@ export function CalendarTab() {
           profile_id: selectedSession.session_details.mentor.id,
           title: 'Session Cancelled',
           message: `Session with ${selectedSession.session_details.mentee.full_name} has been cancelled. Note: ${cancellationNote}`,
-          type: 'session_cancelled'
+          type: 'session_cancelled' as const
         },
         {
           profile_id: selectedSession.session_details.mentee.id,
           title: 'Session Cancelled',
           message: `Session with ${selectedSession.session_details.mentor.full_name} has been cancelled. Note: ${cancellationNote}`,
-          type: 'session_cancelled'
+          type: 'session_cancelled' as const
         }
       ];
 
