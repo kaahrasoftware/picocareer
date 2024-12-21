@@ -37,6 +37,16 @@ export default function CareerUpload() {
 
   const handleSubmit = async (data: any) => {
     try {
+      // Validate required fields
+      if (!data.title || !data.description) {
+        toast({
+          title: "Error",
+          description: "Title and description are required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Process array fields
       const processedData = {
         ...data,
@@ -46,7 +56,9 @@ export default function CareerUpload() {
         keywords: data.keywords ? data.keywords.split(',').map((item: string) => item.trim()) : [],
         transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map((item: string) => item.trim()) : [],
         careers_to_consider_switching_to: data.careers_to_consider_switching_to ? 
-          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : []
+          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : [],
+        // Ensure description is properly set
+        description: data.description.trim()
       };
 
       const { error } = await supabase
