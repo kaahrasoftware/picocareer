@@ -38,7 +38,7 @@ export default function CareerUpload() {
   const handleSubmit = async (data: any) => {
     try {
       // Validate required fields
-      if (!data.title || !data.description) {
+      if (!data.title?.trim() || !data.description?.trim()) {
         toast({
           title: "Error",
           description: "Title and description are required fields",
@@ -47,18 +47,25 @@ export default function CareerUpload() {
         return;
       }
 
-      // Process array fields
+      // Process array fields and ensure they're not undefined
       const processedData = {
-        ...data,
+        title: data.title.trim(),
+        description: data.description.trim(),
+        salary_range: data.salary_range || null,
+        image_url: data.image_url || null,
+        featured: data.featured || false,
         required_education: data.required_education ? data.required_education.split(',').map((item: string) => item.trim()) : [],
         required_skills: data.required_skills ? data.required_skills.split(',').map((item: string) => item.trim()) : [],
         required_tools: data.required_tools ? data.required_tools.split(',').map((item: string) => item.trim()) : [],
+        job_outlook: data.job_outlook || null,
+        industry: data.industry || null,
+        work_environment: data.work_environment || null,
+        growth_potential: data.growth_potential || null,
         keywords: data.keywords ? data.keywords.split(',').map((item: string) => item.trim()) : [],
         transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map((item: string) => item.trim()) : [],
+        stress_levels: data.stress_levels ? parseInt(data.stress_levels) : null,
         careers_to_consider_switching_to: data.careers_to_consider_switching_to ? 
-          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : [],
-        // Ensure description is properly set
-        description: data.description.trim()
+          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : []
       };
 
       const { error } = await supabase
