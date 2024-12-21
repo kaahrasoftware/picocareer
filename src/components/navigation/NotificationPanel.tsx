@@ -56,9 +56,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] bg-zinc-950 text-zinc-50">
+      <SheetContent className="w-[400px]">
         <SheetHeader>
-          <SheetTitle className="text-zinc-50 flex items-center gap-2">
+          <SheetTitle className="flex items-center gap-2">
             Notifications
             <Badge variant="secondary" className="ml-2">
               {notifications.length}
@@ -67,7 +67,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
           {notifications.length === 0 ? (
-            <p className="text-center text-zinc-400 py-4">
+            <p className="text-center text-muted-foreground py-4">
               No notifications yet
             </p>
           ) : (
@@ -77,8 +77,10 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                 return (
                   <div
                     key={notification.id}
-                    className={`p-4 rounded-lg border border-zinc-800 transition-colors ${
-                      notification.read ? 'bg-zinc-900' : 'bg-zinc-900/50'
+                    className={`p-4 rounded-lg border transition-colors ${
+                      notification.read 
+                        ? 'bg-zinc-900 border-zinc-800' 
+                        : 'bg-zinc-900/90 border-zinc-700'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-1">
