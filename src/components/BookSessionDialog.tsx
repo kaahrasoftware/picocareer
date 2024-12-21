@@ -30,6 +30,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const availableTimeSlots = useAvailableTimeSlots(date, mentor.id);
   const bookSession = useBookSession();
 
+  const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
+
   const handleSubmit = async () => {
     if (!date || !selectedTime || !sessionType || !mentor.id) return;
 
@@ -64,19 +66,20 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           />
 
           <div className="space-y-6">
+            <SessionTypeSelector
+              sessionTypes={sessionTypes}
+              onSessionTypeSelect={setSessionType}
+            />
+
             {date && (
               <TimeSlotSelector
                 date={date}
                 availableTimeSlots={availableTimeSlots}
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
+                selectedSessionType={selectedSessionTypeDetails}
               />
             )}
-
-            <SessionTypeSelector
-              sessionTypes={sessionTypes}
-              onSessionTypeSelect={setSessionType}
-            />
 
             <SessionNote
               note={note}
