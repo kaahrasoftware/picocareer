@@ -107,6 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!emailRes.ok) {
+      console.error('Resend API error:', await emailRes.text());
       throw new Error('Failed to send email');
     }
 
