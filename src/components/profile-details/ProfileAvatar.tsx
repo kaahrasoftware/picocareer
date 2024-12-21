@@ -1,18 +1,10 @@
 import { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
-import ReactCrop, { type Crop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
+import { type Crop } from 'react-image-crop';
 import { useToast } from "@/hooks/use-toast";
+import { ImageCropDialog } from "./ImageCropDialog";
+import { processImage, MAX_FILE_SIZE } from "@/utils/imageProcessing";
 
 interface ProfileAvatarProps {
   profile: {
@@ -23,14 +15,11 @@ interface ProfileAvatarProps {
   onAvatarUpdate: (croppedBlob: Blob) => Promise<void>;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
-
 export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
@@ -40,12 +29,12 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     y: 0,
   });
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
     
     const file = event.target.files[0];
 
-    // Check file size
+    // Check file size and type
     if (file.size > MAX_FILE_SIZE) {
       toast({
         title: "File too large",
@@ -55,7 +44,6 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
       return;
     }
 
-    // Check file type
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
@@ -66,12 +54,10 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     }
     
     const reader = new FileReader();
-    
     reader.onload = () => {
       setSelectedImage(reader.result as string);
       setCropDialogOpen(true);
     };
-    
     reader.readAsDataURL(file);
   };
 
@@ -104,36 +90,17 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
       crop.height * scaleY
     );
 
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error('Canvas is empty'));
-            return;
-          }
-          resolve(blob);
-        },
-        'image/jpeg',
-        0.9 // Slightly reduce quality to ensure smaller file size
-      );
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.9);
     });
+
+    return processImage(blob);
   };
 
   const handleSaveAvatar = async () => {
     try {
       setUploading(true);
       const croppedBlob = await getCroppedImage();
-      
-      // Check if the cropped image is within size limits
-      if (croppedBlob.size > MAX_FILE_SIZE) {
-        toast({
-          title: "Image too large",
-          description: "The cropped image is too large. Please try a smaller selection or image.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
       await onAvatarUpdate(croppedBlob);
       setCropDialogOpen(false);
       setSelectedImage(null);
@@ -181,43 +148,16 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
         )}
       </label>
 
-      <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Crop Profile Picture</DialogTitle>
-          </DialogHeader>
-          {selectedImage && (
-            <div className="relative max-h-[500px] overflow-auto">
-              <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                aspect={1}
-                circularCrop
-              >
-                <img
-                  src={selectedImage}
-                  alt="Crop preview"
-                  onLoad={(e) => setImageRef(e.currentTarget)}
-                />
-              </ReactCrop>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCropDialogOpen(false);
-                setSelectedImage(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAvatar} disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ImageCropDialog
+        open={cropDialogOpen}
+        onOpenChange={setCropDialogOpen}
+        selectedImage={selectedImage}
+        crop={crop}
+        onCropChange={setCrop}
+        onImageLoad={setImageRef}
+        onSave={handleSaveAvatar}
+        uploading={uploading}
+      />
     </div>
   );
 }
