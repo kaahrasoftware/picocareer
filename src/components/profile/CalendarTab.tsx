@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,15 +22,24 @@ type CalendarEvent = {
 }
 
 export function CalendarTab() {
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
-  const [showAvailabilityForm, setShowAvailabilityForm] = React.useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const { toast } = useToast();
 
-  const { data: profile } = useQuery({
-    queryKey: ['profile'],
+  // First, get the authenticated user's session
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) throw new Error('Not authenticated');
+      return session;
+    }
+  });
+
+  // Then, get the user's profile type only if we have a session
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) throw new Error('No authenticated user');
 
       const { data, error } = await supabase
         .from('profiles')
@@ -40,10 +49,12 @@ export function CalendarTab() {
 
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!session?.user?.id
   });
 
-  const { data: events } = useQuery<CalendarEvent[]>({
+  // Finally, get calendar events for the selected date
+  const { data: events, isLoading: isEventsLoading } = useQuery<CalendarEvent[]>({
     queryKey: ['calendar_events', selectedDate],
     queryFn: async () => {
       if (!selectedDate) return [];
@@ -67,6 +78,15 @@ export function CalendarTab() {
   });
 
   const isMentor = profile?.user_type === 'mentor';
+  const isLoading = isSessionLoading || isProfileLoading || isEventsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
