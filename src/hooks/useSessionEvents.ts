@@ -22,9 +22,9 @@ export function useSessionEvents(selectedDate: Date | undefined, userId: string 
           scheduled_at,
           status,
           notes,
-          mentor:mentor_id(id, full_name),
-          mentee:mentee_id(id, full_name),
-          session_type:session_type_id(type, duration)
+          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
+          session_type:mentor_session_types(type, duration)
         `)
         .gte('scheduled_at', startOfDay.toISOString())
         .lte('scheduled_at', endOfDay.toISOString())
