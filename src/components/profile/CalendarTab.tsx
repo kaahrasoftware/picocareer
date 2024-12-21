@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,27 +8,9 @@ import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
-import { EventList, Event } from "./calendar/EventList";
+import { EventList } from "./calendar/EventList";
 import { format } from "date-fns";
-
-interface BookedSession {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  mentor: {
-    id: string;
-    full_name: string;
-  };
-  mentee: {
-    id: string;
-    full_name: string;
-  };
-  session_type: {
-    type: string;
-    duration: number;
-  };
-}
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -83,81 +65,18 @@ export function CalendarTab() {
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Get booked sessions
-  const { data: bookedSessions = [], isLoading: isSessionsLoading } = useQuery({
-    queryKey: ['booked_sessions', session?.user?.id, selectedDate],
-    queryFn: async () => {
-      if (!session?.user?.id || !selectedDate) return [];
-
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data: sessions, error } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          scheduled_at,
-          status,
-          notes,
-          mentor:mentor_id(id, full_name),
-          mentee:mentee_id(id, full_name),
-          session_type:session_type_id(type, duration)
-        `)
-        .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
-        .gte('scheduled_at', startOfDay.toISOString())
-        .lte('scheduled_at', endOfDay.toISOString());
-
-      if (error) throw error;
-
-      // Convert sessions to calendar events format
-      return (sessions as unknown as BookedSession[]).map(session => ({
-        id: session.id,
-        title: `Session with ${session.mentor.id === session.user.id ? session.mentee.full_name : session.mentor.full_name}`,
-        description: session.notes || `${session.session_type.type} session`,
-        start_time: session.scheduled_at,
-        end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session' as const,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
-    },
-    enabled: !!session?.user?.id && !!selectedDate,
-  });
-
-  // Get calendar events
-  const { data: events = [], isLoading: isEventsLoading } = useQuery({
-    queryKey: ['calendar_events', selectedDate],
-    queryFn: async () => {
-      if (!selectedDate) return [];
-
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .gte('start_time', startOfDay.toISOString())
-        .lte('end_time', endOfDay.toISOString())
-        .returns<Event[]>();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedDate,
-  });
+  const { allEvents, isLoading: isEventsLoading } = useCalendarEvents(selectedDate, session?.user?.id);
 
   const isMentor = profile?.user_type === 'mentor';
   const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || 
-                   isAvailabilityLoading || isSessionsLoading;
+                   isAvailabilityLoading;
 
-  // Combine all events
-  const allEvents = [...events, ...bookedSessions];
+  // Function to determine if a date has availability set
+  const hasAvailability = (date: Date) => {
+    return availability?.some(slot => 
+      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
+    );
+  };
 
   if (isLoading) {
     return (
@@ -174,13 +93,6 @@ export function CalendarTab() {
       </div>
     );
   }
-
-  // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
-    return availability?.some(slot => 
-      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
-    );
-  };
 
   return (
     <div className="space-y-6">
