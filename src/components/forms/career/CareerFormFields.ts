@@ -1,6 +1,6 @@
 export const careerFormFields = [
-  { name: "title", label: "Title", placeholder: "Software Engineer" },
-  { name: "description", label: "Description", type: "textarea" as const, placeholder: "Detailed description of the career" },
+  { name: "title", label: "Title", placeholder: "Software Engineer", required: true },
+  { name: "description", label: "Description", type: "textarea" as const, placeholder: "Detailed description of the career", required: true },
   { name: "salary_range", label: "Salary Range", placeholder: "$50,000 - $100,000" },
   { name: "image_url", label: "Career Image", type: "image" as const, description: "Upload an image representing this career" },
   { name: "featured", label: "Featured Career", type: "checkbox" as const, description: "Show this career in featured sections" },

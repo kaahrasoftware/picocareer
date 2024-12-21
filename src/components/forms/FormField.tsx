@@ -20,6 +20,7 @@ interface FormFieldProps {
   description?: string;
   type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image";
   bucket?: string;
+  required?: boolean;
 }
 
 export function FormField({ 
@@ -29,7 +30,8 @@ export function FormField({
   placeholder, 
   description, 
   type = "text",
-  bucket = "images"
+  bucket = "images",
+  required = false
 }: FormFieldProps) {
   if (type === "image") {
     return (
@@ -49,7 +51,10 @@ export function FormField({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </FormLabel>
           <FormControl>
             {type === "textarea" ? (
               <Textarea {...field} placeholder={placeholder} />

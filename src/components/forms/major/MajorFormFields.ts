@@ -1,6 +1,6 @@
 export const majorFormFields = [
-  { name: "title", label: "Title", placeholder: "Computer Science" },
-  { name: "description", label: "Description", type: "textarea" as const, placeholder: "Detailed description of the major" },
+  { name: "title", label: "Title", placeholder: "Computer Science", required: true },
+  { name: "description", label: "Description", type: "textarea" as const, placeholder: "Detailed description of the major", required: true },
   { name: "image_url", label: "Major Image", type: "image" as const, description: "Upload an image representing this major" },
   { name: "featured", label: "Featured Major", type: "checkbox" as const, description: "Show this major in featured sections" },
   { name: "learning_objectives", label: "Learning Objectives", type: "array" as const, placeholder: "Problem solving, Critical thinking" },
