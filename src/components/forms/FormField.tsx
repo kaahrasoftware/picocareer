@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ImageUpload } from "./ImageUpload";
 
 interface FormFieldProps {
   control: any;
@@ -17,7 +18,8 @@ interface FormFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image";
+  bucket?: string;
 }
 
 export function FormField({ 
@@ -26,8 +28,21 @@ export function FormField({
   label, 
   placeholder, 
   description, 
-  type = "text" 
+  type = "text",
+  bucket = "images"
 }: FormFieldProps) {
+  if (type === "image") {
+    return (
+      <ImageUpload
+        control={control}
+        name={name}
+        label={label}
+        description={description}
+        bucket={bucket}
+      />
+    );
+  }
+
   return (
     <FormFieldBase
       control={control}
