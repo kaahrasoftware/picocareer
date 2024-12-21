@@ -113,15 +113,14 @@ export function CalendarTab() {
       if (error) throw error;
 
       // Convert sessions to calendar events format
-      return (sessions as BookedSession[]).map(session => ({
+      return (sessions as unknown as BookedSession[]).map(session => ({
         id: session.id,
-        title: `Session with ${session.mentor.id === session.mentee.id ? 'you' : 
-          session.mentor.id === session.user.id ? session.mentee.full_name : session.mentor.full_name}`,
+        title: `Session with ${session.mentor.id === session.user.id ? session.mentee.full_name : session.mentor.full_name}`,
         description: session.notes || `${session.session_type.type} session`,
         start_time: session.scheduled_at,
         end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session',
-        created_at: new Date().toISOString(), // Add required Event properties
+        event_type: 'session' as const,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }));
     },
