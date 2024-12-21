@@ -41,7 +41,7 @@ export function MenuSidebar() {
     queryFn: async () => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
-          queryClient.setQueryData(['auth-session'], null);
+          queryClient.removeQueries({ queryKey: ['auth-session'] });
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
           navigate("/auth");
@@ -76,27 +76,41 @@ export function MenuSidebar() {
     retry: 1,
   });
 
-  // Fetch notifications
-  const { data: notifications = [] } = useQuery({
+  // Fetch notifications with improved error handling and retry logic
+  const { data: notifications = [], error: notificationError } = useQuery({
     queryKey: ['notifications', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return [];
       
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('profile_id', session.user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        return [];
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('profile_id', session.user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching notifications:', error);
+          throw error;
+        }
+        return data || [];
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+        // Let React Query handle the retry
+        throw error;
       }
-      return data;
     },
     enabled: !!session?.user?.id,
+    retry: 3, // Retry up to 3 times
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     refetchInterval: 30000, // Refetch every 30 seconds
-    retry: 1,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to load notifications. Please try again later.",
+        variant: "destructive",
+      });
+    },
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -115,6 +129,11 @@ export function MenuSidebar() {
       queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
     }
   };
 
