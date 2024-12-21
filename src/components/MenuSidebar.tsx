@@ -2,25 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, BellDot } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { NotificationPanel } from "./navigation/NotificationPanel";
+import { UserMenu } from "./navigation/UserMenu";
+import { MainNavigation } from "./navigation/MainNavigation";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
@@ -116,145 +101,23 @@ export function MenuSidebar() {
           </Link>
         </div>
 
-        <nav className="flex-1 flex justify-center">
-          <ul className="flex gap-8">
-            <li>
-              <Link 
-                to="/" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/career" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Careers
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/program" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Programs
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/mentor" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Find a Mentor
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/blog" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Blog
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/video" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Videos
-              </Link>
-            </li>
-          </ul>
-        </nav>
+        <MainNavigation />
 
         <div className="flex items-center gap-4 ml-auto">
           {session?.user && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  {unreadCount > 0 ? (
-                    <>
-                      <BellDot className="h-5 w-5" />
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                      >
-                        {unreadCount}
-                      </Badge>
-                    </>
-                  ) : (
-                    <Bell className="h-5 w-5" />
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Notifications</SheetTitle>
-                </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
-                  {notifications.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-4">
-                      No notifications yet
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-4 rounded-lg border ${
-                            notification.read ? 'bg-background' : 'bg-muted'
-                          }`}
-                          onClick={() => handleMarkAsRead(notification.id)}
-                        >
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-medium">{notification.title}</h4>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(notification.created_at), 'MMM d, h:mm a')}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {notification.message}
-                          </p>
-                          {notification.action_url && (
-                            <Link
-                              to={notification.action_url}
-                              className="text-sm text-primary hover:underline mt-2 block"
-                            >
-                              View details
-                            </Link>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
+            <NotificationPanel
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkAsRead={handleMarkAsRead}
+            />
           )}
 
           {session?.user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-12 w-12 rounded-full p-0 border-0 hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-                  <div className="absolute inset-[3px] rounded-full bg-background" />
-                  <Avatar className="h-10 w-10 relative">
-                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || session.user.email || ''} />
-                    <AvatarFallback>{profile?.full_name?.[0] || session.user.email?.[0].toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserMenu
+              session={session}
+              profile={profile}
+              onSignOut={handleSignOut}
+            />
           ) : (
             <Button 
               variant="default" 
