@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,8 @@ export function CalendarTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get initial session and user profile
-  const { data: session } = useQuery({
+  // Get initial session and listen for auth changes
+  const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -27,8 +28,8 @@ export function CalendarTab() {
     retry: false
   });
 
-  // Get the user's profile type
-  const { data: profile } = useQuery({
+  // Then, get the user's profile type only if we have a session
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) throw new Error('No authenticated user');
@@ -45,8 +46,8 @@ export function CalendarTab() {
     enabled: !!session?.user?.id,
   });
 
-  // Get mentor availability if user is a mentor
-  const { data: availability = [] } = useQuery({
+  // Get mentor availability
+  const { data: availability = [], isLoading: isAvailabilityLoading } = useQuery({
     queryKey: ['mentor_availability', session?.user?.id, selectedDate],
     queryFn: async () => {
       if (!session?.user?.id || !selectedDate) return [];
@@ -63,11 +64,11 @@ export function CalendarTab() {
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Get booked sessions for the selected date
-  const { data: bookedSessions = [] } = useQuery({
-    queryKey: ['booked_sessions', selectedDate, session?.user?.id],
+  // Get calendar events
+  const { data: events = [], isLoading: isEventsLoading } = useQuery({
+    queryKey: ['calendar_events', selectedDate],
     queryFn: async () => {
-      if (!selectedDate || !session?.user?.id) return [];
+      if (!selectedDate) return [];
 
       const startOfDay = new Date(selectedDate);
       startOfDay.setHours(0, 0, 0, 0);
@@ -75,45 +76,29 @@ export function CalendarTab() {
       const endOfDay = new Date(selectedDate);
       endOfDay.setHours(23, 59, 59, 999);
 
-      const { data: sessions, error } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          scheduled_at,
-          status,
-          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
-          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
-          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration)
-        `)
-        .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
-        .gte('scheduled_at', startOfDay.toISOString())
-        .lte('scheduled_at', endOfDay.toISOString());
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .gte('start_time', startOfDay.toISOString())
+        .lte('end_time', endOfDay.toISOString())
+        .returns<Event[]>();
 
       if (error) throw error;
-
-      // Convert sessions to calendar events format
-      return sessions.map(session => ({
-        id: session.id,
-        title: `Session with ${session.mentor.id === session.user.id ? session.mentee.full_name : session.mentor.full_name}`,
-        description: `${session.session_type.type} (${session.session_type.duration} minutes)`,
-        start_time: session.scheduled_at,
-        end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session' as const,
-        created_at: session.scheduled_at,
-        updated_at: session.scheduled_at
-      }));
+      return data;
     },
-    enabled: !!selectedDate && !!session?.user?.id,
+    enabled: !!selectedDate,
   });
 
   const isMentor = profile?.user_type === 'mentor';
+  const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || isAvailabilityLoading;
 
-  // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
-    return availability?.some(slot => 
-      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
     );
-  };
+  }
 
   if (!session) {
     return (
@@ -122,6 +107,13 @@ export function CalendarTab() {
       </div>
     );
   }
+
+  // Function to determine if a date has availability set
+  const hasAvailability = (date: Date) => {
+    return availability?.some(slot => 
+      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -165,17 +157,19 @@ export function CalendarTab() {
                 <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
                   Sessions
                 </Badge>
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                  Webinars
+                </Badge>
+                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                  Holidays
+                </Badge>
                 {isMentor && (
                   <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
                     Available
                   </Badge>
                 )}
               </div>
-              <EventList 
-                events={bookedSessions} 
-                availability={availability} 
-                isMentor={isMentor} 
-              />
+              <EventList events={events} availability={availability} isMentor={isMentor} />
             </div>
           )}
         </div>

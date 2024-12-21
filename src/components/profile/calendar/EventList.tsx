@@ -49,6 +49,14 @@ export function EventList({ events, availability = [], isMentor = false }: Event
         }
       }
       
+      // Handle date strings (YYYY-MM-DD)
+      if (timeStr.includes('-') && timeStr.length === 10) {
+        const date = new Date(timeStr);
+        if (isValid(date)) {
+          return format(date, 'h:mm a');
+        }
+      }
+      
       // Handle time-only strings (HH:mm)
       if (timeStr.match(/^\d{2}:\d{2}$/)) {
         const date = parse(timeStr, 'HH:mm', new Date());
@@ -57,7 +65,8 @@ export function EventList({ events, availability = [], isMentor = false }: Event
         }
       }
       
-      return timeStr;
+      console.error('Invalid time format:', timeStr);
+      return timeStr; // Return original string if all parsing attempts fail
     } catch (error) {
       console.error('Error formatting time:', timeStr, error);
       return timeStr;
