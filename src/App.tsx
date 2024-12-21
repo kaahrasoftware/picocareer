@@ -1,3 +1,19 @@
+import { useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
+import { MenuSidebar } from '@/components/MenuSidebar';
+import { Footer } from '@/components/Footer';
+import Index from '@/pages/Index';
+import Blog from '@/pages/Blog';
+import Mentor from '@/pages/Mentor';
+import Career from '@/pages/Career';
+import CareerUpload from '@/pages/CareerUpload';
+import MajorUpload from '@/pages/MajorUpload';
+import BlogUpload from '@/pages/BlogUpload';
+import Program from '@/pages/Program';
+import Video from '@/pages/Video';
+import Auth from '@/pages/Auth';
+import Profile from '@/pages/Profile';
+
 // Wrapper component to conditionally render footer
 const AppContent = () => {
   const location = useLocation();
@@ -26,3 +42,8 @@ const AppContent = () => {
     </div>
   );
 };
+
+// Export the component as default
+export default function App() {
+  return <AppContent />;
+}
