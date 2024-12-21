@@ -8,7 +8,7 @@ interface ContentUploadFormProps {
   fields: Array<{
     name: string;
     label: string;
-    type?: "text" | "number" | "textarea" | "checkbox" | "array";
+    type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image";
     placeholder?: string;
     description?: string;
   }>;
