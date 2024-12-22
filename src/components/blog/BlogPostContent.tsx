@@ -1,4 +1,6 @@
 import { BlogWithAuthor } from "@/types/blog/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { format } from "date-fns";
 
 interface BlogPostContentProps {
   blog: BlogWithAuthor;
@@ -6,8 +8,8 @@ interface BlogPostContentProps {
 
 export function BlogPostContent({ blog }: BlogPostContentProps) {
   return (
-    <>
-      <div className="relative h-64 w-full flex justify-center items-center overflow-hidden mb-6">
+    <div className="space-y-6">
+      <div className="relative h-64 w-full flex justify-center items-center overflow-hidden">
         <img
           src={blog.cover_image_url || `https://picsum.photos/seed/${blog.id}/1200/600`}
           alt={blog.title}
@@ -15,7 +17,28 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
         />
       </div>
 
-      <div className="prose prose-sm dark:prose-invert max-w-none mt-4">
+      <div className="text-center space-y-4">
+        <h1 className="text-2xl font-bold">{blog.title}</h1>
+        
+        <div className="flex items-center justify-center gap-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={blog.profiles?.avatar_url || ''} />
+            <AvatarFallback>
+              {blog.profiles?.full_name?.charAt(0) || 'A'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">
+              {blog.profiles?.full_name || 'Anonymous'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(blog.created_at), 'MMMM d, yyyy')}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="prose prose-sm dark:prose-invert max-w-none">
         <p className="text-muted-foreground mb-4">{blog.summary}</p>
         <div 
           dangerouslySetInnerHTML={{ __html: blog.content }} 
@@ -36,6 +59,6 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
           </span>
         ))}
       </div>
-    </>
+    </div>
   );
 }

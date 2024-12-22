@@ -1,6 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { BlogWithAuthor } from "@/types/blog/types";
-import { BlogPostHeader } from "./BlogPostHeader";
 import { BlogPostContent } from "./BlogPostContent";
 import { RelatedPosts } from "./RelatedPosts";
 
@@ -15,7 +14,6 @@ export function BlogPostDialog({ blog, isOpen, onClose }: BlogPostDialogProps) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <BlogPostContent blog={blog} />
-        <BlogPostHeader blog={blog} />
         <RelatedPosts blog={blog} isOpen={isOpen} />
       </DialogContent>
     </Dialog>
