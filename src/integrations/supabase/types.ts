@@ -12,39 +12,42 @@ export type Database = {
       blogs: {
         Row: {
           author_id: string
-          categories: string[] | null
+          categories: Database["public"]["Enums"]["categories"][] | null
           content: string
           cover_image_url: string | null
           created_at: string
           id: string
           is_recent: boolean | null
-          subcategories: string[] | null
+          other_notes: string | null
+          subcategories: Database["public"]["Enums"]["subcategories"][] | null
           summary: string
           title: string
           updated_at: string
         }
         Insert: {
           author_id: string
-          categories?: string[] | null
+          categories?: Database["public"]["Enums"]["categories"][] | null
           content: string
           cover_image_url?: string | null
           created_at?: string
           id?: string
           is_recent?: boolean | null
-          subcategories?: string[] | null
+          other_notes?: string | null
+          subcategories?: Database["public"]["Enums"]["subcategories"][] | null
           summary: string
           title: string
           updated_at?: string
         }
         Update: {
           author_id?: string
-          categories?: string[] | null
+          categories?: Database["public"]["Enums"]["categories"][] | null
           content?: string
           cover_image_url?: string | null
           created_at?: string
           id?: string
           is_recent?: boolean | null
-          subcategories?: string[] | null
+          other_notes?: string | null
+          subcategories?: Database["public"]["Enums"]["subcategories"][] | null
           summary?: string
           title?: string
           updated_at?: string
@@ -897,6 +900,32 @@ export type Database = {
       }
     }
     Enums: {
+      categories:
+        | "Technology"
+        | "Digital Tools"
+        | "Extracurricular Activities"
+        | "Success Stories"
+        | "Volunteerism"
+        | "Community Service"
+        | "Entrepreneurship"
+        | "Financial Literacy"
+        | "Arts Careers"
+        | "STEM Education"
+        | "STEM Careers"
+        | "Humanities Careers"
+        | "Diversity and Inclusion"
+        | "Educational Resources"
+        | "Leadership Development"
+        | "Mental Health"
+        | "Wellbeing"
+        | "High School to University Transition"
+        | "Study Abroad Preparation"
+        | "Personal Branding"
+        | "Internship and Job Search"
+        | "Networking Strategies"
+        | "Skill Development"
+        | "University Admissions"
+        | "Career Guidance"
       degree:
         | "No Degree"
         | "High School"
@@ -1000,6 +1029,109 @@ export type Database = {
         | "West Virginia - WV"
         | "Wisconsin - WI"
         | "Wyoming - WY"
+      subcategories:
+        | "Industry-Specific Career Insights"
+        | "Choosing the Right Career Path"
+        | "Transitioning Between Careers"
+        | "Work-Life Balance Tips"
+        | "Career Advancement Strategies"
+        | "Crafting a Winning Personal Statement"
+        | "Navigating the Application Process"
+        | "Preparing for Entrance Exams"
+        | "Choosing the Right University"
+        | "Scholarship and Financial Aid Advice"
+        | "Soft Skills for Professional Success"
+        | "Technical Skill Mastery"
+        | "Communication Skills Development"
+        | "Problem-Solving and Critical Thinking"
+        | "Time Management Techniques"
+        | "Building Meaningful Connections"
+        | "Leveraging LinkedIn and Other Platforms"
+        | "Networking for Introverts"
+        | "Finding a Mentor"
+        | "Professional Event Etiquette"
+        | "Crafting an Effective Resume"
+        | "Acing Job Interviews"
+        | "Finding Internship Opportunities"
+        | "Gaining Work Experience in High School"
+        | "Navigating Job Portals and Applications"
+        | "Creating a Strong Online Presence"
+        | "Building a Professional Portfolio"
+        | "Social Media for Career Growth"
+        | "Establishing Expertise in Your Field"
+        | "Branding for Aspiring Entrepreneurs"
+        | "Researching International Programs"
+        | "Visa Application Guidance"
+        | "Adjusting to New Cultures"
+        | "Managing Finances Abroad"
+        | "Safety Tips for International Students"
+        | "Adapting to University Life"
+        | "Choosing a Major"
+        | "Navigating Academic Expectations"
+        | "Developing Independence"
+        | "Building New Friendships"
+        | "Managing Stress and Anxiety"
+        | "Overcoming Imposter Syndrome"
+        | "Balancing Academic and Personal Life"
+        | "Self-Care Strategies for Students"
+        | "Seeking Support When Needed"
+        | "Cultivating Emotional Intelligence"
+        | "Becoming a Campus Leader"
+        | "Decision-Making Skills"
+        | "Managing Teams Effectively"
+        | "Conflict Resolution Strategies"
+        | "Starting a Business in College"
+        | "Writing a Business Plan"
+        | "Finding Funding for Startups"
+        | "Marketing Your Ideas"
+        | "Overcoming Entrepreneurial Challenges"
+        | "Top Study Tools and Apps"
+        | "Online Learning Platforms"
+        | "Using Libraries Effectively"
+        | "Exam Preparation Guides"
+        | "Developing Effective Study Habits"
+        | "Addressing Bias in Academia and Workplaces"
+        | "Supporting Underrepresented Groups"
+        | "Building Inclusive Communities"
+        | "Overcoming Barriers to Opportunity"
+        | "Celebrating Cultural Differences"
+        | "Encouraging STEM in Schools"
+        | "Exploring Careers in Technology"
+        | "Women in STEM"
+        | "Robotics and Coding for Beginners"
+        | "Research Opportunities in STEM Fields"
+        | "Exploring Creative Career Paths"
+        | "Building a Career in Writing"
+        | "Career Options for History Majors"
+        | "Monetizing Artistic Talents"
+        | "Pursuing Higher Education in the Arts"
+        | "Budgeting for Students"
+        | "Managing Student Loans"
+        | "Saving for the Future"
+        | "Understanding Credit and Debt"
+        | "Finding Part-Time Jobs as a Student"
+        | "Finding Volunteer Opportunities"
+        | "Benefits of Community Involvement"
+        | "Organizing Campus Charity Events"
+        | "Highlighting Volunteer Work in Applications"
+        | "Making a Difference Locally and Globally"
+        | "Essential Tech Skills for the Workplace"
+        | "Leveraging AI in Career Planning"
+        | "Artificial Intelligence"
+        | "Machine Learning"
+        | "Best Apps for Productivity"
+        | "Using Technology for Collaboration"
+        | "Staying Updated on Industry Trends"
+        | "Alumni Career Journeys"
+        | "Inspirational Mentor-Student Relationships"
+        | "Overcoming Academic and Career Challenges"
+        | "Students Who Made a Difference"
+        | "First-Generation College Graduates"
+        | "Benefits of Joining Clubs and Societies"
+        | "Sports and Physical Wellbeing"
+        | "Exploring Creative Hobbies"
+        | "How Extracurriculars Boost Applications"
+        | "Starting Your Own Club or Organization"
       user_type: "mentor" | "mentee"
     }
     CompositeTypes: {
