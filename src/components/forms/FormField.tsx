@@ -67,11 +67,18 @@ export function FormField({
           />
         );
       case "image":
+        if (!bucket) {
+          console.error("Bucket is required for image upload");
+          return null;
+        }
         return (
           <ImageUpload
-            value={field.value}
-            onChange={field.onChange}
+            name={name}
+            label={label}
+            description={description}
             bucket={bucket}
+            control={control}
+            onChange={field.onChange}
           />
         );
       default:

@@ -6,20 +6,21 @@ import { Upload, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ImageUploadProps {
-  control: any;
+export interface ImageUploadProps {
   name: string;
   label: string;
   description?: string;
   bucket: string;
+  control: any;
+  onChange?: (url: string) => void;
 }
 
-export function ImageUpload({ control, name, label, description, bucket }: ImageUploadProps) {
+export function ImageUpload({ control, name, label, description, bucket, onChange }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>(null);
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (value: string) => void) => {
     try {
       setUploading(true);
       
@@ -46,7 +47,10 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
         .getPublicUrl(filePath);
 
       // Update form field with the public URL
-      onChange(publicUrl);
+      fieldOnChange(publicUrl);
+      if (onChange) {
+        onChange(publicUrl);
+      }
       setPreview(publicUrl);
 
       toast({

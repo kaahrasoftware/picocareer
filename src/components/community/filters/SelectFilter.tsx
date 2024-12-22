@@ -12,14 +12,16 @@ export function SelectFilter({ value, onValueChange, placeholder, options, multi
   if (multiple) {
     return (
       <Select
-        value={value ? (Array.isArray(value) ? value.join(',') : value) : ""}
+        value={Array.isArray(value) ? value.join(',') : (value || "")}
         onValueChange={(val) => {
           const values = val.split(',').filter(v => v !== "");
           onValueChange(values.length > 0 ? values : null);
         }}
       >
         <SelectTrigger>
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={placeholder}>
+            {Array.isArray(value) ? value.join(', ') : value}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (
