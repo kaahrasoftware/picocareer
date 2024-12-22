@@ -10,9 +10,12 @@ interface SelectFilterProps {
 
 export function SelectFilter({ value, onValueChange, placeholder, options, multiple }: SelectFilterProps) {
   if (multiple) {
+    const stringValue = Array.isArray(value) ? value.join(',') : '';
+    const displayValue = Array.isArray(value) ? value.join(', ') : '';
+
     return (
       <Select
-        value={Array.isArray(value) ? value.join(',') : (value || "")}
+        value={stringValue}
         onValueChange={(val) => {
           const values = val.split(',').filter(v => v !== "");
           onValueChange(values.length > 0 ? values : null);
@@ -20,7 +23,7 @@ export function SelectFilter({ value, onValueChange, placeholder, options, multi
       >
         <SelectTrigger>
           <SelectValue placeholder={placeholder}>
-            {Array.isArray(value) ? value.join(', ') : value}
+            {displayValue}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -33,7 +36,10 @@ export function SelectFilter({ value, onValueChange, placeholder, options, multi
   }
 
   return (
-    <Select value={value || "all"} onValueChange={(value) => onValueChange(value === "all" ? null : value)}>
+    <Select 
+      value={value as string || "all"} 
+      onValueChange={(value) => onValueChange(value === "all" ? null : value)}
+    >
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
