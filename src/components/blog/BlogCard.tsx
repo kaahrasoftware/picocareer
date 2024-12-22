@@ -12,6 +12,12 @@ interface BlogCardProps {
 export function BlogCard({ blog }: BlogCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Get the first 2 categories and subcategories
+  const displayedCategories = blog.categories?.slice(0, 2) || [];
+  const displayedSubcategories = blog.subcategories?.slice(0, 2) || [];
+  const hasMoreCategories = (blog.categories?.length || 0) > 2;
+  const hasMoreSubcategories = (blog.subcategories?.length || 0) > 2;
+
   return (
     <>
       <Card 
@@ -57,7 +63,7 @@ export function BlogCard({ blog }: BlogCardProps) {
 
         <CardContent>
           <div className="flex flex-wrap gap-1.5">
-            {blog.categories?.map((category) => (
+            {displayedCategories.map((category) => (
               <span 
                 key={category} 
                 className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium"
@@ -65,7 +71,12 @@ export function BlogCard({ blog }: BlogCardProps) {
                 {category}
               </span>
             ))}
-            {blog.subcategories?.map((subcategory) => (
+            {hasMoreCategories && (
+              <span className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium">
+                +{(blog.categories?.length || 0) - 2}
+              </span>
+            )}
+            {displayedSubcategories.map((subcategory) => (
               <span 
                 key={subcategory} 
                 className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium"
@@ -73,6 +84,11 @@ export function BlogCard({ blog }: BlogCardProps) {
                 {subcategory}
               </span>
             ))}
+            {hasMoreSubcategories && (
+              <span className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium">
+                +{(blog.subcategories?.length || 0) - 2}
+              </span>
+            )}
           </div>
         </CardContent>
 
