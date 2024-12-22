@@ -10,22 +10,26 @@ interface SelectFilterProps {
 
 export function SelectFilter({ value, onValueChange, placeholder, options, multiple }: SelectFilterProps) {
   if (multiple) {
-    // Ensure value is a string and handle undefined/null cases
+    // Convert value to string, handling all edge cases
     const stringValue = Array.isArray(value) 
-      ? value.join(',') 
-      : (typeof value === 'string' ? value : '');
+      ? value.filter(v => v != null).join(',')
+      : typeof value === 'string' 
+        ? value 
+        : '';
     
     return (
       <Select
         value={stringValue}
         onValueChange={(val) => {
-          // Handle empty string case
           if (!val) {
             onValueChange(null);
             return;
           }
           
-          const values = val.split(',').filter(v => v !== "");
+          // Filter out empty strings and nullish values
+          const values = val.split(',')
+            .filter(v => v != null && v.trim() !== "");
+          
           onValueChange(values.length > 0 ? values : null);
         }}
       >
@@ -42,9 +46,12 @@ export function SelectFilter({ value, onValueChange, placeholder, options, multi
   }
 
   // Handle single select
+  // Ensure we have a valid string value or "all"
   const currentValue = Array.isArray(value) 
-    ? value[0] 
-    : (typeof value === 'string' ? value : "all");
+    ? value[0] || "all"
+    : typeof value === 'string' && value.trim() !== "" 
+      ? value 
+      : "all";
   
   return (
     <Select 
