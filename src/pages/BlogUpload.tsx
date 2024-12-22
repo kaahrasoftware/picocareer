@@ -55,8 +55,8 @@ export default function BlogUpload() {
         summary: data.summary.trim(),
         content: data.content.trim(),
         cover_image_url: data.cover_image_url || null,
-        categories: data.categories ? data.categories.split(',').map((item: string) => item.trim()) : [],
-        subcategories: data.subcategories ? data.subcategories.split(',').map((item: string) => item.trim()) : [],
+        categories: data.categories || [],
+        subcategories: data.subcategories || [],
         is_recent: data.is_recent || false,
         author_id: user.id
       };
