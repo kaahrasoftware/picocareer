@@ -1,120 +1,103 @@
 import React from "react";
-import {
-  FormField as FormFieldBase,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-} from "@/components/ui/form";
+import { useController } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { ImageUpload } from "./ImageUpload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectFilter } from "../community/filters/SelectFilter";
 
 interface FormFieldProps {
-  control: any;
   name: string;
   label: string;
+  control: any;
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree";
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree";
   bucket?: string;
   required?: boolean;
+  options?: string[];
 }
 
-const degreeOptions = [
-  "No Degree",
-  "High School",
-  "Associate",
-  "Bachelor",
-  "Master",
-  "MD",
-  "PhD"
-] as const;
-
 export function FormField({ 
-  control, 
   name, 
   label, 
-  placeholder, 
-  description, 
+  control, 
   type = "text",
-  bucket = "images",
-  required = false
+  placeholder,
+  description,
+  bucket,
+  required,
+  options = []
 }: FormFieldProps) {
-  if (type === "image") {
-    return (
-      <ImageUpload
-        control={control}
-        name={name}
-        label={label}
-        description={description}
-        bucket={bucket}
-      />
-    );
-  }
+  const {
+    field,
+    fieldState: { error },
+  } = useController({
+    name,
+    control,
+    rules: { required },
+  });
+
+  const renderField = () => {
+    switch (type) {
+      case "textarea":
+        return (
+          <Textarea
+            {...field}
+            placeholder={placeholder}
+            className="min-h-[100px]"
+          />
+        );
+      case "checkbox":
+        return (
+          <Checkbox
+            checked={field.value}
+            onCheckedChange={field.onChange}
+          />
+        );
+      case "array":
+        return (
+          <SelectFilter
+            value={field.value}
+            onValueChange={field.onChange}
+            placeholder={placeholder || ""}
+            options={options}
+            multiple={true}
+          />
+        );
+      case "image":
+        return (
+          <ImageUpload
+            value={field.value}
+            onChange={field.onChange}
+            bucket={bucket}
+          />
+        );
+      default:
+        return (
+          <Input
+            {...field}
+            type={type}
+            placeholder={placeholder}
+          />
+        );
+    }
+  };
 
   return (
-    <FormFieldBase
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>
-            {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </FormLabel>
-          <FormControl>
-            {type === "degree" ? (
-              <Select
-                value={field.value || ""}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={placeholder || "Select a degree"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {degreeOptions.map((degree) => (
-                    <SelectItem key={degree} value={degree}>
-                      {degree}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : type === "textarea" ? (
-              <Textarea {...field} placeholder={placeholder} />
-            ) : type === "checkbox" ? (
-              <div className="flex flex-row items-start space-x-3 space-y-0">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </div>
-            ) : type === "number" ? (
-              <Input
-                {...field}
-                type="number"
-                onChange={e => field.onChange(parseFloat(e.target.value))}
-                placeholder={placeholder}
-              />
-            ) : type === "array" ? (
-              <Input {...field} placeholder={`${placeholder} (comma-separated)`} />
-            ) : (
-              <Input {...field} placeholder={placeholder} />
-            )}
-          </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
-        </FormItem>
+    <div className="space-y-2">
+      <Label>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
+      {renderField()}
+      {description && (
+        <p className="text-sm text-gray-500">{description}</p>
       )}
-    />
+      {error && (
+        <p className="text-sm text-red-500">{error.message}</p>
+      )}
+    </div>
   );
 }
