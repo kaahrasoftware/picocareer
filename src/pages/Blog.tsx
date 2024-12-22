@@ -14,8 +14,8 @@ const ITEMS_PER_PAGE = 6;
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("_all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("_all");
   const [showRecentOnly, setShowRecentOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -35,12 +35,12 @@ const Blog = () => {
             )
           `);
 
-        if (selectedCategory.length > 0) {
-          query = query.contains('categories', selectedCategory);
+        if (selectedCategory && selectedCategory !== "_all") {
+          query = query.contains('categories', [selectedCategory]);
         }
 
-        if (selectedSubcategory.length > 0) {
-          query = query.contains('subcategories', selectedSubcategory);
+        if (selectedSubcategory && selectedSubcategory !== "_all") {
+          query = query.contains('subcategories', [selectedSubcategory]);
         }
 
         if (showRecentOnly) {
