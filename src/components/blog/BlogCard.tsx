@@ -47,7 +47,7 @@ export function BlogCard({ blog }: BlogCardProps) {
               </span>
             </div>
           </div>
-          <CardTitle className="line-clamp-2 hover:text-primary transition-colors">
+          <CardTitle className="text-xl font-bold line-clamp-2 hover:text-primary transition-colors">
             {blog.title}
           </CardTitle>
           <CardDescription className="line-clamp-2">
