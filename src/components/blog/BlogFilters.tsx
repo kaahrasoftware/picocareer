@@ -1,10 +1,9 @@
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from "lucide-react";
+import { X, Tag, Tags } from "lucide-react";
 
 interface BlogFiltersProps {
   searchQuery: string;
@@ -37,6 +36,9 @@ export function BlogFilters({
   const handleCategorySelect = (category: string) => {
     if (selectedCategory.includes(category)) {
       setSelectedCategory(selectedCategory.filter(c => c !== category));
+      // Remove subcategories associated with the removed category
+      const removedSubcategories = subcategories[category as keyof typeof subcategories] || [];
+      setSelectedSubcategory(selectedSubcategory.filter(s => !removedSubcategories.includes(s)));
     } else {
       setSelectedCategory([...selectedCategory, category]);
     }
@@ -52,6 +54,9 @@ export function BlogFilters({
 
   const removeCategory = (category: string) => {
     setSelectedCategory(selectedCategory.filter(c => c !== category));
+    // Remove subcategories associated with the removed category
+    const removedSubcategories = subcategories[category as keyof typeof subcategories] || [];
+    setSelectedSubcategory(selectedSubcategory.filter(s => !removedSubcategories.includes(s)));
   };
 
   const removeSubcategory = (subcategory: string) => {
@@ -63,7 +68,7 @@ export function BlogFilters({
     : Object.values(subcategories).flat();
 
   return (
-    <div className="space-y-4 mb-8">
+    <div className="space-y-4 p-4 rounded-lg border bg-card">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <Input
@@ -83,16 +88,19 @@ export function BlogFilters({
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <Label className="mb-2 block">Categories</Label>
-          <ScrollArea className="h-20 rounded-md border p-2">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            <Label>Categories</Label>
+          </div>
+          <ScrollArea className="h-24 rounded-md border p-2">
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
                 <Badge
                   key={category}
                   variant={selectedCategory.includes(category) ? "default" : "outline"}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-primary/90 transition-colors"
                   onClick={() => handleCategorySelect(category)}
                 >
                   {category}
@@ -100,34 +108,38 @@ export function BlogFilters({
               ))}
             </div>
           </ScrollArea>
+          {selectedCategory.length > 0 && (
+            <div className="mt-2">
+              <Label className="text-sm text-muted-foreground">Selected Categories:</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {selectedCategory.map((category) => (
+                  <Badge key={category} variant="secondary" className="pr-1">
+                    {category}
+                    <button
+                      onClick={() => removeCategory(category)}
+                      className="ml-1 hover:bg-secondary/80 rounded-full p-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div>
-          <Label className="mb-2 block">Selected Categories</Label>
-          <div className="flex flex-wrap gap-2">
-            {selectedCategory.map((category) => (
-              <Badge key={category} variant="secondary" className="pr-1">
-                {category}
-                <button
-                  onClick={() => removeCategory(category)}
-                  className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-1"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Tags className="h-4 w-4" />
+            <Label>Subcategories</Label>
           </div>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Subcategories</Label>
-          <ScrollArea className="h-20 rounded-md border p-2">
+          <ScrollArea className="h-24 rounded-md border p-2">
             <div className="flex flex-wrap gap-2">
               {availableSubcategories.map((subcategory) => (
                 <Badge
                   key={subcategory}
                   variant={selectedSubcategory.includes(subcategory) ? "default" : "outline"}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-primary/90 transition-colors"
                   onClick={() => handleSubcategorySelect(subcategory)}
                 >
                   {subcategory}
@@ -135,23 +147,24 @@ export function BlogFilters({
               ))}
             </div>
           </ScrollArea>
-        </div>
-
-        <div>
-          <Label className="mb-2 block">Selected Subcategories</Label>
-          <div className="flex flex-wrap gap-2">
-            {selectedSubcategory.map((subcategory) => (
-              <Badge key={subcategory} variant="secondary" className="pr-1">
-                {subcategory}
-                <button
-                  onClick={() => removeSubcategory(subcategory)}
-                  className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-1"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
+          {selectedSubcategory.length > 0 && (
+            <div className="mt-2">
+              <Label className="text-sm text-muted-foreground">Selected Subcategories:</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {selectedSubcategory.map((subcategory) => (
+                  <Badge key={subcategory} variant="secondary" className="pr-1">
+                    {subcategory}
+                    <button
+                      onClick={() => removeSubcategory(subcategory)}
+                      className="ml-1 hover:bg-secondary/80 rounded-full p-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
