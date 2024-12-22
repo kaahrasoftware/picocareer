@@ -20,6 +20,25 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
       <div className="text-center space-y-4">
         <h1 className="text-2xl font-bold">{blog.title}</h1>
         
+        <div className="flex flex-wrap gap-1.5 justify-center">
+          {blog.categories?.map((category) => (
+            <span 
+              key={category} 
+              className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium"
+            >
+              {category}
+            </span>
+          ))}
+          {blog.subcategories?.map((subcategory) => (
+            <span 
+              key={subcategory} 
+              className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium"
+            >
+              {subcategory}
+            </span>
+          ))}
+        </div>
+
         <div className="flex items-center justify-center gap-2">
           <Avatar className="h-8 w-8">
             <AvatarImage src={blog.profiles?.avatar_url || ''} />
@@ -35,25 +54,6 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
               {format(new Date(blog.created_at), 'MMMM d, yyyy')}
             </span>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 justify-center mt-4">
-          {blog.categories?.map((category) => (
-            <span 
-              key={category} 
-              className="text-xs px-3 py-1.5 bg-[#9b87f5] text-white rounded-full font-medium"
-            >
-              {category}
-            </span>
-          ))}
-          {blog.subcategories?.map((subcategory) => (
-            <span 
-              key={subcategory} 
-              className="text-xs px-3 py-1.5 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium"
-            >
-              {subcategory}
-            </span>
-          ))}
         </div>
       </div>
 
