@@ -50,7 +50,7 @@ export function BlogCard({ blog }: BlogCardProps) {
           <CardTitle className="text-xl font-bold line-clamp-2 hover:text-primary transition-colors">
             {blog.title}
           </CardTitle>
-          <CardDescription className="line-clamp-2">
+          <CardDescription className="line-clamp-3">
             {blog.summary}
           </CardDescription>
         </CardHeader>
