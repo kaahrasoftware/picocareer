@@ -2,6 +2,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Database } from "@/integrations/supabase/types";
+
+type Categories = Database['public']['Enums']['categories'];
+type Subcategories = Database['public']['Enums']['subcategories'];
 
 interface BlogFiltersProps {
   searchQuery: string;
@@ -14,12 +18,18 @@ interface BlogFiltersProps {
   setShowRecentOnly: (value: boolean) => void;
 }
 
-const categories = ["Technology", "Career", "Education"];
-const subcategories = {
-  Technology: ["Programming", "Data Science", "Web Development"],
-  Career: ["Job Search", "Interview Tips", "Career Change"],
-  Education: ["Study Tips", "College Life", "Graduate School"],
-};
+const categories: Categories[] = [
+  "Technology",
+  "Career Guidance",
+  "Educational Resources"
+];
+
+const subcategories: Record<Categories, Subcategories[]> = {
+  "Technology": ["Technical Skill Mastery", "Essential Tech Skills for the Workplace"],
+  "Career Guidance": ["Industry-Specific Career Insights", "Career Advancement Strategies"],
+  "Educational Resources": ["Study Tips", "Online Learning Platforms"],
+  // Add other categories with their subcategories as needed
+} as Record<Categories, Subcategories[]>;
 
 export function BlogFilters({
   searchQuery,
@@ -66,7 +76,7 @@ export function BlogFilters({
           <SelectContent>
             <SelectItem value="_all">All Subcategories</SelectItem>
             {selectedCategory && selectedCategory !== "_all" && 
-              subcategories[selectedCategory as keyof typeof subcategories].map((subcategory) => (
+              subcategories[selectedCategory as Categories]?.map((subcategory) => (
                 <SelectItem key={subcategory} value={subcategory}>
                   {subcategory}
                 </SelectItem>
