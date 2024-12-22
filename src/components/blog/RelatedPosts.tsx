@@ -23,19 +23,19 @@ export function RelatedPosts({ blog, isOpen }: RelatedPostsProps) {
         `)
         .neq('id', blog.id)
         .or(
-          blog.categories?.map(category => 
+          (blog.categories?.map(category => 
             `categories.cs.{${category}}`
-          ).join(',') + ',' +
-          blog.subcategories?.map(subcategory => 
+          ) || []).join(',') + ',' +
+          (blog.subcategories?.map(subcategory => 
             `subcategories.cs.{${subcategory}}`
-          ).join(',')
+          ) || []).join(',')
         )
         .limit(3);
 
       if (error) throw error;
       return data as BlogWithAuthor[];
     },
-    enabled: isOpen, // Only fetch when dialog is open
+    enabled: isOpen && (blog.categories?.length || 0) > 0, // Only fetch when dialog is open and there are categories
   });
 
   if (!relatedPosts || relatedPosts.length === 0) return null;

@@ -5,8 +5,6 @@ type Subcategories = Database["public"]["Enums"]["subcategories"];
 
 export const categories: Categories[] = [
   "Technology",
-  "Career",
-  "Education",
   "Digital Tools",
   "Extracurricular Activities",
   "Success Stories",
@@ -42,17 +40,14 @@ export const subcategories: Record<string, Subcategories[]> = {
     "Best Apps for Productivity",
     "Using Technology for Collaboration"
   ],
-  Career: [
+  "Career Guidance": [
     "Industry-Specific Career Insights",
     "Choosing the Right Career Path",
     "Transitioning Between Careers",
     "Work-Life Balance Tips",
     "Career Advancement Strategies"
   ],
-  Education: [
-    "Study Tips",
-    "College Life",
-    "Graduate School",
+  "Educational Resources": [
     "Crafting a Winning Personal Statement",
     "Navigating the Application Process",
     "Preparing for Entrance Exams",
