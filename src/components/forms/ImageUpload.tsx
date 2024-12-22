@@ -1,13 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface ImageUploadProps {
   onChange: (value: string) => void;
-  value?: string;
   bucket?: string;
+  value?: string;
 }
 
 export function ImageUpload({ onChange, value, bucket }: ImageUploadProps) {
   const [image, setImage] = useState<string | null>(value || null);
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setImage(value);
+    }
+  }, [value]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -24,8 +30,19 @@ export function ImageUpload({ onChange, value, bucket }: ImageUploadProps) {
 
   return (
     <div className="image-upload">
-      <input type="file" accept="image/*" onChange={handleImageChange} />
-      {image && <img src={image} alt="Uploaded" className="uploaded-image" />}
+      <input 
+        type="file" 
+        accept="image/*" 
+        onChange={handleImageChange}
+        className="mb-2"
+      />
+      {image && (
+        <img 
+          src={image} 
+          alt="Uploaded" 
+          className="mt-2 max-w-xs rounded-lg shadow-md" 
+        />
+      )}
     </div>
   );
 }
