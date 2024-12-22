@@ -38,22 +38,22 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
             </span>
           ))}
         </div>
+      </div>
 
-        <div className="flex items-center justify-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={blog.profiles?.avatar_url || ''} />
-            <AvatarFallback>
-              {blog.profiles?.full_name?.charAt(0) || 'A'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">
-              {blog.profiles?.full_name || 'Anonymous'}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(blog.created_at), 'MMMM d, yyyy')}
-            </span>
-          </div>
+      <div className="flex items-center gap-2">
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={blog.profiles?.avatar_url || ''} />
+          <AvatarFallback>
+            {blog.profiles?.full_name?.charAt(0) || 'A'}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">
+            {blog.profiles?.full_name || 'Anonymous'}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {format(new Date(blog.created_at), 'MMMM d, yyyy')}
+          </span>
         </div>
       </div>
 
