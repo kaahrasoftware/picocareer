@@ -12,7 +12,7 @@ export function SelectFilter({ value, onValueChange, placeholder, options, multi
   if (multiple) {
     return (
       <Select
-        value={value ? (Array.isArray(value) ? value.join(',') : value) : ""}
+        value={Array.isArray(value) ? value.join(',') : value || ""}
         onValueChange={(val) => {
           const values = val.split(',').filter(v => v !== "");
           onValueChange(values.length > 0 ? values : null);
@@ -31,7 +31,10 @@ export function SelectFilter({ value, onValueChange, placeholder, options, multi
   }
 
   return (
-    <Select value={value || "all"} onValueChange={(value) => onValueChange(value === "all" ? null : value)}>
+    <Select 
+      value={Array.isArray(value) ? value[0] : value || "all"} 
+      onValueChange={(value) => onValueChange(value === "all" ? null : value)}
+    >
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
