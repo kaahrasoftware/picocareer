@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FormField as FormFieldBase,
   FormItem,
@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { categories, subcategories } from "./blog/BlogFormFields";
 
 interface FormFieldProps {
   control: any;
@@ -25,9 +26,12 @@ interface FormFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect";
   bucket?: string;
   required?: boolean;
+  options?: string[];
+  dependsOn?: string;
+  watch?: any;
 }
 
 const degreeOptions = [
@@ -48,8 +52,25 @@ export function FormField({
   description, 
   type = "text",
   bucket = "images",
-  required = false
+  required = false,
+  options = [],
+  dependsOn,
+  watch
 }: FormFieldProps) {
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [availableOptions, setAvailableOptions] = useState<string[]>(options);
+  
+  const watchDependency = dependsOn ? watch?.(dependsOn) : null;
+  
+  useEffect(() => {
+    if (dependsOn === 'categories' && watchDependency) {
+      const newOptions = watchDependency.flatMap((category: string) => 
+        subcategories[category] || []
+      );
+      setAvailableOptions(Array.from(new Set(newOptions)));
+    }
+  }, [dependsOn, watchDependency]);
+
   if (type === "image") {
     return (
       <ImageUpload
@@ -73,7 +94,28 @@ export function FormField({
             {required && <span className="text-red-500 ml-1">*</span>}
           </FormLabel>
           <FormControl>
-            {type === "degree" ? (
+            {type === "multiselect" ? (
+              <Select
+                value={field.value?.[field.value.length - 1] || ""}
+                onValueChange={(value) => {
+                  const newValues = field.value || [];
+                  if (!newValues.includes(value)) {
+                    field.onChange([...newValues, value]);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : type === "degree" ? (
               <Select
                 value={field.value || ""}
                 onValueChange={field.onChange}
@@ -113,6 +155,27 @@ export function FormField({
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
+          {type === "multiselect" && field.value?.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {field.value.map((value: string) => (
+                <span
+                  key={value}
+                  className="bg-primary/10 text-sm px-2 py-1 rounded-full flex items-center gap-1"
+                >
+                  {value}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      field.onChange(field.value.filter((v: string) => v !== value));
+                    }}
+                    className="text-xs hover:text-destructive"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </FormItem>
       )}
     />

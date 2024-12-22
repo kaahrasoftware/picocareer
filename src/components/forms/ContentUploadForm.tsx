@@ -9,17 +9,20 @@ interface ContentUploadFormProps {
   fields: Array<{
     name: string;
     label: string;
-    type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree";
+    type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect";
     placeholder?: string;
     description?: string;
     bucket?: string;
     required?: boolean;
+    options?: string[];
+    dependsOn?: string;
   }>;
   onSubmit: (data: any) => Promise<void>;
 }
 
 export function ContentUploadForm({ fields, onSubmit }: ContentUploadFormProps) {
   const form = useForm();
+  const { watch } = form;
 
   return (
     <Form {...form}>
@@ -31,9 +34,11 @@ export function ContentUploadForm({ fields, onSubmit }: ContentUploadFormProps) 
                 ${field.type === 'textarea' ? 'md:col-span-2' : ''} 
                 ${field.type === 'image' ? 'md:col-span-2' : ''}
                 ${field.name === 'description' ? 'md:col-span-2' : ''}
+                ${field.type === 'multiselect' ? 'md:col-span-2' : ''}
               `}>
                 <FormField
                   control={form.control}
+                  watch={watch}
                   {...field}
                 />
               </div>
