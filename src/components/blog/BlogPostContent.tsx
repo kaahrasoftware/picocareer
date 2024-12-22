@@ -36,6 +36,25 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
             </span>
           </div>
         </div>
+
+        <div className="flex flex-wrap gap-2 justify-center mt-4">
+          {blog.categories?.map((category) => (
+            <span 
+              key={category} 
+              className="text-xs px-3 py-1.5 bg-[#9b87f5] text-white rounded-full font-medium"
+            >
+              {category}
+            </span>
+          ))}
+          {blog.subcategories?.map((subcategory) => (
+            <span 
+              key={subcategory} 
+              className="text-xs px-3 py-1.5 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium"
+            >
+              {subcategory}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -45,19 +64,6 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
           className="prose-headings:font-semibold prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-4 
                      prose-p:my-3 prose-ul:my-4 prose-li:my-1"
         />
-      </div>
-
-      <div className="flex flex-wrap gap-2 mt-4">
-        {blog.categories?.map((category) => (
-          <span key={category} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-            {category}
-          </span>
-        ))}
-        {blog.subcategories?.map((subcategory) => (
-          <span key={subcategory} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-            {subcategory}
-          </span>
-        ))}
       </div>
     </div>
   );
