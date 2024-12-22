@@ -12,6 +12,19 @@ export function RelatedPosts({ blog, isOpen }: RelatedPostsProps) {
   const { data: relatedPosts } = useQuery({
     queryKey: ['related-posts', blog.id, blog.categories, blog.subcategories],
     queryFn: async () => {
+      // Create the query conditions for categories and subcategories
+      const categoryConditions = blog.categories?.map(category => 
+        `categories.cs.{${category}}`
+      ) || [];
+      
+      const subcategoryConditions = blog.subcategories?.map(subcategory => 
+        `subcategories.cs.{${subcategory}}`
+      ) || [];
+
+      // Combine conditions, ensuring we have at least one condition
+      const conditions = [...categoryConditions, ...subcategoryConditions];
+      const queryCondition = conditions.length > 0 ? conditions.join(',') : 'categories.cs.{}';
+
       const { data, error } = await supabase
         .from('blogs')
         .select(`
@@ -22,20 +35,16 @@ export function RelatedPosts({ blog, isOpen }: RelatedPostsProps) {
           )
         `)
         .neq('id', blog.id)
-        .or(
-          blog.categories?.map(category => 
-            `categories.cs.{${category}}`
-          ).join(',') + ',' +
-          blog.subcategories?.map(subcategory => 
-            `subcategories.cs.{${subcategory}}`
-          ).join(',')
-        )
+        .or(queryCondition)
         .limit(3);
 
       if (error) throw error;
       return data as BlogWithAuthor[];
     },
-    enabled: isOpen, // Only fetch when dialog is open
+    enabled: isOpen && (
+      (blog.categories?.length ?? 0) > 0 || 
+      (blog.subcategories?.length ?? 0) > 0
+    ),
   });
 
   if (!relatedPosts || relatedPosts.length === 0) return null;
