@@ -131,11 +131,17 @@ export function FormField({
                   ))}
                 </SelectContent>
               </Select>
-            ) : type === "textarea" ? (
+            ) : type === "textarea" && name === "content" ? (
               <RichTextEditor
                 value={field.value || ''}
                 onChange={field.onChange}
                 placeholder={placeholder}
+              />
+            ) : type === "textarea" ? (
+              <Input
+                {...field}
+                placeholder={placeholder}
+                className="min-h-[100px]"
               />
             ) : type === "checkbox" ? (
               <div className="flex flex-row items-start space-x-3 space-y-0">
