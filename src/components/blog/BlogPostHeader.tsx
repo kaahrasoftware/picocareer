@@ -9,9 +9,9 @@ interface BlogPostHeaderProps {
 
 export function BlogPostHeader({ blog }: BlogPostHeaderProps) {
   return (
-    <DialogHeader>
-      <DialogTitle className="text-2xl font-bold">{blog.title}</DialogTitle>
-      <div className="flex items-center gap-2 mt-2">
+    <DialogHeader className="text-center">
+      <DialogTitle className="text-2xl font-bold mb-4">{blog.title}</DialogTitle>
+      <div className="flex items-center justify-center gap-2 mt-2">
         <Avatar className="h-8 w-8">
           <AvatarImage src={blog.profiles?.avatar_url || ''} />
           <AvatarFallback>
