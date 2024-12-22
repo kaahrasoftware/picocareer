@@ -9,7 +9,7 @@ interface BlogPostContentProps {
 export function BlogPostContent({ blog }: BlogPostContentProps) {
   return (
     <div className="space-y-6">
-      <div className="relative h-64 w-full flex justify-center items-center overflow-hidden">
+      <div className="relative h-64 w-full flex items-center justify-center overflow-hidden">
         <img
           src={blog.cover_image_url || `https://picsum.photos/seed/${blog.id}/1200/600`}
           alt={blog.title}
