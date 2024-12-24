@@ -3,6 +3,7 @@ export const careerFormFields = [
     name: "title", 
     label: "Career Title", 
     placeholder: "e.g., Software Engineer", 
+    type: "text",
     required: true 
   },
   { 
