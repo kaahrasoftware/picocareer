@@ -77,7 +77,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-        <DialogHeader className="p-6 pb-0">
+        <DialogHeader className="p-4 pb-0">
           <div className="relative">
             <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
             <Badge variant="secondary" className="absolute top-0 right-0 flex items-center gap-1">
@@ -93,8 +93,8 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
           )}
         </DialogHeader>
         
-        <ScrollArea className="h-[calc(85vh-120px)] px-6">
-          <div className="space-y-6 pb-6">
+        <ScrollArea className="h-[calc(85vh-120px)]">
+          <div className="space-y-6 p-4">
             {career.image_url && (
               <img 
                 src={career.image_url} 
