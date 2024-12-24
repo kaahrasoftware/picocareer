@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
+
+type Status = Database["public"]["Enums"]["status"];
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -23,20 +26,20 @@ type InsertData = {
   majors: {
     title: string;
     description: string;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: Status;
   };
   schools: {
     name: string;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: Status;
   };
   companies: {
     name: string;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: Status;
   };
   careers: {
     title: string;
     description: string;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: Status;
   };
 }
 
@@ -62,7 +65,7 @@ export function SelectWithCustomOption({
 
       if (checkError) throw checkError;
 
-      if (existingData) {
+      if (existingData && 'id' in existingData) {
         onValueChange(existingData.id);
         setShowCustomInput(false);
         setCustomValue("");
@@ -140,10 +143,6 @@ export function SelectWithCustomOption({
     );
   }
 
-  const displayValue = (option: { id: string; title?: string; name?: string }) => {
-    return option.title || option.name || '';
-  };
-
   return (
     <Select
       value={value}
@@ -161,7 +160,7 @@ export function SelectWithCustomOption({
       <SelectContent>
         {options.map((option) => (
           <SelectItem key={option.id} value={option.id}>
-            {displayValue(option)}
+            {option.title || option.name || ''}
           </SelectItem>
         ))}
         <SelectItem value="other">Other (Add New)</SelectItem>

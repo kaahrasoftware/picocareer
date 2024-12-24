@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { FormFieldProps } from "@/components/forms/FormField";
 import { categories } from "./categories";
-import { subcategories } from "./data/subcategories";
+import { subcategories } from "@/components/blog/data/subcategories";
+import { Database } from "@/integrations/supabase/types";
+
+type Categories = Database["public"]["Enums"]["categories"];
+type Subcategories = Database["public"]["Enums"]["subcategories"];
 
 // Transform categories and subcategories into the required format
 const categoryOptions = categories.map(category => ({
@@ -9,10 +13,12 @@ const categoryOptions = categories.map(category => ({
   title: category
 }));
 
-const subcategoryOptions = Object.values(subcategories).flat().map(subcategory => ({
-  id: subcategory,
-  title: subcategory
-}));
+const subcategoryOptions = Object.values(subcategories)
+  .flat()
+  .map((subcategory: Subcategories) => ({
+    id: subcategory,
+    title: subcategory
+  }));
 
 export const blogFormFields: FormFieldProps[] = [
   {
