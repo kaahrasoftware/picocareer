@@ -45,6 +45,13 @@ export const blogFormFields = [
     dependsOn: "categories"
   },
   { 
+    name: "other_notes", 
+    label: "Additional Notes", 
+    type: "textarea" as const, 
+    placeholder: "Any additional notes or remarks about this blog post",
+    description: "Optional notes that might be helpful for readers or future reference" 
+  },
+  { 
     name: "is_recent", 
     label: "Mark as Recent", 
     type: "checkbox" as const, 
