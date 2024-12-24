@@ -41,6 +41,15 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
+    // Clear any existing session data on mount
+    const clearSession = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error clearing session:', error);
+      }
+    };
+    clearSession();
+
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -61,6 +70,9 @@ export default function AuthPage() {
           description: "You have successfully signed in.",
         });
         navigate("/");
+      } else if (event === 'SIGNED_OUT') {
+        // Clear any cached data
+        localStorage.removeItem('supabase.auth.token');
       }
     });
 
@@ -89,7 +101,7 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
-          redirectTo={`${window.location.origin}/auth`}
+          redirectTo={window.location.origin + '/auth'}
         />
       </div>
     </div>
