@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { categories, subcategories } from "./blog/BlogFormFields";
 
-interface FormFieldProps {
+export interface FormFieldProps {
   control: any;
   name: string;
   label: string;
@@ -29,7 +29,7 @@ interface FormFieldProps {
   type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect";
   bucket?: string;
   required?: boolean;
-  options?: string[];
+  options?: readonly string[] | string[];
   dependsOn?: string;
   watch?: any;
 }

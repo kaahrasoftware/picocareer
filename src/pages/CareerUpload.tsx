@@ -6,6 +6,7 @@ import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
 import { careerFormFields } from "@/components/forms/career/CareerFormFields";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { FormFieldProps } from "@/components/forms/FormField";
 
 export default function CareerUpload() {
   const { toast } = useToast();
@@ -95,9 +96,12 @@ export default function CareerUpload() {
         growth_potential: data.growth_potential || null,
         keywords: data.keywords ? data.keywords.split(',').map((item: string) => item.trim()) : [],
         transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map((item: string) => item.trim()) : [],
-        stress_levels: data.stress_levels ? data.stress_levels.toString() : null,
+        stress_levels: data.stress_levels || null,
         careers_to_consider_switching_to: data.careers_to_consider_switching_to ? 
-          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : []
+          data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : [],
+        rare: data.rare || false,
+        popular: data.popular || false,
+        new_career: data.new_career || false
       };
 
       const { error: insertError } = await supabase
@@ -134,6 +138,9 @@ export default function CareerUpload() {
     }
   };
 
+  // Cast the readonly array to a mutable array for the ContentUploadForm
+  const formFields = careerFormFields as FormFieldProps[];
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Card className="bg-card">
@@ -147,7 +154,7 @@ export default function CareerUpload() {
         <CardContent>
           <div className="space-y-6">
             <ContentUploadForm 
-              fields={careerFormFields}
+              fields={formFields}
               onSubmit={handleSubmit}
             />
           </div>
