@@ -153,7 +153,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
             </div>
 
             <div className="space-y-4">
-              {renderMetricBar(career.intensity, "Career Intensity")}
+              {renderMetricBar(career.intensity?.toString(), "Career Intensity")}
               {renderMetricBar(career.stress_levels, "Stress Levels")}
               {career.dropout_rates && (
                 <div className="text-sm">
