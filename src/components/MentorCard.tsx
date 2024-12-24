@@ -19,6 +19,7 @@ interface MentorCardProps {
   };
   top_mentor?: boolean;
   position?: string;
+  career_title?: string; // Add career_title to props
   location?: string;
   bio?: string;
   skills?: string[];
@@ -48,7 +49,9 @@ export function MentorCard(props: MentorCardProps) {
                 )}
               </div>
               <h3 className="font-semibold truncate mb-2">{props.name}</h3>
-              <p className="text-sm font-medium mb-1 truncate text-foreground/90">{props.title || props.position}</p>
+              <p className="text-sm font-medium mb-1 truncate text-foreground/90">
+                {props.career_title || props.title || "No position set"}
+              </p>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Building2 className="h-3 w-3 flex-shrink-0" />
