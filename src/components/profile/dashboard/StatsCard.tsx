@@ -3,12 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { ContentDetailsDialog } from "./ContentDetailsDialog";
 
+// Import the ContentType type or redefine it here
+type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
+
 interface StatsCardProps {
   title: string;
   value: number;
   subtitle?: string;
   icon: LucideIcon;
-  contentType?: string;
+  contentType?: ContentType;
 }
 
 export function StatsCard({ title, value, subtitle, icon: Icon, contentType }: StatsCardProps) {
