@@ -9,9 +9,13 @@ export function useNotifications(session: Session | null) {
   return useQuery({
     queryKey: ['notifications', session?.user?.id],
     queryFn: async () => {
-      if (!session?.user?.id) return [];
+      if (!session?.user?.id) {
+        console.log('No authenticated session, skipping notifications fetch');
+        return [];
+      }
       
       try {
+        console.log('Fetching notifications for user:', session.user.id);
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
@@ -19,12 +23,19 @@ export function useNotifications(session: Session | null) {
           .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Error fetching notifications:', error);
+          console.error('Supabase query error:', error);
           throw error;
         }
+
+        console.log('Notifications fetched successfully:', data?.length);
         return data || [];
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
+      } catch (error: any) {
+        console.error('Failed to fetch notifications:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
     },
