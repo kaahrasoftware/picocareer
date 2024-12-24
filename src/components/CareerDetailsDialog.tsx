@@ -13,7 +13,7 @@ import { AboutSection } from "./career-details/AboutSection";
 import { CareerMetrics } from "./career-details/CareerMetrics";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
-import { Users, DollarSign } from "lucide-react";
+import { Users, DollarSign, Book, ArrowRight, Tag } from "lucide-react";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -111,11 +111,34 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               industry={career.industry}
               work_environment={career.work_environment}
               growth_potential={career.growth_potential}
+              job_outlook={career.job_outlook}
             />
+
+            {career.academic_majors && career.academic_majors.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Book className="h-5 w-5 text-primary" />
+                  Academic Majors
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {career.academic_majors.map((major, index) => (
+                    <Badge 
+                      key={index}
+                      className="bg-primary/10 text-primary rounded-full"
+                    >
+                      {major}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {career.career_major_relations && career.career_major_relations.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Related Majors</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <ArrowRight className="h-5 w-5 text-primary" />
+                  Related Majors
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {career.career_major_relations.map(({ major }) => (
                     <Badge 
@@ -123,6 +146,26 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
                       className="bg-primary/10 text-primary rounded-full"
                     >
                       {major.title}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {career.keywords && career.keywords.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-primary" />
+                  Keywords
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {career.keywords.map((keyword, index) => (
+                    <Badge 
+                      key={index}
+                      variant="outline"
+                      className="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
+                    >
+                      {keyword}
                     </Badge>
                   ))}
                 </div>
@@ -144,6 +187,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               tools_knowledge={career.tools_knowledge}
               skill_match={career.skill_match}
               transferable_skills={career.transferable_skills}
+              required_education={career.required_education}
             />
 
             <AdditionalInfo

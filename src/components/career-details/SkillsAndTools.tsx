@@ -1,4 +1,4 @@
-import { Wrench, Lightbulb, ArrowRightLeft } from "lucide-react";
+import { Wrench, Lightbulb, ArrowRightLeft, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SkillsAndToolsProps {
@@ -7,6 +7,7 @@ interface SkillsAndToolsProps {
   tools_knowledge?: string[];
   skill_match?: string[];
   transferable_skills?: string[];
+  required_education?: string[];
 }
 
 export function SkillsAndTools({
@@ -14,7 +15,8 @@ export function SkillsAndTools({
   required_tools,
   tools_knowledge,
   skill_match,
-  transferable_skills
+  transferable_skills,
+  required_education
 }: SkillsAndToolsProps) {
   const renderSection = (items: string[] | undefined, title: string, badgeClass: string, icon: React.ReactNode) => {
     if (!items?.length) return null;
@@ -45,6 +47,13 @@ export function SkillsAndTools({
         <Wrench className="h-5 w-5 text-primary" />
         Skills & Tools
       </h4>
+
+      {renderSection(
+        required_education,
+        "Required Education",
+        "bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]",
+        <GraduationCap className="h-4 w-4 text-muted-foreground" />
+      )}
 
       {renderSection(
         required_skills,

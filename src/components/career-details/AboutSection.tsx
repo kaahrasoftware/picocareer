@@ -1,4 +1,4 @@
-import { Briefcase, Building2, GraduationCap, TrendingUp } from "lucide-react";
+import { Briefcase, Building2, GraduationCap, TrendingUp, BarChart2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface AboutSectionProps {
@@ -7,6 +7,7 @@ interface AboutSectionProps {
   industry?: string;
   work_environment?: string;
   growth_potential?: string;
+  job_outlook?: string;
 }
 
 export function AboutSection({ 
@@ -14,7 +15,8 @@ export function AboutSection({
   learning_objectives,
   industry,
   work_environment,
-  growth_potential
+  growth_potential,
+  job_outlook
 }: AboutSectionProps) {
   return (
     <div className="space-y-4">
@@ -51,6 +53,16 @@ export function AboutSection({
               </Badge>
             ))}
           </div>
+        </div>
+      )}
+
+      {job_outlook && (
+        <div className="mt-4">
+          <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <BarChart2 className="h-4 w-4 text-muted-foreground" />
+            Job Outlook
+          </h5>
+          <p className="text-muted-foreground">{job_outlook}</p>
         </div>
       )}
 
