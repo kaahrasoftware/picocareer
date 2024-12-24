@@ -71,6 +71,7 @@ export default function Auth() {
                     {mentors?.map((mentor) => (
                       <CarouselItem key={mentor.id} className="basis-1/5 pl-1 flex items-center justify-center">
                         <div className="relative">
+                          <div className="absolute -inset-2 rounded-full bg-blue-500/40 blur-lg" />
                           <Avatar className="w-8 h-8 relative border border-white/20">
                             <AvatarImage src={mentor.avatar_url || ''} alt="Mentor" />
                             <AvatarFallback>
