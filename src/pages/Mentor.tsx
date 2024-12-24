@@ -44,6 +44,7 @@ export default function Mentor() {
             location,
             fields_of_interest,
             top_mentor,
+            user_type,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
