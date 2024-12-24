@@ -19,6 +19,27 @@ interface SelectWithCustomOptionProps {
   tableName: 'majors' | 'schools' | 'companies' | 'careers';
 }
 
+type InsertData = {
+  majors: {
+    title: string;
+    description: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+  };
+  schools: {
+    name: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+  };
+  companies: {
+    name: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+  };
+  careers: {
+    title: string;
+    description: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+  };
+}
+
 export function SelectWithCustomOption({
   value,
   onValueChange,
@@ -47,9 +68,20 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create new entry
-      const insertData = tableName === 'majors' || tableName === 'careers'
-        ? { title: customValue, description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, status: 'Pending' }
-        : { name: customValue, status: 'Pending' };
+      let insertData: InsertData[typeof tableName];
+
+      if (tableName === 'majors' || tableName === 'careers') {
+        insertData = {
+          title: customValue,
+          description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`,
+          status: 'Pending'
+        };
+      } else {
+        insertData = {
+          name: customValue,
+          status: 'Pending'
+        };
+      }
 
       const { data, error } = await supabase
         .from(tableName)

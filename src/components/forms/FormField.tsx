@@ -38,7 +38,7 @@ export interface FormFieldProps {
   type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect" | "select";
   bucket?: string;
   required?: boolean;
-  options?: Array<{ id: string; title?: string; name?: string }>;
+  options?: Array<{ id: string; title?: string; name?: string; }>;
   dependsOn?: string;
   watch?: any;
   control?: any;

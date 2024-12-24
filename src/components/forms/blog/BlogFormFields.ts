@@ -1,63 +1,71 @@
-import { categories } from "./categories";
-import { subcategories } from "./subcategories";
-import { FormFieldProps } from "../FormField";
+import { z } from "zod";
+import { FormFieldProps } from "@/components/forms/FormField";
+import { categories, subcategories } from "./categories";
+
+// Transform categories and subcategories into the required format
+const categoryOptions = categories.map(category => ({
+  id: category,
+  title: category
+}));
+
+const subcategoryOptions = subcategories.map(subcategory => ({
+  id: subcategory,
+  title: subcategory
+}));
 
 export const blogFormFields: FormFieldProps[] = [
-  { 
-    name: "title", 
-    label: "Title", 
-    placeholder: "Blog Post Title", 
-    required: true 
+  {
+    name: "title",
+    label: "Title",
+    type: "text",
+    placeholder: "Enter the blog title",
+    required: true
   },
-  { 
-    name: "summary", 
-    label: "Summary", 
-    type: "textarea", 
-    placeholder: "Brief summary of the blog post", 
-    required: true 
+  {
+    name: "content",
+    label: "Content",
+    type: "textarea",
+    placeholder: "Write your blog content here",
+    required: true
   },
-  { 
-    name: "content", 
-    label: "Content", 
-    type: "textarea", 
-    placeholder: "Full blog post content", 
-    required: true 
-  },
-  { 
-    name: "cover_image_url", 
-    label: "Cover Image", 
-    type: "image", 
-    description: "Upload a cover image for your blog post",
-    bucket: "images"
-  },
-  { 
-    name: "categories", 
-    label: "Categories", 
-    type: "multiselect",
+  {
+    name: "categories",
+    label: "Categories",
+    type: "select",
     placeholder: "Select categories",
-    options: categories
+    options: categoryOptions,
+    required: true
   },
-  { 
-    name: "subcategories", 
-    label: "Subcategories", 
-    type: "multiselect",
+  {
+    name: "subcategories",
+    label: "Subcategories",
+    type: "select",
     placeholder: "Select subcategories",
-    options: [],
-    dependsOn: "categories"
+    options: subcategoryOptions,
+    required: true
   },
-  { 
-    name: "other_notes", 
-    label: "Additional Notes", 
-    type: "textarea", 
-    placeholder: "Any additional notes or remarks about this blog post",
-    description: "Optional notes that might be helpful for readers or future reference" 
+  {
+    name: "featured_image",
+    label: "Featured Image",
+    type: "image",
+    bucket: "blog-images",
+    description: "Upload a featured image for the blog post",
+    required: true
   },
-  { 
-    name: "is_recent", 
-    label: "Mark as Recent", 
-    type: "checkbox", 
-    description: "Feature this post in recent blogs section" 
+  {
+    name: "tags",
+    label: "Tags",
+    type: "array",
+    placeholder: "Enter tags (comma-separated)",
+    required: false
   }
 ];
 
-export { categories, subcategories };
+export const blogSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  categories: z.array(z.string()).min(1, "At least one category is required"),
+  subcategories: z.array(z.string()).min(1, "At least one subcategory is required"),
+  featured_image: z.string().min(1, "Featured image is required"),
+  tags: z.array(z.string()).optional()
+});
