@@ -1037,6 +1037,7 @@ export type Database = {
         | "session_reminder"
         | "profile_update"
         | "mentor_request"
+        | "blog_posted"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
         | "Introduction"
