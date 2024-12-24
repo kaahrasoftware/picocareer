@@ -30,9 +30,9 @@ type CareerWithMajors = Tables<"careers"> & {
   }[];
   intensity?: string;
   dropout_rates?: string;
-  average_salary?: number;
-  potential_salary?: number;
-  tuition_and_fees?: number;
+  average_salary?: string;
+  potential_salary?: string;
+  tuition_and_fees?: string;
   learning_objectives?: string[];
   tools_knowledge?: string[];
   skill_match?: string[];
