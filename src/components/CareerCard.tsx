@@ -63,10 +63,12 @@ export function CareerCard({
                 </div>
               )}
               {salary_range && (
-                <div className="flex items-center gap-2 text-sm mt-1">
-                  <TrendingUp className="h-3 w-3 text-[#8B5CF6]" />
-                  <span className="text-[#8B5CF6] font-medium">{salary_range}</span>
-                </div>
+                <Badge 
+                  variant="outline" 
+                  className="bg-[#FFDEE2] text-[#4B5563] mt-2"
+                >
+                  {salary_range}
+                </Badge>
               )}
             </div>
           </div>
