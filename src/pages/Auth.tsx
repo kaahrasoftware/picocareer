@@ -23,7 +23,7 @@ export default function Auth() {
           
           <div className="max-w-md space-y-8 text-center mt-auto">
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">Join Our Community</h2>
+              <h2 className="text-xl font-semibold text-white">Become a Mentor</h2>
               <p className="text-gray-300">
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
