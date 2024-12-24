@@ -2,12 +2,22 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
-import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
 
 export default function Auth() {
   return (
     <div className="min-h-screen bg-background">
       <div className="flex min-h-screen">
+        <div className="w-[40%] bg-muted/30 p-4">
+          <div className="flex items-center justify-center min-h-full">
+            <div className="max-w-md space-y-4 text-center">
+              <h2 className="text-xl font-semibold">Join Our Community</h2>
+              <p className="text-muted-foreground">
+                Connect with mentors, explore careers, and shape your future with PicoCareer.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="w-[60%] p-4">
           <div className="flex items-center justify-center min-h-full">
             <Card className="w-full max-w-md p-6 space-y-6">
@@ -33,17 +43,6 @@ export default function Auth() {
                 </TabsContent>
               </Tabs>
             </Card>
-          </div>
-        </div>
-        
-        <div className="w-[40%] bg-muted/30 p-4">
-          <div className="flex items-center justify-center min-h-full">
-            <div className="max-w-md space-y-4 text-center">
-              <h2 className="text-xl font-semibold">Join Our Community</h2>
-              <p className="text-muted-foreground">
-                Connect with mentors, explore careers, and shape your future with PicoCareer.
-              </p>
-            </div>
           </div>
         </div>
       </div>
