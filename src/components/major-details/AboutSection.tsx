@@ -27,30 +27,6 @@ export function AboutSection({
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const mentorsPerPage = 8;
 
-  const { data: mentors } = useQuery({
-    queryKey: ['major-mentors', majorId, currentPage],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          avatar_url,
-          position,
-          company:companies(name)
-        `)
-        .eq('academic_major_id', majorId)
-        .eq('user_type', 'mentor')
-        .range((currentPage - 1) * mentorsPerPage, currentPage * mentorsPerPage - 1)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!majorId,
-  });
-
   const { data: totalCount } = useQuery({
     queryKey: ['major-mentors-count', majorId],
     queryFn: async () => {
@@ -66,6 +42,33 @@ export function AboutSection({
     enabled: !!majorId,
   });
 
+  const { data: mentors } = useQuery({
+    queryKey: ['major-mentors', majorId, currentPage],
+    queryFn: async () => {
+      const start = (currentPage - 1) * mentorsPerPage;
+      const end = start + mentorsPerPage - 1;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          avatar_url,
+          position,
+          company:companies(name)
+        `)
+        .eq('academic_major_id', majorId)
+        .eq('user_type', 'mentor')
+        .range(start, end)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!majorId,
+  });
+
   const totalPages = Math.ceil((totalCount || 0) / mentorsPerPage);
 
   return (
@@ -75,7 +78,7 @@ export function AboutSection({
           <h5 className="text-sm font-medium mb-3">Mentors with this major</h5>
           <ScrollArea className="w-full pb-2">
             <div className="flex justify-center min-w-full py-2">
-              <div className="flex gap-4 px-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {mentors.map((mentor) => (
                   <Card 
                     key={mentor.id}
