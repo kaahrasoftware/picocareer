@@ -113,7 +113,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
 
           <ScrollArea className="flex-1 px-6">
             <div className="space-y-6 pb-6">
-              <ProfileBio bio={profile.bio} />
+              <ProfileBio bio={profile.bio} profileId={profile.id} />
               
               {/* Keywords Section */}
               {profile.keywords && profile.keywords.length > 0 && (
