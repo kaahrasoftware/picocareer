@@ -12,14 +12,16 @@ export default function Auth() {
             <div className="space-y-4">
               <div className="flex justify-center">
                 <img 
-                  src="/lovable-uploads/855127b6-c96d-4c87-9a6e-cdf75680afe9.png" 
+                  src="/lovable-uploads/d815cd5f-d140-4520-87a1-3d7a6c17df4d.png" 
                   alt="PicoCareer Logo" 
                   className="h-16 w-auto animate-float"
                 />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">
-                PicoCareer
-              </h1>
+              <img 
+                src="/lovable-uploads/855127b6-c96d-4c87-9a6e-cdf75680afe9.png" 
+                alt="PicoCareer Title" 
+                className="h-8 w-auto mx-auto"
+              />
               <p className="text-lg text-gray-300">
                 Your Gateway to Career Success
               </p>
