@@ -21,6 +21,13 @@ export const careerFormFields = [
     description: "Upload an image representing this career" 
   },
   { 
+    name: "academic_majors", 
+    label: "Related Academic Majors", 
+    type: "array", 
+    placeholder: "Computer Science, Information Technology", 
+    description: "Enter majors that are relevant to this career"
+  },
+  { 
     name: "salary_range", 
     label: "Salary Range", 
     type: "text",

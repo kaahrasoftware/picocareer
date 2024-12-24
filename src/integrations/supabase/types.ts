@@ -145,7 +145,7 @@ export type Database = {
           required_skills: string[] | null
           required_tools: string[] | null
           salary_range: string | null
-          stress_levels: number | null
+          stress_levels: string | null
           title: string
           transferable_skills: string[] | null
           updated_at: string
@@ -167,7 +167,7 @@ export type Database = {
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
-          stress_levels?: number | null
+          stress_levels?: string | null
           title: string
           transferable_skills?: string[] | null
           updated_at?: string
@@ -189,7 +189,7 @@ export type Database = {
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
-          stress_levels?: number | null
+          stress_levels?: string | null
           title?: string
           transferable_skills?: string[] | null
           updated_at?: string
