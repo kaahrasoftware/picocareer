@@ -11,6 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
 
 const mentorRegistrationSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email"),
+  avatar_url: z.string().min(1, "Profile picture is required"),
   bio: z.string().min(50, "Bio should be at least 50 characters long"),
   years_of_experience: z.number().min(0, "Years of experience cannot be negative"),
   linkedin_url: z.string().url("Please enter a valid LinkedIn URL"),
@@ -18,6 +22,7 @@ const mentorRegistrationSchema = z.object({
   website_url: z.string().url("Please enter a valid website URL").optional(),
   skills: z.string(),
   tools_used: z.string(),
+  keywords: z.string(),
   fields_of_interest: z.string(),
   highest_degree: z.enum([
     "No Degree",
@@ -113,6 +118,10 @@ export default function MentorRegistration() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          avatar_url: data.avatar_url,
           bio: data.bio,
           years_of_experience: data.years_of_experience,
           linkedin_url: data.linkedin_url,
@@ -120,6 +129,7 @@ export default function MentorRegistration() {
           website_url: data.website_url,
           skills: data.skills.split(',').map(s => s.trim()),
           tools_used: data.tools_used.split(',').map(s => s.trim()),
+          keywords: data.keywords.split(',').map(s => s.trim()),
           fields_of_interest: data.fields_of_interest.split(',').map(s => s.trim()),
           highest_degree: data.highest_degree,
           position: data.position,
