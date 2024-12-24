@@ -4,18 +4,21 @@ import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/forms/FormField";
-import { blogFormFields } from "./blog/BlogFormFields";
-import { blogFormSchema } from "@/lib/validations/blog";
+import { FormField, FormFieldProps } from "@/components/forms/FormField";
+import { blogFormSchema, BlogFormValues } from "@/lib/validations/blog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export function ContentUploadForm() {
+interface ContentUploadFormProps {
+  onSubmit?: (data: BlogFormValues) => Promise<void>;
+}
+
+export function ContentUploadForm({ onSubmit }: ContentUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const form = useForm({
+  const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
     defaultValues: {
       title: "",
@@ -29,48 +32,51 @@ export function ContentUploadForm() {
     },
   });
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: BlogFormValues) => {
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data: result, error } = await supabase
-        .from('blogs')
-        .insert([
-          {
-            ...data,
-            author_id: user.id,
-            categories: data.categories || [],
-            subcategories: data.subcategories || [],
-          }
-        ])
-        .select();
-
-      if (error) throw error;
-
-      // After successful blog submission, send notifications
-      const { error: notificationError } = await supabase.functions.invoke('send-blog-notifications', {
-        body: { blogId: result[0].id }
-      });
-
-      if (notificationError) {
-        console.error('Error sending notifications:', notificationError);
-        toast({
-          title: "Blog Posted",
-          description: "Blog posted successfully, but there was an issue sending notifications.",
-          variant: "default"
-        });
+      if (onSubmit) {
+        await onSubmit(data);
       } else {
-        toast({
-          title: "Blog Posted",
-          description: "Blog posted successfully! Notifications have been sent.",
-          variant: "default"
-        });
-      }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
 
-      form.reset();
-      navigate('/blog');
+        const { data: result, error } = await supabase
+          .from('blogs')
+          .insert([
+            {
+              ...data,
+              author_id: user.id,
+              categories: data.categories || [],
+              subcategories: data.subcategories || [],
+            }
+          ])
+          .select();
+
+        if (error) throw error;
+
+        const { error: notificationError } = await supabase.functions.invoke('send-blog-notifications', {
+          body: { blogId: result[0].id }
+        });
+
+        if (notificationError) {
+          console.error('Error sending notifications:', notificationError);
+          toast({
+            title: "Blog Posted",
+            description: "Blog posted successfully, but there was an issue sending notifications.",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Blog Posted",
+            description: "Blog posted successfully! Notifications have been sent.",
+            variant: "default"
+          });
+        }
+
+        form.reset();
+        navigate('/blog');
+      }
     } catch (error) {
       console.error('Error submitting blog:', error);
       toast({
