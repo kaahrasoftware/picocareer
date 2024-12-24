@@ -13,8 +13,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// Define valid content types
+// Define valid content types and status
 type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
+type ContentStatus = "Approved" | "Pending" | "Rejected";
 
 interface ContentDetailsDialogProps {
   open: boolean;
@@ -27,7 +28,7 @@ export function ContentDetailsDialog({
   onOpenChange,
   contentType,
 }: ContentDetailsDialogProps) {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<ContentStatus | "all">("all");
   const { toast } = useToast();
 
   const { data: items, isLoading, refetch } = useQuery({
@@ -48,7 +49,7 @@ export function ContentDetailsDialog({
     enabled: open,
   });
 
-  const handleStatusChange = async (itemId: string, newStatus: string) => {
+  const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
     try {
       const { error } = await supabase
         .from(contentType)
@@ -73,7 +74,7 @@ export function ContentDetailsDialog({
     }
   };
 
-  const getBadgeVariant = (status: string | null | undefined) => {
+  const getBadgeVariant = (status: ContentStatus | null | undefined) => {
     switch (status) {
       case 'Approved':
         return 'default';
@@ -84,7 +85,7 @@ export function ContentDetailsDialog({
     }
   };
 
-  const getStatusColor = (status: string | null | undefined) => {
+  const getStatusColor = (status: ContentStatus | null | undefined) => {
     switch (status) {
       case 'Approved':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -111,7 +112,7 @@ export function ContentDetailsDialog({
         <div className="mb-4">
           <Select
             value={statusFilter}
-            onValueChange={setStatusFilter}
+            onValueChange={(value) => setStatusFilter(value as ContentStatus | "all")}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by status" />
@@ -139,9 +140,9 @@ export function ContentDetailsDialog({
                     <div className="flex items-center gap-2">
                       <Select
                         defaultValue={item.status || "Pending"}
-                        onValueChange={(value) => handleStatusChange(item.id, value)}
+                        onValueChange={(value) => handleStatusChange(item.id, value as ContentStatus)}
                       >
-                        <SelectTrigger className={`w-[120px] border ${getStatusColor(item.status)}`}>
+                        <SelectTrigger className={`w-[120px] border ${getStatusColor(item.status as ContentStatus)}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
