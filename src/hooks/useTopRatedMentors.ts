@@ -10,12 +10,13 @@ export const useTopRatedMentors = () => {
         .from('profiles')
         .select(`
           *,
-          company:companies(name)
+          company:companies(name),
+          career:careers!profiles_position_fkey(title)
         `)
         .eq('user_type', 'mentor')
         .eq('top_mentor', true)
-        .limit(10)        // Increased to 10 mentors
-        .order('created_at', { ascending: false }); // Order by most recent first
+        .limit(10)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching mentors:', error);
@@ -38,6 +39,7 @@ export const useTopRatedMentors = () => {
           },
           top_mentor: mentor.top_mentor,
           position: mentor.position,
+          career_title: mentor.career?.title || "No position set",
           location: mentor.location,
           bio: mentor.bio,
           skills: mentor.skills
