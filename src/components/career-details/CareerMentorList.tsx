@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MentorCard } from "@/components/MentorCard";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { Users } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface CareerMentorListProps {
   careerId: string;
@@ -23,15 +24,9 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
         .from('profiles')
         .select(`
           id,
-          full_name,
-          avatar_url,
-          position,
-          company:companies(name),
-          location,
-          bio,
-          skills,
-          top_mentor,
-          total_booked_sessions
+          first_name,
+          last_name,
+          avatar_url
         `, { count: 'exact' })
         .eq('position', careerId)
         .eq('user_type', 'mentor')
@@ -41,22 +36,7 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
       if (error) throw error;
 
       return {
-        mentors: data.map(mentor => ({
-          id: mentor.id,
-          name: mentor.full_name || '',
-          imageUrl: mentor.avatar_url || '',
-          title: mentor.position || '',
-          company: mentor.company?.name || '',
-          location: mentor.location,
-          bio: mentor.bio,
-          skills: mentor.skills,
-          top_mentor: mentor.top_mentor,
-          stats: {
-            mentees: '0',
-            connected: '0',
-            recordings: '0'
-          }
-        })),
+        mentors: data,
         total: count || 0
       };
     },
@@ -80,9 +60,33 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
         Career Mentors
       </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mentors.mentors.map((mentor) => (
-          <MentorCard key={mentor.id} {...mentor} />
+          <Card 
+            key={mentor.id}
+            className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+          >
+            <div className="relative w-20 h-20 group">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
+              <div className="absolute inset-[3px] rounded-full bg-background" />
+              <div className="absolute inset-[6px] rounded-full overflow-hidden">
+                <Avatar className="h-full w-full">
+                  <AvatarImage 
+                    src={mentor.avatar_url || ''} 
+                    alt={`${mentor.first_name} ${mentor.last_name}`}
+                    className="h-full w-full object-cover"
+                  />
+                  <AvatarFallback>
+                    {mentor.first_name?.[0]}
+                    {mentor.last_name?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+            <p className="mt-3 text-sm font-medium text-center">
+              {mentor.first_name} {mentor.last_name}
+            </p>
+          </Card>
         ))}
       </div>
 
