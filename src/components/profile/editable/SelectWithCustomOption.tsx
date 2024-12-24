@@ -9,7 +9,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 type TitleField = 'title' | 'name';
@@ -24,17 +23,10 @@ interface CustomSelectProps {
   value: string;
   options: Option[];
   placeholder: string;
-  tableName: TableName;
   handleSelectChange: (name: string, value: string) => void;
+  tableName: TableName;
   fieldName: string;
   onCancel?: () => void;
-}
-
-type InsertData = {
-  majors: Database['public']['Tables']['majors']['Insert'];
-  schools: Database['public']['Tables']['schools']['Insert'];
-  careers: Database['public']['Tables']['careers']['Insert'];
-  companies: Database['public']['Tables']['companies']['Insert'];
 }
 
 export function SelectWithCustomOption({ 
@@ -84,27 +76,16 @@ export function SelectWithCustomOption({
       }
 
       // Prepare insert data based on table type
-      let insertData: Record<string, any> = {};
-      
-      if (tableName === 'majors') {
-        insertData = {
-          title: customValue,
-          description: `Custom major: ${customValue}`,
-          status: 'Pending'
-        };
-      } else if (tableName === 'careers') {
-        insertData = {
-          title: customValue,
-          description: `Position: ${customValue}`,
-          status: 'Pending'
-        };
-      } else {
-        // For schools and companies
-        insertData = {
-          name: customValue,
-          status: 'Pending'
-        };
-      }
+      const insertData = {
+        [titleField]: customValue,
+        status: 'Pending',
+        ...(tableName === 'majors' && {
+          description: `Custom major: ${customValue}`
+        }),
+        ...(tableName === 'careers' && {
+          description: `Position: ${customValue}`
+        })
+      };
 
       const { data, error } = await supabase
         .from(tableName)
