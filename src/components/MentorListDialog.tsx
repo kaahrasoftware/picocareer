@@ -25,7 +25,7 @@ export const MentorListDialog = ({ isOpen, onClose, mentors }: MentorListDialogP
   const filteredMentors = mentors.filter((mentor) => {
     const matchesSearch = 
       (mentor.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-      (mentor.title?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+      (mentor.career_title?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
     const matchesCompany = companyFilter === "all" || mentor.company === companyFilter;
     const matchesEducation = educationFilter === "all" || mentor.education === educationFilter;
     const matchesExperience = experienceFilter === "all" || mentor.position?.includes(experienceFilter);
