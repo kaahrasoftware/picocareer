@@ -130,6 +130,7 @@ export type Database = {
       }
       careers: {
         Row: {
+          academic_majors: string[] | null
           careers_to_consider_switching_to: string[] | null
           created_at: string
           description: string
@@ -140,7 +141,6 @@ export type Database = {
           industry: string | null
           job_outlook: string | null
           keywords: string[] | null
-          required_degrees: string[] | null
           required_education: string[] | null
           required_skills: string[] | null
           required_tools: string[] | null
@@ -152,6 +152,7 @@ export type Database = {
           work_environment: string | null
         }
         Insert: {
+          academic_majors?: string[] | null
           careers_to_consider_switching_to?: string[] | null
           created_at?: string
           description: string
@@ -162,7 +163,6 @@ export type Database = {
           industry?: string | null
           job_outlook?: string | null
           keywords?: string[] | null
-          required_degrees?: string[] | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
@@ -174,6 +174,7 @@ export type Database = {
           work_environment?: string | null
         }
         Update: {
+          academic_majors?: string[] | null
           careers_to_consider_switching_to?: string[] | null
           created_at?: string
           description?: string
@@ -184,7 +185,6 @@ export type Database = {
           industry?: string | null
           job_outlook?: string | null
           keywords?: string[] | null
-          required_degrees?: string[] | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
