@@ -57,22 +57,32 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
 
         // Convert array fields from comma-separated strings to actual arrays
         const formattedData = {
-          ...data,
+          title: data.title,
+          description: data.description,
+          image_url: data.image_url,
+          salary_range: data.salary_range,
+          featured: data.featured,
           academic_majors: data.academic_majors?.split(',').map(item => item.trim()).filter(Boolean) || [],
           required_skills: data.required_skills?.split(',').map(item => item.trim()).filter(Boolean) || [],
           required_tools: data.required_tools?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          job_outlook: data.job_outlook,
+          industry: data.industry,
+          work_environment: data.work_environment,
+          growth_potential: data.growth_potential,
           keywords: data.keywords?.split(',').map(item => item.trim()).filter(Boolean) || [],
           transferable_skills: data.transferable_skills?.split(',').map(item => item.trim()).filter(Boolean) || [],
           careers_to_consider_switching_to: data.careers_to_consider_switching_to?.split(',').map(item => item.trim()).filter(Boolean) || [],
           required_education: data.required_education?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          stress_levels: data.stress_levels,
+          rare: data.rare,
+          popular: data.popular,
+          new_career: data.new_career,
+          status: 'Pending'
         };
 
         const { error } = await supabase
           .from('careers')
-          .insert([{
-            ...formattedData,
-            status: 'Pending'
-          }]);
+          .insert([formattedData]);
 
         if (error) throw error;
 
