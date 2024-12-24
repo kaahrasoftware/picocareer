@@ -13,12 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools';
-type InsertData = {
-  majors: Database['public']['Tables']['majors']['Insert'];
-  schools: Database['public']['Tables']['schools']['Insert'];
-}
+type FieldName = 'academic_major_id' | 'school_id';
+type TitleField = 'title' | 'name';
 
-interface SelectWithCustomOptionProps {
+interface CustomSelectProps {
   value: string;
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
@@ -27,14 +25,25 @@ interface SelectWithCustomOptionProps {
   onCancel: () => void;
 }
 
-export function SelectWithCustomOption({
-  value,
-  options,
-  placeholder,
+type InsertData = {
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+}
+
+type TableRecord = {
+  id: string;
+  title?: string;
+  name?: string;
+}
+
+export function CustomSelect({ 
+  value, 
+  options, 
+  placeholder, 
   tableName,
   onSelect,
   onCancel
-}: SelectWithCustomOptionProps) {
+}: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const { toast } = useToast();
