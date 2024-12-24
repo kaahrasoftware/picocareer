@@ -7,25 +7,24 @@ export default function Auth() {
   return (
     <div className="min-h-screen">
       <div className="flex min-h-screen">
-        <div className="w-[40%] bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')] p-8 flex flex-col items-center justify-center">
-          <div className="max-w-md space-y-8 text-center">
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <img 
-                  src="/lovable-uploads/5bc14e63-ae18-4b0e-b24f-491ed6206d5c.png" 
-                  alt="PicoCareer Logo" 
-                  className="h-16 w-auto animate-float"
-                />
-              </div>
-              <img 
-                src="/lovable-uploads/90701554-04cf-42e3-9cfd-cce94a7af17a.png" 
-                alt="PicoCareer Title" 
-                className="h-12 w-auto mx-auto" // Reduced height from h-16 to h-12
-              />
-              <p className="text-lg text-gray-300">
-                Your Gateway to Career Success
-              </p>
-            </div>
+        <div className="w-[40%] bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')] p-8 flex flex-col items-center">
+          <div className="flex flex-col items-center space-y-4 mb-8">
+            <img 
+              src="/lovable-uploads/5bc14e63-ae18-4b0e-b24f-491ed6206d5c.png" 
+              alt="PicoCareer Logo" 
+              className="h-16 w-auto animate-float"
+            />
+            <img 
+              src="/lovable-uploads/90701554-04cf-42e3-9cfd-cce94a7af17a.png" 
+              alt="PicoCareer Title" 
+              className="h-12 w-auto mx-auto"
+            />
+            <p className="text-lg text-gray-300">
+              Your Gateway to Career Success
+            </p>
+          </div>
+          
+          <div className="max-w-md space-y-8 text-center mt-auto">
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-white">Join Our Community</h2>
               <p className="text-gray-300">
