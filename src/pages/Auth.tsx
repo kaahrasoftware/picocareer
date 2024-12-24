@@ -91,12 +91,6 @@ export default function AuthPage() {
         // Clear any cached data
         localStorage.removeItem('supabase.auth.token');
         queryClient.clear();
-      } else if (event === 'USER_UPDATED') {
-        // Handle user update events
-        console.log('User updated:', session?.user);
-      } else if (event === 'USER_DELETED') {
-        // Handle user deletion
-        navigate("/auth");
       }
     });
 
@@ -104,27 +98,6 @@ export default function AuthPage() {
       subscription.unsubscribe();
     };
   }, [navigate, toast, queryClient]);
-
-  const handleViewChange = (newView: 'sign_in' | 'sign_up') => {
-    setView(newView);
-  };
-
-  const handleAuthError = (error: any) => {
-    if (error.message.includes('user_already_exists')) {
-      toast({
-        title: "Account Already Exists",
-        description: "Please sign in instead.",
-        variant: "destructive",
-      });
-      setView('sign_in');
-    } else {
-      toast({
-        title: "Authentication Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -149,7 +122,6 @@ export default function AuthPage() {
           redirectTo={window.location.origin}
           showLinks={true}
           view={view}
-          onError={handleAuthError}
           localization={{
             variables: {
               sign_up: {
