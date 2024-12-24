@@ -13,6 +13,8 @@ import { AcademicRequirements } from "./major-details/AcademicRequirements";
 import { CareerProspects } from "./major-details/CareerProspects";
 import { SkillsAndTools } from "./major-details/SkillsAndTools";
 import { AdditionalInfo } from "./major-details/AdditionalInfo";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MajorDetailsProps {
   major: Major;
