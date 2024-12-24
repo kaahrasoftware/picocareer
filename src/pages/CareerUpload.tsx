@@ -48,6 +48,7 @@ export default function CareerUpload() {
           {
             ...data,
             author_id: user.id,
+            status: 'Pending'
           }
         ]);
 
@@ -55,10 +56,9 @@ export default function CareerUpload() {
 
       toast({
         title: "Success",
-        description: "Career information has been uploaded successfully",
+        description: "Career information has been submitted for review",
       });
 
-      // Reset the form by refreshing the page
       window.location.reload();
     } catch (error: any) {
       console.error('Error uploading career:', error);
