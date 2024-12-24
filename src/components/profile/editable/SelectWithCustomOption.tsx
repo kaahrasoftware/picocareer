@@ -12,7 +12,6 @@ import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
 type TableName = 'majors' | 'schools';
-type FieldName = 'academic_major_id' | 'school_id';
 
 interface CustomSelectProps {
   value: string;
@@ -26,12 +25,6 @@ interface CustomSelectProps {
 type InsertData = {
   majors: Database['public']['Tables']['majors']['Insert'];
   schools: Database['public']['Tables']['schools']['Insert'];
-}
-
-interface TableRecord {
-  id: string;
-  title?: string;
-  name?: string;
 }
 
 export function SelectWithCustomOption({ 
