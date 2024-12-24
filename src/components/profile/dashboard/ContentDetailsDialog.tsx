@@ -50,7 +50,11 @@ export function ContentDetailsDialog({
         return data || [];
       } catch (error) {
         console.error('Error fetching content:', error);
-        toast.error('Failed to fetch content. Please try again.');
+        toast({
+          title: "Error",
+          description: "Failed to fetch content. Please try again.",
+          variant: "destructive",
+        });
         throw error;
       }
     },
