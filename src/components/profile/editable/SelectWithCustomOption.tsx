@@ -13,6 +13,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 type TitleField = 'title' | 'name';
+type Status = Database['public']['Enums']['status'];
 
 interface Option {
   id: string;
@@ -34,20 +35,20 @@ type TableInsertData = {
   majors: {
     title: string;
     description: string;
-    status: string;
+    status: Status;
   };
   schools: {
     name: string;
-    status: string;
+    status: Status;
   };
   careers: {
     title: string;
     description: string;
-    status: string;
+    status: Status;
   };
   companies: {
     name: string;
-    status: string;
+    status: Status;
   };
 };
 
@@ -99,7 +100,7 @@ export function SelectWithCustomOption({
 
       // Prepare insert data based on table type
       const baseData = {
-        status: 'Pending' as const
+        status: 'Pending' as Status
       };
 
       let insertData: TableInsertData[TableName];
@@ -132,7 +133,7 @@ export function SelectWithCustomOption({
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
-        .select()
+        .select(`id, ${titleField}`)
         .single();
 
       if (error) {
