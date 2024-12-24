@@ -171,6 +171,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           academic_major={profile?.academic_major}
           highest_degree={profile?.highest_degree}
           school_name={profile?.school_name}
+          profileId={profile?.id || ''}
         />
         <LocationSection profile={profile} />
         <ProfessionalInfoSection profile={profile} isMentee={isMentee} />
