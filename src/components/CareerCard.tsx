@@ -49,6 +49,14 @@ export function CareerCard({
             {description}
           </p>
 
+          {required_education && required_education.length > 0 && (
+            <BadgeSection
+              title="Required Education"
+              items={required_education}
+              badgeClassName="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
+            />
+          )}
+
           {academic_majors && academic_majors.length > 0 && (
             <BadgeSection
               title="Related Majors"
@@ -70,14 +78,6 @@ export function CareerCard({
               title="Required Tools"
               items={required_tools}
               badgeClassName="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-            />
-          )}
-
-          {required_education && required_education.length > 0 && (
-            <BadgeSection
-              title="Required Education"
-              items={required_education}
-              badgeClassName="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
             />
           )}
 
