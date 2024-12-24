@@ -14,7 +14,7 @@ import { AboutSection } from "./career-details/AboutSection";
 import { CareerMetrics } from "./career-details/CareerMetrics";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
-import { Users } from "lucide-react";
+import { Users, DollarSign } from "lucide-react";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -86,8 +86,9 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
             </Badge>
           </div>
           {career.salary_range && (
-            <DialogDescription className="text-primary font-medium mt-2">
-              Salary Range: {career.salary_range}
+            <DialogDescription className="text-primary font-medium mt-2 flex items-center gap-1">
+              <DollarSign className="h-4 w-4" />
+              {career.salary_range}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -101,6 +102,14 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
                 className="w-full h-48 object-cover rounded-lg"
               />
             )}
+
+            <AboutSection
+              description={career.description}
+              learning_objectives={career.learning_objectives}
+              industry={career.industry}
+              work_environment={career.work_environment}
+              growth_potential={career.growth_potential}
+            />
 
             {career.career_major_relations && career.career_major_relations.length > 0 && (
               <div>
@@ -125,14 +134,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               average_salary={career.average_salary}
               potential_salary={career.potential_salary}
               tuition_and_fees={career.tuition_and_fees}
-            />
-
-            <AboutSection
-              description={career.description}
-              learning_objectives={career.learning_objectives}
-              industry={career.industry}
-              work_environment={career.work_environment}
-              growth_potential={career.growth_potential}
             />
 
             <SkillsAndTools
