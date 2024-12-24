@@ -28,6 +28,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -40,7 +41,13 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
+
+      console.log('Fetched profile data:', data);
+      
       return {
         ...data,
         company_name: data.company?.name,

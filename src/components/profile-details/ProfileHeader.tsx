@@ -32,7 +32,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
   // Determine primary and secondary display text based on whether the user is a student or professional
   const primaryText = profile.career_title || profile.academic_major || "No position/major set";
-  const secondaryText = profile.position 
+  const secondaryText = profile.career_title 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
@@ -131,7 +131,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
         <div className="flex flex-col gap-1 mt-2">
           <div className="flex items-center gap-2 text-muted-foreground">
-            {profile.position ? (
+            {profile.career_title ? (
               <Building2 className="h-4 w-4 flex-shrink-0" />
             ) : (
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
