@@ -55,7 +55,7 @@ export function CareerCard({
             )}
             
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate mb-1">{title}</h3>
+              <h3 className="font-semibold mb-1 break-words">{title}</h3>
               {industry && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Building2 className="h-3 w-3 flex-shrink-0" />
@@ -108,9 +108,9 @@ export function CareerCard({
             )}
 
             {salary_range && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <TrendingUp className="h-3 w-3" />
-                <span>{salary_range}</span>
+              <div className="flex items-center gap-2 text-sm">
+                <TrendingUp className="h-3 w-3 text-[#8B5CF6]" />
+                <span className="text-[#8B5CF6] font-medium">{salary_range}</span>
               </div>
             )}
 
