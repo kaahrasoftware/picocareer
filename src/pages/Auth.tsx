@@ -147,16 +147,17 @@ export default function AuthPage() {
               },
             },
           }}
-          additionalData={{
-            first_name: {
-              required: true,
-              label: "First Name",
-              type: "text",
-            },
-            last_name: {
-              required: true,
-              label: "Last Name",
-              type: "text",
+          options={{
+            emailRedirectTo: window.location.origin,
+            signUpFields: {
+              first_name: {
+                required: true,
+                label: "First Name",
+              },
+              last_name: {
+                required: true,
+                label: "Last Name",
+              },
             },
           }}
         />
