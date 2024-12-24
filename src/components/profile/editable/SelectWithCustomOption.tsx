@@ -7,10 +7,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
 
 type TableName = 'majors' | 'schools';
 type FieldName = 'academic_major_id' | 'school_id';
@@ -52,7 +51,7 @@ export function SelectWithCustomOption({
       // First, check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select(tableName === 'majors' ? 'id, title' : 'id, name')
+        .select('id, ' + (tableName === 'majors' ? 'title' : 'name'))
         .eq(tableName === 'majors' ? 'title' : 'name', customValue)
         .maybeSingle();
 
@@ -84,15 +83,14 @@ export function SelectWithCustomOption({
         } as InsertData['majors'];
       } else {
         insertData = {
-          name: customValue,
-          type: 'University' as const
+          name: customValue
         } as InsertData['schools'];
       }
 
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
-        .select(tableName === 'majors' ? 'id, title' : 'id, name')
+        .select('id, ' + (tableName === 'majors' ? 'title' : 'name'))
         .single();
 
       if (error) {
@@ -134,25 +132,24 @@ export function SelectWithCustomOption({
           className="mt-1"
         />
         <div className="flex gap-2">
-          <Button
+          <button
             type="button"
             onClick={handleCustomSubmit}
-            size="sm"
+            className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
             Add
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
             onClick={() => {
               setShowCustomInput(false);
               setCustomValue("");
               onCancel();
             }}
-            variant="outline"
-            size="sm"
+            className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
           >
             Cancel
-          </Button>
+          </button>
         </div>
       </div>
     );
