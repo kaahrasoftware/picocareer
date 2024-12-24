@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 
 interface CareerMentorListProps {
   careerId: string;
@@ -12,9 +13,10 @@ interface CareerMentorListProps {
 
 export function CareerMentorList({ careerId }: CareerMentorListProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const MENTORS_PER_PAGE = 6;
 
-  const { data: mentors, isLoading } = useQuery({
+  const { data: mentors, isLoading, error } = useQuery({
     queryKey: ['career-mentors', careerId, currentPage],
     queryFn: async () => {
       const start = (currentPage - 1) * MENTORS_PER_PAGE;
@@ -47,6 +49,11 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
     return <div>Loading mentors...</div>;
   }
 
+  if (error) {
+    console.error('Error fetching mentors:', error);
+    return <div>Error loading mentors. Please try again later.</div>;
+  }
+
   if (!mentors || mentors.mentors.length === 0) {
     return null;
   }
@@ -65,6 +72,7 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
           <Card 
             key={mentor.id}
             className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => setSelectedMentorId(mentor.id)}
           >
             <div className="relative w-20 h-20 group">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
@@ -97,6 +105,12 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <ProfileDetailsDialog
+        userId={selectedMentorId}
+        open={!!selectedMentorId}
+        onOpenChange={(open) => !open && setSelectedMentorId(null)}
+      />
     </div>
   );
 }
