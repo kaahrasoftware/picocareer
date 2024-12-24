@@ -37,7 +37,7 @@ export function SelectWithCustomOption({
       // Check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id, name, title')
+        .select('id, title, name')
         .eq(tableName === 'schools' ? 'name' : 'title', customValue)
         .maybeSingle();
 
@@ -83,6 +83,10 @@ export function SelectWithCustomOption({
         onSave(data.id);
         setShowCustomInput(false);
         setCustomValue("");
+        toast({
+          title: "Success",
+          description: `Successfully added new ${tableName.slice(0, -1)}.`,
+        });
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
