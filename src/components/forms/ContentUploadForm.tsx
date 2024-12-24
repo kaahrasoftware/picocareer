@@ -55,7 +55,6 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('User not authenticated');
 
-        // Convert array fields from comma-separated strings to actual arrays
         const formattedData = {
           title: data.title,
           description: data.description,
