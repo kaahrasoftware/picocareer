@@ -31,7 +31,6 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
       return newValue;
     },
     onSuccess: (newValue) => {
-      // Update the cache with the new value
       queryClient.setQueryData(['profile'], (oldData: any) => ({
         ...oldData,
         [fieldName]: newValue,
@@ -53,49 +52,42 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
         description: "Failed to update field",
         variant: "destructive",
       });
-      // Reset to previous value on error
       setEditValue(value || "");
     },
   });
 
   if (isEditing) {
     return (
-      <div className="space-y-2">
-        <label className="font-medium">{label}</label>
-        <div className="flex gap-2">
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            className="flex-1"
-          />
-          <Button 
-            onClick={() => updateFieldMutation.mutate(editValue)}
-            size="sm"
-            disabled={updateFieldMutation.isPending}
-          >
-            Save
-          </Button>
-          <Button 
-            onClick={() => {
-              setIsEditing(false);
-              setEditValue(value || "");
-            }} 
-            variant="outline" 
-            size="sm"
-          >
-            Cancel
-          </Button>
-        </div>
+      <div className="flex gap-2">
+        <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="flex-1"
+        />
+        <Button 
+          onClick={() => updateFieldMutation.mutate(editValue)}
+          size="sm"
+          disabled={updateFieldMutation.isPending}
+        >
+          Save
+        </Button>
+        <Button 
+          onClick={() => {
+            setIsEditing(false);
+            setEditValue(value || "");
+          }} 
+          variant="outline" 
+          size="sm"
+        >
+          Cancel
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="flex items-center justify-between group">
-      <div>
-        <span className="font-medium">{label}</span>{" "}
-        <span className="text-muted-foreground">{value || "Not set"}</span>
-      </div>
+      <span className="text-muted-foreground">{value || "Not set"}</span>
       <Button
         variant="ghost"
         size="icon"
