@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 type TitleField = 'title' | 'name';
@@ -28,6 +29,27 @@ interface CustomSelectProps {
   fieldName: string;
   onCancel?: () => void;
 }
+
+type TableInsertData = {
+  majors: {
+    title: string;
+    description: string;
+    status: string;
+  };
+  schools: {
+    name: string;
+    status: string;
+  };
+  careers: {
+    title: string;
+    description: string;
+    status: string;
+  };
+  companies: {
+    name: string;
+    status: string;
+  };
+};
 
 export function SelectWithCustomOption({ 
   value, 
@@ -76,16 +98,36 @@ export function SelectWithCustomOption({
       }
 
       // Prepare insert data based on table type
-      const insertData = {
-        [titleField]: customValue,
-        status: 'Pending',
-        ...(tableName === 'majors' && {
-          description: `Custom major: ${customValue}`
-        }),
-        ...(tableName === 'careers' && {
-          description: `Position: ${customValue}`
-        })
+      const baseData = {
+        status: 'Pending' as const
       };
+
+      let insertData: TableInsertData[TableName];
+
+      if (tableName === 'majors') {
+        insertData = {
+          ...baseData,
+          title: customValue,
+          description: `Custom major: ${customValue}`
+        };
+      } else if (tableName === 'careers') {
+        insertData = {
+          ...baseData,
+          title: customValue,
+          description: `Position: ${customValue}`
+        };
+      } else if (tableName === 'schools') {
+        insertData = {
+          ...baseData,
+          name: customValue
+        };
+      } else {
+        // companies
+        insertData = {
+          ...baseData,
+          name: customValue
+        };
+      }
 
       const { data, error } = await supabase
         .from(tableName)
