@@ -1,53 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FormField } from "@/components/forms/FormField";
 import { useQuery } from "@tanstack/react-query";
-import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
-
-const mentorRegistrationSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email"),
-  avatar_url: z.string().min(1, "Profile picture is required"),
-  bio: z.string().min(50, "Bio should be at least 50 characters long"),
-  years_of_experience: z.number().min(0, "Years of experience cannot be negative"),
-  linkedin_url: z.string().url("Please enter a valid LinkedIn URL"),
-  github_url: z.string().url("Please enter a valid GitHub URL").optional(),
-  website_url: z.string().url("Please enter a valid website URL").optional(),
-  skills: z.string(),
-  tools_used: z.string(),
-  keywords: z.string(),
-  fields_of_interest: z.string(),
-  highest_degree: z.enum([
-    "No Degree",
-    "High School",
-    "Associate",
-    "Bachelor",
-    "Master",
-    "MD",
-    "PhD"
-  ]),
-  position: z.string().min(1, "Please select your current position"),
-  company_id: z.string().min(1, "Please select your company"),
-  school_id: z.string().min(1, "Please select your school"),
-  academic_major_id: z.string().min(1, "Please select your major"),
-  location: z.string().min(1, "Please enter your location"),
-});
+import { mentorRegistrationSchema } from "@/components/forms/mentor/MentorFormFields";
+import { useState } from "react";
+import { MentorRegistrationForm } from "@/components/forms/mentor/MentorRegistrationForm";
 
 export default function MentorRegistration() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const form = useForm({
-    resolver: zodResolver(mentorRegistrationSchema),
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch data queries
   const { data: careers } = useQuery({
     queryKey: ['careers'],
     queryFn: async () => {
@@ -100,7 +63,11 @@ export default function MentorRegistration() {
     }
   });
 
-  const onSubmit = async (data: z.infer<typeof mentorRegistrationSchema>) => {
+  const onSubmit = async (data: any) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -111,6 +78,22 @@ export default function MentorRegistration() {
           variant: "destructive",
         });
         navigate("/auth");
+        return;
+      }
+
+      // Check if user already has a pending mentor application
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_type, status')
+        .eq('id', user.id)
+        .single();
+
+      if (existingProfile?.user_type === 'mentor' && existingProfile?.status === 'Pending') {
+        toast({
+          title: "Application Pending",
+          description: "You already have a pending mentor application. Our team will review it shortly.",
+          variant: "warning",
+        });
         return;
       }
 
@@ -137,25 +120,29 @@ export default function MentorRegistration() {
           school_id: data.school_id,
           academic_major_id: data.academic_major_id,
           location: data.location,
-          user_type: 'mentor'
+          user_type: 'mentor',
+          status: 'Pending'
         })
         .eq('id', user.id);
 
       if (updateError) throw updateError;
 
       toast({
-        title: "Success",
-        description: "Your mentor profile has been created successfully",
+        title: "Application Received",
+        description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
       });
 
-      navigate("/profile");
+      // Reset form through the child component
+      window.location.reload();
     } catch (error) {
       console.error('Error registering mentor:', error);
       toast({
         title: "Error",
-        description: "Failed to register as mentor. Please try again.",
+        description: "Failed to submit mentor application. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,35 +155,15 @@ export default function MentorRegistration() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {mentorFormFields.map((field) => {
-            let options = [];
-            if (field.name === "position") {
-              options = careers || [];
-            } else if (field.name === "company_id") {
-              options = companies || [];
-            } else if (field.name === "school_id") {
-              options = schools || [];
-            } else if (field.name === "academic_major_id") {
-              options = majors || [];
-            }
-
-            return (
-              <FormField
-                key={field.name}
-                control={form.control}
-                {...field}
-                options={options}
-              />
-            );
-          })}
-
-          <Button type="submit" className="w-full">
-            Register as Mentor
-          </Button>
-        </form>
-      </Form>
+      <MentorRegistrationForm
+        onSubmit={onSubmit}
+        isSubmitting={isSubmitting}
+        schema={mentorRegistrationSchema}
+        careers={careers}
+        companies={companies}
+        schools={schools}
+        majors={majors}
+      />
     </div>
   );
 }
