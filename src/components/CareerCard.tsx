@@ -42,19 +42,19 @@ export function CareerCard({
         <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="relative flex flex-col h-full">
-          <div className="absolute top-0 right-0">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              {profiles_count}
-            </Badge>
-          </div>
-
           <CareerHeader 
             title={title}
             industry={industry}
             salary_range={salary_range}
             image_url={image_url}
           />
+
+          <div className="mt-2 mb-4">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              {profiles_count}
+            </Badge>
+          </div>
 
           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
             {description}
