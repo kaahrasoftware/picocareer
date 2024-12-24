@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   FormField as FormFieldBase,
   FormItem,
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "./ImageUpload";
 import { RichTextEditor } from "./RichTextEditor";
+import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
 import {
   Select,
   SelectContent,
@@ -18,23 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { subcategories } from "./blog/subcategories";
-
-type SelectOption = string | { id: string; title?: string; name?: string };
-
-export interface FormFieldProps {
-  name: string;
-  label: string;
-  placeholder?: string;
-  description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect" | "select";
-  bucket?: string;
-  required?: boolean;
-  options?: SelectOption[];
-  dependsOn?: string;
-  watch?: any;
-  control?: any;
-}
 
 const degreeOptions = [
   "No Degree",
@@ -45,6 +29,20 @@ const degreeOptions = [
   "MD",
   "PhD"
 ] as const;
+
+export interface FormFieldProps {
+  name: string;
+  label: string;
+  placeholder?: string;
+  description?: string;
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect" | "select";
+  bucket?: string;
+  required?: boolean;
+  options?: Array<{ id: string; title?: string; name?: string }>;
+  dependsOn?: string;
+  watch?: any;
+  control?: any;
+}
 
 export function FormField({ 
   control, 
@@ -59,20 +57,6 @@ export function FormField({
   dependsOn,
   watch
 }: FormFieldProps) {
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [availableOptions, setAvailableOptions] = useState<string[]>([...options] as string[]);
-  
-  const watchDependency = dependsOn ? watch?.(dependsOn) : null;
-  
-  useEffect(() => {
-    if (dependsOn === 'categories' && watchDependency) {
-      const newOptions = watchDependency.flatMap((category: string) => 
-        subcategories[category] || []
-      );
-      setAvailableOptions(Array.from(new Set(newOptions)));
-    }
-  }, [dependsOn, watchDependency]);
-
   if (type === "image") {
     return (
       <ImageUpload
@@ -84,21 +68,6 @@ export function FormField({
       />
     );
   }
-
-  const renderSelectOption = (option: SelectOption) => {
-    if (typeof option === 'string') {
-      return (
-        <SelectItem key={option} value={option}>
-          {option}
-        </SelectItem>
-      );
-    }
-    return (
-      <SelectItem key={option.id} value={option.id}>
-        {option.title || option.name}
-      </SelectItem>
-    );
-  };
 
   return (
     <FormFieldBase
@@ -112,38 +81,55 @@ export function FormField({
           </FormLabel>
           <FormControl>
             {type === "select" ? (
-              <Select
-                value={field.value || ""}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map(renderSelectOption)}
-                </SelectContent>
-              </Select>
-            ) : type === "multiselect" ? (
-              <Select
-                value={field.value?.[field.value.length - 1] || ""}
-                onValueChange={(value) => {
-                  const newValues = field.value || [];
-                  if (!newValues.includes(value)) {
-                    field.onChange([...newValues, value]);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              name === "position" ? (
+                <SelectWithCustomOption
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                  options={options}
+                  placeholder={placeholder || "Select position"}
+                  tableName="careers"
+                />
+              ) : name === "company_id" ? (
+                <SelectWithCustomOption
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                  options={options}
+                  placeholder={placeholder || "Select company"}
+                  tableName="companies"
+                />
+              ) : name === "school_id" ? (
+                <SelectWithCustomOption
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                  options={options}
+                  placeholder={placeholder || "Select school"}
+                  tableName="schools"
+                />
+              ) : name === "academic_major_id" ? (
+                <SelectWithCustomOption
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                  options={options}
+                  placeholder={placeholder || "Select major"}
+                  tableName="majors"
+                />
+              ) : (
+                <Select
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={placeholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {options.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.title || option.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )
             ) : type === "degree" ? (
               <Select
                 value={field.value || ""}
@@ -194,27 +180,6 @@ export function FormField({
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
-          {type === "multiselect" && field.value?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {field.value.map((value: string) => (
-                <span
-                  key={value}
-                  className="bg-primary/10 text-sm px-2 py-1 rounded-full flex items-center gap-1"
-                >
-                  {value}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      field.onChange(field.value.filter((v: string) => v !== value));
-                    }}
-                    className="text-xs hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
         </FormItem>
       )}
     />
