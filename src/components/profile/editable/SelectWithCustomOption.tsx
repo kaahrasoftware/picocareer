@@ -10,12 +10,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
+
+type TableName = 'majors' | 'schools';
+type InsertData = {
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+}
 
 interface SelectWithCustomOptionProps {
   value: string;
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
-  tableName: 'majors' | 'schools';
+  tableName: TableName;
   onSelect: (value: string) => void;
   onCancel: () => void;
 }
@@ -60,15 +67,19 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      const insertData = tableName === 'majors' 
-        ? { 
-            title: customValue,
-            description: `Custom major: ${customValue}`
-          }
-        : { 
-            name: customValue,
-            type: 'University'
-          };
+      let insertData: InsertData[TableName];
+      
+      if (tableName === 'majors') {
+        insertData = {
+          title: customValue,
+          description: `Custom major: ${customValue}`
+        } as InsertData['majors'];
+      } else {
+        insertData = {
+          name: customValue,
+          type: 'University' as const // Default type for new schools
+        } as InsertData['schools'];
+      }
 
       const { data, error } = await supabase
         .from(tableName)
@@ -86,14 +97,15 @@ export function SelectWithCustomOption({
         return;
       }
 
-      onSelect(data.id);
-      setShowCustomInput(false);
-      setCustomValue("");
-      
-      toast({
-        title: "Success",
-        description: `New ${tableName === 'majors' ? 'major' : 'school'} added successfully!`,
-      });
+      if (data) {
+        onSelect(data.id);
+        setShowCustomInput(false);
+        setCustomValue("");
+        toast({
+          title: "Success",
+          description: `Successfully added new ${tableName === 'majors' ? 'major' : 'school'}.`,
+        });
+      }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
       toast({
@@ -106,30 +118,34 @@ export function SelectWithCustomOption({
 
   if (showCustomInput) {
     return (
-      <div className="flex gap-2">
+      <div className="space-y-2">
         <Input
           value={customValue}
           onChange={(e) => setCustomValue(e.target.value)}
-          className="flex-1"
           placeholder={`Enter ${tableName === 'majors' ? 'major' : 'school'} name`}
+          className="mt-1"
         />
-        <Button 
-          onClick={handleCustomSubmit}
-          size="sm"
-        >
-          Add
-        </Button>
-        <Button 
-          onClick={() => {
-            setShowCustomInput(false);
-            setCustomValue("");
-            onCancel();
-          }} 
-          variant="outline" 
-          size="sm"
-        >
-          Cancel
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onClick={handleCustomSubmit}
+            size="sm"
+          >
+            Add
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              setShowCustomInput(false);
+              setCustomValue("");
+              onCancel();
+            }}
+            variant="outline"
+            size="sm"
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     );
   }
