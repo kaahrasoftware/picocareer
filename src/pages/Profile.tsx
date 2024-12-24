@@ -10,7 +10,7 @@ import { DashboardTab } from "@/components/profile/DashboardTab";
 import { MentorTab } from "@/components/profile/MentorTab";
 import type { Profile } from "@/types/database/profiles";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -84,7 +84,6 @@ export default function ProfilePage() {
         updated_at: data.updated_at || new Date().toISOString(),
         school_id: data.school_id || null,
         company_id: data.company_id || null,
-        career_id: data.career_id || null,
         academic_major_id: data.academic_major_id || null,
         user_type: data.user_type || 'mentee',
         highest_degree: data.highest_degree || null,
