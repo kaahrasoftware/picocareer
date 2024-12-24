@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, TrendingUp, Briefcase } from "lucide-react";
+import { Building2, Briefcase } from "lucide-react";
 
 export interface CareerCardProps {
   id: string;
@@ -14,7 +13,9 @@ export interface CareerCardProps {
   image_url?: string;
   industry?: string;
   required_skills?: string[];
-  stress_levels?: string;
+  required_tools?: string[];
+  required_education?: string[];
+  academic_majors?: string[];
 }
 
 export function CareerCard({ 
@@ -25,12 +26,11 @@ export function CareerCard({
   image_url,
   industry,
   required_skills,
-  stress_levels,
+  required_tools,
+  required_education,
+  academic_majors,
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  
-  // Convert stress_levels string to number for Progress component
-  const stressLevelValue = stress_levels ? parseInt(stress_levels, 10) : undefined;
 
   return (
     <>
@@ -81,11 +81,12 @@ export function CareerCard({
           {/* Skills Section */}
           {required_skills && required_skills.length > 0 && (
             <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Required Skills</h4>
               <div className="flex flex-wrap gap-1.5">
                 {required_skills.slice(0, 3).map((skill) => (
                   <Badge 
                     key={skill}
-                    variant="secondary"
+                    variant="outline"
                     className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
                   >
                     {skill}
@@ -93,8 +94,8 @@ export function CareerCard({
                 ))}
                 {required_skills.length > 3 && (
                   <Badge 
-                    variant="secondary"
-                    className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                    variant="outline"
+                    className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
                   >
                     +{required_skills.length - 3} more
                   </Badge>
@@ -103,18 +104,85 @@ export function CareerCard({
             </div>
           )}
 
-          {/* Stress Level Section */}
-          <div className="mt-auto space-y-4">
-            {stressLevelValue !== undefined && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Stress Level</span>
-                  <span>{stressLevelValue}/10</span>
-                </div>
-                <Progress value={stressLevelValue * 10} className="h-1" />
+          {/* Tools Section */}
+          {required_tools && required_tools.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Required Tools</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {required_tools.slice(0, 3).map((tool) => (
+                  <Badge 
+                    key={tool}
+                    variant="outline"
+                    className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                  >
+                    {tool}
+                  </Badge>
+                ))}
+                {required_tools.length > 3 && (
+                  <Badge 
+                    variant="outline"
+                    className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                  >
+                    +{required_tools.length - 3} more
+                  </Badge>
+                )}
               </div>
-            )}
+            </div>
+          )}
 
+          {/* Education Section */}
+          {required_education && required_education.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Required Education</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {required_education.slice(0, 3).map((education) => (
+                  <Badge 
+                    key={education}
+                    variant="outline"
+                    className="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
+                  >
+                    {education}
+                  </Badge>
+                ))}
+                {required_education.length > 3 && (
+                  <Badge 
+                    variant="outline"
+                    className="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
+                  >
+                    +{required_education.length - 3} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Academic Majors Section */}
+          {academic_majors && academic_majors.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Related Majors</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {academic_majors.slice(0, 3).map((major) => (
+                  <Badge 
+                    key={major}
+                    variant="outline"
+                    className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]"
+                  >
+                    {major}
+                  </Badge>
+                ))}
+                {academic_majors.length > 3 && (
+                  <Badge 
+                    variant="outline"
+                    className="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]"
+                  >
+                    +{academic_majors.length - 3} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-auto">
             <Button 
               variant="outline"
               className="w-full bg-background hover:bg-muted/50 transition-colors"
