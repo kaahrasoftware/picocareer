@@ -19,9 +19,6 @@ export default function Auth() {
               alt="PicoCareer Title" 
               className="h-12 w-auto mx-auto"
             />
-            <p className="text-lg text-gray-300">
-              Your Gateway to Career Success
-            </p>
           </div>
           
           <div className="max-w-md space-y-8 text-center mt-auto">
