@@ -24,6 +24,7 @@ export const careerFormSchema = z.object({
   rare: z.boolean().optional(),
   popular: z.boolean().optional(),
   new_career: z.boolean().optional(),
+  status: statusEnum.optional()
 });
 
 export type CareerFormValues = z.infer<typeof careerFormSchema>;
