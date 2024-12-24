@@ -35,7 +35,7 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
           <Badge
             key={index}
             variant="outline"
-            className={badgeStyle || "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"}
+            className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
           >
             {item}
           </Badge>
@@ -43,7 +43,7 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
         {items.length > 2 && (
           <Badge
             variant="outline"
-            className={badgeStyle || "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"}
+            className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
           >
             +{items.length - 2} more
           </Badge>
