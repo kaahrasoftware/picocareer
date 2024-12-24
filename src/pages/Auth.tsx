@@ -7,9 +7,9 @@ import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
 export default function Auth() {
   return (
     <div className="min-h-screen bg-background">
-      <ResizablePanelGroup direction="horizontal" className="min-h-screen">
-        <ResizablePanel defaultSize={60} minSize={40}>
-          <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex min-h-screen">
+        <div className="w-[60%] p-4">
+          <div className="flex items-center justify-center min-h-full">
             <Card className="w-full max-w-md p-6 space-y-6">
               <div className="space-y-2 text-center">
                 <h1 className="text-2xl font-semibold tracking-tight">Welcome to PicoCareer</h1>
@@ -34,10 +34,10 @@ export default function Auth() {
               </Tabs>
             </Card>
           </div>
-        </ResizablePanel>
+        </div>
         
-        <ResizablePanel defaultSize={40} minSize={30}>
-          <div className="flex items-center justify-center min-h-screen p-4 bg-muted/30">
+        <div className="w-[40%] bg-muted/30 p-4">
+          <div className="flex items-center justify-center min-h-full">
             <div className="max-w-md space-y-4 text-center">
               <h2 className="text-xl font-semibold">Join Our Community</h2>
               <p className="text-muted-foreground">
@@ -45,8 +45,8 @@ export default function Auth() {
               </p>
             </div>
           </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </div>
+      </div>
     </div>
   );
 }
