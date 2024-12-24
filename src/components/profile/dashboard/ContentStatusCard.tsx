@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { 
@@ -12,13 +12,15 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+type TableName = "blogs" | "videos" | "mentor_sessions" | "careers" | "majors" | "schools";
+
 interface ContentStatusCardProps {
   title: string;
   total: number;
   approved: number;
   pending: number;
   rejected?: number;
-  tableName: string;
+  tableName: TableName;
   itemId: string;
   onStatusChange?: () => void;
 }

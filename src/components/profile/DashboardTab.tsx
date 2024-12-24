@@ -131,6 +131,14 @@ export function DashboardTab() {
     refetchUsers();
   };
 
+  if (!contentStats || !userStats) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 p-6">
       {/* Overview Cards */}
