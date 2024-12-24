@@ -91,9 +91,14 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
                 </Avatar>
               </div>
             </div>
-            <p className="mt-3 text-sm font-medium text-center line-clamp-2 w-full">
-              {mentor.first_name} {mentor.last_name}
-            </p>
+            <div className="mt-3 text-center w-full">
+              <p className="text-sm font-medium line-clamp-1">
+                {mentor.first_name}
+              </p>
+              <p className="text-sm font-medium line-clamp-1">
+                {mentor.last_name}
+              </p>
+            </div>
           </Card>
         ))}
       </div>

@@ -52,42 +52,42 @@ export function SkillsAndTools({
       {renderSection(
         required_education,
         "Required Education",
-        badgeStyles.secondary,
+        badgeStyles.education,
         <GraduationCap className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         required_skills,
         "Required Skills",
-        badgeStyles.primary,
+        badgeStyles.skills,
         <Lightbulb className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         required_tools,
         "Required Tools",
-        badgeStyles.primary,
+        badgeStyles.tools,
         <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         tools_knowledge,
         "Tools & Knowledge",
-        badgeStyles.primary,
+        badgeStyles.tools,
         <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         skill_match,
         "Skill Match",
-        badgeStyles.primary,
+        badgeStyles.skills,
         <Lightbulb className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         transferable_skills,
         "Transferable Skills",
-        badgeStyles.primary,
+        badgeStyles.skills,
         <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
       )}
     </div>
