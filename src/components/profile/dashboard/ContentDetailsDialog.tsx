@@ -34,12 +34,10 @@ export function ContentDetailsDialog({
       try {
         console.log('Fetching content with query:', { statusFilter, contentType });
         
-        let query = supabase
+        const { data, error } = await supabase
           .from(contentType)
           .select('*')
           .order('created_at', { ascending: false });
-
-        const { data, error } = await query;
 
         if (error) {
           console.error('Supabase query error:', error);
@@ -72,7 +70,7 @@ export function ContentDetailsDialog({
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: contentType
         },
@@ -91,21 +89,25 @@ export function ContentDetailsDialog({
 
   const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
     try {
-      console.log('Updating status:', { itemId, newStatus });
+      console.log('Updating status:', { itemId, newStatus, contentType });
       
       const { error } = await supabase
         .from(contentType)
         .update({ status: newStatus })
         .eq('id', itemId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating status:', error);
+        throw error;
+      }
 
       toast({
         title: "Status updated",
         description: `Item status has been updated to ${newStatus}`,
       });
 
-      // No need to manually refetch as real-time subscription will handle the update
+      // Refetch to ensure we have the latest data
+      refetch();
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
