@@ -6,8 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
@@ -139,7 +137,7 @@ export function ContentDetailsDialog({
                     <h4 className="font-semibold">{item.title}</h4>
                     <div className="flex items-center gap-2">
                       <Select
-                        defaultValue={item.status || "Pending"}
+                        value={item.status || "Pending"}
                         onValueChange={(value) => handleStatusChange(item.id, value as ContentStatus)}
                       >
                         <SelectTrigger className={`w-[120px] border ${getStatusColor(item.status as ContentStatus)}`}>
@@ -159,7 +157,7 @@ export function ContentDetailsDialog({
                     </p>
                   )}
                   <div className="text-xs text-muted-foreground">
-                    Created: {format(new Date(item.created_at), 'PPP')}
+                    Created: {new Date(item.created_at).toLocaleDateString()}
                   </div>
                 </div>
               ))}
