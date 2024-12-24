@@ -141,6 +141,7 @@ export type Database = {
           growth_potential: string | null
           id: string
           image_url: string | null
+          important_note: string | null
           industry: string | null
           job_outlook: string | null
           keywords: string[] | null
@@ -168,6 +169,7 @@ export type Database = {
           growth_potential?: string | null
           id?: string
           image_url?: string | null
+          important_note?: string | null
           industry?: string | null
           job_outlook?: string | null
           keywords?: string[] | null
@@ -195,6 +197,7 @@ export type Database = {
           growth_potential?: string | null
           id?: string
           image_url?: string | null
+          important_note?: string | null
           industry?: string | null
           job_outlook?: string | null
           keywords?: string[] | null

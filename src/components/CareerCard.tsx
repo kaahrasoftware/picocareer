@@ -45,7 +45,7 @@ export function CareerCard({
           <div className="absolute top-0 right-0">
             <Badge variant="secondary" className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              <span>{profiles_count} mentors</span>
+              {profiles_count}
             </Badge>
           </div>
 
