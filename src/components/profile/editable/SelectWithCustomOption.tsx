@@ -14,7 +14,6 @@ import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools';
 type FieldName = 'academic_major_id' | 'school_id';
-type TitleField = 'title' | 'name';
 
 interface CustomSelectProps {
   value: string;
@@ -30,7 +29,7 @@ type InsertData = {
   schools: Database['public']['Tables']['schools']['Insert'];
 }
 
-type TableRecord = {
+interface TableRecord {
   id: string;
   title?: string;
   name?: string;
