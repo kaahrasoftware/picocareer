@@ -1,5 +1,8 @@
 import * as z from "zod";
 
+const statusEnum = z.enum(["Approved", "Pending", "Rejected"]);
+export type Status = z.infer<typeof statusEnum>;
+
 export const careerFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),

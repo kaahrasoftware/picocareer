@@ -77,7 +77,7 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
           rare: data.rare,
           popular: data.popular,
           new_career: data.new_career,
-          status: 'Pending'
+          status: 'Pending' as const
         };
 
         const { error } = await supabase
