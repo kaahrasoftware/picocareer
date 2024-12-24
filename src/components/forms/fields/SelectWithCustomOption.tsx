@@ -54,11 +54,13 @@ export function SelectWithCustomOption({
   const handleCustomSubmit = async () => {
     try {
       // First check if entry already exists
-      const { data: existingData } = await supabase
+      const { data: existingData, error: checkError } = await supabase
         .from(tableName)
         .select('id, name, title')
         .eq(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name', customValue)
         .maybeSingle();
+
+      if (checkError) throw checkError;
 
       if (existingData) {
         onValueChange(existingData.id);

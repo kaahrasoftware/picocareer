@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { FormFieldProps } from "@/components/forms/FormField";
-import { categories, subcategories } from "./categories";
+import { categories } from "./categories";
+import { subcategories } from "./data/subcategories";
 
 // Transform categories and subcategories into the required format
 const categoryOptions = categories.map(category => ({
@@ -8,7 +9,7 @@ const categoryOptions = categories.map(category => ({
   title: category
 }));
 
-const subcategoryOptions = subcategories.map(subcategory => ({
+const subcategoryOptions = Object.values(subcategories).flat().map(subcategory => ({
   id: subcategory,
   title: subcategory
 }));
