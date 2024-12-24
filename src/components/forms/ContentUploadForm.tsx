@@ -69,10 +69,10 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
 
         const { error } = await supabase
           .from('careers')
-          .insert({
+          .insert([{
             ...formattedData,
-            status: 'Pending',
-          });
+            status: 'Pending'
+          }]);
 
         if (error) throw error;
 
@@ -82,7 +82,6 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
           variant: "default"
         });
 
-        // Reset the form after successful submission
         form.reset();
       }
     } catch (error: any) {

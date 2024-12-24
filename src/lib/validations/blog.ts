@@ -1,16 +1,5 @@
 import * as z from "zod";
 
-export const blogFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  summary: z.string().min(1, "Summary is required"),
-  content: z.string().min(1, "Content is required"),
-  cover_image_url: z.string().optional(),
-  categories: z.array(z.string()).optional(),
-  subcategories: z.array(z.string()).optional(),
-  other_notes: z.string().optional(),
-  is_recent: z.boolean().optional(),
-});
-
 export const careerFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
@@ -34,5 +23,4 @@ export const careerFormSchema = z.object({
   new_career: z.boolean().optional(),
 });
 
-export type BlogFormValues = z.infer<typeof blogFormSchema>;
 export type CareerFormValues = z.infer<typeof careerFormSchema>;
