@@ -27,29 +27,37 @@ export function ContentDetailsDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Updated query with better error handling and logging
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ['content-details', contentType],
+    queryKey: ['content-details', contentType, statusFilter],
     queryFn: async () => {
       try {
         console.log('Fetching content with query:', { statusFilter, contentType });
         
-        const { data, error } = await supabase
+        let query = supabase
           .from(contentType)
           .select('*')
           .order('created_at', { ascending: false });
+
+        // Apply status filter if not "all"
+        if (statusFilter !== "all") {
+          query = query.eq('status', statusFilter);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
           console.error('Supabase query error:', error);
           throw error;
         }
 
-        console.log('Fetched items:', data);
+        console.log(`Fetched ${contentType}:`, data);
         return data || [];
       } catch (error) {
-        console.error('Error fetching content:', error);
+        console.error(`Error fetching ${contentType}:`, error);
         toast({
           title: "Error",
-          description: "Failed to fetch content. Please try again.",
+          description: `Failed to fetch ${contentType}. Please try again.`,
           variant: "destructive",
         });
         throw error;
@@ -58,13 +66,14 @@ export function ContentDetailsDialog({
     enabled: open,
   });
 
+  // Enhanced real-time subscription
   useEffect(() => {
     if (!open) return;
 
-    console.log('Setting up real-time subscription for:', contentType);
+    console.log(`Setting up real-time subscription for: ${contentType}`);
     
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`${contentType}-changes`)
       .on(
         'postgres_changes',
         {
@@ -73,21 +82,27 @@ export function ContentDetailsDialog({
           table: contentType
         },
         (payload) => {
-          console.log('Real-time update received:', payload);
-          queryClient.invalidateQueries({ queryKey: ['content-details', contentType] });
+          console.log(`Real-time update received for ${contentType}:`, payload);
+          // Invalidate queries to refetch data
+          queryClient.invalidateQueries({ 
+            queryKey: ['content-details', contentType]
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Subscription status for ${contentType}:`, status);
+      });
 
     return () => {
-      console.log('Cleaning up real-time subscription');
+      console.log(`Cleaning up real-time subscription for ${contentType}`);
       supabase.removeChannel(channel);
     };
   }, [open, contentType, queryClient]);
 
+  // Updated status change handler with better error handling and immediate UI update
   const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
     try {
-      console.log('Updating status:', { itemId, newStatus, contentType });
+      console.log(`Updating ${contentType} status:`, { itemId, newStatus });
       
       const { error } = await supabase
         .from(contentType)
@@ -95,22 +110,31 @@ export function ContentDetailsDialog({
         .eq('id', itemId);
 
       if (error) {
-        console.error('Error updating status:', error);
+        console.error(`Error updating ${contentType} status:`, error);
         throw error;
       }
 
-      toast({
-        title: "Status updated",
-        description: `Item status has been updated to ${newStatus}`,
+      // Optimistically update the UI
+      queryClient.setQueryData(['content-details', contentType], (oldData: any[]) => {
+        return oldData?.map(item => 
+          item.id === itemId ? { ...item, status: newStatus } : item
+        );
       });
 
-      // Refetch to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ['content-details', contentType] });
+      // Then refetch to ensure data consistency
+      queryClient.invalidateQueries({ 
+        queryKey: ['content-details', contentType]
+      });
+
+      toast({
+        title: "Status updated",
+        description: `${contentType} status has been updated to ${newStatus}`,
+      });
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error(`Error updating ${contentType} status:`, error);
       toast({
         title: "Error updating status",
-        description: "There was an error updating the status. Please try again.",
+        description: `There was an error updating the ${contentType} status. Please try again.`,
         variant: "destructive",
       });
     }
