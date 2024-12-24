@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentUploadFormProps {
-  fields: FormFieldProps[];
+  fields: Omit<FormFieldProps, 'control'>[];
   onSubmit: (data: any) => Promise<void>;
 }
 
@@ -47,16 +47,16 @@ export function ContentUploadForm({ fields, onSubmit }: ContentUploadFormProps) 
       // Show success message
       toast({
         title: "Success",
-        description: "Blog post has been uploaded successfully",
+        description: "Content has been uploaded successfully",
       });
 
       // Reset the form
       form.reset();
     } catch (error: any) {
-      console.error('Error uploading blog:', error);
+      console.error('Error uploading content:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to upload blog post",
+        description: error.message || "Failed to upload content",
         variant: "destructive",
       });
     }
@@ -75,9 +75,9 @@ export function ContentUploadForm({ fields, onSubmit }: ContentUploadFormProps) 
                 ${field.type === 'multiselect' ? 'md:col-span-2' : ''}
               `}>
                 <FormField
+                  {...field}
                   control={form.control}
                   watch={watch}
-                  {...field}
                 />
               </div>
             ))}

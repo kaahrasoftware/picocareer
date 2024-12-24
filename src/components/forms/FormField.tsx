@@ -21,7 +21,6 @@ import {
 import { categories, subcategories } from "./blog/BlogFormFields";
 
 export interface FormFieldProps {
-  control: any;
   name: string;
   label: string;
   placeholder?: string;
@@ -32,6 +31,7 @@ export interface FormFieldProps {
   options?: string[];
   dependsOn?: string;
   watch?: any;
+  control?: any;
 }
 
 const degreeOptions = [
