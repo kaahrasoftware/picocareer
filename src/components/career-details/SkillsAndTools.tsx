@@ -1,5 +1,6 @@
 import { Wrench, Lightbulb, ArrowRightLeft, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { badgeStyles } from "./BadgeStyles";
 
 interface SkillsAndToolsProps {
   required_skills?: string[];
@@ -18,7 +19,7 @@ export function SkillsAndTools({
   transferable_skills,
   required_education
 }: SkillsAndToolsProps) {
-  const renderSection = (items: string[] | undefined, title: string, badgeClass: string, icon: React.ReactNode) => {
+  const renderSection = (items: string[] | undefined, title: string, badgeStyle: string, icon: React.ReactNode) => {
     if (!items?.length) return null;
     return (
       <div className="space-y-2">
@@ -31,7 +32,7 @@ export function SkillsAndTools({
             <Badge 
               key={index}
               variant="outline"
-              className={badgeClass}
+              className={badgeStyle}
             >
               {item}
             </Badge>
@@ -51,42 +52,42 @@ export function SkillsAndTools({
       {renderSection(
         required_education,
         "Required Education",
-        "bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]",
+        badgeStyles.secondary,
         <GraduationCap className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         required_skills,
         "Required Skills",
-        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]",
+        badgeStyles.primary,
         <Lightbulb className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         required_tools,
         "Required Tools",
-        "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]",
+        badgeStyles.primary,
         <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         tools_knowledge,
         "Tools & Knowledge",
-        "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]",
+        badgeStyles.primary,
         <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         skill_match,
         "Skill Match",
-        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]",
+        badgeStyles.primary,
         <Lightbulb className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         transferable_skills,
         "Transferable Skills",
-        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]",
+        badgeStyles.primary,
         <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
       )}
     </div>

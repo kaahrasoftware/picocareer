@@ -14,6 +14,7 @@ import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
 import { CareerMentorList } from "./career-details/CareerMentorList";
 import { Users, DollarSign, Book, ArrowRight, Tag } from "lucide-react";
+import { badgeStyles } from "./career-details/BadgeStyles";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -85,7 +86,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
           {career.salary_range && (
             <Badge 
               variant="outline"
-              className="mt-2 bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6] flex w-fit items-center gap-1"
+              className={badgeStyles.outline}
             >
               <DollarSign className="h-4 w-4" />
               {career.salary_range}
@@ -124,7 +125,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
                   {career.academic_majors.map((major, index) => (
                     <Badge 
                       key={index}
-                      className="bg-primary/10 text-primary rounded-full"
+                      className={badgeStyles.primary}
                     >
                       {major}
                     </Badge>
@@ -143,7 +144,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
                   {career.career_major_relations.map(({ major }) => (
                     <Badge 
                       key={major.id} 
-                      className="bg-primary/10 text-primary rounded-full"
+                      className={badgeStyles.primary}
                     >
                       {major.title}
                     </Badge>
@@ -163,7 +164,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
                     <Badge 
                       key={index}
                       variant="outline"
-                      className="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
+                      className={badgeStyles.keyword}
                     >
                       {keyword}
                     </Badge>
