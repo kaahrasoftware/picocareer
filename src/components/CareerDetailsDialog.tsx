@@ -100,9 +100,12 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         <DialogHeader className="p-4 pb-0">
           <div className="relative">
             <DialogTitle className="text-2xl font-bold text-foreground pr-24">{career.title}</DialogTitle>
-            <Badge variant="secondary" className="absolute top-0 right-0 flex items-center gap-1 bg-transparent border-none">
+            <Badge 
+              variant="secondary" 
+              className="absolute top-0 right-0 flex items-center gap-1.5 bg-[#E5DEFF] hover:bg-[#D8D1F2] text-[#4B5563] transition-colors border border-[#D8D1F2] px-3 py-1 rounded-full shadow-sm"
+            >
               <Users className="h-4 w-4" />
-              <span>{career.profiles_count || 0} mentors</span>
+              <span className="font-medium">{career.profiles_count || 0} mentors</span>
             </Badge>
           </div>
           {career.salary_range && (
