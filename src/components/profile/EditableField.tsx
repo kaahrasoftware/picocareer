@@ -21,6 +21,12 @@ type TableName = 'majors' | 'schools' | 'companies' | 'careers';
 type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
 type TitleField = 'title' | 'name';
 
+interface TableRecord {
+  id: string;
+  title?: string;
+  name?: string;
+}
+
 interface EditableFieldProps {
   label: string;
   value: string | null;
@@ -65,7 +71,7 @@ export function EditableField({
         .order(titleField);
       
       if (error) throw error;
-      return data;
+      return data as TableRecord[];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });
