@@ -28,6 +28,9 @@ export function CareerCard({
   featured
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Convert stress_levels string to number for Progress component
+  const stressLevelValue = stress_levels ? parseInt(stress_levels, 10) : undefined;
 
   return (
     <>
@@ -65,13 +68,13 @@ export function CareerCard({
             </p>
           </div>
 
-          {stress_levels !== undefined && (
+          {stressLevelValue !== undefined && (
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Stress Level</span>
-                <span>{stress_levels}/10</span>
+                <span>{stressLevelValue}/10</span>
               </div>
-              <Progress value={stress_levels * 10} className="h-1" />
+              <Progress value={stressLevelValue * 10} className="h-1" />
             </div>
           )}
 
