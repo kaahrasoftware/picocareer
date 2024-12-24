@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
+import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
 
 export default function MajorUpload() {
@@ -74,9 +74,10 @@ export default function MajorUpload() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Upload Major</h1>
-      <ContentUploadForm 
-        fields={majorFormFields} 
+      <GenericUploadForm 
+        fields={majorFormFields}
         onSubmit={handleSubmit}
+        buttonText="Upload Major"
       />
     </div>
   );

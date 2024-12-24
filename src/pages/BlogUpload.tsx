@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
+import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { blogFormFields } from "@/components/forms/blog/BlogFormFields";
 
 export default function BlogUpload() {
@@ -75,9 +75,10 @@ export default function BlogUpload() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Upload Blog Post</h1>
-      <ContentUploadForm 
+      <GenericUploadForm 
         fields={blogFormFields}
         onSubmit={handleSubmit}
+        buttonText="Upload Blog Post"
       />
     </div>
   );
