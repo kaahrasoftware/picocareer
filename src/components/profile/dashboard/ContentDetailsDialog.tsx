@@ -68,7 +68,7 @@ export function ContentDetailsDialog({ open, onOpenChange, contentType }: Conten
       <div key={item.id} className="bg-muted p-4 rounded-lg mb-4">
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-semibold">{item.title}</h4>
-          <Badge variant={item.status === 'Approved' ? 'success' : item.status === 'Rejected' ? 'destructive' : 'default'}>
+          <Badge variant={item.status === 'Approved' ? 'default' : item.status === 'Rejected' ? 'destructive' : 'outline'}>
             {item.status}
           </Badge>
         </div>

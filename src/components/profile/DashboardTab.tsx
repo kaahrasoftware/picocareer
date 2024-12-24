@@ -15,7 +15,7 @@ import { ContentStatusCard } from "./dashboard/ContentStatusCard";
 import { ActivityChart } from "./dashboard/ActivityChart";
 import { ContentDistributionChart } from "./dashboard/ContentDistributionChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ContentDetailsDialog } from "./ContentDetailsDialog";
+import { ContentDetailsDialog } from "./dashboard/ContentDetailsDialog";
 
 export function DashboardTab() {
   // Fetch users statistics
