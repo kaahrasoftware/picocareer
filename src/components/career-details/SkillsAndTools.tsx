@@ -1,4 +1,4 @@
-import { Wrench } from "lucide-react";
+import { Wrench, Lightbulb, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SkillsAndToolsProps {
@@ -16,11 +16,14 @@ export function SkillsAndTools({
   skill_match,
   transferable_skills
 }: SkillsAndToolsProps) {
-  const renderSection = (items: string[] | undefined, title: string, badgeClass: string) => {
+  const renderSection = (items: string[] | undefined, title: string, badgeClass: string, icon: React.ReactNode) => {
     if (!items?.length) return null;
     return (
       <div className="space-y-2">
-        <h5 className="text-sm font-medium">{title}</h5>
+        <h5 className="text-sm font-medium flex items-center gap-2">
+          {icon}
+          {title}
+        </h5>
         <div className="flex flex-wrap gap-2">
           {items.map((item, index) => (
             <Badge 
@@ -46,31 +49,36 @@ export function SkillsAndTools({
       {renderSection(
         required_skills,
         "Required Skills",
-        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]",
+        <Lightbulb className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         required_tools,
         "Required Tools",
-        "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+        "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]",
+        <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         tools_knowledge,
         "Tools & Knowledge",
-        "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+        "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]",
+        <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         skill_match,
         "Skill Match",
-        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]",
+        <Lightbulb className="h-4 w-4 text-muted-foreground" />
       )}
 
       {renderSection(
         transferable_skills,
         "Transferable Skills",
-        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+        "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]",
+        <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
       )}
     </div>
   );

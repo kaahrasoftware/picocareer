@@ -1,4 +1,5 @@
 import { Progress } from "@/components/ui/progress";
+import { Activity, DollarSign, BookOpen } from "lucide-react";
 
 interface CareerMetricsProps {
   intensity?: string | null;
@@ -35,25 +36,31 @@ export function CareerMetrics({
 
   return (
     <div className="space-y-4">
-      <h4 className="text-lg font-semibold">Career Metrics</h4>
+      <h4 className="text-lg font-semibold flex items-center gap-2">
+        <Activity className="h-5 w-5 text-primary" />
+        Career Metrics
+      </h4>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {average_salary && (
-          <div className="text-sm">
+          <div className="text-sm flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Average Salary:</span>
-            <span className="ml-2">{average_salary}</span>
+            <span>{average_salary}</span>
           </div>
         )}
         {potential_salary && (
-          <div className="text-sm">
+          <div className="text-sm flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Potential Salary:</span>
-            <span className="ml-2">{potential_salary}</span>
+            <span>{potential_salary}</span>
           </div>
         )}
         {tuition_and_fees && (
-          <div className="text-sm">
+          <div className="text-sm flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Tuition & Fees:</span>
-            <span className="ml-2">{tuition_and_fees}</span>
+            <span>{tuition_and_fees}</span>
           </div>
         )}
       </div>
@@ -62,9 +69,10 @@ export function CareerMetrics({
         {renderMetricBar(intensity?.toString(), "Career Intensity")}
         {renderMetricBar(stress_levels, "Stress Levels")}
         {dropout_rates && (
-          <div className="text-sm">
+          <div className="text-sm flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Dropout Rate:</span>
-            <span className="ml-2">{dropout_rates}</span>
+            <span>{dropout_rates}</span>
           </div>
         )}
       </div>

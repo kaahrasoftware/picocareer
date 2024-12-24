@@ -1,6 +1,5 @@
-import { Briefcase } from "lucide-react";
+import { Briefcase, Building2, GraduationCap, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Tables } from "@/integrations/supabase/types";
 
 interface AboutSectionProps {
   description: string;
@@ -27,14 +26,20 @@ export function AboutSection({
 
       {industry && (
         <div className="mt-4">
-          <h5 className="text-sm font-medium mb-2">Industry</h5>
+          <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            Industry
+          </h5>
           <p className="text-muted-foreground">{industry}</p>
         </div>
       )}
       
       {learning_objectives && learning_objectives.length > 0 && (
         <div className="mt-4">
-          <h5 className="text-sm font-medium mb-2">Learning Objectives</h5>
+          <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            Learning Objectives
+          </h5>
           <div className="flex flex-wrap gap-2">
             {learning_objectives.map((objective, index) => (
               <Badge 
@@ -58,7 +63,10 @@ export function AboutSection({
 
       {growth_potential && (
         <div className="mt-4">
-          <h5 className="text-sm font-medium mb-2">Growth Potential</h5>
+          <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            Growth Potential
+          </h5>
           <p className="text-muted-foreground">{growth_potential}</p>
         </div>
       )}

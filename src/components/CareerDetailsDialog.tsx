@@ -28,23 +28,6 @@ type CareerWithMajors = Tables<"careers"> & {
       id: string;
     };
   }[];
-  intensity?: string;
-  dropout_rates?: string;
-  average_salary?: string;
-  potential_salary?: string;
-  tuition_and_fees?: string;
-  learning_objectives?: string[];
-  tools_knowledge?: string[];
-  skill_match?: string[];
-  professional_associations?: string[];
-  common_difficulties?: string[];
-  certifications_to_consider?: string[];
-  affiliated_programs?: string[];
-  careers_to_consider_switching_to?: string[];
-  job_prospects?: string;
-  passion_for_subject?: string;
-  global_applicability?: string;
-  profiles_count?: number;
 };
 
 export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
@@ -66,7 +49,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
-    refetchInterval: 10000,
   });
 
   if (!open) return null;
