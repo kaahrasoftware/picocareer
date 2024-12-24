@@ -35,6 +35,16 @@ const Blog = () => {
             )
           `);
 
+        // Search across multiple columns
+        if (searchQuery) {
+          query = query.or(
+            `title.ilike.%${searchQuery}%,` +
+            `summary.ilike.%${searchQuery}%,` +
+            `content.ilike.%${searchQuery}%,` +
+            `profiles.full_name.ilike.%${searchQuery}%`
+          );
+        }
+
         if (selectedCategory && selectedCategory !== "_all") {
           query = query.contains('categories', [selectedCategory]);
         }
@@ -45,10 +55,6 @@ const Blog = () => {
 
         if (showRecentOnly) {
           query = query.eq('is_recent', true);
-        }
-
-        if (searchQuery) {
-          query = query.ilike('title', `%${searchQuery}%`);
         }
 
         const { data, error } = await query;
