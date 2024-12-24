@@ -21,7 +21,7 @@ interface ContentStatusCardProps {
   pending: number;
   rejected?: number;
   tableName: TableName;
-  itemId: string;
+  itemId?: string; // Make itemId optional since we're not using it for bulk updates
   onStatusChange?: () => void;
 }
 
@@ -32,7 +32,6 @@ export function ContentStatusCard({
   pending, 
   rejected = 0,
   tableName,
-  itemId,
   onStatusChange 
 }: ContentStatusCardProps) {
   const [changing, setChanging] = useState(false);
@@ -41,22 +40,24 @@ export function ContentStatusCard({
   const handleStatusChange = async (newStatus: string) => {
     setChanging(true);
     try {
+      // Update all pending items in the table to the new status
       const { error } = await supabase
         .from(tableName)
         .update({ status: newStatus })
-        .eq('id', itemId);
+        .eq('status', 'Pending');
 
       if (error) throw error;
 
       toast({
         title: "Status updated",
-        description: `${title} status has been updated to ${newStatus}`,
+        description: `All pending ${title.toLowerCase()} have been updated to ${newStatus}`,
       });
 
       if (onStatusChange) {
         onStatusChange();
       }
     } catch (error) {
+      console.error('Error updating status:', error);
       toast({
         title: "Error updating status",
         description: "There was an error updating the status. Please try again.",
@@ -95,14 +96,13 @@ export function ContentStatusCard({
           </span>
         </div>
       )}
-      <Select onValueChange={handleStatusChange} disabled={changing}>
+      <Select onValueChange={handleStatusChange} disabled={changing || pending === 0}>
         <SelectTrigger className="w-full mt-2">
-          <SelectValue placeholder="Change status" />
+          <SelectValue placeholder={pending === 0 ? "No pending items" : "Change status for all pending"} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Approved">Approve</SelectItem>
-          <SelectItem value="Pending">Set as Pending</SelectItem>
-          <SelectItem value="Rejected">Reject</SelectItem>
+          <SelectItem value="Approved">Approve all pending</SelectItem>
+          <SelectItem value="Rejected">Reject all pending</SelectItem>
         </SelectContent>
       </Select>
     </div>
