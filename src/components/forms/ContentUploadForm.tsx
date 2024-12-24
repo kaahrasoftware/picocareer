@@ -34,7 +34,7 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
     },
   });
 
-  const handleSubmit = async (data: BlogFormValues) => {
+  const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       if (onSubmit) {
@@ -43,51 +43,41 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('User not authenticated');
 
-        const { data: result, error } = await supabase
-          .from('blogs')
+        // Convert array fields from comma-separated strings to actual arrays
+        const formattedData = {
+          ...data,
+          academic_majors: data.academic_majors?.split(',').map((item: string) => item.trim()) || [],
+          required_skills: data.required_skills?.split(',').map((item: string) => item.trim()) || [],
+          required_tools: data.required_tools?.split(',').map((item: string) => item.trim()) || [],
+          keywords: data.keywords?.split(',').map((item: string) => item.trim()) || [],
+          transferable_skills: data.transferable_skills?.split(',').map((item: string) => item.trim()) || [],
+          careers_to_consider_switching_to: data.careers_to_consider_switching_to?.split(',').map((item: string) => item.trim()) || [],
+          required_education: data.required_education?.split(',').map((item: string) => item.trim()) || [],
+        };
+
+        const { error } = await supabase
+          .from('careers')
           .insert({
-            title: data.title,
-            summary: data.summary,
-            content: data.content,
-            cover_image_url: data.cover_image_url,
-            categories: data.categories || [],
-            subcategories: data.subcategories || [],
-            other_notes: data.other_notes,
-            is_recent: data.is_recent,
-            author_id: user.id,
-          })
-          .select()
-          .single();
+            ...formattedData,
+            status: 'Pending',
+          });
 
         if (error) throw error;
 
-        const { error: notificationError } = await supabase.functions.invoke('send-blog-notifications', {
-          body: { blogId: result.id }
+        toast({
+          title: "Success",
+          description: "Career uploaded successfully! It will be reviewed before being published.",
+          variant: "default"
         });
-
-        if (notificationError) {
-          console.error('Error sending notifications:', notificationError);
-          toast({
-            title: "Content Uploaded",
-            description: "Content uploaded successfully, but there was an issue sending notifications.",
-            variant: "default"
-          });
-        } else {
-          toast({
-            title: "Success",
-            description: "Content uploaded successfully! Notifications have been sent.",
-            variant: "default"
-          });
-        }
 
         // Reset the form after successful submission
         form.reset();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting content:', error);
       toast({
         title: "Error",
-        description: "Failed to upload content. Please try again.",
+        description: error.message || "Failed to upload content. Please try again.",
         variant: "destructive"
       });
     } finally {
