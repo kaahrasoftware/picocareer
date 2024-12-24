@@ -8,14 +8,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { Badge } from "@/components/ui/badge";
 import { AboutSection } from "./career-details/AboutSection";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
 import { CareerMentorList } from "./career-details/CareerMentorList";
 import { HeaderBadges } from "./career-details/HeaderBadges";
-import { Book, ArrowRight, Tag } from "lucide-react";
-import { badgeStyles } from "./career-details/BadgeStyles";
+import { AcademicMajorsSection } from "./career-details/AcademicMajorsSection";
+import { RelatedMajorsSection } from "./career-details/RelatedMajorsSection";
+import { KeywordsSection } from "./career-details/KeywordsSection";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -132,66 +132,9 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               important_note={career.important_note}
             />
 
-            {/* Academic Majors Section */}
-            {career.academic_majors && career.academic_majors.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <Book className="h-5 w-5 text-primary" />
-                  Academic Majors
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {career.academic_majors.map((major, index) => (
-                    <Badge 
-                      key={index}
-                      className={badgeStyles.primary}
-                    >
-                      {major}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Related Majors Section */}
-            {career.career_major_relations && career.career_major_relations.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <ArrowRight className="h-5 w-5 text-primary" />
-                  Related Majors
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {career.career_major_relations.map(({ major }) => (
-                    <Badge 
-                      key={major.id} 
-                      className={badgeStyles.primary}
-                    >
-                      {major.title}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Keywords Section */}
-            {career.keywords && career.keywords.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-primary" />
-                  Keywords
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {career.keywords.map((keyword, index) => (
-                    <Badge 
-                      key={index}
-                      variant="outline"
-                      className={badgeStyles.keyword}
-                    >
-                      {keyword}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+            <AcademicMajorsSection academicMajors={career.academic_majors} />
+            <RelatedMajorsSection careerMajorRelations={career.career_major_relations} />
+            <KeywordsSection keywords={career.keywords} />
 
             <CareerMentorList careerId={career.id} />
 
