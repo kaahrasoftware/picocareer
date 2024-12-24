@@ -1,18 +1,11 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { EditButton } from "./editable/EditButton";
-import { SelectWithCustomOption } from "./editable/SelectWithCustomOption";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { InputField } from "./editable/InputField";
+import { SelectField } from "./editable/SelectField";
+import { CustomSelect } from "./editable/CustomSelect";
 
 const degreeOptions = [
   "No Degree",
@@ -43,76 +36,40 @@ export function EditableField({
   const [editValue, setEditValue] = useState(value || "");
   const { toast } = useToast();
 
-  // Fetch majors if the field is academic_major_id
-  const { data: majors } = useQuery({
-    queryKey: ['majors'],
+  // Fetch options for select fields
+  const { data: options } = useQuery({
+    queryKey: ['field-options', fieldName],
     queryFn: async () => {
-      if (fieldName !== 'academic_major_id') return null;
-      const { data, error } = await supabase
-        .from('majors')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: fieldName === 'academic_major_id'
-  });
+      if (!['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)) {
+        return null;
+      }
 
-  // Fetch schools if the field is school_id
-  const { data: schools } = useQuery({
-    queryKey: ['schools'],
-    queryFn: async () => {
-      if (fieldName !== 'school_id') return null;
-      const { data, error } = await supabase
-        .from('schools')
-        .select('id, name')
-        .eq('status', 'Approved')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: fieldName === 'school_id'
-  });
+      const tableMap = {
+        academic_major_id: 'majors',
+        school_id: 'schools',
+        position: 'careers',
+        company_id: 'companies'
+      };
 
-  // Fetch careers if the field is position
-  const { data: careers } = useQuery({
-    queryKey: ['careers'],
-    queryFn: async () => {
-      if (fieldName !== 'position') return null;
-      const { data, error } = await supabase
-        .from('careers')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: fieldName === 'position'
-  });
+      const table = tableMap[fieldName as keyof typeof tableMap];
+      const titleField = fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
 
-  // Fetch companies if the field is company_id
-  const { data: companies } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      if (fieldName !== 'company_id') return null;
       const { data, error } = await supabase
-        .from('companies')
-        .select('id, name')
+        .from(table)
+        .select(`id, ${titleField}`)
         .eq('status', 'Approved')
-        .order('name');
+        .order(titleField);
       
       if (error) throw error;
       return data;
     },
-    enabled: fieldName === 'company_id'
+    enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });
 
   const updateField = async (newValue: string) => {
     try {
+      console.log('Updating field:', { fieldName, newValue, profileId });
+      
       const { error } = await supabase
         .from('profiles')
         .update({ [fieldName]: newValue })
@@ -120,6 +77,8 @@ export function EditableField({
 
       if (error) throw error;
 
+      console.log('Field updated successfully');
+      
       toast({
         title: "Success",
         description: "Field updated successfully",
@@ -140,16 +99,26 @@ export function EditableField({
   };
 
   if (isEditing) {
-    if (fieldName === 'school_id' && schools) {
+    // Custom select fields (with option to add new items)
+    if (['school_id', 'academic_major_id', 'position', 'company_id'].includes(fieldName) && options) {
+      const tableMap = {
+        school_id: { table: 'schools', field: 'name' },
+        academic_major_id: { table: 'majors', field: 'title' },
+        position: { table: 'careers', field: 'title' },
+        company_id: { table: 'companies', field: 'name' }
+      };
+      
+      const config = tableMap[fieldName as keyof typeof tableMap];
+      
       return (
-        <SelectWithCustomOption
+        <CustomSelect
           value={editValue}
-          options={schools}
-          placeholder="Select a school"
-          tableName="schools"
-          handleSelectChange={updateField}
+          options={options}
+          placeholder={`Select a ${label.toLowerCase()}`}
+          tableName={config.table}
           fieldName={fieldName}
-          titleField="name"
+          titleField={config.field}
+          onSave={updateField}
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");
@@ -158,119 +127,33 @@ export function EditableField({
       );
     }
 
-    if (fieldName === 'academic_major_id' && majors) {
-      return (
-        <SelectWithCustomOption
-          value={editValue}
-          options={majors}
-          placeholder="Select a major"
-          tableName="majors"
-          handleSelectChange={updateField}
-          fieldName={fieldName}
-          titleField="title"
-          onCancel={() => {
-            setIsEditing(false);
-            setEditValue(value || "");
-          }}
-        />
-      );
-    }
-
-    if (fieldName === 'position' && careers) {
-      return (
-        <SelectWithCustomOption
-          value={editValue}
-          options={careers}
-          placeholder="Select a position"
-          tableName="careers"
-          handleSelectChange={updateField}
-          fieldName={fieldName}
-          titleField="title"
-          onCancel={() => {
-            setIsEditing(false);
-            setEditValue(value || "");
-          }}
-        />
-      );
-    }
-
-    if (fieldName === 'company_id' && companies) {
-      return (
-        <SelectWithCustomOption
-          value={editValue}
-          options={companies}
-          placeholder="Select a company"
-          tableName="companies"
-          handleSelectChange={updateField}
-          fieldName={fieldName}
-          titleField="name"
-          onCancel={() => {
-            setIsEditing(false);
-            setEditValue(value || "");
-          }}
-        />
-      );
-    }
-
+    // Degree select field
     if (fieldName === 'highest_degree') {
       return (
-        <div className="flex gap-2">
-          <Select 
-            value={editValue} 
-            onValueChange={(value) => {
-              updateField(value);
-              setEditValue(value);
-            }}
-          >
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select your highest degree" />
-            </SelectTrigger>
-            <SelectContent>
-              {degreeOptions.map((degree) => (
-                <SelectItem key={degree} value={degree}>
-                  {degree}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button 
-            onClick={() => {
-              setIsEditing(false);
-              setEditValue(value || "");
-            }} 
-            variant="outline" 
-            size="sm"
-          >
-            Cancel
-          </Button>
-        </div>
+        <SelectField
+          value={editValue}
+          options={degreeOptions}
+          placeholder="Select your highest degree"
+          onSave={updateField}
+          onCancel={() => {
+            setIsEditing(false);
+            setEditValue(value || "");
+          }}
+        />
       );
     }
 
+    // Default input field
     return (
-      <div className="flex gap-2">
-        <Input
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          className="flex-1"
-        />
-        <Button 
-          onClick={() => updateField(editValue)}
-          size="sm"
-        >
-          Save
-        </Button>
-        <Button 
-          onClick={() => {
-            setIsEditing(false);
-            setEditValue(value || "");
-          }} 
-          variant="outline" 
-          size="sm"
-        >
-          Cancel
-        </Button>
-      </div>
+      <InputField
+        value={editValue}
+        onChange={setEditValue}
+        onSave={() => updateField(editValue)}
+        onCancel={() => {
+          setIsEditing(false);
+          setEditValue(value || "");
+        }}
+      />
     );
   }
 
