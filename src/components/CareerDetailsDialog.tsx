@@ -70,15 +70,18 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   if (isLoading) return <div>Loading...</div>;
   if (!career) return <div>Career not found</div>;
 
-  const renderMetricBar = (value: number | null, label: string) => {
+  const renderMetricBar = (value: string | null, label: string) => {
     if (value === null) return null;
+    const numericValue = parseInt(value, 10);
+    if (isNaN(numericValue)) return null;
+    
     return (
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span>{label}</span>
-          <span>{value}/10</span>
+          <span>{numericValue}/10</span>
         </div>
-        <Progress value={value * 10} className="h-2" />
+        <Progress value={numericValue * 10} className="h-2" />
       </div>
     );
   };

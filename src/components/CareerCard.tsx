@@ -12,7 +12,7 @@ export interface CareerCardProps {
   image_url?: string;
   industry?: string;
   required_skills?: string[];
-  stress_levels?: number;
+  stress_levels?: string;  // Changed from number to string to match DB
   featured?: boolean;
 }
 

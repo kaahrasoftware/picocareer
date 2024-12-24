@@ -83,6 +83,7 @@ export default function CareerUpload() {
         salary_range: data.salary_range || null,
         image_url: data.image_url || null,
         featured: data.featured || false,
+        academic_majors: data.academic_majors ? data.academic_majors.split(',').map((item: string) => item.trim()) : [],
         required_education: data.required_education ? data.required_education.split(',').map((item: string) => item.trim()) : [],
         required_skills: data.required_skills ? data.required_skills.split(',').map((item: string) => item.trim()) : [],
         required_tools: data.required_tools ? data.required_tools.split(',').map((item: string) => item.trim()) : [],
@@ -92,7 +93,7 @@ export default function CareerUpload() {
         growth_potential: data.growth_potential || null,
         keywords: data.keywords ? data.keywords.split(',').map((item: string) => item.trim()) : [],
         transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map((item: string) => item.trim()) : [],
-        stress_levels: data.stress_levels ? parseInt(data.stress_levels) : null,
+        stress_levels: data.stress_levels ? data.stress_levels.toString() : null,
         careers_to_consider_switching_to: data.careers_to_consider_switching_to ? 
           data.careers_to_consider_switching_to.split(',').map((item: string) => item.trim()) : []
       };

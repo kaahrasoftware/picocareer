@@ -2,8 +2,8 @@ export const careerFormFields = [
   { 
     name: "title", 
     label: "Career Title", 
-    placeholder: "e.g., Software Engineer", 
     type: "text",
+    placeholder: "e.g., Software Engineer", 
     required: true 
   },
   { 
@@ -78,7 +78,7 @@ export const careerFormFields = [
   { 
     name: "stress_levels", 
     label: "Stress Level (1-10)", 
-    type: "number", 
+    type: "text", 
     placeholder: "5" 
   },
   { 
