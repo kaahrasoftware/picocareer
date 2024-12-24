@@ -11,8 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
-type TableName = 'majors' | 'schools' | 'companies';
-type FieldName = 'academic_major_id' | 'school_id' | 'company_id';
+type TableName = 'majors' | 'schools' | 'companies' | 'careers';
+type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
 type TitleField = 'title' | 'name';
 
 interface CustomSelectProps {
@@ -29,6 +29,7 @@ type InsertData = {
   majors: Database['public']['Tables']['majors']['Insert'];
   schools: Database['public']['Tables']['schools']['Insert'];
   companies: Database['public']['Tables']['companies']['Insert'];
+  careers: Database['public']['Tables']['careers']['Insert'];
 }
 
 interface TableRecord {
