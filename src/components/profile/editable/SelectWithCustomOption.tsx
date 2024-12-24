@@ -70,25 +70,26 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // If it doesn't exist, create a new entry
-      const insertData: Partial<InsertData[TableName]> = {
-        status: 'Pending' as const
-      };
+      // Create base insert data with required fields based on table type
+      let insertData: any;
 
       if (tableName === 'majors') {
-        Object.assign(insertData, {
+        insertData = {
           title: customValue,
-          description: `Custom major: ${customValue}`
-        });
+          description: `Custom major: ${customValue}`,
+          status: 'Pending' as const
+        } as InsertData['majors'];
       } else if (tableName === 'careers') {
-        Object.assign(insertData, {
+        insertData = {
           title: customValue,
-          description: `Position: ${customValue}`
-        });
+          description: `Position: ${customValue}`,
+          status: 'Pending' as const
+        } as InsertData['careers'];
       } else {
-        Object.assign(insertData, {
-          name: customValue
-        });
+        insertData = {
+          name: customValue,
+          status: 'Pending' as const
+        } as InsertData['schools'] | InsertData['companies'];
       }
 
       const { data, error } = await supabase
