@@ -36,7 +36,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           company:companies(name),
           school:schools(name),
           academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!profiles_position_fkey(title)
+          career:careers!profiles_position_fkey(title, id)
         `)
         .eq('id', userId)
         .single();
@@ -53,7 +53,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         company_name: data.company?.name,
         school_name: data.school?.name,
         academic_major: data.academic_major?.title,
-        career_title: data.career?.title
+        career_title: data.career?.title,
+        career_id: data.career?.id
       };
     },
     enabled: !!userId && open,

@@ -1,33 +1,23 @@
 import { Badge } from "@/components/ui/badge";
 import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { ProfileAvatar } from "./ProfileAvatar";
-import type { Profile } from "@/types/database/profiles";
 
 interface ProfileHeaderProps {
   profile: {
     id: string;
     avatar_url: string | null;
     full_name: string | null;
-    position: string | null;
+    career_title: string | null;
     company_name?: string | null;
     school_name?: string | null;
     academic_major?: string | null;
     location?: string | null;
     top_mentor?: boolean | null;
     user_type?: string | null;
-    career_title?: string | null;
-  } | null;
+  };
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
-  const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
   if (!profile) return null;
 
   // Determine primary and secondary display text based on whether the user is a student or professional
@@ -36,81 +26,9 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
-  const handleAvatarUpdate = async (croppedBlob: Blob) => {
-    try {
-      setUploading(true);
-
-      const fileName = `avatar.jpg`;
-      const filePath = `${profile.id}/${fileName}`;
-
-      // Delete old avatar if it exists
-      if (profile.avatar_url) {
-        try {
-          const oldFilePath = profile.avatar_url.split('/').slice(-2).join('/');
-          if (oldFilePath) {
-            await supabase.storage
-              .from('avatars')
-              .remove([oldFilePath]);
-          }
-        } catch (deleteError) {
-          console.error('Error deleting old avatar:', deleteError);
-        }
-      }
-
-      // Upload new avatar
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, croppedBlob, { 
-          upsert: true,
-          contentType: 'image/jpeg'
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      // Update profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
-
-      // Update the profile data in the cache
-      const currentProfile = queryClient.getQueryData(['profile']);
-      if (currentProfile && typeof currentProfile === 'object') {
-        queryClient.setQueryData(['profile'], {
-          ...(currentProfile as object),
-          avatar_url: publicUrl
-        });
-      }
-
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      console.error('Error uploading avatar:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
     <div className="flex items-center gap-6 ml-6">
-      <ProfileAvatar 
-        profile={profile}
-        onAvatarUpdate={handleAvatarUpdate}
-      />
+      <ProfileAvatar profile={profile} />
 
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">

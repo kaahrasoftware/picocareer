@@ -11,7 +11,7 @@ interface ProfileCardProps {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
-    position: string | null;
+    career_title: string | null;
     company_name: string | null;
     academic_major: string | null;
     school_name: string | null;
@@ -26,8 +26,8 @@ interface ProfileCardProps {
 export function ProfileCard({ profile }: ProfileCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
-  const displayTitle = profile.position || profile.academic_major || "No position/major set";
-  const displaySubtitle = profile.position 
+  const displayTitle = profile.career_title || profile.academic_major || "No position/major set";
+  const displaySubtitle = profile.career_title 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
@@ -55,7 +55,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               <p className="text-sm font-medium mb-1 truncate text-foreground/90">{displayTitle}</p>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  {profile.position ? (
+                  {profile.career_title ? (
                     <Building2 className="h-3 w-3 flex-shrink-0" />
                   ) : (
                     <GraduationCap className="h-3 w-3 flex-shrink-0" />
