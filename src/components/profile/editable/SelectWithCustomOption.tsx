@@ -50,10 +50,15 @@ export function SelectWithCustomOption({
   const [customValue, setCustomValue] = useState("");
   const { toast } = useToast();
 
+  const getTitleField = (table: TableName): TitleField => {
+    return table === 'majors' || table === 'careers' ? 'title' : 'name';
+  };
+
   const handleCustomSubmit = async () => {
     try {
+      const titleField = getTitleField(tableName);
+      
       // First, check if entry already exists
-      const titleField = tableName === 'schools' || tableName === 'companies' ? 'name' : 'title';
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
         .select(`id, ${titleField}`)
@@ -79,30 +84,26 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: InsertData[TableName];
+      let insertData: Partial<InsertData[TableName]>;
       
       if (tableName === 'majors') {
         insertData = {
           title: customValue,
           description: `Custom major: ${customValue}`,
           status: 'Pending'
-        } as InsertData['majors'];
+        };
       } else if (tableName === 'careers') {
         insertData = {
           title: customValue,
           description: `Position: ${customValue}`,
           status: 'Pending'
-        } as InsertData['careers'];
-      } else if (tableName === 'companies') {
-        insertData = {
-          name: customValue,
-          status: 'Pending'
-        } as InsertData['companies'];
+        };
       } else {
+        // For schools and companies
         insertData = {
           name: customValue,
           status: 'Pending'
-        } as InsertData['schools'];
+        };
       }
 
       const { data, error } = await supabase
@@ -141,7 +142,9 @@ export function SelectWithCustomOption({
   };
 
   const displayValue = (option: Option) => {
-    return option.title || option.name || '';
+    return tableName === 'majors' || tableName === 'careers' 
+      ? option.title 
+      : option.name || '';
   };
 
   if (showCustomInput) {
