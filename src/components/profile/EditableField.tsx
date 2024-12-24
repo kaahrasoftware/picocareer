@@ -47,46 +47,58 @@ export function EditableField({
   const { data: majors } = useQuery({
     queryKey: ['majors'],
     queryFn: async () => {
-      if (fieldName !== 'academic_major') return null;
+      if (fieldName !== 'academic_major_id') return null;
       const { data, error } = await supabase
         .from('majors')
         .select('id, title')
+        .eq('status', 'Approved')
         .order('title');
       
       if (error) throw error;
       return data;
     },
-    enabled: fieldName === 'academic_major'
+    enabled: fieldName === 'academic_major_id'
   });
 
   // Fetch schools if the field is school_name
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
-      if (fieldName !== 'school_name') return null;
+      if (fieldName !== 'school_id') return null;
       const { data, error } = await supabase
         .from('schools')
         .select('id, name')
+        .eq('status', 'Approved')
         .order('name');
       
       if (error) throw error;
       return data;
     },
-    enabled: fieldName === 'school_name'
+    enabled: fieldName === 'school_id'
+  });
+
+  // Fetch careers if the field is position
+  const { data: careers } = useQuery({
+    queryKey: ['careers'],
+    queryFn: async () => {
+      if (fieldName !== 'position') return null;
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: fieldName === 'position'
   });
 
   const updateField = async (newValue: string) => {
     try {
-      let updateField = fieldName;
-      if (fieldName === 'academic_major') {
-        updateField = 'academic_major_id';
-      } else if (fieldName === 'school_name') {
-        updateField = 'school_id';
-      }
-
       const { error } = await supabase
         .from('profiles')
-        .update({ [updateField]: newValue })
+        .update({ [fieldName]: newValue })
         .eq('id', profileId);
 
       if (error) throw error;
@@ -111,14 +123,15 @@ export function EditableField({
   };
 
   if (isEditing) {
-    if (fieldName === 'school_name' && schools) {
+    if (fieldName === 'school_id' && schools) {
       return (
         <SelectWithCustomOption
           value={editValue}
           options={schools}
           placeholder="Select a school"
           tableName="schools"
-          onSelect={(value) => updateField(value)}
+          handleSelectChange={updateField}
+          fieldName={fieldName}
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");
@@ -127,14 +140,32 @@ export function EditableField({
       );
     }
 
-    if (fieldName === 'academic_major' && majors) {
+    if (fieldName === 'academic_major_id' && majors) {
       return (
         <SelectWithCustomOption
           value={editValue}
           options={majors}
           placeholder="Select a major"
           tableName="majors"
-          onSelect={(value) => updateField(value)}
+          handleSelectChange={updateField}
+          fieldName={fieldName}
+          onCancel={() => {
+            setIsEditing(false);
+            setEditValue(value || "");
+          }}
+        />
+      );
+    }
+
+    if (fieldName === 'position' && careers) {
+      return (
+        <SelectWithCustomOption
+          value={editValue}
+          options={careers}
+          placeholder="Select a position"
+          tableName="careers"
+          handleSelectChange={updateField}
+          fieldName={fieldName}
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");

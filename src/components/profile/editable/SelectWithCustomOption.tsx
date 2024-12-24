@@ -11,23 +11,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 type TableName = 'majors' | 'schools' | 'careers';
-type FieldName = 'academic_major_id' | 'school_id' | 'position';
-type TitleField = 'title' | 'name';
 
 interface CustomSelectProps {
   value: string;
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
-  handleSelectChange: (name: string, value: string) => void;
   tableName: TableName;
-  fieldName: FieldName;
-  titleField: TitleField;
-}
-
-type InsertData = {
-  majors: { title: string; description: string; status: "Pending" };
-  schools: { name: string; status: "Pending" };
-  careers: { title: string; description: string; status: "Pending" };
+  handleSelectChange: (name: string, value: string) => void;
+  fieldName: string;
+  onCancel?: () => void;
 }
 
 export function SelectWithCustomOption({ 
@@ -37,7 +29,7 @@ export function SelectWithCustomOption({
   handleSelectChange,
   tableName,
   fieldName,
-  titleField,
+  onCancel
 }: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
@@ -46,11 +38,13 @@ export function SelectWithCustomOption({
   const handleCustomSubmit = async () => {
     try {
       // First, check if entry already exists
-      const { data: existingData, error: existingError } = await supabase
+      const query = supabase
         .from(tableName)
         .select('id, title, name')
-        .eq(titleField, customValue)
+        .eq(tableName === 'schools' ? 'name' : 'title', customValue)
         .maybeSingle();
+
+      const { data: existingData, error: existingError } = await query;
 
       if (existingError) {
         console.error('Error checking existing entry:', existingError);
@@ -71,24 +65,26 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: InsertData[TableName];
-      
+      let insertData: any = {
+        status: 'Pending'
+      };
+
       if (tableName === 'majors') {
         insertData = {
+          ...insertData,
           title: customValue,
-          description: `Custom major: ${customValue}`,
-          status: "Pending"
+          description: `Custom major: ${customValue}`
         };
       } else if (tableName === 'careers') {
         insertData = {
+          ...insertData,
           title: customValue,
-          description: `Position: ${customValue}`,
-          status: "Pending"
+          description: `Position: ${customValue}`
         };
       } else {
         insertData = {
-          name: customValue,
-          status: "Pending"
+          ...insertData,
+          name: customValue
         };
       }
 
@@ -127,6 +123,10 @@ export function SelectWithCustomOption({
     }
   };
 
+  const displayValue = (option: { id: string; title?: string; name?: string }) => {
+    return option.title || option.name || '';
+  };
+
   if (showCustomInput) {
     return (
       <div className="space-y-2">
@@ -146,7 +146,11 @@ export function SelectWithCustomOption({
           </button>
           <button
             type="button"
-            onClick={() => setShowCustomInput(false)}
+            onClick={() => {
+              setShowCustomInput(false);
+              setCustomValue("");
+              if (onCancel) onCancel();
+            }}
             className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
           >
             Cancel
@@ -173,7 +177,7 @@ export function SelectWithCustomOption({
       <SelectContent>
         {options.map((option) => (
           <SelectItem key={option.id} value={option.id}>
-            {option[titleField]}
+            {displayValue(option)}
           </SelectItem>
         ))}
         <SelectItem value="other">Other (Add New)</SelectItem>
