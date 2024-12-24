@@ -17,60 +17,74 @@ export default function Community() {
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const PROFILES_PER_PAGE = 12; // Updated to show 12 profiles per page
+  const PROFILES_PER_PAGE = 12;
   const { toast } = useToast();
 
-const { data: profiles = [], isLoading, error } = useQuery({
-  queryKey: ['profiles'],
-  queryFn: async () => {
-    console.log('Fetching profiles...');
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    try {
-      let query = supabase
-        .from('profiles')
-        .select(`
-          *,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!profiles_position_fkey(title, id)
-        `)
-        .eq('user_type', 'mentor')
-        .order('created_at', { ascending: false });
-
-      if (user?.id) {
-        query = query.neq('id', user.id);
-      }
+  const { data: profiles = [], isLoading, error } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: async () => {
+      console.log('Fetching profiles...');
+      const { data: { user } } = await supabase.auth.getUser();
       
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw error;
-      }
+      try {
+        let query = supabase
+          .from('profiles')
+          .select(`
+            *,
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
+            career:careers!profiles_position_fkey(title, id)
+          `)
+          .eq('user_type', 'mentor');
 
-      console.log('Profiles fetched successfully:', data?.length);
-      return data.map(profile => ({
-        ...profile,
-        company_name: profile.company?.name,
-        school_name: profile.school?.name,
-        academic_major: profile.academic_major?.title,
-        career_title: profile.career?.title
-      }));
-    } catch (err) {
-      console.error('Error in profiles query:', err);
-      toast({
-        title: "Error loading profiles",
-        description: "There was an error loading the community profiles. Please try again later.",
-        variant: "destructive",
-      });
-      throw err;
-    }
-  },
-  retry: 2,
-  retryDelay: 1000,
-});
+        // Add search conditions for text fields
+        if (searchQuery) {
+          query = query.or(
+            `first_name.ilike.%${searchQuery}%,` +
+            `last_name.ilike.%${searchQuery}%,` +
+            `full_name.ilike.%${searchQuery}%,` +
+            `bio.ilike.%${searchQuery}%,` +
+            `location.ilike.%${searchQuery}%,` +
+            `skills.cs.{${searchQuery}},` +
+            `tools_used.cs.{${searchQuery}},` +
+            `keywords.cs.{${searchQuery}},` +
+            `fields_of_interest.cs.{${searchQuery}}`
+          );
+        }
+
+        if (user?.id) {
+          query = query.neq('id', user.id);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+
+        console.log('Profiles fetched successfully:', data?.length);
+        return data.map(profile => ({
+          ...profile,
+          company_name: profile.company?.name,
+          school_name: profile.school?.name,
+          academic_major: profile.academic_major?.title,
+          career_title: profile.career?.title
+        }));
+      } catch (err) {
+        console.error('Error in profiles query:', err);
+        toast({
+          title: "Error loading profiles",
+          description: "There was an error loading the community profiles. Please try again later.",
+          variant: "destructive",
+        });
+        throw err;
+      }
+    },
+    retry: 2,
+    retryDelay: 1000,
+  });
 
   if (error) {
     console.error('React Query error:', error);
@@ -181,13 +195,11 @@ const { data: profiles = [], isLoading, error } = useQuery({
                   </div>
                   
                   {totalPages > 1 && (
-                    <div className="mt-8">
-                      <BlogPagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                      />
-                    </div>
+                    <BlogPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
                   )}
                 </>
               )}
