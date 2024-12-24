@@ -154,6 +154,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                 academic_major={profile.academic_major} 
                 highest_degree={profile.highest_degree}
                 school_name={profile.school_name}
+                profileId={profile.id}
               />
               <ProfileLinks 
                 linkedin_url={profile.linkedin_url}
