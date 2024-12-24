@@ -14,6 +14,7 @@ import { AboutSection } from "./career-details/AboutSection";
 import { CareerMetrics } from "./career-details/CareerMetrics";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
+import { Users } from "lucide-react";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -40,7 +41,7 @@ type CareerWithMajors = Tables<"careers"> & {
   common_difficulties?: string[];
   certifications_to_consider?: string[];
   affiliated_programs?: string[];
-  majors_to_consider_switching_to?: string[];
+  careers_to_consider_switching_to?: string[];
   job_prospects?: string;
   passion_for_subject?: string;
   global_applicability?: string;
@@ -76,7 +77,15 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       <DialogContent className="max-w-3xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
-          <DialogDescription className="text-muted-foreground">{career.description}</DialogDescription>
+          <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span>{career.profiles_count || 0} mentors in this career</span>
+          </div>
+          {career.salary_range && (
+            <DialogDescription className="text-primary font-medium mt-2">
+              Salary Range: {career.salary_range}
+            </DialogDescription>
+          )}
         </DialogHeader>
         
         <ScrollArea className="h-[calc(85vh-120px)] px-6">
@@ -135,7 +144,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               common_difficulties={career.common_difficulties}
               certifications_to_consider={career.certifications_to_consider}
               affiliated_programs={career.affiliated_programs}
-              majors_to_consider_switching_to={career.majors_to_consider_switching_to}
+              majors_to_consider_switching_to={career.careers_to_consider_switching_to}
               job_prospects={career.job_prospects}
               passion_for_subject={career.passion_for_subject}
               global_applicability={career.global_applicability}

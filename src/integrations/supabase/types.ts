@@ -143,6 +143,7 @@ export type Database = {
           keywords: string[] | null
           new_career: boolean | null
           popular: boolean | null
+          profiles_count: number | null
           rare: boolean | null
           required_education: string[] | null
           required_skills: string[] | null
@@ -168,6 +169,7 @@ export type Database = {
           keywords?: string[] | null
           new_career?: boolean | null
           popular?: boolean | null
+          profiles_count?: number | null
           rare?: boolean | null
           required_education?: string[] | null
           required_skills?: string[] | null
@@ -193,6 +195,7 @@ export type Database = {
           keywords?: string[] | null
           new_career?: boolean | null
           popular?: boolean | null
+          profiles_count?: number | null
           rare?: boolean | null
           required_education?: string[] | null
           required_skills?: string[] | null
