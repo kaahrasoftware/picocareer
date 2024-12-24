@@ -101,7 +101,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               <img 
                 src={career.image_url} 
                 alt={career.title} 
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full object-cover rounded-lg"
               />
             )}
 
