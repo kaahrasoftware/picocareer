@@ -1242,7 +1242,7 @@ export type Database = {
         | "Exploring Creative Hobbies"
         | "How Extracurriculars Boost Applications"
         | "Starting Your Own Club or Organization"
-      user_type: "mentor" | "mentee"
+      user_type: "mentor" | "mentee" | "admin" | "editor"
     }
     CompositeTypes: {
       [_ in never]: never

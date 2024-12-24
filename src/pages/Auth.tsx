@@ -5,6 +5,7 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -47,7 +48,12 @@ export default function Auth() {
           
           <div className="max-w-md space-y-8 text-center mt-auto">
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">Become a Mentor</h2>
+              <Link 
+                to="/mentor-registration" 
+                className="text-xl font-semibold text-white hover:text-blue-400 underline decoration-blue-400 transition-colors"
+              >
+                Become a Mentor
+              </Link>
               <p className="text-gray-300">
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
