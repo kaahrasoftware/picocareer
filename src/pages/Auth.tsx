@@ -2,8 +2,32 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export default function Auth() {
+  const { data: mentors } = useQuery({
+    queryKey: ['random-mentors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar_url, first_name, last_name')
+        .eq('user_type', 'mentor')
+        .limit(10)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="min-h-screen">
       <div className="flex min-h-screen">
@@ -27,6 +51,36 @@ export default function Auth() {
               <p className="text-gray-300">
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
+              
+              {/* Mentor Carousel */}
+              <div className="mt-8">
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  plugins={[
+                    Autoplay({
+                      delay: 2000,
+                    }),
+                  ]}
+                  className="w-full max-w-xs mx-auto"
+                >
+                  <CarouselContent>
+                    {mentors?.map((mentor) => (
+                      <CarouselItem key={mentor.id} className="basis-1/3 pl-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={mentor.avatar_url || ''} alt="Mentor" />
+                          <AvatarFallback>
+                            {mentor.first_name?.[0]}
+                            {mentor.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              </div>
             </div>
           </div>
         </div>
