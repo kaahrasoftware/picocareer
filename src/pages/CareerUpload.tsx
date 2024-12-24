@@ -141,7 +141,9 @@ export default function CareerUpload() {
   // Convert the readonly array to a mutable array and ensure all fields have the correct shape
   const formFields: Omit<FormFieldProps, 'control'>[] = careerFormFields.map(field => ({
     ...field,
-    options: field.options || []
+    type: field.type || "text",
+    required: field.required || false,
+    options: []
   }));
 
   return (
