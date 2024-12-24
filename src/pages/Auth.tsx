@@ -109,15 +109,15 @@ export default function AuthPage() {
             variables: {
               default: {
                 colors: {
-                  brand: '#0EA5E9', // Cyan blue from logo
-                  brandAccent: '#002366', // Navy blue from logo
+                  brand: '#0EA5E9',
+                  brandAccent: '#002366',
                   brandButtonText: 'white',
                 }
               }
             }
           }}
           theme="dark"
-          providers={["google", "github"]}
+          providers={["google"]}
           redirectTo={window.location.origin}
         />
       </div>
