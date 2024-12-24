@@ -23,6 +23,7 @@ interface CustomSelectProps {
   tableName: TableName;
   fieldName: FieldName;
   titleField: TitleField;
+  onCancel?: () => void;
 }
 
 type TableInsertData = {
@@ -45,18 +46,15 @@ export function SelectWithCustomOption({
   tableName,
   fieldName,
   titleField,
+  onCancel
 }: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const { toast } = useToast();
 
-  const getTitleField = (table: TableName): TitleField => {
-    return table === 'majors' || table === 'careers' ? 'title' : 'name';
-  };
-
   const handleCustomSubmit = async () => {
     try {
-      const titleField = getTitleField(tableName);
+      const titleField = tableName === 'majors' || tableName === 'careers' ? 'title' : 'name';
       
       // First, check if entry already exists
       const { data: existingData } = await supabase
@@ -66,32 +64,35 @@ export function SelectWithCustomOption({
         .maybeSingle();
 
       if (existingData && 'id' in existingData) {
+        const record = existingData as TableRecord;
         // If it exists, use the existing entry
-        handleSelectChange(fieldName, existingData.id);
+        handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: Partial<TableInsertData[TableName]>;
-      
+      let insertData: Record<string, any> = {
+        status: 'Pending' as const
+      };
+
       if (tableName === 'majors') {
         insertData = {
+          ...insertData,
           title: customValue,
-          description: `Custom major: ${customValue}`,
-          status: 'Pending' as const
+          description: `Custom major: ${customValue}`
         };
       } else if (tableName === 'careers') {
         insertData = {
+          ...insertData,
           title: customValue,
-          description: `Position: ${customValue}`,
-          status: 'Pending' as const
+          description: `Position: ${customValue}`
         };
       } else {
         insertData = {
-          name: customValue,
-          status: 'Pending' as const
+          ...insertData,
+          name: customValue
         };
       }
 
@@ -112,7 +113,8 @@ export function SelectWithCustomOption({
       }
 
       if (data && 'id' in data) {
-        handleSelectChange(fieldName, data.id);
+        const record = data as TableRecord;
+        handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
         toast({
@@ -158,6 +160,7 @@ export function SelectWithCustomOption({
             onClick={() => {
               setShowCustomInput(false);
               setCustomValue("");
+              if (onCancel) onCancel();
             }}
             className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
           >
