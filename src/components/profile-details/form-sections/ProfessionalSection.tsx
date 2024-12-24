@@ -1,5 +1,7 @@
 import { CustomSelect } from "./education/CustomSelect";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Company {
   id: string;
@@ -23,19 +25,34 @@ export function ProfessionalSection({
   handleSelectChange,
   companies,
 }: ProfessionalSectionProps) {
+  // Fetch careers for the position select
+  const { data: careers } = useQuery({
+    queryKey: ['careers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Professional Experience</h3>
-      <div>
-        <label className="text-sm font-medium">Position</label>
-        <Input
-          name="position"
-          value={position}
-          onChange={handleInputChange}
-          className="mt-1"
-          placeholder="Current position"
-        />
-      </div>
+
+      <CustomSelect
+        value={position}
+        options={careers || []}
+        placeholder="Select Position"
+        handleSelectChange={handleSelectChange}
+        tableName="careers"
+        fieldName="position"
+        titleField="title"
+      />
 
       <CustomSelect
         value={companyId}
