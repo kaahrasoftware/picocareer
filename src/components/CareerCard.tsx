@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
 import { CareerHeader } from "./career/CareerHeader";
 import { BadgeSection } from "./career/BadgeSection";
-import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
 
 export interface CareerCardProps {
   id: string;
@@ -47,14 +45,8 @@ export function CareerCard({
             industry={industry}
             salary_range={salary_range}
             image_url={image_url}
+            profiles_count={profiles_count}
           />
-
-          <div className="mt-2 mb-4">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              {profiles_count}
-            </Badge>
-          </div>
 
           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
             {description}

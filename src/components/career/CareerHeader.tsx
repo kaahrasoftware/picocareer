@@ -1,4 +1,4 @@
-import { Building2, Briefcase } from "lucide-react";
+import { Building2, Briefcase, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CareerHeaderProps {
@@ -6,9 +6,10 @@ interface CareerHeaderProps {
   industry?: string;
   salary_range?: string;
   image_url?: string;
+  profiles_count?: number;
 }
 
-export function CareerHeader({ title, industry, salary_range, image_url }: CareerHeaderProps) {
+export function CareerHeader({ title, industry, salary_range, image_url, profiles_count = 0 }: CareerHeaderProps) {
   return (
     <div className="flex items-start gap-4 mb-4">
       {image_url ? (
@@ -26,7 +27,13 @@ export function CareerHeader({ title, industry, salary_range, image_url }: Caree
       )}
       
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold mb-1 break-words">{title}</h3>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-semibold break-words">{title}</h3>
+          <Badge variant="ghost" className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            {profiles_count}
+          </Badge>
+        </div>
         {industry && (
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Building2 className="h-3 w-3 flex-shrink-0" />
