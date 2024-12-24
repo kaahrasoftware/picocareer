@@ -44,7 +44,7 @@ export function SelectWithCustomOption({
       // First, check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id, title, name')
+        .select(tableName === 'majors' ? 'id, title' : 'id, name')
         .eq(tableName === 'majors' ? 'title' : 'name', customValue)
         .maybeSingle();
 
@@ -84,7 +84,7 @@ export function SelectWithCustomOption({
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
-        .select('id')
+        .select(tableName === 'majors' ? 'id, title' : 'id, name')
         .single();
 
       if (error) {
