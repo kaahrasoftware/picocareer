@@ -26,6 +26,7 @@ export function ContentUploadForm({ fields, onSubmit }: ContentUploadFormProps) 
           title: "Error",
           description: "You must be logged in to upload content",
           variant: "destructive",
+          duration: 3000,
         });
         return;
       }
@@ -46,18 +47,27 @@ export function ContentUploadForm({ fields, onSubmit }: ContentUploadFormProps) 
 
       // Show success message
       toast({
-        title: "Success",
+        title: "Success! 🎉",
         description: "Content has been uploaded successfully",
+        duration: 3000,
       });
 
       // Reset the form
       form.reset();
+      
+      // Clear any file inputs by resetting their value
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      fileInputs.forEach((input: HTMLInputElement) => {
+        input.value = '';
+      });
+
     } catch (error: any) {
       console.error('Error uploading content:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to upload content",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };
