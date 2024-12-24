@@ -138,8 +138,11 @@ export default function CareerUpload() {
     }
   };
 
-  // Cast the readonly array to a mutable array for the ContentUploadForm
-  const formFields = careerFormFields as FormFieldProps[];
+  // Convert the readonly array to a mutable array and ensure type compatibility
+  const formFields: FormFieldProps[] = careerFormFields.map(field => ({
+    ...field,
+    options: field.options ? [...field.options] : undefined
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

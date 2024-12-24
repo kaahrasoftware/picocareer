@@ -2,23 +2,13 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { FormField } from "./FormField";
+import { FormField, FormFieldProps } from "./FormField";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentUploadFormProps {
-  fields: Array<{
-    name: string;
-    label: string;
-    type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect";
-    placeholder?: string;
-    description?: string;
-    bucket?: string;
-    required?: boolean;
-    options?: string[];
-    dependsOn?: string;
-  }>;
+  fields: FormFieldProps[];
   onSubmit: (data: any) => Promise<void>;
 }
 

@@ -29,7 +29,7 @@ export interface FormFieldProps {
   type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect";
   bucket?: string;
   required?: boolean;
-  options?: readonly string[] | string[];
+  options?: string[];
   dependsOn?: string;
   watch?: any;
 }
@@ -58,7 +58,7 @@ export function FormField({
   watch
 }: FormFieldProps) {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [availableOptions, setAvailableOptions] = useState<string[]>(options);
+  const [availableOptions, setAvailableOptions] = useState<string[]>([...options]);
   
   const watchDependency = dependsOn ? watch?.(dependsOn) : null;
   
