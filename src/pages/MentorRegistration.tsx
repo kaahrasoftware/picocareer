@@ -82,17 +82,22 @@ export default function MentorRegistration() {
       }
 
       // Check if user already has a pending mentor application
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_type, status')
+        .select('user_type')
         .eq('id', user.id)
         .single();
 
-      if (existingProfile?.user_type === 'mentor' && existingProfile?.status === 'Pending') {
+      if (profileError) {
+        console.error('Error checking profile:', profileError);
+        return;
+      }
+
+      if (existingProfile?.user_type === 'mentor') {
         toast({
           title: "Application Pending",
           description: "You already have a pending mentor application. Our team will review it shortly.",
-          variant: "warning",
+          variant: "default",
         });
         return;
       }
@@ -110,18 +115,17 @@ export default function MentorRegistration() {
           linkedin_url: data.linkedin_url,
           github_url: data.github_url,
           website_url: data.website_url,
-          skills: data.skills.split(',').map(s => s.trim()),
-          tools_used: data.tools_used.split(',').map(s => s.trim()),
-          keywords: data.keywords.split(',').map(s => s.trim()),
-          fields_of_interest: data.fields_of_interest.split(',').map(s => s.trim()),
+          skills: data.skills.split(',').map((s: string) => s.trim()),
+          tools_used: data.tools_used.split(',').map((s: string) => s.trim()),
+          keywords: data.keywords.split(',').map((s: string) => s.trim()),
+          fields_of_interest: data.fields_of_interest.split(',').map((s: string) => s.trim()),
           highest_degree: data.highest_degree,
           position: data.position,
           company_id: data.company_id,
           school_id: data.school_id,
           academic_major_id: data.academic_major_id,
           location: data.location,
-          user_type: 'mentor',
-          status: 'Pending'
+          user_type: 'mentor'
         })
         .eq('id', user.id);
 
@@ -130,6 +134,7 @@ export default function MentorRegistration() {
       toast({
         title: "Application Received",
         description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
+        variant: "default"
       });
 
       // Reset form through the child component
