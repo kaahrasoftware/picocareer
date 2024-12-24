@@ -52,6 +52,16 @@ export function SignUpForm() {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast({
+        title: "Error",
+        description: "First name and last name are required",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -113,7 +123,9 @@ export function SignUpForm() {
     <form onSubmit={handleSignUp} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
+          <Label htmlFor="firstName">
+            First Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="firstName"
             name="firstName"
@@ -121,10 +133,13 @@ export function SignUpForm() {
             value={formData.firstName}
             onChange={handleInputChange}
             required
+            className={!formData.firstName.trim() ? "border-red-500" : ""}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="lastName">
+            Last Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="lastName"
             name="lastName"
@@ -132,11 +147,14 @@ export function SignUpForm() {
             value={formData.lastName}
             onChange={handleInputChange}
             required
+            className={!formData.lastName.trim() ? "border-red-500" : ""}
           />
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
+        <Label htmlFor="signup-email">
+          Email <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="signup-email"
           name="email"
@@ -148,7 +166,9 @@ export function SignUpForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
+        <Label htmlFor="signup-password">
+          Password <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="signup-password"
           name="password"
