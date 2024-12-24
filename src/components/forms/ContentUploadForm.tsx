@@ -45,10 +45,15 @@ export function ContentUploadForm({ onSubmit, fields }: ContentUploadFormProps) 
         const { data: result, error } = await supabase
           .from('blogs')
           .insert({
-            ...data,
-            author_id: user.id,
+            title: data.title,
+            summary: data.summary,
+            content: data.content,
+            cover_image_url: data.cover_image_url,
             categories: data.categories || [],
             subcategories: data.subcategories || [],
+            other_notes: data.other_notes,
+            is_recent: data.is_recent,
+            author_id: user.id,
           })
           .select()
           .single();

@@ -1,144 +1,150 @@
-export const careerFormFields = [
-  { 
-    name: "title", 
-    label: "Career Title", 
-    type: "text" as const,
-    placeholder: "e.g., Software Engineer", 
-    required: true 
-  },
-  { 
-    name: "description", 
-    label: "Description", 
-    type: "textarea" as const, 
-    placeholder: "Detailed description of the career path", 
-    required: true 
-  },
-  { 
-    name: "image_url", 
-    label: "Career Image", 
-    type: "image" as const, 
-    bucket: "images",
-    description: "Upload an image representing this career",
-    required: false
-  },
-  { 
-    name: "academic_majors", 
-    label: "Related Academic Majors", 
-    type: "array" as const, 
-    placeholder: "Computer Science, Information Technology", 
-    description: "Enter majors that are relevant to this career",
-    required: false
-  },
-  { 
-    name: "salary_range", 
-    label: "Salary Range", 
-    type: "text" as const,
-    placeholder: "$50,000 - $100,000",
-    required: false
-  },
-  { 
-    name: "industry", 
-    label: "Industry", 
-    type: "text" as const,
-    placeholder: "e.g., Technology, Healthcare, Finance",
-    required: false
-  },
-  { 
-    name: "required_education", 
-    label: "Required Education", 
-    type: "array" as const, 
-    placeholder: "Bachelor's Degree, Master's Degree",
-    required: false
-  },
-  { 
-    name: "required_skills", 
-    label: "Required Skills", 
-    type: "array" as const, 
-    placeholder: "Programming, Problem Solving",
-    required: false
-  },
-  { 
-    name: "required_tools", 
-    label: "Required Tools", 
-    type: "array" as const, 
-    placeholder: "Git, VS Code",
-    required: false
-  },
-  { 
-    name: "work_environment", 
-    label: "Work Environment", 
-    type: "textarea" as const, 
-    placeholder: "Description of typical work environment",
-    required: false
-  },
-  { 
-    name: "growth_potential", 
-    label: "Growth Potential", 
-    type: "textarea" as const, 
-    placeholder: "Career advancement opportunities and potential growth paths",
-    required: false
-  },
-  { 
-    name: "job_outlook", 
-    label: "Job Outlook", 
-    type: "textarea" as const, 
-    placeholder: "Future prospects and growth expectations",
-    required: false
-  },
-  { 
-    name: "stress_levels", 
-    label: "Stress Level", 
-    type: "text" as const, 
-    placeholder: "Low, Medium, or High",
-    required: false
-  },
-  { 
-    name: "keywords", 
-    label: "Keywords", 
-    type: "array" as const, 
-    placeholder: "tech, coding, development",
-    required: false
-  },
-  { 
-    name: "transferable_skills", 
-    label: "Transferable Skills", 
-    type: "array" as const, 
-    placeholder: "Communication, Leadership",
-    required: false
-  },
-  { 
-    name: "careers_to_consider_switching_to", 
-    label: "Related Careers", 
-    type: "array" as const, 
-    placeholder: "Data Scientist, DevOps Engineer",
-    required: false
-  },
-  { 
-    name: "featured", 
-    label: "Featured Career", 
-    type: "checkbox" as const, 
-    description: "Show this career in featured sections",
-    required: false
+import { FormFieldProps } from "../FormField";
+
+export const careerFormFields: FormFieldProps[] = [
+  {
+    name: "title",
+    label: "Career Title",
+    type: "text",
+    placeholder: "e.g., Software Engineer",
+    required: true
   },
   {
-    name: "rare",
-    label: "Rare Career",
-    type: "checkbox" as const,
-    description: "Mark this as a rare or uncommon career path",
-    required: false
+    name: "description",
+    label: "Description",
+    type: "textarea",
+    placeholder: "Detailed description of the career path",
+    required: true
   },
   {
-    name: "popular",
-    label: "Popular Career",
-    type: "checkbox" as const,
-    description: "Mark this as a popular career choice",
-    required: false
+    name: "featured",
+    label: "Featured",
+    type: "checkbox",
+    description: "Check if this career should be featured"
   },
   {
-    name: "new_career",
-    label: "New Career",
-    type: "checkbox" as const,
-    description: "Mark this as a newly emerging career path",
-    required: false
+    name: "learning_objectives",
+    label: "Learning Objectives",
+    type: "textarea",
+    placeholder: "List the learning objectives for this career",
+  },
+  {
+    name: "common_courses",
+    label: "Common Courses",
+    type: "textarea",
+    placeholder: "List common courses for this career",
+  },
+  {
+    name: "interdisciplinary_connections",
+    label: "Interdisciplinary Connections",
+    type: "textarea",
+    placeholder: "List any interdisciplinary connections",
+  },
+  {
+    name: "job_prospects",
+    label: "Job Prospects",
+    type: "textarea",
+    placeholder: "Describe job prospects for this career",
+  },
+  {
+    name: "certifications_to_consider",
+    label: "Certifications to Consider",
+    type: "textarea",
+    placeholder: "List certifications relevant to this career",
+  },
+  {
+    name: "degree_levels",
+    label: "Degree Levels",
+    type: "textarea",
+    placeholder: "List degree levels required for this career",
+  },
+  {
+    name: "affiliated_programs",
+    label: "Affiliated Programs",
+    type: "textarea",
+    placeholder: "List programs affiliated with this career",
+  },
+  {
+    name: "gpa_expectations",
+    label: "GPA Expectations",
+    type: "text",
+    placeholder: "Enter expected GPA for this career",
+  },
+  {
+    name: "transferable_skills",
+    label: "Transferable Skills",
+    type: "textarea",
+    placeholder: "List transferable skills for this career",
+  },
+  {
+    name: "tools_knowledge",
+    label: "Tools Knowledge",
+    type: "textarea",
+    placeholder: "List tools knowledge required for this career",
+  },
+  {
+    name: "potential_salary",
+    label: "Potential Salary",
+    type: "text",
+    placeholder: "Enter potential salary for this career",
+  },
+  {
+    name: "passion_for_subject",
+    label: "Passion for Subject",
+    type: "textarea",
+    placeholder: "Describe passion for the subject",
+  },
+  {
+    name: "skill_match",
+    label: "Skill Match",
+    type: "textarea",
+    placeholder: "List skills that match this career",
+  },
+  {
+    name: "professional_associations",
+    label: "Professional Associations",
+    type: "textarea",
+    placeholder: "List professional associations related to this career",
+  },
+  {
+    name: "global_applicability",
+    label: "Global Applicability",
+    type: "textarea",
+    placeholder: "Describe global applicability of this career",
+  },
+  {
+    name: "common_difficulties",
+    label: "Common Difficulties",
+    type: "textarea",
+    placeholder: "List common difficulties in this career",
+  },
+  {
+    name: "majors_to_consider_switching_to",
+    label: "Majors to Consider Switching To",
+    type: "textarea",
+    placeholder: "List majors to consider switching to",
+  },
+  {
+    name: "career_opportunities",
+    label: "Career Opportunities",
+    type: "textarea",
+    placeholder: "List career opportunities available",
+  },
+  {
+    name: "intensity",
+    label: "Intensity",
+    type: "text",
+    placeholder: "Describe the intensity of this career",
+  },
+  {
+    name: "stress_level",
+    label: "Stress Level",
+    type: "text",
+    placeholder: "Describe the stress level of this career",
+  },
+  {
+    name: "dropout_rates",
+    label: "Dropout Rates",
+    type: "text",
+    placeholder: "Enter dropout rates for this career",
   }
-] as const;
+];

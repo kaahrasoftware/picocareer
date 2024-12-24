@@ -152,6 +152,7 @@ export type Database = {
           required_skills: string[] | null
           required_tools: string[] | null
           salary_range: string | null
+          status: Database["public"]["Enums"]["status"] | null
           stress_levels: string | null
           title: string
           transferable_skills: string[] | null
@@ -178,6 +179,7 @@ export type Database = {
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
+          status?: Database["public"]["Enums"]["status"] | null
           stress_levels?: string | null
           title: string
           transferable_skills?: string[] | null
@@ -204,6 +206,7 @@ export type Database = {
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
+          status?: Database["public"]["Enums"]["status"] | null
           stress_levels?: string | null
           title?: string
           transferable_skills?: string[] | null
@@ -218,6 +221,7 @@ export type Database = {
           id: string
           industry: string | null
           name: string
+          status: Database["public"]["Enums"]["status"] | null
           updated_at: string
           website: string | null
         }
@@ -226,6 +230,7 @@ export type Database = {
           id?: string
           industry?: string | null
           name: string
+          status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string
           website?: string | null
         }
@@ -234,6 +239,7 @@ export type Database = {
           id?: string
           industry?: string | null
           name?: string
+          status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string
           website?: string | null
         }
@@ -264,6 +270,7 @@ export type Database = {
           professional_associations: string[] | null
           profiles_count: number | null
           skill_match: string[] | null
+          status: Database["public"]["Enums"]["status"] | null
           stress_level: string | null
           title: string
           tools_knowledge: string[] | null
@@ -294,6 +301,7 @@ export type Database = {
           professional_associations?: string[] | null
           profiles_count?: number | null
           skill_match?: string[] | null
+          status?: Database["public"]["Enums"]["status"] | null
           stress_level?: string | null
           title: string
           tools_knowledge?: string[] | null
@@ -324,6 +332,7 @@ export type Database = {
           professional_associations?: string[] | null
           profiles_count?: number | null
           skill_match?: string[] | null
+          status?: Database["public"]["Enums"]["status"] | null
           stress_level?: string | null
           title?: string
           tools_knowledge?: string[] | null
@@ -684,12 +693,34 @@ export type Database = {
           },
         ]
       }
+      scholarships: {
+        Row: {
+          created_at: string
+          id: number
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       schools: {
         Row: {
           created_at: string
           id: string
           location: Database["public"]["Enums"]["states"] | null
           name: string
+          status: Database["public"]["Enums"]["status"] | null
           type: Database["public"]["Enums"]["school_type"] | null
           updated_at: string
           website: string | null
@@ -699,6 +730,7 @@ export type Database = {
           id?: string
           location?: Database["public"]["Enums"]["states"] | null
           name: string
+          status?: Database["public"]["Enums"]["status"] | null
           type?: Database["public"]["Enums"]["school_type"] | null
           updated_at?: string
           website?: string | null
@@ -708,6 +740,7 @@ export type Database = {
           id?: string
           location?: Database["public"]["Enums"]["states"] | null
           name?: string
+          status?: Database["public"]["Enums"]["status"] | null
           type?: Database["public"]["Enums"]["school_type"] | null
           updated_at?: string
           website?: string | null
@@ -847,6 +880,7 @@ export type Database = {
           description: string | null
           duration: number
           id: string
+          status: Database["public"]["Enums"]["status"] | null
           tags: string[]
           thumbnail_url: string | null
           title: string
@@ -861,6 +895,7 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          status?: Database["public"]["Enums"]["status"] | null
           tags?: string[]
           thumbnail_url?: string | null
           title: string
@@ -875,6 +910,7 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          status?: Database["public"]["Enums"]["status"] | null
           tags?: string[]
           thumbnail_url?: string | null
           title?: string
