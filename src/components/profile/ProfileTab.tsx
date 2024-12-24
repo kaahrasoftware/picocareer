@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
+import { PersonalInfoSection } from "./sections/PersonalInfoSection";
+import { ProfessionalInfoSection } from "./sections/ProfessionalInfoSection";
+import { LocationSection } from "./sections/LocationSection";
 
 type DegreeType = Database['public']['Enums']['degree'];
 
@@ -162,55 +165,15 @@ export function ProfileTab({ profile }: ProfileTabProps) {
   return (
     <div className="flex flex-col space-y-6 max-w-3xl mx-auto">
       <div className="space-y-6">
-        {/* Personal Information */}
-        <div className="bg-muted rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Personal Information</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <p className="text-muted-foreground">
-              <span className="font-medium">First Name:</span> {profile?.first_name}
-            </p>
-            <p className="text-muted-foreground">
-              <span className="font-medium">Last Name:</span> {profile?.last_name}
-            </p>
-          </div>
-        </div>
-
+        <PersonalInfoSection profile={profile} />
         <ProfileBio bio={profile?.bio} />
-        
         <ProfileEducation 
           academic_major={profile?.academic_major}
           highest_degree={profile?.highest_degree}
           school_name={profile?.school_name}
         />
-
-        {profile?.location && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="font-semibold mb-2">Location</h4>
-            <p className="text-muted-foreground">{profile.location}</p>
-          </div>
-        )}
-
-        {!isMentee && (
-          <div className="bg-muted rounded-lg p-4 space-y-3">
-            <h4 className="font-semibold">Professional Experience</h4>
-            {profile?.position && (
-              <div className="text-muted-foreground">
-                <span className="font-medium">Position:</span> {profile.position}
-              </div>
-            )}
-            {profile?.company_name && (
-              <div className="text-muted-foreground">
-                <span className="font-medium">Company:</span> {profile.company_name}
-              </div>
-            )}
-            {profile?.years_of_experience !== null && (
-              <div className="text-muted-foreground">
-                <span className="font-medium">Years of Experience:</span> {profile.years_of_experience}
-              </div>
-            )}
-          </div>
-        )}
-
+        <LocationSection profile={profile} />
+        <ProfessionalInfoSection profile={profile} isMentee={isMentee} />
         {!isMentee && profile?.skills && profile?.skills.length > 0 && (
           <ProfileSkills
             skills={profile.skills}
@@ -219,13 +182,11 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             fieldsOfInterest={profile.fields_of_interest}
           />
         )}
-
         <ProfileLinks
           linkedin_url={profile?.linkedin_url}
           github_url={profile?.github_url}
           website_url={profile?.website_url}
         />
-
         <Button 
           onClick={() => setIsEditing(true)}
           className="w-full"
