@@ -15,6 +15,7 @@ import { ContentStatusCard } from "./dashboard/ContentStatusCard";
 import { ActivityChart } from "./dashboard/ActivityChart";
 import { ContentDistributionChart } from "./dashboard/ContentDistributionChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ContentDetailsDialog } from "./ContentDetailsDialog";
 
 export function DashboardTab() {
   // Fetch users statistics
@@ -154,6 +155,7 @@ export function DashboardTab() {
           value={(contentStats?.blogs.total || 0) + (contentStats?.videos.total || 0)}
           subtitle={`${contentStats?.blogs.total || 0} blogs, ${contentStats?.videos.total || 0} videos`}
           icon={BookOpen}
+          contentType="blogs"
         />
         <StatsCard
           title="Total Sessions"
@@ -166,6 +168,7 @@ export function DashboardTab() {
           value={(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
           subtitle={`${contentStats?.blogs.pending || 0} blogs, ${contentStats?.videos.pending || 0} videos`}
           icon={Video}
+          contentType="videos"
         />
       </div>
 
@@ -176,12 +179,14 @@ export function DashboardTab() {
           value={contentStats?.careers.total || 0}
           subtitle={`${contentStats?.careers.pending || 0} pending approval`}
           icon={GraduationCap}
+          contentType="careers"
         />
         <StatsCard
           title="Majors"
           value={contentStats?.majors.total || 0}
           subtitle={`${contentStats?.majors.pending || 0} pending approval`}
           icon={BookOpen}
+          contentType="majors"
         />
         <StatsCard
           title="Schools"
