@@ -140,10 +140,12 @@ export default function AuthPage() {
             first_name: {
               required: true,
               label: "First Name",
+              type: "text",
             },
             last_name: {
               required: true,
               label: "Last Name",
+              type: "text",
             },
           }}
         />
