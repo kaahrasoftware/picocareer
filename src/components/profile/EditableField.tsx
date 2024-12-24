@@ -61,7 +61,7 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
   if (isEditing) {
     return (
       <div className="space-y-2">
-        <label className="font-medium">{label}:</label>
+        <label className="font-medium">{label}</label>
         <div className="flex gap-2">
           <Input
             value={editValue}
@@ -93,7 +93,7 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
   return (
     <div className="flex items-center justify-between group">
       <div>
-        <span className="font-medium">{label}:</span>{" "}
+        <span className="font-medium">{label}</span>{" "}
         <span className="text-muted-foreground">{value || "Not set"}</span>
       </div>
       <Button
