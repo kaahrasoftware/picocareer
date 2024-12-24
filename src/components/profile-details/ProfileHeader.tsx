@@ -29,8 +29,9 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
   if (!profile) return null;
 
-  const displayTitle = profile.position || profile.academic_major || "No position/major set";
-  const displaySubtitle = profile.position 
+  // Determine primary and secondary display text based on whether the user is a student or professional
+  const primaryText = profile.position || profile.academic_major || "No position/major set";
+  const secondaryText = profile.position 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
@@ -126,7 +127,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             )
           )}
         </div>
-        <p className="text-lg font-medium text-foreground/90">{displayTitle}</p>
+        <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
         <div className="flex flex-col gap-1 mt-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             {profile.position ? (
@@ -134,7 +135,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             ) : (
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
             )}
-            <span>{displaySubtitle}</span>
+            <span>{secondaryText}</span>
           </div>
           {profile.location && (
             <div className="flex items-center gap-2 text-muted-foreground">
