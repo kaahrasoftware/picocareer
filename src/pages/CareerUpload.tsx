@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
+import { FormFieldProps } from "@/components/forms/FormField";
 
 export default function CareerUpload() {
   const { toast } = useToast();
@@ -71,7 +72,7 @@ export default function CareerUpload() {
     }
   };
 
-  const careerFields = [
+  const careerFields: FormFieldProps[] = [
     {
       name: "title",
       label: "Career Title",
@@ -101,19 +102,19 @@ export default function CareerUpload() {
     {
       name: "academic_majors",
       label: "Academic Majors",
-      type: "textarea",
+      type: "array",
       placeholder: "List relevant academic majors (comma-separated)"
     },
     {
       name: "required_skills",
       label: "Required Skills",
-      type: "textarea",
+      type: "array",
       placeholder: "List required skills (comma-separated)"
     },
     {
       name: "required_tools",
       label: "Required Tools",
-      type: "textarea",
+      type: "array",
       placeholder: "List required tools (comma-separated)"
     },
     {
@@ -143,25 +144,25 @@ export default function CareerUpload() {
     {
       name: "keywords",
       label: "Keywords",
-      type: "textarea",
+      type: "array",
       placeholder: "Enter relevant keywords (comma-separated)"
     },
     {
       name: "transferable_skills",
       label: "Transferable Skills",
-      type: "textarea",
+      type: "array",
       placeholder: "List transferable skills (comma-separated)"
     },
     {
       name: "careers_to_consider_switching_to",
       label: "Alternative Careers",
-      type: "textarea",
+      type: "array",
       placeholder: "List alternative careers to consider (comma-separated)"
     },
     {
       name: "required_education",
       label: "Required Education",
-      type: "textarea",
+      type: "array",
       placeholder: "List required education levels (comma-separated)"
     },
     {
