@@ -104,5 +104,23 @@ export const careerFormFields = [
     label: "Featured Career", 
     type: "checkbox" as const, 
     description: "Show this career in featured sections" 
+  },
+  {
+    name: "rare",
+    label: "Rare Career",
+    type: "checkbox" as const,
+    description: "Mark this as a rare or uncommon career path"
+  },
+  {
+    name: "popular",
+    label: "Popular Career",
+    type: "checkbox" as const,
+    description: "Mark this as a popular career choice"
+  },
+  {
+    name: "new_career",
+    label: "New Career",
+    type: "checkbox" as const,
+    description: "Mark this as a newly emerging career path"
   }
-];
+] as const;
