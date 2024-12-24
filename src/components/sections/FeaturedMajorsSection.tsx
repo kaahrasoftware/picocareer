@@ -16,7 +16,7 @@ export const FeaturedMajorsSection = () => {
   const { toast } = useToast();
   const { data: majors = [], isLoading, error } = useFeaturedMajors();
 
-  // Handle error state
+  // Show error toast only when component mounts or when error changes
   if (error) {
     toast({
       title: "Error",
