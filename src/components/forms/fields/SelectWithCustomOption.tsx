@@ -43,6 +43,12 @@ type InsertData = {
   };
 }
 
+interface TableRecord {
+  id: string;
+  title?: string;
+  name?: string;
+}
+
 export function SelectWithCustomOption({
   value,
   onValueChange,
@@ -66,7 +72,8 @@ export function SelectWithCustomOption({
       if (checkError) throw checkError;
 
       if (existingData && 'id' in existingData) {
-        onValueChange(existingData.id);
+        const record = existingData as TableRecord;
+        onValueChange(record.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
