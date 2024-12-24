@@ -890,6 +890,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      match_careers_with_majors: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       match_profiles_with_majors: {
         Args: Record<PropertyKey, never>
         Returns: undefined
