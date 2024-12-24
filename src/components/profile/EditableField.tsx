@@ -6,6 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { EditButton } from "./editable/EditButton";
 import { SelectWithCustomOption } from "./editable/SelectWithCustomOption";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EditableFieldProps {
   label: string;
@@ -14,6 +21,16 @@ interface EditableFieldProps {
   profileId: string;
   onUpdate?: (newValue: string) => void;
 }
+
+const degreeOptions = [
+  "No Degree",
+  "High School",
+  "Associate",
+  "Bachelor",
+  "Master",
+  "MD",
+  "PhD"
+] as const;
 
 export function EditableField({ 
   label, 
@@ -123,6 +140,41 @@ export function EditableField({
             setEditValue(value || "");
           }}
         />
+      );
+    }
+
+    if (fieldName === 'highest_degree') {
+      return (
+        <div className="flex gap-2">
+          <Select 
+            value={editValue} 
+            onValueChange={(value) => {
+              updateField(value);
+              setEditValue(value);
+            }}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Select your highest degree" />
+            </SelectTrigger>
+            <SelectContent>
+              {degreeOptions.map((degree) => (
+                <SelectItem key={degree} value={degree}>
+                  {degree}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            onClick={() => {
+              setIsEditing(false);
+              setEditValue(value || "");
+            }} 
+            variant="outline" 
+            size="sm"
+          >
+            Cancel
+          </Button>
+        </div>
       );
     }
 
