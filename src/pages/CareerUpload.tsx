@@ -4,6 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
 import { careerFormFields } from "@/components/forms/career/CareerFormFields";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export default function CareerUpload() {
   const { toast } = useToast();
@@ -133,17 +135,24 @@ export default function CareerUpload() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Upload Career Information</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Add a new career path to help guide others in their professional journey.
-        </p>
-      </div>
-      <ContentUploadForm 
-        fields={careerFormFields}
-        onSubmit={handleSubmit}
-      />
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Card className="bg-card">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-3xl font-bold">Upload Career Information</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Add a new career path to help guide others in their professional journey
+          </CardDescription>
+        </CardHeader>
+        <Separator className="mb-6" />
+        <CardContent>
+          <div className="space-y-6">
+            <ContentUploadForm 
+              fields={careerFormFields}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
