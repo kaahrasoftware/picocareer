@@ -33,7 +33,7 @@ export function SelectWithCustomOption({
   placeholder, 
   tableName,
   onSelect,
-  onCancel
+  onCancel,
 }: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
@@ -44,7 +44,7 @@ export function SelectWithCustomOption({
       // First, check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id, ' + (tableName === 'majors' ? 'title' : 'name'))
+        .select('*')
         .eq(tableName === 'majors' ? 'title' : 'name', customValue)
         .maybeSingle();
 
@@ -83,7 +83,7 @@ export function SelectWithCustomOption({
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
-        .select('id, ' + (tableName === 'majors' ? 'title' : 'name'))
+        .select()
         .maybeSingle();
 
       if (error) {
