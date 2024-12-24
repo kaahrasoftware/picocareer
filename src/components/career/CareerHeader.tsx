@@ -29,7 +29,7 @@ export function CareerHeader({ title, industry, salary_range, image_url, profile
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <h3 className="font-semibold break-words">{title}</h3>
-          <Badge variant="ghost" className="flex items-center gap-1">
+          <Badge variant="outline" className="flex items-center gap-1 bg-transparent border-none">
             <Users className="h-4 w-4" />
             {profiles_count}
           </Badge>
