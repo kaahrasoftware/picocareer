@@ -8,10 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// Define valid content types and status
 type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
 type ContentStatus = "Approved" | "Pending" | "Rejected";
 
@@ -29,7 +28,7 @@ export function ContentDetailsDialog({
   const [statusFilter, setStatusFilter] = useState<ContentStatus | "all">("all");
   const { toast } = useToast();
 
-  const { data: items, isLoading, refetch } = useQuery({
+  const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['content-details', contentType],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,6 +46,31 @@ export function ContentDetailsDialog({
     enabled: open,
   });
 
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!open) return;
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: contentType
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [open, contentType, refetch]);
+
   const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
     try {
       const { error } = await supabase
@@ -61,7 +85,7 @@ export function ContentDetailsDialog({
         description: `Item status has been updated to ${newStatus}`,
       });
 
-      refetch();
+      // No need to manually refetch as real-time subscription will handle the update
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -69,17 +93,6 @@ export function ContentDetailsDialog({
         description: "There was an error updating the status. Please try again.",
         variant: "destructive",
       });
-    }
-  };
-
-  const getBadgeVariant = (status: ContentStatus | null | undefined) => {
-    switch (status) {
-      case 'Approved':
-        return 'default';
-      case 'Rejected':
-        return 'destructive';
-      default:
-        return 'outline';
     }
   };
 
