@@ -10,9 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { AboutSection } from "./career-details/AboutSection";
-import { CareerMetrics } from "./career-details/CareerMetrics";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
+import { CareerMentorList } from "./career-details/CareerMentorList";
 import { Users, DollarSign, Book, ArrowRight, Tag } from "lucide-react";
 
 interface CareerDetailsDialogProps {
@@ -172,14 +172,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               </div>
             )}
 
-            <CareerMetrics
-              intensity={career.intensity}
-              stress_levels={career.stress_levels}
-              dropout_rates={career.dropout_rates}
-              average_salary={career.average_salary}
-              potential_salary={career.potential_salary}
-              tuition_and_fees={career.tuition_and_fees}
-            />
+            <CareerMentorList careerId={career.id} />
 
             <SkillsAndTools
               required_skills={career.required_skills}
