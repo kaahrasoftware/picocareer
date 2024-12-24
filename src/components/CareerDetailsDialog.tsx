@@ -63,6 +63,9 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         .single();
 
       if (error) throw error;
+      
+      // Add console log to verify relations
+      console.log('Career with relations:', data);
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
