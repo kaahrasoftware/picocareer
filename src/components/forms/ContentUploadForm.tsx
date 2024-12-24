@@ -12,9 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ContentUploadFormProps {
   onSubmit?: (data: BlogFormValues) => Promise<void>;
   fields: FormFieldProps[];
+  buttonText?: string;
 }
 
-export function ContentUploadForm({ onSubmit, fields }: ContentUploadFormProps) {
+export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Career" }: ContentUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -113,7 +114,7 @@ export function ContentUploadForm({ onSubmit, fields }: ContentUploadFormProps) 
           />
         ))}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Uploading..." : "Upload Blog Post"}
+          {isSubmitting ? "Uploading..." : buttonText}
         </Button>
       </form>
     </Form>
