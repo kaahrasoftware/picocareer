@@ -47,28 +47,28 @@ export const mentorFormFields: FormFieldProps[] = [
   {
     name: "position",
     label: "Current Position",
-    type: "text",
+    type: "select",
     placeholder: "Select your current position",
     required: true
   },
   {
     name: "company_id",
     label: "Company",
-    type: "text",
+    type: "select",
     placeholder: "Select your company",
     required: true
   },
   {
     name: "school_id",
     label: "School",
-    type: "text",
+    type: "select",
     placeholder: "Select your school",
     required: true
   },
   {
     name: "academic_major_id",
     label: "Academic Major",
-    type: "text",
+    type: "select",
     placeholder: "Select your major",
     required: true
   },

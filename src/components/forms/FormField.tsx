@@ -25,10 +25,10 @@ export interface FormFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect" | "select";
   bucket?: string;
   required?: boolean;
-  options?: string[];
+  options?: Array<{ id: string; title?: string; name?: string }>;
   dependsOn?: string;
   watch?: any;
   control?: any;
@@ -71,18 +71,6 @@ export function FormField({
     }
   }, [dependsOn, watchDependency]);
 
-  if (type === "image") {
-    return (
-      <ImageUpload
-        control={control}
-        name={name}
-        label={label}
-        description={description}
-        bucket={bucket}
-      />
-    );
-  }
-
   return (
     <FormFieldBase
       control={control}
@@ -94,7 +82,23 @@ export function FormField({
             {required && <span className="text-red-500 ml-1">*</span>}
           </FormLabel>
           <FormControl>
-            {type === "multiselect" ? (
+            {type === "select" ? (
+              <Select
+                value={field.value || ""}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.title || option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : type === "multiselect" ? (
               <Select
                 value={field.value?.[field.value.length - 1] || ""}
                 onValueChange={(value) => {

@@ -170,13 +170,27 @@ export default function MentorRegistration() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {mentorFormFields.map((field) => (
-            <FormField
-              key={field.name}
-              control={form.control}
-              {...field}
-            />
-          ))}
+          {mentorFormFields.map((field) => {
+            let options = [];
+            if (field.name === "position") {
+              options = careers || [];
+            } else if (field.name === "company_id") {
+              options = companies || [];
+            } else if (field.name === "school_id") {
+              options = schools || [];
+            } else if (field.name === "academic_major_id") {
+              options = majors || [];
+            }
+
+            return (
+              <FormField
+                key={field.name}
+                control={form.control}
+                {...field}
+                options={options}
+              />
+            );
+          })}
 
           <Button type="submit" className="w-full">
             Register as Mentor
