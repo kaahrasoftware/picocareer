@@ -3,7 +3,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -86,10 +85,13 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
             </Badge>
           </div>
           {career.salary_range && (
-            <DialogDescription className="text-primary font-medium mt-2 flex items-center gap-1">
+            <Badge 
+              variant="outline"
+              className="mt-2 bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6] flex w-fit items-center gap-1"
+            >
               <DollarSign className="h-4 w-4" />
               {career.salary_range}
-            </DialogDescription>
+            </Badge>
           )}
         </DialogHeader>
         
