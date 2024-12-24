@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface EditableFieldProps {
   label: string;
@@ -17,15 +18,24 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const handleSave = async () => {
-    try {
+  const updateFieldMutation = useMutation({
+    mutationFn: async (newValue: string) => {
       const { error } = await supabase
         .from('profiles')
-        .update({ [fieldName]: editValue })
+        .update({ [fieldName]: newValue })
         .eq('id', profileId);
 
       if (error) throw error;
+      return newValue;
+    },
+    onSuccess: (newValue) => {
+      // Update the cache with the new value
+      queryClient.setQueryData(['profile'], (oldData: any) => ({
+        ...oldData,
+        [fieldName]: newValue,
+      }));
 
       toast({
         title: "Success",
@@ -33,17 +43,20 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
       });
 
       if (onUpdate) {
-        onUpdate(editValue);
+        onUpdate(newValue);
       }
       setIsEditing(false);
-    } catch (error) {
+    },
+    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to update field",
         variant: "destructive",
       });
-    }
-  };
+      // Reset to previous value on error
+      setEditValue(value || "");
+    },
+  });
 
   if (isEditing) {
     return (
@@ -55,8 +68,23 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
             onChange={(e) => setEditValue(e.target.value)}
             className="flex-1"
           />
-          <Button onClick={handleSave} size="sm">Save</Button>
-          <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">Cancel</Button>
+          <Button 
+            onClick={() => updateFieldMutation.mutate(editValue)}
+            size="sm"
+            disabled={updateFieldMutation.isPending}
+          >
+            Save
+          </Button>
+          <Button 
+            onClick={() => {
+              setIsEditing(false);
+              setEditValue(value || "");
+            }} 
+            variant="outline" 
+            size="sm"
+          >
+            Cancel
+          </Button>
         </div>
       </div>
     );
