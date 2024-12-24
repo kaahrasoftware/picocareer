@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -7,12 +7,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
-type ContentStatus = "Approved" | "Pending" | "Rejected";
+import { ContentList } from "./content/ContentList";
+import type { ContentType, ContentStatus } from "./types";
 
 interface ContentDetailsDialogProps {
   open: boolean;
@@ -27,8 +25,9 @@ export function ContentDetailsDialog({
 }: ContentDetailsDialogProps) {
   const [statusFilter, setStatusFilter] = useState<ContentStatus | "all">("all");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: items = [], isLoading, refetch } = useQuery({
+  const { data: items = [], isLoading } = useQuery({
     queryKey: ['content-details', contentType],
     queryFn: async () => {
       try {
@@ -59,7 +58,6 @@ export function ContentDetailsDialog({
     enabled: open,
   });
 
-  // Subscribe to real-time updates
   useEffect(() => {
     if (!open) return;
 
@@ -76,7 +74,7 @@ export function ContentDetailsDialog({
         },
         (payload) => {
           console.log('Real-time update received:', payload);
-          refetch();
+          queryClient.invalidateQueries({ queryKey: ['content-details', contentType] });
         }
       )
       .subscribe();
@@ -85,7 +83,7 @@ export function ContentDetailsDialog({
       console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [open, contentType, refetch]);
+  }, [open, contentType, queryClient]);
 
   const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
     try {
@@ -107,7 +105,7 @@ export function ContentDetailsDialog({
       });
 
       // Refetch to ensure we have the latest data
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['content-details', contentType] });
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -118,7 +116,7 @@ export function ContentDetailsDialog({
     }
   };
 
-  const getStatusColor = (status: ContentStatus | null | undefined) => {
+  const getStatusColor = (status: ContentStatus) => {
     switch (status) {
       case 'Approved':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -129,9 +127,7 @@ export function ContentDetailsDialog({
     }
   };
 
-  const filteredItems = items?.filter(item => 
-    statusFilter === "all" ? true : item.status === statusFilter
-  ) || [];
+  if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -159,50 +155,14 @@ export function ContentDetailsDialog({
           </Select>
         </div>
 
-        <ScrollArea className="flex-1 h-[calc(85vh-200px)]">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : filteredItems.length > 0 ? (
-            <div className="space-y-4 px-1">
-              {filteredItems.map((item: any) => (
-                <div key={item.id} className="bg-muted p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold">{item.title}</h4>
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={item.status || "Pending"}
-                        onValueChange={(value) => handleStatusChange(item.id, value as ContentStatus)}
-                      >
-                        <SelectTrigger className={`w-[120px] border ${getStatusColor(item.status as ContentStatus)}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Approved">Approved</SelectItem>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Rejected">Rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  {item.description && (
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {item.description}
-                    </p>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    Created: {new Date(item.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4 text-muted-foreground">
-              No {statusFilter === "all" ? "" : statusFilter} {contentType} found
-            </div>
-          )}
-        </ScrollArea>
+        <ContentList
+          items={items}
+          isLoading={isLoading}
+          contentType={contentType}
+          statusFilter={statusFilter}
+          handleStatusChange={handleStatusChange}
+          getStatusColor={getStatusColor}
+        />
       </DialogContent>
     </Dialog>
   );
