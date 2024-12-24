@@ -119,23 +119,14 @@ export default function AuthPage() {
           theme="dark"
           providers={["google"]}
           redirectTo={window.location.origin}
-          options={{
-            emailRedirectTo: window.location.origin,
-            metadata: {
-              fields: [
-                {
-                  name: 'first_name',
-                  type: 'text',
-                  required: true,
-                  label: 'First Name',
-                },
-                {
-                  name: 'last_name',
-                  type: 'text',
-                  required: true,
-                  label: 'Last Name',
-                },
-              ],
+          view="sign_in"
+          showLinks={true}
+          additionalData={{
+            first_name: {
+              required: true,
+            },
+            last_name: {
+              required: true,
             },
           }}
         />
