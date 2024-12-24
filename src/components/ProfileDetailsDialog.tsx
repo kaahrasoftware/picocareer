@@ -15,6 +15,7 @@ import { ProfileBio } from "./profile-details/ProfileBio";
 import { ProfileSkills } from "./profile-details/ProfileSkills";
 import { ProfileEducation } from "./profile-details/ProfileEducation";
 import { ProfileLinks } from "./profile-details/ProfileLinks";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -24,6 +25,15 @@ interface ProfileDetailsDialogProps {
 
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
   const [bookingOpen, setBookingOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
@@ -64,6 +74,14 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     return null;
   }
 
+  const isOwnProfile = currentUser?.id === userId;
+  const isMentor = profile.user_type === 'mentor';
+
+  const handleEditProfile = () => {
+    onOpenChange(false);
+    navigate('/profile');
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,13 +89,25 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           <DialogHeader className="p-6 pb-0">
             <div className="relative">
               <ProfileHeader profile={profile} />
-              <Button 
-                size="lg"
-                onClick={() => setBookingOpen(true)}
-                className="absolute right-0 top-16"
-              >
-                Book a Session
-              </Button>
+              {isMentor && (
+                isOwnProfile ? (
+                  <Button 
+                    size="lg"
+                    onClick={handleEditProfile}
+                    className="absolute right-0 top-16"
+                  >
+                    Edit Mentor Profile
+                  </Button>
+                ) : (
+                  <Button 
+                    size="lg"
+                    onClick={() => setBookingOpen(true)}
+                    className="absolute right-0 top-16"
+                  >
+                    Book a Session
+                  </Button>
+                )
+              )}
             </div>
           </DialogHeader>
 
@@ -135,15 +165,17 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         </DialogContent>
       </Dialog>
 
-      <BookSessionDialog
-        mentor={{
-          id: userId,
-          name: profile.full_name || '',
-          imageUrl: profile.avatar_url || ''
-        }}
-        open={bookingOpen}
-        onOpenChange={setBookingOpen}
-      />
+      {!isOwnProfile && (
+        <BookSessionDialog
+          mentor={{
+            id: userId,
+            name: profile.full_name || '',
+            imageUrl: profile.avatar_url || ''
+          }}
+          open={bookingOpen}
+          onOpenChange={setBookingOpen}
+        />
+      )}
     </>
   );
 }
