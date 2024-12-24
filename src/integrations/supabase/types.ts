@@ -141,6 +141,9 @@ export type Database = {
           industry: string | null
           job_outlook: string | null
           keywords: string[] | null
+          new_career: boolean | null
+          popular: boolean | null
+          rare: boolean | null
           required_education: string[] | null
           required_skills: string[] | null
           required_tools: string[] | null
@@ -163,6 +166,9 @@ export type Database = {
           industry?: string | null
           job_outlook?: string | null
           keywords?: string[] | null
+          new_career?: boolean | null
+          popular?: boolean | null
+          rare?: boolean | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
@@ -185,6 +191,9 @@ export type Database = {
           industry?: string | null
           job_outlook?: string | null
           keywords?: string[] | null
+          new_career?: boolean | null
+          popular?: boolean | null
+          rare?: boolean | null
           required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null

@@ -77,9 +77,9 @@ export const careerFormFields = [
   },
   { 
     name: "stress_levels", 
-    label: "Stress Level (1-10)", 
+    label: "Stress Level", 
     type: "text" as const, 
-    placeholder: "5" 
+    placeholder: "Low, Medium, or High" 
   },
   { 
     name: "keywords", 
