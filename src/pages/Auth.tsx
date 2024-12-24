@@ -53,7 +53,7 @@ export default function Auth() {
               </p>
               
               {/* Mentor Carousel */}
-              <div className="mt-8">
+              <div className="mt-8 flex justify-center items-center">
                 <Carousel
                   opts={{
                     align: "start",
