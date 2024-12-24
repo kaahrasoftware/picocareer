@@ -11,12 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
-type TableName = 'majors' | 'schools' | 'careers';
+type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 type TitleField = 'title' | 'name';
 
 interface Option {
   id: string;
-  [key: string]: any;
+  title?: string;
+  name?: string;
 }
 
 interface CustomSelectProps {
@@ -33,11 +34,7 @@ type InsertData = {
   majors: Database['public']['Tables']['majors']['Insert'];
   schools: Database['public']['Tables']['schools']['Insert'];
   careers: Database['public']['Tables']['careers']['Insert'];
-}
-
-interface TableRecord {
-  id: string;
-  [key: string]: any;
+  companies: Database['public']['Tables']['companies']['Insert'];
 }
 
 export function SelectWithCustomOption({ 
@@ -56,7 +53,7 @@ export function SelectWithCustomOption({
   const handleCustomSubmit = async () => {
     try {
       // First, check if entry already exists
-      const titleField = tableName === 'schools' ? 'name' : 'title';
+      const titleField = tableName === 'schools' || tableName === 'companies' ? 'name' : 'title';
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
         .select(`id, ${titleField}`)
@@ -96,6 +93,11 @@ export function SelectWithCustomOption({
           description: `Position: ${customValue}`,
           status: 'Pending'
         } as InsertData['careers'];
+      } else if (tableName === 'companies') {
+        insertData = {
+          name: customValue,
+          status: 'Pending'
+        } as InsertData['companies'];
       } else {
         insertData = {
           name: customValue,
@@ -125,7 +127,7 @@ export function SelectWithCustomOption({
         setCustomValue("");
         toast({
           title: "Success",
-          description: `Successfully added new ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : 'school'}.`,
+          description: `Successfully added new ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : tableName === 'companies' ? 'company' : 'school'}.`,
         });
       }
     } catch (error) {
@@ -148,7 +150,7 @@ export function SelectWithCustomOption({
         <Input
           value={customValue}
           onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : 'school'} name`}
+          placeholder={`Enter ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : tableName === 'companies' ? 'company' : 'school'} name`}
           className="mt-1"
         />
         <div className="flex gap-2">

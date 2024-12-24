@@ -43,7 +43,7 @@ export function EditableField({
   const [editValue, setEditValue] = useState(value || "");
   const { toast } = useToast();
 
-  // Fetch majors if the field is academic_major
+  // Fetch majors if the field is academic_major_id
   const { data: majors } = useQuery({
     queryKey: ['majors'],
     queryFn: async () => {
@@ -60,7 +60,7 @@ export function EditableField({
     enabled: fieldName === 'academic_major_id'
   });
 
-  // Fetch schools if the field is school_name
+  // Fetch schools if the field is school_id
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
@@ -92,6 +92,23 @@ export function EditableField({
       return data;
     },
     enabled: fieldName === 'position'
+  });
+
+  // Fetch companies if the field is company_id
+  const { data: companies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      if (fieldName !== 'company_id') return null;
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: fieldName === 'company_id'
   });
 
   const updateField = async (newValue: string) => {
@@ -164,6 +181,23 @@ export function EditableField({
           options={careers}
           placeholder="Select a position"
           tableName="careers"
+          handleSelectChange={updateField}
+          fieldName={fieldName}
+          onCancel={() => {
+            setIsEditing(false);
+            setEditValue(value || "");
+          }}
+        />
+      );
+    }
+
+    if (fieldName === 'company_id' && companies) {
+      return (
+        <SelectWithCustomOption
+          value={editValue}
+          options={companies}
+          placeholder="Select a company"
+          tableName="companies"
           handleSelectChange={updateField}
           fieldName={fieldName}
           onCancel={() => {
