@@ -83,8 +83,8 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // If it doesn't exist, create a new entry
-      let insertData: Partial<InsertData[TableName]>;
+      // Prepare insert data based on table type
+      let insertData: Record<string, any> = {};
       
       if (tableName === 'majors') {
         insertData = {
