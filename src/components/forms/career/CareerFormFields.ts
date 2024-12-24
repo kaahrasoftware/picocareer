@@ -22,11 +22,13 @@ export const careerFormFields = [
   { 
     name: "salary_range", 
     label: "Salary Range", 
+    type: "text",
     placeholder: "$50,000 - $100,000" 
   },
   { 
     name: "industry", 
     label: "Industry", 
+    type: "text",
     placeholder: "e.g., Technology, Healthcare, Finance" 
   },
   { 
