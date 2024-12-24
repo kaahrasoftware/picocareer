@@ -73,12 +73,20 @@ export default function CareerUpload() {
   };
 
   const careerFields: FormFieldProps[] = [
+    // Basic Information Section
     {
       name: "title",
       label: "Career Title",
       type: "text",
       placeholder: "e.g., Software Engineer",
       required: true
+    },
+    {
+      name: "image_url",
+      label: "Career Image",
+      type: "image",
+      bucket: "images",
+      description: "Upload an image that represents this career"
     },
     {
       name: "description",
@@ -94,16 +102,23 @@ export default function CareerUpload() {
       placeholder: "e.g., $50,000 - $100,000"
     },
     {
-      name: "image_url",
-      label: "Image URL",
+      name: "industry",
+      label: "Industry",
       type: "text",
-      placeholder: "URL for career image"
+      placeholder: "e.g., Technology, Healthcare"
     },
+    // Education and Skills Section
     {
       name: "academic_majors",
       label: "Academic Majors",
       type: "array",
       placeholder: "List relevant academic majors (comma-separated)"
+    },
+    {
+      name: "required_education",
+      label: "Required Education",
+      type: "array",
+      placeholder: "List required education levels (comma-separated)"
     },
     {
       name: "required_skills",
@@ -118,22 +133,17 @@ export default function CareerUpload() {
       placeholder: "List required tools (comma-separated)"
     },
     {
+      name: "transferable_skills",
+      label: "Transferable Skills",
+      type: "array",
+      placeholder: "List transferable skills (comma-separated)"
+    },
+    // Career Growth Section
+    {
       name: "job_outlook",
       label: "Job Outlook",
       type: "textarea",
       placeholder: "Describe the job outlook"
-    },
-    {
-      name: "industry",
-      label: "Industry",
-      type: "text",
-      placeholder: "e.g., Technology, Healthcare"
-    },
-    {
-      name: "work_environment",
-      label: "Work Environment",
-      type: "textarea",
-      placeholder: "Describe the work environment"
     },
     {
       name: "growth_potential",
@@ -142,28 +152,10 @@ export default function CareerUpload() {
       placeholder: "Describe career growth potential"
     },
     {
-      name: "keywords",
-      label: "Keywords",
-      type: "array",
-      placeholder: "Enter relevant keywords (comma-separated)"
-    },
-    {
-      name: "transferable_skills",
-      label: "Transferable Skills",
-      type: "array",
-      placeholder: "List transferable skills (comma-separated)"
-    },
-    {
-      name: "careers_to_consider_switching_to",
-      label: "Alternative Careers",
-      type: "array",
-      placeholder: "List alternative careers to consider (comma-separated)"
-    },
-    {
-      name: "required_education",
-      label: "Required Education",
-      type: "array",
-      placeholder: "List required education levels (comma-separated)"
+      name: "work_environment",
+      label: "Work Environment",
+      type: "textarea",
+      placeholder: "Describe the work environment"
     },
     {
       name: "stress_levels",
@@ -171,6 +163,20 @@ export default function CareerUpload() {
       type: "text",
       placeholder: "Describe typical stress levels"
     },
+    // Additional Information Section
+    {
+      name: "keywords",
+      label: "Keywords",
+      type: "array",
+      placeholder: "Enter relevant keywords (comma-separated)"
+    },
+    {
+      name: "careers_to_consider_switching_to",
+      label: "Alternative Careers",
+      type: "array",
+      placeholder: "List alternative careers to consider (comma-separated)"
+    },
+    // Career Status Section
     {
       name: "featured",
       label: "Featured Career",
@@ -199,11 +205,18 @@ export default function CareerUpload() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Upload Career Information</h1>
-      <ContentUploadForm 
-        fields={careerFields} 
-        onSubmit={handleSubmit}
-      />
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Upload Career Information</h1>
+        <p className="text-gray-600 mb-6">
+          Please provide detailed information about this career path to help others make informed decisions.
+        </p>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <ContentUploadForm 
+            fields={careerFields} 
+            onSubmit={handleSubmit}
+          />
+        </div>
+      </div>
     </div>
   );
 }
