@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
 import { ProfileAvatar } from "./ProfileAvatar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileHeaderProps {
   profile: {
@@ -18,6 +20,8 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
+  const { toast } = useToast();
+  
   if (!profile) return null;
 
   // Determine primary and secondary display text based on whether the user is a student or professional
@@ -26,9 +30,44 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
-  const handleAvatarUpdate = (url: string) => {
-    // This is just a placeholder - the actual update logic should be implemented
-    console.log("Avatar update:", url);
+  const handleAvatarUpdate = async (blob: Blob) => {
+    try {
+      const fileExt = 'jpg'; // Since we're converting to JPEG in the image processing
+      const filePath = `${profile.id}.${fileExt}`;
+
+      // Upload the blob to Supabase storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update the profile with the new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
