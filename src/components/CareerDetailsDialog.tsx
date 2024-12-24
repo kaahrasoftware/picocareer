@@ -98,11 +98,13 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         <ScrollArea className="h-[calc(85vh-120px)]">
           <div className="space-y-6 p-4">
             {career.image_url && (
-              <img 
-                src={career.image_url} 
-                alt={career.title} 
-                className="w-full max-h-[300px] object-cover rounded-lg"
-              />
+              <div className="flex justify-center">
+                <img 
+                  src={career.image_url} 
+                  alt={career.title} 
+                  className="max-h-[300px] w-auto object-contain rounded-lg"
+                />
+              </div>
             )}
 
             <AboutSection
