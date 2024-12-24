@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
 // Define valid content types
@@ -62,7 +63,7 @@ export function ContentDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
+      <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             {contentType.charAt(0).toUpperCase() + contentType.slice(1)} Details
@@ -86,38 +87,40 @@ export function ContentDetailsDialog({
           </Select>
         </div>
 
-        <div className="overflow-y-auto">
+        <ScrollArea className="flex-1 h-[calc(85vh-200px)]">
           {isLoading ? (
             <div className="flex items-center justify-center p-4">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : filteredItems.length > 0 ? (
-            filteredItems.map((item: any) => (
-              <div key={item.id} className="bg-muted p-4 rounded-lg mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold">{item.title}</h4>
-                  {item.status && (
-                    <Badge variant={getBadgeVariant(item.status)}>
-                      {item.status}
-                    </Badge>
+            <div className="space-y-4 px-1">
+              {filteredItems.map((item: any) => (
+                <div key={item.id} className="bg-muted p-4 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold">{item.title}</h4>
+                    {item.status && (
+                      <Badge variant={getBadgeVariant(item.status)}>
+                        {item.status}
+                      </Badge>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {item.description}
+                    </p>
                   )}
+                  <div className="text-xs text-muted-foreground">
+                    Created: {format(new Date(item.created_at), 'PPP')}
+                  </div>
                 </div>
-                {item.description && (
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {item.description}
-                  </p>
-                )}
-                <div className="text-xs text-muted-foreground">
-                  Created: {format(new Date(item.created_at), 'PPP')}
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
             <div className="text-center py-4 text-muted-foreground">
               No {statusFilter === "all" ? "" : statusFilter} {contentType} found
             </div>
           )}
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
