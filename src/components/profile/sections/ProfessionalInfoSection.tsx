@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Profile } from '@/types/database/profiles';
+import { EditableField } from '../EditableField';
 
 interface ProfessionalInfoSectionProps {
   profile: Profile | null;
@@ -10,7 +11,7 @@ export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoS
   if (isMentee) return null;
 
   return (
-    <div className="bg-muted rounded-lg p-4 space-y-3">
+    <div className="bg-muted rounded-lg p-4 space-y-4">
       <h4 className="font-semibold">Professional Experience</h4>
       {profile?.career?.title && (
         <div className="text-muted-foreground">
@@ -18,14 +19,20 @@ export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoS
         </div>
       )}
       {profile?.company_name && (
-        <div className="text-muted-foreground">
-          <span className="font-medium">Company:</span> {profile.company_name}
-        </div>
+        <EditableField
+          label="Company"
+          value={profile.company_name}
+          fieldName="company_name"
+          profileId={profile.id}
+        />
       )}
       {profile?.years_of_experience !== null && (
-        <div className="text-muted-foreground">
-          <span className="font-medium">Years of Experience:</span> {profile.years_of_experience}
-        </div>
+        <EditableField
+          label="Years of Experience"
+          value={profile.years_of_experience.toString()}
+          fieldName="years_of_experience"
+          profileId={profile.id}
+        />
       )}
     </div>
   );

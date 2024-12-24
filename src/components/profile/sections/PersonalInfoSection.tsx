@@ -1,22 +1,29 @@
 import React from 'react';
 import type { Profile } from '@/types/database/profiles';
+import { EditableField } from '../EditableField';
 
 interface PersonalInfoSectionProps {
   profile: Profile | null;
 }
 
 export function PersonalInfoSection({ profile }: PersonalInfoSectionProps) {
+  if (!profile) return null;
+
   return (
-    <div className="bg-muted rounded-lg p-4">
-      <h4 className="font-semibold mb-2">Personal Information</h4>
-      <div className="grid grid-cols-2 gap-4">
-        <p className="text-muted-foreground">
-          <span className="font-medium">First Name:</span> {profile?.first_name}
-        </p>
-        <p className="text-muted-foreground">
-          <span className="font-medium">Last Name:</span> {profile?.last_name}
-        </p>
-      </div>
+    <div className="bg-muted rounded-lg p-4 space-y-4">
+      <h4 className="font-semibold mb-4">Personal Information</h4>
+      <EditableField
+        label="First Name"
+        value={profile.first_name}
+        fieldName="first_name"
+        profileId={profile.id}
+      />
+      <EditableField
+        label="Last Name"
+        value={profile.last_name}
+        fieldName="last_name"
+        profileId={profile.id}
+      />
     </div>
   );
 }
