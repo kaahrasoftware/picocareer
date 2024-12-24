@@ -3,18 +3,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { FormField, FormFieldProps } from "@/components/forms/FormField";
 import { careerFormSchema, CareerFormValues } from "@/lib/validations/blog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { BasicCareerInfo } from "./career/BasicCareerInfo";
+import { SkillsAndRequirements } from "./career/SkillsAndRequirements";
+import { CareerDetails } from "./career/CareerDetails";
+import { CareerMetadata } from "./career/CareerMetadata";
 
 interface ContentUploadFormProps {
   onSubmit?: (data: CareerFormValues) => Promise<void>;
-  fields: FormFieldProps[];
   buttonText?: string;
 }
 
-export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Career" }: ContentUploadFormProps) {
+export function ContentUploadForm({ onSubmit, buttonText = "Upload Career" }: ContentUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -41,6 +43,7 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
       rare: false,
       popular: false,
       new_career: false,
+      status: 'Pending'
     },
   });
 
@@ -102,22 +105,13 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {fields.map((field) => (
-          <FormField
-            key={field.name}
-            control={form.control}
-            name={field.name}
-            label={field.label}
-            placeholder={field.placeholder}
-            description={field.description}
-            type={field.type}
-            required={field.required}
-            options={field.options}
-            dependsOn={field.dependsOn}
-            watch={form.watch}
-          />
-        ))}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="space-y-6">
+          <BasicCareerInfo control={form.control} />
+          <SkillsAndRequirements control={form.control} />
+          <CareerDetails control={form.control} />
+          <CareerMetadata control={form.control} />
+        </div>
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Uploading..." : buttonText}
         </Button>
