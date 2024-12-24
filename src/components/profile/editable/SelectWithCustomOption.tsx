@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from '@/integrations/supabase/types';
 import { useToast } from "@/hooks/use-toast";
-import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 type TitleField = 'title' | 'name';
@@ -74,21 +74,11 @@ export function SelectWithCustomOption({
       const titleField = getTitleField(tableName);
       
       // First, check if entry already exists
-      const { data: existingData, error: existingError } = await supabase
+      const { data: existingData } = await supabase
         .from(tableName)
         .select(`id, ${titleField}`)
         .eq(titleField, customValue)
         .maybeSingle();
-
-      if (existingError) {
-        console.error('Error checking existing entry:', existingError);
-        toast({
-          title: "Error",
-          description: "Failed to check for existing entry. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
 
       if (existingData) {
         // If it exists, use the existing entry
