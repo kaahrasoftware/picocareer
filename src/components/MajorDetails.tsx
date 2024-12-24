@@ -21,6 +21,26 @@ interface MajorDetailsProps {
 }
 
 export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
+  const { data: majorWithCareers } = useQuery({
+    queryKey: ['major-careers', major.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select(`
+          *,
+          career_major_relations(
+            career:careers(id, title, salary_range)
+          )
+        `)
+        .eq('id', major.id)
+        .single();
+
+      if (error) throw error;
+      return data as Major;
+    },
+    enabled: open && !!major.id,
+  });
+
   if (!major) return null;
 
   const formatProfileCount = (count: number | undefined) => {
@@ -88,6 +108,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
               career_opportunities={major.career_opportunities}
               professional_associations={major.professional_associations}
               global_applicability={major.global_applicability}
+              related_careers={majorWithCareers?.career_major_relations}
             />
 
             <SkillsAndTools 

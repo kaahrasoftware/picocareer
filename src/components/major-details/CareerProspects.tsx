@@ -7,6 +7,13 @@ interface CareerProspectsProps {
   potential_salary?: string;
   professional_associations?: string[];
   global_applicability?: string;
+  related_careers?: {
+    career: {
+      id: string;
+      title: string;
+      salary_range: string | null;
+    };
+  }[];
 }
 
 export function CareerProspects({ 
@@ -14,7 +21,8 @@ export function CareerProspects({
   career_opportunities,
   potential_salary,
   professional_associations,
-  global_applicability
+  global_applicability,
+  related_careers
 }: CareerProspectsProps) {
   return (
     <div className="space-y-4">
@@ -27,6 +35,23 @@ export function CareerProspects({
         <div className="flex items-center gap-2 text-sm">
           <DollarSign className="h-4 w-4 text-primary" />
           <span>Potential Salary: {potential_salary}</span>
+        </div>
+      )}
+
+      {related_careers && related_careers.length > 0 && (
+        <div className="space-y-2">
+          <h5 className="text-sm font-medium">Related Careers</h5>
+          <div className="flex flex-wrap gap-2">
+            {related_careers.map(({ career }) => (
+              <Badge 
+                key={career.id} 
+                variant="secondary"
+                className="bg-primary/10 text-primary border-primary/20"
+              >
+                {career.title} {career.salary_range && `(${career.salary_range})`}
+              </Badge>
+            ))}
+          </div>
         </div>
       )}
 

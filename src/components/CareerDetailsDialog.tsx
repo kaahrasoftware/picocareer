@@ -22,6 +22,7 @@ type CareerWithMajors = Tables<"careers"> & {
   career_major_relations: {
     major: {
       title: string;
+      id: string;
     };
   }[];
   average_salary?: number;
@@ -50,7 +51,12 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     queryFn: async () => {
       const { data, error } = await supabase
         .from('careers')
-        .select('*, career_major_relations(major:majors(title))')
+        .select(`
+          *,
+          career_major_relations(
+            major:majors(id, title)
+          )
+        `)
         .eq('id', careerId)
         .single();
 
@@ -107,6 +113,19 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               <img src={career.image_url} alt={career.title} className="w-full h-48 object-cover rounded-lg" />
             )}
             
+            {career.career_major_relations && career.career_major_relations.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Related Majors</h3>
+                <div className="flex flex-wrap gap-2">
+                  {career.career_major_relations.map(({ major }) => (
+                    <span key={major.id} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                      {major.title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="text-sm">
                 <span className="text-muted-foreground">Industry:</span>

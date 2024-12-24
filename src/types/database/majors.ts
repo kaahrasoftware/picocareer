@@ -27,4 +27,11 @@ export interface Major {
   dropout_rates: string | null;
   majors_to_consider_switching_to: string[] | null;
   profiles_count?: number | null;
+  career_major_relations?: {
+    career: {
+      id: string;
+      title: string;
+      salary_range: string | null;
+    };
+  }[];
 }

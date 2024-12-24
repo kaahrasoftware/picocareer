@@ -141,6 +141,7 @@ export type Database = {
           job_outlook: string | null
           keywords: string[] | null
           required_degrees: string[] | null
+          required_education: string[] | null
           required_skills: string[] | null
           required_tools: string[] | null
           salary_range: string | null
@@ -162,6 +163,7 @@ export type Database = {
           job_outlook?: string | null
           keywords?: string[] | null
           required_degrees?: string[] | null
+          required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           job_outlook?: string | null
           keywords?: string[] | null
           required_degrees?: string[] | null
+          required_education?: string[] | null
           required_skills?: string[] | null
           required_tools?: string[] | null
           salary_range?: string | null
