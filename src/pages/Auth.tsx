@@ -5,22 +5,37 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 
 export default function Auth() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')]">
       <div className="flex min-h-screen">
-        <div className="w-[40%] bg-muted/30 p-4">
-          <div className="flex items-center justify-center min-h-full">
-            <div className="max-w-md space-y-4 text-center">
-              <h2 className="text-xl font-semibold">Join Our Community</h2>
-              <p className="text-muted-foreground">
+        <div className="w-[40%] bg-picocareer-dark/90 p-8 flex flex-col items-center justify-center">
+          <div className="max-w-md space-y-8 text-center">
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <img 
+                  src="/lovable-uploads/d815cd5f-d140-4520-87a1-3d7a6c17df4d.png" 
+                  alt="PicoCareer Logo" 
+                  className="h-16 w-auto animate-float"
+                />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-white">
+                PicoCareer
+              </h1>
+              <p className="text-lg text-gray-300">
+                Your Gateway to Career Success
+              </p>
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-white">Join Our Community</h2>
+              <p className="text-gray-300">
                 Connect with mentors, explore careers, and shape your future with PicoCareer.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="w-[60%] p-4">
+        <div className="w-[60%] p-4 bg-black/10">
           <div className="flex items-center justify-center min-h-full">
-            <Card className="w-full max-w-md p-6 space-y-6">
+            <Card className="w-full max-w-md p-6 space-y-6 backdrop-blur-sm bg-white/95">
               <div className="space-y-2 text-center">
                 <h1 className="text-2xl font-semibold tracking-tight">Welcome to PicoCareer</h1>
                 <p className="text-sm text-muted-foreground">
