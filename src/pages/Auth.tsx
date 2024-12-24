@@ -12,7 +12,7 @@ export default function Auth() {
             <div className="space-y-4">
               <div className="flex justify-center">
                 <img 
-                  src="/lovable-uploads/d815cd5f-d140-4520-87a1-3d7a6c17df4d.png" 
+                  src="/lovable-uploads/5bc14e63-ae18-4b0e-b24f-491ed6206d5c.png" 
                   alt="PicoCareer Logo" 
                   className="h-16 w-auto animate-float"
                 />
