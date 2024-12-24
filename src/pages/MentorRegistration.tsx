@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FormField } from "@/components/forms/FormField";
 import { useQuery } from "@tanstack/react-query";
+import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
 
 const mentorRegistrationSchema = z.object({
   bio: z.string().min(50, "Bio should be at least 50 characters long"),
@@ -41,7 +42,7 @@ export default function MentorRegistration() {
     resolver: zodResolver(mentorRegistrationSchema),
   });
 
-  // Fetch careers for position selection
+  // Fetch data queries
   const { data: careers } = useQuery({
     queryKey: ['careers'],
     queryFn: async () => {
@@ -55,7 +56,6 @@ export default function MentorRegistration() {
     }
   });
 
-  // Fetch companies
   const { data: companies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
@@ -69,7 +69,6 @@ export default function MentorRegistration() {
     }
   });
 
-  // Fetch schools
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
@@ -83,7 +82,6 @@ export default function MentorRegistration() {
     }
   });
 
-  // Fetch majors
   const { data: majors } = useQuery({
     queryKey: ['majors'],
     queryFn: async () => {
@@ -151,104 +149,6 @@ export default function MentorRegistration() {
     }
   };
 
-  const formFields = [
-    {
-      name: "bio",
-      label: "Professional Bio",
-      type: "textarea",
-      placeholder: "Tell us about your professional journey and expertise",
-      required: true
-    },
-    {
-      name: "years_of_experience",
-      label: "Years of Experience",
-      type: "number",
-      placeholder: "Enter your years of experience",
-      required: true
-    },
-    {
-      name: "position",
-      label: "Current Position",
-      type: "select",
-      options: careers?.map(career => ({ value: career.id, label: career.title })) || [],
-      required: true
-    },
-    {
-      name: "company_id",
-      label: "Company",
-      type: "select",
-      options: companies?.map(company => ({ value: company.id, label: company.name })) || [],
-      required: true
-    },
-    {
-      name: "school_id",
-      label: "School",
-      type: "select",
-      options: schools?.map(school => ({ value: school.id, label: school.name })) || [],
-      required: true
-    },
-    {
-      name: "academic_major_id",
-      label: "Academic Major",
-      type: "select",
-      options: majors?.map(major => ({ value: major.id, label: major.title })) || [],
-      required: true
-    },
-    {
-      name: "highest_degree",
-      label: "Highest Degree",
-      type: "degree",
-      required: true
-    },
-    {
-      name: "location",
-      label: "Location",
-      type: "text",
-      placeholder: "City, Country",
-      required: true
-    },
-    {
-      name: "skills",
-      label: "Skills",
-      type: "text",
-      placeholder: "Enter your skills (comma-separated)",
-      required: true
-    },
-    {
-      name: "tools_used",
-      label: "Tools & Technologies",
-      type: "text",
-      placeholder: "Enter tools and technologies you use (comma-separated)",
-      required: true
-    },
-    {
-      name: "fields_of_interest",
-      label: "Fields of Interest",
-      type: "text",
-      placeholder: "Enter your fields of interest (comma-separated)",
-      required: true
-    },
-    {
-      name: "linkedin_url",
-      label: "LinkedIn Profile",
-      type: "text",
-      placeholder: "https://linkedin.com/in/username",
-      required: true
-    },
-    {
-      name: "github_url",
-      label: "GitHub Profile",
-      type: "text",
-      placeholder: "https://github.com/username"
-    },
-    {
-      name: "website_url",
-      label: "Personal Website",
-      type: "text",
-      placeholder: "https://yourwebsite.com"
-    }
-  ];
-
   return (
     <div className="container max-w-2xl py-10">
       <div className="mb-8">
@@ -260,7 +160,7 @@ export default function MentorRegistration() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {formFields.map((field) => (
+          {mentorFormFields.map((field) => (
             <FormField
               key={field.name}
               control={form.control}
