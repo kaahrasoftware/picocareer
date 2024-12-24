@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { Card } from "@/components/ui/card";
 
 interface AboutSectionProps {
   description: string;
@@ -32,7 +33,8 @@ export function AboutSection({
         .from('profiles')
         .select(`
           id,
-          full_name,
+          first_name,
+          last_name,
           avatar_url,
           position,
           company:companies(name)
@@ -74,25 +76,37 @@ export function AboutSection({
             <div className="flex justify-center min-w-full py-2">
               <div className="flex gap-4 px-4">
                 {mentors.map((mentor) => (
-                  <div key={mentor.id} className="flex flex-col items-center space-y-2">
-                    <Avatar 
-                      className="h-16 w-16 ring-2 ring-primary/20 shadow-[0_0_15px_rgba(0,0,0,0.2)] transition-shadow hover:shadow-[0_0_20px_rgba(var(--primary),0.3)] cursor-pointer"
-                      onClick={() => setSelectedMentorId(mentor.id)}
-                    >
-                      <AvatarImage src={mentor.avatar_url || ''} alt={mentor.full_name || ''} />
-                      <AvatarFallback>{mentor.full_name?.[0] || '?'}</AvatarFallback>
-                    </Avatar>
-                    <div className="text-center">
-                      <p className="text-sm font-medium truncate max-w-[120px]">
-                        {mentor.full_name}
-                      </p>
-                      {mentor.position && (
-                        <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                          {mentor.position}
-                        </p>
-                      )}
+                  <Card 
+                    key={mentor.id}
+                    className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
+                    onClick={() => setSelectedMentorId(mentor.id)}
+                  >
+                    <div className="relative w-20 h-20 group">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
+                      <div className="absolute inset-[3px] rounded-full bg-background" />
+                      <div className="absolute inset-[6px] rounded-full overflow-hidden">
+                        <Avatar className="h-full w-full">
+                          <AvatarImage 
+                            src={mentor.avatar_url || ''} 
+                            alt={`${mentor.first_name} ${mentor.last_name}`}
+                            className="h-full w-full object-cover"
+                          />
+                          <AvatarFallback>
+                            {mentor.first_name?.[0]}
+                            {mentor.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
                     </div>
-                  </div>
+                    <div className="mt-3 text-center w-full">
+                      <p className="text-sm font-medium line-clamp-1">
+                        {mentor.first_name}
+                      </p>
+                      <p className="text-sm font-medium line-clamp-1">
+                        {mentor.last_name}
+                      </p>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </div>
