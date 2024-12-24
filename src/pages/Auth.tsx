@@ -41,10 +41,13 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    // Clear any existing session data on mount
+    // Clear any existing session and local storage data on mount
     const clearSession = async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
+      try {
+        localStorage.removeItem('supabase.auth.token');
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      } catch (error) {
         console.error('Error clearing session:', error);
       }
     };
@@ -61,18 +64,30 @@ export default function AuthPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
       if (event === 'SIGNED_IN' && session) {
-        // Try to create profile when user signs in
-        await createProfile(session.user.id, session.user.email || '');
-        
-        toast({
-          title: "Welcome!",
-          description: "You have successfully signed in.",
-        });
-        navigate("/");
+        try {
+          // Try to create profile when user signs in
+          await createProfile(session.user.id, session.user.email || '');
+          
+          toast({
+            title: "Welcome!",
+            description: "You have successfully signed in.",
+          });
+          navigate("/");
+        } catch (error) {
+          console.error('Error during sign in:', error);
+          toast({
+            title: "Error",
+            description: "There was an error during sign in. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else if (event === 'SIGNED_OUT') {
         // Clear any cached data
         localStorage.removeItem('supabase.auth.token');
+        queryClient.clear();
       }
     });
 
@@ -101,7 +116,7 @@ export default function AuthPage() {
           }}
           theme="dark"
           providers={["google", "github"]}
-          redirectTo={window.location.origin + '/auth'}
+          redirectTo={window.location.origin}
         />
       </div>
     </div>
