@@ -5,12 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormField, FormFieldProps } from "@/components/forms/FormField";
-import { blogFormSchema, BlogFormValues } from "@/lib/validations/blog";
+import { careerFormSchema, CareerFormValues } from "@/lib/validations/blog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentUploadFormProps {
-  onSubmit?: (data: BlogFormValues) => Promise<void>;
+  onSubmit?: (data: CareerFormValues) => Promise<void>;
   fields: FormFieldProps[];
   buttonText?: string;
 }
@@ -20,21 +20,33 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const form = useForm<BlogFormValues>({
-    resolver: zodResolver(blogFormSchema),
+  const form = useForm<CareerFormValues>({
+    resolver: zodResolver(careerFormSchema),
     defaultValues: {
       title: "",
-      summary: "",
-      content: "",
-      cover_image_url: "",
-      categories: [],
-      subcategories: [],
-      other_notes: "",
-      is_recent: false,
+      description: "",
+      image_url: "",
+      salary_range: "",
+      featured: false,
+      academic_majors: "",
+      required_skills: "",
+      required_tools: "",
+      job_outlook: "",
+      industry: "",
+      work_environment: "",
+      growth_potential: "",
+      keywords: "",
+      transferable_skills: "",
+      careers_to_consider_switching_to: "",
+      required_education: "",
+      stress_levels: "",
+      rare: false,
+      popular: false,
+      new_career: false,
     },
   });
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CareerFormValues) => {
     setIsSubmitting(true);
     try {
       if (onSubmit) {
@@ -46,13 +58,13 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
         // Convert array fields from comma-separated strings to actual arrays
         const formattedData = {
           ...data,
-          academic_majors: data.academic_majors?.split(',').map((item: string) => item.trim()) || [],
-          required_skills: data.required_skills?.split(',').map((item: string) => item.trim()) || [],
-          required_tools: data.required_tools?.split(',').map((item: string) => item.trim()) || [],
-          keywords: data.keywords?.split(',').map((item: string) => item.trim()) || [],
-          transferable_skills: data.transferable_skills?.split(',').map((item: string) => item.trim()) || [],
-          careers_to_consider_switching_to: data.careers_to_consider_switching_to?.split(',').map((item: string) => item.trim()) || [],
-          required_education: data.required_education?.split(',').map((item: string) => item.trim()) || [],
+          academic_majors: data.academic_majors?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          required_skills: data.required_skills?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          required_tools: data.required_tools?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          keywords: data.keywords?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          transferable_skills: data.transferable_skills?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          careers_to_consider_switching_to: data.careers_to_consider_switching_to?.split(',').map(item => item.trim()).filter(Boolean) || [],
+          required_education: data.required_education?.split(',').map(item => item.trim()).filter(Boolean) || [],
         };
 
         const { error } = await supabase
