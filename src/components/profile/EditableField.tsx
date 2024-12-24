@@ -70,8 +70,16 @@ export function EditableField({
         .eq('status', 'Approved')
         .order(titleField);
       
-      if (error) throw error;
-      return data as TableRecord[];
+      if (error) {
+        console.error('Error fetching options:', error);
+        return [];
+      }
+
+      // Ensure the data matches our TableRecord interface
+      return (data || []).map(item => ({
+        id: item.id,
+        ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
+      })) as TableRecord[];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });
