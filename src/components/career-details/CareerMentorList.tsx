@@ -67,17 +67,17 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
         Career Mentors
       </h3>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
         {mentors.mentors.map((mentor) => (
           <Card 
             key={mentor.id}
-            className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
+            className="flex flex-col items-center p-6 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
             onClick={() => setSelectedMentorId(mentor.id)}
           >
-            <div className="relative w-20 h-20 group">
+            <div className="relative w-16 h-16 group mb-3">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-              <div className="absolute inset-[3px] rounded-full bg-background" />
-              <div className="absolute inset-[6px] rounded-full overflow-hidden">
+              <div className="absolute inset-[2px] rounded-full bg-background" />
+              <div className="absolute inset-[4px] rounded-full overflow-hidden">
                 <Avatar className="h-full w-full">
                   <AvatarImage 
                     src={mentor.avatar_url || ''} 
@@ -91,7 +91,7 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
                 </Avatar>
               </div>
             </div>
-            <div className="mt-3 text-center w-full">
+            <div className="text-center w-full space-y-0.5">
               <p className="text-sm font-medium line-clamp-1">
                 {mentor.first_name}
               </p>
