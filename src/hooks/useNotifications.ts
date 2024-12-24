@@ -36,13 +36,21 @@ export function useNotifications(session: Session | null) {
           hint: error.hint,
           code: error.code
         });
+        
+        // Show error toast only on final retry
+        toast({
+          title: "Error loading notifications",
+          description: "Please check your connection and try again",
+          variant: "destructive",
+        });
+        
         throw error;
       }
     },
     enabled: !!session?.user?.id,
     retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    refetchInterval: 30000,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff with max 30s
+    refetchInterval: 30000, // Refetch every 30 seconds
     meta: {
       errorMessage: "Failed to load notifications. Please try again later."
     }
