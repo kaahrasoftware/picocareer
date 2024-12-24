@@ -20,7 +20,7 @@ export default function Auth() {
               <img 
                 src="/lovable-uploads/90701554-04cf-42e3-9cfd-cce94a7af17a.png" 
                 alt="PicoCareer Title" 
-                className="h-10 w-auto mx-auto"
+                className="h-16 w-auto mx-auto" // Increased height from h-10 to h-16
               />
               <p className="text-lg text-gray-300">
                 Your Gateway to Career Success
