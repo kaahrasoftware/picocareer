@@ -29,6 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { sessionId, type } = await req.json() as EmailRequest;
+    console.log('Processing email request:', { sessionId, type });
 
     // Fetch session details with mentor and mentee information
     const { data: session, error: sessionError } = await supabase
@@ -46,6 +47,13 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error fetching session:', sessionError);
       throw new Error('Session not found');
     }
+
+    console.log('Session details:', {
+      mentorEmail: session.mentor.email,
+      menteeEmail: session.mentee.email,
+      sessionType: session.session_type.type,
+      scheduledAt: session.scheduled_at
+    });
 
     const scheduledDate = new Date(session.scheduled_at).toLocaleString('en-US', {
       dateStyle: 'full',
@@ -96,8 +104,14 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
-    console.log('Sending email with subject:', subject);
-    console.log('To emails:', [session.mentor.email, session.mentee.email]);
+    const emailPayload = {
+      from: "PicoCareer <sessions@picocareer.com>",
+      to: [session.mentor.email, session.mentee.email],
+      subject,
+      html: content,
+    };
+
+    console.log('Sending email with payload:', emailPayload);
 
     // Send email using Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
@@ -106,21 +120,21 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
-      body: JSON.stringify({
-        from: "PicoCareer <sessions@picocareer.com>",
-        to: [session.mentor.email, session.mentee.email],
-        subject,
-        html: content,
-      }),
+      body: JSON.stringify(emailPayload),
+    });
+
+    const emailResText = await emailRes.text();
+    console.log('Resend API response:', {
+      status: emailRes.status,
+      statusText: emailRes.statusText,
+      body: emailResText
     });
 
     if (!emailRes.ok) {
-      const errorText = await emailRes.text();
-      console.error('Resend API error:', errorText);
-      throw new Error('Failed to send email via Resend API');
+      throw new Error(`Resend API error: ${emailResText}`);
     }
 
-    const emailData = await emailRes.json();
+    const emailData = JSON.parse(emailResText);
     console.log('Email sent successfully:', emailData);
 
     return new Response(JSON.stringify({ success: true }), {
