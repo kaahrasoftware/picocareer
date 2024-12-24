@@ -70,9 +70,9 @@ export default function Auth() {
                   <CarouselContent className="-ml-1">
                     {mentors?.map((mentor) => (
                       <CarouselItem key={mentor.id} className="basis-1/5 pl-1 flex items-center justify-center">
-                        <div className="relative p-2">
-                          <div className="absolute inset-0 rounded-full bg-blue-500/30 blur-lg animate-pulse scale-150" />
-                          <Avatar className="w-8 h-8 relative border-2 border-white/10">
+                        <div className="relative">
+                          <div className="absolute -inset-1 rounded-full bg-blue-500/40 blur-md animate-pulse" />
+                          <Avatar className="w-8 h-8 relative border border-white/20">
                             <AvatarImage src={mentor.avatar_url || ''} alt="Mentor" />
                             <AvatarFallback>
                               {mentor.first_name?.[0]}
