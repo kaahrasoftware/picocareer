@@ -1,7 +1,7 @@
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_up');
 
   const createProfile = async (userId: string, email: string) => {
     try {
@@ -90,6 +91,12 @@ export default function AuthPage() {
         // Clear any cached data
         localStorage.removeItem('supabase.auth.token');
         queryClient.clear();
+      } else if (event === 'USER_UPDATED') {
+        // Handle user update events
+        console.log('User updated:', session?.user);
+      } else if (event === 'USER_DELETED') {
+        // Handle user deletion
+        navigate("/auth");
       }
     });
 
@@ -97,6 +104,27 @@ export default function AuthPage() {
       subscription.unsubscribe();
     };
   }, [navigate, toast, queryClient]);
+
+  const handleViewChange = (newView: 'sign_in' | 'sign_up') => {
+    setView(newView);
+  };
+
+  const handleAuthError = (error: any) => {
+    if (error.message.includes('user_already_exists')) {
+      toast({
+        title: "Account Already Exists",
+        description: "Please sign in instead.",
+        variant: "destructive",
+      });
+      setView('sign_in');
+    } else {
+      toast({
+        title: "Authentication Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -120,7 +148,8 @@ export default function AuthPage() {
           providers={["google"]}
           redirectTo={window.location.origin}
           showLinks={true}
-          view="sign_up"
+          view={view}
+          onError={handleAuthError}
           localization={{
             variables: {
               sign_up: {
@@ -133,6 +162,16 @@ export default function AuthPage() {
                 social_provider_text: "Sign in with {{provider}}",
                 link_text: "Don't have an account? Sign up",
                 confirmation_text: "Check your email for the confirmation link",
+              },
+              sign_in: {
+                email_label: "Email",
+                password_label: "Password",
+                email_input_placeholder: "Your email address",
+                password_input_placeholder: "Your password",
+                button_label: "Sign in",
+                loading_button_label: "Signing in ...",
+                social_provider_text: "Sign in with {{provider}}",
+                link_text: "Already have an account? Sign in",
               },
             },
           }}
