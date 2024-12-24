@@ -11,10 +11,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 type TableName = 'majors' | 'schools' | 'careers';
+type TitleField = 'title' | 'name';
+
+interface Option {
+  id: string;
+  [key: string]: any;
+}
 
 interface CustomSelectProps {
   value: string;
-  options: Array<{ id: string; title?: string; name?: string }>;
+  options: Option[];
   placeholder: string;
   tableName: TableName;
   handleSelectChange: (name: string, value: string) => void;
@@ -38,13 +44,12 @@ export function SelectWithCustomOption({
   const handleCustomSubmit = async () => {
     try {
       // First, check if entry already exists
-      const query = supabase
+      const titleField = tableName === 'schools' ? 'name' : 'title';
+      const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id, title, name')
-        .eq(tableName === 'schools' ? 'name' : 'title', customValue)
+        .select(`id, ${titleField}`)
+        .eq(titleField, customValue)
         .maybeSingle();
-
-      const { data: existingData, error: existingError } = await query;
 
       if (existingError) {
         console.error('Error checking existing entry:', existingError);
@@ -65,8 +70,8 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: any = {
-        status: 'Pending'
+      let insertData: Record<string, any> = {
+        status: 'Pending' as const
       };
 
       if (tableName === 'majors') {
@@ -123,7 +128,7 @@ export function SelectWithCustomOption({
     }
   };
 
-  const displayValue = (option: { id: string; title?: string; name?: string }) => {
+  const displayValue = (option: Option) => {
     return option.title || option.name || '';
   };
 
