@@ -8,30 +8,28 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
 
-type TableName = 'majors' | 'schools' | 'careers';
-type Status = 'Approved' | 'Pending' | 'Rejected';
-
-interface Option {
-  id: string;
-  title?: string;
-  name?: string;
-}
+type TableName = 'majors' | 'schools';
 
 interface CustomSelectProps {
   value: string;
-  options: Option[];
+  options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
   tableName: TableName;
   onSelect: (value: string) => void;
   onCancel: () => void;
 }
 
+type InsertData = {
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+}
+
 export function SelectWithCustomOption({ 
   value, 
-  options: initialOptions, 
+  options, 
   placeholder, 
   tableName,
   onSelect,
@@ -41,33 +39,13 @@ export function SelectWithCustomOption({
   const [customValue, setCustomValue] = useState("");
   const { toast } = useToast();
 
-  // Fetch options based on table name
-  const { data: options } = useQuery({
-    queryKey: [tableName],
-    queryFn: async () => {
-      let query = supabase
-        .from(tableName)
-        .select('id, title, name')
-        .eq('status', 'Approved')
-        .order(tableName === 'careers' ? 'title' : 'name', { ascending: true });
-
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error(`Error fetching ${tableName}:`, error);
-        return [];
-      }
-      return data || [];
-    },
-  });
-
   const handleCustomSubmit = async () => {
     try {
       // First, check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('id')
-        .eq(tableName === 'careers' ? 'title' : 'name', customValue)
+        .select('*')
+        .eq(tableName === 'majors' ? 'title' : 'name', customValue)
         .maybeSingle();
 
       if (existingError) {
@@ -89,22 +67,24 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      const insertData = tableName === 'careers' 
-        ? {
-            title: customValue,
-            description: `Career in ${customValue}`,
-            status: 'Pending' as Status
-          }
-        : {
-            name: customValue,
-            status: 'Pending' as Status
-          };
+      let insertData: InsertData[TableName];
+      
+      if (tableName === 'majors') {
+        insertData = {
+          title: customValue,
+          description: `Custom major: ${customValue}`
+        } as InsertData['majors'];
+      } else {
+        insertData = {
+          name: customValue
+        } as InsertData['schools'];
+      }
 
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error(`Failed to add new ${tableName}:`, error);
@@ -122,7 +102,7 @@ export function SelectWithCustomOption({
         setCustomValue("");
         toast({
           title: "Success",
-          description: `Successfully added new ${tableName === 'careers' ? 'career' : 'school'}. It will be reviewed by an admin.`,
+          description: `Successfully added new ${tableName === 'majors' ? 'major' : 'school'}.`,
         });
       }
     } catch (error) {
@@ -141,7 +121,7 @@ export function SelectWithCustomOption({
         <Input
           value={customValue}
           onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName === 'careers' ? 'career' : 'school'} name`}
+          placeholder={`Enter ${tableName === 'majors' ? 'major' : 'school'} name`}
           className="mt-1"
         />
         <div className="flex gap-2">
@@ -183,7 +163,7 @@ export function SelectWithCustomOption({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {options?.map((option) => (
+        {options.map((option) => (
           <SelectItem key={option.id} value={option.id}>
             {option.title || option.name}
           </SelectItem>
