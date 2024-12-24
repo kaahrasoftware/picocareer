@@ -24,6 +24,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+
     const { sessionId, type } = await req.json() as EmailRequest;
 
     // Fetch session details with mentor and mentee information
@@ -39,6 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (sessionError || !session) {
+      console.error('Error fetching session:', sessionError);
       throw new Error('Session not found');
     }
 
@@ -91,6 +96,9 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
+    console.log('Sending email with subject:', subject);
+    console.log('To emails:', [session.mentor.email, session.mentee.email]);
+
     // Send email using Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -107,9 +115,13 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!emailRes.ok) {
-      console.error('Resend API error:', await emailRes.text());
-      throw new Error('Failed to send email');
+      const errorText = await emailRes.text();
+      console.error('Resend API error:', errorText);
+      throw new Error('Failed to send email via Resend API');
     }
+
+    const emailData = await emailRes.json();
+    console.log('Email sent successfully:', emailData);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
