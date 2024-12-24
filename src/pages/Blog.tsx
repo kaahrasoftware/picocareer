@@ -33,7 +33,8 @@ const Blog = () => {
               full_name,
               avatar_url
             )
-          `);
+          `)
+          .eq('status', 'Approved'); // Only fetch approved blogs
 
         // Search across multiple columns
         if (searchQuery) {
