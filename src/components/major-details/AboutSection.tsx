@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { Card } from "@/components/ui/card";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 
 interface AboutSectionProps {
   description: string;
@@ -112,26 +113,12 @@ export function AboutSection({
             </div>
           </ScrollArea>
           {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <span className="flex items-center text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
+            <div className="mt-4">
+              <BlogPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </div>
