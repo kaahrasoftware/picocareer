@@ -82,7 +82,7 @@ export function AdditionalInfo({
 
       {renderSection(
         majors_to_consider_switching_to,
-        "Alternative Majors to Consider",
+        "Alternative Careers to Consider",
         "bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]",
         <ArrowRight className="h-4 w-4 text-muted-foreground" />
       )}
