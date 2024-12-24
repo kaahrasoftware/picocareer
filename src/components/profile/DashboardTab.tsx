@@ -1,36 +1,24 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CircularProgress } from "@/components/ui/circular-progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
 import { 
   Users, 
   BookOpen, 
   Video, 
   Calendar,
-  TrendingUp,
-  CheckCircle2,
-  Clock,
-  XCircle
+  GraduationCap,
+  Building,
+  School,
+  Bell
 } from "lucide-react";
+import { StatsCard } from "./dashboard/StatsCard";
+import { ContentStatusCard } from "./dashboard/ContentStatusCard";
+import { ActivityChart } from "./dashboard/ActivityChart";
+import { ContentDistributionChart } from "./dashboard/ContentDistributionChart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function DashboardTab() {
   // Fetch users statistics
-  const { data: userStats } = useQuery({
+  const { data: userStats, refetch: refetchUsers } = useQuery({
     queryKey: ['dashboard-users'],
     queryFn: async () => {
       const { data: mentors } = await supabase
@@ -51,36 +39,59 @@ export function DashboardTab() {
   });
 
   // Fetch content statistics
-  const { data: contentStats } = useQuery({
+  const { data: contentStats, refetch: refetchContent } = useQuery({
     queryKey: ['dashboard-content'],
     queryFn: async () => {
-      const { data: blogs } = await supabase
-        .from('blogs')
-        .select('status');
-
-      const { data: videos } = await supabase
-        .from('videos')
-        .select('status');
-
-      const { data: sessions } = await supabase
-        .from('mentor_sessions')
-        .select('status');
+      const [blogs, videos, sessions, careers, majors, schools, notifications] = await Promise.all([
+        supabase.from('blogs').select('status'),
+        supabase.from('videos').select('status'),
+        supabase.from('mentor_sessions').select('status'),
+        supabase.from('careers').select('status'),
+        supabase.from('majors').select('status'),
+        supabase.from('schools').select('status'),
+        supabase.from('notifications').select('read')
+      ]);
 
       return {
         blogs: {
-          total: blogs?.length || 0,
-          pending: blogs?.filter(b => b.status === 'Pending').length || 0,
-          approved: blogs?.filter(b => b.status === 'Approved').length || 0
+          total: blogs.data?.length || 0,
+          pending: blogs.data?.filter(b => b.status === 'Pending').length || 0,
+          approved: blogs.data?.filter(b => b.status === 'Approved').length || 0,
+          rejected: blogs.data?.filter(b => b.status === 'Rejected').length || 0
         },
         videos: {
-          total: videos?.length || 0,
-          pending: videos?.filter(v => v.status === 'Pending').length || 0,
-          approved: videos?.filter(v => v.status === 'Approved').length || 0
+          total: videos.data?.length || 0,
+          pending: videos.data?.filter(v => v.status === 'Pending').length || 0,
+          approved: videos.data?.filter(v => v.status === 'Approved').length || 0,
+          rejected: videos.data?.filter(v => v.status === 'Rejected').length || 0
         },
         sessions: {
-          total: sessions?.length || 0,
-          pending: sessions?.filter(s => s.status === 'pending').length || 0,
-          completed: sessions?.filter(s => s.status === 'completed').length || 0
+          total: sessions.data?.length || 0,
+          pending: sessions.data?.filter(s => s.status === 'pending').length || 0,
+          completed: sessions.data?.filter(s => s.status === 'completed').length || 0
+        },
+        careers: {
+          total: careers.data?.length || 0,
+          pending: careers.data?.filter(c => c.status === 'Pending').length || 0,
+          approved: careers.data?.filter(c => c.status === 'Approved').length || 0,
+          rejected: careers.data?.filter(c => c.status === 'Rejected').length || 0
+        },
+        majors: {
+          total: majors.data?.length || 0,
+          pending: majors.data?.filter(m => m.status === 'Pending').length || 0,
+          approved: majors.data?.filter(m => m.status === 'Approved').length || 0,
+          rejected: majors.data?.filter(m => m.status === 'Rejected').length || 0
+        },
+        schools: {
+          total: schools.data?.length || 0,
+          pending: schools.data?.filter(s => s.status === 'Pending').length || 0,
+          approved: schools.data?.filter(s => s.status === 'Approved').length || 0,
+          rejected: schools.data?.filter(s => s.status === 'Rejected').length || 0
+        },
+        notifications: {
+          total: notifications.data?.length || 0,
+          unread: notifications.data?.filter(n => !n.read).length || 0,
+          read: notifications.data?.filter(n => n.read).length || 0
         }
       };
     }
@@ -115,132 +126,84 @@ export function DashboardTab() {
     }
   });
 
-  const COLORS = ['#0EA5E9', '#8B5CF6', '#F97316', '#10B981'];
+  const handleStatusChange = () => {
+    refetchContent();
+    refetchUsers();
+  };
 
   return (
     <div className="space-y-8 p-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Users
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(userStats?.mentors || 0) + (userStats?.mentees || 0)}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {userStats?.mentors || 0} mentors, {userStats?.mentees || 0} mentees
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Total Users"
+          value={(userStats?.mentors || 0) + (userStats?.mentees || 0)}
+          subtitle={`${userStats?.mentors || 0} mentors, ${userStats?.mentees || 0} mentees`}
+          icon={Users}
+        />
+        <StatsCard
+          title="Total Content"
+          value={(contentStats?.blogs.total || 0) + (contentStats?.videos.total || 0)}
+          subtitle={`${contentStats?.blogs.total || 0} blogs, ${contentStats?.videos.total || 0} videos`}
+          icon={BookOpen}
+        />
+        <StatsCard
+          title="Total Sessions"
+          value={contentStats?.sessions.total || 0}
+          subtitle={`${contentStats?.sessions.completed || 0} completed sessions`}
+          icon={Calendar}
+        />
+        <StatsCard
+          title="Pending Reviews"
+          value={(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
+          subtitle={`${contentStats?.blogs.pending || 0} blogs, ${contentStats?.videos.pending || 0} videos`}
+          icon={Video}
+        />
+      </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Content
-            </CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(contentStats?.blogs.total || 0) + (contentStats?.videos.total || 0)}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {contentStats?.blogs.total || 0} blogs, {contentStats?.videos.total || 0} videos
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Sessions
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {contentStats?.sessions.total || 0}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {contentStats?.sessions.completed || 0} completed sessions
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Reviews
-            </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {contentStats?.blogs.pending || 0} blogs, {contentStats?.videos.pending || 0} videos
-            </div>
-          </CardContent>
-        </Card>
+      {/* Additional Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          title="Careers"
+          value={contentStats?.careers.total || 0}
+          subtitle={`${contentStats?.careers.pending || 0} pending approval`}
+          icon={GraduationCap}
+        />
+        <StatsCard
+          title="Majors"
+          value={contentStats?.majors.total || 0}
+          subtitle={`${contentStats?.majors.pending || 0} pending approval`}
+          icon={BookOpen}
+        />
+        <StatsCard
+          title="Schools"
+          value={contentStats?.schools.total || 0}
+          subtitle={`${contentStats?.schools.pending || 0} pending approval`}
+          icon={School}
+        />
+        <StatsCard
+          title="Notifications"
+          value={contentStats?.notifications.total || 0}
+          subtitle={`${contentStats?.notifications.unread || 0} unread`}
+          icon={Bell}
+        />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Session Activity (Last 6 Months)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyStats || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="total" fill="#0EA5E9" name="Total Sessions" />
-                <Bar dataKey="completed" fill="#10B981" name="Completed" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Content Distribution</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: 'Approved Blogs', value: contentStats?.blogs.approved || 0 },
-                    { name: 'Pending Blogs', value: contentStats?.blogs.pending || 0 },
-                    { name: 'Approved Videos', value: contentStats?.videos.approved || 0 },
-                    { name: 'Pending Videos', value: contentStats?.videos.pending || 0 }
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {COLORS.map((color, index) => (
-                    <Cell key={`cell-${index}`} fill={color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <ActivityChart 
+          data={monthlyStats || []}
+          title="Session Activity (Last 6 Months)"
+        />
+        <ContentDistributionChart
+          data={[
+            { name: 'Approved Blogs', value: contentStats?.blogs.approved || 0 },
+            { name: 'Pending Blogs', value: contentStats?.blogs.pending || 0 },
+            { name: 'Approved Videos', value: contentStats?.videos.approved || 0 },
+            { name: 'Pending Videos', value: contentStats?.videos.pending || 0 }
+          ]}
+          title="Content Distribution"
+        />
       </div>
 
       {/* Content Status Section */}
@@ -250,68 +213,35 @@ export function DashboardTab() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Blogs</span>
-                <span className="text-sm text-muted-foreground">
-                  {contentStats?.blogs.total || 0} total
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm">
-                  {contentStats?.blogs.approved || 0} approved
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <span className="text-sm">
-                  {contentStats?.blogs.pending || 0} pending
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Videos</span>
-                <span className="text-sm text-muted-foreground">
-                  {contentStats?.videos.total || 0} total
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm">
-                  {contentStats?.videos.approved || 0} approved
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <span className="text-sm">
-                  {contentStats?.videos.pending || 0} pending
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Sessions</span>
-                <span className="text-sm text-muted-foreground">
-                  {contentStats?.sessions.total || 0} total
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm">
-                  {contentStats?.sessions.completed || 0} completed
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <span className="text-sm">
-                  {contentStats?.sessions.pending || 0} pending
-                </span>
-              </div>
-            </div>
+            <ContentStatusCard
+              title="Blogs"
+              total={contentStats?.blogs.total || 0}
+              approved={contentStats?.blogs.approved || 0}
+              pending={contentStats?.blogs.pending || 0}
+              rejected={contentStats?.blogs.rejected || 0}
+              tableName="blogs"
+              itemId="blog-id"
+              onStatusChange={handleStatusChange}
+            />
+            <ContentStatusCard
+              title="Videos"
+              total={contentStats?.videos.total || 0}
+              approved={contentStats?.videos.approved || 0}
+              pending={contentStats?.videos.pending || 0}
+              rejected={contentStats?.videos.rejected || 0}
+              tableName="videos"
+              itemId="video-id"
+              onStatusChange={handleStatusChange}
+            />
+            <ContentStatusCard
+              title="Sessions"
+              total={contentStats?.sessions.total || 0}
+              approved={contentStats?.sessions.completed || 0}
+              pending={contentStats?.sessions.pending || 0}
+              tableName="mentor_sessions"
+              itemId="session-id"
+              onStatusChange={handleStatusChange}
+            />
           </div>
         </CardContent>
       </Card>
