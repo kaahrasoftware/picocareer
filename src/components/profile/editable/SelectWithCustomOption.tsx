@@ -63,7 +63,6 @@ export function SelectWithCustomOption({
 
       if (existingData && 'id' in existingData) {
         const record = existingData as TableRecord;
-        // If it exists, use the existing entry
         handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
