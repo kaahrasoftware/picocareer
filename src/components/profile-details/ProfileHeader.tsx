@@ -19,6 +19,7 @@ interface ProfileHeaderProps {
     location?: string | null;
     top_mentor?: boolean | null;
     user_type?: string | null;
+    career_title?: string | null;
   } | null;
 }
 
@@ -30,7 +31,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   if (!profile) return null;
 
   // Determine primary and secondary display text based on whether the user is a student or professional
-  const primaryText = profile.position || profile.academic_major || "No position/major set";
+  const primaryText = profile.career_title || profile.academic_major || "No position/major set";
   const secondaryText = profile.position 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
