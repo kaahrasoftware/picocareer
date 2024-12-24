@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MajorCard } from "@/components/MajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
 import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
+import { useToast } from "@/hooks/use-toast";
 import {
   Carousel,
   CarouselContent,
@@ -12,19 +13,29 @@ import {
 
 export const FeaturedMajorsSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: majors = [], isLoading, refetch } = useFeaturedMajors();
+  const { toast } = useToast();
+  const { data: majors = [], isLoading, error } = useFeaturedMajors();
 
-  useEffect(() => {
-    refetch();
-    const intervalId = setInterval(() => {
-      console.log("Refreshing majors data...");
-      refetch();
-    }, 10000);
-    return () => clearInterval(intervalId);
-  }, [refetch]);
+  // Handle error state
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load featured majors. Please try again later.",
+      variant: "destructive",
+    });
+  }
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Majors</h2>
+        </div>
+        <div className="flex items-center justify-center p-8">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </section>
+    );
   }
 
   return (
