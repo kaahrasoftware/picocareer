@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 
 interface MentorCardProps {
   id: string;
-  title: string;
-  company: string;
+  title?: string;  // Made optional
+  company?: string; // Made optional to match Mentor type
   imageUrl: string;
   name: string;
   stats: {
@@ -19,7 +19,7 @@ interface MentorCardProps {
   };
   top_mentor?: boolean;
   position?: string;
-  career_title?: string; // Add career_title to props
+  career_title?: string;
   location?: string;
   bio?: string;
   skills?: string[];
@@ -53,10 +53,12 @@ export function MentorCard(props: MentorCardProps) {
                 {props.career_title || props.title || "No position set"}
               </p>
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Building2 className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">{props.company}</span>
-                </div>
+                {props.company && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Building2 className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{props.company}</span>
+                  </div>
+                )}
                 {props.location && (
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
