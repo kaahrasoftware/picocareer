@@ -71,7 +71,7 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
         {mentors.mentors.map((mentor) => (
           <Card 
             key={mentor.id}
-            className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+            className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
             onClick={() => setSelectedMentorId(mentor.id)}
           >
             <div className="relative w-20 h-20 group">
@@ -91,7 +91,7 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
                 </Avatar>
               </div>
             </div>
-            <p className="mt-3 text-sm font-medium text-center">
+            <p className="mt-3 text-sm font-medium text-center line-clamp-2 w-full">
               {mentor.first_name} {mentor.last_name}
             </p>
           </Card>
