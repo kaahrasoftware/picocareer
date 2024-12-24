@@ -27,7 +27,6 @@ export function CareerCard({
   industry,
   required_skills,
   stress_levels,
-  featured
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -57,13 +56,6 @@ export function CareerCard({
             )}
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                {featured && (
-                  <Badge className="bg-primary/20 text-primary border-primary/30">
-                    Featured
-                  </Badge>
-                )}
-              </div>
               <h3 className="font-semibold truncate mb-1">{title}</h3>
               {industry && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
