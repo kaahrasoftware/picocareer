@@ -27,11 +27,16 @@ export function CareerHeader({ title, industry, salary_range, image_url, profile
       )}
       
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold break-words mb-1">{title}</h3>
-        <Badge variant="outline" className="flex items-center gap-1 bg-transparent border-none mb-1">
-          <Users className="h-4 w-4" />
-          {profiles_count}
-        </Badge>
+        <div className="relative mb-1">
+          <h3 className="font-semibold break-words pr-16">{title}</h3>
+          <Badge 
+            variant="outline" 
+            className="flex items-center gap-1 bg-transparent border-none absolute top-0 right-0"
+          >
+            <Users className="h-4 w-4" />
+            {profiles_count}
+          </Badge>
+        </div>
         {industry && (
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Building2 className="h-3 w-3 flex-shrink-0" />
