@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,6 +52,7 @@ export function SelectWithCustomOption({
       }
 
       if (existingData) {
+        // If it exists, use the existing entry
         onSave(existingData.id);
         setShowCustomInput(false);
         setCustomValue("");
@@ -59,13 +60,19 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry if it doesn't exist
+      const insertData = tableName === 'majors' 
+        ? { 
+            title: customValue,
+            description: `Custom major: ${customValue}`
+          }
+        : { 
+            name: customValue,
+            type: 'University'
+          };
+
       const { data, error } = await supabase
         .from(tableName)
-        .insert(
-          tableName === 'schools' 
-            ? { name: customValue }
-            : { title: customValue, description: `Custom ${tableName.slice(0, -1)}: ${customValue}` }
-        )
+        .insert(insertData)
         .select('id')
         .single();
 

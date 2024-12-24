@@ -53,9 +53,16 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
   });
 
   const updateField = async (newValue: string) => {
+    let valueToUpdate = newValue;
+
+    // Handle array fields
+    if (['skills', 'tools_used', 'keywords', 'fields_of_interest'].includes(fieldName)) {
+      valueToUpdate = `{${newValue.split(',').map(item => item.trim()).filter(Boolean).join(',')}}`;
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({ [fieldName]: newValue })
+      .update({ [fieldName]: valueToUpdate })
       .eq('id', profileId);
 
     if (error) {
