@@ -36,7 +36,7 @@ type TableRecord = {
   name?: string;
 }
 
-export function CustomSelect({ 
+export function SelectWithCustomOption({ 
   value, 
   options, 
   placeholder, 
@@ -86,7 +86,7 @@ export function CustomSelect({
       } else {
         insertData = {
           name: customValue,
-          type: 'University' as const // Default type for new schools
+          type: 'University' as const
         } as InsertData['schools'];
       }
 
