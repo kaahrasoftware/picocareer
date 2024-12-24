@@ -970,6 +970,10 @@ export type Database = {
         }
         Returns: string[]
       }
+      update_careers_profiles_count: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       categories:

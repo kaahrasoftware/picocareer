@@ -66,6 +66,8 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
+    // Refetch every 10 seconds to get updated profiles_count
+    refetchInterval: 10000,
   });
 
   if (!open) return null;
@@ -77,9 +79,11 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       <DialogContent className="max-w-3xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
-          <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{career.profiles_count || 0} mentors in this career</span>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{career.profiles_count || 0} professionals</span>
+            </Badge>
           </div>
           {career.salary_range && (
             <DialogDescription className="text-primary font-medium mt-2">
