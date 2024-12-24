@@ -28,15 +28,6 @@ export default function ProfilePage() {
           variant: "destructive",
         });
         navigate("/auth");
-      } else {
-        // Check if user is admin
-        const { role } = session.user.app_metadata;
-        setIsAdmin(role === 'admin');
-        
-        // If user is not admin and tries to access dashboard tab, switch to profile
-        if (!isAdmin && activeTab === 'dashboard') {
-          setActiveTab('profile');
-        }
       }
     };
 
@@ -51,7 +42,7 @@ export default function ProfilePage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast, activeTab, isAdmin]);
+  }, [navigate, toast]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -67,7 +58,8 @@ export default function ProfilePage() {
         .eq('id', session.user.id)
         .single();
 
-      const isMentee = userTypeData?.user_type === 'mentee';
+      // Set admin status based on user_type
+      setIsAdmin(userTypeData?.user_type === 'admin');
 
       const { data, error } = await supabase
         .from('profiles')
@@ -104,6 +96,13 @@ export default function ProfilePage() {
     },
     retry: false
   });
+
+  // If not admin and trying to access dashboard tab, switch to profile
+  useEffect(() => {
+    if (!isAdmin && activeTab === 'dashboard') {
+      setActiveTab('profile');
+    }
+  }, [isAdmin, activeTab]);
 
   if (isLoading) {
     return (
