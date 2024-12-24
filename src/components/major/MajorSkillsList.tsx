@@ -24,6 +24,20 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
     }
   };
 
+  // Get the appropriate badge style based on the icon type
+  const getBadgeStyle = () => {
+    switch (icon) {
+      case "skills":
+        return "bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]";
+      case "tools":
+        return "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]";
+      case "courses":
+        return "bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2 mb-2">
@@ -35,7 +49,7 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
           <Badge
             key={index}
             variant="outline"
-            className={badgeStyle}
+            className={getBadgeStyle()}
           >
             {item}
           </Badge>
@@ -43,7 +57,7 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
         {items.length > 2 && (
           <Badge
             variant="outline"
-            className={badgeStyle}
+            className={getBadgeStyle()}
           >
             +{items.length - 2} more
           </Badge>
