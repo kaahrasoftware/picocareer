@@ -5,6 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { mentorRegistrationSchema } from "@/components/forms/mentor/MentorFormFields";
 import { useState } from "react";
 import { MentorRegistrationForm } from "@/components/forms/mentor/MentorRegistrationForm";
+import type { Database } from "@/integrations/supabase/types";
+
+type NotificationType = Database["public"]["Enums"]["notification_type"];
 
 export default function MentorRegistration() {
   const { toast } = useToast();
@@ -81,7 +84,7 @@ export default function MentorRegistration() {
         profile_id: admin.id,
         title: 'New Mentor Application',
         message: `${mentorData.first_name} ${mentorData.last_name} has applied to become a mentor.`,
-        type: 'mentor_request',
+        type: 'mentor_request' as NotificationType,
         action_url: '/admin/mentors/pending'
       }));
 
