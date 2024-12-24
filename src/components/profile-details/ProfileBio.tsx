@@ -1,14 +1,20 @@
+import { EditableField } from "@/components/profile/EditableField";
+
 interface ProfileBioProps {
   bio: string | null;
+  profileId: string;
 }
 
-export function ProfileBio({ bio }: ProfileBioProps) {
-  if (!bio) return null;
-
+export function ProfileBio({ bio, profileId }: ProfileBioProps) {
   return (
     <div className="bg-muted rounded-lg p-4">
       <h4 className="font-semibold mb-2">About</h4>
-      <p className="text-muted-foreground">{bio}</p>
+      <EditableField
+        label="Bio"
+        value={bio}
+        fieldName="bio"
+        profileId={profileId}
+      />
     </div>
   );
 }

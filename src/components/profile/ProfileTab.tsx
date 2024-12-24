@@ -166,7 +166,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     <div className="flex flex-col space-y-6 max-w-3xl mx-auto">
       <div className="space-y-6">
         <PersonalInfoSection profile={profile} />
-        <ProfileBio bio={profile?.bio} />
+        <ProfileBio bio={profile?.bio} profileId={profile?.id || ''} />
         <ProfileEducation 
           academic_major={profile?.academic_major}
           highest_degree={profile?.highest_degree}
