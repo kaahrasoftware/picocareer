@@ -113,9 +113,41 @@ export default function AuthPage() {
                   brand: '#0EA5E9',
                   brandAccent: '#002366',
                   brandButtonText: 'white',
-                }
+                },
+                space: {
+                  inputPadding: '12px',
+                  buttonPadding: '12px',
+                },
+                radii: {
+                  borderRadiusButton: '8px',
+                  buttonBorderRadius: '8px',
+                  inputBorderRadius: '8px',
+                },
+                fonts: {
+                  bodyFontFamily: 'inherit',
+                  buttonFontFamily: 'inherit',
+                  inputFontFamily: 'inherit',
+                },
               }
-            }
+            },
+            style: {
+              input: {
+                borderColor: 'rgb(226, 232, 240)',
+                marginBottom: '16px',
+              },
+              label: {
+                marginBottom: '8px',
+                color: 'rgb(55, 65, 81)',
+                fontWeight: '500',
+              },
+              button: {
+                height: 'auto',
+                padding: '12px',
+              },
+              anchor: {
+                color: '#0EA5E9',
+              },
+            },
           }}
           theme="dark"
           providers={["google"]}
