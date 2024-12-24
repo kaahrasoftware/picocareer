@@ -63,6 +63,7 @@ export default function Auth() {
                   plugins={[
                     Autoplay({
                       delay: 2000,
+                      stopOnInteraction: false, // Continue auto-scrolling after user interaction
                     }),
                   ]}
                   className="w-full max-w-xs mx-auto"
@@ -70,7 +71,7 @@ export default function Auth() {
                   <CarouselContent className="-ml-1">
                     {mentors?.map((mentor) => (
                       <CarouselItem key={mentor.id} className="basis-1/5 pl-1 flex items-center justify-center">
-                        <div className="relative w-16 h-16">
+                        <div className="relative w-12 h-12">
                           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
                           <div className="absolute inset-[2px] rounded-full bg-background" />
                           <div className="absolute inset-[4px] rounded-full overflow-hidden">
