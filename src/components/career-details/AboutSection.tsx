@@ -30,11 +30,11 @@ export function AboutSection({
 
       {important_note && (
         <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-          <h5 className="text-sm font-medium mb-2 flex items-center gap-2 text-yellow-800">
+          <h5 className="text-sm font-medium mb-2 flex items-center gap-2 text-foreground">
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
             Important Note
           </h5>
-          <p className="text-sm text-yellow-700">{important_note}</p>
+          <p className="text-sm text-foreground">{important_note}</p>
         </div>
       )}
 
