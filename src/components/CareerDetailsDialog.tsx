@@ -74,7 +74,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+      <DialogContent className="max-w-4xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-4 pb-0">
           <div className="relative">
             <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
