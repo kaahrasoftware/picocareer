@@ -52,9 +52,6 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
       if (onSubmit) {
         await onSubmit(data);
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('User not authenticated');
-
         const formattedData = {
           title: data.title,
           description: data.description,
