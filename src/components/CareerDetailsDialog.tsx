@@ -78,11 +78,11 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="secondary" className="flex items-center gap-1">
+          <div className="relative">
+            <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
+            <Badge variant="secondary" className="absolute top-0 right-0 flex items-center gap-1">
               <Users className="h-4 w-4" />
-              <span>{career.profiles_count || 0} professionals</span>
+              <span>{career.profiles_count || 0} mentors</span>
             </Badge>
           </div>
           {career.salary_range && (
