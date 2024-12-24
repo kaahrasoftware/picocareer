@@ -45,6 +45,7 @@ type CareerWithMajors = Tables<"careers"> & {
   job_prospects?: string;
   passion_for_subject?: string;
   global_applicability?: string;
+  important_note?: string; // Added important_note
 };
 
 export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
@@ -118,6 +119,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               work_environment={career.work_environment}
               growth_potential={career.growth_potential}
               job_outlook={career.job_outlook}
+              important_note={career.important_note} // Pass important_note prop
             />
 
             {career.academic_majors && career.academic_majors.length > 0 && (
