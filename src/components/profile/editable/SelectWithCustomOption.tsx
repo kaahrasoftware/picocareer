@@ -91,7 +91,7 @@ export function SelectWithCustomOption({
         .from(tableName)
         .insert(insertData)
         .select('id, ' + (tableName === 'majors' ? 'title' : 'name'))
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error(`Failed to add new ${tableName}:`, error);
