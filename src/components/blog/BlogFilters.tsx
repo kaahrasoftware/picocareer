@@ -57,6 +57,11 @@ const subcategories: Record<Categories, Subcategories[]> = {
     "Best Apps for Productivity",
     "Using Technology for Collaboration"
   ],
+  "Digital Tools": [
+    "Essential Tech Skills for the Workplace",
+    "Best Apps for Productivity",
+    "Using Technology for Collaboration"
+  ],
   "Career Guidance": [
     "Industry-Specific Career Insights",
     "Choosing the Right Career Path",
@@ -189,6 +194,34 @@ const subcategories: Record<Categories, Subcategories[]> = {
     "Exploring Creative Hobbies",
     "How Extracurriculars Boost Applications",
     "Starting Your Own Club or Organization"
+  ],
+  "Community Service": [
+    "Finding Volunteer Opportunities",
+    "Benefits of Community Involvement",
+    "Organizing Campus Charity Events",
+    "Making a Difference Locally and Globally",
+    "Highlighting Volunteer Work in Applications"
+  ],
+  "Arts Careers": [
+    "Exploring Creative Career Paths",
+    "Monetizing Artistic Talents",
+    "Building a Professional Portfolio",
+    "Career Options in Visual Arts",
+    "Pursuing Higher Education in the Arts"
+  ],
+  "STEM Careers": [
+    "Exploring Careers in Technology",
+    "Women in STEM",
+    "Research Opportunities in STEM Fields",
+    "Industry-Specific Career Insights",
+    "Technical Skill Mastery"
+  ],
+  "Wellbeing": [
+    "Managing Stress and Anxiety",
+    "Self-Care Strategies for Students",
+    "Sports and Physical Wellbeing",
+    "Balancing Academic and Personal Life",
+    "Seeking Support When Needed"
   ]
 };
 
