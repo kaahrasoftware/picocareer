@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ContentUploadFormProps {
   onSubmit?: (data: BlogFormValues) => Promise<void>;
+  fields: FormFieldProps[];
 }
 
-export function ContentUploadForm({ onSubmit }: ContentUploadFormProps) {
+export function ContentUploadForm({ onSubmit, fields }: ContentUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -43,20 +44,19 @@ export function ContentUploadForm({ onSubmit }: ContentUploadFormProps) {
 
         const { data: result, error } = await supabase
           .from('blogs')
-          .insert([
-            {
-              ...data,
-              author_id: user.id,
-              categories: data.categories || [],
-              subcategories: data.subcategories || [],
-            }
-          ])
-          .select();
+          .insert({
+            ...data,
+            author_id: user.id,
+            categories: data.categories || [],
+            subcategories: data.subcategories || [],
+          })
+          .select()
+          .single();
 
         if (error) throw error;
 
         const { error: notificationError } = await supabase.functions.invoke('send-blog-notifications', {
-          body: { blogId: result[0].id }
+          body: { blogId: result.id }
         });
 
         if (notificationError) {
@@ -92,7 +92,7 @@ export function ContentUploadForm({ onSubmit }: ContentUploadFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {blogFormFields.map((field) => (
+        {fields.map((field) => (
           <FormField
             key={field.name}
             control={form.control}
