@@ -119,14 +119,31 @@ export default function AuthPage() {
           theme="dark"
           providers={["google"]}
           redirectTo={window.location.origin}
-          view="sign_in"
           showLinks={true}
+          view="sign_up"
+          localization={{
+            variables: {
+              sign_up: {
+                email_label: "Email",
+                password_label: "Password",
+                email_input_placeholder: "Your email address",
+                password_input_placeholder: "Your password",
+                button_label: "Sign up",
+                loading_button_label: "Signing up ...",
+                social_provider_text: "Sign in with {{provider}}",
+                link_text: "Don't have an account? Sign up",
+                confirmation_text: "Check your email for the confirmation link",
+              },
+            },
+          }}
           additionalData={{
             first_name: {
               required: true,
+              label: "First Name",
             },
             last_name: {
               required: true,
+              label: "Last Name",
             },
           }}
         />
