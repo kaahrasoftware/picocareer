@@ -15,6 +15,8 @@ import { AdditionalInfo } from "./career-details/AdditionalInfo";
 import { CareerMentorList } from "./career-details/CareerMentorList";
 import { Users, DollarSign, Book, ArrowRight, Tag } from "lucide-react";
 import { badgeStyles } from "./career-details/BadgeStyles";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -29,26 +31,11 @@ type CareerWithMajors = Tables<"careers"> & {
       id: string;
     };
   }[];
-} & {
-  learning_objectives?: string[];
-  intensity?: string;
-  dropout_rates?: string;
-  average_salary?: string;
-  potential_salary?: string;
-  tuition_and_fees?: string;
-  tools_knowledge?: string[];
-  skill_match?: string[];
-  professional_associations?: string[];
-  common_difficulties?: string[];
-  certifications_to_consider?: string[];
-  affiliated_programs?: string[];
-  job_prospects?: string;
-  passion_for_subject?: string;
-  global_applicability?: string;
-  important_note?: string; // Added important_note
 };
 
 export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
+  const queryClient = useQueryClient();
+
   const { data: career, isLoading } = useQuery({
     queryKey: ['career', careerId],
     queryFn: async () => {
@@ -65,12 +52,44 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
 
       if (error) throw error;
       
-      // Add console log to verify relations
       console.log('Career with relations:', data);
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
   });
+
+  // Subscribe to real-time updates for the careers table
+  useEffect(() => {
+    if (!open || !careerId) return;
+
+    const channel = supabase
+      .channel('career-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'careers',
+          filter: `id=eq.${careerId}`,
+        },
+        (payload) => {
+          console.log('Received real-time update:', payload);
+          // Update the cache with the new data
+          queryClient.setQueryData(['career', careerId], (oldData: CareerWithMajors | undefined) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              ...payload.new,
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [careerId, open, queryClient]);
 
   if (!open) return null;
   if (isLoading) return <div>Loading...</div>;
@@ -81,8 +100,8 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       <DialogContent className="max-w-4xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-4 pb-0">
           <div className="relative">
-            <DialogTitle className="text-2xl font-bold text-foreground">{career.title}</DialogTitle>
-            <Badge variant="secondary" className="absolute top-0 right-0 flex items-center gap-1">
+            <DialogTitle className="text-2xl font-bold text-foreground pr-24">{career.title}</DialogTitle>
+            <Badge variant="secondary" className="absolute top-0 right-0 flex items-center gap-1 bg-transparent border-none">
               <Users className="h-4 w-4" />
               <span>{career.profiles_count || 0} mentors</span>
             </Badge>
@@ -119,7 +138,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               work_environment={career.work_environment}
               growth_potential={career.growth_potential}
               job_outlook={career.job_outlook}
-              important_note={career.important_note} // Pass important_note prop
+              important_note={career.important_note}
             />
 
             {career.academic_majors && career.academic_majors.length > 0 && (
