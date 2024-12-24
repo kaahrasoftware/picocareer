@@ -62,6 +62,12 @@ export function CareerCard({
                   <span className="truncate">{industry}</span>
                 </div>
               )}
+              {salary_range && (
+                <div className="flex items-center gap-2 text-sm mt-1">
+                  <TrendingUp className="h-3 w-3 text-[#8B5CF6]" />
+                  <span className="text-[#8B5CF6] font-medium">{salary_range}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -95,7 +101,7 @@ export function CareerCard({
             </div>
           )}
 
-          {/* Stress Level & Salary Section */}
+          {/* Stress Level Section */}
           <div className="mt-auto space-y-4">
             {stressLevelValue !== undefined && (
               <div className="space-y-1">
@@ -104,13 +110,6 @@ export function CareerCard({
                   <span>{stressLevelValue}/10</span>
                 </div>
                 <Progress value={stressLevelValue * 10} className="h-1" />
-              </div>
-            )}
-
-            {salary_range && (
-              <div className="flex items-center gap-2 text-sm">
-                <TrendingUp className="h-3 w-3 text-[#8B5CF6]" />
-                <span className="text-[#8B5CF6] font-medium">{salary_range}</span>
               </div>
             )}
 
