@@ -68,26 +68,26 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
         if (notificationError) {
           console.error('Error sending notifications:', notificationError);
           toast({
-            title: "Blog Posted",
-            description: "Blog posted successfully, but there was an issue sending notifications.",
+            title: "Content Uploaded",
+            description: "Content uploaded successfully, but there was an issue sending notifications.",
             variant: "default"
           });
         } else {
           toast({
-            title: "Blog Posted",
-            description: "Blog posted successfully! Notifications have been sent.",
+            title: "Success",
+            description: "Content uploaded successfully! Notifications have been sent.",
             variant: "default"
           });
         }
 
+        // Reset the form after successful submission
         form.reset();
-        navigate('/blog');
       }
     } catch (error) {
-      console.error('Error submitting blog:', error);
+      console.error('Error submitting content:', error);
       toast({
         title: "Error",
-        description: "Failed to post blog. Please try again.",
+        description: "Failed to upload content. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -113,7 +113,7 @@ export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Caree
             watch={form.watch}
           />
         ))}
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Uploading..." : buttonText}
         </Button>
       </form>
