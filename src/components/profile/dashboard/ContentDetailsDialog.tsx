@@ -11,10 +11,13 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
+// Define valid content types
+type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
+
 interface ContentDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contentType: string;
+  contentType: ContentType;
 }
 
 export function ContentDetailsDialog({
@@ -32,15 +35,30 @@ export function ContentDetailsDialog({
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching content:', error);
+        throw error;
+      }
+
+      return data || [];
     },
     enabled: open,
   });
 
+  const getBadgeVariant = (status: string | null | undefined) => {
+    switch (status) {
+      case 'Approved':
+        return 'default';
+      case 'Rejected':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
   const filteredItems = items?.filter(item => 
     statusFilter === "all" ? true : item.status === statusFilter
-  );
+  ) || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -73,17 +91,21 @@ export function ContentDetailsDialog({
             <div className="flex items-center justify-center p-4">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ) : filteredItems && filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
+          ) : filteredItems.length > 0 ? (
+            filteredItems.map((item: any) => (
               <div key={item.id} className="bg-muted p-4 rounded-lg mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold">{item.title}</h4>
-                  <Badge variant={item.status === 'Approved' ? 'default' : item.status === 'Rejected' ? 'destructive' : 'outline'}>
-                    {item.status}
-                  </Badge>
+                  {item.status && (
+                    <Badge variant={getBadgeVariant(item.status)}>
+                      {item.status}
+                    </Badge>
+                  )}
                 </div>
                 {item.description && (
-                  <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {item.description}
+                  </p>
                 )}
                 <div className="text-xs text-muted-foreground">
                   Created: {format(new Date(item.created_at), 'PPP')}
