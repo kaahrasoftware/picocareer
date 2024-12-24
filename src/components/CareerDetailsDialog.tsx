@@ -84,13 +84,15 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
             </Badge>
           </div>
           {career.salary_range && (
-            <Badge 
-              variant="outline"
-              className={badgeStyles.outline}
-            >
-              <DollarSign className="h-4 w-4" />
-              {career.salary_range}
-            </Badge>
+            <div className="flex items-center gap-1">
+              <Badge 
+                variant="outline"
+                className={badgeStyles.outline}
+              >
+                <DollarSign className="h-4 w-4" />
+                {career.salary_range}
+              </Badge>
+            </div>
           )}
         </DialogHeader>
         
