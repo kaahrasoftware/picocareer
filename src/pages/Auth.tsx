@@ -17,9 +17,11 @@ export default function Auth() {
                   className="h-16 w-auto animate-float"
                 />
               </div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">
-                PicoCareer
-              </h1>
+              <img 
+                src="/lovable-uploads/90701554-04cf-42e3-9cfd-cce94a7af17a.png" 
+                alt="PicoCareer Title" 
+                className="h-10 w-auto mx-auto"
+              />
               <p className="text-lg text-gray-300">
                 Your Gateway to Career Success
               </p>
