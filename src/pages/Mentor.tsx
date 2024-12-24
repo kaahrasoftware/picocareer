@@ -9,7 +9,7 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Community() {
+export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
@@ -30,7 +30,20 @@ export default function Community() {
         let query = supabase
           .from('profiles')
           .select(`
-            *,
+            id,
+            first_name,
+            last_name,
+            full_name,
+            avatar_url,
+            position,
+            highest_degree,
+            skills,
+            tools_used,
+            keywords,
+            bio,
+            location,
+            fields_of_interest,
+            top_mentor,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
@@ -49,7 +62,8 @@ export default function Community() {
             `skills.cs.{${searchQuery}},` +
             `tools_used.cs.{${searchQuery}},` +
             `keywords.cs.{${searchQuery}},` +
-            `fields_of_interest.cs.{${searchQuery}}`
+            `fields_of_interest.cs.{${searchQuery}},` +
+            `career.title.ilike.%${searchQuery}%`
           );
         }
 
