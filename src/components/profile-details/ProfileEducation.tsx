@@ -19,7 +19,6 @@ export function ProfileEducation({ academic_major, highest_degree, school_name, 
       <div className="flex items-center gap-2 text-muted-foreground">
         <GraduationCap className="h-4 w-4" />
         <EditableField
-          label="Academic Major"
           value={academic_major}
           fieldName="academic_major"
           profileId={profileId}
@@ -29,7 +28,6 @@ export function ProfileEducation({ academic_major, highest_degree, school_name, 
       <div className="flex items-center gap-2 text-muted-foreground">
         <School className="h-4 w-4" />
         <EditableField
-          label="School"
           value={school_name}
           fieldName="school_name"
           profileId={profileId}
@@ -38,7 +36,6 @@ export function ProfileEducation({ academic_major, highest_degree, school_name, 
 
       <div>
         <EditableField
-          label="Highest Degree"
           value={highest_degree}
           fieldName="highest_degree"
           profileId={profileId}

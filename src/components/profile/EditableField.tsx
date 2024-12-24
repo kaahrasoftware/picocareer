@@ -1,11 +1,10 @@
 import React, { useState } from "react";
+import { Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { EditButton } from "./editable/EditButton";
-import { SelectWithCustomOption } from "./editable/SelectWithCustomOption";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface EditableFieldProps {
   label: string;
@@ -19,115 +18,45 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Fetch majors if the field is academic_major
-  const { data: majors } = useQuery({
-    queryKey: ['majors'],
-    queryFn: async () => {
-      if (fieldName !== 'academic_major_id') return null;
-      const { data, error } = await supabase
-        .from('majors')
-        .select('id, title')
-        .order('title');
-      
+  const updateFieldMutation = useMutation({
+    mutationFn: async (newValue: string) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [fieldName]: newValue })
+        .eq('id', profileId);
+
       if (error) throw error;
-      return data;
+      return newValue;
     },
-    enabled: fieldName === 'academic_major_id'
-  });
+    onSuccess: (newValue) => {
+      queryClient.setQueryData(['profile'], (oldData: any) => ({
+        ...oldData,
+        [fieldName]: newValue,
+      }));
 
-  // Fetch schools if the field is school
-  const { data: schools } = useQuery({
-    queryKey: ['schools'],
-    queryFn: async () => {
-      if (fieldName !== 'school_id') return null;
-      const { data, error } = await supabase
-        .from('schools')
-        .select('id, name')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
+      toast({
+        title: "Success",
+        description: "Field updated successfully",
+      });
+
+      if (onUpdate) {
+        onUpdate(newValue);
+      }
+      setIsEditing(false);
     },
-    enabled: fieldName === 'school_id'
-  });
-
-  const updateField = async (newValue: string) => {
-    let valueToUpdate = newValue;
-
-    // Handle array fields
-    if (['skills', 'tools_used', 'keywords', 'fields_of_interest'].includes(fieldName)) {
-      valueToUpdate = `{${newValue.split(',').map(item => item.trim()).filter(Boolean).join(',')}}`;
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ [fieldName]: valueToUpdate })
-      .eq('id', profileId);
-
-    if (error) {
+    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to update field",
         variant: "destructive",
       });
-      return false;
-    }
-
-    toast({
-      title: "Success",
-      description: "Field updated successfully",
-    });
-
-    if (onUpdate) {
-      onUpdate(newValue);
-    }
-    return true;
-  };
+      setEditValue(value || "");
+    },
+  });
 
   if (isEditing) {
-    if (fieldName === 'academic_major_id' && majors) {
-      return (
-        <SelectWithCustomOption
-          value={editValue}
-          options={majors}
-          onSave={async (value) => {
-            const success = await updateField(value);
-            if (success) {
-              setIsEditing(false);
-            }
-          }}
-          onCancel={() => {
-            setIsEditing(false);
-            setEditValue(value || "");
-          }}
-          tableName="majors"
-          placeholder="Major"
-        />
-      );
-    }
-
-    if (fieldName === 'school_id' && schools) {
-      return (
-        <SelectWithCustomOption
-          value={editValue}
-          options={schools}
-          onSave={async (value) => {
-            const success = await updateField(value);
-            if (success) {
-              setIsEditing(false);
-            }
-          }}
-          onCancel={() => {
-            setIsEditing(false);
-            setEditValue(value || "");
-          }}
-          tableName="schools"
-          placeholder="School"
-        />
-      );
-    }
-
     return (
       <div className="flex gap-2">
         <Input
@@ -136,13 +65,9 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
           className="flex-1"
         />
         <Button 
-          onClick={async () => {
-            const success = await updateField(editValue);
-            if (success) {
-              setIsEditing(false);
-            }
-          }}
+          onClick={() => updateFieldMutation.mutate(editValue)}
           size="sm"
+          disabled={updateFieldMutation.isPending}
         >
           Save
         </Button>
@@ -163,7 +88,14 @@ export function EditableField({ label, value, fieldName, profileId, onUpdate }: 
   return (
     <div className="flex items-center justify-between group">
       <span className="text-muted-foreground">{value || "Not set"}</span>
-      <EditButton onClick={() => setIsEditing(true)} />
+      <Button
+        variant="ghost"
+        size="icon"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={() => setIsEditing(true)}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
