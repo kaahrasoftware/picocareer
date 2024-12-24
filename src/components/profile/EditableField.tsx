@@ -14,14 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface EditableFieldProps {
-  label: string;
-  value: string | null;
-  fieldName: string;
-  profileId: string;
-  onUpdate?: (newValue: string) => void;
-}
-
 const degreeOptions = [
   "No Degree",
   "High School",
@@ -31,6 +23,14 @@ const degreeOptions = [
   "MD",
   "PhD"
 ] as const;
+
+interface EditableFieldProps {
+  label: string;
+  value: string | null;
+  fieldName: string;
+  profileId: string;
+  onUpdate?: (newValue: string) => void;
+}
 
 export function EditableField({ 
   label, 
@@ -149,6 +149,7 @@ export function EditableField({
           tableName="schools"
           handleSelectChange={updateField}
           fieldName={fieldName}
+          titleField="name"
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");
@@ -166,6 +167,7 @@ export function EditableField({
           tableName="majors"
           handleSelectChange={updateField}
           fieldName={fieldName}
+          titleField="title"
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");
@@ -183,6 +185,7 @@ export function EditableField({
           tableName="careers"
           handleSelectChange={updateField}
           fieldName={fieldName}
+          titleField="title"
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");
@@ -200,6 +203,7 @@ export function EditableField({
           tableName="companies"
           handleSelectChange={updateField}
           fieldName={fieldName}
+          titleField="name"
           onCancel={() => {
             setIsEditing(false);
             setEditValue(value || "");

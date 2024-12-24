@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from '@/integrations/supabase/types';
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
 
-type TableName = 'majors' | 'schools' | 'careers' | 'companies';
+type TableName = 'majors' | 'schools' | 'companies' | 'careers';
 type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
 type TitleField = 'title' | 'name';
 
@@ -26,7 +26,7 @@ interface CustomSelectProps {
   onCancel?: () => void;
 }
 
-type TableInsertData = {
+type InsertData = {
   majors: Database['public']['Tables']['majors']['Insert'];
   schools: Database['public']['Tables']['schools']['Insert'];
   companies: Database['public']['Tables']['companies']['Insert'];
@@ -54,8 +54,6 @@ export function SelectWithCustomOption({
 
   const handleCustomSubmit = async () => {
     try {
-      const titleField = tableName === 'majors' || tableName === 'careers' ? 'title' : 'name';
-      
       // First, check if entry already exists
       const { data: existingData } = await supabase
         .from(tableName)
@@ -73,27 +71,24 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: Record<string, any> = {
+      const insertData: Partial<InsertData[TableName]> = {
         status: 'Pending' as const
       };
 
       if (tableName === 'majors') {
-        insertData = {
-          ...insertData,
+        Object.assign(insertData, {
           title: customValue,
           description: `Custom major: ${customValue}`
-        };
+        });
       } else if (tableName === 'careers') {
-        insertData = {
-          ...insertData,
+        Object.assign(insertData, {
           title: customValue,
           description: `Position: ${customValue}`
-        };
+        });
       } else {
-        insertData = {
-          ...insertData,
+        Object.assign(insertData, {
           name: customValue
-        };
+        });
       }
 
       const { data, error } = await supabase
@@ -133,9 +128,7 @@ export function SelectWithCustomOption({
   };
 
   const displayValue = (option: { id: string; title?: string; name?: string }) => {
-    return tableName === 'majors' || tableName === 'careers' 
-      ? option.title 
-      : option.name || '';
+    return option[titleField] || '';
   };
 
   if (showCustomInput) {
