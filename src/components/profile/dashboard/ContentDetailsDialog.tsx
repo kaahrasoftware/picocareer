@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 // Define valid content types
 type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
@@ -27,8 +28,9 @@ export function ContentDetailsDialog({
   contentType,
 }: ContentDetailsDialogProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { toast } = useToast();
 
-  const { data: items, isLoading } = useQuery({
+  const { data: items, isLoading, refetch } = useQuery({
     queryKey: ['content-details', contentType],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,6 +48,31 @@ export function ContentDetailsDialog({
     enabled: open,
   });
 
+  const handleStatusChange = async (itemId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from(contentType)
+        .update({ status: newStatus })
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status updated",
+        description: `Item status has been updated to ${newStatus}`,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error updating status",
+        description: "There was an error updating the status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getBadgeVariant = (status: string | null | undefined) => {
     switch (status) {
       case 'Approved':
@@ -54,6 +81,17 @@ export function ContentDetailsDialog({
         return 'destructive';
       default:
         return 'outline';
+    }
+  };
+
+  const getStatusColor = (status: string | null | undefined) => {
+    switch (status) {
+      case 'Approved':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Rejected':
+        return 'bg-red-50 text-red-700 border-red-200';
+      default:
+        return 'bg-orange-50 text-orange-700 border-orange-200';
     }
   };
 
@@ -98,11 +136,21 @@ export function ContentDetailsDialog({
                 <div key={item.id} className="bg-muted p-4 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold">{item.title}</h4>
-                    {item.status && (
-                      <Badge variant={getBadgeVariant(item.status)}>
-                        {item.status}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Select
+                        defaultValue={item.status || "Pending"}
+                        onValueChange={(value) => handleStatusChange(item.id, value)}
+                      >
+                        <SelectTrigger className={`w-[120px] border ${getStatusColor(item.status)}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Approved">Approved</SelectItem>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Rejected">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   {item.description && (
                     <p className="text-sm text-muted-foreground mb-2">
