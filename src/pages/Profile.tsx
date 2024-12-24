@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -27,6 +28,15 @@ export default function ProfilePage() {
           variant: "destructive",
         });
         navigate("/auth");
+      } else {
+        // Check if user is admin
+        const { role } = session.user.app_metadata;
+        setIsAdmin(role === 'admin');
+        
+        // If user is not admin and tries to access dashboard tab, switch to profile
+        if (!isAdmin && activeTab === 'dashboard') {
+          setActiveTab('profile');
+        }
       }
     };
 
@@ -41,7 +51,7 @@ export default function ProfilePage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate, toast, activeTab, isAdmin]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -111,7 +121,7 @@ export default function ProfilePage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
           <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="mentor">Mentor</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -121,9 +131,11 @@ export default function ProfilePage() {
             <ProfileTab profile={profile} />
           </TabsContent>
 
-          <TabsContent value="dashboard">
-            <DashboardTab />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="dashboard">
+              <DashboardTab />
+            </TabsContent>
+          )}
 
           <TabsContent value="calendar">
             <CalendarTab />
