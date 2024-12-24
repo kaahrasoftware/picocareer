@@ -139,8 +139,11 @@ export default function MajorUpload() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Upload Major Information</h1>
-      <ContentUploadForm onSubmit={handleSubmit} />
+      <h1 className="text-2xl font-bold mb-6">Upload Major</h1>
+      <ContentUploadForm 
+        fields={majorFormFields} 
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }

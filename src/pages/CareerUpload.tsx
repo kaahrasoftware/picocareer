@@ -74,8 +74,11 @@ export default function CareerUpload() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Upload Career Information</h1>
-      <ContentUploadForm onSubmit={handleSubmit} />
+      <h1 className="text-2xl font-bold mb-6">Upload Career</h1>
+      <ContentUploadForm 
+        fields={careerFormFields} 
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }

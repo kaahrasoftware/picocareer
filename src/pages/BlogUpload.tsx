@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
+import { blogFormFields } from "@/components/forms/blog/BlogFormFields";
 import type { BlogFormValues } from "@/lib/validations/blog";
 
 export default function BlogUpload() {
@@ -38,7 +39,7 @@ export default function BlogUpload() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Upload Blog Post</h1>
-      <ContentUploadForm />
+      <ContentUploadForm fields={blogFormFields} />
     </div>
   );
 }

@@ -19,6 +19,7 @@ export type Database = {
           id: string
           is_recent: boolean | null
           other_notes: string | null
+          status: Database["public"]["Enums"]["status"] | null
           subcategories: Database["public"]["Enums"]["subcategories"][] | null
           summary: string
           title: string
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           is_recent?: boolean | null
           other_notes?: string | null
+          status?: Database["public"]["Enums"]["status"] | null
           subcategories?: Database["public"]["Enums"]["subcategories"][] | null
           summary: string
           title: string
@@ -47,6 +49,7 @@ export type Database = {
           id?: string
           is_recent?: boolean | null
           other_notes?: string | null
+          status?: Database["public"]["Enums"]["status"] | null
           subcategories?: Database["public"]["Enums"]["subcategories"][] | null
           summary?: string
           title?: string
@@ -1096,6 +1099,7 @@ export type Database = {
         | "West Virginia - WV"
         | "Wisconsin - WI"
         | "Wyoming - WY"
+      status: "Approved" | "Pending" | "Rejected"
       subcategories:
         | "Industry-Specific Career Insights"
         | "Choosing the Right Career Path"
