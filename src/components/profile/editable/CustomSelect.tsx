@@ -7,7 +7,7 @@ type TitleField = 'title' | 'name';
 
 interface CustomSelectProps {
   value: string;
-  options: any[];
+  options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
   tableName: TableName;
   fieldName: FieldName;

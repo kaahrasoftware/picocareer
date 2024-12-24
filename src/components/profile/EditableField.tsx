@@ -17,6 +17,10 @@ const degreeOptions = [
   "PhD"
 ] as const;
 
+type TableName = 'majors' | 'schools' | 'companies' | 'careers';
+type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
+type TitleField = 'title' | 'name';
+
 interface EditableFieldProps {
   label: string;
   value: string | null;
@@ -44,15 +48,15 @@ export function EditableField({
         return null;
       }
 
-      const tableMap = {
+      const tableMap: Record<FieldName, TableName> = {
         academic_major_id: 'majors',
         school_id: 'schools',
         position: 'careers',
         company_id: 'companies'
       };
 
-      const table = tableMap[fieldName as keyof typeof tableMap];
-      const titleField = fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
+      const table = tableMap[fieldName as FieldName];
+      const titleField: TitleField = fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
 
       const { data, error } = await supabase
         .from(table)
@@ -101,23 +105,24 @@ export function EditableField({
   if (isEditing) {
     // Custom select fields (with option to add new items)
     if (['school_id', 'academic_major_id', 'position', 'company_id'].includes(fieldName) && options) {
-      const tableMap = {
-        school_id: { table: 'schools', field: 'name' },
-        academic_major_id: { table: 'majors', field: 'title' },
-        position: { table: 'careers', field: 'title' },
-        company_id: { table: 'companies', field: 'name' }
+      const tableMap: Record<FieldName, TableName> = {
+        academic_major_id: 'majors',
+        school_id: 'schools',
+        position: 'careers',
+        company_id: 'companies'
       };
       
-      const config = tableMap[fieldName as keyof typeof tableMap];
+      const table = tableMap[fieldName as FieldName];
+      const titleField: TitleField = fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
       
       return (
         <CustomSelect
           value={editValue}
           options={options}
           placeholder={`Select a ${label.toLowerCase()}`}
-          tableName={config.table}
-          fieldName={fieldName}
-          titleField={config.field}
+          tableName={table}
+          fieldName={fieldName as FieldName}
+          titleField={titleField}
           onSave={updateField}
           onCancel={() => {
             setIsEditing(false);

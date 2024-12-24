@@ -17,7 +17,7 @@ interface SelectFieldProps {
 }
 
 export function SelectField({ value, options, placeholder, onSave, onCancel }: SelectFieldProps) {
-  const isStringArray = (arr: any[]): arr is string[] => {
+  const isStringArray = (arr: readonly any[]): arr is readonly string[] => {
     return typeof arr[0] === 'string';
   };
 
@@ -25,7 +25,7 @@ export function SelectField({ value, options, placeholder, onSave, onCancel }: S
     <div className="flex gap-2">
       <Select 
         value={value} 
-        onValueChange={(value) => onSave(value)}
+        onValueChange={onSave}
       >
         <SelectTrigger className="flex-1">
           <SelectValue placeholder={placeholder} />
