@@ -13,7 +13,8 @@ import { AboutSection } from "./career-details/AboutSection";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
 import { CareerMentorList } from "./career-details/CareerMentorList";
-import { Users, DollarSign, Book, ArrowRight, Tag } from "lucide-react";
+import { HeaderBadges } from "./career-details/HeaderBadges";
+import { Book, ArrowRight, Tag } from "lucide-react";
 import { badgeStyles } from "./career-details/BadgeStyles";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -99,26 +100,14 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       <DialogContent className="max-w-4xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-4 pb-0">
           <div className="relative">
-            <DialogTitle className="text-2xl font-bold text-foreground pr-24">{career.title}</DialogTitle>
-            <Badge 
-              variant="secondary" 
-              className="absolute top-0 right-0 flex items-center gap-1.5 bg-[#E5DEFF] hover:bg-[#D8D1F2] text-[#4B5563] transition-colors border border-[#D8D1F2] px-3 py-1 rounded-full shadow-sm"
-            >
-              <Users className="h-4 w-4" />
-              <span className="font-medium">{career.profiles_count || 0} mentors</span>
-            </Badge>
+            <DialogTitle className="text-2xl font-bold text-foreground pr-24">
+              {career.title}
+            </DialogTitle>
+            <HeaderBadges 
+              profilesCount={career.profiles_count || 0}
+              salaryRange={career.salary_range}
+            />
           </div>
-          {career.salary_range && (
-            <div className="flex items-center gap-1">
-              <Badge 
-                variant="outline"
-                className={badgeStyles.outline}
-              >
-                <DollarSign className="h-4 w-4" />
-                {career.salary_range}
-              </Badge>
-            </div>
-          )}
         </DialogHeader>
         
         <ScrollArea className="h-[calc(85vh-120px)]">
@@ -143,6 +132,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               important_note={career.important_note}
             />
 
+            {/* Academic Majors Section */}
             {career.academic_majors && career.academic_majors.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
@@ -162,6 +152,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               </div>
             )}
 
+            {/* Related Majors Section */}
             {career.career_major_relations && career.career_major_relations.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
@@ -181,6 +172,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
               </div>
             )}
 
+            {/* Keywords Section */}
             {career.keywords && career.keywords.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
