@@ -20,55 +20,57 @@ export default function Community() {
   const PROFILES_PER_PAGE = 12; // Updated to show 12 profiles per page
   const { toast } = useToast();
 
-  const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => {
-      console.log('Fetching profiles...');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      try {
-        let query = supabase
-          .from('profiles')
-          .select(`
-            *,
-            company:companies(name),
-            school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title)
-          `)
-          .eq('user_type', 'mentor')
-          .order('created_at', { ascending: false });
+const { data: profiles = [], isLoading, error } = useQuery({
+  queryKey: ['profiles'],
+  queryFn: async () => {
+    console.log('Fetching profiles...');
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    try {
+      let query = supabase
+        .from('profiles')
+        .select(`
+          *,
+          company:companies(name),
+          school:schools(name),
+          academic_major:majors!profiles_academic_major_id_fkey(title),
+          career:careers!profiles_position_fkey(title, id)
+        `)
+        .eq('user_type', 'mentor')
+        .order('created_at', { ascending: false });
 
-        if (user?.id) {
-          query = query.neq('id', user.id);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
-
-        console.log('Profiles fetched successfully:', data?.length);
-        return data.map(profile => ({
-          ...profile,
-          company_name: profile.company?.name,
-          school_name: profile.school?.name,
-          academic_major: profile.academic_major?.title || null
-        }));
-      } catch (err) {
-        console.error('Error in profiles query:', err);
-        toast({
-          title: "Error loading profiles",
-          description: "There was an error loading the community profiles. Please try again later.",
-          variant: "destructive",
-        });
-        throw err;
+      if (user?.id) {
+        query = query.neq('id', user.id);
       }
-    },
-    retry: 2,
-    retryDelay: 1000,
-  });
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
+
+      console.log('Profiles fetched successfully:', data?.length);
+      return data.map(profile => ({
+        ...profile,
+        company_name: profile.company?.name,
+        school_name: profile.school?.name,
+        academic_major: profile.academic_major?.title,
+        career_title: profile.career?.title
+      }));
+    } catch (err) {
+      console.error('Error in profiles query:', err);
+      toast({
+        title: "Error loading profiles",
+        description: "There was an error loading the community profiles. Please try again later.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  },
+  retry: 2,
+  retryDelay: 1000,
+});
 
   if (error) {
     console.error('React Query error:', error);

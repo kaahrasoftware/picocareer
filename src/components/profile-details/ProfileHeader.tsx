@@ -7,7 +7,7 @@ interface ProfileHeaderProps {
     id: string;
     avatar_url: string | null;
     full_name: string | null;
-    career_title: string | null;
+    career: { title: string; id: string } | null;
     company_name?: string | null;
     school_name?: string | null;
     academic_major?: string | null;
@@ -21,14 +21,22 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   if (!profile) return null;
 
   // Determine primary and secondary display text based on whether the user is a student or professional
-  const primaryText = profile.career_title || profile.academic_major || "No position/major set";
-  const secondaryText = profile.career_title 
+  const primaryText = profile.career?.title || profile.academic_major || "No position/major set";
+  const secondaryText = profile.career?.title 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 
+  const handleAvatarUpdate = (url: string) => {
+    // This is just a placeholder - the actual update logic should be implemented
+    console.log("Avatar update:", url);
+  };
+
   return (
     <div className="flex items-center gap-6 ml-6">
-      <ProfileAvatar profile={profile} />
+      <ProfileAvatar 
+        profile={profile} 
+        onAvatarUpdate={handleAvatarUpdate}
+      />
 
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
@@ -49,7 +57,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
         <div className="flex flex-col gap-1 mt-2">
           <div className="flex items-center gap-2 text-muted-foreground">
-            {profile.career_title ? (
+            {profile.career?.title ? (
               <Building2 className="h-4 w-4 flex-shrink-0" />
             ) : (
               <GraduationCap className="h-4 w-4 flex-shrink-0" />

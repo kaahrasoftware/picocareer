@@ -65,7 +65,8 @@ export default function ProfilePage() {
           *,
           company:companies(name),
           school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title)
+          academic_major:majors!profiles_academic_major_id_fkey(title),
+          career:careers!profiles_position_fkey(title, id)
         `)
         .eq('id', session.user.id)
         .maybeSingle();
@@ -73,11 +74,12 @@ export default function ProfilePage() {
       if (error) throw error;
       if (!data) throw new Error('No profile data found');
 
-      const profileData: Profile = {
+      return {
         ...data,
         company_name: data.company?.name ?? null,
         school_name: data.school?.name ?? null,
         academic_major: data.academic_major?.title ?? null,
+        career_title: data.career?.title ?? null,
         full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null,
         email: data.email || '',
         created_at: data.created_at || new Date().toISOString(),
@@ -89,8 +91,6 @@ export default function ProfilePage() {
         highest_degree: data.highest_degree || null,
         top_mentor: data.top_mentor || false
       };
-
-      return profileData;
     },
     retry: false
   });
