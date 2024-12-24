@@ -2,13 +2,12 @@ import { GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
-import { Card } from "@/components/ui/card";
-import { BlogPagination } from "@/components/blog/BlogPagination";
 
 interface AboutSectionProps {
   description: string;
@@ -25,7 +24,7 @@ export function AboutSection({
 }: AboutSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
-  const MENTORS_PER_PAGE = 6; // Adjusted to match CareerMentorList
+  const MENTORS_PER_PAGE = 6;
 
   const { data: totalCount } = useQuery({
     queryKey: ['major-mentors-count', majorId],
@@ -72,23 +71,23 @@ export function AboutSection({
   const totalPages = Math.ceil((totalCount || 0) / MENTORS_PER_PAGE);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {mentors && mentors.length > 0 && (
         <div>
-          <h5 className="text-sm font-medium mb-3">Mentors with this major</h5>
-          <ScrollArea className="w-full pb-2">
-            <div className="flex justify-center min-w-full py-2">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <h5 className="text-sm font-medium mb-4">Mentors with this major</h5>
+          <ScrollArea className="w-full pb-4">
+            <div className="flex justify-center min-w-full">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
                 {mentors.map((mentor) => (
                   <Card 
                     key={mentor.id}
-                    className="flex flex-col items-center p-4 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
+                    className="flex flex-col items-center p-6 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
                     onClick={() => setSelectedMentorId(mentor.id)}
                   >
-                    <div className="relative w-20 h-20 group">
+                    <div className="relative w-16 h-16 group mb-3">
                       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-                      <div className="absolute inset-[3px] rounded-full bg-background" />
-                      <div className="absolute inset-[6px] rounded-full overflow-hidden">
+                      <div className="absolute inset-[2px] rounded-full bg-background" />
+                      <div className="absolute inset-[4px] rounded-full overflow-hidden">
                         <Avatar className="h-full w-full">
                           <AvatarImage 
                             src={mentor.avatar_url || ''} 
@@ -102,7 +101,7 @@ export function AboutSection({
                         </Avatar>
                       </div>
                     </div>
-                    <div className="mt-3 text-center w-full">
+                    <div className="text-center w-full space-y-0.5">
                       <p className="text-sm font-medium line-clamp-1">
                         {mentor.first_name}
                       </p>
@@ -116,7 +115,7 @@ export function AboutSection({
             </div>
           </ScrollArea>
           {totalPages > 1 && (
-            <div className="mt-4">
+            <div className="mt-6">
               <BlogPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
