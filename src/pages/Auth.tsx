@@ -58,6 +58,7 @@ export default function Auth() {
                   opts={{
                     align: "start",
                     loop: true,
+                    dragFree: true,
                   }}
                   plugins={[
                     Autoplay({
@@ -66,10 +67,10 @@ export default function Auth() {
                   ]}
                   className="w-full max-w-xs mx-auto"
                 >
-                  <CarouselContent>
+                  <CarouselContent className="-ml-1">
                     {mentors?.map((mentor) => (
-                      <CarouselItem key={mentor.id} className="basis-1/3 pl-1">
-                        <Avatar className="w-12 h-12">
+                      <CarouselItem key={mentor.id} className="basis-1/5 pl-1">
+                        <Avatar className="w-8 h-8">
                           <AvatarImage src={mentor.avatar_url || ''} alt="Mentor" />
                           <AvatarFallback>
                             {mentor.first_name?.[0]}
