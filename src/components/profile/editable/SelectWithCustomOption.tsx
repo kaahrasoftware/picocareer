@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
 
 type TableName = 'majors' | 'schools' | 'careers';
 type TitleField = 'title' | 'name';
@@ -26,6 +27,17 @@ interface CustomSelectProps {
   handleSelectChange: (name: string, value: string) => void;
   fieldName: string;
   onCancel?: () => void;
+}
+
+type InsertData = {
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+  careers: Database['public']['Tables']['careers']['Insert'];
+}
+
+interface TableRecord {
+  id: string;
+  [key: string]: any;
 }
 
 export function SelectWithCustomOption({ 
@@ -70,27 +82,25 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: Record<string, any> = {
-        status: 'Pending' as const
-      };
-
+      let insertData: InsertData[TableName];
+      
       if (tableName === 'majors') {
         insertData = {
-          ...insertData,
           title: customValue,
-          description: `Custom major: ${customValue}`
-        };
+          description: `Custom major: ${customValue}`,
+          status: 'Pending'
+        } as InsertData['majors'];
       } else if (tableName === 'careers') {
         insertData = {
-          ...insertData,
           title: customValue,
-          description: `Position: ${customValue}`
-        };
+          description: `Position: ${customValue}`,
+          status: 'Pending'
+        } as InsertData['careers'];
       } else {
         insertData = {
-          ...insertData,
-          name: customValue
-        };
+          name: customValue,
+          status: 'Pending'
+        } as InsertData['schools'];
       }
 
       const { data, error } = await supabase
