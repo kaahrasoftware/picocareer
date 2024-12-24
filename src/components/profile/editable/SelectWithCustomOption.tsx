@@ -12,10 +12,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
 type TableName = 'majors' | 'schools' | 'careers';
+type Status = 'Approved' | 'Pending' | 'Rejected';
+
+interface Option {
+  id: string;
+  title?: string;
+  name?: string;
+}
 
 interface CustomSelectProps {
   value: string;
-  options: Array<{ id: string; title?: string; name?: string }>;
+  options: Option[];
   placeholder: string;
   tableName: TableName;
   onSelect: (value: string) => void;
@@ -38,11 +45,13 @@ export function SelectWithCustomOption({
   const { data: options } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from(tableName)
         .select('id, title, name')
         .eq('status', 'Approved')
-        .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+        .order(tableName === 'careers' ? 'title' : 'name', { ascending: true });
+
+      const { data, error } = await query;
       
       if (error) {
         console.error(`Error fetching ${tableName}:`, error);
@@ -57,7 +66,7 @@ export function SelectWithCustomOption({
       // First, check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select('*')
+        .select('id')
         .eq(tableName === 'careers' ? 'title' : 'name', customValue)
         .maybeSingle();
 
@@ -84,18 +93,18 @@ export function SelectWithCustomOption({
         ? {
             title: customValue,
             description: `Career in ${customValue}`,
-            status: 'Pending'
+            status: 'Pending' as Status
           }
         : {
             name: customValue,
-            status: 'Pending'
+            status: 'Pending' as Status
           };
 
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
         .select()
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error(`Failed to add new ${tableName}:`, error);
