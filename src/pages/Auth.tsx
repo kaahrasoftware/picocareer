@@ -5,9 +5,9 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 
 export default function Auth() {
   return (
-    <div className="min-h-screen bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')]">
+    <div className="min-h-screen">
       <div className="flex min-h-screen">
-        <div className="w-[40%] bg-picocareer-dark/90 p-8 flex flex-col items-center justify-center">
+        <div className="w-[40%] bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')] p-8 flex flex-col items-center justify-center">
           <div className="max-w-md space-y-8 text-center">
             <div className="space-y-4">
               <div className="flex justify-center">
@@ -33,9 +33,9 @@ export default function Auth() {
           </div>
         </div>
 
-        <div className="w-[60%] p-4 bg-black/10">
+        <div className="w-[60%] p-4">
           <div className="flex items-center justify-center min-h-full">
-            <Card className="w-full max-w-md p-6 space-y-6 backdrop-blur-sm bg-white/95">
+            <Card className="w-full max-w-md p-6 space-y-6">
               <div className="space-y-2 text-center">
                 <h1 className="text-2xl font-semibold tracking-tight">Welcome to PicoCareer</h1>
                 <p className="text-sm text-muted-foreground">
