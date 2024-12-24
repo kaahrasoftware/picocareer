@@ -1,196 +1,297 @@
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Icons } from "@/components/ui/icons";
 
-export default function AuthPage() {
+export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_up');
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+  });
 
-  const createProfile = async (userId: string, email: string) => {
+  const createProfile = async (userId: string, email: string, firstName: string, lastName: string) => {
     try {
-      // First check if profile exists
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
         .single();
 
-      // If profile doesn't exist, create it
       if (!existingProfile) {
         const { error } = await supabase.from('profiles').insert({
           id: userId,
           email: email,
+          first_name: firstName,
+          last_name: lastName,
           user_type: 'mentee'
         });
 
-        if (error) {
-          console.error('Error creating profile:', error);
-          toast({
-            title: "Profile Creation Failed",
-            description: "There was an error creating your profile. Please try again.",
-            variant: "destructive",
-          });
-        }
+        if (error) throw error;
       }
     } catch (error) {
       console.error('Error in createProfile:', error);
+      throw error;
     }
   };
 
-  useEffect(() => {
-    // Clear any existing session and local storage data on mount
-    const clearSession = async () => {
-      try {
-        localStorage.removeItem('supabase.auth.token');
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-      } catch (error) {
-        console.error('Error clearing session:', error);
-      }
-    };
-    clearSession();
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
 
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/");
-      }
-    });
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session) {
-        try {
-          // Try to create profile when user signs in
-          await createProfile(session.user.id, session.user.email || '');
-          
-          toast({
-            title: "Welcome!",
-            description: "You have successfully signed in.",
-          });
-          navigate("/");
-        } catch (error) {
-          console.error('Error during sign in:', error);
-          toast({
-            title: "Error",
-            description: "There was an error during sign in. Please try again.",
-            variant: "destructive",
-          });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          }
         }
-      } else if (event === 'SIGNED_OUT') {
-        // Clear any cached data
-        localStorage.removeItem('supabase.auth.token');
-        queryClient.clear();
-      }
-    });
+      });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, toast, queryClient]);
+      if (error) throw error;
+
+      if (data.user) {
+        await createProfile(
+          data.user.id,
+          formData.email,
+          formData.firstName,
+          formData.lastName
+        );
+
+        toast({
+          title: "Success!",
+          description: "Please check your email to verify your account.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-md bg-card border border-border rounded-lg p-6 shadow-lg">
-        <h1 className="text-2xl font-semibold text-center mb-6">Welcome to PicoCareer</h1>
-        <SupabaseAuth
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#0EA5E9',
-                  brandAccent: '#002366',
-                  brandButtonText: 'white',
-                },
-                space: {
-                  inputPadding: '12px',
-                  buttonPadding: '12px',
-                },
-                radii: {
-                  borderRadiusButton: '8px',
-                  buttonBorderRadius: '8px',
-                  inputBorderRadius: '8px',
-                },
-                fonts: {
-                  bodyFontFamily: 'inherit',
-                  buttonFontFamily: 'inherit',
-                  inputFontFamily: 'inherit',
-                },
-              }
-            },
-            style: {
-              input: {
-                borderColor: 'rgb(226, 232, 240)',
-                marginBottom: '16px',
-              },
-              label: {
-                marginBottom: '8px',
-                color: 'rgb(55, 65, 81)',
-                fontWeight: '500',
-              },
-              button: {
-                height: 'auto',
-                padding: '12px',
-              },
-              anchor: {
-                color: '#0EA5E9',
-              },
-            },
-          }}
-          theme="dark"
-          providers={["google"]}
-          redirectTo={window.location.origin}
-          showLinks={true}
-          view={view}
-          localization={{
-            variables: {
-              sign_up: {
-                email_label: "Email",
-                password_label: "Password",
-                email_input_placeholder: "Your email address",
-                password_input_placeholder: "Your password",
-                button_label: "Sign up",
-                loading_button_label: "Signing up ...",
-                social_provider_text: "Sign in with {{provider}}",
-                link_text: "Don't have an account? Sign up",
-                confirmation_text: "Check your email for the confirmation link",
-              },
-              sign_in: {
-                email_label: "Email",
-                password_label: "Password",
-                email_input_placeholder: "Your email address",
-                password_input_placeholder: "Your password",
-                button_label: "Sign in",
-                loading_button_label: "Signing in ...",
-                social_provider_text: "Sign in with {{provider}}",
-                link_text: "Already have an account? Sign in",
-              },
-            },
-          }}
-          additionalData={{
-            first_name: {
-              required: true,
-              label: "First Name",
-            },
-            last_name: {
-              required: true,
-              label: "Last Name",
-            },
-          }}
-        />
-      </div>
+      <Card className="w-full max-w-md p-6 space-y-6">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome to PicoCareer</h1>
+          <p className="text-sm text-muted-foreground">
+            Sign in to your account or create a new one
+          </p>
+        </div>
+
+        <Tabs defaultValue="signin" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="signin" className="space-y-4">
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <Input
+                  id="signin-email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Password</Label>
+                <Input
+                  id="signin-password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full"
+              onClick={handleGoogleSignIn}
+            >
+              <Icons.google className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="signup" className="space-y-4">
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    placeholder="John"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    placeholder="Doe"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                  id="signup-email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input
+                  id="signup-password"
+                  name="password"
+                  type="password"
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Creating account..." : "Create Account"}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full"
+              onClick={handleGoogleSignIn}
+            >
+              <Icons.google className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+          </TabsContent>
+        </Tabs>
+      </Card>
     </div>
   );
 }
