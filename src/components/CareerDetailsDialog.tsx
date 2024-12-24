@@ -74,7 +74,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         },
         (payload) => {
           console.log('Received real-time update:', payload);
-          // Update the cache with the new data
           queryClient.setQueryData(['career', careerId], (oldData: CareerWithMajors | undefined) => {
             if (!oldData) return oldData;
             return {
@@ -133,7 +132,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
 
             <AboutSection
               description={career.description}
-              learning_objectives={career.learning_objectives}
+              learning_objectives={[]}
               industry={career.industry}
               work_environment={career.work_environment}
               growth_potential={career.growth_potential}
@@ -204,21 +203,21 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
             <SkillsAndTools
               required_skills={career.required_skills}
               required_tools={career.required_tools}
-              tools_knowledge={career.tools_knowledge}
-              skill_match={career.skill_match}
+              tools_knowledge={[]}
+              skill_match={[]}
               transferable_skills={career.transferable_skills}
               required_education={career.required_education}
             />
 
             <AdditionalInfo
-              professional_associations={career.professional_associations}
-              common_difficulties={career.common_difficulties}
-              certifications_to_consider={career.certifications_to_consider}
-              affiliated_programs={career.affiliated_programs}
+              professional_associations={[]}
+              common_difficulties={[]}
+              certifications_to_consider={[]}
+              affiliated_programs={[]}
               majors_to_consider_switching_to={career.careers_to_consider_switching_to}
-              job_prospects={career.job_prospects}
-              passion_for_subject={career.passion_for_subject}
-              global_applicability={career.global_applicability}
+              job_prospects={null}
+              passion_for_subject={null}
+              global_applicability={null}
             />
           </div>
         </ScrollArea>
