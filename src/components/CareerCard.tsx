@@ -15,7 +15,6 @@ export interface CareerCardProps {
   industry?: string;
   required_skills?: string[];
   stress_levels?: string;
-  featured?: boolean;
 }
 
 export function CareerCard({ 
@@ -42,7 +41,7 @@ export function CareerCard({
           {/* Header Section */}
           <div className="flex items-start gap-4 mb-4">
             {image_url ? (
-              <div className="h-16 w-16 rounded-lg overflow-hidden ring-2 ring-background shadow-lg">
+              <div className="h-24 w-24 rounded-lg overflow-hidden ring-2 ring-background shadow-lg">
                 <img 
                   src={image_url} 
                   alt={title}
@@ -50,8 +49,8 @@ export function CareerCard({
                 />
               </div>
             ) : (
-              <div className="h-16 w-16 rounded-lg bg-muted/50 flex items-center justify-center ring-2 ring-background shadow-lg">
-                <Briefcase className="h-8 w-8 text-muted-foreground/50" />
+              <div className="h-24 w-24 rounded-lg bg-muted/50 flex items-center justify-center ring-2 ring-background shadow-lg">
+                <Briefcase className="h-12 w-12 text-muted-foreground/50" />
               </div>
             )}
             
