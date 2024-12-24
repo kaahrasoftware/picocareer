@@ -12,45 +12,30 @@ import type { Database } from '@/integrations/supabase/types';
 import { useToast } from "@/hooks/use-toast";
 
 type TableName = 'majors' | 'schools' | 'careers' | 'companies';
+type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
 type TitleField = 'title' | 'name';
-type Status = Database['public']['Enums']['status'];
-
-interface Option {
-  id: string;
-  title?: string;
-  name?: string;
-}
 
 interface CustomSelectProps {
   value: string;
-  options: Option[];
+  options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
   handleSelectChange: (name: string, value: string) => void;
   tableName: TableName;
-  fieldName: string;
-  onCancel?: () => void;
+  fieldName: FieldName;
+  titleField: TitleField;
 }
 
 type TableInsertData = {
-  majors: {
-    title: string;
-    description: string;
-    status: Status;
-  };
-  schools: {
-    name: string;
-    status: Status;
-  };
-  careers: {
-    title: string;
-    description: string;
-    status: Status;
-  };
-  companies: {
-    name: string;
-    status: Status;
-  };
-};
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+  companies: Database['public']['Tables']['companies']['Insert'];
+  careers: Database['public']['Tables']['careers']['Insert'];
+}
+
+interface TableRecord {
+  id: string;
+  [key: string]: any;
+}
 
 export function SelectWithCustomOption({ 
   value, 
@@ -59,7 +44,7 @@ export function SelectWithCustomOption({
   handleSelectChange,
   tableName,
   fieldName,
-  onCancel
+  titleField,
 }: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
@@ -80,7 +65,7 @@ export function SelectWithCustomOption({
         .eq(titleField, customValue)
         .maybeSingle();
 
-      if (existingData) {
+      if (existingData && 'id' in existingData) {
         // If it exists, use the existing entry
         handleSelectChange(fieldName, existingData.id);
         setShowCustomInput(false);
@@ -88,35 +73,25 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // Prepare insert data based on table type
-      const baseData = {
-        status: 'Pending' as Status
-      };
-
-      let insertData: TableInsertData[TableName];
-
+      // If it doesn't exist, create a new entry
+      let insertData: Partial<TableInsertData[TableName]>;
+      
       if (tableName === 'majors') {
         insertData = {
-          ...baseData,
           title: customValue,
-          description: `Custom major: ${customValue}`
+          description: `Custom major: ${customValue}`,
+          status: 'Pending' as const
         };
       } else if (tableName === 'careers') {
         insertData = {
-          ...baseData,
           title: customValue,
-          description: `Position: ${customValue}`
-        };
-      } else if (tableName === 'schools') {
-        insertData = {
-          ...baseData,
-          name: customValue
+          description: `Position: ${customValue}`,
+          status: 'Pending' as const
         };
       } else {
-        // companies
         insertData = {
-          ...baseData,
-          name: customValue
+          name: customValue,
+          status: 'Pending' as const
         };
       }
 
@@ -136,7 +111,7 @@ export function SelectWithCustomOption({
         return;
       }
 
-      if (data) {
+      if (data && 'id' in data) {
         handleSelectChange(fieldName, data.id);
         setShowCustomInput(false);
         setCustomValue("");
@@ -155,7 +130,7 @@ export function SelectWithCustomOption({
     }
   };
 
-  const displayValue = (option: Option) => {
+  const displayValue = (option: { id: string; title?: string; name?: string }) => {
     return tableName === 'majors' || tableName === 'careers' 
       ? option.title 
       : option.name || '';
@@ -183,7 +158,6 @@ export function SelectWithCustomOption({
             onClick={() => {
               setShowCustomInput(false);
               setCustomValue("");
-              if (onCancel) onCancel();
             }}
             className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
           >
