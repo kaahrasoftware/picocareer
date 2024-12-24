@@ -65,7 +65,7 @@ export function SkillsAndTools({
 
       {renderSection(
         required_tools,
-        "Required Tools",
+        "Commonly Used Tools",
         badgeStyles.tools,
         <Wrench className="h-4 w-4 text-muted-foreground" />
       )}
