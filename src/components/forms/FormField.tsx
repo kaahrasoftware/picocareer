@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categories, subcategories } from "./blog/BlogFormFields";
+
+type SelectOption = string | { id: string; title?: string; name?: string };
 
 export interface FormFieldProps {
   name: string;
@@ -28,7 +29,7 @@ export interface FormFieldProps {
   type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect" | "select";
   bucket?: string;
   required?: boolean;
-  options?: Array<{ id: string; title?: string; name?: string }>;
+  options?: SelectOption[];
   dependsOn?: string;
   watch?: any;
   control?: any;
@@ -58,7 +59,7 @@ export function FormField({
   watch
 }: FormFieldProps) {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [availableOptions, setAvailableOptions] = useState<string[]>([...options]);
+  const [availableOptions, setAvailableOptions] = useState<string[]>([...options] as string[]);
   
   const watchDependency = dependsOn ? watch?.(dependsOn) : null;
   
@@ -70,6 +71,33 @@ export function FormField({
       setAvailableOptions(Array.from(new Set(newOptions)));
     }
   }, [dependsOn, watchDependency]);
+
+  if (type === "image") {
+    return (
+      <ImageUpload
+        control={control}
+        name={name}
+        label={label}
+        description={description}
+        bucket={bucket}
+      />
+    );
+  }
+
+  const renderSelectOption = (option: SelectOption) => {
+    if (typeof option === 'string') {
+      return (
+        <SelectItem key={option} value={option}>
+          {option}
+        </SelectItem>
+      );
+    }
+    return (
+      <SelectItem key={option.id} value={option.id}>
+        {option.title || option.name}
+      </SelectItem>
+    );
+  };
 
   return (
     <FormFieldBase
@@ -91,11 +119,7 @@ export function FormField({
                   <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {options.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.title || option.name}
-                    </SelectItem>
-                  ))}
+                  {options.map(renderSelectOption)}
                 </SelectContent>
               </Select>
             ) : type === "multiselect" ? (
