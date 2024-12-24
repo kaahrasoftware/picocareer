@@ -7,7 +7,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen">
       <div className="flex min-h-screen">
-        <div className="w-[40%] bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')] p-8 flex flex-col items-center justify-center">
+        <div className="w-[40%] bg-[#F1F0FB] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjRjFGMEZCIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiNFNUU1RTUiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')] p-8 flex flex-col items-center justify-center">
           <div className="max-w-md space-y-8 text-center">
             <div className="space-y-4">
               <div className="flex justify-center">
@@ -22,13 +22,13 @@ export default function Auth() {
                 alt="PicoCareer Title" 
                 className="h-10 w-auto mx-auto"
               />
-              <p className="text-lg text-gray-300">
+              <p className="text-lg text-gray-600">
                 Your Gateway to Career Success
               </p>
             </div>
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">Join Our Community</h2>
-              <p className="text-gray-300">
+              <h2 className="text-xl font-semibold text-gray-800">Join Our Community</h2>
+              <p className="text-gray-600">
                 Connect with mentors, explore careers, and shape your future with PicoCareer.
               </p>
             </div>
