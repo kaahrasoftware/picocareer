@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,6 @@ interface ContentUploadFormProps {
 
 export function ContentUploadForm({ onSubmit, fields, buttonText = "Upload Career" }: ContentUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const form = useForm<CareerFormValues>({
