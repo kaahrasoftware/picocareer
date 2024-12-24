@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
 import { CareerHeader } from "./career/CareerHeader";
 import { BadgeSection } from "./career/BadgeSection";
+import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
 
 export interface CareerCardProps {
   id: string;
@@ -16,6 +18,7 @@ export interface CareerCardProps {
   required_tools?: string[];
   required_education?: string[];
   academic_majors?: string[];
+  profiles_count?: number;
 }
 
 export function CareerCard({ 
@@ -29,6 +32,7 @@ export function CareerCard({
   required_tools,
   required_education,
   academic_majors,
+  profiles_count = 0,
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -38,6 +42,13 @@ export function CareerCard({
         <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="relative flex flex-col h-full">
+          <div className="absolute top-0 right-0">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{profiles_count} mentors</span>
+            </Badge>
+          </div>
+
           <CareerHeader 
             title={title}
             industry={industry}
