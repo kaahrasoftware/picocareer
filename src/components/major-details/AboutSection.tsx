@@ -25,7 +25,7 @@ export function AboutSection({
 }: AboutSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
-  const mentorsPerPage = 8;
+  const MENTORS_PER_PAGE = 6; // Adjusted to match CareerMentorList
 
   const { data: totalCount } = useQuery({
     queryKey: ['major-mentors-count', majorId],
@@ -45,8 +45,8 @@ export function AboutSection({
   const { data: mentors } = useQuery({
     queryKey: ['major-mentors', majorId, currentPage],
     queryFn: async () => {
-      const start = (currentPage - 1) * mentorsPerPage;
-      const end = start + mentorsPerPage - 1;
+      const start = (currentPage - 1) * MENTORS_PER_PAGE;
+      const end = start + MENTORS_PER_PAGE - 1;
 
       const { data, error } = await supabase
         .from('profiles')
@@ -69,7 +69,7 @@ export function AboutSection({
     enabled: !!majorId,
   });
 
-  const totalPages = Math.ceil((totalCount || 0) / mentorsPerPage);
+  const totalPages = Math.ceil((totalCount || 0) / MENTORS_PER_PAGE);
 
   return (
     <div className="space-y-4">
@@ -78,7 +78,7 @@ export function AboutSection({
           <h5 className="text-sm font-medium mb-3">Mentors with this major</h5>
           <ScrollArea className="w-full pb-2">
             <div className="flex justify-center min-w-full py-2">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {mentors.map((mentor) => (
                   <Card 
                     key={mentor.id}
