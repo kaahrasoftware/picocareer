@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const createProfile = async (userId: string, email: string) => {
     try {
@@ -94,7 +96,7 @@ export default function AuthPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, queryClient]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
