@@ -1,7 +1,3 @@
-import { Profile } from '@/types/database/profiles';
-import { Career } from '@/types/database/careers';
-import { RelationsTables } from '@/types/database/relations';
-
 export type Json =
   | string
   | number
@@ -10,19 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
-      profiles: {
-        Row: Profile;
-        Insert: Omit<Profile, 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Profile, 'id'>>;
-      };
-      careers: {
-        Row: Career;
-        Insert: Omit<Career, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Career, 'id'>>;
-      };
       blogs: {
         Row: {
           author_id: string
@@ -66,6 +52,15 @@ export interface Database {
           title?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "blogs_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_events: {
         Row: {
@@ -98,6 +93,121 @@ export interface Database {
           title?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      career_major_relations: {
+        Row: {
+          career_id: string
+          major_id: string
+          relevance_score: number | null
+        }
+        Insert: {
+          career_id: string
+          major_id: string
+          relevance_score?: number | null
+        }
+        Update: {
+          career_id?: string
+          major_id?: string
+          relevance_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_major_relations_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_major_relations_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      careers: {
+        Row: {
+          academic_majors: string[] | null
+          careers_to_consider_switching_to: string[] | null
+          created_at: string
+          description: string
+          featured: boolean | null
+          growth_potential: string | null
+          id: string
+          image_url: string | null
+          industry: string | null
+          job_outlook: string | null
+          keywords: string[] | null
+          new_career: boolean | null
+          popular: boolean | null
+          profiles_count: number | null
+          rare: boolean | null
+          required_education: string[] | null
+          required_skills: string[] | null
+          required_tools: string[] | null
+          salary_range: string | null
+          stress_levels: string | null
+          title: string
+          transferable_skills: string[] | null
+          updated_at: string
+          work_environment: string | null
+        }
+        Insert: {
+          academic_majors?: string[] | null
+          careers_to_consider_switching_to?: string[] | null
+          created_at?: string
+          description: string
+          featured?: boolean | null
+          growth_potential?: string | null
+          id?: string
+          image_url?: string | null
+          industry?: string | null
+          job_outlook?: string | null
+          keywords?: string[] | null
+          new_career?: boolean | null
+          popular?: boolean | null
+          profiles_count?: number | null
+          rare?: boolean | null
+          required_education?: string[] | null
+          required_skills?: string[] | null
+          required_tools?: string[] | null
+          salary_range?: string | null
+          stress_levels?: string | null
+          title: string
+          transferable_skills?: string[] | null
+          updated_at?: string
+          work_environment?: string | null
+        }
+        Update: {
+          academic_majors?: string[] | null
+          careers_to_consider_switching_to?: string[] | null
+          created_at?: string
+          description?: string
+          featured?: boolean | null
+          growth_potential?: string | null
+          id?: string
+          image_url?: string | null
+          industry?: string | null
+          job_outlook?: string | null
+          keywords?: string[] | null
+          new_career?: boolean | null
+          popular?: boolean | null
+          profiles_count?: number | null
+          rare?: boolean | null
+          required_education?: string[] | null
+          required_skills?: string[] | null
+          required_tools?: string[] | null
+          salary_range?: string | null
+          stress_levels?: string | null
+          title?: string
+          transferable_skills?: string[] | null
+          updated_at?: string
+          work_environment?: string | null
+        }
+        Relationships: []
       }
       companies: {
         Row: {
@@ -124,6 +234,7 @@ export interface Database {
           updated_at?: string
           website?: string | null
         }
+        Relationships: []
       }
       majors: {
         Row: {
@@ -216,6 +327,7 @@ export interface Database {
           transferable_skills?: string[] | null
           updated_at?: string
         }
+        Relationships: []
       }
       mentor_availability: {
         Row: {
@@ -257,6 +369,15 @@ export interface Database {
           timezone?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_availability_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mentor_session_types: {
         Row: {
@@ -289,6 +410,15 @@ export interface Database {
           type?: Database["public"]["Enums"]["session_type"]
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_session_types_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mentor_sessions: {
         Row: {
@@ -324,6 +454,72 @@ export interface Database {
           status?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_sessions_mentee_id_fkey"
+            columns: ["mentee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_sessions_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_sessions_session_type_id_fkey"
+            columns: ["session_type_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_session_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentor_specializations: {
+        Row: {
+          career_id: string
+          major_id: string
+          profile_id: string
+          years_of_experience: number | null
+        }
+        Insert: {
+          career_id: string
+          major_id: string
+          profile_id: string
+          years_of_experience?: number | null
+        }
+        Update: {
+          career_id?: string
+          major_id?: string
+          profile_id?: string
+          years_of_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_specializations_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_specializations_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_specializations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -359,6 +555,131 @@ export interface Database {
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          academic_major_id: string | null
+          avatar_url: string | null
+          bio: string | null
+          company_id: string | null
+          created_at: string
+          email: string
+          fields_of_interest: string[] | null
+          first_name: string | null
+          full_name: string | null
+          github_url: string | null
+          highest_degree: Database["public"]["Enums"]["degree"] | null
+          id: string
+          keywords: string[] | null
+          last_name: string | null
+          linkedin_url: string | null
+          location: string | null
+          position: string | null
+          school_id: string | null
+          skills: string[] | null
+          tools_used: string[] | null
+          top_mentor: boolean | null
+          total_booked_sessions: number | null
+          updated_at: string
+          user_type: Database["public"]["Enums"]["user_type"] | null
+          website_url: string | null
+          years_of_experience: number | null
+        }
+        Insert: {
+          academic_major_id?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_id?: string | null
+          created_at?: string
+          email: string
+          fields_of_interest?: string[] | null
+          first_name?: string | null
+          full_name?: string | null
+          github_url?: string | null
+          highest_degree?: Database["public"]["Enums"]["degree"] | null
+          id: string
+          keywords?: string[] | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          position?: string | null
+          school_id?: string | null
+          skills?: string[] | null
+          tools_used?: string[] | null
+          top_mentor?: boolean | null
+          total_booked_sessions?: number | null
+          updated_at?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
+          website_url?: string | null
+          years_of_experience?: number | null
+        }
+        Update: {
+          academic_major_id?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          fields_of_interest?: string[] | null
+          first_name?: string | null
+          full_name?: string | null
+          github_url?: string | null
+          highest_degree?: Database["public"]["Enums"]["degree"] | null
+          id?: string
+          keywords?: string[] | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          position?: string | null
+          school_id?: string | null
+          skills?: string[] | null
+          tools_used?: string[] | null
+          top_mentor?: boolean | null
+          total_booked_sessions?: number | null
+          updated_at?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
+          website_url?: string | null
+          years_of_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_academic_major_id_fkey"
+            columns: ["academic_major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_position_fkey"
+            columns: ["position"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {
@@ -388,6 +709,7 @@ export interface Database {
           updated_at?: string
           website?: string | null
         }
+        Relationships: []
       }
       video_comments: {
         Row: {
@@ -414,6 +736,22 @@ export interface Database {
           updated_at?: string
           video_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "video_comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_interactions: {
         Row: {
@@ -437,6 +775,22 @@ export interface Database {
           profile_id?: string
           video_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "video_interactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_interactions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_views: {
         Row: {
@@ -466,6 +820,22 @@ export interface Database {
           video_id?: string
           watch_time?: number
         }
+        Relationships: [
+          {
+            foreignKeyName: "video_views_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       videos: {
         Row: {
@@ -510,6 +880,15 @@ export interface Database {
           updated_at?: string
           video_url?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "videos_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

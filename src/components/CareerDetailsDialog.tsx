@@ -45,6 +45,7 @@ type CareerWithMajors = Tables<"careers"> & {
   job_prospects?: string;
   passion_for_subject?: string;
   global_applicability?: string;
+  profiles_count?: number;
 };
 
 export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
@@ -66,7 +67,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
-    // Refetch every 10 seconds to get updated profiles_count
     refetchInterval: 10000,
   });
 
