@@ -31,17 +31,28 @@ export function ContentDetailsDialog({
   const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['content-details', contentType],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(contentType)
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        console.log('Fetching content with query:', { statusFilter, contentType });
+        
+        let query = supabase
+          .from(contentType)
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) {
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+
+        console.log('Fetched items:', data);
+        return data || [];
+      } catch (error) {
         console.error('Error fetching content:', error);
+        toast.error('Failed to fetch content. Please try again.');
         throw error;
       }
-
-      return data || [];
     },
     enabled: open,
   });
@@ -50,6 +61,8 @@ export function ContentDetailsDialog({
   useEffect(() => {
     if (!open) return;
 
+    console.log('Setting up real-time subscription for:', contentType);
+    
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -67,12 +80,15 @@ export function ContentDetailsDialog({
       .subscribe();
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [open, contentType, refetch]);
 
   const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
     try {
+      console.log('Updating status:', { itemId, newStatus });
+      
       const { error } = await supabase
         .from(contentType)
         .update({ status: newStatus })
