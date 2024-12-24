@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
-type TableName = 'majors' | 'schools';
+type TableName = 'majors' | 'schools' | 'careers';
 
 interface CustomSelectProps {
   value: string;
@@ -22,14 +22,9 @@ interface CustomSelectProps {
   onCancel: () => void;
 }
 
-type InsertData = {
-  majors: Database['public']['Tables']['majors']['Insert'];
-  schools: Database['public']['Tables']['schools']['Insert'];
-}
-
 export function SelectWithCustomOption({ 
   value, 
-  options, 
+  options: initialOptions, 
   placeholder, 
   tableName,
   onSelect,
@@ -39,13 +34,31 @@ export function SelectWithCustomOption({
   const [customValue, setCustomValue] = useState("");
   const { toast } = useToast();
 
+  // Fetch options based on table name
+  const { data: options } = useQuery({
+    queryKey: [tableName],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('id, title, name')
+        .eq('status', 'Approved')
+        .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+      
+      if (error) {
+        console.error(`Error fetching ${tableName}:`, error);
+        return [];
+      }
+      return data || [];
+    },
+  });
+
   const handleCustomSubmit = async () => {
     try {
       // First, check if entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
         .select('*')
-        .eq(tableName === 'majors' ? 'title' : 'name', customValue)
+        .eq(tableName === 'careers' ? 'title' : 'name', customValue)
         .maybeSingle();
 
       if (existingError) {
@@ -67,18 +80,16 @@ export function SelectWithCustomOption({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: InsertData[TableName];
-      
-      if (tableName === 'majors') {
-        insertData = {
-          title: customValue,
-          description: `Custom major: ${customValue}`
-        } as InsertData['majors'];
-      } else {
-        insertData = {
-          name: customValue
-        } as InsertData['schools'];
-      }
+      const insertData = tableName === 'careers' 
+        ? {
+            title: customValue,
+            description: `Career in ${customValue}`,
+            status: 'Pending'
+          }
+        : {
+            name: customValue,
+            status: 'Pending'
+          };
 
       const { data, error } = await supabase
         .from(tableName)
@@ -102,7 +113,7 @@ export function SelectWithCustomOption({
         setCustomValue("");
         toast({
           title: "Success",
-          description: `Successfully added new ${tableName === 'majors' ? 'major' : 'school'}.`,
+          description: `Successfully added new ${tableName === 'careers' ? 'career' : 'school'}. It will be reviewed by an admin.`,
         });
       }
     } catch (error) {
@@ -121,7 +132,7 @@ export function SelectWithCustomOption({
         <Input
           value={customValue}
           onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName === 'majors' ? 'major' : 'school'} name`}
+          placeholder={`Enter ${tableName === 'careers' ? 'career' : 'school'} name`}
           className="mt-1"
         />
         <div className="flex gap-2">
@@ -163,7 +174,7 @@ export function SelectWithCustomOption({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => (
+        {options?.map((option) => (
           <SelectItem key={option.id} value={option.id}>
             {option.title || option.name}
           </SelectItem>
