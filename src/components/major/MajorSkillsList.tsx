@@ -32,7 +32,7 @@ export function MajorSkillsList({ title, items, icon, badgeStyle }: MajorSkillsL
       case "tools":
         return "bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]";
       case "courses":
-        return "bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]";
+        return "bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]";
       default:
         return "";
     }
