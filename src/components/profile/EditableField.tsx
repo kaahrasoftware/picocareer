@@ -64,24 +64,40 @@ export function EditableField({
       const table = tableMap[fieldName as FieldName];
       const titleField: TitleField = fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
 
-      const { data, error } = await supabase
-        .from(table)
-        .select(`id, ${titleField}`)
-        .eq('status', 'Approved')
-        .order(titleField);
-      
-      if (error) {
-        console.error('Error fetching options:', error);
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select(`id, ${titleField}`)
+          .eq('status', 'Approved')
+          .order(titleField);
+        
+        if (error) {
+          console.error('Error fetching options:', error);
+          return [];
+        }
+
+        if (!data) return [];
+
+        // Type guard to ensure data has the correct shape
+        const isValidRecord = (item: any): item is { id: string; [key: string]: any } => {
+          return typeof item.id === 'string' && (
+            typeof item.title === 'string' || 
+            typeof item.name === 'string'
+          );
+        };
+
+        // Filter and map the data to ensure it matches our TableRecord interface
+        return data
+          .filter(isValidRecord)
+          .map(item => ({
+            id: item.id,
+            ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
+          }));
+
+      } catch (error) {
+        console.error('Error in query:', error);
         return [];
       }
-
-      if (!data) return [];
-
-      // Ensure the data matches our TableRecord interface
-      return data.map(item => ({
-        id: item.id,
-        ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
-      })) as TableRecord[];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });
