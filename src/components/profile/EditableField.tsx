@@ -75,8 +75,10 @@ export function EditableField({
         return [];
       }
 
+      if (!data) return [];
+
       // Ensure the data matches our TableRecord interface
-      return (data || []).map(item => ({
+      return data.map(item => ({
         id: item.id,
         ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
       })) as TableRecord[];
