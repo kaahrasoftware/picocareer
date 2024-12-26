@@ -57,13 +57,11 @@ export function MentorTab({ profile }: MentorTabProps) {
       const upcoming_sessions = sessions.filter(s => s.status === 'upcoming').length;
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
       
-      // Calculate total hours from session durations
       const total_hours = sessions.reduce((acc, session) => {
         const sessionType = sessionTypesResponse.data.find(st => st.id === session.session_type_id);
         return acc + (sessionType ? sessionType.duration / 60 : 0);
       }, 0);
 
-      // Prepare data for the chart
       const session_data = Array.from({ length: 6 }, (_, i) => {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
@@ -134,58 +132,55 @@ export function MentorTab({ profile }: MentorTabProps) {
           setIsEditing={setIsEditing}
         />
       ) : (
-        <>
-          {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Mentor Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="overview" className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger value="availability" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Availability
-                  </TabsTrigger>
-                  <TabsTrigger value="sessions" className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Session Types
-                  </TabsTrigger>
-                </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>Mentor Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="availability" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Availability
+                </TabsTrigger>
+                <TabsTrigger value="sessions" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Session Types
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="overview">
-                  <MentorDetails mentorData={mentorData} />
-                  <Button 
-                    onClick={() => setIsEditing(true)}
-                    className="w-full mt-4"
-                  >
-                    Edit Mentor Details
-                  </Button>
-                </TabsContent>
+              <TabsContent value="overview">
+                {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
+                <MentorDetails mentorData={mentorData} />
+                <Button 
+                  onClick={() => setIsEditing(true)}
+                  className="w-full mt-4"
+                >
+                  Edit Mentor Details
+                </Button>
+              </TabsContent>
 
-                <TabsContent value="availability" className="mt-0">
-                  <AvailabilityManager 
-                    profileId={profile.id} 
-                    onUpdate={handleUpdate}
-                  />
-                </TabsContent>
+              <TabsContent value="availability" className="mt-0">
+                <AvailabilityManager 
+                  profileId={profile.id} 
+                  onUpdate={handleUpdate}
+                />
+              </TabsContent>
 
-                <TabsContent value="sessions" className="mt-0">
-                  <SessionTypeManager
-                    profileId={profile.id}
-                    sessionTypes={mentorData?.sessionTypes || []}
-                    onUpdate={handleUpdate}
-                  />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </>
+              <TabsContent value="sessions" className="mt-0">
+                <SessionTypeManager
+                  profileId={profile.id}
+                  sessionTypes={mentorData?.sessionTypes || []}
+                  onUpdate={handleUpdate}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
