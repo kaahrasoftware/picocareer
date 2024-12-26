@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,17 +33,39 @@ export function MentorFilters({
   sessionFilter,
   setSessionFilter,
 }: MentorFiltersProps) {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLDivElement;
+      setIsScrolled(target.scrollTop > 20);
+    };
+
+    const dialogContent = document.querySelector('.max-h-\\[80vh\\]');
+    dialogContent?.addEventListener('scroll', handleScroll);
+
+    return () => {
+      dialogContent?.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 transition-all duration-200 ${
+      isScrolled ? 'gap-2 p-2' : ''
+    }`}>
       <Input
         placeholder="Search mentors..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full"
+        className={`w-full transition-all duration-200 ${
+          isScrolled ? 'h-8 text-sm' : 'h-10'
+        }`}
       />
       
       <Select value={companyFilter} onValueChange={setCompanyFilter}>
-        <SelectTrigger>
+        <SelectTrigger className={`transition-all duration-200 ${
+          isScrolled ? 'h-8 text-sm' : 'h-10'
+        }`}>
           <SelectValue placeholder="Company" />
         </SelectTrigger>
         <SelectContent>
@@ -55,7 +78,9 @@ export function MentorFilters({
       </Select>
 
       <Select value={educationFilter} onValueChange={setEducationFilter}>
-        <SelectTrigger>
+        <SelectTrigger className={`transition-all duration-200 ${
+          isScrolled ? 'h-8 text-sm' : 'h-10'
+        }`}>
           <SelectValue placeholder="Education" />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +92,9 @@ export function MentorFilters({
       </Select>
 
       <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-        <SelectTrigger>
+        <SelectTrigger className={`transition-all duration-200 ${
+          isScrolled ? 'h-8 text-sm' : 'h-10'
+        }`}>
           <SelectValue placeholder="Experience Level" />
         </SelectTrigger>
         <SelectContent>
@@ -80,7 +107,9 @@ export function MentorFilters({
       </Select>
 
       <Select value={sessionFilter} onValueChange={setSessionFilter}>
-        <SelectTrigger>
+        <SelectTrigger className={`transition-all duration-200 ${
+          isScrolled ? 'h-8 text-sm' : 'h-10'
+        }`}>
           <SelectValue placeholder="Sessions Held" />
         </SelectTrigger>
         <SelectContent>
