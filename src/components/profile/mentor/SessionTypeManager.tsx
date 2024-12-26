@@ -6,14 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-interface SessionType {
-  id: string;
-  type: string;
-  duration: number;
-  price: number;
-  description: string | null;
-}
+type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
 interface SessionTypeManagerProps {
   profileId: string;
@@ -22,7 +17,7 @@ interface SessionTypeManagerProps {
 }
 
 export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: SessionTypeManagerProps) {
-  const [type, setType] = React.useState('Introduction');
+  const [type, setType] = React.useState<Database["public"]["Enums"]["session_type"]>("Introduction");
   const [duration, setDuration] = React.useState('30');
   const [price, setPrice] = React.useState('0');
   const [description, setDescription] = React.useState('');
@@ -50,7 +45,7 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
       onUpdate();
       
       // Reset form
-      setType('Introduction');
+      setType("Introduction");
       setDuration('30');
       setPrice('0');
       setDescription('');
@@ -63,6 +58,14 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
       });
     }
   };
+
+  const sessionTypeOptions: Database["public"]["Enums"]["session_type"][] = [
+    "Introduction",
+    "Quick-Advice",
+    "Walkthrough",
+    "Group (2-3 Mentees)",
+    "Group (4-6 Mentees)"
+  ];
 
   return (
     <Card>
@@ -87,16 +90,19 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
         </div>
 
         <div className="space-y-4 pt-4 border-t">
-          <Select value={type} onValueChange={setType}>
+          <Select
+            value={type}
+            onValueChange={(value: Database["public"]["Enums"]["session_type"]) => setType(value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select session type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Introduction">Introduction</SelectItem>
-              <SelectItem value="Quick-Advice">Quick Advice</SelectItem>
-              <SelectItem value="Walkthrough">Walkthrough</SelectItem>
-              <SelectItem value="Group (2-3 Mentees)">Group (2-3 Mentees)</SelectItem>
-              <SelectItem value="Group (4-6 Mentees)">Group (4-6 Mentees)</SelectItem>
+              {sessionTypeOptions.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
