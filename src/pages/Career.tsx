@@ -1,17 +1,6 @@
 import { useState } from "react";
 import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -20,6 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Career() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -41,8 +33,6 @@ export default function Career() {
     },
   });
 
-  const featuredCareers = careers.filter(career => career.featured);
-  
   const filteredCareers = careers.filter((career) => {
     const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesIndustry = industryFilter === "all" || career.industry === industryFilter;
@@ -71,50 +61,6 @@ export default function Career() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col space-y-12">
-        {/* Featured Careers Section */}
-        <section className="bg-gradient-to-br from-background/50 to-background/80 rounded-xl p-8 border shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-                Featured Careers
-              </h2>
-              <p className="text-muted-foreground mt-2">
-                Explore our handpicked selection of trending career paths
-              </p>
-            </div>
-            <button 
-              onClick={() => setIsDialogOpen(true)}
-              className="text-primary hover:text-primary/80 transition-colors font-medium"
-            >
-              View all
-            </button>
-          </div>
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 5000,
-                stopOnInteraction: true,
-                stopOnMouseEnter: true,
-              }),
-            ]}
-            className="w-full"
-          >
-            <CarouselContent>
-              {featuredCareers.map((career) => (
-                <CarouselItem key={career.id} className="basis-full md:basis-1/2 lg:basis-1/3 pl-4">
-                  <CareerCard {...career} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-4" />
-            <CarouselNext className="hidden md:flex -right-4" />
-          </Carousel>
-        </section>
-
         {/* Search and Filter Section */}
         <section className="space-y-8">
           <div>
