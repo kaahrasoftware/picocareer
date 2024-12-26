@@ -46,6 +46,7 @@ export function TimeSlotSelector({
   };
 
   const timeSlots = generateTimeSlots();
+  console.log("Generated time slots in selector:", timeSlots);
 
   return (
     <div>

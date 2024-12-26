@@ -70,7 +70,6 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
-        // Parse the time strings (HH:mm format)
         const startTime = parse(availability.start_time, 'HH:mm', new Date());
         const endTime = parse(availability.end_time, 'HH:mm', new Date());
         
@@ -80,11 +79,8 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         while (currentTime < endTime) {
           const timeString = format(currentTime, 'HH:mm');
           const isBooked = bookingsData?.some(booking => {
-            const bookingHour = new Date(booking.scheduled_at).getHours();
-            const bookingMinute = new Date(booking.scheduled_at).getMinutes();
-            const slotHour = currentTime.getHours();
-            const slotMinute = currentTime.getMinutes();
-            return bookingHour === slotHour && bookingMinute === slotMinute;
+            const bookingTime = new Date(booking.scheduled_at);
+            return format(bookingTime, 'HH:mm') === timeString;
           });
 
           slots.push({
