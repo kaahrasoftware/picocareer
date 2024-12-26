@@ -403,6 +403,9 @@ export type Database = {
           description: string | null
           duration: number
           id: string
+          meeting_platform:
+            | Database["public"]["Enums"]["meeting_platform"][]
+            | null
           price: number
           profile_id: string
           type: Database["public"]["Enums"]["session_type"]
@@ -413,6 +416,9 @@ export type Database = {
           description?: string | null
           duration: number
           id?: string
+          meeting_platform?:
+            | Database["public"]["Enums"]["meeting_platform"][]
+            | null
           price: number
           profile_id: string
           type: Database["public"]["Enums"]["session_type"]
@@ -423,6 +429,9 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: string
+          meeting_platform?:
+            | Database["public"]["Enums"]["meeting_platform"][]
+            | null
           price?: number
           profile_id?: string
           type?: Database["public"]["Enums"]["session_type"]
@@ -440,8 +449,13 @@ export type Database = {
       }
       mentor_sessions: {
         Row: {
+          calendar_event_id: string | null
           created_at: string
           id: string
+          meeting_link: string | null
+          meeting_platform:
+            | Database["public"]["Enums"]["meeting_platform"]
+            | null
           mentee_id: string
           mentor_id: string
           notes: string | null
@@ -451,8 +465,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          calendar_event_id?: string | null
           created_at?: string
           id?: string
+          meeting_link?: string | null
+          meeting_platform?:
+            | Database["public"]["Enums"]["meeting_platform"]
+            | null
           mentee_id: string
           mentor_id: string
           notes?: string | null
@@ -462,8 +481,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          calendar_event_id?: string | null
           created_at?: string
           id?: string
+          meeting_link?: string | null
+          meeting_platform?:
+            | Database["public"]["Enums"]["meeting_platform"]
+            | null
           mentee_id?: string
           mentor_id?: string
           notes?: string | null
@@ -1072,6 +1096,7 @@ export type Database = {
         | "Ewe"
         | "Twi"
         | "Anufo"
+      meeting_platform: "google_meet" | "whatsapp" | "telegram"
       notification_type:
         | "session_booked"
         | "session_cancelled"
