@@ -6,6 +6,7 @@ interface BookSessionParams {
   selectedTime: string;
   sessionTypeId: string;
   note: string;
+  meetingPlatform: string;
 }
 
 interface BookSessionResult {
@@ -15,7 +16,14 @@ interface BookSessionResult {
 }
 
 export function useBookSession() {
-  const bookSession = async ({ mentorId, date, selectedTime, sessionTypeId, note }: BookSessionParams): Promise<BookSessionResult> => {
+  const bookSession = async ({ 
+    mentorId, 
+    date, 
+    selectedTime, 
+    sessionTypeId, 
+    note,
+    meetingPlatform 
+  }: BookSessionParams): Promise<BookSessionResult> => {
     if (!date || !selectedTime || !sessionTypeId || !mentorId) {
       return { success: false, error: "Missing required fields" };
     }
@@ -33,6 +41,7 @@ export function useBookSession() {
           session_type_id: sessionTypeId,
           scheduled_at: scheduledAt.toISOString(),
           notes: note,
+          meeting_platform: meetingPlatform,
         })
         .select()
         .single();

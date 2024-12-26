@@ -10,6 +10,7 @@ import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useBookSession } from "@/hooks/useBookSession";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -26,6 +27,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
+  const [meetingPlatform, setMeetingPlatform] = useState<string>("google_meet");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { toast } = useToast();
@@ -47,10 +49,27 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         selectedTime,
         sessionTypeId: sessionType,
         note,
+        meetingPlatform,
       });
 
       if (!sessionResult.success) {
         throw new Error(sessionResult.error || 'Failed to book session');
+      }
+
+      // Create Google Meet link if selected
+      if (meetingPlatform === 'google_meet') {
+        const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
+          body: { sessionId: sessionResult.sessionId }
+        });
+
+        if (meetError) {
+          console.error('Error creating meet link:', meetError);
+          toast({
+            title: "Warning",
+            description: "Session booked, but there was an issue creating the meeting link.",
+            variant: "destructive"
+          });
+        }
       }
 
       // Schedule notifications and send confirmation emails
@@ -126,6 +145,20 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                 selectedSessionType={selectedSessionTypeDetails}
               />
             )}
+
+            <div>
+              <h4 className="font-semibold mb-2">Meeting Platform</h4>
+              <Select value={meetingPlatform} onValueChange={setMeetingPlatform}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select meeting platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="google_meet">Google Meet</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="telegram">Telegram</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <SessionNote
               note={note}
