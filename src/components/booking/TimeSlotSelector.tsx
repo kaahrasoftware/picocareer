@@ -13,6 +13,7 @@ interface TimeSlotSelectorProps {
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
   selectedSessionType: SessionType | undefined;
+  title?: string;
 }
 
 export function TimeSlotSelector({ 
@@ -20,7 +21,8 @@ export function TimeSlotSelector({
   availableTimeSlots, 
   selectedTime, 
   onTimeSelect,
-  selectedSessionType
+  selectedSessionType,
+  title = "Start Time"
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
@@ -62,7 +64,7 @@ export function TimeSlotSelector({
         </p>
       )}
       <TimeSlotsGrid
-        title="Start Time"
+        title={title}
         timeSlots={timeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}

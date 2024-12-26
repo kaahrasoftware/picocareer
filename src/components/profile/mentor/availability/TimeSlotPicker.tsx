@@ -40,6 +40,7 @@ export function TimeSlotPicker({
             selectedTime={selectedEndTime}
             onTimeSelect={onEndTimeSelect}
             selectedSessionType={undefined}
+            title="End Time"
           />
         </div>
       </div>
