@@ -12,6 +12,7 @@ interface SkillsFilterProps {
   onSkillSearchChange: (value: string) => void;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  className?: string;
 }
 
 export function SkillsFilter({
@@ -22,6 +23,7 @@ export function SkillsFilter({
   onSkillSearchChange,
   isOpen,
   onOpenChange,
+  className,
 }: SkillsFilterProps) {
   const commandRef = useRef<HTMLDivElement>(null);
   const filteredSkills = allSkills.filter(skill => 
@@ -42,12 +44,13 @@ export function SkillsFilter({
   }, [onOpenChange]);
 
   return (
-    <Command className="rounded-lg border shadow-md" ref={commandRef}>
+    <Command className={cn("rounded-lg border shadow-md", className)} ref={commandRef}>
       <CommandInput 
         placeholder="Search skills..." 
         value={skillSearchQuery}
         onValueChange={onSkillSearchChange}
         onFocus={() => onOpenChange(true)}
+        className={className}
       />
       {isOpen && (
         <CommandList>

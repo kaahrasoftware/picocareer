@@ -5,12 +5,13 @@ interface SelectFilterProps {
   onValueChange: (value: string | null) => void;
   placeholder: string;
   options: string[];
+  className?: string;
 }
 
-export function SelectFilter({ value, onValueChange, placeholder, options }: SelectFilterProps) {
+export function SelectFilter({ value, onValueChange, placeholder, options, className }: SelectFilterProps) {
   return (
     <Select value={value || "all"} onValueChange={(value) => onValueChange(value === "all" ? null : value)}>
-      <SelectTrigger>
+      <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
