@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { Clock, DollarSign, FileText } from "lucide-react";
+import { Clock, DollarSign, FileText, Trash2 } from "lucide-react";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -60,6 +60,31 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
     }
   };
 
+  const handleDeleteSessionType = async (sessionTypeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('mentor_session_types')
+        .delete()
+        .eq('id', sessionTypeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Session type removed successfully",
+      });
+      
+      onUpdate();
+    } catch (error) {
+      console.error('Error deleting session type:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove session type",
+        variant: "destructive",
+      });
+    }
+  };
+
   const sessionTypeOptions: Database["public"]["Enums"]["session_type"][] = [
     "Introduction",
     "Quick-Advice",
@@ -76,17 +101,26 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
       <CardContent className="space-y-6">
         {/* Existing Session Types */}
         {sessionTypes.length > 0 && (
-          <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sessionTypes.map((sessionType) => (
               <div 
                 key={sessionType.id} 
-                className="bg-muted/50 p-4 rounded-lg space-y-2"
+                className="bg-card border rounded-lg p-4 space-y-2 relative group hover:shadow-md transition-shadow"
               >
-                <h4 className="font-medium text-lg">{sessionType.type}</h4>
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => handleDeleteSessionType(sessionType.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                
+                <h4 className="font-medium text-lg pr-8">{sessionType.type}</h4>
+                <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    {sessionType.duration} minutes
+                    {sessionType.duration} min
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
@@ -94,9 +128,9 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
                   </div>
                 </div>
                 {sessionType.description && (
-                  <div className="flex items-start gap-1 text-sm">
+                  <div className="flex items-start gap-1 text-sm text-muted-foreground">
                     <FileText className="h-4 w-4 mt-1 flex-shrink-0" />
-                    <p>{sessionType.description}</p>
+                    <p className="line-clamp-2">{sessionType.description}</p>
                   </div>
                 )}
               </div>
