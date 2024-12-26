@@ -6,7 +6,7 @@ import { InputField } from "./editable/InputField";
 import { SelectField } from "./editable/SelectField";
 import { CustomSelect } from "./editable/CustomSelect";
 import { useFieldOptions } from "./editable/useFieldOptions";
-import { EditableFieldProps } from "./editable/types";
+import { EditableFieldProps, FieldName } from "./editable/types";
 
 const degreeOptions = [
   "No Degree",
@@ -74,7 +74,7 @@ export function EditableField({
           options={options}
           placeholder={`Select a ${label.toLowerCase()}`}
           tableName={tableName}
-          fieldName={fieldName}
+          fieldName={fieldName as FieldName}
           titleField={titleField}
           onSave={updateField}
           onCancel={() => {
