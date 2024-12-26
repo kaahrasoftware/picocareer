@@ -138,15 +138,24 @@ export function MentorTab({ profile }: MentorTabProps) {
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="overview" 
+                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Settings className="h-4 w-4" />
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="availability" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="availability" 
+                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Calendar className="h-4 w-4" />
                   Availability
                 </TabsTrigger>
-                <TabsTrigger value="sessions" className="flex items-center gap-2">
+                <TabsTrigger 
+                  value="sessions" 
+                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Clock className="h-4 w-4" />
                   Session Types
                 </TabsTrigger>
