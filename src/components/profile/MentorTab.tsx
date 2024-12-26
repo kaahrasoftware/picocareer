@@ -68,7 +68,7 @@ export function MentorTab({ profile }: MentorTabProps) {
         specializations: formattedSpecializations
       };
     },
-    enabled: !!profile?.id && profile.user_type === 'mentor'
+    enabled: !!profile?.id
   });
 
   if (isLoading) {
@@ -81,11 +81,14 @@ export function MentorTab({ profile }: MentorTabProps) {
 
   if (!profile) return null;
 
-  if (profile.user_type !== 'mentor') {
+  // Allow access for mentors, editors, and admins
+  const canAccessMentorTab = ['mentor', 'editor', 'admin'].includes(profile.user_type || '');
+
+  if (!canAccessMentorTab) {
     return (
       <div className="text-center p-8">
         <p className="text-muted-foreground">
-          You need to be registered as a mentor to access this section.
+          You need to be registered as a mentor, editor, or admin to access this section.
         </p>
       </div>
     );
