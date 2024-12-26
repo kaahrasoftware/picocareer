@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [canAccessMentorTab, setCanAccessMentorTab] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -60,6 +61,8 @@ export default function ProfilePage() {
 
       // Set admin status based on user_type
       setIsAdmin(userTypeData?.user_type === 'admin');
+      // Set mentor tab access for mentors, editors, and admins
+      setCanAccessMentorTab(['mentor', 'editor', 'admin'].includes(userTypeData?.user_type || ''));
 
       const { data, error } = await supabase
         .from('profiles')
@@ -97,12 +100,12 @@ export default function ProfilePage() {
     retry: false
   });
 
-  // If not admin and trying to access dashboard tab, switch to profile
+  // If not authorized and trying to access restricted tabs, switch to profile
   useEffect(() => {
-    if (!isAdmin && activeTab === 'dashboard') {
+    if ((!isAdmin && activeTab === 'dashboard') || (!canAccessMentorTab && activeTab === 'mentor')) {
       setActiveTab('profile');
     }
-  }, [isAdmin, activeTab]);
+  }, [isAdmin, canAccessMentorTab, activeTab]);
 
   if (isLoading) {
     return (
@@ -122,7 +125,7 @@ export default function ProfilePage() {
             <TabsTrigger value="profile">Profile</TabsTrigger>
             {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="mentor">Mentor</TabsTrigger>
+            {canAccessMentorTab && <TabsTrigger value="mentor">Mentor</TabsTrigger>}
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -140,9 +143,11 @@ export default function ProfilePage() {
             <CalendarTab />
           </TabsContent>
 
-          <TabsContent value="mentor">
-            <MentorTab profile={profile} />
-          </TabsContent>
+          {canAccessMentorTab && (
+            <TabsContent value="mentor">
+              <MentorTab profile={profile} />
+            </TabsContent>
+          )}
 
           <TabsContent value="settings">
             <SettingsTab />
