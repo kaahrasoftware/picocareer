@@ -157,7 +157,7 @@ export function MentorTab({ profile }: MentorTabProps) {
                   className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
                 >
                   <Clock className="h-4 w-4" />
-                  Session Types
+                  Contents
                 </TabsTrigger>
               </TabsList>
 
