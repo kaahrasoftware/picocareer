@@ -7,7 +7,7 @@ interface TimeSlotPickerProps {
   onStartTimeSelect: (time: string) => void;
   onEndTimeSelect: (time: string) => void;
   onSave: () => void;
-  timeSlots: Array<{ time: string; available: boolean; }>;
+  mentorId: string;
 }
 
 export function TimeSlotPicker({ 
@@ -16,7 +16,7 @@ export function TimeSlotPicker({
   onStartTimeSelect,
   onEndTimeSelect,
   onSave,
-  timeSlots
+  mentorId
 }: TimeSlotPickerProps) {
   return (
     <div className="space-y-4">
@@ -24,7 +24,7 @@ export function TimeSlotPicker({
         <div>
           <TimeSlotSelector
             date={new Date()}
-            availableTimeSlots={timeSlots}
+            mentorId={mentorId}
             selectedTime={selectedStartTime}
             onTimeSelect={onStartTimeSelect}
             selectedSessionType={undefined}
@@ -33,9 +33,7 @@ export function TimeSlotPicker({
         <div>
           <TimeSlotSelector
             date={new Date()}
-            availableTimeSlots={timeSlots.filter(slot => 
-              !selectedStartTime || slot.time > selectedStartTime
-            )}
+            mentorId={mentorId}
             selectedTime={selectedEndTime}
             onTimeSelect={onEndTimeSelect}
             selectedSessionType={undefined}

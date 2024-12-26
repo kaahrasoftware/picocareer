@@ -15,18 +15,6 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
   const [selectedTime, setSelectedTime] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const timeSlots = [
-    { time: "09:00", available: true },
-    { time: "10:00", available: true },
-    { time: "11:00", available: true },
-    { time: "12:00", available: true },
-    { time: "13:00", available: true },
-    { time: "14:00", available: true },
-    { time: "15:00", available: true },
-    { time: "16:00", available: true },
-    { time: "17:00", available: true }
-  ];
-
   const handleSubmit = async () => {
     if (!selectedDate || !selectedTime) return;
 
@@ -77,7 +65,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
       {selectedDate && (
         <TimeSlotSelector
           date={selectedDate}
-          availableTimeSlots={timeSlots}
+          mentorId={supabase.auth.getUser()?.data?.user?.id || ''}
           selectedTime={selectedTime}
           onTimeSelect={setSelectedTime}
           selectedSessionType={undefined}

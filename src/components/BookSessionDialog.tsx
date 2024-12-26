@@ -6,7 +6,6 @@ import { TimeSlotSelector } from "./booking/TimeSlotSelector";
 import { SessionTypeSelector } from "./booking/SessionTypeSelector";
 import { SessionNote } from "./booking/SessionNote";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
-import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useBookSession } from "@/hooks/useBookSession";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +34,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const { toast } = useToast();
 
   const sessionTypes = useSessionTypes(mentor.id, open);
-  const availableTimeSlots = useAvailableTimeSlots(date, mentor.id);
   const bookSession = useBookSession();
 
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
@@ -141,7 +139,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             {date && (
               <TimeSlotSelector
                 date={date}
-                availableTimeSlots={availableTimeSlots}
+                mentorId={mentor.id}
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
                 selectedSessionType={selectedSessionTypeDetails}
