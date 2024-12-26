@@ -12,7 +12,7 @@ export default function About() {
     {
       name: "Dr. Francis Kangure",
       role: (
-        <span className="flex items-center gap-2">
+        <span className="flex items-center justify-center gap-2">
           National Director, Kenya
           <img 
             src="/lovable-uploads/b1e313c9-c9f3-4dbd-84b9-1ffc660e1103.png" 
