@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
+
 interface BookSessionDialogProps {
   mentor: {
     id: string;
@@ -27,7 +29,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
-  const [meetingPlatform, setMeetingPlatform] = useState<string>("google_meet");
+  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { toast } = useToast();

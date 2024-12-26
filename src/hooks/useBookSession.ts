@@ -1,12 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
+type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
+
 interface BookSessionParams {
   mentorId: string;
   date: Date;
   selectedTime: string;
   sessionTypeId: string;
   note: string;
-  meetingPlatform: string;
+  meetingPlatform: MeetingPlatform;
 }
 
 interface BookSessionResult {
