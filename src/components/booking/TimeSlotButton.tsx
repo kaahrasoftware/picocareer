@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { format, parse } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface TimeSlotButtonProps {
   time: string;
@@ -22,7 +22,7 @@ export function TimeSlotButton({
   return (
     <Button
       variant={isSelected ? "default" : "outline"}
-      className="w-full justify-start"
+      className={!available ? 'opacity-50' : ''}
       disabled={!available}
       onClick={() => onSelect(time)}
     >
