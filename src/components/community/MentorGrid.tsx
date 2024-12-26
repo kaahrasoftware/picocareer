@@ -37,11 +37,13 @@ export function MentorGrid({ profiles, isLoading }: MentorGridProps) {
           <ProfileCard key={profile.id} profile={profile} />
         ))}
       </div>
-      <LoadMoreButton 
-        hasMore={hasMore} 
-        isLoading={isLoading} 
-        onClick={handleLoadMore} 
-      />
+      <div className="flex justify-center mt-8">
+        <LoadMoreButton 
+          hasMore={hasMore} 
+          isLoading={isLoading} 
+          onClick={handleLoadMore} 
+        />
+      </div>
     </div>
   );
 }
