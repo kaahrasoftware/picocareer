@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function About() {
   const teamMembers = [
     {
-      name: "Rafik Tarbari",
+      name: "Dr. Francis Kangure",
       role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
