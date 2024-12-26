@@ -154,12 +154,6 @@ export function MentorTab({ profile }: MentorTabProps) {
 
               <TabsContent value="overview">
                 {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
-                <Button 
-                  onClick={() => setIsEditing(true)}
-                  className="w-full mt-4"
-                >
-                  Edit Mentor Details
-                </Button>
               </TabsContent>
 
               <TabsContent value="availability" className="mt-0">
