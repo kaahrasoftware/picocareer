@@ -6,10 +6,14 @@ import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
+type SessionTypeEnum = Database["public"]["Enums"]["session_type"];
 
 interface SessionTypeManagerProps {
   profileId: string;
-  sessionTypes: Array<{ id: string; type: string; duration: number; price: number; description: string | null }>;
+  sessionTypes: SessionType[];
   onUpdate: () => void;
 }
 
@@ -18,13 +22,13 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
   const { toast } = useToast();
 
   const handleAddSessionType = async (data: {
-    type: string;
+    type: SessionTypeEnum;
     duration: string;
     price: string;
     description: string;
   }) => {
     try {
-      // First check if this session type already exists for this mentor
+      // Check if this session type already exists for this mentor
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
         .select('id')
@@ -50,7 +54,8 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
           type: data.type,
           duration: parseInt(data.duration),
           price: parseFloat(data.price),
-          description: data.description
+          description: data.description,
+          meeting_platform: ['google_meet']
         });
 
       if (error) throw error;
@@ -97,6 +102,9 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
     }
   };
 
+  // Get array of session types that are already set
+  const existingTypes = sessionTypes.map(st => st.type);
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -128,7 +136,7 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
           <SessionTypeForm
             onSubmit={handleAddSessionType}
             onCancel={() => setShowForm(false)}
-            existingTypes={sessionTypes.map(st => st.type)}
+            existingTypes={existingTypes}
           />
         </DialogContent>
       </Dialog>

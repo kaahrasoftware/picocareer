@@ -5,32 +5,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import type { Database } from "@/integrations/supabase/types";
 
-type SessionType = Database["public"]["Enums"]["session_type"];
+type SessionTypeEnum = Database["public"]["Enums"]["session_type"];
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
-    type: SessionType;
+    type: SessionTypeEnum;
     duration: string;
     price: string;
     description: string;
   }) => void;
   onCancel: () => void;
-  existingTypes?: SessionType[];
+  existingTypes: SessionTypeEnum[];
 }
 
-export function SessionTypeForm({ onSubmit, onCancel, existingTypes = [] }: SessionTypeFormProps) {
-  const [type, setType] = useState<SessionType>("Introduction");
+const sessionTypeOptions: SessionTypeEnum[] = [
+  "Introduction",
+  "Quick-Advice",
+  "Walkthrough",
+  "Group (2-3 Mentees)",
+  "Group (4-6 Mentees)"
+];
+
+export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTypeFormProps) {
+  const [type, setType] = useState<SessionTypeEnum>("Introduction");
   const [duration, setDuration] = useState('30');
   const [price, setPrice] = useState('0');
   const [description, setDescription] = useState('');
-
-  const sessionTypeOptions: SessionType[] = [
-    "Introduction",
-    "Quick-Advice",
-    "Walkthrough",
-    "Group (2-3 Mentees)",
-    "Group (4-6 Mentees)"
-  ];
 
   // Filter out already used session types
   const availableTypes = sessionTypeOptions.filter(type => !existingTypes.includes(type));
@@ -46,7 +46,7 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes = [] }: Sess
         <label className="text-sm font-medium">Session Type</label>
         <Select
           value={type}
-          onValueChange={(value: SessionType) => setType(value)}
+          onValueChange={(value: SessionTypeEnum) => setType(value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select session type" />
