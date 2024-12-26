@@ -1,29 +1,36 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export function MainNavigation() {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const isActive = (path: string) => {
+    if (path === "/" && currentPath !== "/") return false;
+    return currentPath.startsWith(path);
+  };
+
   return (
     <nav className="flex-1 flex justify-center">
-      <ul className="flex gap-8">
+      <ul className="flex items-center gap-8">
         <li>
           <Link 
             to="/" 
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/") && "bg-primary/20 text-primary"
+            )}
           >
             Home
           </Link>
         </li>
         <li>
           <Link 
-            to="/career" 
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Careers
-          </Link>
-        </li>
-        <li>
-          <Link 
             to="/program" 
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/program") && "bg-primary/20 text-primary"
+            )}
           >
             Programs
           </Link>
@@ -31,25 +38,34 @@ export function MainNavigation() {
         <li>
           <Link 
             to="/mentor" 
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/mentor") && "bg-primary/20 text-primary"
+            )}
           >
-            Find a Mentor
+            Mentors
           </Link>
         </li>
         <li>
           <Link 
             to="/blog" 
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/blog") && "bg-primary/20 text-primary"
+            )}
           >
             Blog
           </Link>
         </li>
         <li>
           <Link 
-            to="/video" 
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            to="/about" 
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/about") && "bg-primary/20 text-primary"
+            )}
           >
-            Videos
+            About
           </Link>
         </li>
       </ul>
