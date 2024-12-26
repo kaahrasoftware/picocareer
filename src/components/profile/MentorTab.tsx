@@ -8,6 +8,9 @@ import { MentorDetails } from "./mentor/MentorDetails";
 import { MentorshipStats } from "./mentor/MentorshipStats";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, Settings } from "lucide-react";
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorTabProps {
@@ -16,6 +19,7 @@ interface MentorTabProps {
 
 export function MentorTab({ profile }: MentorTabProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -105,7 +109,6 @@ export function MentorTab({ profile }: MentorTabProps) {
 
   if (!profile) return null;
 
-  // Allow access for mentors, editors, and admins
   const canAccessMentorTab = ['mentor', 'editor', 'admin'].includes(profile.user_type || '');
 
   if (!canAccessMentorTab) {
@@ -134,26 +137,54 @@ export function MentorTab({ profile }: MentorTabProps) {
         <>
           {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
           
-          <div className="grid gap-6 md:grid-cols-2">
-            <AvailabilityManager 
-              profileId={profile.id} 
-              onUpdate={handleUpdate}
-            />
-            <SessionTypeManager
-              profileId={profile.id}
-              sessionTypes={mentorData?.sessionTypes || []}
-              onUpdate={handleUpdate}
-            />
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Mentor Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="overview" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="availability" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Availability
+                  </TabsTrigger>
+                  <TabsTrigger value="sessions" className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Session Types
+                  </TabsTrigger>
+                </TabsList>
 
-          <MentorDetails mentorData={mentorData} />
-          
-          <Button 
-            onClick={() => setIsEditing(true)}
-            className="w-full"
-          >
-            Edit Mentor Details
-          </Button>
+                <TabsContent value="overview">
+                  <MentorDetails mentorData={mentorData} />
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    className="w-full mt-4"
+                  >
+                    Edit Mentor Details
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="availability" className="mt-0">
+                  <AvailabilityManager 
+                    profileId={profile.id} 
+                    onUpdate={handleUpdate}
+                  />
+                </TabsContent>
+
+                <TabsContent value="sessions" className="mt-0">
+                  <SessionTypeManager
+                    profileId={profile.id}
+                    sessionTypes={mentorData?.sessionTypes || []}
+                    onUpdate={handleUpdate}
+                  />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
