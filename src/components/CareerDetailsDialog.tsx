@@ -14,7 +14,6 @@ import { AdditionalInfo } from "./career-details/AdditionalInfo";
 import { CareerMentorList } from "./career-details/CareerMentorList";
 import { HeaderBadges } from "./career-details/HeaderBadges";
 import { AcademicMajorsSection } from "./career-details/AcademicMajorsSection";
-import { RelatedMajorsSection } from "./career-details/RelatedMajorsSection";
 import { KeywordsSection } from "./career-details/KeywordsSection";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -133,7 +132,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
             />
 
             <AcademicMajorsSection academicMajors={career.academic_majors} />
-            <RelatedMajorsSection careerMajorRelations={career.career_major_relations} />
             <KeywordsSection keywords={career.keywords} />
 
             <CareerMentorList careerId={career.id} />
