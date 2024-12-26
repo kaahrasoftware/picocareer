@@ -10,8 +10,8 @@ export default function About() {
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
     },
     {
-      name: "Sarah Johnson",
-      role: "Head of Mentorship",
+      name: "Dr. Francis Kangure",
+      role: "National Director, Kenya 🇰🇪",
       bio: "Dedicated to building bridges between industry experts and aspiring professionals.",
       imageUrl: "/placeholder.svg"
     },
