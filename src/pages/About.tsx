@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function About() {
   const teamMembers = [
     {
-      name: "John Smith",
+      name: "Rafik Tarbari",
       role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
       imageUrl: "/placeholder.svg"
@@ -25,7 +25,6 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-      {/* Hero Section */}
       <div className="relative h-[300px] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -40,7 +39,6 @@ export default function About() {
 
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="grid gap-12">
-          {/* Mission & Vision Section */}
           <div className="grid md:grid-cols-2 gap-8">
             {/* Mission Section */}
             <Card className="overflow-hidden">
@@ -77,7 +75,6 @@ export default function About() {
             </Card>
           </div>
 
-          {/* Values Section - Moved above Team section */}
           <section className="pt-12">
             <Card className="bg-gradient-to-br from-picocareer-dark to-picocareer-darker text-white">
               <CardContent className="p-8">
