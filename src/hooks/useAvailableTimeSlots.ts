@@ -56,8 +56,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         .select('scheduled_at')
         .eq('mentor_id', mentorId)
         .gte('scheduled_at', startOfDay.toISOString())
-        .lte('scheduled_at', endOfDay.toISOString())
-        .neq('status', 'cancelled');
+        .lte('scheduled_at', endOfDay.toISOString());
 
       if (bookingsError) {
         console.error("Error fetching bookings:", bookingsError);
