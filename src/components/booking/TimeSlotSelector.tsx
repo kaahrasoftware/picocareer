@@ -62,7 +62,7 @@ export function TimeSlotSelector({
         </p>
       )}
       <TimeSlotsGrid
-        title=""
+        title="Start Time"
         timeSlots={timeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
