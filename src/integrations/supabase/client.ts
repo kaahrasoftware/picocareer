@@ -6,10 +6,12 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage,
+    persistSession: true,
+    detectSessionInUrl: false,
+    storage: localStorage,
+    storageKey: 'picocareer-auth-token',
+    flowType: 'pkce',
   },
   global: {
     headers: {
