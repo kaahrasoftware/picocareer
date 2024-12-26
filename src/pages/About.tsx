@@ -27,7 +27,6 @@ export default function About() {
     {
       name: "Tav Denkey Jr.",
       role: "Mentor and Advisor | Founder and CEO MiaPay",
-      bio: "Focused on creating innovative solutions for career development.",
       imageUrl: "/placeholder.svg"
     }
   ];
