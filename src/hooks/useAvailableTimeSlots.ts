@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parse, addMinutes } from "date-fns";
+import { format, parse, addMinutes, isWithinInterval } from "date-fns";
 
 interface TimeSlot {
   time: string;
@@ -37,6 +37,8 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         return;
       }
 
+      console.log("Availability data:", availabilityData);
+
       if (!availabilityData?.length) {
         console.log("No availability found for this date");
         setAvailableTimeSlots([]);
@@ -67,28 +69,47 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         return;
       }
 
+      console.log("Bookings data:", bookingsData);
+
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
-        const startTime = parse(availability.start_time, 'HH:mm', new Date());
-        const endTime = parse(availability.end_time, 'HH:mm', new Date());
-        
-        let currentTime = startTime;
-        const increment = 15; // 15-minute increments
+        try {
+          // Create a base date for today to properly handle time comparisons
+          const baseDate = new Date();
+          baseDate.setHours(0, 0, 0, 0);
 
-        while (currentTime < endTime) {
-          const timeString = format(currentTime, 'HH:mm');
-          const isBooked = bookingsData?.some(booking => {
-            const bookingTime = new Date(booking.scheduled_at);
-            return format(bookingTime, 'HH:mm') === timeString;
-          });
+          // Parse start and end times
+          const [startHour, startMinute] = availability.start_time.split(':').map(Number);
+          const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
-          slots.push({
-            time: timeString,
-            available: !isBooked
-          });
+          const startTime = new Date(baseDate);
+          startTime.setHours(startHour, startMinute);
 
-          currentTime = addMinutes(currentTime, increment);
+          const endTime = new Date(baseDate);
+          endTime.setHours(endHour, endMinute);
+
+          let currentTime = startTime;
+          const increment = 15; // 15-minute increments
+
+          while (currentTime < endTime) {
+            const timeString = format(currentTime, 'HH:mm');
+            
+            // Check if this time slot is booked
+            const isBooked = bookingsData?.some(booking => {
+              const bookingTime = new Date(booking.scheduled_at);
+              return format(bookingTime, 'HH:mm') === timeString;
+            });
+
+            slots.push({
+              time: timeString,
+              available: !isBooked
+            });
+
+            currentTime = addMinutes(currentTime, increment);
+          }
+        } catch (error) {
+          console.error("Error processing availability slot:", error);
         }
       });
 

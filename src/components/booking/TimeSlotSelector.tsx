@@ -24,6 +24,7 @@ export function TimeSlotSelector({
 
   // Use the custom hook to fetch available time slots
   const availableTimeSlots = useAvailableTimeSlots(date, mentorId);
+  console.log("Available time slots in selector:", availableTimeSlots);
 
   // Generate time slots based on session duration
   const generateTimeSlots = () => {
@@ -32,11 +33,11 @@ export function TimeSlotSelector({
     const slots = [...availableTimeSlots];
     const sessionDuration = selectedSessionType?.duration || 60;
 
-    // Filter out slots that don't have enough time for the selected session duration
+    // Filter out slots that don't have enough consecutive available slots
     return slots.filter((slot, index) => {
       if (!slot.available) return false;
 
-      // Check if there's enough consecutive available slots for the session
+      // Check if there's enough time for the session
       const slotsNeeded = Math.ceil(sessionDuration / 15);
       for (let i = 0; i < slotsNeeded; i++) {
         if (!slots[index + i]?.available) return false;
