@@ -14,6 +14,7 @@ export default function Program() {
   const [degreeFilter, setDegreeFilter] = useState<string | null>(null);
   const [gpaFilter, setGpaFilter] = useState<string | null>(null);
   const [courseFilter, setCourseFilter] = useState<string | null>(null);
+  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const MAJORS_PER_PAGE = 9;
   const { toast } = useToast();
@@ -73,8 +74,11 @@ export default function Program() {
         course.toLowerCase().includes(courseFilter.toLowerCase())
       );
 
+    const matchesField = !fieldFilter ||
+      major.title.toLowerCase().includes(fieldFilter.toLowerCase());
+
     return matchesSearch && matchesSkills && matchesDegree && 
-           matchesGPA && matchesCourse;
+           matchesGPA && matchesCourse && matchesField;
   });
 
   // Calculate pagination
@@ -86,6 +90,7 @@ export default function Program() {
   const allSkills = Array.from(new Set(majors?.flatMap(m => m.skill_match || []) || [])).sort();
   const degreeTypes = Array.from(new Set(majors?.flatMap(m => m.degree_levels || []) || [])).sort();
   const courses = Array.from(new Set(majors?.flatMap(m => m.common_courses || []) || [])).sort();
+  const fields = Array.from(new Set(majors?.map(m => m.title) || [])).sort();
 
   return (
     <SidebarProvider>
@@ -111,10 +116,12 @@ export default function Program() {
                     onCompanyChange={setGpaFilter}
                     schoolFilter={courseFilter}
                     onSchoolChange={setCourseFilter}
+                    fieldFilter={fieldFilter}
+                    onFieldChange={setFieldFilter}
                     locations={degreeTypes}
                     companies={["3.5+", "3.0-3.5", "below-3.0"]}
                     schools={courses}
-                    fields={[]}
+                    fields={fields}
                     allSkills={allSkills}
                   />
                 </div>
@@ -145,11 +152,13 @@ export default function Program() {
                   </div>
                   
                   {totalPages > 1 && (
-                    <BlogPagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
+                    <div className="flex justify-center mt-6">
+                      <BlogPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                      />
+                    </div>
                   )}
                 </>
               )}
