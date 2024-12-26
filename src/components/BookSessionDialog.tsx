@@ -10,6 +10,8 @@ import { useBookSession } from "@/hooks/useBookSession";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
 
@@ -30,6 +32,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [note, setNote] = useState("");
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [googleAuthError, setGoogleAuthError] = useState(false);
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { toast } = useToast();
 
@@ -42,6 +45,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     if (!date || !selectedTime || !sessionType || !mentor.id) return;
     
     setIsSubmitting(true);
+    setGoogleAuthError(false);
+    
     try {
       const sessionResult = await bookSession({
         mentorId: mentor.id,
@@ -64,6 +69,15 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
         if (meetError) {
           console.error('Error creating meet link:', meetError);
+          
+          // Check if the error is due to Google account not being connected
+          if (meetError.message?.includes('not connected their Google account') || 
+              (typeof meetError.context?.body === 'string' && 
+               meetError.context.body.includes('not connected their Google account'))) {
+            setGoogleAuthError(true);
+            throw new Error('Mentor has not connected their Google account');
+          }
+          
           toast({
             title: "Warning",
             description: "Session booked, but there was an issue creating the meeting link.",
@@ -101,13 +115,17 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       }
 
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error booking session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to book session. Please try again.",
-        variant: "destructive"
-      });
+      
+      // If it's not a Google auth error, show generic error message
+      if (!googleAuthError) {
+        toast({
+          title: "Error",
+          description: "Failed to book session. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -121,6 +139,15 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             Book a Session with {mentor.name}
           </DialogTitle>
         </DialogHeader>
+
+        {googleAuthError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              This mentor hasn't connected their Google account yet. Please select a different meeting platform or try again later.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DateSelector
@@ -150,7 +177,10 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               <h4 className="font-semibold mb-2">Meeting Platform</h4>
               <Select 
                 value={meetingPlatform} 
-                onValueChange={(value: MeetingPlatform) => setMeetingPlatform(value)}
+                onValueChange={(value: MeetingPlatform) => {
+                  setMeetingPlatform(value);
+                  setGoogleAuthError(false); // Reset error when platform changes
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select meeting platform" />
