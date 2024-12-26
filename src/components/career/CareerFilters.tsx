@@ -42,7 +42,7 @@ export const CareerFilters = ({
   popularFilter,
   setPopularFilter,
   industries,
-  allSkills,
+  allSkills = [], // Provide default empty array
 }: CareerFiltersProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 bg-muted/50 p-6 rounded-lg">
