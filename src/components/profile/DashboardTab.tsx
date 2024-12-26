@@ -59,6 +59,7 @@ export function DashboardTab() {
       const upcomingSessions = sessions.data?.filter(s => 
         new Date(s.scheduled_at) > now
       ).length || 0;
+      const completedSessions = totalSessions - upcomingSessions;
 
       return {
         blogs: {
@@ -76,7 +77,7 @@ export function DashboardTab() {
         sessions: {
           total: totalSessions,
           upcoming: upcomingSessions,
-          completed: totalSessions - upcomingSessions
+          completed: completedSessions
         },
         careers: {
           total: careers.data?.length || 0,
@@ -257,7 +258,7 @@ export function DashboardTab() {
               title="Sessions"
               total={contentStats?.sessions.total || 0}
               approved={contentStats?.sessions.completed || 0}
-              pending={contentStats?.sessions.pending || 0}
+              pending={contentStats?.sessions.upcoming || 0}
               tableName="mentor_sessions"
               itemId="session-id"
               onStatusChange={handleStatusChange}

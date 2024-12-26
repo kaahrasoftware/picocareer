@@ -1,14 +1,18 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
-import { 
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,30 +22,32 @@ type ContentStatus = "Approved" | "Pending" | "Rejected";
 interface ContentStatusCardProps {
   title: string;
   total: number;
-  approved: number;
-  pending: number;
+  approved?: number;
+  pending?: number;
   rejected?: number;
   tableName: TableName;
-  itemId?: string; // Make itemId optional since we're not using it for bulk updates
+  itemId: string;
   onStatusChange?: () => void;
 }
 
-export function ContentStatusCard({ 
-  title, 
-  total, 
-  approved, 
-  pending, 
+export function ContentStatusCard({
+  title,
+  total,
+  approved = 0,
+  pending = 0,
   rejected = 0,
   tableName,
-  onStatusChange 
+  itemId,
+  onStatusChange,
 }: ContentStatusCardProps) {
   const [changing, setChanging] = useState(false);
   const { toast } = useToast();
 
   const handleStatusChange = async (newStatus: ContentStatus) => {
+    if (tableName === 'mentor_sessions') return; // Skip for mentor sessions as they don't have status
+
     setChanging(true);
     try {
-      // Update all pending items in the table to the new status
       const { error } = await supabase
         .from(tableName)
         .update({ status: newStatus })
@@ -50,8 +56,8 @@ export function ContentStatusCard({
       if (error) throw error;
 
       toast({
-        title: "Status updated",
-        description: `All pending ${title.toLowerCase()} have been updated to ${newStatus}`,
+        title: "Status Updated",
+        description: `All pending ${title.toLowerCase()} have been ${newStatus.toLowerCase()}.`,
       });
 
       if (onStatusChange) {
@@ -60,8 +66,8 @@ export function ContentStatusCard({
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
-        title: "Error updating status",
-        description: "There was an error updating the status. Please try again.",
+        title: "Error",
+        description: "Failed to update status. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -70,42 +76,58 @@ export function ContentStatusCard({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{title}</span>
-        <span className="text-sm text-muted-foreground">
-          {total} total
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        <span className="text-sm">
-          {approved} approved
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <Clock className="h-4 w-4 text-amber-500" />
-        <span className="text-sm">
-          {pending} pending
-        </span>
-      </div>
-      {rejected > 0 && (
-        <div className="flex items-center gap-2">
-          <XCircle className="h-4 w-4 text-red-500" />
-          <span className="text-sm">
-            {rejected} rejected
-          </span>
-        </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>Total: {total}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {tableName !== 'mentor_sessions' && (
+            <>
+              <div className="flex justify-between text-sm">
+                <span>Approved</span>
+                <span>{approved}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Pending</span>
+                <span>{pending}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Rejected</span>
+                <span>{rejected}</span>
+              </div>
+            </>
+          )}
+          {tableName === 'mentor_sessions' && (
+            <>
+              <div className="flex justify-between text-sm">
+                <span>Completed</span>
+                <span>{approved}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Upcoming</span>
+                <span>{pending}</span>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {tableName !== 'mentor_sessions' && pending > 0 && (
+        <Select
+          disabled={changing}
+          onValueChange={handleStatusChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Update all pending..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Approved">Approve All Pending</SelectItem>
+            <SelectItem value="Rejected">Reject All Pending</SelectItem>
+          </SelectContent>
+        </Select>
       )}
-      <Select onValueChange={handleStatusChange} disabled={changing || pending === 0}>
-        <SelectTrigger className="w-full mt-2">
-          <SelectValue placeholder={pending === 0 ? "No pending items" : "Change status for all pending"} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Approved">Approve all pending</SelectItem>
-          <SelectItem value="Rejected">Reject all pending</SelectItem>
-        </SelectContent>
-      </Select>
     </div>
   );
 }

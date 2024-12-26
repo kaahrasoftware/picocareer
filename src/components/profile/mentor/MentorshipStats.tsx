@@ -6,7 +6,6 @@ interface SessionStats {
   total_sessions: number;
   completed_sessions: number;
   upcoming_sessions: number;
-  cancelled_sessions: number;
   total_hours: number;
   session_data: {
     name: string;
@@ -20,7 +19,7 @@ interface MentorshipStatsProps {
 
 export function MentorshipStats({ stats }: MentorshipStatsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
@@ -48,15 +47,6 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.upcoming_sessions}</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.cancelled_sessions}</div>
         </CardContent>
       </Card>
 
