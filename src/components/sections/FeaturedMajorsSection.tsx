@@ -3,6 +3,7 @@ import { MajorCard } from "@/components/MajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
 import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -42,12 +43,12 @@ export const FeaturedMajorsSection = () => {
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Featured Majors</h2>
-        <button 
-          onClick={() => setIsDialogOpen(true)}
+        <Link 
+          to="/program"
           className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
-        </button>
+        </Link>
       </div>
       <div className="relative -mx-8">
         <Carousel
