@@ -1,11 +1,11 @@
-import { Target, Users } from "lucide-react";
+import { Target, Flag, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function About() {
   const teamMembers = [
     {
-      name: "Dr. Francis Kangure",
-      role: "National Director, Kenya",
+      name: "Rafik Tarbari",
+      role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
     },
@@ -60,7 +60,7 @@ export default function About() {
             {/* Vision Section */}
             <Card className="overflow-hidden">
               <div className="h-48 bg-gradient-to-br from-picocareer-secondary to-picocareer-dark opacity-90 flex items-center justify-center">
-                <Target className="w-16 h-16 text-white" />
+                <Flag className="w-16 h-16 text-white" />
               </div>
               <CardHeader className="flex flex-row items-center gap-4">
                 <CardTitle>Our Vision</CardTitle>
@@ -97,7 +97,7 @@ export default function About() {
                     </div>
                     <div className="text-center">
                       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                        <Target className="w-8 h-8" />
+                        <Flag className="w-8 h-8" />
                       </div>
                       <h3 className="font-semibold mb-2">Innovation</h3>
                       <p className="text-white/80">Continuously improving and adapting to change</p>
@@ -132,14 +132,7 @@ export default function About() {
                       />
                     </div>
                     <CardTitle className="text-xl">{member.name}</CardTitle>
-                    <p className="text-sm text-picocareer-primary font-medium">
-                      {member.role}
-                      {member.name === "Dr. Francis Kangure" && (
-                        <span className="ml-1" role="img" aria-label="Kenya Flag">
-                          🇰🇪
-                        </span>
-                      )}
-                    </p>
+                    <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground text-center">{member.bio}</p>
