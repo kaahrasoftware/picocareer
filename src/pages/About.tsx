@@ -5,7 +5,7 @@ export default function About() {
   const teamMembers = [
     {
       name: "Dr. Francis Kangure",
-      role: "CEO & Founder",
+      role: "National Director, Kenya",
       bio: "Passionate about connecting students with their dream careers.",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
     },
@@ -132,7 +132,10 @@ export default function About() {
                       />
                     </div>
                     <CardTitle className="text-xl">{member.name}</CardTitle>
-                    <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
+                    <p className="text-sm text-picocareer-primary font-medium flex items-center justify-center gap-1">
+                      {member.role}
+                      <Flag className="w-4 h-4" />
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground text-center">{member.bio}</p>
