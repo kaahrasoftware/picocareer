@@ -60,8 +60,8 @@ export function TimeSlotSelector({
         Available Times for {format(date, "MMMM d, yyyy")}
       </h4>
       {selectedSessionType && (
-        <p className="text-sm text-muted-foreground mb-4">
-          Showing {selectedSessionType.duration}-minute slots
+        <p className="text-sm text-muted-foreground mb-2">
+          {selectedSessionType.duration}-minute slots
         </p>
       )}
       <TimeSlotsGrid

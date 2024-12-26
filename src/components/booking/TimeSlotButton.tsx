@@ -14,7 +14,7 @@ export function TimeSlotButton({
   isSelected, 
   onSelect 
 }: TimeSlotButtonProps) {
-  const displayTime = format(
+  const formattedTime = format(
     parse(time, 'HH:mm', new Date()),
     'h:mm a'
   );
@@ -22,11 +22,11 @@ export function TimeSlotButton({
   return (
     <Button
       variant={isSelected ? "default" : "outline"}
-      onClick={() => onSelect(time)}
+      className="w-full justify-start"
       disabled={!available}
-      className={`w-full ${!available ? 'opacity-50' : ''}`}
+      onClick={() => onSelect(time)}
     >
-      {displayTime}
+      {formattedTime}
     </Button>
   );
 }

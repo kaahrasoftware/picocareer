@@ -26,7 +26,7 @@ export function TimeSlotsGrid({
   }
 
   return (
-    <ScrollArea className="h-[200px] rounded-md border border-kahra-darker">
+    <ScrollArea className="h-[300px] rounded-md border border-kahra-darker">
       <div className="flex flex-col gap-2 p-4">
         {timeSlots.map((slot) => (
           <TimeSlotButton
