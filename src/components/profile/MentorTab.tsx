@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentorEditForm } from "./mentor/MentorEditForm";
-import { MentorDetails } from "./mentor/MentorDetails";
 import { MentorshipStats } from "./mentor/MentorshipStats";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
@@ -155,7 +154,6 @@ export function MentorTab({ profile }: MentorTabProps) {
 
               <TabsContent value="overview">
                 {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
-                <MentorDetails mentorData={mentorData} />
                 <Button 
                   onClick={() => setIsEditing(true)}
                   className="w-full mt-4"
