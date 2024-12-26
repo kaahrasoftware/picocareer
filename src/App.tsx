@@ -15,6 +15,7 @@ import Video from '@/pages/Video';
 import Auth from '@/pages/Auth';
 import Profile from '@/pages/Profile';
 import MentorRegistration from '@/pages/MentorRegistration';
+import About from '@/pages/About';
 
 const AppContent = () => {
   const location = useLocation();
@@ -38,6 +39,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/mentor-registration" element={<MentorRegistration />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </main>
       {!isVideoPage && !isAuthPage && <Footer />}
