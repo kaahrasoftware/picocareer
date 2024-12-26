@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import { MenuSidebar } from '@/components/MenuSidebar';
 import { Footer } from '@/components/Footer';
+import { GoToTopButton } from '@/components/ui/go-to-top-button';
 import Index from '@/pages/Index';
 import Blog from '@/pages/Blog';
 import Mentor from '@/pages/Mentor';
@@ -40,6 +41,7 @@ const AppContent = () => {
         </Routes>
       </main>
       {!isVideoPage && !isAuthPage && <Footer />}
+      {!isVideoPage && !isAuthPage && <GoToTopButton />}
     </div>
   );
 };
