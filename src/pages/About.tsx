@@ -7,7 +7,7 @@ export default function About() {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
-      imageUrl: "/lovable-uploads/d7aced88-63b9-4e1e-9ed8-175f4df75f44.png"
+      imageUrl: "/lovable-uploads/78c33673-65f1-4220-a700-3a63544cdff3.png"
     },
     {
       name: "Sarah Johnson",
@@ -108,6 +108,7 @@ export default function About() {
             </Card>
           </section>
 
+          {/* Team Section */}
           <section className="pt-12">
             <div className="text-center mb-12">
               <div className="flex items-center justify-center gap-4 mb-4">
@@ -123,14 +124,12 @@ export default function About() {
               {teamMembers.map((member, index) => (
                 <Card key={index} className="transform transition-transform hover:scale-105">
                   <CardHeader className="text-center pb-4">
-                    <div className="w-40 h-40 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-picocareer-primary to-picocareer-accent p-1">
-                      <div className="w-full h-full rounded-full overflow-hidden">
-                        <img 
-                          src={member.imageUrl} 
-                          alt={member.name}
-                          className="w-full h-full object-cover bg-white"
-                        />
-                      </div>
+                    <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-picocareer-primary to-picocareer-accent p-1">
+                      <img 
+                        src={member.imageUrl} 
+                        alt={member.name}
+                        className="w-full h-full rounded-full object-cover bg-white"
+                      />
                     </div>
                     <CardTitle className="text-xl">{member.name}</CardTitle>
                     <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
