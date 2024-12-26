@@ -7,7 +7,7 @@ export default function About() {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
-      imageUrl: "/lovable-uploads/78c33673-65f1-4220-a700-3a63544cdff3.png"
+      imageUrl: "/lovable-uploads/d7aced88-63b9-4e1e-9ed8-175f4df75f44.png"
     },
     {
       name: "Sarah Johnson",
@@ -128,7 +128,7 @@ export default function About() {
                       <img 
                         src={member.imageUrl} 
                         alt={member.name}
-                        className="w-full h-full rounded-full object-cover object-[center_40%] bg-white"
+                        className="w-full h-full rounded-full object-cover object-center bg-white"
                       />
                     </div>
                     <CardTitle className="text-xl">{member.name}</CardTitle>
