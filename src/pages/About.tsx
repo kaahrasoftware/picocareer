@@ -15,7 +15,7 @@ export default function About() {
         <span className="flex items-center gap-2">
           National Director, Kenya
           <img 
-            src="/lovable-uploads/kenya-flag.png" 
+            src="/lovable-uploads/b1e313c9-c9f3-4dbd-84b9-1ffc660e1103.png" 
             alt="Kenyan Flag"
             className="w-5 h-3 inline-block object-cover"
           />
