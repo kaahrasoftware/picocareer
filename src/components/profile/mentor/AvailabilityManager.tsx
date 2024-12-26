@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { TimeSlotPicker } from "./availability/TimeSlotPicker";
+import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -26,27 +25,25 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     available: true
   }));
 
-  // Fetch existing availability slots when date changes
-  React.useEffect(() => {
-    async function fetchAvailability() {
-      if (!selectedDate) return;
-
-      const { data, error } = await supabase
-        .from('mentor_availability')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('date_available', format(selectedDate, 'yyyy-MM-dd'));
-
-      if (error) {
-        console.error('Error fetching availability:', error);
-        return;
-      }
-
-      setExistingSlots(data || []);
-    }
-
+  useEffect(() => {
+    if (!selectedDate) return;
     fetchAvailability();
   }, [selectedDate, profileId]);
+
+  const fetchAvailability = async () => {
+    const { data, error } = await supabase
+      .from('mentor_availability')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('date_available', format(selectedDate!, 'yyyy-MM-dd'));
+
+    if (error) {
+      console.error('Error fetching availability:', error);
+      return;
+    }
+
+    setExistingSlots(data || []);
+  };
 
   const handleSaveAvailability = async () => {
     if (!selectedDate || !selectedStartTime || !selectedEndTime) {
@@ -80,15 +77,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       setSelectedStartTime(undefined);
       setSelectedEndTime(undefined);
       onUpdate();
-      
-      // Refresh the existing slots
-      const { data: newData } = await supabase
-        .from('mentor_availability')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('date_available', format(selectedDate, 'yyyy-MM-dd'));
-        
-      setExistingSlots(newData || []);
+      fetchAvailability();
     } catch (error) {
       console.error('Error setting availability:', error);
       toast({
@@ -130,9 +119,10 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       <CardHeader>
         <CardTitle>Manage Availability</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
+      <CardContent className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2">
           <div>
+            <h4 className="font-medium mb-2">Select Date</h4>
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -145,71 +135,23 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
               }}
             />
           </div>
-          <div>
-            {selectedDate && (
-              <>
-                <h4 className="font-medium mb-2">Set Available Hours</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Start Time</label>
-                    <TimeSlotSelector
-                      date={selectedDate}
-                      availableTimeSlots={timeSlots}
-                      selectedTime={selectedStartTime}
-                      onTimeSelect={setSelectedStartTime}
-                      selectedSessionType={undefined}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">End Time</label>
-                    <TimeSlotSelector
-                      date={selectedDate}
-                      availableTimeSlots={timeSlots.filter(slot => 
-                        !selectedStartTime || slot.time > selectedStartTime
-                      )}
-                      selectedTime={selectedEndTime}
-                      onTimeSelect={setSelectedEndTime}
-                      selectedSessionType={undefined}
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleSaveAvailability}
-                    disabled={!selectedStartTime || !selectedEndTime}
-                    className="w-full"
-                  >
-                    Save Availability
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
+          
+          {selectedDate && (
+            <TimeSlotPicker
+              selectedStartTime={selectedStartTime}
+              selectedEndTime={selectedEndTime}
+              onStartTimeSelect={setSelectedStartTime}
+              onEndTimeSelect={setSelectedEndTime}
+              onSave={handleSaveAvailability}
+              timeSlots={timeSlots}
+            />
+          )}
         </div>
 
-        {existingSlots.length > 0 && (
-          <div className="mt-6">
-            <h4 className="font-medium mb-2">Existing Time Slots</h4>
-            <div className="space-y-2">
-              {existingSlots.map((slot) => (
-                <div 
-                  key={slot.id}
-                  className="flex items-center justify-between p-3 bg-secondary rounded-lg"
-                >
-                  <span>
-                    {format(new Date(`2000-01-01T${slot.start_time}`), 'h:mm a')} - 
-                    {format(new Date(`2000-01-01T${slot.end_time}`), 'h:mm a')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteSlot(slot.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <ExistingTimeSlots 
+          slots={existingSlots}
+          onDelete={handleDeleteSlot}
+        />
       </CardContent>
     </Card>
   );
