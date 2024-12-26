@@ -16,7 +16,7 @@ export default function Career() {
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(15);
-  const LOAD_MORE_INCREMENT = 15;
+  const LOAD_MORE_INCREMENT = 3; // Changed from 15 to 3
 
   const { data: careers = [], isLoading } = useQuery({
     queryKey: ["careers"],
