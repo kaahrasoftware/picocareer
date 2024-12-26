@@ -7,7 +7,7 @@ export default function About() {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
-      imageUrl: "/lovable-uploads/78c33673-65f1-4220-a700-3a63544cdff3.png"
+      imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
     },
     {
       name: "Sarah Johnson",
