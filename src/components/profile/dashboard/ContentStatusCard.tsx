@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 type TableName = "blogs" | "videos" | "mentor_sessions" | "careers" | "majors" | "schools";
+type ContentStatus = "Approved" | "Pending" | "Rejected";
 
 interface ContentStatusCardProps {
   title: string;
@@ -37,7 +38,7 @@ export function ContentStatusCard({
   const [changing, setChanging] = useState(false);
   const { toast } = useToast();
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: ContentStatus) => {
     setChanging(true);
     try {
       // Update all pending items in the table to the new status

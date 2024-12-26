@@ -46,12 +46,19 @@ export function DashboardTab() {
       const [blogs, videos, sessions, careers, majors, schools, notifications] = await Promise.all([
         supabase.from('blogs').select('status'),
         supabase.from('videos').select('status'),
-        supabase.from('mentor_sessions').select('status'),
+        supabase.from('mentor_sessions').select('scheduled_at'),
         supabase.from('careers').select('status'),
         supabase.from('majors').select('status'),
         supabase.from('schools').select('status'),
         supabase.from('notifications').select('read')
       ]);
+
+      // Calculate total and upcoming sessions
+      const now = new Date();
+      const totalSessions = sessions.data?.length || 0;
+      const upcomingSessions = sessions.data?.filter(s => 
+        new Date(s.scheduled_at) > now
+      ).length || 0;
 
       return {
         blogs: {
@@ -67,9 +74,9 @@ export function DashboardTab() {
           rejected: videos.data?.filter(v => v.status === 'Rejected').length || 0
         },
         sessions: {
-          total: sessions.data?.length || 0,
-          pending: sessions.data?.filter(s => s.status === 'pending').length || 0,
-          completed: sessions.data?.filter(s => s.status === 'completed').length || 0
+          total: totalSessions,
+          upcoming: upcomingSessions,
+          completed: totalSessions - upcomingSessions
         },
         careers: {
           total: careers.data?.length || 0,
@@ -104,7 +111,7 @@ export function DashboardTab() {
     queryFn: async () => {
       const { data: sessions } = await supabase
         .from('mentor_sessions')
-        .select('scheduled_at, status')
+        .select('scheduled_at')
         .gte('scheduled_at', new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString());
 
       const monthlyData = Array.from({ length: 6 }, (_, i) => {
@@ -119,7 +126,7 @@ export function DashboardTab() {
         return {
           month,
           total: sessionsInMonth?.length || 0,
-          completed: sessionsInMonth?.filter(s => s.status === 'completed').length || 0
+          completed: sessionsInMonth?.filter(s => new Date(s.scheduled_at) < new Date()).length || 0
         };
       }).reverse();
 
