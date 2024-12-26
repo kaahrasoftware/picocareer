@@ -64,20 +64,12 @@ export function TimeSlotSelector({
           {selectedSessionType.duration}-minute slots
         </p>
       )}
-      <div className="grid grid-cols-2 gap-4">
-        <TimeSlotsGrid
-          title="Start Time"
-          timeSlots={timeSlots}
-          selectedTime={selectedTime}
-          onTimeSelect={onTimeSelect}
-        />
-        <TimeSlotsGrid
-          title="End Time"
-          timeSlots={timeSlots.filter(slot => !selectedTime || slot.time > selectedTime)}
-          selectedTime={selectedTime}
-          onTimeSelect={onTimeSelect}
-        />
-      </div>
+      <TimeSlotsGrid
+        title="Time Slots"
+        timeSlots={timeSlots}
+        selectedTime={selectedTime}
+        onTimeSelect={onTimeSelect}
+      />
     </div>
   );
 }
