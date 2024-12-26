@@ -38,23 +38,6 @@ export function CareerProspects({
         </div>
       )}
 
-      {related_careers && related_careers.length > 0 && (
-        <div className="space-y-2">
-          <h5 className="text-sm font-medium">Related Careers</h5>
-          <div className="flex flex-wrap gap-2">
-            {related_careers.map(({ career }) => (
-              <Badge 
-                key={career.id} 
-                variant="secondary"
-                className="bg-primary/10 text-primary border-primary/20"
-              >
-                {career.title} {career.salary_range && `(${career.salary_range})`}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
       {career_opportunities && career_opportunities.length > 0 && (
         <div className="space-y-2">
           <h5 className="text-sm font-medium">Career Opportunities</h5>

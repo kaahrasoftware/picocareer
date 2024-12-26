@@ -971,10 +971,6 @@ export type Database = {
         }
         Returns: unknown
       }
-      match_careers_with_majors: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       match_profiles_with_majors: {
         Args: Record<PropertyKey, never>
         Returns: undefined
