@@ -140,21 +140,21 @@ export function MentorTab({ profile }: MentorTabProps) {
               <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger 
                   value="overview" 
-                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
                 >
                   <Settings className="h-4 w-4" />
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="availability" 
-                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
                 >
                   <Calendar className="h-4 w-4" />
                   Availability
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sessions" 
-                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
                 >
                   <Clock className="h-4 w-4" />
                   Session Types
