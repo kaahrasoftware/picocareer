@@ -82,8 +82,8 @@ export function CommunityFilters({
             <h2 className="text-sm font-medium">Filters</h2>
           </div>
 
-          <div className="grid gap-4">
-            <div className="flex-1">
+          <div className="flex gap-4">
+            <div className="flex-1 max-w-[60%]">
               <SearchInput 
                 value={searchQuery} 
                 onChange={onSearchChange}
@@ -94,7 +94,7 @@ export function CommunityFilters({
               />
             </div>
 
-            <div>
+            <div className="flex-1 max-w-[40%]">
               <SelectFilter
                 value={fieldFilter}
                 onValueChange={onFieldChange}
