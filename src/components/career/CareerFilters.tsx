@@ -42,19 +42,19 @@ export const CareerFilters = ({
   popularFilter,
   setPopularFilter,
   industries,
-  allSkills = [], // Provide default empty array
+  allSkills = [],
 }: CareerFiltersProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 bg-muted/50 p-6 rounded-lg">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 bg-muted/50 p-3 rounded-lg">
       <Input
         placeholder="Search careers..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="bg-background"
+        className="bg-background h-9"
       />
       
       <Select value={industryFilter} onValueChange={setIndustryFilter}>
-        <SelectTrigger className="bg-background">
+        <SelectTrigger className="bg-background h-9">
           <SelectValue placeholder="Industry" />
         </SelectTrigger>
         <SelectContent>
@@ -66,7 +66,7 @@ export const CareerFilters = ({
       </Select>
 
       <Select value={popularFilter} onValueChange={setPopularFilter}>
-        <SelectTrigger className="bg-background">
+        <SelectTrigger className="bg-background h-9">
           <SelectValue placeholder="Career Type" />
         </SelectTrigger>
         <SelectContent>
@@ -87,16 +87,17 @@ export const CareerFilters = ({
             value={skillSearchQuery}
             onValueChange={setSkillSearchQuery}
             onFocus={() => setIsSkillsDropdownOpen(true)}
+            className="h-9"
           />
           {isSkillsDropdownOpen && (
-            <CommandList>
+            <CommandList className="absolute w-full bg-popover z-50">
               <CommandGroup>
                 <div className="flex flex-wrap gap-1 p-2">
                   {selectedSkills.map((skill) => (
                     <Badge
                       key={skill}
                       variant="secondary"
-                      className="mr-1 mb-1 cursor-pointer"
+                      className="mr-1 mb-1 cursor-pointer text-xs"
                       onClick={() => setSelectedSkills(selectedSkills.filter(s => s !== skill))}
                     >
                       {skill} ×

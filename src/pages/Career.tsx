@@ -94,31 +94,33 @@ export default function Career() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col space-y-12">
         <section className="space-y-8">
-          {/* Make the header and filters sticky */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-6 space-y-8">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Explore All Careers</h2>
-              <p className="text-muted-foreground">
+          {/* Make the header and filters sticky with a compact design */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+            <div className="transform transition-transform duration-200 py-2">
+              <h2 className="text-xl font-bold">Explore All Careers</h2>
+              <p className="text-sm text-muted-foreground">
                 Find the perfect career path that matches your interests and skills
               </p>
             </div>
             
-            <CareerFilters
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              industryFilter={industryFilter}
-              setIndustryFilter={setIndustryFilter}
-              selectedSkills={selectedSkills}
-              setSelectedSkills={setSelectedSkills}
-              isSkillsDropdownOpen={isSkillsDropdownOpen}
-              setIsSkillsDropdownOpen={setIsSkillsDropdownOpen}
-              skillSearchQuery={skillSearchQuery}
-              setSkillSearchQuery={setSkillSearchQuery}
-              popularFilter={popularFilter}
-              setPopularFilter={setPopularFilter}
-              industries={industries}
-              allSkills={allSkills}
-            />
+            <div className="transform transition-all duration-200 -mx-2">
+              <CareerFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                industryFilter={industryFilter}
+                setIndustryFilter={setIndustryFilter}
+                selectedSkills={selectedSkills}
+                setSelectedSkills={setSelectedSkills}
+                isSkillsDropdownOpen={isSkillsDropdownOpen}
+                setIsSkillsDropdownOpen={setIsSkillsDropdownOpen}
+                skillSearchQuery={skillSearchQuery}
+                setSkillSearchQuery={setSkillSearchQuery}
+                popularFilter={popularFilter}
+                setPopularFilter={setPopularFilter}
+                industries={industries}
+                allSkills={allSkills}
+              />
+            </div>
           </div>
 
           <CareerResults filteredCareers={visibleCareers} />
