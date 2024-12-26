@@ -22,7 +22,13 @@ export function TimeSlotButton({
   return (
     <Button
       variant={isSelected ? "default" : "outline"}
-      className={`${!available ? 'opacity-50' : ''} py-1 px-2 h-auto text-sm`}
+      className={`
+        ${!available ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/90'} 
+        ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background hover:text-primary-foreground'} 
+        py-2 px-3 h-auto text-sm font-medium rounded-md transition-colors
+        w-full text-center justify-center
+        border border-input shadow-sm
+      `}
       disabled={!available}
       onClick={() => onSelect(time)}
     >
