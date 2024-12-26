@@ -18,4 +18,15 @@ export interface EditableFieldProps {
   onUpdate?: (newValue: string) => void;
 }
 
+export interface CustomSelectProps {
+  value: string;
+  options: Array<{ id: string; title?: string; name?: string }>;
+  placeholder: string;
+  tableName: TableName;
+  fieldName: FieldName;
+  titleField: TitleField;
+  onSave: (value: string) => void;
+  onCancel: () => void;
+}
+
 export type Status = Database["public"]["Enums"]["status"];

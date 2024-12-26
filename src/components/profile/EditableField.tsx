@@ -61,11 +61,21 @@ export function EditableField({
   if (isEditing) {
     // Custom select fields (with option to add new items)
     if (['school_id', 'academic_major_id', 'position', 'company_id'].includes(fieldName) && options) {
+      const tableName = fieldName === 'school_id' ? 'schools' 
+        : fieldName === 'academic_major_id' ? 'majors'
+        : fieldName === 'position' ? 'careers'
+        : 'companies';
+      
+      const titleField = tableName === 'schools' || tableName === 'companies' ? 'name' : 'title';
+
       return (
         <CustomSelect
           value={editValue}
           options={options}
           placeholder={`Select a ${label.toLowerCase()}`}
+          tableName={tableName}
+          fieldName={fieldName}
+          titleField={titleField}
           onSave={updateField}
           onCancel={() => {
             setIsEditing(false);
