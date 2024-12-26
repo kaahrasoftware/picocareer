@@ -45,18 +45,23 @@ export const MentorListDialog = ({ isOpen, onClose, mentors }: MentorListDialogP
         </DialogHeader>
         
         <div className="space-y-4">
-          <MentorFilters
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            companyFilter={companyFilter}
-            setCompanyFilter={setCompanyFilter}
-            educationFilter={educationFilter}
-            setEducationFilter={setEducationFilter}
-            experienceFilter={experienceFilter}
-            setExperienceFilter={setExperienceFilter}
-            sessionFilter={sessionFilter}
-            setSessionFilter={setSessionFilter}
-          />
+          {/* Make the filters sticky with a compact design */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+            <div className="transform transition-all duration-200 -mx-2">
+              <MentorFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                companyFilter={companyFilter}
+                setCompanyFilter={setCompanyFilter}
+                educationFilter={educationFilter}
+                setEducationFilter={setEducationFilter}
+                experienceFilter={experienceFilter}
+                setExperienceFilter={setExperienceFilter}
+                sessionFilter={sessionFilter}
+                setSessionFilter={setSessionFilter}
+              />
+            </div>
+          </div>
           
           <MentorResults mentors={filteredMentors} />
         </div>

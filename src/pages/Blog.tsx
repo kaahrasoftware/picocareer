@@ -100,17 +100,26 @@ const Blog = () => {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
-              <BlogHeader />
-              <BlogFilters
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                selectedSubcategory={selectedSubcategory}
-                setSelectedSubcategory={setSelectedSubcategory}
-                showRecentOnly={showRecentOnly}
-                setShowRecentOnly={setShowRecentOnly}
-              />
+              {/* Make the header and filters sticky with a compact design */}
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+                <div className="transform transition-transform duration-200 py-2">
+                  <BlogHeader />
+                </div>
+                
+                <div className="transform transition-all duration-200 -mx-2">
+                  <BlogFilters
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    selectedSubcategory={selectedSubcategory}
+                    setSelectedSubcategory={setSelectedSubcategory}
+                    showRecentOnly={showRecentOnly}
+                    setShowRecentOnly={setShowRecentOnly}
+                  />
+                </div>
+              </div>
+
               <BlogGrid blogs={currentItems} isLoading={isLoading} />
               {!isLoading && blogs && blogs.length > 0 && (
                 <BlogPagination

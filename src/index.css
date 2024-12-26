@@ -88,3 +88,26 @@
 .main-content {
   @apply flex-1 w-full;
 }
+
+/* Filter section transitions */
+.sticky {
+  transition: all 0.2s ease-in-out;
+}
+
+.sticky.scrolled {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.sticky.scrolled h1,
+.sticky.scrolled h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.sticky.scrolled input,
+.sticky.scrolled select,
+.sticky.scrolled button {
+  height: 2rem;
+  font-size: 0.875rem;
+}

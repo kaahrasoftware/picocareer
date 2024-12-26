@@ -20,57 +20,57 @@ export default function Program() {
   const PROFILES_PER_PAGE = 15;
   const { toast } = useToast();
 
-const { data: profiles = [], isLoading, error } = useQuery({
-  queryKey: ['profiles'],
-  queryFn: async () => {
-    console.log('Fetching profiles...');
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    try {
-      let query = supabase
-        .from('profiles')
-        .select(`
-          *,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!profiles_position_fkey(title, id)
-        `)
-        .eq('user_type', 'mentor')
-        .order('created_at', { ascending: false });
-
-      if (user?.id) {
-        query = query.neq('id', user.id);
-      }
+  const { data: profiles = [], isLoading, error } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: async () => {
+      console.log('Fetching profiles...');
+      const { data: { user } } = await supabase.auth.getUser();
       
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw error;
-      }
+      try {
+        let query = supabase
+          .from('profiles')
+          .select(`
+            *,
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
+            career:careers!profiles_position_fkey(title, id)
+          `)
+          .eq('user_type', 'mentor')
+          .order('created_at', { ascending: false });
 
-      console.log('Profiles fetched successfully:', data?.length);
-      return data.map(profile => ({
-        ...profile,
-        company_name: profile.company?.name,
-        school_name: profile.school?.name,
-        academic_major: profile.academic_major?.title,
-        career_title: profile.career?.title
-      }));
-    } catch (err) {
-      console.error('Error in profiles query:', err);
-      toast({
-        title: "Error loading profiles",
-        description: "There was an error loading the community profiles. Please try again later.",
-        variant: "destructive",
-      });
-      throw err;
-    }
-  },
-  retry: 2,
-  retryDelay: 1000,
-});
+        if (user?.id) {
+          query = query.neq('id', user.id);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+
+        console.log('Profiles fetched successfully:', data?.length);
+        return data.map(profile => ({
+          ...profile,
+          company_name: profile.company?.name,
+          school_name: profile.school?.name,
+          academic_major: profile.academic_major?.title,
+          career_title: profile.career?.title
+        }));
+      } catch (err) {
+        console.error('Error in profiles query:', err);
+        toast({
+          title: "Error loading profiles",
+          description: "There was an error loading the community profiles. Please try again later.",
+          variant: "destructive",
+        });
+        throw err;
+      }
+    },
+    retry: 2,
+    retryDelay: 1000,
+  });
 
   if (error) {
     console.error('React Query error:', error);
@@ -126,27 +126,34 @@ const { data: profiles = [], isLoading, error } = useQuery({
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
-              <h1 className="text-3xl font-bold">PicoCareer Programs</h1>
-              
-              <CommunityFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedSkills={selectedSkills}
-                onSkillsChange={setSelectedSkills}
-                locationFilter={locationFilter}
-                onLocationChange={setLocationFilter}
-                companyFilter={companyFilter}
-                onCompanyChange={setCompanyFilter}
-                schoolFilter={schoolFilter}
-                onSchoolChange={setSchoolFilter}
-                fieldFilter={fieldFilter}
-                onFieldChange={setFieldFilter}
-                locations={locations}
-                companies={companies}
-                schools={schools}
-                fields={fields}
-                allSkills={allSkills}
-              />
+              {/* Make the header and filters sticky with a compact design */}
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+                <div className="transform transition-transform duration-200 py-2">
+                  <h1 className="text-xl font-bold">PicoCareer Programs</h1>
+                </div>
+                
+                <div className="transform transition-all duration-200 -mx-2">
+                  <CommunityFilters
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    selectedSkills={selectedSkills}
+                    onSkillsChange={setSelectedSkills}
+                    locationFilter={locationFilter}
+                    onLocationChange={setLocationFilter}
+                    companyFilter={companyFilter}
+                    onCompanyChange={setCompanyFilter}
+                    schoolFilter={schoolFilter}
+                    onSchoolChange={setSchoolFilter}
+                    fieldFilter={fieldFilter}
+                    onFieldChange={setFieldFilter}
+                    locations={locations}
+                    companies={companies}
+                    schools={schools}
+                    fields={fields}
+                    allSkills={allSkills}
+                  />
+                </div>
+              </div>
 
               {error ? (
                 <div className="text-center py-8">
