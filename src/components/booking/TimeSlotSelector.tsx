@@ -1,6 +1,7 @@
 import { format, parse, addMinutes } from "date-fns";
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
+import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 
 interface TimeSlot {
   time: string;
@@ -9,7 +10,7 @@ interface TimeSlot {
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
-  availableTimeSlots: TimeSlot[];
+  mentorId: string; // Add mentorId prop
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
   selectedSessionType: SessionType | undefined;
@@ -18,7 +19,7 @@ interface TimeSlotSelectorProps {
 
 export function TimeSlotSelector({ 
   date, 
-  availableTimeSlots, 
+  mentorId,
   selectedTime, 
   onTimeSelect,
   selectedSessionType,
@@ -26,12 +27,15 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
+  // Use the custom hook to fetch available time slots
+  const availableTimeSlots = useAvailableTimeSlots(date, mentorId);
+
   // Generate time slots based on session duration
   const generateTimeSlots = () => {
     if (!availableTimeSlots.length) return [];
 
     const slots: TimeSlot[] = [];
-    const increment = 15; // Changed from 60 to 15 minutes
+    const increment = 15; // 15-minute increments
     const sessionDuration = selectedSessionType?.duration || 60;
 
     availableTimeSlots.forEach(availability => {
@@ -48,7 +52,7 @@ export function TimeSlotSelector({
             available: availability.available
           });
         }
-        currentTime = addMinutes(currentTime, increment); // Increment by 15 minutes
+        currentTime = addMinutes(currentTime, increment);
       }
     });
 

@@ -18,7 +18,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
 
       console.log("Fetching availability for date:", format(date, "yyyy-MM-dd"), "mentor:", mentorId);
       
-      // Query based on the specific date instead of day_of_week
+      // Query based on the specific date
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('start_time, end_time')
