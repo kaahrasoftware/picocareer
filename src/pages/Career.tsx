@@ -34,10 +34,25 @@ export default function Career() {
   const allSkills = Array.from(new Set(careers.flatMap(career => career.required_skills || []))).sort();
 
   const filteredCareers = careers.filter((career) => {
-    const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      career.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchableFields = [
+      career.title,
+      career.description,
+      ...(career.required_skills || []),
+      ...(career.required_tools || []),
+      career.job_outlook,
+      career.industry,
+      career.work_environment,
+      career.growth_potential,
+      ...(career.keywords || []),
+      ...(career.transferable_skills || []),
+      ...(career.careers_to_consider_switching_to || []),
+      ...(career.required_education || []),
+      ...(career.academic_majors || []),
+      career.important_note
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    const matchesSearch = searchQuery === "" || searchableFields.includes(searchQuery.toLowerCase());
     const matchesIndustry = industryFilter === "all" || career.industry === industryFilter;
-    // Changed from AND (every) to OR (some) logic for skills matching
     const matchesSkills = selectedSkills.length === 0 || 
       (career.required_skills && selectedSkills.some(skill => 
         career.required_skills.includes(skill)
