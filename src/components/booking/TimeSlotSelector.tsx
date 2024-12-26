@@ -31,7 +31,8 @@ export function TimeSlotSelector({
     if (!availableTimeSlots.length) return [];
 
     const slots: TimeSlot[] = [];
-    const increment = selectedSessionType?.duration || 60; // Default to 1 hour if no session type selected
+    const increment = 15; // Changed from 60 to 15 minutes
+    const sessionDuration = selectedSessionType?.duration || 60;
 
     availableTimeSlots.forEach(availability => {
       const startTime = parse(availability.time, 'HH:mm', new Date());
@@ -40,14 +41,14 @@ export function TimeSlotSelector({
       let currentTime = startTime;
       while (currentTime < endTime) {
         // Check if there's enough time remaining in the slot for the selected session duration
-        const slotEndTime = addMinutes(currentTime, increment);
+        const slotEndTime = addMinutes(currentTime, sessionDuration);
         if (slotEndTime <= endTime) {
           slots.push({
             time: format(currentTime, 'HH:mm'),
             available: availability.available
           });
         }
-        currentTime = addMinutes(currentTime, 15); // Always increment by 15 minutes for granular selection
+        currentTime = addMinutes(currentTime, increment); // Increment by 15 minutes
       }
     });
 
