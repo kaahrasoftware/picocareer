@@ -30,13 +30,19 @@ export function CareerProspects({
 }: CareerProspectsProps) {
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
 
-  // Fetch all careers to match against opportunities
-  const { data: careers } = useQuery({
-    queryKey: ['careers-for-opportunities'],
+  // Fetch all careers with their relations to match against opportunities
+  const { data: careersWithRelations } = useQuery({
+    queryKey: ['careers-with-relations'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('careers')
-        .select('id, title')
+        .select(`
+          id,
+          title,
+          career_major_relations!inner(
+            major_id
+          )
+        `)
         .eq('status', 'Approved');
       
       if (error) throw error;
@@ -44,9 +50,9 @@ export function CareerProspects({
     },
   });
 
-  // Function to find matching career
+  // Function to find matching career using career_major_relations
   const findMatchingCareer = (opportunity: string) => {
-    return careers?.find(career => 
+    return careersWithRelations?.find(career => 
       career.title.toLowerCase() === opportunity.toLowerCase()
     );
   };
