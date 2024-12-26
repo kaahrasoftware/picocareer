@@ -37,8 +37,9 @@ export default function Career() {
     const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       career.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesIndustry = industryFilter === "all" || career.industry === industryFilter;
+    // Changed from AND (every) to OR (some) logic for skills matching
     const matchesSkills = selectedSkills.length === 0 || 
-      (career.required_skills && selectedSkills.every(skill => 
+      (career.required_skills && selectedSkills.some(skill => 
         career.required_skills.includes(skill)
       ));
     const matchesPopular = popularFilter === "all" || 
