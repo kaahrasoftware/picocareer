@@ -12,7 +12,7 @@ export function LoadMoreButton({ hasMore, isLoading, onClick }: LoadMoreButtonPr
   return (
     <Button 
       variant="outline" 
-      className="w-full mt-6" 
+      className="min-w-[200px]" 
       onClick={onClick}
       disabled={isLoading}
     >
