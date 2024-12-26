@@ -74,6 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Mentor:</strong> ${session.mentor.full_name}</p>
           <p><strong>Mentee:</strong> ${session.mentee.full_name}</p>
           ${session.notes ? `<p><strong>Notes:</strong> ${session.notes}</p>` : ''}
+          ${session.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${session.meeting_link}">${session.meeting_link}</a></p>` : ''}
         `;
         break;
 
@@ -100,12 +101,13 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Mentor:</strong> ${session.mentor.full_name}</p>
           <p><strong>Mentee:</strong> ${session.mentee.full_name}</p>
           ${session.notes ? `<p><strong>Notes:</strong> ${session.notes}</p>` : ''}
+          ${session.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${session.meeting_link}">${session.meeting_link}</a></p>` : ''}
         `;
         break;
     }
 
     const emailPayload = {
-      from: "PicoCareer <sessions@picocareer.com>",
+      from: "PicoCareer <onboarding@resend.dev>", // Using resend.dev domain temporarily
       to: [session.mentor.email, session.mentee.email],
       subject,
       html: content,
@@ -113,7 +115,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending email with payload:', emailPayload);
 
-    // Send email using Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
