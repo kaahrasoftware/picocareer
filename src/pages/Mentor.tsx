@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfileCard } from "@/components/community/ProfileCard";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
-import { BlogPagination } from "@/components/blog/BlogPagination";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { MentorGrid } from "@/components/community/MentorGrid";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,8 +14,6 @@ export default function Mentor() {
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const PROFILES_PER_PAGE = 12;
   const { toast } = useToast();
 
   const { data: profiles = [], isLoading, error } = useQuery({
@@ -52,7 +48,6 @@ export default function Mentor() {
           `)
           .eq('user_type', 'mentor');
 
-        // Add search conditions for text fields
         if (searchQuery) {
           query = query.or(
             `first_name.ilike.%${searchQuery}%,` +
@@ -101,10 +96,6 @@ export default function Mentor() {
     retryDelay: 1000,
   });
 
-  if (error) {
-    console.error('React Query error:', error);
-  }
-
   const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
   const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
   const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
@@ -142,11 +133,6 @@ export default function Mentor() {
     return matchesSearch && matchesSkills && matchesLocation && 
            matchesCompany && matchesSchool && matchesField;
   });
-
-  // Calculate pagination
-  const totalPages = Math.ceil((filteredProfiles?.length || 0) / PROFILES_PER_PAGE);
-  const startIndex = (currentPage - 1) * PROFILES_PER_PAGE;
-  const paginatedProfiles = filteredProfiles?.slice(startIndex, startIndex + PROFILES_PER_PAGE);
 
   return (
     <SidebarProvider>
@@ -187,36 +173,11 @@ export default function Mentor() {
                     Try refreshing the page
                   </button>
                 </div>
-              ) : isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="p-6 rounded-lg border bg-card">
-                      <div className="flex items-start gap-4">
-                        <Skeleton className="h-16 w-16 rounded-full" />
-                        <div className="flex-1">
-                          <Skeleton className="h-4 w-3/4 mb-2" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedProfiles?.map((profile) => (
-                      <ProfileCard key={profile.id} profile={profile} />
-                    ))}
-                  </div>
-                  
-                  {totalPages > 1 && (
-                    <BlogPagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
-                  )}
-                </>
+                <MentorGrid 
+                  profiles={filteredProfiles || []} 
+                  isLoading={isLoading} 
+                />
               )}
             </div>
           </div>
