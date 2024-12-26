@@ -1,5 +1,9 @@
 import { Briefcase, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 
 interface CareerProspectsProps {
   job_prospects?: string;
@@ -24,6 +28,29 @@ export function CareerProspects({
   global_applicability,
   related_careers
 }: CareerProspectsProps) {
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+
+  // Fetch all careers to match against opportunities
+  const { data: careers } = useQuery({
+    queryKey: ['careers-for-opportunities'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Function to find matching career
+  const findMatchingCareer = (opportunity: string) => {
+    return careers?.find(career => 
+      career.title.toLowerCase() === opportunity.toLowerCase()
+    );
+  };
+
   return (
     <div className="space-y-4">
       <h4 className="text-lg font-semibold flex items-center gap-2">
@@ -49,15 +76,21 @@ export function CareerProspects({
         <div className="space-y-2">
           <h5 className="text-sm font-medium">Career Opportunities</h5>
           <div className="flex flex-wrap gap-2">
-            {career_opportunities.map((career, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary"
-                className="bg-[#D3E4FD] text-[#4B5563] border-[#C1D9F9]"
-              >
-                {career}
-              </Badge>
-            ))}
+            {career_opportunities.map((career, index) => {
+              const matchingCareer = findMatchingCareer(career);
+              return (
+                <Badge 
+                  key={index} 
+                  variant="secondary"
+                  className={`bg-[#D3E4FD] text-[#4B5563] border-[#C1D9F9] ${
+                    matchingCareer ? 'cursor-pointer hover:bg-[#C1D9F9] transition-colors' : ''
+                  }`}
+                  onClick={() => matchingCareer && setSelectedCareerId(matchingCareer.id)}
+                >
+                  {career}
+                </Badge>
+              );
+            })}
           </div>
         </div>
       )}
@@ -84,6 +117,14 @@ export function CareerProspects({
           <h5 className="text-sm font-medium mb-2">Global Applicability</h5>
           <p className="text-sm text-muted-foreground">{global_applicability}</p>
         </div>
+      )}
+
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={!!selectedCareerId}
+          onOpenChange={(open) => !open && setSelectedCareerId(null)}
+        />
       )}
     </div>
   );
