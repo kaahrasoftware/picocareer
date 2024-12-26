@@ -6,7 +6,6 @@ export default function About() {
     {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
-      bio: "Passionate about connecting students with their dream careers.",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
     },
     {
@@ -21,13 +20,11 @@ export default function About() {
           />
         </span>
       ),
-      bio: "Dedicated to building bridges between industry experts and aspiring professionals.",
       imageUrl: "/placeholder.svg"
     },
     {
       name: "Tav Denkey Jr.",
       role: "Mentor and Advisor | Founder and CEO MiaPay",
-      bio: "",
       imageUrl: "/placeholder.svg"
     }
   ];
