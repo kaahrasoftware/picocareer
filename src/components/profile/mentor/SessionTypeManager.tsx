@@ -28,6 +28,25 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
     description: string;
   }) => {
     try {
+      // First check if this session type already exists for this mentor
+      const { data: existingType, error: checkError } = await supabase
+        .from('mentor_session_types')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('type', data.type)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingType) {
+        toast({
+          title: "Session type already exists",
+          description: "You already have this type of session configured.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
