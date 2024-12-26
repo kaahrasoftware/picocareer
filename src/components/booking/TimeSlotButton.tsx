@@ -1,6 +1,5 @@
 import { format, parse } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface TimeSlotButtonProps {
   time: string;
@@ -23,11 +22,7 @@ export function TimeSlotButton({
   return (
     <Button
       variant={isSelected ? "default" : "outline"}
-      className={cn(
-        "w-full min-w-[100px] py-2 px-3 h-auto text-sm",
-        !available && "opacity-50",
-        isSelected && "ring-2 ring-primary ring-offset-2",
-      )}
+      className={`${!available ? 'opacity-50' : ''} py-1 px-2 h-auto text-sm`}
       disabled={!available}
       onClick={() => onSelect(time)}
     >
