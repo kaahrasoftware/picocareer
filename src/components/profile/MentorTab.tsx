@@ -5,24 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentorEditForm } from "./mentor/MentorEditForm";
 import { MentorDetails } from "./mentor/MentorDetails";
+import { MentorshipStats } from "./mentor/MentorshipStats";
+import { AvailabilityManager } from "./mentor/AvailabilityManager";
+import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import type { Profile } from "@/types/database/profiles";
-import type { Database } from "@/integrations/supabase/types";
-
-type SessionType = Database["public"]["Enums"]["session_type"];
-
-interface SessionTypeData {
-  id: string;
-  type: SessionType;
-  duration: number;
-  price: number;
-  description: string | null;
-}
-
-interface SpecializationData {
-  career: { title: string; id: string } | null;
-  major: { title: string; id: string } | null;
-  years_of_experience: number;
-}
 
 interface MentorTabProps {
   profile: Profile | null;
@@ -38,7 +24,7 @@ export function MentorTab({ profile }: MentorTabProps) {
     queryFn: async () => {
       if (!profile?.id) return null;
 
-      const [sessionTypesResponse, specializationsResponse] = await Promise.all([
+      const [sessionTypesResponse, specializationsResponse, sessionsResponse] = await Promise.all([
         supabase
           .from('mentor_session_types')
           .select('*')
@@ -50,22 +36,60 @@ export function MentorTab({ profile }: MentorTabProps) {
             career:careers(id, title),
             major:majors(id, title)
           `)
-          .eq('profile_id', profile.id)
+          .eq('profile_id', profile.id),
+        supabase
+          .from('mentor_sessions')
+          .select('*')
+          .eq('mentor_id', profile.id)
       ]);
 
       if (sessionTypesResponse.error) throw sessionTypesResponse.error;
       if (specializationsResponse.error) throw specializationsResponse.error;
+      if (sessionsResponse.error) throw sessionsResponse.error;
 
-      // Transform the data to match our expected types
-      const formattedSpecializations: SpecializationData[] = specializationsResponse.data.map(spec => ({
-        career: spec.career ? { id: spec.career.id, title: spec.career.title } : null,
-        major: spec.major ? { id: spec.major.id, title: spec.major.title } : null,
-        years_of_experience: spec.years_of_experience
-      }));
+      const sessions = sessionsResponse.data;
+      const total_sessions = sessions.length;
+      const completed_sessions = sessions.filter(s => s.status === 'completed').length;
+      const upcoming_sessions = sessions.filter(s => s.status === 'upcoming').length;
+      const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
+      
+      // Calculate total hours from session durations
+      const total_hours = sessions.reduce((acc, session) => {
+        const sessionType = sessionTypesResponse.data.find(st => st.id === session.session_type_id);
+        return acc + (sessionType ? sessionType.duration / 60 : 0);
+      }, 0);
+
+      // Prepare data for the chart
+      const session_data = Array.from({ length: 6 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthName = date.toLocaleString('default', { month: 'short' });
+        const monthSessions = sessions.filter(s => {
+          const sessionDate = new Date(s.scheduled_at);
+          return sessionDate.getMonth() === date.getMonth() && 
+                 sessionDate.getFullYear() === date.getFullYear();
+        }).length;
+        return {
+          name: monthName,
+          sessions: monthSessions
+        };
+      }).reverse();
 
       return {
-        sessionTypes: sessionTypesResponse.data as SessionTypeData[],
-        specializations: formattedSpecializations
+        sessionTypes: sessionTypesResponse.data,
+        specializations: specializationsResponse.data.map(spec => ({
+          career: spec.career ? { id: spec.career.id, title: spec.career.title } : null,
+          major: spec.major ? { id: spec.major.id, title: spec.major.title } : null,
+          years_of_experience: spec.years_of_experience
+        })),
+        stats: {
+          total_sessions,
+          completed_sessions,
+          upcoming_sessions,
+          cancelled_sessions,
+          total_hours,
+          session_data
+        }
       };
     },
     enabled: !!profile?.id
@@ -94,6 +118,10 @@ export function MentorTab({ profile }: MentorTabProps) {
     );
   }
 
+  const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['mentor-details', profile.id] });
+  };
+
   return (
     <div className="space-y-6">
       {isEditing ? (
@@ -104,7 +132,22 @@ export function MentorTab({ profile }: MentorTabProps) {
         />
       ) : (
         <>
+          {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
+          
+          <div className="grid gap-6 md:grid-cols-2">
+            <AvailabilityManager 
+              profileId={profile.id} 
+              onUpdate={handleUpdate}
+            />
+            <SessionTypeManager
+              profileId={profile.id}
+              sessionTypes={mentorData?.sessionTypes || []}
+              onUpdate={handleUpdate}
+            />
+          </div>
+
           <MentorDetails mentorData={mentorData} />
+          
           <Button 
             onClick={() => setIsEditing(true)}
             className="w-full"
