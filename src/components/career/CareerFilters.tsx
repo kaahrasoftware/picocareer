@@ -77,7 +77,10 @@ export const CareerFilters = ({
         </SelectContent>
       </Select>
 
-      <div className="relative">
+      <div 
+        className="relative"
+        onMouseLeave={() => setIsSkillsDropdownOpen(false)}
+      >
         <Command className="rounded-lg border shadow-md">
           <CommandInput 
             placeholder="Filter by skills..." 
