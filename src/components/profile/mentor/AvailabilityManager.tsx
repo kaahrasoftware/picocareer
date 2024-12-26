@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { TimeSlotPicker } from "./availability/TimeSlotPicker";
 import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
+import { SessionTypeManager } from "./SessionTypeManager";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -17,6 +18,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   const [selectedStartTime, setSelectedStartTime] = useState<string>();
   const [selectedEndTime, setSelectedEndTime] = useState<string>();
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
+  const [sessionTypes, setSessionTypes] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Generate time slots for the full day
@@ -28,6 +30,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   useEffect(() => {
     if (!selectedDate) return;
     fetchAvailability();
+    fetchSessionTypes();
   }, [selectedDate, profileId]);
 
   const fetchAvailability = async () => {
@@ -43,6 +46,20 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     }
 
     setExistingSlots(data || []);
+  };
+
+  const fetchSessionTypes = async () => {
+    const { data, error } = await supabase
+      .from('mentor_session_types')
+      .select('*')
+      .eq('profile_id', profileId);
+
+    if (error) {
+      console.error('Error fetching session types:', error);
+      return;
+    }
+
+    setSessionTypes(data || []);
   };
 
   const handleSaveAvailability = async () => {
@@ -115,44 +132,55 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manage Availability</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <h4 className="font-medium mb-2">Select Date</h4>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border"
-              disabled={(date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return date < today;
-              }}
-            />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage Availability</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h4 className="font-medium mb-2">Select Date</h4>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="rounded-md border"
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+              />
+            </div>
+            
+            {selectedDate && (
+              <TimeSlotPicker
+                selectedStartTime={selectedStartTime}
+                selectedEndTime={selectedEndTime}
+                onStartTimeSelect={setSelectedStartTime}
+                onEndTimeSelect={setSelectedEndTime}
+                onSave={handleSaveAvailability}
+                timeSlots={timeSlots}
+              />
+            )}
           </div>
-          
-          {selectedDate && (
-            <TimeSlotPicker
-              selectedStartTime={selectedStartTime}
-              selectedEndTime={selectedEndTime}
-              onStartTimeSelect={setSelectedStartTime}
-              onEndTimeSelect={setSelectedEndTime}
-              onSave={handleSaveAvailability}
-              timeSlots={timeSlots}
-            />
-          )}
-        </div>
 
-        <ExistingTimeSlots 
-          slots={existingSlots}
-          onDelete={handleDeleteSlot}
-        />
-      </CardContent>
-    </Card>
+          <ExistingTimeSlots 
+            slots={existingSlots}
+            onDelete={handleDeleteSlot}
+          />
+        </CardContent>
+      </Card>
+
+      <SessionTypeManager
+        profileId={profileId}
+        sessionTypes={sessionTypes}
+        onUpdate={() => {
+          fetchSessionTypes();
+          onUpdate();
+        }}
+      />
+    </div>
   );
 }
