@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
-import { BlogPagination } from "@/components/blog/BlogPagination";
+import { Button } from "@/components/ui/button";
 
 export default function Career() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -15,8 +15,8 @@ export default function Career() {
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const CAREERS_PER_PAGE = 15;
+  const [visibleCount, setVisibleCount] = useState(15);
+  const LOAD_MORE_INCREMENT = 15;
 
   const { data: careers = [], isLoading } = useQuery({
     queryKey: ["careers"],
@@ -68,10 +68,12 @@ export default function Career() {
     return matchesSearch && matchesIndustry && matchesSkills && matchesPopular;
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredCareers.length / CAREERS_PER_PAGE);
-  const startIndex = (currentPage - 1) * CAREERS_PER_PAGE;
-  const paginatedCareers = filteredCareers.slice(startIndex, startIndex + CAREERS_PER_PAGE);
+  const visibleCareers = filteredCareers.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredCareers.length;
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
+  };
 
   if (isLoading) {
     return (
@@ -116,14 +118,18 @@ export default function Career() {
             allSkills={allSkills}
           />
 
-          <CareerResults filteredCareers={paginatedCareers} />
+          <CareerResults filteredCareers={visibleCareers} />
           
-          {totalPages > 1 && (
-            <BlogPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+          {hasMore && (
+            <div className="flex justify-center mt-8">
+              <Button 
+                variant="outline" 
+                onClick={handleLoadMore}
+                className="min-w-[200px]"
+              >
+                Load More Careers
+              </Button>
+            </div>
           )}
         </section>
       </div>
