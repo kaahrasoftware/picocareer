@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 
 export default function Career() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -14,6 +15,8 @@ export default function Career() {
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const CAREERS_PER_PAGE = 15;
 
   const { data: careers = [], isLoading } = useQuery({
     queryKey: ["careers"],
@@ -65,6 +68,11 @@ export default function Career() {
     return matchesSearch && matchesIndustry && matchesSkills && matchesPopular;
   });
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredCareers.length / CAREERS_PER_PAGE);
+  const startIndex = (currentPage - 1) * CAREERS_PER_PAGE;
+  const paginatedCareers = filteredCareers.slice(startIndex, startIndex + CAREERS_PER_PAGE);
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -108,7 +116,15 @@ export default function Career() {
             allSkills={allSkills}
           />
 
-          <CareerResults filteredCareers={filteredCareers} />
+          <CareerResults filteredCareers={paginatedCareers} />
+          
+          {totalPages > 1 && (
+            <BlogPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </section>
       </div>
 
