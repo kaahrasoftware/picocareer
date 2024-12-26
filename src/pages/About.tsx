@@ -140,9 +140,6 @@ export default function About() {
                     <CardTitle className="text-xl">{member.name}</CardTitle>
                     <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-center">{member.bio}</p>
-                  </CardContent>
                 </Card>
               ))}
             </div>
