@@ -29,7 +29,7 @@ export function TimeSlotsGrid({
 
   return (
     <div>
-      <h5 className="text-sm font-medium mb-2">{title}</h5>
+      <h4 className="font-medium mb-2">{title}</h4>
       <ScrollArea className="h-[250px] rounded-md border border-kahra-darker">
         <div className="flex flex-col gap-1.5 p-3">
           {timeSlots.map((slot) => (
