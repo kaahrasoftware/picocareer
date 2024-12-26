@@ -56,16 +56,13 @@ export function TimeSlotSelector({
 
   return (
     <div>
-      <h4 className="font-semibold mb-2">
-        Available Times for {format(date, "MMMM d, yyyy")}
-      </h4>
       {selectedSessionType && (
         <p className="text-sm text-muted-foreground mb-2">
           {selectedSessionType.duration}-minute slots
         </p>
       )}
       <TimeSlotsGrid
-        title="Available Times"
+        title=""
         timeSlots={timeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
