@@ -150,7 +150,10 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
             <div>
               <h4 className="font-semibold mb-2">Meeting Platform</h4>
-              <Select value={meetingPlatform} onValueChange={setMeetingPlatform}>
+              <Select 
+                value={meetingPlatform} 
+                onValueChange={(value: MeetingPlatform) => setMeetingPlatform(value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select meeting platform" />
                 </SelectTrigger>
