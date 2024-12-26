@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
@@ -17,7 +17,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
   const [userId, setUserId] = useState<string>('');
 
   // Get user ID on component mount
-  useState(() => {
+  useEffect(() => {
     const getUserId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
