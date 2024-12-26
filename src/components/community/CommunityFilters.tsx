@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { SelectFilter } from "./filters/SelectFilter";
 import { SearchInput } from "./filters/SearchInput";
+import { Card } from "@/components/ui/card";
+import { Filter } from "lucide-react";
 
 export interface CommunityFiltersProps {
   searchQuery: string;
@@ -35,33 +37,41 @@ export function CommunityFilters({
 
   return (
     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className={`space-y-4 transform transition-all duration-200 ${
-        isScrolled ? 'p-2 space-y-2' : 'p-4'
+      <Card className={`border-0 shadow-none ${
+        isScrolled ? 'p-2' : 'p-4'
       }`}>
-        <div className="flex-1">
-          <SearchInput 
-            value={searchQuery} 
-            onChange={onSearchChange}
-            className={`transition-all duration-200 ${
-              isScrolled ? 'h-8 text-sm' : 'h-10'
-            }`}
-          />
-        </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Filter className="h-4 w-4" />
+            <h2 className="text-sm font-medium">Filters</h2>
+          </div>
 
-        <div className={`grid grid-cols-1 gap-4 ${
-          isScrolled ? 'gap-2' : ''
-        }`}>
-          <SelectFilter
-            value={fieldFilter}
-            onValueChange={onFieldChange}
-            placeholder="Category"
-            options={fields}
-            className={`transition-all duration-200 ${
-              isScrolled ? 'h-8 text-sm' : 'h-10'
-            }`}
-          />
+          <div className="grid gap-4">
+            <div className="flex-1">
+              <SearchInput 
+                value={searchQuery} 
+                onChange={onSearchChange}
+                className={`transition-all duration-200 ${
+                  isScrolled ? 'h-8 text-sm' : 'h-10'
+                }`}
+                placeholder="Search by title, description, skills..."
+              />
+            </div>
+
+            <div>
+              <SelectFilter
+                value={fieldFilter}
+                onValueChange={onFieldChange}
+                placeholder="Category"
+                options={fields}
+                className={`transition-all duration-200 ${
+                  isScrolled ? 'h-8 text-sm' : 'h-10'
+                }`}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
