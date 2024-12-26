@@ -40,7 +40,7 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
 
       if (existingType) {
         toast({
-          title: "Session type already exists",
+          title: "Session type exists",
           description: "You already have this type of session configured.",
           variant: "destructive",
         });

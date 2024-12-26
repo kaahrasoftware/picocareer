@@ -73,6 +73,24 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     }
 
     try {
+      // Check for existing slot
+      const { data: existingSlot } = await supabase
+        .from('mentor_availability')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('date_available', format(selectedDate, 'yyyy-MM-dd'))
+        .eq('start_time', selectedStartTime)
+        .maybeSingle();
+
+      if (existingSlot) {
+        toast({
+          title: "Time slot exists",
+          description: "This time slot is already set for this date",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
