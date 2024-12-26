@@ -28,7 +28,7 @@ export function useFieldOptions(fieldName: string) {
       }
 
       const table = tableMap[fieldName as FieldName];
-      const titleField: TitleField = fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
+      const titleField: TitleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
 
       try {
         const { data, error } = await supabase
@@ -45,7 +45,7 @@ export function useFieldOptions(fieldName: string) {
         if (!data) return [];
 
         // Filter and map the data to ensure it matches our TableRecord interface
-        const validRecords = data
+        const validRecords = (data as any[])
           .filter(isValidRecord)
           .map(item => ({
             id: item.id,
