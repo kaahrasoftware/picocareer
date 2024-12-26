@@ -19,7 +19,7 @@ export function TimeSlotsGrid({
 }: TimeSlotsGridProps) {
   if (timeSlots.length === 0) {
     return (
-      <div className="col-span-2 text-center text-gray-500 py-4">
+      <div className="text-center text-gray-500 py-4">
         No available time slots for this date
       </div>
     );
@@ -27,7 +27,7 @@ export function TimeSlotsGrid({
 
   return (
     <ScrollArea className="h-[200px] rounded-md border border-kahra-darker">
-      <div className="grid grid-cols-2 gap-2 p-4">
+      <div className="flex flex-col gap-2 p-4">
         {timeSlots.map((slot) => (
           <TimeSlotButton
             key={slot.time}
