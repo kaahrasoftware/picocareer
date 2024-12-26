@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import { useFeaturedCareers } from "@/hooks/useFeaturedCareers";
+import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -22,12 +23,12 @@ export const FeaturedCareersSection = () => {
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Featured Careers</h2>
-        <button 
-          onClick={() => setIsDialogOpen(true)}
+        <Link 
+          to="/career"
           className="text-primary hover:text-primary/80 transition-colors"
         >
           View all
-        </button>
+        </Link>
       </div>
       <div className="relative -mx-8">
         <Carousel
