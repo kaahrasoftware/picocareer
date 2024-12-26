@@ -19,10 +19,20 @@ export function TimeSlotsGrid({
   selectedTime, 
   onTimeSelect 
 }: TimeSlotsGridProps) {
+  const availableSlots = timeSlots.filter(slot => slot.available);
+
   if (timeSlots.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-4">
-        No available time slots
+      <div className="text-center text-muted-foreground py-4 bg-muted/5 rounded-md border">
+        No available time slots for this date
+      </div>
+    );
+  }
+
+  if (availableSlots.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-4 bg-muted/5 rounded-md border">
+        All time slots are booked for this date
       </div>
     );
   }
@@ -30,7 +40,7 @@ export function TimeSlotsGrid({
   return (
     <div>
       <h4 className="font-medium mb-2">{title}</h4>
-      <ScrollArea className="h-[250px] rounded-md border border-kahra-darker">
+      <ScrollArea className="h-[250px] rounded-md border">
         <div className="flex flex-col gap-1.5 p-3">
           {timeSlots.map((slot) => (
             <TimeSlotButton

@@ -3,14 +3,9 @@ import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 
-interface TimeSlot {
-  time: string;
-  available: boolean;
-}
-
 interface TimeSlotSelectorProps {
   date: Date | undefined;
-  mentorId: string; // Add mentorId prop
+  mentorId: string;
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
   selectedSessionType: SessionType | undefined;
@@ -34,29 +29,20 @@ export function TimeSlotSelector({
   const generateTimeSlots = () => {
     if (!availableTimeSlots.length) return [];
 
-    const slots: TimeSlot[] = [];
-    const increment = 15; // 15-minute increments
+    const slots = [...availableTimeSlots];
     const sessionDuration = selectedSessionType?.duration || 60;
 
-    availableTimeSlots.forEach(availability => {
-      const startTime = parse(availability.time, 'HH:mm', new Date());
-      const endTime = addMinutes(startTime, 60); // Each availability slot is 1 hour
+    // Filter out slots that don't have enough time for the selected session duration
+    return slots.filter((slot, index) => {
+      if (!slot.available) return false;
 
-      let currentTime = startTime;
-      while (currentTime < endTime) {
-        // Check if there's enough time remaining in the slot for the selected session duration
-        const slotEndTime = addMinutes(currentTime, sessionDuration);
-        if (slotEndTime <= endTime) {
-          slots.push({
-            time: format(currentTime, 'HH:mm'),
-            available: availability.available
-          });
-        }
-        currentTime = addMinutes(currentTime, increment);
+      // Check if there's enough consecutive available slots for the session
+      const slotsNeeded = Math.ceil(sessionDuration / 15);
+      for (let i = 0; i < slotsNeeded; i++) {
+        if (!slots[index + i]?.available) return false;
       }
+      return true;
     });
-
-    return slots;
   };
 
   const timeSlots = generateTimeSlots();

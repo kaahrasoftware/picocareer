@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
+import { format, parse, addMinutes } from "date-fns";
 
 interface TimeSlot {
   time: string;
@@ -16,14 +16,15 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
     async function fetchAvailability() {
       if (!date || !mentorId) return;
 
-      console.log("Fetching availability for date:", format(date, "yyyy-MM-dd"), "mentor:", mentorId);
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId);
       
       // Query based on the specific date
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('start_time, end_time')
         .eq('profile_id', mentorId)
-        .eq('date_available', format(date, 'yyyy-MM-dd'))
+        .eq('date_available', formattedDate)
         .eq('is_available', true);
 
       if (availabilityError) {
@@ -66,26 +67,32 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
         return;
       }
 
-      console.log("Availability data:", availabilityData);
-      console.log("Bookings data:", bookingsData);
-
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
-        const [startHour] = availability.start_time.split(':').map(Number);
-        const [endHour] = availability.end_time.split(':').map(Number);
+        // Parse the time strings (HH:mm format)
+        const startTime = parse(availability.start_time, 'HH:mm', new Date());
+        const endTime = parse(availability.end_time, 'HH:mm', new Date());
         
-        for (let hour = startHour; hour < endHour; hour++) {
-          const timeString = `${hour.toString().padStart(2, '0')}:00`;
+        let currentTime = startTime;
+        const increment = 15; // 15-minute increments
+
+        while (currentTime < endTime) {
+          const timeString = format(currentTime, 'HH:mm');
           const isBooked = bookingsData?.some(booking => {
             const bookingHour = new Date(booking.scheduled_at).getHours();
-            return bookingHour === hour;
+            const bookingMinute = new Date(booking.scheduled_at).getMinutes();
+            const slotHour = currentTime.getHours();
+            const slotMinute = currentTime.getMinutes();
+            return bookingHour === slotHour && bookingMinute === slotMinute;
           });
-          
+
           slots.push({
             time: timeString,
             available: !isBooked
           });
+
+          currentTime = addMinutes(currentTime, increment);
         }
       });
 
