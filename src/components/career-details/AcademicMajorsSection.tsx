@@ -30,32 +30,7 @@ export function AcademicMajorsSection({ academicMajors }: AcademicMajorsSectionP
         return [];
       }
 
-      // Get related majors through career_major_relations
-      const { data: relatedMajors, error: relatedError } = await supabase
-        .from('career_major_relations')
-        .select(`
-          major:majors(*)
-        `)
-        .gte('relevance_score', 16)
-        .order('relevance_score', { ascending: false });
-
-      if (relatedError) {
-        console.error('Error fetching related majors:', relatedError);
-        return directMajors || [];
-      }
-
-      // Combine and deduplicate majors
-      const allMajors = [
-        ...(directMajors || []),
-        ...(relatedMajors?.map(rm => rm.major) || [])
-      ];
-
-      // Remove duplicates based on major id
-      const uniqueMajors = Array.from(
-        new Map(allMajors.map(major => [major.id, major])).values()
-      );
-
-      return uniqueMajors;
+      return directMajors || [];
     },
     enabled: !!academicMajors?.length,
   });
