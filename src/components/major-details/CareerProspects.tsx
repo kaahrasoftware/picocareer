@@ -45,6 +45,23 @@ export function CareerProspects({
         </div>
       )}
 
+      {career_opportunities && career_opportunities.length > 0 && (
+        <div className="space-y-2">
+          <h5 className="text-sm font-medium">Career Opportunities</h5>
+          <div className="flex flex-wrap gap-2">
+            {career_opportunities.map((career, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary"
+                className="bg-[#D3E4FD] text-[#4B5563] border-[#C1D9F9]"
+              >
+                {career}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
       {professional_associations && professional_associations.length > 0 && (
         <div className="space-y-2">
           <h5 className="text-sm font-medium">Professional Associations</h5>
