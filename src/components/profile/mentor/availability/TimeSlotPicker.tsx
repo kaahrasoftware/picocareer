@@ -20,7 +20,6 @@ export function TimeSlotPicker({
 }: TimeSlotPickerProps) {
   return (
     <div className="space-y-4">
-      <h4 className="font-medium">Set Available Hours</h4>
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <TimeSlotSelector
