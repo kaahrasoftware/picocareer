@@ -128,7 +128,7 @@ export default function About() {
                       <img 
                         src={member.imageUrl} 
                         alt={member.name}
-                        className="w-full h-full rounded-full object-cover bg-white"
+                        className="w-full h-full rounded-full object-cover object-top bg-white"
                       />
                     </div>
                     <CardTitle className="text-xl">{member.name}</CardTitle>
