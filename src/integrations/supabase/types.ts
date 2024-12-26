@@ -252,6 +252,7 @@ export type Database = {
         Row: {
           affiliated_programs: string[] | null
           career_opportunities: string[] | null
+          category: string[] | null
           certifications_to_consider: string[] | null
           common_courses: string[] | null
           common_difficulties: string[] | null
@@ -283,6 +284,7 @@ export type Database = {
         Insert: {
           affiliated_programs?: string[] | null
           career_opportunities?: string[] | null
+          category?: string[] | null
           certifications_to_consider?: string[] | null
           common_courses?: string[] | null
           common_difficulties?: string[] | null
@@ -314,6 +316,7 @@ export type Database = {
         Update: {
           affiliated_programs?: string[] | null
           career_opportunities?: string[] | null
+          category?: string[] | null
           certifications_to_consider?: string[] | null
           common_courses?: string[] | null
           common_difficulties?: string[] | null

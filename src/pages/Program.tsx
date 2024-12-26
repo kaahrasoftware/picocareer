@@ -10,10 +10,6 @@ import { LoadMoreButton } from "@/components/community/LoadMoreButton";
 
 export default function Program() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [degreeFilter, setDegreeFilter] = useState<string | null>(null);
-  const [gpaFilter, setGpaFilter] = useState<string | null>(null);
-  const [courseFilter, setCourseFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(12);
   const { toast } = useToast();
@@ -72,36 +68,13 @@ export default function Program() {
     const matchesSearch = searchQuery === "" || 
       searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
 
-    const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => (major.skill_match || []).includes(skill));
+    const matchesField = !fieldFilter || 
+      (major.category || []).includes(fieldFilter);
 
-    const matchesDegree = !degreeFilter || 
-      (major.degree_levels || []).includes(degreeFilter);
-
-    const matchesGPA = !gpaFilter || (
-      gpaFilter === "3.5+" ? (major.gpa_expectations || 0) >= 3.5 :
-      gpaFilter === "3.0-3.5" ? (major.gpa_expectations || 0) >= 3.0 && (major.gpa_expectations || 0) < 3.5 :
-      (major.gpa_expectations || 0) < 3.0
-    );
-
-    const matchesCourse = !courseFilter || 
-      (major.common_courses || []).some(course => 
-        course.toLowerCase().includes(courseFilter.toLowerCase())
-      );
-
-    const matchesField = !fieldFilter ||
-      major.title.toLowerCase().includes(fieldFilter.toLowerCase());
-
-    return matchesSearch && matchesSkills && matchesDegree && 
-           matchesGPA && matchesCourse && matchesField;
+    return matchesSearch && matchesField;
   });
 
-  // Get unique values for filters
-  const allSkills = Array.from(new Set(majors?.flatMap(m => m.skill_match || []) || [])).sort();
-  const degreeTypes = Array.from(new Set(majors?.flatMap(m => m.degree_levels || []) || [])).sort();
-  const courses = Array.from(new Set(majors?.flatMap(m => m.common_courses || []) || [])).sort();
-  const fields = Array.from(new Set(majors?.map(m => m.title) || [])).sort();
-
+  const fields = Array.from(new Set(majors?.flatMap(m => m.category || []) || [])).sort();
   const displayedMajors = filteredMajors?.slice(0, displayCount);
   const hasMore = displayCount < (filteredMajors?.length || 0);
 
@@ -125,21 +98,9 @@ export default function Program() {
                   <CommunityFilters
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
-                    selectedSkills={selectedSkills}
-                    onSkillsChange={setSelectedSkills}
-                    locationFilter={degreeFilter}
-                    onLocationChange={setDegreeFilter}
-                    companyFilter={gpaFilter}
-                    onCompanyChange={setGpaFilter}
-                    schoolFilter={courseFilter}
-                    onSchoolChange={setCourseFilter}
                     fieldFilter={fieldFilter}
                     onFieldChange={setFieldFilter}
-                    locations={degreeTypes}
-                    companies={["3.5+", "3.0-3.5", "below-3.0"]}
-                    schools={courses}
                     fields={fields}
-                    allSkills={allSkills}
                   />
                 </div>
               </div>
