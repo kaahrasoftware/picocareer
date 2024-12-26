@@ -7,19 +7,19 @@ export default function About() {
       name: "John Smith",
       role: "CEO & Founder",
       bio: "Passionate about connecting students with their dream careers.",
-      imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=john"
+      imageUrl: "/placeholder.svg"
     },
     {
       name: "Sarah Johnson",
       role: "Head of Mentorship",
       bio: "Dedicated to building bridges between industry experts and aspiring professionals.",
-      imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah"
+      imageUrl: "/placeholder.svg"
     },
     {
       name: "Michael Chen",
       role: "Technical Lead",
       bio: "Focused on creating innovative solutions for career development.",
-      imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael"
+      imageUrl: "/placeholder.svg"
     }
   ];
 
