@@ -1,68 +1,40 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfileCard } from "@/components/community/ProfileCard";
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { MajorCard } from "@/components/MajorCard";
 
 export default function Program() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [locationFilter, setLocationFilter] = useState<string | null>(null);
-  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
-  const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
-  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
+  const [degreeFilter, setDegreeFilter] = useState<string | null>(null);
+  const [gpaFilter, setGpaFilter] = useState<string | null>(null);
+  const [courseFilter, setCourseFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const PROFILES_PER_PAGE = 15;
+  const MAJORS_PER_PAGE = 9;
   const { toast } = useToast();
 
-  const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles'],
+  const { data: majors = [], isLoading, error } = useQuery({
+    queryKey: ['majors'],
     queryFn: async () => {
-      console.log('Fetching profiles...');
-      const { data: { user } } = await supabase.auth.getUser();
-      
       try {
-        let query = supabase
-          .from('profiles')
-          .select(`
-            *,
-            company:companies(name),
-            school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title, id)
-          `)
-          .eq('user_type', 'mentor')
+        const { data, error } = await supabase
+          .from('majors')
+          .select('*')
+          .eq('status', 'Approved')
           .order('created_at', { ascending: false });
 
-        if (user?.id) {
-          query = query.neq('id', user.id);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
-
-        console.log('Profiles fetched successfully:', data?.length);
-        return data.map(profile => ({
-          ...profile,
-          company_name: profile.company?.name,
-          school_name: profile.school?.name,
-          academic_major: profile.academic_major?.title,
-          career_title: profile.career?.title
-        }));
+        if (error) throw error;
+        return data;
       } catch (err) {
-        console.error('Error in profiles query:', err);
+        console.error('Error fetching majors:', err);
         toast({
-          title: "Error loading profiles",
-          description: "There was an error loading the community profiles. Please try again later.",
+          title: "Error loading majors",
+          description: "There was an error loading the majors. Please try again later.",
           variant: "destructive",
         });
         throw err;
@@ -72,52 +44,48 @@ export default function Program() {
     retryDelay: 1000,
   });
 
-  if (error) {
-    console.error('React Query error:', error);
-  }
-
-  const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
-  const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
-  const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
-  const fields = Array.from(new Set(profiles?.flatMap(p => p.fields_of_interest || []) || [])).sort();
-  const allSkills = Array.from(new Set(profiles?.flatMap(p => p.skills || []) || [])).sort();
-
-  const filteredProfiles = profiles?.filter(profile => {
+  const filteredMajors = majors?.filter(major => {
     const searchableFields = [
-      profile.first_name,
-      profile.last_name,
-      profile.full_name,
-      profile.position,
-      profile.highest_degree,
-      profile.bio,
-      profile.location,
-      profile.company_name,
-      profile.school_name,
-      profile.academic_major,
-      ...(profile.keywords || []),
-      ...(profile.skills || []),
-      ...(profile.tools_used || []),
-      ...(profile.fields_of_interest || [])
+      major.title,
+      major.description,
+      ...(major.common_courses || []),
+      ...(major.skill_match || []),
+      ...(major.tools_knowledge || []),
     ].filter(Boolean).map(field => field.toLowerCase());
 
     const matchesSearch = searchQuery === "" || 
       searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
 
     const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => (profile.skills || []).includes(skill));
-    const matchesLocation = !locationFilter || profile.location === locationFilter;
-    const matchesCompany = !companyFilter || profile.company_name === companyFilter;
-    const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
-    const matchesField = !fieldFilter || (profile.fields_of_interest || []).includes(fieldFilter);
+      selectedSkills.every(skill => (major.skill_match || []).includes(skill));
 
-    return matchesSearch && matchesSkills && matchesLocation && 
-           matchesCompany && matchesSchool && matchesField;
+    const matchesDegree = !degreeFilter || 
+      (major.degree_levels || []).includes(degreeFilter);
+
+    const matchesGPA = !gpaFilter || (
+      gpaFilter === "3.5+" ? (major.gpa_expectations || 0) >= 3.5 :
+      gpaFilter === "3.0-3.5" ? (major.gpa_expectations || 0) >= 3.0 && (major.gpa_expectations || 0) < 3.5 :
+      (major.gpa_expectations || 0) < 3.0
+    );
+
+    const matchesCourse = !courseFilter || 
+      (major.common_courses || []).some(course => 
+        course.toLowerCase().includes(courseFilter.toLowerCase())
+      );
+
+    return matchesSearch && matchesSkills && matchesDegree && 
+           matchesGPA && matchesCourse;
   });
 
   // Calculate pagination
-  const totalPages = Math.ceil((filteredProfiles?.length || 0) / PROFILES_PER_PAGE);
-  const startIndex = (currentPage - 1) * PROFILES_PER_PAGE;
-  const paginatedProfiles = filteredProfiles?.slice(startIndex, startIndex + PROFILES_PER_PAGE);
+  const totalPages = Math.ceil((filteredMajors?.length || 0) / MAJORS_PER_PAGE);
+  const startIndex = (currentPage - 1) * MAJORS_PER_PAGE;
+  const paginatedMajors = filteredMajors?.slice(startIndex, startIndex + MAJORS_PER_PAGE);
+
+  // Get unique values for filters
+  const allSkills = Array.from(new Set(majors?.flatMap(m => m.skill_match || []) || [])).sort();
+  const degreeTypes = Array.from(new Set(majors?.flatMap(m => m.degree_levels || []) || [])).sort();
+  const courses = Array.from(new Set(majors?.flatMap(m => m.common_courses || []) || [])).sort();
 
   return (
     <SidebarProvider>
@@ -126,10 +94,9 @@ export default function Program() {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
-              {/* Make the header and filters sticky with a compact design */}
               <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
                 <div className="transform transition-transform duration-200 py-2">
-                  <h1 className="text-xl font-bold">PicoCareer Programs</h1>
+                  <h1 className="text-xl font-bold">Academic Programs</h1>
                 </div>
                 
                 <div className="transform transition-all duration-200 -mx-2">
@@ -138,18 +105,16 @@ export default function Program() {
                     onSearchChange={setSearchQuery}
                     selectedSkills={selectedSkills}
                     onSkillsChange={setSelectedSkills}
-                    locationFilter={locationFilter}
-                    onLocationChange={setLocationFilter}
-                    companyFilter={companyFilter}
-                    onCompanyChange={setCompanyFilter}
-                    schoolFilter={schoolFilter}
-                    onSchoolChange={setSchoolFilter}
-                    fieldFilter={fieldFilter}
-                    onFieldChange={setFieldFilter}
-                    locations={locations}
-                    companies={companies}
-                    schools={schools}
-                    fields={fields}
+                    locationFilter={degreeFilter}
+                    onLocationChange={setDegreeFilter}
+                    companyFilter={gpaFilter}
+                    onCompanyChange={setGpaFilter}
+                    schoolFilter={courseFilter}
+                    onSchoolChange={setCourseFilter}
+                    locations={degreeTypes}
+                    companies={["3.5+", "3.0-3.5", "below-3.0"]}
+                    schools={courses}
+                    fields={[]}
                     allSkills={allSkills}
                   />
                 </div>
@@ -157,7 +122,7 @@ export default function Program() {
 
               {error ? (
                 <div className="text-center py-8">
-                  <p className="text-destructive">Failed to load community profiles.</p>
+                  <p className="text-destructive">Failed to load academic programs.</p>
                   <button 
                     onClick={() => window.location.reload()} 
                     className="mt-4 text-primary hover:underline"
@@ -168,22 +133,14 @@ export default function Program() {
               ) : isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="p-6 rounded-lg border bg-card">
-                      <div className="flex items-start gap-4">
-                        <Skeleton className="h-16 w-16 rounded-full" />
-                        <div className="flex-1">
-                          <Skeleton className="h-4 w-3/4 mb-2" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      </div>
-                    </div>
+                    <div key={i} className="h-[300px] rounded-lg border bg-card animate-pulse" />
                   ))}
                 </div>
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedProfiles?.map((profile) => (
-                      <ProfileCard key={profile.id} profile={profile} />
+                    {paginatedMajors?.map((major) => (
+                      <MajorCard key={major.id} {...major} />
                     ))}
                   </div>
                   
