@@ -25,8 +25,8 @@ export default function About() {
       imageUrl: "/placeholder.svg"
     },
     {
-      name: "Michael Chen",
-      role: "Technical Lead",
+      name: "Tav Denkey Jr.",
+      role: "Mentor and Advisor | Founder and CEO MiaPay",
       bio: "Focused on creating innovative solutions for career development.",
       imageUrl: "/placeholder.svg"
     }
