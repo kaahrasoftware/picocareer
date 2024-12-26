@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
@@ -14,19 +14,28 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+
+  // Get user ID on component mount
+  useState(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUserId();
+  }, []);
 
   const handleSubmit = async () => {
     if (!selectedDate || !selectedTime) return;
 
     setIsSubmitting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) throw new Error('Not authenticated');
-
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          profile_id: session.user.id,
+          profile_id: userId,
           date_available: format(selectedDate, 'yyyy-MM-dd'),
           start_time: selectedTime,
           end_time: format(
@@ -65,7 +74,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
       {selectedDate && (
         <TimeSlotSelector
           date={selectedDate}
-          mentorId={supabase.auth.getUser()?.data?.user?.id || ''}
+          mentorId={userId}
           selectedTime={selectedTime}
           onTimeSelect={setSelectedTime}
           selectedSessionType={undefined}

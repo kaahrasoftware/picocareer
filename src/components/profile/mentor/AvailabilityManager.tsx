@@ -179,7 +179,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                 onStartTimeSelect={setSelectedStartTime}
                 onEndTimeSelect={setSelectedEndTime}
                 onSave={handleSaveAvailability}
-                timeSlots={timeSlots}
+                mentorId={profileId}
               />
             )}
           </div>
