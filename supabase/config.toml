@@ -1,4 +1,3 @@
 project_id = "wurdmlkfkzuivvwxjmxk"
-
-[functions.update-career-major-matches]
-verify_jwt = false
+[functions.google-auth]
+verify_jwt = true
