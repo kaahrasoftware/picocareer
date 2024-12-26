@@ -10,6 +10,15 @@ export interface CommunityFiltersProps {
   fieldFilter: string | null;
   onFieldChange: (value: string | null) => void;
   fields: string[];
+  selectedSkills?: string[];
+  onSkillsChange?: (skills: string[]) => void;
+  isSkillsDropdownOpen?: boolean;
+  setIsSkillsDropdownOpen?: (isOpen: boolean) => void;
+  skillSearchQuery?: string;
+  setSkillSearchQuery?: (query: string) => void;
+  popularFilter?: string;
+  setPopularFilter?: (filter: string) => void;
+  allSkills?: string[];
 }
 
 export function CommunityFilters({
@@ -18,6 +27,15 @@ export function CommunityFilters({
   fieldFilter,
   onFieldChange,
   fields,
+  selectedSkills,
+  onSkillsChange,
+  isSkillsDropdownOpen,
+  setIsSkillsDropdownOpen,
+  skillSearchQuery,
+  setSkillSearchQuery,
+  popularFilter,
+  setPopularFilter,
+  allSkills,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
