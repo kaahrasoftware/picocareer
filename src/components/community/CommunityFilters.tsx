@@ -19,6 +19,15 @@ export interface CommunityFiltersProps {
   popularFilter?: string;
   setPopularFilter?: (filter: string) => void;
   allSkills?: string[];
+  locationFilter?: string | null;
+  onLocationChange?: (value: string | null) => void;
+  companyFilter?: string | null;
+  onCompanyChange?: (value: string | null) => void;
+  schoolFilter?: string | null;
+  onSchoolChange?: (value: string | null) => void;
+  locations?: string[];
+  companies?: string[];
+  schools?: string[];
 }
 
 export function CommunityFilters({
@@ -36,6 +45,15 @@ export function CommunityFilters({
   popularFilter,
   setPopularFilter,
   allSkills,
+  locationFilter,
+  onLocationChange,
+  companyFilter,
+  onCompanyChange,
+  schoolFilter,
+  onSchoolChange,
+  locations,
+  companies,
+  schools,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
