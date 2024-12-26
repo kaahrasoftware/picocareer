@@ -1,28 +1,24 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
 import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
-
-type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 
 interface SessionTypeManagerProps {
   profileId: string;
-  sessionTypes: SessionType[];
+  sessionTypes: Array<{ id: string; type: string; duration: number; price: number; description: string | null }>;
   onUpdate: () => void;
 }
 
 export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: SessionTypeManagerProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
 
   const handleAddSessionType = async (data: {
-    type: Database["public"]["Enums"]["session_type"];
+    type: string;
     duration: string;
     price: string;
     description: string;
@@ -53,7 +49,7 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
           profile_id: profileId,
           type: data.type,
           duration: parseInt(data.duration),
-          price: parseInt(data.price),
+          price: parseFloat(data.price),
           description: data.description
         });
 
@@ -63,9 +59,9 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
         title: "Success",
         description: "Session type added successfully",
       });
-      
+
       onUpdate();
-      setIsDialogOpen(false);
+      setShowForm(false);
     } catch (error) {
       console.error('Error adding session type:', error);
       toast({
@@ -76,67 +72,66 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
     }
   };
 
-  const handleDeleteSessionType = async (sessionTypeId: string) => {
+  const handleDeleteSessionType = async (id: string) => {
     try {
       const { error } = await supabase
         .from('mentor_session_types')
         .delete()
-        .eq('id', sessionTypeId);
+        .eq('id', id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Session type removed successfully",
+        description: "Session type deleted successfully",
       });
-      
+
       onUpdate();
     } catch (error) {
       console.error('Error deleting session type:', error);
       toast({
         title: "Error",
-        description: "Failed to remove session type",
+        description: "Failed to delete session type",
         variant: "destructive",
       });
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Session Types</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sessionTypes.map((sessionType) => (
-            <SessionTypeCard
-              key={sessionType.id}
-              sessionType={sessionType}
-              onDelete={handleDeleteSessionType}
-            />
-          ))}
-          <Button
-            variant="outline"
-            className="h-[200px] border-dashed flex flex-col gap-2"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="h-6 w-6" />
-            Add Session Type
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sessionTypes.map((sessionType) => (
+          <SessionTypeCard
+            key={sessionType.id}
+            sessionType={sessionType}
+            onDelete={handleDeleteSessionType}
+          />
+        ))}
+        <Button
+          variant="outline"
+          className="h-[200px] border-dashed flex flex-col gap-2"
+          onClick={() => setShowForm(true)}
+        >
+          <Plus className="h-6 w-6" />
+          Add Session Type
+        </Button>
+      </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Session Type</DialogTitle>
-            </DialogHeader>
-            <SessionTypeForm
-              onSubmit={handleAddSessionType}
-              onCancel={() => setIsDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Session Type</DialogTitle>
+            <DialogDescription>
+              Configure a new type of mentoring session that mentees can book with you.
+            </DialogDescription>
+          </DialogHeader>
+          <SessionTypeForm
+            onSubmit={handleAddSessionType}
+            onCancel={() => setShowForm(false)}
+            existingTypes={sessionTypes.map(st => st.type)}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

@@ -15,9 +15,10 @@ interface SessionTypeFormProps {
     description: string;
   }) => void;
   onCancel: () => void;
+  existingTypes?: SessionType[];
 }
 
-export function SessionTypeForm({ onSubmit, onCancel }: SessionTypeFormProps) {
+export function SessionTypeForm({ onSubmit, onCancel, existingTypes = [] }: SessionTypeFormProps) {
   const [type, setType] = useState<SessionType>("Introduction");
   const [duration, setDuration] = useState('30');
   const [price, setPrice] = useState('0');
@@ -30,6 +31,9 @@ export function SessionTypeForm({ onSubmit, onCancel }: SessionTypeFormProps) {
     "Group (2-3 Mentees)",
     "Group (4-6 Mentees)"
   ];
+
+  // Filter out already used session types
+  const availableTypes = sessionTypeOptions.filter(type => !existingTypes.includes(type));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +52,7 @@ export function SessionTypeForm({ onSubmit, onCancel }: SessionTypeFormProps) {
             <SelectValue placeholder="Select session type" />
           </SelectTrigger>
           <SelectContent>
-            {sessionTypeOptions.map((type) => (
+            {availableTypes.map((type) => (
               <SelectItem key={type} value={type}>
                 {type}
               </SelectItem>
