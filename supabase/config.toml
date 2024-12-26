@@ -1,1 +1,4 @@
 project_id = "wurdmlkfkzuivvwxjmxk"
+
+[functions.update-career-major-matches]
+verify_jwt = false
