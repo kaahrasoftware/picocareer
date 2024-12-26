@@ -1,48 +1,42 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimeSlotButton } from "./TimeSlotButton";
 
-interface TimeSlot {
-  time: string;
-  available: boolean;
-}
-
 interface TimeSlotsGridProps {
-  title: string;
-  timeSlots: TimeSlot[];
+  title?: string;
+  timeSlots: Array<{ time: string; available: boolean }>;
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
 }
 
-export function TimeSlotsGrid({ 
+export function TimeSlotsGrid({
   title,
-  timeSlots, 
-  selectedTime, 
-  onTimeSelect 
+  timeSlots,
+  selectedTime,
+  onTimeSelect
 }: TimeSlotsGridProps) {
-  if (timeSlots.length === 0) {
+  if (!timeSlots.length) {
     return (
-      <div className="text-center text-gray-500 py-4">
-        No available time slots
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground">No time slots available</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h4 className="font-medium mb-2">{title}</h4>
-      <ScrollArea className="h-[250px] rounded-md border border-kahra-darker">
-        <div className="flex flex-col gap-1.5 p-3">
-          {timeSlots.map((slot) => (
-            <TimeSlotButton
-              key={slot.time}
-              time={slot.time}
-              available={slot.available}
-              isSelected={selectedTime === slot.time}
-              onSelect={onTimeSelect}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+    <div className="space-y-4">
+      {title && (
+        <h4 className="text-sm font-medium">{title}</h4>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {timeSlots.map((slot) => (
+          <TimeSlotButton
+            key={slot.time}
+            time={slot.time}
+            available={slot.available}
+            isSelected={selectedTime === slot.time}
+            onSelect={onTimeSelect}
+          />
+        ))}
+      </div>
     </div>
   );
 }

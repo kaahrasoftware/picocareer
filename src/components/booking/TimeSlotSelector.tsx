@@ -31,7 +31,7 @@ export function TimeSlotSelector({
     if (!availableTimeSlots.length) return [];
 
     const slots: TimeSlot[] = [];
-    const increment = 15; // Changed from 60 to 15 minutes
+    const increment = 15; // 15-minute increments
     const sessionDuration = selectedSessionType?.duration || 60;
 
     availableTimeSlots.forEach(availability => {
@@ -48,7 +48,7 @@ export function TimeSlotSelector({
             available: availability.available
           });
         }
-        currentTime = addMinutes(currentTime, increment); // Increment by 15 minutes
+        currentTime = addMinutes(currentTime, increment);
       }
     });
 
@@ -58,9 +58,9 @@ export function TimeSlotSelector({
   const timeSlots = generateTimeSlots();
 
   return (
-    <div>
+    <div className="space-y-2">
       {selectedSessionType && (
-        <p className="text-sm text-muted-foreground mb-2">
+        <p className="text-sm text-muted-foreground">
           {selectedSessionType.duration}-minute slots
         </p>
       )}
