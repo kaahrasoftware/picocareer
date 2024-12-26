@@ -48,9 +48,25 @@ export default function Program() {
     const searchableFields = [
       major.title,
       major.description,
+      ...(major.learning_objectives || []),
       ...(major.common_courses || []),
-      ...(major.skill_match || []),
+      ...(major.interdisciplinary_connections || []),
+      major.job_prospects,
+      ...(major.certifications_to_consider || []),
+      ...(major.degree_levels || []),
+      ...(major.affiliated_programs || []),
+      ...(major.transferable_skills || []),
       ...(major.tools_knowledge || []),
+      major.passion_for_subject,
+      ...(major.skill_match || []),
+      ...(major.professional_associations || []),
+      major.global_applicability,
+      ...(major.common_difficulties || []),
+      ...(major.majors_to_consider_switching_to || []),
+      ...(major.career_opportunities || []),
+      major.intensity,
+      major.stress_level,
+      major.dropout_rates
     ].filter(Boolean).map(field => field.toLowerCase());
 
     const matchesSearch = searchQuery === "" || 
