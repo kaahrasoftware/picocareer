@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { Clock, DollarSign, FileText } from "lucide-react";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -72,63 +73,101 @@ export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: Sessio
       <CardHeader>
         <CardTitle>Session Types</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4">
-          {sessionTypes.map((sessionType) => (
-            <div key={sessionType.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <h4 className="font-medium">{sessionType.type}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {sessionType.duration} minutes - ${sessionType.price}
-                </p>
+      <CardContent className="space-y-6">
+        {/* Existing Session Types */}
+        {sessionTypes.length > 0 && (
+          <div className="grid gap-4">
+            {sessionTypes.map((sessionType) => (
+              <div 
+                key={sessionType.id} 
+                className="bg-muted/50 p-4 rounded-lg space-y-2"
+              >
+                <h4 className="font-medium text-lg">{sessionType.type}</h4>
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    {sessionType.duration} minutes
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    ${sessionType.price}
+                  </div>
+                </div>
                 {sessionType.description && (
-                  <p className="text-sm mt-1">{sessionType.description}</p>
+                  <div className="flex items-start gap-1 text-sm">
+                    <FileText className="h-4 w-4 mt-1 flex-shrink-0" />
+                    <p>{sessionType.description}</p>
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
+        {/* Add New Session Type Form */}
         <div className="space-y-4 pt-4 border-t">
-          <Select
-            value={type}
-            onValueChange={(value: Database["public"]["Enums"]["session_type"]) => setType(value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select session type" />
-            </SelectTrigger>
-            <SelectContent>
-              {sessionTypeOptions.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h3 className="font-medium text-lg">Add New Session Type</h3>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Session Type</label>
+              <Select
+                value={type}
+                onValueChange={(value: Database["public"]["Enums"]["session_type"]) => setType(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select session type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessionTypeOptions.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            placeholder="Duration (minutes)"
-          />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Duration (minutes)</label>
+                <Input
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="Duration (minutes)"
+                />
+              </div>
 
-          <Input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price ($)"
-          />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Price ($)</label>
+                <Input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="Price ($)"
+                />
+              </div>
+            </div>
 
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
-          />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe what mentees can expect from this session type"
+                className="h-24"
+              />
+            </div>
 
-          <Button onClick={handleAddSessionType} className="w-full">
-            Add Session Type
-          </Button>
+            <Button 
+              onClick={handleAddSessionType} 
+              className="w-full"
+              disabled={!type || !duration || !price}
+            >
+              Add Session Type
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
