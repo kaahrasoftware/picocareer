@@ -15,7 +15,7 @@ export default function Career() {
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState<string>("all");
-  const [visibleCount, setVisibleCount] = useState(9); // Changed from 15 to 9
+  const [visibleCount, setVisibleCount] = useState(9);
   const LOAD_MORE_INCREMENT = 3;
 
   const { data: careers = [], isLoading } = useQuery({
@@ -94,29 +94,32 @@ export default function Career() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col space-y-12">
         <section className="space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Explore All Careers</h2>
-            <p className="text-muted-foreground">
-              Find the perfect career path that matches your interests and skills
-            </p>
+          {/* Make the header and filters sticky */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-6 space-y-8">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Explore All Careers</h2>
+              <p className="text-muted-foreground">
+                Find the perfect career path that matches your interests and skills
+              </p>
+            </div>
+            
+            <CareerFilters
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              industryFilter={industryFilter}
+              setIndustryFilter={setIndustryFilter}
+              selectedSkills={selectedSkills}
+              setSelectedSkills={setSelectedSkills}
+              isSkillsDropdownOpen={isSkillsDropdownOpen}
+              setIsSkillsDropdownOpen={setIsSkillsDropdownOpen}
+              skillSearchQuery={skillSearchQuery}
+              setSkillSearchQuery={setSkillSearchQuery}
+              popularFilter={popularFilter}
+              setPopularFilter={setPopularFilter}
+              industries={industries}
+              allSkills={allSkills}
+            />
           </div>
-          
-          <CareerFilters
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            industryFilter={industryFilter}
-            setIndustryFilter={setIndustryFilter}
-            selectedSkills={selectedSkills}
-            setSelectedSkills={setSelectedSkills}
-            isSkillsDropdownOpen={isSkillsDropdownOpen}
-            setIsSkillsDropdownOpen={setIsSkillsDropdownOpen}
-            skillSearchQuery={skillSearchQuery}
-            setSkillSearchQuery={setSkillSearchQuery}
-            popularFilter={popularFilter}
-            setPopularFilter={setPopularFilter}
-            industries={industries}
-            allSkills={allSkills}
-          />
 
           <CareerResults filteredCareers={visibleCareers} />
           
