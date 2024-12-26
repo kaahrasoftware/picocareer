@@ -11,7 +11,16 @@ export default function About() {
     },
     {
       name: "Dr. Francis Kangure",
-      role: "National Director, Kenya 🇰🇪",
+      role: (
+        <span className="flex items-center gap-2">
+          National Director, Kenya
+          <img 
+            src="/lovable-uploads/kenya-flag.png" 
+            alt="Kenyan Flag"
+            className="w-5 h-3 inline-block object-cover"
+          />
+        </span>
+      ),
       bio: "Dedicated to building bridges between industry experts and aspiring professionals.",
       imageUrl: "/placeholder.svg"
     },
