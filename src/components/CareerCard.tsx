@@ -34,6 +34,8 @@ export function CareerCard({
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const handleOpenDialog = () => setDialogOpen(true);
+
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -46,6 +48,7 @@ export function CareerCard({
             salary_range={salary_range}
             image_url={image_url}
             profiles_count={profiles_count}
+            onImageClick={handleOpenDialog}
           />
 
           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
@@ -88,7 +91,7 @@ export function CareerCard({
             <Button 
               variant="outline"
               className="w-full bg-background hover:bg-muted/50 transition-colors"
-              onClick={() => setDialogOpen(true)}
+              onClick={handleOpenDialog}
             >
               View Details
             </Button>

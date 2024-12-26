@@ -7,13 +7,24 @@ interface CareerHeaderProps {
   salary_range?: string;
   image_url?: string;
   profiles_count?: number;
+  onImageClick?: () => void;  // Add new prop for click handler
 }
 
-export function CareerHeader({ title, industry, salary_range, image_url, profiles_count = 0 }: CareerHeaderProps) {
+export function CareerHeader({ 
+  title, 
+  industry, 
+  salary_range, 
+  image_url, 
+  profiles_count = 0,
+  onImageClick 
+}: CareerHeaderProps) {
   return (
     <div className="flex items-start gap-4 mb-4">
       {image_url ? (
-        <div className="h-24 w-24 rounded-lg overflow-hidden ring-2 ring-background shadow-lg">
+        <div 
+          className="h-24 w-24 rounded-lg overflow-hidden ring-2 ring-background shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={onImageClick}
+        >
           <img 
             src={image_url} 
             alt={title}
@@ -21,7 +32,10 @@ export function CareerHeader({ title, industry, salary_range, image_url, profile
           />
         </div>
       ) : (
-        <div className="h-24 w-24 rounded-lg bg-muted/50 flex items-center justify-center ring-2 ring-background shadow-lg">
+        <div 
+          className="h-24 w-24 rounded-lg bg-muted/50 flex items-center justify-center ring-2 ring-background shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={onImageClick}
+        >
           <Briefcase className="h-12 w-12 text-muted-foreground/50" />
         </div>
       )}
