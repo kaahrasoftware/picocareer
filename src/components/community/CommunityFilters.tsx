@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { SelectFilter } from "./filters/SelectFilter";
 import { SearchInput } from "./filters/SearchInput";
 
-interface CommunityFiltersProps {
+export interface CommunityFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   fieldFilter: string | null;
