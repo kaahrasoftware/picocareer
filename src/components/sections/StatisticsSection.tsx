@@ -93,7 +93,7 @@ export function StatisticsSection() {
     <section className="py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         {items.map((item) => (
-          <Card key={item.label} className="border-none shadow-sm hover:shadow-md transition-shadow">
+          <Card key={item.label} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center space-y-2">
                 <div className={`p-3 rounded-full ${item.color}`}>
