@@ -134,7 +134,7 @@ export default function About() {
                     <CardTitle className="text-xl">{member.name}</CardTitle>
                     <p className="text-sm text-picocareer-primary font-medium flex items-center justify-center gap-1">
                       {member.role}
-                      <Flag className="w-4 h-4" />
+                      <span role="img" aria-label="Kenya Flag">🇰🇪</span>
                     </p>
                   </CardHeader>
                   <CardContent>
