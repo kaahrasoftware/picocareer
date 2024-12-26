@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
-import { BlogPagination } from "@/components/blog/BlogPagination";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { MajorCard } from "@/components/MajorCard";
+import { LoadMoreButton } from "@/components/community/LoadMoreButton";
 
 export default function Program() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,8 +15,7 @@ export default function Program() {
   const [gpaFilter, setGpaFilter] = useState<string | null>(null);
   const [courseFilter, setCourseFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const MAJORS_PER_PAGE = 9;
+  const [displayCount, setDisplayCount] = useState(12);
   const { toast } = useToast();
 
   const { data: majors = [], isLoading, error } = useQuery({
@@ -81,16 +80,18 @@ export default function Program() {
            matchesGPA && matchesCourse && matchesField;
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil((filteredMajors?.length || 0) / MAJORS_PER_PAGE);
-  const startIndex = (currentPage - 1) * MAJORS_PER_PAGE;
-  const paginatedMajors = filteredMajors?.slice(startIndex, startIndex + MAJORS_PER_PAGE);
-
   // Get unique values for filters
   const allSkills = Array.from(new Set(majors?.flatMap(m => m.skill_match || []) || [])).sort();
   const degreeTypes = Array.from(new Set(majors?.flatMap(m => m.degree_levels || []) || [])).sort();
   const courses = Array.from(new Set(majors?.flatMap(m => m.common_courses || []) || [])).sort();
   const fields = Array.from(new Set(majors?.map(m => m.title) || [])).sort();
+
+  const displayedMajors = filteredMajors?.slice(0, displayCount);
+  const hasMore = displayCount < (filteredMajors?.length || 0);
+
+  const handleLoadMore = () => {
+    setDisplayCount(prev => Math.min(prev + 3, filteredMajors?.length || 0));
+  };
 
   return (
     <SidebarProvider>
@@ -144,23 +145,21 @@ export default function Program() {
                   ))}
                 </div>
               ) : (
-                <>
+                <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedMajors?.map((major) => (
+                    {displayedMajors?.map((major) => (
                       <MajorCard key={major.id} {...major} />
                     ))}
                   </div>
                   
-                  {totalPages > 1 && (
-                    <div className="flex justify-center mt-6">
-                      <BlogPagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                      />
-                    </div>
-                  )}
-                </>
+                  <div className="flex justify-center mt-8">
+                    <LoadMoreButton 
+                      hasMore={hasMore} 
+                      isLoading={isLoading} 
+                      onClick={handleLoadMore} 
+                    />
+                  </div>
+                </div>
               )}
             </div>
           </div>
