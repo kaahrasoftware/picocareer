@@ -6,6 +6,17 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { MentorGrid } from "@/components/community/MentorGrid";
+import type { Profile } from "@/types/database/profiles";
+
+type ExtendedProfile = Profile & {
+  company_name?: string | null;
+  school_name?: string | null;
+  academic_major?: string | null;
+  career_title?: string | null;
+  career?: {
+    title?: string | null;
+  } | null;
+};
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,21 +37,7 @@ export default function Mentor() {
         let query = supabase
           .from('profiles')
           .select(`
-            id,
-            first_name,
-            last_name,
-            full_name,
-            avatar_url,
-            position,
-            highest_degree,
-            skills,
-            tools_used,
-            keywords,
-            bio,
-            location,
-            fields_of_interest,
-            top_mentor,
-            user_type,
+            *,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
@@ -75,13 +72,13 @@ export default function Mentor() {
         }
 
         console.log('Profiles fetched successfully:', data?.length);
-        return data.map(profile => ({
+        return (data || []).map((profile: any) => ({
           ...profile,
           company_name: profile.company?.name,
           school_name: profile.school?.name,
           academic_major: profile.academic_major?.title,
           career_title: profile.career?.title
-        }));
+        })) as ExtendedProfile[];
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({

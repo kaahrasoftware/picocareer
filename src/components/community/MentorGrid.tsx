@@ -4,7 +4,12 @@ import { useState } from "react";
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorGridProps {
-  profiles: Profile[];
+  profiles: (Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career_title?: string | null;
+  })[];
   isLoading: boolean;
 }
 

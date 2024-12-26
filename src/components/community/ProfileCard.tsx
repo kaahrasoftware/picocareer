@@ -5,21 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { useState } from "react";
+import type { Profile } from "@/types/database/profiles";
 
 interface ProfileCardProps {
-  profile: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    career_title: string | null;
-    company_name: string | null;
-    academic_major: string | null;
-    school_name: string | null;
-    skills: string[] | null;
-    user_type: string | null;
-    top_mentor: boolean | null;
-    bio: string | null;
-    location: string | null;
+  profile: Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career_title?: string | null;
   };
 }
 
