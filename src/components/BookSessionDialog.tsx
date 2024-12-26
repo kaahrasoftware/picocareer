@@ -70,7 +70,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         if (meetError) {
           console.error('Error creating meet link:', meetError);
           
-          // Check if the error is due to Google account not being connected
           if (meetError.message?.includes('not connected their Google account') || 
               (typeof meetError.context?.body === 'string' && 
                meetError.context.body.includes('not connected their Google account'))) {
@@ -118,7 +117,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     } catch (error: any) {
       console.error('Error booking session:', error);
       
-      // If it's not a Google auth error, show generic error message
       if (!googleAuthError) {
         toast({
           title: "Error",
@@ -179,7 +177,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                 value={meetingPlatform} 
                 onValueChange={(value: MeetingPlatform) => {
                   setMeetingPlatform(value);
-                  setGoogleAuthError(false); // Reset error when platform changes
+                  setGoogleAuthError(false);
                 }}
               >
                 <SelectTrigger>
