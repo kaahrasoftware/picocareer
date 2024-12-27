@@ -14,6 +14,7 @@ interface TimeSlotFormProps {
 export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFormProps) {
   const [selectedStartTime, setSelectedStartTime] = useState<string>();
   const [selectedEndTime, setSelectedEndTime] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleSaveAvailability = async () => {
@@ -26,46 +27,60 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      // Check for existing slot
-      const { data: existingSlot } = await supabase
-        .from('mentor_availability')
-        .select('id')
-        .eq('profile_id', profileId)
-        .eq('date_available', format(selectedDate, 'yyyy-MM-dd'))
-        .eq('start_time', selectedStartTime)
-        .maybeSingle();
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
 
-      if (existingSlot) {
+      // First, check if there's any overlapping availability for this date and time
+      const { data: existingSlots } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', profileId)
+        .eq('date_available', formattedDate)
+        .or(`start_time.lte.${selectedEndTime},end_time.gte.${selectedStartTime}`);
+
+      if (existingSlots && existingSlots.length > 0) {
         toast({
-          title: "Time slot exists",
-          description: "This time slot is already set for this date",
+          title: "Time slot conflict",
+          description: "You already have availability set that overlaps with this time slot",
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
+      // If no conflicts, proceed with insertion
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
           profile_id: profileId,
-          date_available: format(selectedDate, 'yyyy-MM-dd'),
+          date_available: formattedDate,
           start_time: selectedStartTime,
           end_time: selectedEndTime,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           is_available: true
         });
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Availability has been set",
-      });
-      
-      setSelectedStartTime(undefined);
-      setSelectedEndTime(undefined);
-      onSuccess();
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Duplicate time slot",
+            description: "This time slot is already set for this date",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Success",
+          description: "Availability has been set",
+        });
+        
+        setSelectedStartTime(undefined);
+        setSelectedEndTime(undefined);
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error setting availability:', error);
       toast({
@@ -73,6 +88,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         description: "Failed to set availability",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -85,6 +102,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         onEndTimeSelect={setSelectedEndTime}
         onSave={handleSaveAvailability}
         mentorId={profileId}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

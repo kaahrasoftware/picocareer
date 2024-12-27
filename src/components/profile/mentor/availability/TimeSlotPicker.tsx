@@ -15,6 +15,7 @@ interface TimeSlotPickerProps {
   onEndTimeSelect: (time: string) => void;
   onSave: () => void;
   mentorId: string;
+  isSubmitting: boolean;
 }
 
 export function TimeSlotPicker({ 
@@ -23,7 +24,8 @@ export function TimeSlotPicker({
   onStartTimeSelect,
   onEndTimeSelect,
   onSave,
-  mentorId
+  mentorId,
+  isSubmitting
 }: TimeSlotPickerProps) {
   // Generate time slots for the full day in 30-minute increments
   const generateTimeSlots = () => {
@@ -89,10 +91,10 @@ export function TimeSlotPicker({
 
       <Button 
         onClick={onSave}
-        disabled={!selectedStartTime || !selectedEndTime}
+        disabled={!selectedStartTime || !selectedEndTime || isSubmitting}
         className="w-full"
       >
-        Save Availability
+        {isSubmitting ? "Saving..." : "Save Availability"}
       </Button>
     </div>
   );
