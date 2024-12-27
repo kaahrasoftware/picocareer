@@ -163,7 +163,7 @@ export function CalendarTab() {
       <CalendarHeader isMentor={isMentor} />
 
       <div className="flex">
-        <div className="flex-1">
+        <div className="w-fit">
           <CalendarContainer
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
