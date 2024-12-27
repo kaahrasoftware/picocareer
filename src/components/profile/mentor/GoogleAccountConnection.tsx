@@ -43,30 +43,42 @@ export function GoogleAccountConnection({ profileId }: GoogleAccountConnectionPr
 
   const handleGoogleAuth = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('google-auth', {
-        body: { 
-          action: isConnected ? 'disconnect' : 'authorize',
-          userId: profileId
-        }
-      });
+      if (isConnected) {
+        // Handle disconnect
+        const { error: disconnectError } = await supabase.functions.invoke('google-auth', {
+          body: { 
+            action: 'disconnect',
+            userId: profileId
+          }
+        });
 
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.location.href = data.url;
-      } else if (isConnected) {
-        // Handle disconnect success
+        if (disconnectError) throw disconnectError;
+        
         setIsConnected(false);
         toast({
           title: "Success",
           description: "Google account disconnected successfully",
         });
+      } else {
+        // Handle connect
+        const { data, error } = await supabase.functions.invoke('google-auth', {
+          body: { 
+            action: 'authorize',
+            userId: profileId
+          }
+        });
+
+        if (error) throw error;
+        
+        if (data?.url) {
+          window.location.href = data.url;
+        }
       }
-    } catch (error) {
-      console.error('Error initiating Google auth:', error);
+    } catch (error: any) {
+      console.error('Error with Google auth:', error);
       toast({
         title: "Error",
-        description: "Failed to process Google authentication",
+        description: error.message || "Failed to process Google authentication",
         variant: "destructive",
       });
     }

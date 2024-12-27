@@ -1,60 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import type { MentorSession, CalendarEvent } from "@/types/calendar";
+import type { MentorSession } from "@/types/database/session";
 
-export function useSessionEvents(selectedDate: Date | undefined, userId: string | undefined) {
+export function useSessionEvents(date: Date) {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
   return useQuery({
-    queryKey: ['calendar_events', selectedDate],
+    queryKey: ['session-events', date.toISOString()],
     queryFn: async () => {
-      if (!selectedDate || !userId) return [];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
 
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data: sessions, error: sessionsError } = await supabase
+      const { data, error } = await supabase
         .from('mentor_sessions')
         .select(`
           id,
           scheduled_at,
           notes,
-          mentor:profiles!mentor_sessions_mentor_id_fkey(
-            id,
-            full_name
-          ),
-          mentee:profiles!mentor_sessions_mentee_id_fkey(
-            id,
-            full_name
-          ),
-          session_type:mentor_session_types(
-            type,
-            duration
-          )
+          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
+          session_type:mentor_session_types(type, duration)
         `)
         .gte('scheduled_at', startOfDay.toISOString())
         .lte('scheduled_at', endOfDay.toISOString())
-        .or(`mentor_id.eq.${userId},mentee_id.eq.${userId}`)
-        .returns<MentorSession[]>();
+        .or(`mentor_id.eq.${user.id},mentee_id.eq.${user.id}`);
 
-      if (sessionsError) throw sessionsError;
-
-      // Convert sessions to calendar events
-      const sessionEvents: CalendarEvent[] = sessions.map(session => ({
-        id: session.id,
-        title: `Session with ${session.mentor.id === userId ? session.mentee.full_name : session.mentor.full_name}`,
-        description: `${session.session_type.type} (${session.session_type.duration} minutes)`,
-        start_time: session.scheduled_at,
-        end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
-        event_type: 'session',
-        notes: session.notes,
-        session_details: session
-      }));
-
-      return sessionEvents;
+      if (error) throw error;
+      return data as MentorSession[];
     },
-    enabled: !!selectedDate && !!userId,
+    enabled: !!date,
   });
 }

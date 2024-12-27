@@ -34,9 +34,12 @@ serve(async (req) => {
       throw new Error('Action is required')
     }
 
+    console.log('Processing action:', action, 'for user:', userId)
+
     if (action === 'authorize') {
       // Generate authorization URL
       const { uri } = await oauth2Client.code.getAuthorizationUri()
+      console.log('Generated auth URI:', uri)
       return new Response(JSON.stringify({ url: uri }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
