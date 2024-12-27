@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
 import { format } from "date-fns";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
+import { CalendarHeader } from "./calendar/CalendarHeader";
 import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
 import { CalendarViews } from "./calendar/CalendarViews";
 import { CalendarViewType } from "./calendar/types";
@@ -166,49 +168,67 @@ export function CalendarTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-semibold">Calendar</h2>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={view === "day" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setView("day")}
-            >
-              <List className="h-4 w-4 mr-2" />
-              Day
-            </Button>
-            <Button
-              variant={view === "week" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setView("week")}
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Week
-            </Button>
-            <Button
-              variant={view === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setView("month")}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Month
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <CalendarHeader 
+        isMentor={isMentor} 
+        onSetAvailability={() => setShowAvailabilityForm(true)} 
+      />
+
+      <div className="flex justify-end gap-2 mb-4">
+        <Button
+          variant={view === "day" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("day")}
+        >
+          <List className="h-4 w-4 mr-2" />
+          Day
+        </Button>
+        <Button
+          variant={view === "week" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("week")}
+        >
+          <LayoutGrid className="h-4 w-4 mr-2" />
+          Week
+        </Button>
+        <Button
+          variant={view === "month" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("month")}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Month
+        </Button>
       </div>
 
-      <CalendarViews
-        selectedDate={selectedDate || new Date()}
-        onSelectDate={setSelectedDate}
-        events={events}
-        availability={availability}
-        isMentor={isMentor}
-        onEventClick={setSelectedSession}
-        hasAvailability={hasAvailability}
-        view={view}
-      />
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <CalendarViews
+            selectedDate={selectedDate || new Date()}
+            onSelectDate={setSelectedDate}
+            events={events}
+            availability={availability}
+            isMentor={isMentor}
+            onEventClick={setSelectedSession}
+            hasAvailability={hasAvailability}
+            view={view}
+          />
+        </div>
+
+        {showAvailabilityForm && isMentor && (
+          <MentorAvailabilityForm 
+            onClose={() => setShowAvailabilityForm(false)}
+            onSuccess={() => {
+              setShowAvailabilityForm(false);
+              toast({
+                title: "Availability set",
+                description: "Your availability has been updated successfully.",
+              });
+              queryClient.invalidateQueries({ queryKey: ['mentor_availability'] });
+            }}
+          />
+        )}
+      </div>
 
       <SessionDetailsDialog
         session={selectedSession}

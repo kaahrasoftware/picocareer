@@ -1,4 +1,7 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import { CalendarViewType } from "./types";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
@@ -25,9 +28,9 @@ export function CalendarViews({
   hasAvailability,
   view
 }: CalendarViewsProps) {
-  return (
-    <div className="h-[calc(100vh-12rem)] bg-background rounded-lg border">
-      {view === "day" && (
+  switch (view) {
+    case "day":
+      return (
         <DayView
           date={selectedDate}
           events={events}
@@ -35,8 +38,9 @@ export function CalendarViews({
           isMentor={isMentor}
           onEventClick={onEventClick}
         />
-      )}
-      {view === "week" && (
+      );
+    case "week":
+      return (
         <WeekView
           date={selectedDate}
           events={events}
@@ -44,14 +48,26 @@ export function CalendarViews({
           isMentor={isMentor}
           onEventClick={onEventClick}
         />
-      )}
-      {view === "month" && (
-        <MonthView
-          date={selectedDate}
-          onSelectDate={onSelectDate}
-          hasAvailability={hasAvailability}
+      );
+    case "month":
+      return (
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={onSelectDate}
+          className="rounded-md border bg-background"
+          modifiers={{
+            hasAvailability: (date) => hasAvailability(date)
+          }}
+          modifiersStyles={{
+            hasAvailability: {
+              border: '2px solid #22c55e',
+              borderRadius: '4px'
+            }
+          }}
         />
-      )}
-    </div>
-  );
+      );
+    default:
+      return null;
+  }
 }

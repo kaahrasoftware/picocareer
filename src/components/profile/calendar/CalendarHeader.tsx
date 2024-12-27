@@ -1,4 +1,6 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { CalendarPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CalendarHeaderProps {
@@ -6,11 +8,20 @@ interface CalendarHeaderProps {
   onSetAvailability: () => void;
 }
 
-export function CalendarHeader({ isMentor }: CalendarHeaderProps) {
+export function CalendarHeader({ isMentor, onSetAvailability }: CalendarHeaderProps) {
   return (
     <>
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Calendar</h2>
+        {isMentor && (
+          <Button 
+            onClick={onSetAvailability}
+            className="flex items-center gap-2"
+          >
+            <CalendarPlus className="w-4 h-4" />
+            Set Availability
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-2 mb-4">
