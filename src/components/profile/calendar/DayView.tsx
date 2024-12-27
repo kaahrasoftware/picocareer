@@ -1,6 +1,6 @@
 import React from "react";
 import { format } from "date-fns";
-import { EventList } from "./EventList";
+import { TimeGrid } from "./TimeGrid";
 
 interface DayViewProps {
   date: Date;
@@ -18,18 +18,18 @@ export function DayView({
   onEventClick
 }: DayViewProps) {
   return (
-    <div className="p-6">
-      <h3 className="text-lg font-medium mb-6">
-        {format(date, 'EEEE, MMMM d, yyyy')}
-      </h3>
-      <div className="space-y-2">
-        <EventList 
-          events={events} 
-          availability={availability}
-          isMentor={isMentor}
-          onEventClick={onEventClick}
-        />
+    <div className="flex flex-col h-full bg-background">
+      <div className="text-center py-4 border-b">
+        <div className="text-sm text-gray-500">{format(date, "EEEE")}</div>
+        <div className="text-2xl font-semibold">{format(date, "MMMM d, yyyy")}</div>
       </div>
+      
+      <TimeGrid 
+        events={events} 
+        date={date}
+        startHour={6}
+        endHour={22}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { EventList } from "./EventList";
+import { format, eachDayOfInterval, startOfWeek, endOfWeek } from "date-fns";
+import { TimeGrid } from "./TimeGrid";
 
 interface WeekViewProps {
   date: Date;
@@ -22,31 +22,25 @@ export function WeekView({
   const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   return (
-    <div className="p-6 space-y-6">
-      {daysInWeek.map((day) => {
-        const dayEvents = events.filter(event => {
-          const eventDate = new Date(event.start_time);
-          return format(eventDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
-        });
-
-        const dayAvailability = availability.filter(slot => 
-          slot.date_available === format(day, 'yyyy-MM-dd')
-        );
-
-        return (
-          <div key={day.toISOString()} className="space-y-2">
-            <h3 className="text-lg font-medium sticky top-0 bg-background py-2 border-b">
-              {format(day, 'EEEE, MMMM d')}
-            </h3>
-            <EventList 
-              events={dayEvents} 
-              availability={dayAvailability}
-              isMentor={isMentor}
-              onEventClick={onEventClick}
-            />
+    <div className="flex flex-col h-full bg-background">
+      <div className="grid grid-cols-7 border-b">
+        {daysInWeek.map((day) => (
+          <div
+            key={day.toISOString()}
+            className="flex flex-col items-center py-2 border-r last:border-r-0"
+          >
+            <div className="text-sm text-gray-500">{format(day, "EEE")}</div>
+            <div className="text-xl font-semibold">{format(day, "d")}</div>
           </div>
-        );
-      })}
+        ))}
+      </div>
+      
+      <TimeGrid 
+        events={events} 
+        date={date}
+        startHour={6}
+        endHour={22}
+      />
     </div>
   );
 }

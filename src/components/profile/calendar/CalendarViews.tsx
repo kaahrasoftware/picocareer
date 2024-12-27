@@ -25,9 +25,9 @@ export function CalendarViews({
   hasAvailability,
   view
 }: CalendarViewsProps) {
-  switch (view) {
-    case "day":
-      return (
+  return (
+    <div className="h-[calc(100vh-12rem)] bg-background rounded-lg border">
+      {view === "day" && (
         <DayView
           date={selectedDate}
           events={events}
@@ -35,9 +35,8 @@ export function CalendarViews({
           isMentor={isMentor}
           onEventClick={onEventClick}
         />
-      );
-    case "week":
-      return (
+      )}
+      {view === "week" && (
         <WeekView
           date={selectedDate}
           events={events}
@@ -45,16 +44,14 @@ export function CalendarViews({
           isMentor={isMentor}
           onEventClick={onEventClick}
         />
-      );
-    case "month":
-      return (
+      )}
+      {view === "month" && (
         <MonthView
           date={selectedDate}
           onSelectDate={onSelectDate}
           hasAvailability={hasAvailability}
         />
-      );
-    default:
-      return null;
-  }
+      )}
+    </div>
+  );
 }
