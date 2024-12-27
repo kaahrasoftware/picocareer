@@ -49,11 +49,10 @@ export function EventsSidebar({
     return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
   };
 
-  // Generate time slots from 7 AM to 9 PM
-  const timeSlots = Array.from({ length: 15 }, (_, i) => {
-    const hour = i + 7; // Start from 7 AM
+  // Generate time slots from 12 AM to 11 PM
+  const timeSlots = Array.from({ length: 24 }, (_, i) => {
     return formatInTimeZone(
-      new Date().setHours(hour, 0, 0, 0),
+      new Date().setHours(i, 0, 0, 0),
       timezone,
       'h a'
     );
@@ -63,7 +62,7 @@ export function EventsSidebar({
     const eventDate = new Date(time);
     const hours = eventDate.getHours();
     const minutes = eventDate.getMinutes();
-    return `${(hours - 7) * 60 + minutes}px`; // 7 is the starting hour
+    return `${hours * 60 + minutes}px`; // No need to subtract 7 anymore since we start at 0
   };
 
   const getEventWidth = (title: string) => {
@@ -96,7 +95,7 @@ export function EventsSidebar({
             </div>
 
             {/* Events grid */}
-            <div className="relative border-l border-border min-h-[900px]">
+            <div className="relative border-l border-border min-h-[1440px]">
               {/* Hour grid lines */}
               {timeSlots.map((_, index) => (
                 <div
