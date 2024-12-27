@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parse, addMinutes, isWithinInterval } from "date-fns";
-import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -88,13 +88,13 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
           const [startHour, startMinute] = availability.start_time.split(':').map(Number);
           const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
-          const startTime = utcToZonedTime(
-            zonedTimeToUtc(new Date(baseDate.setHours(startHour, startMinute)), mentorTimezone),
+          const startTime = toZonedTime(
+            fromZonedTime(new Date(baseDate.setHours(startHour, startMinute)), mentorTimezone),
             userTimezone
           );
 
-          const endTime = utcToZonedTime(
-            zonedTimeToUtc(new Date(baseDate.setHours(endHour, endMinute)), mentorTimezone),
+          const endTime = toZonedTime(
+            fromZonedTime(new Date(baseDate.setHours(endHour, endMinute)), mentorTimezone),
             userTimezone
           );
 
