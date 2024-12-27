@@ -17,7 +17,7 @@ if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVAT
 
 async function getAccessToken() {
   try {
-    const now = Math.floor(Date.now() / 1000);
+    console.log('Starting getAccessToken process...');
     
     const claims = {
       iss: SERVICE_ACCOUNT_EMAIL,
@@ -28,15 +28,16 @@ async function getAccessToken() {
       sub: COMPANY_CALENDAR_EMAIL,
     };
 
-    // Convert the private key from PEM format to a CryptoKey
-    const pemHeader = "-----BEGIN PRIVATE KEY-----";
-    const pemFooter = "-----END PRIVATE KEY-----";
-    const pemContents = SERVICE_ACCOUNT_PRIVATE_KEY.substring(
-      SERVICE_ACCOUNT_PRIVATE_KEY.indexOf(pemHeader) + pemHeader.length,
-      SERVICE_ACCOUNT_PRIVATE_KEY.indexOf(pemFooter)
-    ).replace(/\s/g, '');
+    // Extract the key content between the PEM markers
+    const pemContent = SERVICE_ACCOUNT_PRIVATE_KEY
+      .replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '')
+      .replace(/\s/g, '');
 
-    const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+    // Decode the base64 key
+    const binaryKey = Uint8Array.from(atob(pemContent), c => c.charCodeAt(0));
+    
+    console.log('Importing private key...');
     const privateKey = await crypto.subtle.importKey(
       "pkcs8",
       binaryKey,
@@ -48,12 +49,14 @@ async function getAccessToken() {
       ["sign"]
     );
 
+    console.log('Creating JWT...');
     const jwt = await create(
       { alg: "RS256", typ: "JWT" },
       claims,
       privateKey
     );
 
+    console.log('Requesting access token...');
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -68,9 +71,10 @@ async function getAccessToken() {
     const data = await response.json();
     if (!response.ok) {
       console.error('Failed to get access token:', data);
-      throw new Error('Failed to get access token');
+      throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
     }
 
+    console.log('Successfully obtained access token');
     return data.access_token;
   } catch (error) {
     console.error('Error in getAccessToken:', error);
