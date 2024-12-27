@@ -40,9 +40,10 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         .or(`start_time.lte.${selectedEndTime},end_time.gte.${selectedStartTime}`);
 
       if (existingSlots && existingSlots.length > 0) {
+        const overlappingSlot = existingSlots[0];
         toast({
           title: "Time slot conflict",
-          description: "You already have availability set that overlaps with this time slot",
+          description: `You already have availability set from ${format(new Date(`2000-01-01T${overlappingSlot.start_time}`), 'h:mm a')} to ${format(new Date(`2000-01-01T${overlappingSlot.end_time}`), 'h:mm a')} on this date`,
           variant: "destructive",
         });
         setIsSubmitting(false);
