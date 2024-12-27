@@ -83,7 +83,7 @@ export function EventsSidebar({
     const start = new Date(`2000-01-01T${startTime}`);
     const end = new Date(`2000-01-01T${endTime}`);
     const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-    return `${diffInMinutes}px`;
+    return `${(diffInMinutes / 30) * 26}px`;
   };
 
   return (
