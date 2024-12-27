@@ -6,14 +6,17 @@ interface TimeGridLinesProps {
 
 export function TimeGridLines({ cellHeight }: TimeGridLinesProps) {
   return (
-    <>
+    <div className="absolute inset-0">
       {Array.from({ length: 48 }, (_, index) => (
         <div
           key={index}
           className="absolute w-full border-t border-border/30"
-          style={{ top: `${index * cellHeight}px` }}
+          style={{ 
+            top: `${index * cellHeight}px`,
+            height: `${cellHeight}px`
+          }}
         />
       ))}
-    </>
+    </div>
   );
 }

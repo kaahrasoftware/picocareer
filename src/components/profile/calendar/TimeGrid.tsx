@@ -7,6 +7,7 @@ interface TimeGridProps {
 }
 
 export function TimeGrid({ timezone, cellHeight }: TimeGridProps) {
+  // Generate time slots from 00:00 to 23:30 in 30-minute increments
   const timeSlots = Array.from({ length: 48 }, (_, i) => {
     const date = new Date();
     date.setHours(Math.floor(i / 2), (i % 2) * 30, 0, 0);
@@ -14,9 +15,16 @@ export function TimeGrid({ timezone, cellHeight }: TimeGridProps) {
   });
 
   return (
-    <div className="space-y-[26px] pt-3">
-      {timeSlots.map((time) => (
-        <div key={time} className="text-sm text-muted-foreground h-[26px]">
+    <div className="relative" style={{ paddingTop: '3px' }}>
+      {timeSlots.map((time, index) => (
+        <div
+          key={time}
+          className="text-sm text-muted-foreground"
+          style={{ 
+            height: `${cellHeight}px`,
+            lineHeight: `${cellHeight}px`
+          }}
+        >
           {time}
         </div>
       ))}

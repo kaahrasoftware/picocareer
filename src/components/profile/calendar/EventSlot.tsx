@@ -34,16 +34,16 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
     return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
   };
 
-  const getEventPosition = (timeStr: string) => {
-    const date = new Date(timeStr);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
+  const getEventPosition = () => {
+    const startDate = new Date(event.start_time);
+    const hours = startDate.getHours();
+    const minutes = startDate.getMinutes();
     return hours * cellHeight * 2 + (minutes / 30) * cellHeight;
   };
 
-  const calculateEventHeight = (startTime: string, endTime: string) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+  const calculateEventHeight = () => {
+    const start = new Date(event.start_time);
+    const end = new Date(event.end_time);
     const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
     return (diffInMinutes / 30) * cellHeight;
   };
@@ -51,7 +51,7 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
   return (
     <div
       className={cn(
-        "absolute left-2 p-3 rounded-lg transition-all duration-200",
+        "absolute left-2 right-2 p-3 rounded-lg transition-all duration-200",
         "shadow-sm",
         event.status !== 'cancelled' && "hover:shadow-md hover:translate-y-[-1px]",
         getEventColor(
@@ -61,9 +61,8 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
         )
       )}
       style={{
-        top: `${getEventPosition(event.start_time)}px`,
-        width: '140px',
-        height: `${calculateEventHeight(event.start_time, event.end_time)}px`,
+        top: `${getEventPosition()}px`,
+        height: `${calculateEventHeight()}px`,
         zIndex: 10
       }}
       onClick={() => event.status !== 'cancelled' && onEventClick?.(event)}
