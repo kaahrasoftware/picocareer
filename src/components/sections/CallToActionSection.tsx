@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 
 export const CallToActionSection = () => {
   return (
-    <section className="py-16 bg-gradient-to-br from-picocareer-dark to-picocareer-darker">
-      <div className="container mx-auto px-4">
+    <section className="py-16 relative overflow-hidden rounded-xl mx-4">
+      <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6">
           <Button
             asChild
