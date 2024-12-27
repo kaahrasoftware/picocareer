@@ -15,7 +15,7 @@ export function TimeGrid({ timezone, cellHeight }: TimeGridProps) {
   });
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ paddingTop: `${cellHeight / 2}px` }}>
       {timeSlots.map((time, index) => (
         <div
           key={time}
