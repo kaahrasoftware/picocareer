@@ -8,7 +8,7 @@ interface TimeSlot {
   available: boolean;
 }
 
-export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) {
+export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, sessionDuration: number = 15) {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const { toast } = useToast();
 
@@ -53,7 +53,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
 
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('mentor_sessions')
-        .select('scheduled_at')
+        .select('scheduled_at, session_type:mentor_session_types(duration)')
         .eq('mentor_id', mentorId)
         .gte('scheduled_at', startOfDay.toISOString())
         .lte('scheduled_at', endOfDay.toISOString());
@@ -75,7 +75,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
       availabilityData.forEach((availability) => {
         try {
           // Create a base date for today to properly handle time comparisons
-          const baseDate = new Date();
+          const baseDate = new Date(date);
           baseDate.setHours(0, 0, 0, 0);
 
           // Parse start and end times
@@ -93,16 +93,28 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
 
           while (currentTime < endTime) {
             const timeString = format(currentTime, 'HH:mm');
+            const slotStart = new Date(date);
+            slotStart.setHours(currentTime.getHours(), currentTime.getMinutes());
             
-            // Check if this time slot is booked
-            const isBooked = bookingsData?.some(booking => {
+            // Check if this time slot overlaps with any existing booking
+            const isOverlapping = bookingsData?.some(booking => {
               const bookingTime = new Date(booking.scheduled_at);
-              return format(bookingTime, 'HH:mm') === timeString;
+              const bookingDuration = booking.session_type?.duration || 60;
+              const bookingEnd = addMinutes(bookingTime, bookingDuration);
+
+              // Check if the current slot (considering session duration) overlaps with the booking
+              const slotEnd = addMinutes(slotStart, sessionDuration);
+              
+              return (
+                (slotStart >= bookingTime && slotStart < bookingEnd) || // Slot start falls within booking
+                (slotEnd > bookingTime && slotEnd <= bookingEnd) || // Slot end falls within booking
+                (slotStart <= bookingTime && slotEnd >= bookingEnd) // Slot encompasses booking
+              );
             });
 
             slots.push({
               time: timeString,
-              available: !isBooked
+              available: !isOverlapping
             });
 
             currentTime = addMinutes(currentTime, increment);
@@ -119,7 +131,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string) 
     if (date && mentorId) {
       fetchAvailability();
     }
-  }, [date, mentorId, toast]);
+  }, [date, mentorId, sessionDuration, toast]);
 
   return availableTimeSlots;
 }
