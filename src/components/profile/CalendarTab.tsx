@@ -77,8 +77,8 @@ export function CalendarTab() {
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Get calendar events using our custom hook
-  const { data: events = [], isLoading: isEventsLoading } = useSessionEvents(selectedDate, session?.user?.id);
+  // Get calendar events using our custom hook - now only passing selectedDate
+  const { data: events = [], isLoading: isEventsLoading } = useSessionEvents(selectedDate || new Date());
 
   const handleCancelSession = async () => {
     if (!selectedSession?.session_details) return;

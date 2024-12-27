@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { MentorSession } from "@/types/database/session";
+import { CalendarEvent } from "@/types/calendar";
+import { format } from "date-fns";
 
 export function useSessionEvents(date: Date) {
   const startOfDay = new Date(date);
@@ -30,7 +32,17 @@ export function useSessionEvents(date: Date) {
         .or(`mentor_id.eq.${user.id},mentee_id.eq.${user.id}`);
 
       if (error) throw error;
-      return data as MentorSession[];
+
+      // Transform MentorSession[] into CalendarEvent[]
+      return (data as MentorSession[]).map(session => ({
+        id: session.id,
+        title: `Session with ${user.id === session.mentor.id ? session.mentee.full_name : session.mentor.full_name}`,
+        description: session.notes || '',
+        start_time: session.scheduled_at,
+        end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
+        event_type: 'session' as const,
+        session_details: session
+      }));
     },
     enabled: !!date,
   });
