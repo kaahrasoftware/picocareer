@@ -24,25 +24,25 @@ export function EventsSidebar({
   const getEventColor = (type: CalendarEvent['event_type'], status?: string, sessionType?: string) => {
     if (type === 'session') {
       if (status === 'cancelled') {
-        return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/30';
+        return 'border-red-500/30 bg-red-500/20 hover:bg-red-500/30 hover:border-red-500/40';
       }
       // Different colors for different session types with improved hover states
       switch(sessionType?.toLowerCase()) {
         case 'mentorship':
-          return 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/30';
+          return 'border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40';
         case 'career_guidance':
-          return 'border-green-500/20 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/30';
+          return 'border-green-500/30 bg-green-500/20 hover:bg-green-500/30 hover:border-green-500/40';
         case 'technical':
-          return 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20 hover:border-blue-500/30';
+          return 'border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/30 hover:border-blue-500/40';
         case 'interview_prep':
-          return 'border-orange-500/20 bg-orange-500/10 hover:bg-orange-500/20 hover:border-orange-500/30';
+          return 'border-orange-500/30 bg-orange-500/20 hover:bg-orange-500/30 hover:border-orange-500/40';
         case 'resume_review':
-          return 'border-pink-500/20 bg-pink-500/10 hover:bg-pink-500/20 hover:border-pink-500/30';
+          return 'border-pink-500/30 bg-pink-500/20 hover:bg-pink-500/30 hover:border-pink-500/40';
         default:
-          return 'border-violet-500/20 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/30';
+          return 'border-violet-500/30 bg-violet-500/20 hover:bg-violet-500/30 hover:border-violet-500/40';
       }
     }
-    return 'border-gray-500/20 bg-gray-500/10 hover:bg-gray-500/20 hover:border-gray-500/30';
+    return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
   };
 
   // Generate time slots from 7 AM to 9 PM
@@ -134,7 +134,7 @@ export function EventsSidebar({
               {isMentor && availability.map((slot, index) => (
                 <div
                   key={`${slot.date_available}-${slot.start_time}-${index}`}
-                  className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/30 transition-colors"
+                  className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
                   style={{
                     top: getEventPosition(slot.start_time),
                     minHeight: '44px',
