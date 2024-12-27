@@ -170,7 +170,7 @@ export function CalendarTab() {
       <CalendarHeader isMentor={isMentor} />
 
       <div className="flex">
-        <div className="flex-[2]">
+        <div className="flex-1">
           <Calendar
             mode="single"
             selected={selectedDate}
