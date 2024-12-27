@@ -11,7 +11,7 @@ export interface SessionParticipant {
 export interface MentorSession {
   id: string;
   scheduled_at: string;
-  status: string;
+  status?: string;
   notes: string | null;
   mentor: SessionParticipant;
   mentee: SessionParticipant;

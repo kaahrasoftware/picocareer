@@ -1,26 +1,15 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
 import { EventList } from "./calendar/EventList";
 import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { CalendarEvent } from "@/types/calendar";
+import { CalendarHeader } from "./calendar/CalendarHeader";
+import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -178,24 +167,12 @@ export function CalendarTab() {
     );
   };
 
-  const handleEventClick = (event: CalendarEvent) => {
-    setSelectedSession(event);
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Calendar</h2>
-        {isMentor && (
-          <Button 
-            onClick={() => setShowAvailabilityForm(true)}
-            className="flex items-center gap-2"
-          >
-            <CalendarPlus className="w-4 h-4" />
-            Set Availability
-          </Button>
-        )}
-      </div>
+      <CalendarHeader 
+        isMentor={isMentor} 
+        onSetAvailability={() => setShowAvailabilityForm(true)} 
+      />
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
@@ -220,27 +197,11 @@ export function CalendarTab() {
               <h3 className="font-medium mb-2">
                 Events for {format(selectedDate, 'MMMM d, yyyy')}
               </h3>
-              <div className="flex gap-2 mb-4">
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                  Sessions
-                </Badge>
-                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                  Webinars
-                </Badge>
-                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                  Holidays
-                </Badge>
-                {isMentor && (
-                  <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                    Available
-                  </Badge>
-                )}
-              </div>
               <EventList 
                 events={events} 
                 availability={availability} 
                 isMentor={isMentor}
-                onEventClick={handleEventClick}
+                onEventClick={setSelectedSession}
               />
             </div>
           )}
@@ -261,75 +222,16 @@ export function CalendarTab() {
         )}
       </div>
 
-      <Dialog open={!!selectedSession} onOpenChange={() => {
-        setSelectedSession(null);
-        setCancellationNote("");
-      }}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Session Details</DialogTitle>
-            <DialogDescription>
-              View session details and manage your booking
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedSession?.session_details && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium">Session Type</h4>
-                <p className="text-sm text-muted-foreground">
-                  {selectedSession.session_details.session_type.type}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-medium">Duration</h4>
-                <p className="text-sm text-muted-foreground">
-                  {selectedSession.session_details.session_type.duration} minutes
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-medium">Participants</h4>
-                <p className="text-sm text-muted-foreground">
-                  Mentor: {selectedSession.session_details.mentor.full_name}<br />
-                  Mentee: {selectedSession.session_details.mentee.full_name}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-medium">Status</h4>
-                <Badge 
-                  variant={selectedSession.status === 'cancelled' ? 'destructive' : 'default'}
-                  className="mt-1"
-                >
-                  {selectedSession.status.charAt(0).toUpperCase() + selectedSession.status.slice(1)}
-                </Badge>
-              </div>
-
-              {selectedSession.status !== 'cancelled' && (
-                <>
-                  <Textarea
-                    placeholder="Please provide a reason for cancellation..."
-                    value={cancellationNote}
-                    onChange={(e) => setCancellationNote(e.target.value)}
-                    className="h-24"
-                  />
-                  <DialogFooter>
-                    <Button
-                      variant="destructive"
-                      onClick={handleCancelSession}
-                      disabled={!cancellationNote.trim()}
-                    >
-                      Cancel Session
-                    </Button>
-                  </DialogFooter>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <SessionDetailsDialog
+        session={selectedSession}
+        onClose={() => {
+          setSelectedSession(null);
+          setCancellationNote("");
+        }}
+        onCancel={handleCancelSession}
+        cancellationNote={cancellationNote}
+        onCancellationNoteChange={setCancellationNote}
+      />
     </div>
   );
 }
