@@ -53,8 +53,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
           `skills.cs.{${debouncedSearch}},` +
           `tools_used.cs.{${debouncedSearch}},` +
           `keywords.cs.{${debouncedSearch}},` +
-          `fields_of_interest.cs.{${debouncedSearch}},` +
-          `highest_degree.ilike.%${debouncedSearch}%`
+          `fields_of_interest.cs.{${debouncedSearch}}`
         )
         .limit(5);
 
@@ -63,7 +62,13 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
         return;
       }
 
-      setSearchResults(data || []);
+      // Filter results by highest_degree after fetching
+      const filteredData = data?.filter(profile => 
+        !debouncedSearch || 
+        profile.highest_degree?.toLowerCase().includes(debouncedSearch.toLowerCase())
+      ) || [];
+
+      setSearchResults(filteredData);
     };
 
     fetchResults();
