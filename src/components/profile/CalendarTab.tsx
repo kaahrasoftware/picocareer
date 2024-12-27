@@ -162,7 +162,7 @@ export function CalendarTab() {
     <div className="space-y-6">
       <CalendarHeader isMentor={isMentor} />
 
-      <div className="flex">
+      <div className="flex gap-4">
         <div className="w-fit">
           <CalendarContainer
             selectedDate={selectedDate}
@@ -172,7 +172,7 @@ export function CalendarTab() {
         </div>
 
         {selectedDate && (
-          <div className="flex-1">
+          <div className="w-fit">
             <EventsSidebar
               date={selectedDate}
               events={events}
