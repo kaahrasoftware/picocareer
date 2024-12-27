@@ -39,13 +39,50 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
 
+  // Check if mentor has Google account connected before allowing Google Meet selection
+  const checkGoogleAuth = async () => {
+    try {
+      const { data: tokens, error } = await supabase
+        .from('user_oauth_tokens')
+        .select('*')
+        .eq('user_id', mentor.id)
+        .eq('provider', 'google')
+        .single();
+
+      if (error || !tokens) {
+        setGoogleAuthError(true);
+        if (meetingPlatform === 'google_meet') {
+          setMeetingPlatform('whatsapp');
+        }
+        toast({
+          title: "Google Meet Unavailable",
+          description: "This mentor hasn't connected their Google account. Please select a different platform.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error checking Google auth:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!date || !selectedTime || !sessionType || !mentor.id) return;
     
     setIsSubmitting(true);
-    setGoogleAuthError(false);
     
     try {
+      // If Google Meet is selected, verify mentor has connected their account
+      if (meetingPlatform === 'google_meet') {
+        const hasGoogleAuth = await checkGoogleAuth();
+        if (!hasGoogleAuth) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
       console.log('Booking session with:', { date, selectedTime, sessionType, meetingPlatform });
       
       // Book the session first
@@ -75,23 +112,11 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
           if (meetError) {
             console.error('Error creating meet link:', meetError);
-            
-            if (meetError.message?.includes('not connected their Google account') || 
-                (typeof meetError.context?.body === 'string' && 
-                 meetError.context.body.includes('not connected their Google account'))) {
-              setGoogleAuthError(true);
-              toast({
-                title: "Google Meet Not Available",
-                description: "The mentor hasn't connected their Google account yet. The session is booked, but you'll need to use an alternative platform for now.",
-                variant: "destructive"
-              });
-            } else {
-              toast({
-                title: "Google Meet Error",
-                description: "Session booked, but there was an issue creating the meeting link. Please contact the mentor to set up the meeting.",
-                variant: "destructive"
-              });
-            }
+            toast({
+              title: "Google Meet Error",
+              description: "Session booked, but there was an issue creating the meeting link. Please contact the mentor to set up the meeting.",
+              variant: "destructive"
+            });
           } else {
             console.log('Meet link created successfully:', meetData);
           }
@@ -121,19 +146,11 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           })
         ]).catch(error => {
           console.error('Error with notifications/emails:', error);
-          if (error.message?.includes('can only send testing emails')) {
-            toast({
-              title: "Email Notification Limited",
-              description: "Session booked successfully! During testing, email notifications are limited to verified addresses.",
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "Notification Error",
-              description: "Session booked successfully, but there was an issue sending notifications.",
-              variant: "destructive"
-            });
-          }
+          toast({
+            title: "Notification Error",
+            description: "Session booked successfully, but there was an issue sending notifications.",
+            variant: "destructive"
+          });
         });
       } catch (notificationError) {
         console.error('Error with notifications/emails:', notificationError);
