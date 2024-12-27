@@ -10,7 +10,7 @@ interface EventListProps {
 }
 
 export function EventList({ events, availability = [], isMentor = false, onEventClick }: EventListProps) {
-  const getEventColor = (type: Event['event_type'], status?: string) => {
+  const getEventColor = (type: CalendarEvent['event_type'], status?: string) => {
     if (type === 'session' && status === 'cancelled') {
       return 'border-red-500/20 bg-red-500/10';
     }
