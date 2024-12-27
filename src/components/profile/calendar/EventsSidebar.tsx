@@ -39,29 +39,33 @@ export function EventsSidebar({
         </div>
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="relative min-h-[1248px]">
-            <TimeGridLines cellHeight={CELL_HEIGHT} />
+          <div className="relative grid grid-cols-[80px_1fr] gap-4">
+            <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
 
-            {events.map((event) => (
-              <EventSlot
-                key={event.id}
-                event={event}
-                timezone={timezone}
-                onEventClick={onEventClick}
-                cellHeight={CELL_HEIGHT}
-              />
-            ))}
+            <div className="relative border-l border-border min-h-[1248px]">
+              <TimeGridLines cellHeight={CELL_HEIGHT} />
 
-            {isMentor && availability.map((slot, index) => (
-              <AvailabilitySlot
-                key={`${slot.date_available}-${slot.start_time}-${index}`}
-                slot={slot}
-                date={date}
-                timezone={timezone}
-                index={index}
-                cellHeight={CELL_HEIGHT}
-              />
-            ))}
+              {events.map((event) => (
+                <EventSlot
+                  key={event.id}
+                  event={event}
+                  timezone={timezone}
+                  onEventClick={onEventClick}
+                  cellHeight={CELL_HEIGHT}
+                />
+              ))}
+
+              {isMentor && availability.map((slot, index) => (
+                <AvailabilitySlot
+                  key={`${slot.date_available}-${slot.start_time}-${index}`}
+                  slot={slot}
+                  date={date}
+                  timezone={timezone}
+                  index={index}
+                  cellHeight={CELL_HEIGHT}
+                />
+              ))}
+            </div>
           </div>
         </ScrollArea>
       </div>
