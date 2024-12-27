@@ -7,6 +7,9 @@ export const CallToActionSection = () => {
     <section className="py-16 relative overflow-hidden rounded-xl mx-4">
       <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
       <div className="container mx-auto px-4 relative z-10">
+        <h2 className="text-3xl font-bold text-white text-center mb-8">
+          Join Our Community Today
+        </h2>
         <div className="flex flex-col md:flex-row items-center justify-center gap-6">
           <Button
             asChild
