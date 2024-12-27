@@ -1,25 +1,28 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
-serve(async (req) => {
+serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { sessionId } = await req.json()
-    if (!sessionId) throw new Error('Session ID is required')
+    const { sessionId } = await req.json();
+    if (!sessionId) throw new Error('Session ID is required');
+
+    console.log('Creating Meet link for session:', sessionId);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
     // Get session details
     const { data: session, error: sessionError } = await supabase
@@ -31,10 +34,11 @@ serve(async (req) => {
         session_type:session_type_id(duration, type)
       `)
       .eq('id', sessionId)
-      .single()
+      .single();
 
     if (sessionError || !session) {
-      throw new Error('Session not found')
+      console.error('Session not found:', sessionError);
+      throw new Error('Session not found');
     }
 
     // Get mentor's Google OAuth token
@@ -43,15 +47,16 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', session.mentor.id)
       .eq('provider', 'google')
-      .single()
+      .single();
 
     if (tokenError || !tokenData) {
-      throw new Error('Mentor has not connected their Google account')
+      console.error('Google token not found:', tokenError);
+      throw new Error('Mentor has not connected their Google account');
     }
 
     // Check if token needs refresh
     if (new Date(tokenData.expires_at) <= new Date()) {
-      console.log('Token expired, refreshing...')
+      console.log('Token expired, refreshing...');
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -61,11 +66,12 @@ serve(async (req) => {
           refresh_token: tokenData.refresh_token || '',
           grant_type: 'refresh_token',
         }),
-      })
+      });
 
-      const refreshData = await response.json()
+      const refreshData = await response.json();
       if (!response.ok) {
-        throw new Error('Failed to refresh token')
+        console.error('Failed to refresh token:', refreshData);
+        throw new Error('Failed to refresh token');
       }
 
       // Update token in database
@@ -75,18 +81,19 @@ serve(async (req) => {
           access_token: refreshData.access_token,
           expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
         })
-        .eq('id', tokenData.id)
+        .eq('id', tokenData.id);
 
       if (updateError) {
-        throw new Error('Failed to update token')
+        console.error('Failed to update token:', updateError);
+        throw new Error('Failed to update token');
       }
 
-      tokenData.access_token = refreshData.access_token
+      tokenData.access_token = refreshData.access_token;
     }
 
     // Create Google Calendar event with Meet link
-    const startTime = new Date(session.scheduled_at)
-    const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000)
+    const startTime = new Date(session.scheduled_at);
+    const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000);
 
     const event = {
       summary: `${session.session_type.type} Session with ${session.mentee.full_name}`,
@@ -108,8 +115,9 @@ serve(async (req) => {
           conferenceSolutionKey: { type: 'hangoutsMeet' },
         },
       },
-    }
+    };
 
+    console.log('Creating calendar event with Meet link...');
     const calendarResponse = await fetch(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1',
       {
@@ -120,18 +128,23 @@ serve(async (req) => {
         },
         body: JSON.stringify(event),
       }
-    )
+    );
 
     if (!calendarResponse.ok) {
-      throw new Error('Failed to create calendar event')
+      const errorData = await calendarResponse.json();
+      console.error('Failed to create calendar event:', errorData);
+      throw new Error('Failed to create calendar event');
     }
 
-    const calendarEvent = await calendarResponse.json()
-    const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri
+    const calendarEvent = await calendarResponse.json();
+    const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri;
 
     if (!meetLink) {
-      throw new Error('Failed to generate Meet link')
+      console.error('No Meet link in calendar event:', calendarEvent);
+      throw new Error('Failed to generate Meet link');
     }
+
+    console.log('Successfully created Meet link:', meetLink);
 
     // Update session with Meet link and calendar event ID
     const { error: updateError } = await supabase
@@ -141,10 +154,11 @@ serve(async (req) => {
         meeting_link: meetLink,
         calendar_event_id: calendarEvent.id,
       })
-      .eq('id', sessionId)
+      .eq('id', sessionId);
 
     if (updateError) {
-      throw new Error('Failed to update session with Meet link')
+      console.error('Failed to update session with Meet link:', updateError);
+      throw new Error('Failed to update session with Meet link');
     }
 
     return new Response(
@@ -159,10 +173,10 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         } 
       }
-    )
+    );
 
   } catch (error) {
-    console.error('Error creating Meet link:', error)
+    console.error('Error creating Meet link:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -175,6 +189,6 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         }
       }
-    )
+    );
   }
-})
+});

@@ -48,6 +48,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     setGoogleAuthError(false);
     
     try {
+      // Book the session first
       const sessionResult = await bookSession({
         mentorId: mentor.id,
         date,
@@ -61,7 +62,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         throw new Error(sessionResult.error || 'Failed to book session');
       }
 
-      // Create Google Meet link if selected
+      // If Google Meet is selected, create the meeting link
       if (meetingPlatform === 'google_meet') {
         try {
           const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
@@ -75,7 +76,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                 (typeof meetError.context?.body === 'string' && 
                  meetError.context.body.includes('not connected their Google account'))) {
               setGoogleAuthError(true);
-              // Don't throw error here, continue with session creation
               toast({
                 title: "Warning",
                 description: "Session booked, but the mentor needs to connect their Google account for Meet integration.",
@@ -88,10 +88,11 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                 variant: "destructive"
               });
             }
+          } else {
+            console.log('Meet link created successfully:', meetData);
           }
         } catch (meetError) {
           console.error('Error with Google Meet integration:', meetError);
-          // Continue with session creation even if Meet link fails
           toast({
             title: "Warning",
             description: "Session booked, but there was an issue with Google Meet integration.",
