@@ -59,11 +59,29 @@ export function EventsSidebar({
   });
 
   const getEventPosition = (time: string) => {
-    const eventDate = new Date(time);
-    const hours = eventDate.getHours();
-    const minutes = eventDate.getMinutes();
-    // Calculate position based on hours and minutes (1 hour = 60px)
-    return `${(hours * 60) + minutes}px`;
+    try {
+      let hours = 0;
+      let minutes = 0;
+
+      // Handle different time formats
+      if (time.includes('T')) {
+        // ISO datetime string
+        const date = new Date(time);
+        hours = date.getHours();
+        minutes = date.getMinutes();
+      } else if (time.includes(':')) {
+        // HH:mm format
+        const [h, m] = time.split(':').map(Number);
+        hours = h;
+        minutes = m;
+      }
+
+      // Calculate position (1 hour = 60px)
+      return `${(hours * 60) + minutes}px`;
+    } catch (error) {
+      console.error('Error calculating position for time:', time, error);
+      return '0px';
+    }
   };
 
   const getEventWidth = (title: string) => {
