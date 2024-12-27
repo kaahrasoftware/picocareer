@@ -28,7 +28,6 @@ export function EventsSidebar({
       if (status === 'cancelled') {
         return 'border-red-500/20 bg-red-500/5 opacity-75 cursor-not-allowed hover:bg-red-500/5';
       }
-      // Different colors for different session types with improved hover states
       switch(sessionType?.toLowerCase()) {
         case 'mentorship':
           return 'border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40';
@@ -49,23 +48,9 @@ export function EventsSidebar({
 
   const getEventPosition = (time: string) => {
     try {
-      let hours = 0;
-      let minutes = 0;
-
-      // Handle different time formats
-      if (time.includes('T')) {
-        // ISO datetime string
-        const date = new Date(time);
-        hours = date.getHours();
-        minutes = date.getMinutes();
-      } else if (time.includes(':')) {
-        // HH:mm format
-        const [h, m] = time.split(':').map(Number);
-        hours = h;
-        minutes = m;
-      }
-
-      // Calculate position (30 minutes = 26px)
+      const date = new Date(`2000-01-01T${time}`);
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
       return `${(hours * 52) + (minutes / 30 * 26)}px`;
     } catch (error) {
       console.error('Error calculating position for time:', time, error);
@@ -74,16 +59,20 @@ export function EventsSidebar({
   };
 
   const getEventWidth = (title: string) => {
-    // Base width calculation on title length, with min and max constraints
     const baseWidth = Math.min(Math.max(title.length * 8, 140), 300);
     return `${baseWidth}px`;
   };
 
   const calculateSlotHeight = (startTime: string, endTime: string) => {
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-    return `${(diffInMinutes / 30) * 26}px`;
+    try {
+      const start = new Date(`2000-01-01T${startTime}`);
+      const end = new Date(`2000-01-01T${endTime}`);
+      const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+      return `${(diffInMinutes / 30) * 26}px`;
+    } catch (error) {
+      console.error('Error calculating slot height:', error);
+      return '26px';
+    }
   };
 
   return (
@@ -100,12 +89,9 @@ export function EventsSidebar({
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="relative grid grid-cols-[80px_1fr] gap-4">
-            {/* Time slots */}
             <TimeGrid timezone={timezone} />
 
-            {/* Events grid */}
             <div className="relative border-l border-border min-h-[1248px]">
-              {/* Hour grid lines - adjusted for 30-minute intervals */}
               {Array.from({ length: 48 }, (_, index) => (
                 <div
                   key={index}
@@ -114,7 +100,6 @@ export function EventsSidebar({
                 />
               ))}
 
-              {/* Events */}
               {events.map((event) => (
                 <div
                   key={event.id}
@@ -129,7 +114,7 @@ export function EventsSidebar({
                     )
                   )}
                   style={{
-                    top: getEventPosition(event.start_time),
+                    top: getEventPosition(event.start_time.split('T')[1]),
                     width: getEventWidth(event.title),
                     minHeight: '44px',
                     zIndex: 10
@@ -152,7 +137,6 @@ export function EventsSidebar({
                 </div>
               ))}
 
-              {/* Availability slots */}
               {isMentor && availability.map((slot, index) => {
                 const slotDate = new Date(date);
                 const [startHour, startMinute] = slot.start_time.split(':').map(Number);
