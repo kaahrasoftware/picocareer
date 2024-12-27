@@ -10,7 +10,7 @@ export function TimeGridLines({ cellHeight }: TimeGridLinesProps) {
       {Array.from({ length: 48 }, (_, index) => (
         <div
           key={index}
-          className="absolute w-full border-t border-border/30"
+          className="absolute w-full border-t border-border/50"
           style={{ 
             top: `${index * cellHeight}px`,
             height: `${cellHeight}px`
