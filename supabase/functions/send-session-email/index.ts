@@ -19,8 +19,6 @@ interface EmailRequest {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("Email function triggered");
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,53 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    const body = await req.json();
-    const isTest = body.test === true;
-    
-    if (isTest) {
-      console.log('Sending test email...');
-      const testEmailPayload = {
-        from: "PicoCareer <picocareer@gmail.com>",
-        to: ["picocareer@gmail.com"],
-        subject: "Test Email from PicoCareer",
-        html: `
-          <h2>Test Email</h2>
-          <p>This is a test email from PicoCareer using Resend.</p>
-          <p>If you're receiving this, the email service is working correctly!</p>
-          <p>Timestamp: ${new Date().toISOString()}</p>
-        `,
-      };
-
-      console.log('Sending test email with payload:', testEmailPayload);
-
-      const emailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify(testEmailPayload),
-      });
-
-      const emailData = await emailRes.text();
-      console.log('Resend API response:', {
-        status: emailRes.status,
-        statusText: emailRes.statusText,
-        body: emailData
-      });
-
-      if (!emailRes.ok) {
-        throw new Error(`Resend API error: ${emailData}`);
-      }
-
-      return new Response(JSON.stringify({ success: true, test: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    // Regular email sending logic
-    const { sessionId, type } = body as EmailRequest;
+    const { sessionId, type } = await req.json() as EmailRequest;
     console.log('Processing email request:', { sessionId, type });
 
     // Fetch session details with mentor and mentee information
@@ -155,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailPayload = {
-      from: "PicoCareer <picocareer@gmail.com>",
+      from: "PicoCareer <onboarding@resend.dev>", // Using resend.dev domain temporarily
       to: [session.mentor.email, session.mentee.email],
       subject,
       html: content,

@@ -21,7 +21,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { CalendarEvent } from "@/types/calendar";
-import { useNavigate } from "react-router-dom";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -30,24 +29,14 @@ export function CalendarTab() {
   const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   // Get initial session and listen for auth changes
-  const { data: session, isLoading: isSessionLoading, error: sessionError } = useQuery({
+  const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/auth");
-          return null;
-        }
-        return session;
-      } catch (error) {
-        console.error('Session error:', error);
-        navigate("/auth");
-        return null;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session');
+      return session;
     },
     retry: false
   });
@@ -166,11 +155,6 @@ export function CalendarTab() {
   const isMentor = profile?.user_type === 'mentor';
   const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || isAvailabilityLoading;
 
-  if (sessionError) {
-    navigate("/auth");
-    return null;
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -189,10 +173,8 @@ export function CalendarTab() {
 
   // Function to determine if a date has availability set
   const hasAvailability = (date: Date) => {
-    if (!date) return false;
-    const formattedDate = format(date, 'yyyy-MM-dd');
     return availability?.some(slot => 
-      slot.date_available === formattedDate && slot.is_available
+      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
     );
   };
 

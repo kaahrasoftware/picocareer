@@ -20,6 +20,7 @@ export function useSessionEvents(selectedDate: Date | undefined, userId: string 
         .select(`
           id,
           scheduled_at,
+          status,
           notes,
           mentor:profiles!mentor_sessions_mentor_id_fkey(
             id,
@@ -49,6 +50,7 @@ export function useSessionEvents(selectedDate: Date | undefined, userId: string 
         start_time: session.scheduled_at,
         end_time: new Date(new Date(session.scheduled_at).getTime() + session.session_type.duration * 60000).toISOString(),
         event_type: 'session',
+        status: session.status,
         notes: session.notes,
         session_details: session
       }));

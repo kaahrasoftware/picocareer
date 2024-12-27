@@ -71,14 +71,14 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           if (meetError) {
             console.error('Error creating meet link:', meetError);
             
-            // Check if error is due to Google account not being connected
             if (meetError.message?.includes('not connected their Google account') || 
-                typeof meetError.context?.body === 'string' && 
-                JSON.parse(meetError.context.body)?.error?.includes('not connected their Google account')) {
+                (typeof meetError.context?.body === 'string' && 
+                 meetError.context.body.includes('not connected their Google account'))) {
               setGoogleAuthError(true);
+              // Don't throw error here, continue with session creation
               toast({
-                title: "Session Booked",
-                description: "Session booked successfully, but the mentor needs to connect their Google account for Meet integration.",
+                title: "Warning",
+                description: "Session booked, but the mentor needs to connect their Google account for Meet integration.",
                 variant: "default"
               });
             } else {
@@ -89,11 +89,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               });
             }
           }
-        } catch (meetError: any) {
+        } catch (meetError) {
           console.error('Error with Google Meet integration:', meetError);
-          if (meetError.message?.includes('not connected their Google account')) {
-            setGoogleAuthError(true);
-          }
+          // Continue with session creation even if Meet link fails
           toast({
             title: "Warning",
             description: "Session booked, but there was an issue with Google Meet integration.",
