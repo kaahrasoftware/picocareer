@@ -1,4 +1,5 @@
 import { format, parse, addMinutes } from "date-fns";
+import { formatInTimeZone } from 'date-fns-tz';
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
@@ -22,6 +23,9 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  console.log("User timezone:", userTimezone);
+
   // Use the custom hook to fetch available time slots, passing the session duration
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
@@ -30,9 +34,19 @@ export function TimeSlotSelector({
   );
   console.log("Available time slots in selector:", availableTimeSlots);
 
-  // Filter out slots that don't have enough consecutive available slots
-  const timeSlots = availableTimeSlots.filter(slot => slot.available);
-  console.log("Generated time slots in selector:", timeSlots);
+  // Convert time slots to user's timezone
+  const convertedTimeSlots = availableTimeSlots.map(slot => {
+    const slotDate = new Date(date);
+    const [hours, minutes] = slot.time.split(':').map(Number);
+    slotDate.setHours(hours, minutes, 0, 0);
+
+    return {
+      time: formatInTimeZone(slotDate, userTimezone, 'HH:mm'),
+      available: slot.available
+    };
+  });
+
+  console.log("Converted time slots:", convertedTimeSlots);
 
   return (
     <div>
@@ -43,10 +57,13 @@ export function TimeSlotSelector({
       )}
       <TimeSlotsGrid
         title={title}
-        timeSlots={timeSlots}
+        timeSlots={convertedTimeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
       />
+      <p className="text-xs text-muted-foreground mt-2">
+        Times shown in your timezone ({userTimezone})
+      </p>
     </div>
   );
 }

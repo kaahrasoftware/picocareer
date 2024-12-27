@@ -14,6 +14,7 @@ export function TimeSlotButton({
   isSelected, 
   onSelect 
 }: TimeSlotButtonProps) {
+  // Parse the time and format it in 12-hour format
   const formattedTime = format(
     parse(time, 'HH:mm', new Date()),
     'h:mm a'

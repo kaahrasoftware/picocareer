@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parse, addMinutes, isWithinInterval } from "date-fns";
+import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -11,6 +12,7 @@ interface TimeSlot {
 export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, sessionDuration: number = 15) {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const { toast } = useToast();
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     async function fetchAvailability() {
@@ -22,7 +24,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       // Query based on the specific date
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
-        .select('start_time, end_time')
+        .select('start_time, end_time, timezone')
         .eq('profile_id', mentorId)
         .eq('date_available', formattedDate)
         .eq('is_available', true);
@@ -56,7 +58,8 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
         .select('scheduled_at, session_type:mentor_session_types(duration)')
         .eq('mentor_id', mentorId)
         .gte('scheduled_at', startOfDay.toISOString())
-        .lte('scheduled_at', endOfDay.toISOString());
+        .lte('scheduled_at', endOfDay.toISOString())
+        .neq('status', 'cancelled');
 
       if (bookingsError) {
         console.error("Error fetching bookings:", bookingsError);
@@ -74,19 +77,26 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
         try {
+          const mentorTimezone = availability.timezone;
+          console.log("Mentor timezone:", mentorTimezone);
+
           // Create a base date for today to properly handle time comparisons
           const baseDate = new Date(date);
           baseDate.setHours(0, 0, 0, 0);
 
-          // Parse start and end times
+          // Parse start and end times in mentor's timezone
           const [startHour, startMinute] = availability.start_time.split(':').map(Number);
           const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
-          const startTime = new Date(baseDate);
-          startTime.setHours(startHour, startMinute);
+          const startTime = utcToZonedTime(
+            zonedTimeToUtc(new Date(baseDate.setHours(startHour, startMinute)), mentorTimezone),
+            userTimezone
+          );
 
-          const endTime = new Date(baseDate);
-          endTime.setHours(endHour, endMinute);
+          const endTime = utcToZonedTime(
+            zonedTimeToUtc(new Date(baseDate.setHours(endHour, endMinute)), mentorTimezone),
+            userTimezone
+          );
 
           let currentTime = startTime;
           const increment = 15; // 15-minute increments
@@ -131,7 +141,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
     if (date && mentorId) {
       fetchAvailability();
     }
-  }, [date, mentorId, sessionDuration, toast]);
+  }, [date, mentorId, sessionDuration, toast, userTimezone]);
 
   return availableTimeSlots;
 }
