@@ -14,10 +14,7 @@ export function useAuthSession() {
     queryFn: async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Session error:', error);
-          throw error;
-        }
+        if (error) throw error;
         return session;
       } catch (error: any) {
         console.error('Error fetching session:', error);
@@ -41,14 +38,14 @@ export function useAuthSession() {
         console.log('Auth event:', event);
         
         if (event === 'SIGNED_OUT') {
+          // Clear all auth-related queries and storage
           queryClient.removeQueries({ queryKey: ['auth-session'] });
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
-          // Clear any auth-related local storage
           localStorage.removeItem('picocareer_auth_token');
           navigate("/auth");
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('Setting new session data');
+          // Update session data
           queryClient.setQueryData(['auth-session'], session);
         }
       });

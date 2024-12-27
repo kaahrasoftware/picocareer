@@ -21,34 +21,14 @@ export function MenuSidebar() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Clear all queries and local storage
       queryClient.clear();
+      localStorage.removeItem('picocareer_auth_token');
       navigate("/auth");
     } catch (error) {
       console.error('Error signing out:', error);
