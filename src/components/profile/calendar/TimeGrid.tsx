@@ -1,5 +1,4 @@
 import React from 'react';
-import { formatInTimeZone } from 'date-fns-tz';
 
 interface TimeGridProps {
   timezone: string;
@@ -7,26 +6,19 @@ interface TimeGridProps {
 }
 
 export function TimeGrid({ timezone, cellHeight }: TimeGridProps) {
-  // Generate time slots from 00:00 to 23:30 in 30-minute increments
-  const timeSlots = Array.from({ length: 48 }, (_, i) => {
-    const date = new Date();
-    date.setHours(Math.floor(i / 2), (i % 2) * 30, 0, 0);
-    return formatInTimeZone(date, timezone, 'h:mm a');
-  });
+  // Generate 48 slots for the 24-hour day (30-minute intervals)
+  const slots = Array.from({ length: 48 }, (_, i) => i);
 
   return (
     <div className="relative" style={{ paddingTop: '3px' }}>
-      {timeSlots.map((time, index) => (
+      {slots.map((index) => (
         <div
-          key={time}
-          className="text-sm text-muted-foreground"
+          key={index}
+          className="border-b border-border/10"
           style={{ 
             height: `${cellHeight}px`,
-            lineHeight: `${cellHeight}px`
           }}
-        >
-          {time}
-        </div>
+        />
       ))}
     </div>
   );
