@@ -83,13 +83,13 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               toast({
                 title: "Google Meet Not Available",
                 description: "The mentor hasn't connected their Google account yet. The session is booked, but you'll need to use an alternative platform for now.",
-                variant: "warning"
+                variant: "destructive"
               });
             } else {
               toast({
                 title: "Google Meet Error",
                 description: "Session booked, but there was an issue creating the meeting link. Please contact the mentor to set up the meeting.",
-                variant: "warning"
+                variant: "destructive"
               });
             }
           } else {
@@ -100,7 +100,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           toast({
             title: "Google Meet Error",
             description: "Session booked, but there was an issue with Google Meet integration. Please contact the mentor to set up the meeting.",
-            variant: "warning"
+            variant: "destructive"
           });
         }
       }
@@ -125,13 +125,13 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             toast({
               title: "Email Notification Limited",
               description: "Session booked successfully! During testing, email notifications are limited to verified addresses.",
-              variant: "warning"
+              variant: "destructive"
             });
           } else {
             toast({
               title: "Notification Error",
               description: "Session booked successfully, but there was an issue sending notifications.",
-              variant: "warning"
+              variant: "destructive"
             });
           }
         });
@@ -140,7 +140,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         toast({
           title: "Session Booked",
           description: "Session booked successfully, but there was an issue sending notifications.",
-          variant: "warning"
+          variant: "destructive"
         });
       }
 
