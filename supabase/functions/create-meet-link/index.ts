@@ -114,11 +114,13 @@ serve(async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get session details including mentor and mentee emails
+    // Get session details with explicit column selection
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
-        *,
+        id,
+        scheduled_at,
+        notes,
         mentor:mentor_id(id, email, full_name),
         mentee:mentee_id(id, email, full_name),
         session_type:session_type_id(duration, type)
