@@ -72,6 +72,13 @@ export function EventsSidebar({
     return `${baseWidth}px`;
   };
 
+  const calculateSlotHeight = (startTime: string, endTime: string) => {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+    return `${diffInMinutes}px`;
+  };
+
   return (
     <div className="w-[800px] bg-background border border-border rounded-lg p-4">
       <div className="space-y-4">
@@ -159,7 +166,7 @@ export function EventsSidebar({
                     className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
                     style={{
                       top: getEventPosition(startTimeInUserTz),
-                      minHeight: '44px',
+                      height: calculateSlotHeight(slot.start_time, slot.end_time),
                       zIndex: 5
                     }}
                   >
