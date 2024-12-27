@@ -63,70 +63,55 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
       // Create Google Meet link if selected
       if (meetingPlatform === 'google_meet') {
-        try {
-          const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
-            body: { sessionId: sessionResult.sessionId }
-          });
+        const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
+          body: { sessionId: sessionResult.sessionId }
+        });
 
-          if (meetError) {
-            console.error('Error creating meet link:', meetError);
-            
-            if (meetError.message?.includes('not connected their Google account') || 
-                (typeof meetError.context?.body === 'string' && 
-                 meetError.context.body.includes('not connected their Google account'))) {
-              setGoogleAuthError(true);
-              // Don't throw error here, continue with session creation
-              toast({
-                title: "Warning",
-                description: "Session booked, but the mentor needs to connect their Google account for Meet integration.",
-                variant: "default"
-              });
-            } else {
-              toast({
-                title: "Warning",
-                description: "Session booked, but there was an issue creating the meeting link.",
-                variant: "destructive"
-              });
-            }
+        if (meetError) {
+          console.error('Error creating meet link:', meetError);
+          
+          if (meetError.message?.includes('not connected their Google account') || 
+              (typeof meetError.context?.body === 'string' && 
+               meetError.context.body.includes('not connected their Google account'))) {
+            setGoogleAuthError(true);
+            throw new Error('Mentor has not connected their Google account');
           }
-        } catch (meetError) {
-          console.error('Error with Google Meet integration:', meetError);
-          // Continue with session creation even if Meet link fails
+          
           toast({
             title: "Warning",
-            description: "Session booked, but there was an issue with Google Meet integration.",
-            variant: "default"
+            description: "Session booked, but there was an issue creating the meeting link.",
+            variant: "destructive"
           });
         }
       }
 
       // Schedule notifications and send confirmation emails
-      try {
-        await Promise.all([
-          supabase.functions.invoke('schedule-session-notifications', {
-            body: { sessionId: sessionResult.sessionId }
-          }),
-          supabase.functions.invoke('send-session-email', {
-            body: { 
-              sessionId: sessionResult.sessionId,
-              type: 'confirmation'
-            }
-          })
-        ]);
-      } catch (notificationError) {
-        console.error('Error with notifications/emails:', notificationError);
+      const { error: notificationError } = await supabase.functions.invoke('schedule-session-notifications', {
+        body: { sessionId: sessionResult.sessionId }
+      });
+
+      // Send confirmation emails
+      const { error: emailError } = await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: sessionResult.sessionId,
+          type: 'confirmation'
+        }
+      });
+
+      if (notificationError || emailError) {
+        console.error('Error with notifications/emails:', { notificationError, emailError });
         toast({
           title: "Session Booked",
           description: "Session booked successfully, but there was an issue sending notifications.",
           variant: "default"
         });
+      } else {
+        toast({
+          title: "Session Booked",
+          description: "Session booked successfully! Check your email for confirmation details.",
+          variant: "default"
+        });
       }
-
-      toast({
-        title: "Session Booked",
-        description: "Session booked successfully! Check your email for confirmation details.",
-        variant: "default"
-      });
 
       onOpenChange(false);
     } catch (error: any) {
