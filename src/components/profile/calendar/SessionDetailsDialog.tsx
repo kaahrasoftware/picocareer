@@ -35,6 +35,7 @@ export function SessionDetailsDialog({
 }: SessionDetailsDialogProps) {
   const { toast } = useToast();
   const [attendance, setAttendance] = React.useState(false);
+  const [isCancelling, setIsCancelling] = React.useState(false);
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   if (!session?.session_details) return null;
@@ -66,6 +67,87 @@ export function SessionDetailsDialog({
         description: "Failed to update attendance status",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleCancelSession = async () => {
+    if (!canCancel || !session.session_details?.id) return;
+    
+    setIsCancelling(true);
+    try {
+      // First update the session status in the database
+      const { error: dbError } = await supabase
+        .from('mentor_sessions')
+        .update({ 
+          status: 'cancelled',
+          notes: cancellationNote 
+        })
+        .eq('id', session.session_details.id);
+
+      if (dbError) throw dbError;
+
+      // If Google Meet was used, cancel the calendar event
+      if (session.session_details.meeting_platform === 'google_meet') {
+        const { error: meetError } = await supabase.functions.invoke('cancel-meet-link', {
+          body: { sessionId: session.session_details.id }
+        });
+
+        if (meetError) {
+          console.error('Error cancelling meet link:', meetError);
+          toast({
+            title: "Google Meet Error",
+            description: "Session cancelled, but there was an issue cancelling the Google Meet link.",
+            variant: "destructive"
+          });
+        }
+      }
+
+      // Create notifications for both mentor and mentee
+      const notifications = [
+        {
+          profile_id: session.session_details.mentor.id,
+          title: 'Session Cancelled',
+          message: `Session with ${session.session_details.mentee.full_name} has been cancelled. Note: ${cancellationNote}`,
+          type: 'session_cancelled' as const
+        },
+        {
+          profile_id: session.session_details.mentee.id,
+          title: 'Session Cancelled',
+          message: `Session with ${session.session_details.mentor.full_name} has been cancelled. Note: ${cancellationNote}`,
+          type: 'session_cancelled' as const
+        }
+      ];
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (notificationError) throw notificationError;
+
+      // Send cancellation emails
+      await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: session.session_details.id,
+          type: 'cancellation'
+        }
+      });
+
+      await onCancel();
+      onClose();
+      
+      toast({
+        title: "Session Cancelled",
+        description: "The session has been cancelled and notifications have been sent.",
+      });
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel the session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -172,11 +254,11 @@ export function SessionDetailsDialog({
                   <DialogFooter>
                     <Button
                       variant="destructive"
-                      onClick={onCancel}
-                      disabled={!cancellationNote.trim()}
+                      onClick={handleCancelSession}
+                      disabled={!cancellationNote.trim() || isCancelling}
                       className="w-full"
                     >
-                      Cancel Session
+                      {isCancelling ? "Cancelling..." : "Cancel Session"}
                     </Button>
                   </DialogFooter>
                 </>
