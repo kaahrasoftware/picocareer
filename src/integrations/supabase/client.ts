@@ -10,7 +10,19 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: localStorage,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'picocareer_auth_token',
   },
 });
+
+// Set up auth state change listener
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      // Clear any auth-related local storage
+      localStorage.removeItem('picocareer_auth_token');
+    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      console.log('Auth state changed:', event);
+    }
+  });
+}
