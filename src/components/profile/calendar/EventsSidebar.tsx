@@ -27,14 +27,20 @@ export function EventsSidebar({
         return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/30';
       }
       // Different colors for different session types with improved hover states
-      const sessionColors: Record<string, string> = {
-        'mentorship': 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20 hover:border-blue-500/30',
-        'career_guidance': 'border-green-500/20 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/30',
-        'technical': 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/30',
-        'interview_prep': 'border-orange-500/20 bg-orange-500/10 hover:bg-orange-500/20 hover:border-orange-500/30',
-        'resume_review': 'border-pink-500/20 bg-pink-500/10 hover:bg-pink-500/20 hover:border-pink-500/30'
-      };
-      return sessionColors[sessionType || 'mentorship'];
+      switch(sessionType?.toLowerCase()) {
+        case 'mentorship':
+          return 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/30';
+        case 'career_guidance':
+          return 'border-green-500/20 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/30';
+        case 'technical':
+          return 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20 hover:border-blue-500/30';
+        case 'interview_prep':
+          return 'border-orange-500/20 bg-orange-500/10 hover:bg-orange-500/20 hover:border-orange-500/30';
+        case 'resume_review':
+          return 'border-pink-500/20 bg-pink-500/10 hover:bg-pink-500/20 hover:border-pink-500/30';
+        default:
+          return 'border-violet-500/20 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/30';
+      }
     }
     return 'border-gray-500/20 bg-gray-500/10 hover:bg-gray-500/20 hover:border-gray-500/30';
   };
@@ -54,7 +60,7 @@ export function EventsSidebar({
 
   const getEventWidth = (title: string) => {
     // Base width calculation on title length, with min and max constraints
-    const baseWidth = Math.min(Math.max(title.length * 8, 140), 300); // Increased min width for better readability
+    const baseWidth = Math.min(Math.max(title.length * 8, 140), 300);
     return `${baseWidth}px`;
   };
 
@@ -97,8 +103,8 @@ export function EventsSidebar({
                 <div
                   key={event.id}
                   className={cn(
-                    "absolute left-2 p-3 rounded-lg cursor-pointer transition-all shadow-sm",
-                    "hover:shadow-md hover:translate-y-[-1px]",
+                    "absolute left-2 p-3 rounded-lg cursor-pointer transition-all",
+                    "shadow-sm hover:shadow-md hover:translate-y-[-1px]",
                     getEventColor(
                       event.event_type, 
                       event.status,
@@ -128,7 +134,7 @@ export function EventsSidebar({
               {isMentor && availability.map((slot, index) => (
                 <div
                   key={`${slot.date_available}-${slot.start_time}-${index}`}
-                  className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/20 bg-purple-500/10"
+                  className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/30 transition-colors"
                   style={{
                     top: getEventPosition(slot.start_time),
                     minHeight: '44px',
