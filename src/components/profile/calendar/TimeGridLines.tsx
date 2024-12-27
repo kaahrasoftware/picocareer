@@ -12,7 +12,7 @@ export function TimeGridLines({ cellHeight }: TimeGridLinesProps) {
           key={index}
           className="absolute w-full border-t border-border/50"
           style={{ 
-            top: `${index * cellHeight}px`,
+            top: `${(index + 1) * cellHeight}px`,
             height: `${cellHeight}px`
           }}
         />
