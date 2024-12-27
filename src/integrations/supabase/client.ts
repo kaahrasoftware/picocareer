@@ -12,6 +12,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     detectSessionInUrl: true,
     storage: window.localStorage,
     flowType: 'pkce',
-    debug: true
+    debug: true,
+    // Add a small delay to ensure session is properly initialized
+    initOptions: {
+      refreshIntervalMs: 1000 * 60 * 2 // Refresh token every 2 minutes
+    }
   }
 });
