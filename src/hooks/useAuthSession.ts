@@ -81,7 +81,7 @@ export function useAuthSession() {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth event:', event);
         
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        if (event === 'SIGNED_OUT') {
           // Clear all auth-related queries and storage
           queryClient.removeQueries({ queryKey: ['auth-session'] });
           queryClient.removeQueries({ queryKey: ['profile'] });
