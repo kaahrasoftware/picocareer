@@ -8,7 +8,7 @@ export function EmailTest() {
   const handleTestEmail = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('send-session-email', {
-        query: { test: 'true' }
+        body: { test: true }
       });
 
       if (error) throw error;
