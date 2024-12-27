@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const COMPANY_CALENDAR_EMAIL = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
 const SERVICE_ACCOUNT_EMAIL = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-const SERVICE_ACCOUNT_PRIVATE_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+const SERVICE_ACCOUNT_PRIVATE_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY');
 
 if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVATE_KEY) {
   throw new Error('Missing required Google service account credentials');
@@ -18,8 +18,6 @@ if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVAT
 async function getAccessToken() {
   try {
     console.log('Starting getAccessToken process...');
-    console.log('Using service account email:', SERVICE_ACCOUNT_EMAIL);
-    console.log('Using calendar email:', COMPANY_CALENDAR_EMAIL);
     
     const claims = {
       iss: SERVICE_ACCOUNT_EMAIL,
@@ -30,54 +28,70 @@ async function getAccessToken() {
       sub: COMPANY_CALENDAR_EMAIL,
     };
 
+    // Clean and prepare the private key
+    let privateKeyContent = SERVICE_ACCOUNT_PRIVATE_KEY;
+    
+    // If the key doesn't contain the PEM markers, add them
+    if (!privateKeyContent.includes('-----BEGIN PRIVATE KEY-----')) {
+      privateKeyContent = `-----BEGIN PRIVATE KEY-----\n${privateKeyContent}\n-----END PRIVATE KEY-----`;
+    }
+    
+    // Remove any escaped newlines and replace with actual newlines
+    privateKeyContent = privateKeyContent.replace(/\\n/g, '\n');
+
     // Extract the key content between the PEM markers
-    const pemContent = SERVICE_ACCOUNT_PRIVATE_KEY
+    const pemContent = privateKeyContent
       .replace('-----BEGIN PRIVATE KEY-----', '')
       .replace('-----END PRIVATE KEY-----', '')
       .replace(/\s/g, '');
 
-    // Decode the base64 key
-    const binaryKey = Uint8Array.from(atob(pemContent), c => c.charCodeAt(0));
-    
-    console.log('Importing private key...');
-    const privateKey = await crypto.subtle.importKey(
-      "pkcs8",
-      binaryKey,
-      {
-        name: "RSASSA-PKCS1-v1_5",
-        hash: "SHA-256",
-      },
-      true,
-      ["sign"]
-    );
+    try {
+      // Decode the base64 key
+      const binaryKey = Uint8Array.from(atob(pemContent), c => c.charCodeAt(0));
+      
+      console.log('Importing private key...');
+      const privateKey = await crypto.subtle.importKey(
+        "pkcs8",
+        binaryKey,
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256",
+        },
+        true,
+        ["sign"]
+      );
 
-    console.log('Creating JWT...');
-    const jwt = await create(
-      { alg: "RS256", typ: "JWT" },
-      claims,
-      privateKey
-    );
+      console.log('Creating JWT...');
+      const jwt = await create(
+        { alg: "RS256", typ: "JWT" },
+        claims,
+        privateKey
+      );
 
-    console.log('Requesting access token...');
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: jwt,
-      }),
-    });
+      console.log('Requesting access token...');
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: jwt,
+        }),
+      });
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Failed to get access token:', data);
-      throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Failed to get access token:', data);
+        throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
+      }
+
+      console.log('Successfully obtained access token');
+      return data.access_token;
+    } catch (error) {
+      console.error('Error processing private key:', error);
+      throw new Error(`Error processing private key: ${error.message}`);
     }
-
-    console.log('Successfully obtained access token');
-    return data.access_token;
   } catch (error) {
     console.error('Error in getAccessToken:', error);
     throw error;
@@ -180,7 +194,6 @@ serve(async (req: Request): Promise<Response> => {
     const { error: updateError } = await supabase
       .from('mentor_sessions')
       .update({
-        meeting_platform: 'google_meet',
         meeting_link: meetLink,
         calendar_event_id: calendarEvent.id,
       })
