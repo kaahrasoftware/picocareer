@@ -62,7 +62,8 @@ export function EventsSidebar({
     const eventDate = new Date(time);
     const hours = eventDate.getHours();
     const minutes = eventDate.getMinutes();
-    return `${hours * 60 + minutes}px`; // No need to subtract 7 anymore since we start at 0
+    // Calculate position based on hours and minutes (1 hour = 60px)
+    return `${(hours * 60) + minutes}px`;
   };
 
   const getEventWidth = (title: string) => {
