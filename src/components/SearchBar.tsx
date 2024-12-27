@@ -42,7 +42,11 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
           `last_name.ilike.%${debouncedSearch}%,` +
           `full_name.ilike.%${debouncedSearch}%,` +
           `bio.ilike.%${debouncedSearch}%,` +
-          `location.ilike.%${debouncedSearch}%`
+          `location.ilike.%${debouncedSearch}%,` +
+          `skills.cs.{${debouncedSearch}},` +
+          `tools_used.cs.{${debouncedSearch}},` +
+          `keywords.cs.{${debouncedSearch}},` +
+          `fields_of_interest.cs.{${debouncedSearch}}`
         )
         .limit(5);
 
@@ -85,7 +89,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            placeholder="Search mentors by name, location, or position..."
+            placeholder="Search mentors by name, location, skills, or interests..."
             {...props}
           />
         </div>
