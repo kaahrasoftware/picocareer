@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, MapPin, GraduationCap } from "lucide-react";
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -33,7 +33,14 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
           position,
           location,
           bio,
+          skills,
+          tools_used,
+          keywords,
+          fields_of_interest,
+          highest_degree,
           company:companies(name),
+          school:schools(name),
+          academic_major:majors!profiles_academic_major_id_fkey(title),
           career:careers!profiles_position_fkey(title)
         `)
         .eq('user_type', 'mentor')
@@ -46,7 +53,8 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
           `skills.cs.{${debouncedSearch}},` +
           `tools_used.cs.{${debouncedSearch}},` +
           `keywords.cs.{${debouncedSearch}},` +
-          `fields_of_interest.cs.{${debouncedSearch}}`
+          `fields_of_interest.cs.{${debouncedSearch}},` +
+          `highest_degree.ilike.%${debouncedSearch}%`
         )
         .limit(5);
 
@@ -89,7 +97,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            placeholder="Search mentors by name, location, skills, or interests..."
+            placeholder="Search mentors by name, skills, education, company, or interests..."
             {...props}
           />
         </div>
@@ -119,6 +127,16 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
                           {mentor.career?.title}
                           {mentor.career?.title && mentor.company?.name && " at "}
                           {mentor.company?.name}
+                        </span>
+                      </div>
+                    )}
+                    {(mentor.academic_major?.title || mentor.school?.name) && (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                        <GraduationCap className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">
+                          {mentor.academic_major?.title}
+                          {mentor.academic_major?.title && mentor.school?.name && " at "}
+                          {mentor.school?.name}
                         </span>
                       </div>
                     )}
