@@ -30,14 +30,14 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    // For testing, we'll send a test email
-    const isTest = new URL(req.url).searchParams.get('test') === 'true';
+    const body = await req.json();
+    const isTest = body.test === true;
     
     if (isTest) {
       console.log('Sending test email...');
       const testEmailPayload = {
-        from: "PicoCareer <onboarding@resend.dev>",
-        to: ["your-test-email@example.com"], // Replace with your email for testing
+        from: "PicoCareer <picocareer@gmail.com>", // Use verified email
+        to: ["picocareer@gmail.com"], // Send only to verified email during testing
         subject: "Test Email from PicoCareer",
         html: `
           <h2>Test Email</h2>
@@ -76,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Regular email sending logic
-    const { sessionId, type } = await req.json() as EmailRequest;
+    const { sessionId, type } = body as EmailRequest;
     console.log('Processing email request:', { sessionId, type });
 
     // Fetch session details with mentor and mentee information
