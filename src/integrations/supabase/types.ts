@@ -449,6 +449,7 @@ export type Database = {
       }
       mentor_sessions: {
         Row: {
+          attendance_confirmed: boolean | null
           calendar_event_id: string | null
           created_at: string
           id: string
@@ -465,6 +466,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attendance_confirmed?: boolean | null
           calendar_event_id?: string | null
           created_at?: string
           id?: string
@@ -481,6 +483,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attendance_confirmed?: boolean | null
           calendar_event_id?: string | null
           created_at?: string
           id?: string

@@ -16,4 +16,7 @@ export interface MentorSession {
   mentor: SessionParticipant;
   mentee: SessionParticipant;
   session_type: SessionType;
+  meeting_link?: string | null;
+  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram';
+  attendance_confirmed?: boolean;
 }
