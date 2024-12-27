@@ -47,9 +47,14 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         .select('*')
         .eq('user_id', mentor.id)
         .eq('provider', 'google')
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
-      if (error || !tokens) {
+      if (error) {
+        console.error('Error checking Google auth:', error);
+        throw error;
+      }
+
+      if (!tokens) {
         setGoogleAuthError(true);
         if (meetingPlatform === 'google_meet') {
           setMeetingPlatform('whatsapp');
@@ -61,9 +66,19 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         });
         return false;
       }
+
       return true;
     } catch (error) {
       console.error('Error checking Google auth:', error);
+      setGoogleAuthError(true);
+      if (meetingPlatform === 'google_meet') {
+        setMeetingPlatform('whatsapp');
+      }
+      toast({
+        title: "Google Meet Error",
+        description: "Unable to verify Google account connection. Please select a different platform.",
+        variant: "destructive"
+      });
       return false;
     }
   };
