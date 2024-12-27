@@ -38,7 +38,7 @@ export function EventsSidebar({
   };
 
   return (
-    <div className="w-80 border-l border-border bg-card/50 p-4">
+    <div className="w-96 border-l border-border bg-card/50 p-4">
       <div className="space-y-4">
         <div>
           <h3 className="font-medium text-lg">

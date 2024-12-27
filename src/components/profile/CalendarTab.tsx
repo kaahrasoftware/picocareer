@@ -170,7 +170,7 @@ export function CalendarTab() {
       <CalendarHeader isMentor={isMentor} />
 
       <div className="flex">
-        <div className="flex-1">
+        <div className="flex-[2]">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -189,13 +189,15 @@ export function CalendarTab() {
         </div>
 
         {selectedDate && (
-          <EventsSidebar
-            date={selectedDate}
-            events={events}
-            availability={availability}
-            isMentor={isMentor}
-            onEventClick={setSelectedSession}
-          />
+          <div className="flex-1">
+            <EventsSidebar
+              date={selectedDate}
+              events={events}
+              availability={availability}
+              isMentor={isMentor}
+              onEventClick={setSelectedSession}
+            />
+          </div>
         )}
       </div>
 
