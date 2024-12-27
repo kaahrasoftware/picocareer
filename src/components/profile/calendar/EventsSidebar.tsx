@@ -1,5 +1,5 @@
 import React from "react";
-import { format } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 import { CalendarEvent, Availability } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -25,16 +25,6 @@ export function EventsSidebar({
       return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20';
     }
     return 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20';
-  };
-
-  const formatTimeString = (timeStr: string) => {
-    try {
-      const date = new Date(timeStr);
-      return format(date, 'h:mm a');
-    } catch (error) {
-      console.error('Error formatting time:', timeStr, error);
-      return timeStr;
-    }
   };
 
   // Generate time slots from 7 AM to 9 PM
@@ -96,16 +86,6 @@ export function EventsSidebar({
                   onClick={() => onEventClick?.(event)}
                 >
                   <h4 className="font-medium text-sm leading-tight">{event.title}</h4>
-                  {event.description && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {event.description}
-                    </p>
-                  )}
-                  {event.status === 'cancelled' && (
-                    <span className="text-xs text-red-500">
-                      Cancelled
-                    </span>
-                  )}
                 </div>
               ))}
 
@@ -120,9 +100,6 @@ export function EventsSidebar({
                   }}
                 >
                   <h4 className="font-medium text-sm leading-tight">Available for Booking</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {formatTimeString(slot.start_time)} - {formatTimeString(slot.end_time)}
-                  </p>
                 </div>
               ))}
             </div>
