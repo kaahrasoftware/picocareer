@@ -13,8 +13,7 @@ interface AvailabilitySlotProps {
 export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: AvailabilitySlotProps) {
   const getSlotPosition = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
-    // Add one cellHeight to move the slot down one row
-    return (hours * cellHeight * 2 + (minutes / 30) * cellHeight) + cellHeight;
+    return (hours * cellHeight * 2 + (minutes / 30) * cellHeight);
   };
 
   const calculateSlotHeight = (startTime: string, endTime: string) => {
@@ -33,7 +32,7 @@ export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: Av
       key={`${slot.date_available}-${slot.start_time}-${index}`}
       className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
       style={{
-        top: `${getSlotPosition(slot.start_time)}px`,
+        top: `${getSlotPosition(slot.start_time) + cellHeight}px`,
         height: `${calculateSlotHeight(slot.start_time, slot.end_time)}px`,
         zIndex: 5
       }}
