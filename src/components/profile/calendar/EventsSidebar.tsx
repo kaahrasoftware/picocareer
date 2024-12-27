@@ -27,7 +27,7 @@ export function EventsSidebar({
   const CELL_HEIGHT = 26; // Height for 30-minute intervals
 
   return (
-    <div className="w-[800px] bg-background border border-border rounded-lg p-4">
+    <div className="w-[600px] bg-background border border-border rounded-lg p-4">
       <div className="space-y-4">
         <div>
           <h3 className="font-medium text-lg">
