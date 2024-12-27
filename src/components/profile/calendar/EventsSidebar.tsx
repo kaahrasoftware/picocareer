@@ -26,7 +26,7 @@ export function EventsSidebar({
 }: EventsSidebarProps) {
   const CELL_HEIGHT = 26; // Height for 30-minute intervals
 
-  // Filter out cancelled events for the calendar grid view
+  // Filter out cancelled events for both calendar grid and sidebar
   const activeEvents = events.filter(event => event.status !== 'cancelled');
 
   return (
