@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailPayload = {
-      from: "PicoCareer <notifications@picocareer.com>", // Using your verified domain
+      from: "PicoCareer <info@picocareer.com>", // Updated email address
       to: [session.mentor.email, session.mentee.email],
       subject,
       html: content,
