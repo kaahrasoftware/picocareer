@@ -67,7 +67,9 @@ export function useAuthSession() {
           queryClient.removeQueries({ queryKey: ['auth-session'] });
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
-          localStorage.removeItem('picocareer_auth_token');
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem('picocareer_auth_token');
+          }
           navigate("/auth");
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           console.log('Setting new session data');

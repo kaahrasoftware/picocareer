@@ -45,22 +45,31 @@ export function MenuSidebar() {
 
   const handleSignOut = async () => {
     try {
+      // Clear all auth-related queries before signing out
+      queryClient.clear();
+      
+      // Clear local storage
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('picocareer_auth_token');
+      }
+      
+      // Attempt to sign out
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      queryClient.clear();
       navigate("/auth");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing out:', error);
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
+      // Force navigation to auth page if sign out fails
+      navigate("/auth");
     }
   };
 
-  // If there's an auth error, show sign in button
   if (isError) {
     return (
       <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
