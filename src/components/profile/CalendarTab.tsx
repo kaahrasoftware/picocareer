@@ -127,7 +127,7 @@ export function CalendarTab() {
       setCancellationNote("");
       
       // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['calendar_events'] });
+      queryClient.invalidateQueries({ queryKey: ['session-events'] });
 
     } catch (error) {
       console.error('Error cancelling session:', error);

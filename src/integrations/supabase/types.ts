@@ -461,6 +461,7 @@ export type Database = {
           notes: string | null
           scheduled_at: string
           session_type_id: string
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -476,6 +477,7 @@ export type Database = {
           notes?: string | null
           scheduled_at: string
           session_type_id: string
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -491,6 +493,7 @@ export type Database = {
           notes?: string | null
           scheduled_at?: string
           session_type_id?: string
+          status?: string | null
           updated_at?: string
         }
         Relationships: [
