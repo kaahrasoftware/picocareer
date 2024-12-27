@@ -31,19 +31,25 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Session not found');
     }
 
-    // Create confirmation notifications
+    // Create confirmation notifications with meeting link
+    const meetingLinkInfo = session.meeting_link 
+      ? `\nMeeting Link: ${session.meeting_link}`
+      : session.meeting_platform === 'google_meet' 
+        ? '\nGoogle Meet link will be sent shortly.'
+        : '';
+
     const notifications = [
       {
         profile_id: session.mentor_id,
         title: 'New Session Booked',
-        message: `${session.mentee.full_name} has booked a ${session.session_type.type} session with you.`,
+        message: `${session.mentee.full_name} has booked a ${session.session_type.type} session with you.${meetingLinkInfo}`,
         type: 'session_booked',
         action_url: '/profile?tab=calendar'
       },
       {
         profile_id: session.mentee_id,
         title: 'Session Confirmation',
-        message: `Your ${session.session_type.type} session with ${session.mentor.full_name} has been booked.`,
+        message: `Your ${session.session_type.type} session with ${session.mentor.full_name} has been booked.${meetingLinkInfo}`,
         type: 'session_booked',
         action_url: '/profile?tab=calendar'
       }
@@ -72,14 +78,14 @@ const handler = async (req: Request): Promise<Response> => {
         {
           profile_id: session.mentor_id,
           title: `Session Reminder: ${minutes} minutes`,
-          message: `Your session with ${session.mentee.full_name} starts in ${minutes} minutes.`,
+          message: `Your session with ${session.mentee.full_name} starts in ${minutes} minutes.${meetingLinkInfo}`,
           type: 'session_reminder',
           action_url: '/profile?tab=calendar'
         },
         {
           profile_id: session.mentee_id,
           title: `Session Reminder: ${minutes} minutes`,
-          message: `Your session with ${session.mentor.full_name} starts in ${minutes} minutes.`,
+          message: `Your session with ${session.mentor.full_name} starts in ${minutes} minutes.${meetingLinkInfo}`,
           type: 'session_reminder',
           action_url: '/profile?tab=calendar'
         }
