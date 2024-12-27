@@ -169,10 +169,7 @@ export function CalendarTab() {
 
   return (
     <div className="space-y-6">
-      <CalendarHeader 
-        isMentor={isMentor} 
-        onSetAvailability={() => setShowAvailabilityForm(true)} 
-      />
+      <CalendarHeader isMentor={isMentor} />
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>

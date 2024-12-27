@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 
 interface CalendarHeaderProps {
   isMentor: boolean;
-  onSetAvailability: () => void;
 }
 
 export function CalendarHeader({ isMentor }: CalendarHeaderProps) {
