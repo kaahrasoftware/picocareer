@@ -2,6 +2,7 @@ import React from "react";
 import { format } from "date-fns";
 import { CalendarEvent, Availability } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface EventsSidebarProps {
   date: Date;
@@ -21,10 +22,21 @@ export function EventsSidebar({
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
   const getEventColor = (type: CalendarEvent['event_type'], status?: string) => {
-    if (type === 'session' && status === 'cancelled') {
-      return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20';
+    if (type === 'session') {
+      if (status === 'cancelled') {
+        return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20';
+      }
+      // Different colors for different session types
+      const sessionColors: Record<string, string> = {
+        'mentorship': 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20',
+        'career_guidance': 'border-green-500/20 bg-green-500/10 hover:bg-green-500/20',
+        'technical': 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20',
+        'interview_prep': 'border-orange-500/20 bg-orange-500/10 hover:bg-orange-500/20',
+        'resume_review': 'border-pink-500/20 bg-pink-500/10 hover:bg-pink-500/20'
+      };
+      return sessionColors[events[0]?.session_details?.session_type?.type || 'mentorship'];
     }
-    return 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20';
+    return 'border-gray-500/20 bg-gray-500/10 hover:bg-gray-500/20';
   };
 
   // Generate time slots from 7 AM to 9 PM
@@ -38,6 +50,12 @@ export function EventsSidebar({
     const hours = eventDate.getHours();
     const minutes = eventDate.getMinutes();
     return `${(hours - 7) * 60 + minutes}px`; // 7 is the starting hour
+  };
+
+  const getEventWidth = (title: string) => {
+    // Base width calculation on title length, with min and max constraints
+    const baseWidth = Math.min(Math.max(title.length * 8, 120), 300); // min 120px, max 300px
+    return `${baseWidth}px`;
   };
 
   return (
@@ -78,9 +96,13 @@ export function EventsSidebar({
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className={`absolute left-2 right-2 p-2 rounded-md cursor-pointer transition-all ${getEventColor(event.event_type, event.status)}`}
+                  className={cn(
+                    "absolute left-2 p-2 rounded-md cursor-pointer transition-all",
+                    getEventColor(event.event_type, event.status)
+                  )}
                   style={{
                     top: getEventPosition(event.start_time),
+                    width: getEventWidth(event.title),
                     minHeight: '40px',
                     zIndex: 10
                   }}
