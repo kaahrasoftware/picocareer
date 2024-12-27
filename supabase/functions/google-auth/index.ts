@@ -28,8 +28,11 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url)
-    const action = url.searchParams.get('action')
+    const { action, userId } = await req.json()
+
+    if (!action) {
+      throw new Error('Action is required')
+    }
 
     if (action === 'authorize') {
       // Generate authorization URL
@@ -39,9 +42,33 @@ serve(async (req) => {
       })
     }
 
+    if (action === 'disconnect') {
+      if (!userId) {
+        throw new Error('User ID is required for disconnection')
+      }
+
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      )
+
+      // Remove the tokens from the database
+      const { error: deleteError } = await supabase
+        .from('user_oauth_tokens')
+        .delete()
+        .eq('user_id', userId)
+        .eq('provider', 'google')
+
+      if (deleteError) throw deleteError
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'callback') {
       // Handle the OAuth callback
-      const code = url.searchParams.get('code')
+      const code = new URL(req.url).searchParams.get('code')
       if (!code) {
         throw new Error('No code provided')
       }
@@ -49,7 +76,6 @@ serve(async (req) => {
       // Exchange the authorization code for tokens
       const tokens = await oauth2Client.code.getToken(req.url)
       
-      // Store the tokens in the database for the user
       const authHeader = req.headers.get('Authorization')
       if (!authHeader) {
         throw new Error('No authorization header')

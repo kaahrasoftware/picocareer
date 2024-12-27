@@ -25,13 +25,17 @@ export function GoogleAccountConnection({ profileId }: GoogleAccountConnectionPr
         .select('*')
         .eq('user_id', profileId)
         .eq('provider', 'google')
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setIsConnected(!!tokens);
     } catch (error) {
       console.error('Error checking Google connection:', error);
-      setIsConnected(false);
+      toast({
+        title: "Error",
+        description: "Failed to check Google connection status",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -40,43 +44,29 @@ export function GoogleAccountConnection({ profileId }: GoogleAccountConnectionPr
   const handleGoogleAuth = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('google-auth', {
-        body: { action: 'authorize' }
+        body: { 
+          action: isConnected ? 'disconnect' : 'authorize',
+          userId: profileId
+        }
       });
 
       if (error) throw error;
+      
       if (data?.url) {
         window.location.href = data.url;
+      } else if (isConnected) {
+        // Handle disconnect success
+        setIsConnected(false);
+        toast({
+          title: "Success",
+          description: "Google account disconnected successfully",
+        });
       }
     } catch (error) {
       console.error('Error initiating Google auth:', error);
       toast({
         title: "Error",
-        description: "Failed to connect Google account. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      const { error } = await supabase
-        .from('user_oauth_tokens')
-        .delete()
-        .eq('user_id', profileId)
-        .eq('provider', 'google');
-
-      if (error) throw error;
-
-      setIsConnected(false);
-      toast({
-        title: "Success",
-        description: "Google account disconnected successfully",
-      });
-    } catch (error) {
-      console.error('Error disconnecting Google account:', error);
-      toast({
-        title: "Error",
-        description: "Failed to disconnect Google account. Please try again.",
+        description: "Failed to process Google authentication",
         variant: "destructive",
       });
     }
@@ -112,7 +102,7 @@ export function GoogleAccountConnection({ profileId }: GoogleAccountConnectionPr
             <span>{isConnected ? 'Connected to Google' : 'Not connected'}</span>
           </div>
           <Button
-            onClick={isConnected ? handleDisconnect : handleGoogleAuth}
+            onClick={handleGoogleAuth}
             variant={isConnected ? "destructive" : "default"}
           >
             {isConnected ? 'Disconnect' : 'Connect Google Account'}
