@@ -32,7 +32,15 @@ export function useAuthSession() {
           }
           
           if (!refreshedSession) {
-            // If still no session after refresh, redirect to auth
+            // Clear all auth-related queries and storage
+            queryClient.removeQueries({ queryKey: ['auth-session'] });
+            queryClient.removeQueries({ queryKey: ['profile'] });
+            queryClient.removeQueries({ queryKey: ['notifications'] });
+            
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem('picocareer_auth_token');
+            }
+            
             navigate("/auth");
             return null;
           }
@@ -48,6 +56,17 @@ export function useAuthSession() {
           description: "Please try signing in again",
           variant: "destructive",
         });
+        
+        // Clear all auth-related data on error
+        queryClient.removeQueries({ queryKey: ['auth-session'] });
+        queryClient.removeQueries({ queryKey: ['profile'] });
+        queryClient.removeQueries({ queryKey: ['notifications'] });
+        
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem('picocareer_auth_token');
+        }
+        
+        navigate("/auth");
         return null;
       }
     },
@@ -62,14 +81,16 @@ export function useAuthSession() {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth event:', event);
         
-        if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
           // Clear all auth-related queries and storage
           queryClient.removeQueries({ queryKey: ['auth-session'] });
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
+          
           if (typeof window !== 'undefined') {
             window.localStorage.removeItem('picocareer_auth_token');
           }
+          
           navigate("/auth");
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           console.log('Setting new session data');
