@@ -33,20 +33,20 @@ export function EventsSidebar({
       // Different colors for different session types with improved hover states
       switch(sessionType?.toLowerCase()) {
         case 'mentorship':
-          return 'border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40';
+          return 'border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/40';
         case 'career_guidance':
-          return 'border-green-500/30 bg-green-500/20 hover:bg-green-500/30 hover:border-green-500/40';
+          return 'border-green-500/30 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/40';
         case 'technical':
-          return 'border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/30 hover:border-blue-500/40';
+          return 'border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 hover:border-blue-500/40';
         case 'interview_prep':
-          return 'border-orange-500/30 bg-orange-500/20 hover:bg-orange-500/30 hover:border-orange-500/40';
+          return 'border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 hover:border-orange-500/40';
         case 'resume_review':
-          return 'border-pink-500/30 bg-pink-500/20 hover:bg-pink-500/30 hover:border-pink-500/40';
+          return 'border-pink-500/30 bg-pink-500/10 hover:bg-pink-500/20 hover:border-pink-500/40';
         default:
-          return 'border-violet-500/30 bg-violet-500/20 hover:bg-violet-500/30 hover:border-violet-500/40';
+          return 'border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/40';
       }
     }
-    return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
+    return 'border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 hover:border-gray-500/40';
   };
 
   // Generate time slots from 12 AM to 11 PM
@@ -97,7 +97,7 @@ export function EventsSidebar({
 
             {/* Events grid */}
             <div className="relative border-l border-border min-h-[1440px]">
-              {/* Hour grid lines */}
+              {/* Hour grid lines with improved visibility */}
               {timeSlots.map((_, index) => (
                 <div
                   key={index}
@@ -106,13 +106,13 @@ export function EventsSidebar({
                 />
               ))}
 
-              {/* Events */}
+              {/* Events with enhanced styling */}
               {events.map((event) => (
                 <div
                   key={event.id}
                   className={cn(
                     "absolute left-2 p-3 rounded-lg transition-all duration-200",
-                    "shadow-sm",
+                    "shadow-sm backdrop-blur-sm",
                     event.status !== 'cancelled' && "hover:shadow-md hover:translate-y-[-1px]",
                     getEventColor(
                       event.event_type, 
@@ -144,7 +144,7 @@ export function EventsSidebar({
                 </div>
               ))}
 
-              {/* Availability slots */}
+              {/* Availability slots with improved styling */}
               {isMentor && availability.map((slot, index) => {
                 const slotDate = new Date(date);
                 const [startHour, startMinute] = slot.start_time.split(':').map(Number);
@@ -156,7 +156,7 @@ export function EventsSidebar({
                 return (
                   <div
                     key={`${slot.date_available}-${slot.start_time}-${index}`}
-                    className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
+                    className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/40 transition-colors backdrop-blur-sm"
                     style={{
                       top: getEventPosition(startTimeInUserTz),
                       minHeight: '44px',
