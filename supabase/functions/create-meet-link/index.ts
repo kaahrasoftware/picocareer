@@ -18,6 +18,8 @@ if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVAT
 async function getAccessToken() {
   try {
     console.log('Starting getAccessToken process...');
+    console.log('Using service account email:', SERVICE_ACCOUNT_EMAIL);
+    console.log('Using calendar email:', COMPANY_CALENDAR_EMAIL);
     
     const claims = {
       iss: SERVICE_ACCOUNT_EMAIL,
