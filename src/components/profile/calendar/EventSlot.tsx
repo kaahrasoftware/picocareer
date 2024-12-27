@@ -76,9 +76,6 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
             <span className="text-red-500 text-xs font-medium">(Cancelled)</span>
           )}
         </div>
-        <span className="text-xs text-muted-foreground">
-          {formatInTimeZone(new Date(event.start_time), timezone, 'h:mm a')}
-        </span>
       </div>
     </div>
   );
