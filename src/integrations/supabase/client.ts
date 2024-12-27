@@ -10,6 +10,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storageKey: 'picocareer_auth_token',
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: localStorage
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined
   }
 });

@@ -31,6 +31,12 @@ export function useAuthSession() {
             throw refreshError;
           }
           
+          if (!refreshedSession) {
+            // If still no session after refresh, redirect to auth
+            navigate("/auth");
+            return null;
+          }
+          
           return refreshedSession;
         }
 
