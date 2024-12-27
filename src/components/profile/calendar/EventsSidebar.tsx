@@ -24,7 +24,7 @@ export function EventsSidebar({
   const getEventColor = (type: CalendarEvent['event_type'], status?: string, sessionType?: string) => {
     if (type === 'session') {
       if (status === 'cancelled') {
-        return 'border-red-500/20 bg-red-500/10 opacity-60 cursor-not-allowed hover:bg-red-500/10 hover:border-red-500/20';
+        return 'border-red-500/20 bg-red-500/5 opacity-75 cursor-not-allowed hover:bg-red-500/5';
       }
       // Different colors for different session types with improved hover states
       switch(sessionType?.toLowerCase()) {
@@ -103,9 +103,9 @@ export function EventsSidebar({
                 <div
                   key={event.id}
                   className={cn(
-                    "absolute left-2 p-3 rounded-lg transition-all",
-                    "shadow-sm hover:shadow-md",
-                    event.status !== 'cancelled' && "hover:translate-y-[-1px]",
+                    "absolute left-2 p-3 rounded-lg transition-all duration-200",
+                    "shadow-sm",
+                    event.status !== 'cancelled' && "hover:shadow-md hover:translate-y-[-1px]",
                     getEventColor(
                       event.event_type, 
                       event.status,
@@ -121,12 +121,14 @@ export function EventsSidebar({
                   onClick={() => event.status !== 'cancelled' && onEventClick?.(event)}
                 >
                   <div className="flex flex-col gap-1">
-                    <h4 className="font-medium text-sm leading-tight truncate">
-                      {event.title}
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm leading-tight truncate">
+                        {event.title}
+                      </h4>
                       {event.status === 'cancelled' && (
-                        <span className="ml-2 text-red-500 text-xs">(Cancelled)</span>
+                        <span className="text-red-500 text-xs font-medium">(Cancelled)</span>
                       )}
-                    </h4>
+                    </div>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(event.start_time), 'h:mm a')}
                     </span>
