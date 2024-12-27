@@ -13,19 +13,32 @@ export function useAuthSession() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Session error:', error);
-          throw error;
+        // First try to get the existing session
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        if (!existingSession) {
+          // If no session exists, try to refresh it
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+            
+          if (refreshError) throw refreshError;
+          return refreshedSession;
         }
-        return session;
+        
+        return existingSession;
       } catch (error: any) {
         console.error('Error fetching session:', error);
+        // Clear any stale session data
+        await supabase.auth.signOut();
+        queryClient.clear();
+        
         toast({
           title: "Authentication Error",
           description: "Please try signing in again",
           variant: "destructive",
         });
+        
+        navigate("/auth");
         return null;
       }
     },

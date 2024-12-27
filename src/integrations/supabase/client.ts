@@ -8,8 +8,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     persistSession: true,
     storageKey: 'picocareer_auth_token',
+    storage: localStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: window.localStorage
+    flowType: 'pkce'
   }
 });
