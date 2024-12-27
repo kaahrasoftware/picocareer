@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { DateSelector } from "./booking/DateSelector";
 import { TimeSlotSelector } from "./booking/TimeSlotSelector";
 import { SessionTypeSelector } from "./booking/SessionTypeSelector";
 import { SessionNote } from "./booking/SessionNote";
+import { MeetingPlatformSelector } from "./booking/MeetingPlatformSelector";
+import { BookingConfirmation } from "./booking/BookingConfirmation";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useBookSession } from "@/hooks/useBookSession";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
 
@@ -48,6 +46,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     setGoogleAuthError(false);
     
     try {
+      console.log('Booking session with:', { date, selectedTime, sessionType, meetingPlatform });
+      
       // Book the session first
       const sessionResult = await bookSession({
         mentorId: mentor.id,
@@ -62,9 +62,13 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         throw new Error(sessionResult.error || 'Failed to book session');
       }
 
+      console.log('Session booked successfully:', sessionResult);
+
       // If Google Meet is selected, create the meeting link
       if (meetingPlatform === 'google_meet') {
         try {
+          console.log('Creating Google Meet link for session:', sessionResult.sessionId);
+          
           const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
             body: { sessionId: sessionResult.sessionId }
           });
@@ -103,6 +107,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
       // Schedule notifications and send confirmation emails
       try {
+        console.log('Scheduling notifications and sending emails');
+        
         await Promise.all([
           supabase.functions.invoke('schedule-session-notifications', {
             body: { sessionId: sessionResult.sessionId }
@@ -145,6 +151,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     }
   };
 
+  const isValid = !!date && !!selectedTime && !!sessionType && !!mentor.id;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -153,15 +161,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             Book a Session with {mentor.name}
           </DialogTitle>
         </DialogHeader>
-
-        {googleAuthError && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              This mentor hasn't connected their Google account yet. Please select a different meeting platform or try again later.
-            </AlertDescription>
-          </Alert>
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DateSelector
@@ -187,25 +186,11 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               />
             )}
 
-            <div>
-              <h4 className="font-semibold mb-2">Meeting Platform</h4>
-              <Select 
-                value={meetingPlatform} 
-                onValueChange={(value: MeetingPlatform) => {
-                  setMeetingPlatform(value);
-                  setGoogleAuthError(false);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select meeting platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="google_meet">Google Meet</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="telegram">Telegram</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <MeetingPlatformSelector
+              value={meetingPlatform}
+              onValueChange={setMeetingPlatform}
+              onGoogleAuthErrorClear={() => setGoogleAuthError(false)}
+            />
 
             <SessionNote
               note={note}
@@ -214,17 +199,13 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!date || !selectedTime || !sessionType || !mentor.id || isSubmitting}
-          >
-            {isSubmitting ? "Booking..." : "Book Session"}
-          </Button>
-        </div>
+        <BookingConfirmation
+          isSubmitting={isSubmitting}
+          googleAuthError={googleAuthError}
+          onCancel={() => onOpenChange(false)}
+          onConfirm={handleSubmit}
+          isValid={isValid}
+        />
       </DialogContent>
     </Dialog>
   );
