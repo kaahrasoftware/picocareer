@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface BookingConfirmationProps {
   isSubmitting: boolean;
-  googleAuthError: boolean;
+  googleAuthError?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   isValid: boolean;
@@ -12,7 +12,7 @@ interface BookingConfirmationProps {
 
 export function BookingConfirmation({ 
   isSubmitting, 
-  googleAuthError, 
+  googleAuthError = false, 
   onCancel, 
   onConfirm,
   isValid 

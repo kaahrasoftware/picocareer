@@ -5,7 +5,7 @@ type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
 interface MeetingPlatformSelectorProps {
   value: MeetingPlatform;
   onValueChange: (value: MeetingPlatform) => void;
-  onGoogleAuthErrorClear: () => void;
+  onGoogleAuthErrorClear?: () => void;
 }
 
 export function MeetingPlatformSelector({ 
@@ -20,7 +20,7 @@ export function MeetingPlatformSelector({
         value={value} 
         onValueChange={(value: MeetingPlatform) => {
           onValueChange(value);
-          onGoogleAuthErrorClear();
+          onGoogleAuthErrorClear?.();
         }}
       >
         <SelectTrigger>

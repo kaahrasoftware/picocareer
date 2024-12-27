@@ -9,6 +9,7 @@ import { BookingConfirmation } from "./booking/BookingConfirmation";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
 
@@ -178,6 +179,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             <MeetingPlatformSelector
               value={meetingPlatform}
               onValueChange={setMeetingPlatform}
+              onGoogleAuthErrorClear={() => {}}
             />
 
             <SessionNote
@@ -192,6 +194,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           onCancel={() => onOpenChange(false)}
           onConfirm={handleSubmit}
           isValid={isValid}
+          googleAuthError={false}
         />
       </DialogContent>
     </Dialog>
