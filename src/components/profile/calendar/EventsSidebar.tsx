@@ -4,6 +4,7 @@ import { CalendarEvent, Availability } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { formatInTimeZone } from 'date-fns-tz';
+import { TimeGrid } from "./TimeGrid";
 
 interface EventsSidebarProps {
   date: Date;
@@ -22,9 +23,6 @@ export function EventsSidebar({
   onEventClick,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
-  console.log("Events in sidebar:", events);
-  console.log("Using timezone:", timezone);
-
   const getEventColor = (type: CalendarEvent['event_type'], status?: string, sessionType?: string) => {
     if (type === 'session') {
       if (status === 'cancelled') {
@@ -49,15 +47,6 @@ export function EventsSidebar({
     return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
   };
 
-  // Generate time slots from 12 AM to 11 PM
-  const timeSlots = Array.from({ length: 24 }, (_, i) => {
-    return formatInTimeZone(
-      new Date().setHours(i, 0, 0, 0),
-      timezone,
-      'h a'
-    );
-  });
-
   const getEventPosition = (time: string) => {
     try {
       let hours = 0;
@@ -76,8 +65,8 @@ export function EventsSidebar({
         minutes = m;
       }
 
-      // Calculate position (1 hour = 60px)
-      return `${(hours * 60) + minutes}px`;
+      // Calculate position (30 minutes = 26px)
+      return `${(hours * 52) + (minutes / 30 * 26)}px`;
     } catch (error) {
       console.error('Error calculating position for time:', time, error);
       return '0px';
@@ -112,22 +101,16 @@ export function EventsSidebar({
         <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="relative grid grid-cols-[80px_1fr] gap-4">
             {/* Time slots */}
-            <div className="space-y-[52px] pt-6">
-              {timeSlots.map((time) => (
-                <div key={time} className="text-sm text-muted-foreground">
-                  {time}
-                </div>
-              ))}
-            </div>
+            <TimeGrid timezone={timezone} />
 
             {/* Events grid */}
-            <div className="relative border-l border-border min-h-[1440px]">
-              {/* Hour grid lines */}
-              {timeSlots.map((_, index) => (
+            <div className="relative border-l border-border min-h-[1248px]">
+              {/* Hour grid lines - adjusted for 30-minute intervals */}
+              {Array.from({ length: 48 }, (_, index) => (
                 <div
                   key={index}
                   className="absolute w-full border-t border-border/30"
-                  style={{ top: `${index * 60}px` }}
+                  style={{ top: `${index * 26}px` }}
                 />
               ))}
 
