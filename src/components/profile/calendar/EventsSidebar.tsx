@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { CalendarEvent, Availability } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface EventsSidebarProps {
   date: Date;
@@ -21,6 +22,9 @@ export function EventsSidebar({
   onEventClick,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
+  console.log("Events in sidebar:", events);
+  console.log("Using timezone:", timezone);
+
   const getEventColor = (type: CalendarEvent['event_type'], status?: string, sessionType?: string) => {
     if (type === 'session') {
       if (status === 'cancelled') {
@@ -48,7 +52,11 @@ export function EventsSidebar({
   // Generate time slots from 7 AM to 9 PM
   const timeSlots = Array.from({ length: 15 }, (_, i) => {
     const hour = i + 7; // Start from 7 AM
-    return format(new Date().setHours(hour, 0, 0, 0), 'h a');
+    return formatInTimeZone(
+      new Date().setHours(hour, 0, 0, 0),
+      timezone,
+      'h a'
+    );
   });
 
   const getEventPosition = (time: string) => {
@@ -69,7 +77,7 @@ export function EventsSidebar({
       <div className="space-y-4">
         <div>
           <h3 className="font-medium text-lg">
-            {format(date, 'MMMM d, yyyy')}
+            {formatInTimeZone(date, timezone, 'MMMM d, yyyy')}
           </h3>
           <p className="text-sm text-muted-foreground">
             Timezone: {timezone}
@@ -130,34 +138,47 @@ export function EventsSidebar({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(event.start_time), 'h:mm a')}
+                      {formatInTimeZone(new Date(event.start_time), timezone, 'h:mm a')}
                     </span>
                   </div>
                 </div>
               ))}
 
               {/* Availability slots */}
-              {isMentor && availability.map((slot, index) => (
-                <div
-                  key={`${slot.date_available}-${slot.start_time}-${index}`}
-                  className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
-                  style={{
-                    top: getEventPosition(slot.start_time),
-                    minHeight: '44px',
-                    zIndex: 5
-                  }}
-                >
-                  <div className="flex flex-col gap-1">
-                    <h4 className="font-medium text-sm leading-tight truncate">
-                      Available for Booking
-                    </h4>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(`2000-01-01T${slot.start_time}`), 'h:mm a')} - 
-                      {format(new Date(`2000-01-01T${slot.end_time}`), 'h:mm a')}
-                    </span>
+              {isMentor && availability.map((slot, index) => {
+                const slotDate = new Date(date);
+                const [startHour, startMinute] = slot.start_time.split(':').map(Number);
+                const [endHour, endMinute] = slot.end_time.split(':').map(Number);
+                
+                slotDate.setHours(startHour, startMinute);
+                const startTimeInUserTz = formatInTimeZone(slotDate, timezone, 'HH:mm');
+                
+                return (
+                  <div
+                    key={`${slot.date_available}-${slot.start_time}-${index}`}
+                    className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
+                    style={{
+                      top: getEventPosition(startTimeInUserTz),
+                      minHeight: '44px',
+                      zIndex: 5
+                    }}
+                  >
+                    <div className="flex flex-col gap-1">
+                      <h4 className="font-medium text-sm leading-tight truncate">
+                        Available for Booking
+                      </h4>
+                      <span className="text-xs text-muted-foreground">
+                        {formatInTimeZone(slotDate, timezone, 'h:mm a')} - 
+                        {formatInTimeZone(
+                          new Date(slotDate).setHours(endHour, endMinute),
+                          timezone,
+                          'h:mm a'
+                        )}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </ScrollArea>
