@@ -1,5 +1,5 @@
 export interface SessionType {
-  type: "Introduction" | "Quick-Advice" | "Walkthrough" | "Group (2-3 Mentees)" | "Group (4-6 Mentees)";
+  type: string;  // Changed from union type to string to match database
   duration: number;
 }
 
@@ -28,4 +28,11 @@ export interface CalendarEvent {
   status?: string;
   notes?: string | null;
   session_details?: MentorSession;
+}
+
+export interface Availability {
+  date_available: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
 }

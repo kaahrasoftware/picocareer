@@ -1,29 +1,12 @@
 import React from "react";
 import { format, parse, isValid } from "date-fns";
-
-export interface Event {
-  id: string;
-  title: string;
-  description: string | null;
-  start_time: string;
-  end_time: string;
-  event_type: 'session';
-  status?: string;
-  session_details?: any;
-}
-
-interface Availability {
-  date_available: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-}
+import { CalendarEvent, Availability } from "@/types/calendar";
 
 interface EventListProps {
-  events: Event[];
+  events: CalendarEvent[];
   availability?: Availability[];
   isMentor?: boolean;
-  onEventClick?: (event: Event) => void;
+  onEventClick?: (event: CalendarEvent) => void;
 }
 
 export function EventList({ events, availability = [], isMentor = false, onEventClick }: EventListProps) {

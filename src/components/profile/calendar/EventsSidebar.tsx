@@ -1,7 +1,6 @@
 import React from "react";
 import { format } from "date-fns";
-import { CalendarEvent } from "@/types/calendar";
-import { Availability } from "./EventList";
+import { CalendarEvent, Availability } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface EventsSidebarProps {
