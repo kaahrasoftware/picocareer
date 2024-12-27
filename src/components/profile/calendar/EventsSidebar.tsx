@@ -21,22 +21,22 @@ export function EventsSidebar({
   onEventClick,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
-  const getEventColor = (type: CalendarEvent['event_type'], status?: string) => {
+  const getEventColor = (type: CalendarEvent['event_type'], status?: string, sessionType?: string) => {
     if (type === 'session') {
       if (status === 'cancelled') {
-        return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20';
+        return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/30';
       }
-      // Different colors for different session types
+      // Different colors for different session types with improved hover states
       const sessionColors: Record<string, string> = {
-        'mentorship': 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20',
-        'career_guidance': 'border-green-500/20 bg-green-500/10 hover:bg-green-500/20',
-        'technical': 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20',
-        'interview_prep': 'border-orange-500/20 bg-orange-500/10 hover:bg-orange-500/20',
-        'resume_review': 'border-pink-500/20 bg-pink-500/10 hover:bg-pink-500/20'
+        'mentorship': 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20 hover:border-blue-500/30',
+        'career_guidance': 'border-green-500/20 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/30',
+        'technical': 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-500/30',
+        'interview_prep': 'border-orange-500/20 bg-orange-500/10 hover:bg-orange-500/20 hover:border-orange-500/30',
+        'resume_review': 'border-pink-500/20 bg-pink-500/10 hover:bg-pink-500/20 hover:border-pink-500/30'
       };
-      return sessionColors[events[0]?.session_details?.session_type?.type || 'mentorship'];
+      return sessionColors[sessionType || 'mentorship'];
     }
-    return 'border-gray-500/20 bg-gray-500/10 hover:bg-gray-500/20';
+    return 'border-gray-500/20 bg-gray-500/10 hover:bg-gray-500/20 hover:border-gray-500/30';
   };
 
   // Generate time slots from 7 AM to 9 PM
@@ -54,7 +54,7 @@ export function EventsSidebar({
 
   const getEventWidth = (title: string) => {
     // Base width calculation on title length, with min and max constraints
-    const baseWidth = Math.min(Math.max(title.length * 8, 120), 300); // min 120px, max 300px
+    const baseWidth = Math.min(Math.max(title.length * 8, 140), 300); // Increased min width for better readability
     return `${baseWidth}px`;
   };
 
@@ -97,20 +97,30 @@ export function EventsSidebar({
                 <div
                   key={event.id}
                   className={cn(
-                    "absolute left-2 p-2 rounded-md cursor-pointer transition-all",
-                    getEventColor(event.event_type, event.status)
+                    "absolute left-2 p-3 rounded-lg cursor-pointer transition-all shadow-sm",
+                    "hover:shadow-md hover:translate-y-[-1px]",
+                    getEventColor(
+                      event.event_type, 
+                      event.status,
+                      event.session_details?.session_type?.type
+                    )
                   )}
                   style={{
                     top: getEventPosition(event.start_time),
                     width: getEventWidth(event.title),
-                    minHeight: '40px',
+                    minHeight: '44px',
                     zIndex: 10
                   }}
                   onClick={() => onEventClick?.(event)}
                 >
-                  <h4 className="font-medium text-sm leading-tight truncate">
-                    {event.title}
-                  </h4>
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-medium text-sm leading-tight truncate">
+                      {event.title}
+                    </h4>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(event.start_time), 'h:mm a')}
+                    </span>
+                  </div>
                 </div>
               ))}
 
@@ -118,16 +128,22 @@ export function EventsSidebar({
               {isMentor && availability.map((slot, index) => (
                 <div
                   key={`${slot.date_available}-${slot.start_time}-${index}`}
-                  className="absolute left-2 right-2 p-2 rounded-md border border-purple-500/20 bg-purple-500/10"
+                  className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/20 bg-purple-500/10"
                   style={{
                     top: getEventPosition(slot.start_time),
-                    minHeight: '40px',
+                    minHeight: '44px',
                     zIndex: 5
                   }}
                 >
-                  <h4 className="font-medium text-sm leading-tight truncate">
-                    Available for Booking
-                  </h4>
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-medium text-sm leading-tight truncate">
+                      Available for Booking
+                    </h4>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(`2000-01-01T${slot.start_time}`), 'h:mm a')} - 
+                      {format(new Date(`2000-01-01T${slot.end_time}`), 'h:mm a')}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
