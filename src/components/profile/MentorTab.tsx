@@ -7,7 +7,6 @@ import { MentorEditForm } from "./mentor/MentorEditForm";
 import { MentorshipStats } from "./mentor/MentorshipStats";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
-import { GoogleAccountConnection } from "./mentor/GoogleAccountConnection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Settings } from "lucide-react";
@@ -167,7 +166,6 @@ export function MentorTab({ profile }: MentorTabProps) {
 
               <TabsContent value="overview">
                 <div className="space-y-6">
-                  <GoogleAccountConnection profileId={profile.id} />
                   {mentorData?.stats && <MentorshipStats stats={mentorData.stats} />}
                 </div>
               </TabsContent>
