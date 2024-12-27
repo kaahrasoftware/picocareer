@@ -4,8 +4,7 @@ import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const COMPANY_CALENDAR_EMAIL = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
@@ -19,17 +18,15 @@ if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVAT
 async function getAccessToken() {
   const now = Math.floor(Date.now() / 1000);
   
-  // Create JWT claims
   const claims = {
     iss: SERVICE_ACCOUNT_EMAIL,
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
     aud: 'https://oauth2.googleapis.com/token',
-    exp: getNumericDate(3600), // 1 hour from now
+    exp: getNumericDate(3600),
     iat: getNumericDate(0),
     sub: COMPANY_CALENDAR_EMAIL,
   };
 
-  // Create private key
   const privateKey = await crypto.subtle.importKey(
     "pkcs8",
     new TextEncoder().encode(SERVICE_ACCOUNT_PRIVATE_KEY),
@@ -41,14 +38,12 @@ async function getAccessToken() {
     ["sign"]
   );
 
-  // Create JWT
   const jwt = await create(
     { alg: "RS256", typ: "JWT" },
     claims,
     privateKey
   );
 
-  // Exchange JWT for access token
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: {
@@ -70,7 +65,6 @@ async function getAccessToken() {
 }
 
 serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -86,7 +80,7 @@ serve(async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get session details
+    // Get session details including mentor and mentee emails
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`

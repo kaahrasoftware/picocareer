@@ -8,7 +8,6 @@ import { MeetingPlatformSelector } from "./booking/MeetingPlatformSelector";
 import { BookingConfirmation } from "./booking/BookingConfirmation";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useBookSession } from "@/hooks/useBookSession";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
@@ -30,7 +29,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [note, setNote] = useState("");
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [googleAuthError, setGoogleAuthError] = useState(false);
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { toast } = useToast();
 
@@ -39,65 +37,12 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
 
-  // Check if mentor has Google account connected before allowing Google Meet selection
-  const checkGoogleAuth = async () => {
-    try {
-      const { data: tokens, error } = await supabase
-        .from('user_oauth_tokens')
-        .select('*')
-        .eq('user_id', mentor.id)
-        .eq('provider', 'google')
-        .maybeSingle(); // Changed from .single() to .maybeSingle()
-
-      if (error) {
-        console.error('Error checking Google auth:', error);
-        throw error;
-      }
-
-      if (!tokens) {
-        setGoogleAuthError(true);
-        if (meetingPlatform === 'google_meet') {
-          setMeetingPlatform('whatsapp');
-        }
-        toast({
-          title: "Google Meet Unavailable",
-          description: "This mentor hasn't connected their Google account. Please select a different platform.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error checking Google auth:', error);
-      setGoogleAuthError(true);
-      if (meetingPlatform === 'google_meet') {
-        setMeetingPlatform('whatsapp');
-      }
-      toast({
-        title: "Google Meet Error",
-        description: "Unable to verify Google account connection. Please select a different platform.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
   const handleSubmit = async () => {
     if (!date || !selectedTime || !sessionType || !mentor.id) return;
     
     setIsSubmitting(true);
     
     try {
-      // If Google Meet is selected, verify mentor has connected their account
-      if (meetingPlatform === 'google_meet') {
-        const hasGoogleAuth = await checkGoogleAuth();
-        if (!hasGoogleAuth) {
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      
       console.log('Booking session with:', { date, selectedTime, sessionType, meetingPlatform });
       
       // Book the session first
@@ -129,7 +74,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             console.error('Error creating meet link:', meetError);
             toast({
               title: "Google Meet Error",
-              description: "Session booked, but there was an issue creating the meeting link. Please contact the mentor to set up the meeting.",
+              description: "Session booked, but there was an issue creating the meeting link. We'll send you the link via email shortly.",
               variant: "destructive"
             });
           } else {
@@ -139,7 +84,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           console.error('Error with Google Meet integration:', meetError);
           toast({
             title: "Google Meet Error",
-            description: "Session booked, but there was an issue with Google Meet integration. Please contact the mentor to set up the meeting.",
+            description: "Session booked, but there was an issue with Google Meet integration. We'll send you the link via email shortly.",
             variant: "destructive"
           });
         }
@@ -185,14 +130,11 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error booking session:', error);
-      
-      if (!googleAuthError) {
-        toast({
-          title: "Booking Error",
-          description: "Failed to book session. Please try again.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Booking Error",
+        description: "Failed to book session. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +178,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             <MeetingPlatformSelector
               value={meetingPlatform}
               onValueChange={setMeetingPlatform}
-              onGoogleAuthErrorClear={() => setGoogleAuthError(false)}
             />
 
             <SessionNote
@@ -248,7 +189,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
         <BookingConfirmation
           isSubmitting={isSubmitting}
-          googleAuthError={googleAuthError}
           onCancel={() => onOpenChange(false)}
           onConfirm={handleSubmit}
           isValid={isValid}
