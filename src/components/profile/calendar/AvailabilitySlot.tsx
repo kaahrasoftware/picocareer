@@ -13,7 +13,8 @@ interface AvailabilitySlotProps {
 export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: AvailabilitySlotProps) {
   const getSlotPosition = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * cellHeight * 2 + (minutes / 30) * cellHeight;
+    // Add one cellHeight to move the slot down one row
+    return (hours * cellHeight * 2 + (minutes / 30) * cellHeight) + cellHeight;
   };
 
   const calculateSlotHeight = (startTime: string, endTime: string) => {
