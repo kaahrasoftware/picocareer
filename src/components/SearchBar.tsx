@@ -62,13 +62,17 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
         return;
       }
 
-      // Filter results by highest_degree after fetching
-      // This handles the enum type properly by doing the filtering client-side
+      // Filter by highest_degree after fetching
       const filteredData = data?.filter(profile => {
-        const degreeMatch = !debouncedSearch || 
-          profile.highest_degree?.toLowerCase() === debouncedSearch.toLowerCase() ||
-          profile.highest_degree?.toLowerCase().includes(debouncedSearch.toLowerCase());
-        return degreeMatch;
+        // Only apply degree filter if there's a search query
+        if (!debouncedSearch) return true;
+        
+        // Convert both to lowercase for case-insensitive comparison
+        const searchLower = debouncedSearch.toLowerCase();
+        const degreeLower = profile.highest_degree?.toLowerCase();
+        
+        // Check if degree exists and matches the search term
+        return degreeLower?.includes(searchLower);
       }) || [];
 
       setSearchResults(filteredData);
