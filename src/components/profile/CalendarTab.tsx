@@ -3,17 +3,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
-import { EventList } from "./calendar/EventList";
 import { format } from "date-fns";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { CalendarEvent } from "@/types/calendar";
 import { CalendarHeader } from "./calendar/CalendarHeader";
 import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
+import { EventsSidebar } from "./calendar/EventsSidebar";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const [selectedSession, setSelectedSession] = useState<CalendarEvent | null>(null);
   const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
@@ -66,7 +64,7 @@ export function CalendarTab() {
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Get calendar events using our custom hook - now only passing selectedDate
+  // Get calendar events using our custom hook
   const { data: events = [], isLoading: isEventsLoading } = useSessionEvents(selectedDate || new Date());
 
   const handleCancelSession = async () => {
@@ -171,8 +169,8 @@ export function CalendarTab() {
     <div className="space-y-6">
       <CalendarHeader isMentor={isMentor} />
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
+      <div className="flex">
+        <div className="flex-1">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -188,33 +186,15 @@ export function CalendarTab() {
               }
             }}
           />
-          
-          {selectedDate && (
-            <div className="mt-4">
-              <h3 className="font-medium mb-2">
-                Events for {format(selectedDate, 'MMMM d, yyyy')}
-              </h3>
-              <EventList 
-                events={events} 
-                availability={availability} 
-                isMentor={isMentor}
-                onEventClick={setSelectedSession}
-              />
-            </div>
-          )}
         </div>
 
-        {showAvailabilityForm && isMentor && (
-          <MentorAvailabilityForm 
-            onClose={() => setShowAvailabilityForm(false)}
-            onSuccess={() => {
-              setShowAvailabilityForm(false);
-              toast({
-                title: "Availability set",
-                description: "Your availability has been updated successfully.",
-              });
-              queryClient.invalidateQueries({ queryKey: ['mentor_availability'] });
-            }}
+        {selectedDate && (
+          <EventsSidebar
+            date={selectedDate}
+            events={events}
+            availability={availability}
+            isMentor={isMentor}
+            onEventClick={setSelectedSession}
           />
         )}
       </div>
