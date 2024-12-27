@@ -36,8 +36,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (isTest) {
       console.log('Sending test email...');
       const testEmailPayload = {
-        from: "PicoCareer <picocareer@gmail.com>", // Use verified email
-        to: ["picocareer@gmail.com"], // Send only to verified email during testing
+        from: "PicoCareer <picocareer@gmail.com>",
+        to: ["picocareer@gmail.com"],
         subject: "Test Email from PicoCareer",
         html: `
           <h2>Test Email</h2>
@@ -155,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailPayload = {
-      from: "PicoCareer <onboarding@resend.dev>", // Using resend.dev domain temporarily
+      from: "PicoCareer <picocareer@gmail.com>",
       to: [session.mentor.email, session.mentee.email],
       subject,
       html: content,
