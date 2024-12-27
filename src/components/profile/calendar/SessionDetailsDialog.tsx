@@ -83,69 +83,77 @@ export function SessionDetailsDialog({
 
   return (
     <Dialog open={!!session} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-background/80 backdrop-blur-lg border-border/50">
         <DialogHeader>
-          <DialogTitle>Session Details</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-semibold">Session Details</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             View session details and manage your booking
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-medium">Session Type</h4>
-            <p className="text-sm text-muted-foreground">
-              {session.session_details.session_type.type}
-            </p>
-          </div>
+        <div className="space-y-6">
+          <div className="space-y-4 divide-y divide-border/30">
+            <div className="pb-4">
+              <h4 className="text-sm font-medium text-foreground mb-1">Session Type</h4>
+              <p className="text-sm text-muted-foreground">
+                {session.session_details.session_type.type}
+              </p>
+            </div>
 
-          <div>
-            <h4 className="font-medium">Time</h4>
-            <p className="text-sm text-muted-foreground">
-              {formatInTimeZone(
-                new Date(session.start_time),
-                userTimezone,
-                "PPP p"
-              )}
-            </p>
-          </div>
+            <div className="py-4">
+              <h4 className="text-sm font-medium text-foreground mb-1">Time</h4>
+              <p className="text-sm text-muted-foreground">
+                {formatInTimeZone(
+                  new Date(session.start_time),
+                  userTimezone,
+                  "PPP p"
+                )}
+              </p>
+            </div>
 
-          <div>
-            <h4 className="font-medium">Duration</h4>
-            <p className="text-sm text-muted-foreground">
-              {session.session_details.session_type.duration} minutes
-            </p>
-          </div>
+            <div className="py-4">
+              <h4 className="text-sm font-medium text-foreground mb-1">Duration</h4>
+              <p className="text-sm text-muted-foreground">
+                {session.session_details.session_type.duration} minutes
+              </p>
+            </div>
 
-          <div>
-            <h4 className="font-medium">Participants</h4>
-            <p className="text-sm text-muted-foreground">
-              Mentor: {session.session_details.mentor.full_name}<br />
-              Mentee: {session.session_details.mentee.full_name}
-            </p>
+            <div className="py-4">
+              <h4 className="text-sm font-medium text-foreground mb-1">Participants</h4>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium">Mentor:</span> {session.session_details.mentor.full_name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium">Mentee:</span> {session.session_details.mentee.full_name}
+                </p>
+              </div>
+            </div>
           </div>
 
           {session.status === 'cancelled' ? (
-            <div className="flex items-center gap-2 text-red-500">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
               <AlertCircle className="h-4 w-4" />
-              <span>This session has been cancelled</span>
+              <span className="text-sm font-medium">This session has been cancelled</span>
             </div>
           ) : (
-            <>
+            <div className="space-y-4">
               {canMarkAttendance && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                  <Label htmlFor="attendance" className="text-sm font-medium">
+                    Confirm Attendance
+                  </Label>
                   <Switch
                     id="attendance"
                     checked={attendance}
                     onCheckedChange={handleAttendanceToggle}
                   />
-                  <Label htmlFor="attendance">Confirm Attendance</Label>
                 </div>
               )}
 
               {session.session_details.meeting_link && (
                 <Button
-                  className="w-full"
+                  className="w-full bg-primary hover:bg-primary/90"
                   onClick={handleJoinSession}
                 >
                   Join Session <ExternalLink className="ml-2 h-4 w-4" />
@@ -158,7 +166,7 @@ export function SessionDetailsDialog({
                     placeholder="Please provide a reason for cancellation..."
                     value={cancellationNote}
                     onChange={(e) => onCancellationNoteChange(e.target.value)}
-                    className="h-24"
+                    className="h-24 resize-none bg-muted"
                   />
                   
                   <DialogFooter>
@@ -166,6 +174,7 @@ export function SessionDetailsDialog({
                       variant="destructive"
                       onClick={onCancel}
                       disabled={!cancellationNote.trim()}
+                      className="w-full"
                     >
                       Cancel Session
                     </Button>
@@ -174,12 +183,14 @@ export function SessionDetailsDialog({
               )}
 
               {!canCancel && (
-                <div className="flex items-center gap-2 text-sm text-yellow-500">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 text-yellow-500">
                   <AlertCircle className="h-4 w-4" />
-                  Sessions cannot be cancelled less than 1 hour before the start time
+                  <span className="text-sm">
+                    Sessions cannot be cancelled less than 1 hour before the start time
+                  </span>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </DialogContent>
