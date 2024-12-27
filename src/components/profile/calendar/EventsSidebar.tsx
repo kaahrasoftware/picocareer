@@ -22,9 +22,9 @@ export function EventsSidebar({
 }: EventsSidebarProps) {
   const getEventColor = (type: CalendarEvent['event_type'], status?: string) => {
     if (type === 'session' && status === 'cancelled') {
-      return 'border-red-500/20 bg-red-500/10 hover:bg-red-500/20';
+      return 'bg-red-500/10 hover:bg-red-500/20';
     }
-    return 'border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20';
+    return 'bg-blue-500/10 hover:bg-blue-500/20';
   };
 
   const formatTimeString = (timeStr: string) => {
@@ -38,13 +38,13 @@ export function EventsSidebar({
   };
 
   return (
-    <div className="w-96 border-l border-border bg-card/50 p-4">
+    <div className="w-96 bg-zinc-900/50 p-4 rounded-lg border border-zinc-800">
       <div className="space-y-4">
         <div>
-          <h3 className="font-medium text-lg">
+          <h3 className="font-medium text-lg text-zinc-100">
             {format(date, 'MMMM d, yyyy')}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-400">
             Timezone: {timezone}
           </p>
         </div>
@@ -52,7 +52,7 @@ export function EventsSidebar({
         <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="space-y-2">
             {events.length === 0 && (!isMentor || availability.length === 0) ? (
-              <p className="text-sm text-muted-foreground py-2">
+              <p className="text-sm text-zinc-400 py-2">
                 No events scheduled for this day
               </p>
             ) : (
@@ -60,23 +60,23 @@ export function EventsSidebar({
                 {events.map((event) => (
                   <div
                     key={event.id}
-                    className={`p-3 rounded-lg border transition-colors cursor-pointer ${getEventColor(event.event_type, event.status)}`}
+                    className={`p-3 rounded-lg transition-colors cursor-pointer ${getEventColor(event.event_type, event.status)}`}
                     onClick={() => onEventClick?.(event)}
                   >
                     <div className="space-y-1.5">
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-medium text-zinc-400">
                         {formatTimeString(event.start_time)}
                       </p>
-                      <h4 className="font-medium leading-none">
+                      <h4 className="font-medium leading-none text-zinc-100">
                         {event.title}
                       </h4>
                       {event.description && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-zinc-400">
                           {event.description}
                         </p>
                       )}
                       {event.status === 'cancelled' && (
-                        <span className="text-sm text-red-500">
+                        <span className="text-sm text-red-400">
                           Cancelled
                         </span>
                       )}
@@ -87,13 +87,13 @@ export function EventsSidebar({
                 {isMentor && availability.map((slot, index) => (
                   <div
                     key={`${slot.date_available}-${slot.start_time}-${index}`}
-                    className="p-3 rounded-lg border border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 transition-colors"
+                    className="p-3 rounded-lg bg-emerald-500/10 transition-colors"
                   >
                     <div className="space-y-1.5">
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-sm font-medium text-zinc-400">
                         {formatTimeString(slot.start_time)} - {formatTimeString(slot.end_time)}
                       </p>
-                      <h4 className="font-medium leading-none">
+                      <h4 className="font-medium leading-none text-zinc-100">
                         Available for Booking
                       </h4>
                     </div>
