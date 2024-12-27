@@ -51,8 +51,8 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
   return (
     <div
       className={cn(
-        "absolute left-2 right-2 p-3 rounded-lg transition-all duration-200",
-        "shadow-sm",
+        "absolute left-2 right-2 px-2 py-1 rounded-lg transition-all duration-200",
+        "shadow-sm inline-flex items-center",
         event.status !== 'cancelled' && "hover:shadow-md hover:translate-y-[-1px]",
         getEventColor(
           event.event_type, 
@@ -67,15 +67,13 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
       }}
       onClick={() => event.status !== 'cancelled' && onEventClick?.(event)}
     >
-      <div className="flex items-center justify-between h-full">
-        <div className="flex items-center justify-between w-full">
-          <h4 className="font-medium text-sm leading-tight truncate">
-            {event.title}
-          </h4>
-          {event.status === 'cancelled' && (
-            <span className="text-red-500 text-xs font-medium">(Cancelled)</span>
-          )}
-        </div>
+      <div className="flex items-center justify-between min-w-0 w-full">
+        <h4 className="font-medium text-sm leading-tight truncate">
+          {event.title}
+        </h4>
+        {event.status === 'cancelled' && (
+          <span className="text-red-500 text-xs font-medium ml-1 whitespace-nowrap">(Cancelled)</span>
+        )}
       </div>
     </div>
   );
