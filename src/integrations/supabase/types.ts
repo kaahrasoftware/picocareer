@@ -248,27 +248,6 @@ export type Database = {
         }
         Relationships: []
       }
-      email_subscriptions: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       majors: {
         Row: {
           affiliated_programs: string[] | null

@@ -1,76 +1,41 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { UserPlus, GraduationCap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const CallToActionSection = () => {
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('email_subscriptions')
-        .insert([{ email }]);
-
-      if (error) {
-        if (error.code === '23505') { // Unique violation error code
-          toast.error("This email is already subscribed!");
-        } else {
-          toast.error("Failed to subscribe. Please try again.");
-        }
-        console.error('Subscription error:', error);
-        return;
-      }
-
-      toast.success("Successfully subscribed to our newsletter!");
-      setEmail("");
-    } catch (error) {
-      console.error('Subscription error:', error);
-      toast.error("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <section className="py-16 px-4 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-3xl">
-      <div className="max-w-3xl mx-auto text-center space-y-8">
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Ready to Start Your Journey?
-          </h2>
-          <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Join our community of mentors and mentees. Get personalized guidance and support on your career path.
-          </p>
+    <>
+      <h2 className="text-3xl font-bold text-center mb-8">
+        Join Our Community Today
+      </h2>
+      <section className="py-16 relative overflow-hidden rounded-xl mx-4">
+        <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            <Button
+              asChild
+              size="lg"
+              className="w-full md:w-auto bg-picocareer-primary hover:bg-picocareer-accent text-white font-semibold"
+            >
+              <Link to="/auth">
+                <UserPlus className="mr-2 h-5 w-5" />
+                Sign Up
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="secondary"
+              className="w-full md:w-auto bg-white hover:bg-gray-100 text-picocareer-dark font-semibold"
+            >
+              <Link to="/mentor-registration">
+                <GraduationCap className="mr-2 h-5 w-5" />
+                Become a Mentor
+              </Link>
+            </Button>
+          </div>
         </div>
-        <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-          <Input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1"
-            required
-          />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Subscribing..." : "Subscribe"}
-          </Button>
-        </form>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button variant="default" size="lg" className="w-full sm:w-auto">
-            Sign Up Now
-          </Button>
-          <Button variant="outline" size="lg" className="w-full sm:w-auto">
-            Become a Mentor
-          </Button>
-        </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
