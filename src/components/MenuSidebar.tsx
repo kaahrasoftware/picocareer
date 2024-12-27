@@ -17,18 +17,44 @@ export function MenuSidebar() {
   const { toast } = useToast();
   const { session, isError } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { data: notifications = [] } = useNotifications(session);
+  const { data: notifications = [], refetch: refetchNotifications } = useNotifications(session);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleSignOut = async () => {
+  const handleMarkAsRead = async (notificationId: string) => {
+    if (!session?.user?.id) return;
+
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId)
+        .eq('profile_id', session.user.id); // Ensure we only update user's own notifications
+
       if (error) throw error;
       
-      // Clear all queries and local storage
+      await refetchNotifications();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      // First clear all queries and local storage
       queryClient.clear();
       localStorage.removeItem('picocareer_auth_token');
+      
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      // Finally navigate to auth page
       navigate("/auth");
     } catch (error) {
       console.error('Error signing out:', error);

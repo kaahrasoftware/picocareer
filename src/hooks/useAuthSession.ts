@@ -13,8 +13,18 @@ export function useAuthSession() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
+        // First try to get an existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
+        
+        if (!session) {
+          // If no session exists, try to refresh it
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+          if (refreshError) throw refreshError;
+          return refreshedSession;
+        }
+        
         return session;
       } catch (error: any) {
         console.error('Error fetching session:', error);
