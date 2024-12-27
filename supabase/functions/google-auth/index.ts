@@ -15,10 +15,10 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   throw new Error('Missing required Google OAuth credentials')
 }
 
-console.log('Google OAuth credentials loaded successfully')
+console.log('Starting Google OAuth Edge Function')
 console.log('Redirect URL:', REDIRECT_URL)
 
-// Initialize the OAuth 2.0 client with basic scopes first
+// Initialize the OAuth 2.0 client with basic scopes
 const oauth2Client = new OAuth2Client({
   clientId: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
@@ -31,31 +31,33 @@ const oauth2Client = new OAuth2Client({
 })
 
 serve(async (req) => {
+  console.log('Received request:', req.method, req.url)
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request')
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { action, userId } = await req.json()
+    console.log('Request payload:', { action, userId })
 
     if (!action) {
       throw new Error('Action is required')
     }
 
-    console.log('Processing action:', action, 'for user:', userId)
-
     if (action === 'authorize') {
-      // Add calendar scopes only when specifically requesting them
-      const scopes = [
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile',
-      ]
-
-      // Generate authorization URL with specified scopes
+      console.log('Processing authorize action')
+      // Generate authorization URL with all required scopes
       const { uri } = await oauth2Client.code.getAuthorizationUri({
-        scope: scopes,
-        state: JSON.stringify({ action: 'authorize' }),
+        scope: [
+          'https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events'
+        ],
+        state: JSON.stringify({ action: 'authorize', userId }),
         access_type: 'offline',
         prompt: 'consent',
       })
@@ -67,6 +69,7 @@ serve(async (req) => {
     }
 
     if (action === 'disconnect') {
+      console.log('Processing disconnect action for user:', userId)
       if (!userId) {
         throw new Error('User ID is required for disconnection')
       }
@@ -76,7 +79,6 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       )
 
-      // Remove the tokens from the database
       const { error: deleteError } = await supabase
         .from('user_oauth_tokens')
         .delete()
@@ -91,15 +93,16 @@ serve(async (req) => {
     }
 
     if (action === 'callback') {
-      // Handle the OAuth callback
+      console.log('Processing callback action')
       const code = new URL(req.url).searchParams.get('code')
       if (!code) {
         throw new Error('No code provided')
       }
 
-      // Exchange the authorization code for tokens
+      console.log('Exchanging code for tokens')
       const tokens = await oauth2Client.code.getToken(req.url)
-      
+      console.log('Tokens received')
+
       const authHeader = req.headers.get('Authorization')
       if (!authHeader) {
         throw new Error('No authorization header')
@@ -118,7 +121,7 @@ serve(async (req) => {
         throw new Error('Invalid user token')
       }
 
-      // Store the tokens in a secure table
+      console.log('Storing tokens for user:', user.id)
       const { error: insertError } = await supabase
         .from('user_oauth_tokens')
         .upsert({
@@ -140,7 +143,7 @@ serve(async (req) => {
 
     throw new Error('Invalid action')
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in Edge Function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
