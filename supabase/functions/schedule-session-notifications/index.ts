@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +10,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+interface EmailRequest {
+  sessionId: string;
+  type: 'confirmation' | 'cancellation' | 'update';
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -23,7 +28,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch session details
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
-      .select('*, mentor:profiles!mentor_id(*), mentee:profiles!mentee_id(*), session_type:mentor_session_types(*)')
+      .select(`
+        *,
+        mentor:profiles!mentor_id(*),
+        mentee:profiles!mentee_id(*),
+        session_type:mentor_session_types(*)
+      `)
       .eq('id', sessionId)
       .single();
 
@@ -33,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create confirmation notifications with meeting link
     const meetingLinkInfo = session.meeting_link 
-      ? `\nMeeting Link: ${session.meeting_link}`
+      ? `\n<div style="margin-top: 10px;"><a href="${session.meeting_link}" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">Join now</a></div>`
       : session.meeting_platform === 'google_meet' 
         ? '\nGoogle Meet link will be sent shortly.'
         : '';
