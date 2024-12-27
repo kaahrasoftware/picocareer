@@ -7,7 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const REDIRECT_URL = Deno.env.get('REDIRECT_URL') || 'http://localhost:5173/auth/callback'
+// Use the Supabase project URL for the redirect
+const REDIRECT_URL = `https://wurdmlkfkzuivvwxjmxk.supabase.co/functions/v1/google-auth`
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
 
