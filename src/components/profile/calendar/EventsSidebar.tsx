@@ -26,6 +26,9 @@ export function EventsSidebar({
 }: EventsSidebarProps) {
   const CELL_HEIGHT = 26; // Height for 30-minute intervals
 
+  // Filter out cancelled events for the calendar grid view
+  const activeEvents = events.filter(event => event.status !== 'cancelled');
+
   return (
     <div className="w-[600px] bg-background border border-border rounded-lg p-4">
       <div className="space-y-4">
@@ -45,7 +48,7 @@ export function EventsSidebar({
             <div className="relative border-l border-border min-h-[1248px]">
               <TimeGridLines cellHeight={CELL_HEIGHT} />
 
-              {events.map((event) => (
+              {activeEvents.map((event) => (
                 <EventSlot
                   key={event.id}
                   event={event}
