@@ -1,11 +1,55 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { JWT } from "https://deno.land/x/jwt@v2.0.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+const COMPANY_CALENDAR_EMAIL = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
+const SERVICE_ACCOUNT_EMAIL = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+const SERVICE_ACCOUNT_PRIVATE_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+
+if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVATE_KEY) {
+  throw new Error('Missing required Google service account credentials');
+}
+
+async function getAccessToken() {
+  const now = Math.floor(Date.now() / 1000);
+  
+  const jwt = await new JWT({
+    alg: 'RS256',
+    typ: 'JWT'
+  }).setIssuer(SERVICE_ACCOUNT_EMAIL)
+    .setAudience('https://oauth2.googleapis.com/token')
+    .setExpirationTime(now + 3600)
+    .setIssuedAt(now)
+    .setSubject(COMPANY_CALENDAR_EMAIL)
+    .addScope('https://www.googleapis.com/auth/calendar')
+    .addScope('https://www.googleapis.com/auth/calendar.events')
+    .sign(SERVICE_ACCOUNT_PRIVATE_KEY);
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    console.error('Failed to get access token:', data);
+    throw new Error('Failed to get access token');
+  }
+
+  return data.access_token;
+}
 
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -29,7 +73,7 @@ serve(async (req: Request): Promise<Response> => {
       .from('mentor_sessions')
       .select(`
         *,
-        mentor:mentor_id(id),
+        mentor:mentor_id(id, email, full_name),
         mentee:mentee_id(id, email, full_name),
         session_type:session_type_id(duration, type)
       `)
@@ -41,55 +85,8 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error('Session not found');
     }
 
-    // Get mentor's Google OAuth token
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('user_oauth_tokens')
-      .select('*')
-      .eq('user_id', session.mentor.id)
-      .eq('provider', 'google')
-      .single();
-
-    if (tokenError || !tokenData) {
-      console.error('Google token not found:', tokenError);
-      throw new Error('Mentor has not connected their Google account');
-    }
-
-    // Check if token needs refresh
-    if (new Date(tokenData.expires_at) <= new Date()) {
-      console.log('Token expired, refreshing...');
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: Deno.env.get('GOOGLE_CLIENT_ID') || '',
-          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
-          refresh_token: tokenData.refresh_token || '',
-          grant_type: 'refresh_token',
-        }),
-      });
-
-      const refreshData = await response.json();
-      if (!response.ok) {
-        console.error('Failed to refresh token:', refreshData);
-        throw new Error('Failed to refresh token');
-      }
-
-      // Update token in database
-      const { error: updateError } = await supabase
-        .from('user_oauth_tokens')
-        .update({
-          access_token: refreshData.access_token,
-          expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
-        })
-        .eq('id', tokenData.id);
-
-      if (updateError) {
-        console.error('Failed to update token:', updateError);
-        throw new Error('Failed to update token');
-      }
-
-      tokenData.access_token = refreshData.access_token;
-    }
+    // Get access token using service account
+    const accessToken = await getAccessToken();
 
     // Create Google Calendar event with Meet link
     const startTime = new Date(session.scheduled_at);
@@ -107,6 +104,7 @@ serve(async (req: Request): Promise<Response> => {
         timeZone: 'UTC',
       },
       attendees: [
+        { email: session.mentor.email },
         { email: session.mentee.email },
       ],
       conferenceData: {
@@ -123,7 +121,7 @@ serve(async (req: Request): Promise<Response> => {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(event),
