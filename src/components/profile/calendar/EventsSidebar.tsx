@@ -1,5 +1,5 @@
 import React from "react";
-import { format, parse, isValid } from "date-fns";
+import { format } from "date-fns";
 import { CalendarEvent, Availability } from "@/types/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -53,9 +53,9 @@ export function EventsSidebar({
         </div>
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="relative grid grid-cols-[100px_1fr] gap-4">
+          <div className="relative grid grid-cols-[80px_1fr] gap-4">
             {/* Time slots */}
-            <div className="space-y-14 pt-6">
+            <div className="space-y-[52px] pt-6">
               {timeSlots.map((time) => (
                 <div key={time} className="text-sm text-muted-foreground">
                   {time}
@@ -64,12 +64,12 @@ export function EventsSidebar({
             </div>
 
             {/* Events grid */}
-            <div className="relative border-l border-border">
+            <div className="relative border-l border-border min-h-[900px]">
               {/* Hour grid lines */}
               {timeSlots.map((_, index) => (
                 <div
                   key={index}
-                  className="absolute w-full border-t border-border"
+                  className="absolute w-full border-t border-border/30"
                   style={{ top: `${index * 60}px` }}
                 />
               ))}
@@ -78,14 +78,17 @@ export function EventsSidebar({
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className={`absolute left-2 right-2 p-2 rounded-lg cursor-pointer ${getEventColor(event.event_type, event.status)}`}
+                  className={`absolute left-2 right-2 p-2 rounded-md cursor-pointer transition-all ${getEventColor(event.event_type, event.status)}`}
                   style={{
                     top: getEventPosition(event.start_time),
-                    minHeight: '60px'
+                    minHeight: '40px',
+                    zIndex: 10
                   }}
                   onClick={() => onEventClick?.(event)}
                 >
-                  <h4 className="font-medium text-sm leading-tight">{event.title}</h4>
+                  <h4 className="font-medium text-sm leading-tight truncate">
+                    {event.title}
+                  </h4>
                 </div>
               ))}
 
@@ -93,13 +96,16 @@ export function EventsSidebar({
               {isMentor && availability.map((slot, index) => (
                 <div
                   key={`${slot.date_available}-${slot.start_time}-${index}`}
-                  className="absolute left-2 right-2 p-2 rounded-lg border border-purple-500/20 bg-purple-500/10"
+                  className="absolute left-2 right-2 p-2 rounded-md border border-purple-500/20 bg-purple-500/10"
                   style={{
                     top: getEventPosition(slot.start_time),
-                    minHeight: '60px'
+                    minHeight: '40px',
+                    zIndex: 5
                   }}
                 >
-                  <h4 className="font-medium text-sm leading-tight">Available for Booking</h4>
+                  <h4 className="font-medium text-sm leading-tight truncate">
+                    Available for Booking
+                  </h4>
                 </div>
               ))}
             </div>
