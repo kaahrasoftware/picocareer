@@ -18,7 +18,7 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
 console.log('Google OAuth credentials loaded successfully')
 console.log('Redirect URL:', REDIRECT_URL)
 
-// Initialize the OAuth 2.0 client
+// Initialize the OAuth 2.0 client with basic scopes first
 const oauth2Client = new OAuth2Client({
   clientId: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
@@ -26,7 +26,7 @@ const oauth2Client = new OAuth2Client({
   tokenUri: 'https://oauth2.googleapis.com/token',
   redirectUri: REDIRECT_URL,
   defaults: {
-    scope: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
+    scope: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
   },
 })
 
@@ -46,8 +46,20 @@ serve(async (req) => {
     console.log('Processing action:', action, 'for user:', userId)
 
     if (action === 'authorize') {
-      // Generate authorization URL
-      const { uri } = await oauth2Client.code.getAuthorizationUri()
+      // Add calendar scopes only when specifically requesting them
+      const scopes = [
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+      ]
+
+      // Generate authorization URL with specified scopes
+      const { uri } = await oauth2Client.code.getAuthorizationUri({
+        scope: scopes,
+        state: JSON.stringify({ action: 'authorize' }),
+        access_type: 'offline',
+        prompt: 'consent',
+      })
+      
       console.log('Generated auth URI:', uri)
       return new Response(JSON.stringify({ url: uri }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
