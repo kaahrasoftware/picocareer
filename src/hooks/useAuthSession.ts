@@ -8,7 +8,6 @@ export function useAuthSession() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Get initial session and listen for auth changes
   const { data: session, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
@@ -28,11 +27,18 @@ export function useAuthSession() {
         return session;
       } catch (error: any) {
         console.error('Error fetching session:', error);
+        // Clear all auth-related data on error
+        queryClient.removeQueries({ queryKey: ['auth-session'] });
+        queryClient.removeQueries({ queryKey: ['profile'] });
+        queryClient.removeQueries({ queryKey: ['notifications'] });
+        localStorage.removeItem('picocareer_auth_token');
+        
         toast({
           title: "Authentication Error",
           description: "Please try signing in again",
           variant: "destructive",
         });
+        navigate("/auth");
         return null;
       }
     },

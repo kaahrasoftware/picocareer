@@ -29,7 +29,7 @@ export function MenuSidebar() {
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId)
-        .eq('profile_id', session.user.id); // Ensure we only update user's own notifications
+        .eq('profile_id', session.user.id);
 
       if (error) throw error;
       

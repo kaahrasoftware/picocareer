@@ -12,6 +12,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     detectSessionInUrl: true,
     storage: window.localStorage,
     flowType: 'pkce',
-    debug: true // Enable debug mode to help troubleshoot auth issues
+    debug: true
   }
 });
