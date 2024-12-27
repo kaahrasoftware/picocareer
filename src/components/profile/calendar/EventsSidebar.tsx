@@ -46,14 +46,17 @@ export function EventsSidebar({
     return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
   };
 
-  const getEventPosition = (time: string) => {
+  const getEventPosition = (timeStr: string) => {
     try {
-      const date = new Date(`2000-01-01T${time}`);
-      const hours = date.getHours();
-      const minutes = date.getMinutes();
-      return `${(hours * 52) + (minutes / 30 * 26)}px`;
+      // Parse the time string into hours and minutes
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      // Calculate pixels from midnight (each hour is 52px, each 30 min is 26px)
+      const pixelsFromMidnight = (hours * 52) + (minutes * (52/60));
+      
+      return `${pixelsFromMidnight}px`;
     } catch (error) {
-      console.error('Error calculating position for time:', time, error);
+      console.error('Error calculating position for time:', timeStr, error);
       return '0px';
     }
   };
@@ -65,10 +68,17 @@ export function EventsSidebar({
 
   const calculateSlotHeight = (startTime: string, endTime: string) => {
     try {
-      const start = new Date(`2000-01-01T${startTime}`);
-      const end = new Date(`2000-01-01T${endTime}`);
-      const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-      return `${(diffInMinutes / 30) * 26}px`;
+      // Parse start and end times
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+      
+      // Calculate total minutes difference
+      const startTotalMinutes = startHours * 60 + startMinutes;
+      const endTotalMinutes = endHours * 60 + endMinutes;
+      const diffInMinutes = endTotalMinutes - startTotalMinutes;
+      
+      // Convert to pixels (52px per hour, so 26px per 30 minutes)
+      return `${(diffInMinutes * (52/60))}px`;
     } catch (error) {
       console.error('Error calculating slot height:', error);
       return '26px';
