@@ -83,7 +83,7 @@ export function SessionDetailsDialog({
 
   return (
     <Dialog open={!!session} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-background/80 backdrop-blur-lg border-border/50">
+      <DialogContent className="sm:max-w-[425px] bg-background border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Session Details</DialogTitle>
           <DialogDescription className="text-muted-foreground">
