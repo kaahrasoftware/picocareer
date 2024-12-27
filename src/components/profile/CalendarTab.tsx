@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
@@ -9,6 +8,7 @@ import { CalendarEvent } from "@/types/calendar";
 import { CalendarHeader } from "./calendar/CalendarHeader";
 import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
 import { EventsSidebar } from "./calendar/EventsSidebar";
+import { CalendarContainer } from "./calendar/CalendarContainer";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -158,33 +158,16 @@ export function CalendarTab() {
     );
   }
 
-  // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
-    return availability?.some(slot => 
-      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
-    );
-  };
-
   return (
     <div className="space-y-6">
       <CalendarHeader isMentor={isMentor} />
 
       <div className="flex">
         <div className="flex-1">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border bg-kahra-darker"
-            modifiers={{
-              hasAvailability: (date) => hasAvailability(date)
-            }}
-            modifiersStyles={{
-              hasAvailability: {
-                border: '2px solid #22c55e',
-                borderRadius: '4px'
-              }
-            }}
+          <CalendarContainer
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            availability={availability}
           />
         </div>
 
