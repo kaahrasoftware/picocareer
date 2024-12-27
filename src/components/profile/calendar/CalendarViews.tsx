@@ -1,7 +1,4 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 import { CalendarViewType } from "./types";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
@@ -51,20 +48,10 @@ export function CalendarViews({
       );
     case "month":
       return (
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={onSelectDate}
-          className="rounded-md border bg-background"
-          modifiers={{
-            hasAvailability: (date) => hasAvailability(date)
-          }}
-          modifiersStyles={{
-            hasAvailability: {
-              border: '2px solid #22c55e',
-              borderRadius: '4px'
-            }
-          }}
+        <MonthView
+          date={selectedDate}
+          onSelectDate={onSelectDate}
+          hasAvailability={hasAvailability}
         />
       );
     default:
