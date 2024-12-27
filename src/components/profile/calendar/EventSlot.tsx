@@ -67,8 +67,8 @@ export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSl
       }}
       onClick={() => event.status !== 'cancelled' && onEventClick?.(event)}
     >
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between h-full">
+        <div className="flex items-center justify-between w-full">
           <h4 className="font-medium text-sm leading-tight truncate">
             {event.title}
           </h4>
