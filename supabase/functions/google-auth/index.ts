@@ -15,6 +15,9 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   throw new Error('Missing required Google OAuth credentials')
 }
 
+console.log('Google OAuth credentials loaded successfully')
+console.log('Redirect URL:', REDIRECT_URL)
+
 // Initialize the OAuth 2.0 client
 const oauth2Client = new OAuth2Client({
   clientId: GOOGLE_CLIENT_ID,
