@@ -8,11 +8,17 @@ const corsHeaders = {
 }
 
 const REDIRECT_URL = Deno.env.get('REDIRECT_URL') || 'http://localhost:5173/auth/callback'
+const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
+const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
+
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+  throw new Error('Missing required Google OAuth credentials')
+}
 
 // Initialize the OAuth 2.0 client
 const oauth2Client = new OAuth2Client({
-  clientId: Deno.env.get('GOOGLE_CLIENT_ID') || '',
-  clientSecret: Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
+  clientId: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
   authorizationEndpointUri: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenUri: 'https://oauth2.googleapis.com/token',
   redirectUri: REDIRECT_URL,
