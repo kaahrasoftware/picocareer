@@ -106,9 +106,13 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
+    // For testing, only send to picocareer@gmail.com until domain is verified
+    const testMode = true; // Set to false after domain verification
+    const recipients = testMode ? ['picocareer@gmail.com'] : [session.mentor.email, session.mentee.email];
+
     const emailPayload = {
-      from: "PicoCareer <onboarding@resend.dev>", // Using resend.dev domain temporarily
-      to: [session.mentor.email, session.mentee.email],
+      from: "PicoCareer <onboarding@resend.dev>",
+      to: recipients,
       subject,
       html: content,
     };
@@ -138,7 +142,11 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = JSON.parse(emailResText);
     console.log('Email sent successfully:', emailData);
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ 
+      success: true,
+      testMode,
+      message: testMode ? "Email sent to test address only. Verify domain to send to actual recipients." : "Email sent successfully"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

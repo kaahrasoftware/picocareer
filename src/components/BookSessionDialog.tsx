@@ -81,15 +81,15 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                  meetError.context.body.includes('not connected their Google account'))) {
               setGoogleAuthError(true);
               toast({
-                title: "Warning",
-                description: "Session booked, but the mentor needs to connect their Google account for Meet integration.",
-                variant: "default"
+                title: "Google Meet Not Available",
+                description: "The mentor hasn't connected their Google account yet. The session is booked, but you'll need to use an alternative platform for now.",
+                variant: "warning"
               });
             } else {
               toast({
-                title: "Warning",
-                description: "Session booked, but there was an issue creating the meeting link.",
-                variant: "destructive"
+                title: "Google Meet Error",
+                description: "Session booked, but there was an issue creating the meeting link. Please contact the mentor to set up the meeting.",
+                variant: "warning"
               });
             }
           } else {
@@ -98,9 +98,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         } catch (meetError) {
           console.error('Error with Google Meet integration:', meetError);
           toast({
-            title: "Warning",
-            description: "Session booked, but there was an issue with Google Meet integration.",
-            variant: "default"
+            title: "Google Meet Error",
+            description: "Session booked, but there was an issue with Google Meet integration. Please contact the mentor to set up the meeting.",
+            variant: "warning"
           });
         }
       }
@@ -119,13 +119,28 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               type: 'confirmation'
             }
           })
-        ]);
+        ]).catch(error => {
+          console.error('Error with notifications/emails:', error);
+          if (error.message?.includes('can only send testing emails')) {
+            toast({
+              title: "Email Notification Limited",
+              description: "Session booked successfully! During testing, email notifications are limited to verified addresses.",
+              variant: "warning"
+            });
+          } else {
+            toast({
+              title: "Notification Error",
+              description: "Session booked successfully, but there was an issue sending notifications.",
+              variant: "warning"
+            });
+          }
+        });
       } catch (notificationError) {
         console.error('Error with notifications/emails:', notificationError);
         toast({
           title: "Session Booked",
           description: "Session booked successfully, but there was an issue sending notifications.",
-          variant: "default"
+          variant: "warning"
         });
       }
 
@@ -141,7 +156,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       
       if (!googleAuthError) {
         toast({
-          title: "Error",
+          title: "Booking Error",
           description: "Failed to book session. Please try again.",
           variant: "destructive"
         });
