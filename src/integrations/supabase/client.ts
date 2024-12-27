@@ -12,6 +12,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     detectSessionInUrl: true,
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     flowType: 'pkce',
-    debug: true // Enable debug mode to help identify session issues
+    debug: true,
+    cookieOptions: {
+      name: 'picocareer_auth_token',
+      lifetime: 60 * 60 * 8, // 8 hours
+      domain: window.location.hostname,
+      sameSite: 'lax',
+      path: '/'
+    }
   }
 });
