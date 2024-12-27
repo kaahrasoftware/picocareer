@@ -25,14 +25,22 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { sessionId } = await req.json();
 
-    // Fetch session details
+    // Fetch session details with explicit column selection
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
-        *,
-        mentor:profiles!mentor_id(*),
-        mentee:profiles!mentee_id(*),
-        session_type:mentor_session_types(*)
+        id,
+        mentor_id,
+        mentee_id,
+        session_type_id,
+        scheduled_at,
+        notes,
+        meeting_platform,
+        meeting_link,
+        calendar_event_id,
+        mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
+        mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
+        session_type:mentor_session_types(type, duration)
       `)
       .eq('id', sessionId)
       .single();
