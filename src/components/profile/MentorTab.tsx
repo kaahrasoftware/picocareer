@@ -96,6 +96,14 @@ export function MentorTab({ profile }: MentorTabProps) {
     enabled: !!profile?.id
   });
 
+  const handleUpdate = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['mentor-details', profile?.id] });
+    toast({
+      title: "Success",
+      description: "Settings updated successfully",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-4">

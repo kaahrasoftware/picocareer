@@ -1,18 +1,18 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Google } from "lucide-react";
+import { Link2 } from "lucide-react";
 
 interface GoogleAccountConnectionProps {
   profileId: string;
 }
 
 export function GoogleAccountConnection({ profileId }: GoogleAccountConnectionProps) {
-  const { toast } = useToast();
   const [isConnected, setIsConnected] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     checkGoogleConnection();
@@ -108,7 +108,7 @@ export function GoogleAccountConnection({ profileId }: GoogleAccountConnectionPr
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Google className="h-5 w-5" />
+            <Link2 className="h-5 w-5" />
             <span>{isConnected ? 'Connected to Google' : 'Not connected'}</span>
           </div>
           <Button
