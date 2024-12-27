@@ -1,25 +1,26 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { MentorAvailabilityForm } from "./calendar/MentorAvailabilityForm";
-import { EventList } from "./calendar/EventList";
 import { format } from "date-fns";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
-import { CalendarEvent } from "@/types/calendar";
 import { CalendarHeader } from "./calendar/CalendarHeader";
 import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
+import { CalendarViews } from "./calendar/CalendarViews";
+import { CalendarViewType } from "./calendar/types";
+import { Button } from "@/components/ui/button";
+import { Calendar, LayoutGrid, List } from "lucide-react";
 
 export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<CalendarEvent | null>(null);
+  const [selectedSession, setSelectedSession] = useState<any | null>(null);
   const [cancellationNote, setCancellationNote] = useState("");
+  const [view, setView] = useState<CalendarViewType>("month");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get initial session and listen for auth changes
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
@@ -66,7 +67,7 @@ export function CalendarTab() {
     enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
 
-  // Get calendar events using our custom hook - now only passing selectedDate
+  // Get calendar events using our custom hook
   const { data: events = [], isLoading: isEventsLoading } = useSessionEvents(selectedDate || new Date());
 
   const handleCancelSession = async () => {
@@ -141,6 +142,12 @@ export function CalendarTab() {
     }
   };
 
+  const hasAvailability = (date: Date) => {
+    return availability?.some(slot => 
+      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
+    );
+  };
+
   const isMentor = profile?.user_type === 'mentor';
   const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || isAvailabilityLoading;
 
@@ -160,13 +167,6 @@ export function CalendarTab() {
     );
   }
 
-  // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
-    return availability?.some(slot => 
-      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
-    );
-  };
-
   return (
     <div className="space-y-6">
       <CalendarHeader 
@@ -174,37 +174,45 @@ export function CalendarTab() {
         onSetAvailability={() => setShowAvailabilityForm(true)} 
       />
 
+      <div className="flex justify-end gap-2 mb-4">
+        <Button
+          variant={view === "day" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("day")}
+        >
+          <List className="h-4 w-4 mr-2" />
+          Day
+        </Button>
+        <Button
+          variant={view === "week" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("week")}
+        >
+          <LayoutGrid className="h-4 w-4 mr-2" />
+          Week
+        </Button>
+        <Button
+          variant={view === "month" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("month")}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Month
+        </Button>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border bg-kahra-darker"
-            modifiers={{
-              hasAvailability: (date) => hasAvailability(date)
-            }}
-            modifiersStyles={{
-              hasAvailability: {
-                border: '2px solid #22c55e',
-                borderRadius: '4px'
-              }
-            }}
+          <CalendarViews
+            selectedDate={selectedDate || new Date()}
+            onSelectDate={setSelectedDate}
+            events={events}
+            availability={availability}
+            isMentor={isMentor}
+            onEventClick={setSelectedSession}
+            hasAvailability={hasAvailability}
+            view={view}
           />
-          
-          {selectedDate && (
-            <div className="mt-4">
-              <h3 className="font-medium mb-2">
-                Events for {format(selectedDate, 'MMMM d, yyyy')}
-              </h3>
-              <EventList 
-                events={events} 
-                availability={availability} 
-                isMentor={isMentor}
-                onEventClick={setSelectedSession}
-              />
-            </div>
-          )}
         </div>
 
         {showAvailabilityForm && isMentor && (
