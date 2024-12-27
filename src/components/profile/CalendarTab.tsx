@@ -168,67 +168,67 @@ export function CalendarTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <CalendarHeader 
-        isMentor={isMentor} 
-        onSetAvailability={() => setShowAvailabilityForm(true)} 
-      />
+    <div className="space-y-4 h-full">
+      <div className="flex flex-col space-y-4">
+        <CalendarHeader 
+          isMentor={isMentor} 
+          onSetAvailability={() => setShowAvailabilityForm(true)} 
+        />
 
-      <div className="flex justify-end gap-2 mb-4">
-        <Button
-          variant={view === "day" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("day")}
-        >
-          <List className="h-4 w-4 mr-2" />
-          Day
-        </Button>
-        <Button
-          variant={view === "week" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("week")}
-        >
-          <LayoutGrid className="h-4 w-4 mr-2" />
-          Week
-        </Button>
-        <Button
-          variant={view === "month" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("month")}
-        >
-          <Calendar className="h-4 w-4 mr-2" />
-          Month
-        </Button>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <CalendarViews
-            selectedDate={selectedDate || new Date()}
-            onSelectDate={setSelectedDate}
-            events={events}
-            availability={availability}
-            isMentor={isMentor}
-            onEventClick={setSelectedSession}
-            hasAvailability={hasAvailability}
-            view={view}
-          />
+        <div className="flex justify-end gap-2">
+          <Button
+            variant={view === "day" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setView("day")}
+          >
+            <List className="h-4 w-4 mr-2" />
+            Day
+          </Button>
+          <Button
+            variant={view === "week" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setView("week")}
+          >
+            <LayoutGrid className="h-4 w-4 mr-2" />
+            Week
+          </Button>
+          <Button
+            variant={view === "month" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setView("month")}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Month
+          </Button>
         </div>
-
-        {showAvailabilityForm && isMentor && (
-          <MentorAvailabilityForm 
-            onClose={() => setShowAvailabilityForm(false)}
-            onSuccess={() => {
-              setShowAvailabilityForm(false);
-              toast({
-                title: "Availability set",
-                description: "Your availability has been updated successfully.",
-              });
-              queryClient.invalidateQueries({ queryKey: ['mentor_availability'] });
-            }}
-          />
-        )}
       </div>
+
+      <div className="bg-background rounded-lg border shadow-sm min-h-[600px]">
+        <CalendarViews
+          selectedDate={selectedDate || new Date()}
+          onSelectDate={setSelectedDate}
+          events={events}
+          availability={availability}
+          isMentor={isMentor}
+          onEventClick={setSelectedSession}
+          hasAvailability={hasAvailability}
+          view={view}
+        />
+      </div>
+
+      {showAvailabilityForm && isMentor && (
+        <MentorAvailabilityForm 
+          onClose={() => setShowAvailabilityForm(false)}
+          onSuccess={() => {
+            setShowAvailabilityForm(false);
+            toast({
+              title: "Availability set",
+              description: "Your availability has been updated successfully.",
+            });
+            queryClient.invalidateQueries({ queryKey: ['mentor_availability'] });
+          }}
+        />
+      )}
 
       <SessionDetailsDialog
         session={selectedSession}

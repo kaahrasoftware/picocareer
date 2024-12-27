@@ -22,7 +22,7 @@ export function WeekView({
   const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {daysInWeek.map((day) => {
         const dayEvents = events.filter(event => {
           const eventDate = new Date(event.start_time);
@@ -35,7 +35,7 @@ export function WeekView({
 
         return (
           <div key={day.toISOString()} className="space-y-2">
-            <h3 className="font-medium">
+            <h3 className="text-lg font-medium sticky top-0 bg-background py-2 border-b">
               {format(day, 'EEEE, MMMM d')}
             </h3>
             <EventList 

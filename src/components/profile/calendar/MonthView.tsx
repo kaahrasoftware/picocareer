@@ -14,20 +14,22 @@ export function MonthView({
   hasAvailability
 }: MonthViewProps) {
   return (
-    <Calendar
-      mode="single"
-      selected={date}
-      onSelect={onSelectDate}
-      className="rounded-md border bg-background"
-      modifiers={{
-        hasAvailability: (date) => hasAvailability(date)
-      }}
-      modifiersStyles={{
-        hasAvailability: {
-          border: '2px solid #22c55e',
-          borderRadius: '4px'
-        }
-      }}
-    />
+    <div className="p-6">
+      <Calendar
+        mode="single"
+        selected={date}
+        onSelect={onSelectDate}
+        className="w-full rounded-md border-0"
+        modifiers={{
+          hasAvailability: (date) => hasAvailability(date)
+        }}
+        modifiersStyles={{
+          hasAvailability: {
+            border: '2px solid #22c55e',
+            borderRadius: '4px'
+          }
+        }}
+      />
+    </div>
   );
 }

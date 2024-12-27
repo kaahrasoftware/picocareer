@@ -18,16 +18,18 @@ export function DayView({
   onEventClick
 }: DayViewProps) {
   return (
-    <div className="space-y-4">
-      <h3 className="font-medium">
-        Events for {format(date, 'MMMM d, yyyy')}
+    <div className="p-6">
+      <h3 className="text-lg font-medium mb-6">
+        {format(date, 'EEEE, MMMM d, yyyy')}
       </h3>
-      <EventList 
-        events={events} 
-        availability={availability}
-        isMentor={isMentor}
-        onEventClick={onEventClick}
-      />
+      <div className="space-y-2">
+        <EventList 
+          events={events} 
+          availability={availability}
+          isMentor={isMentor}
+          onEventClick={onEventClick}
+        />
+      </div>
     </div>
   );
 }
