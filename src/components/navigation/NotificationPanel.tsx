@@ -54,7 +54,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   };
 
   const handleJoinMeeting = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
