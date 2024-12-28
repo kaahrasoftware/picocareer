@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export function useAuthSession() {
   const { toast } = useToast();
-  const queryClient } = useQueryClient();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   // Get initial session and listen for auth changes
