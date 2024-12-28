@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck, CircleDot, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -31,6 +33,7 @@ interface NotificationPanelProps {
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
+  const { toast } = useToast();
 
   // Update local state when props change
   if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
@@ -53,9 +56,33 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     onMarkAsRead(notification.id);
   };
 
-  const handleJoinMeeting = (url: string) => {
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+  const handleJoinMeeting = async (sessionId: string) => {
+    try {
+      // Fetch the meeting link from mentor_sessions table
+      const { data: sessionData, error } = await supabase
+        .from('mentor_sessions')
+        .select('meeting_link')
+        .eq('id', sessionId)
+        .single();
+
+      if (error) throw error;
+
+      if (sessionData?.meeting_link) {
+        window.open(sessionData.meeting_link, '_blank', 'noopener,noreferrer');
+      } else {
+        toast({
+          title: "No meeting link available",
+          description: "The meeting link for this session is not available",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching meeting link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to retrieve meeting link",
+        variant: "destructive",
+      });
     }
   };
 
