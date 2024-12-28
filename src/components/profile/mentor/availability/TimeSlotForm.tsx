@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface TimeSlotFormProps {
   selectedDate: Date | undefined;
@@ -13,6 +15,7 @@ interface TimeSlotFormProps {
 export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFormProps) {
   const [selectedStartTime, setSelectedStartTime] = useState<string>();
   const [selectedEndTime, setSelectedEndTime] = useState<string>();
+  const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -75,7 +78,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           start_time: selectedStartTime,
           end_time: selectedEndTime,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          is_available: true
+          is_available: true,
+          recurring: isRecurring,
+          day_of_week: isRecurring ? selectedDate.getDay() : null
         });
 
       if (error) {
@@ -84,11 +89,14 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
       toast({
         title: "Success",
-        description: "Availability has been set",
+        description: isRecurring 
+          ? "Weekly availability has been set"
+          : "Availability has been set",
       });
       
       setSelectedStartTime(undefined);
       setSelectedEndTime(undefined);
+      setIsRecurring(false);
       onSuccess();
     } catch (error) {
       console.error('Error setting availability:', error);
@@ -156,6 +164,15 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="recurring"
+          checked={isRecurring}
+          onCheckedChange={setIsRecurring}
+        />
+        <Label htmlFor="recurring">Make this a weekly recurring availability</Label>
       </div>
 
       <Button 
