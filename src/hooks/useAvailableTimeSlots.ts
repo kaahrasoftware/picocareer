@@ -110,7 +110,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
               const bookingTime = new Date(booking.scheduled_at);
               const bookingDuration = booking.session_type?.duration || 60;
               const bookingEnd = addMinutes(bookingTime, bookingDuration);
-
+              
               // Check if the current slot (considering session duration) overlaps with the booking
               const slotEnd = addMinutes(slotStart, sessionDuration);
               
