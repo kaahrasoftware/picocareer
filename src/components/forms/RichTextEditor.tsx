@@ -40,7 +40,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       modules={modules}
       formats={formats}
       placeholder={placeholder}
-      className="min-h-[200px] bg-white dark:bg-gray-800"
+      className="min-h-[200px] bg-gray-50 rounded-md"
     />
   );
 }
