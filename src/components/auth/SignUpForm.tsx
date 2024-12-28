@@ -64,6 +64,23 @@ export function SignUpForm() {
     }
 
     try {
+      // First, check if the email already exists
+      const { data: existingUser } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (existingUser?.user) {
+        toast({
+          title: "Error",
+          description: "An account with this email already exists. Please sign in instead.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Proceed with signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -77,14 +94,13 @@ export function SignUpForm() {
       });
 
       if (error) {
-        // Check if it's a confirmation email error
         if (error.message.includes("confirmation email")) {
           toast({
-            title: "Email Configuration Error",
-            description: "There was an issue with our email service. Please try again later or contact support.",
+            title: "Email Service Error",
+            description: "We're experiencing issues with our email service. Please try again later or contact support.",
             variant: "destructive",
           });
-          console.error('Detailed signup error:', error);
+          console.error('Email service error:', error);
           return;
         }
         throw error;
@@ -108,11 +124,28 @@ export function SignUpForm() {
       }
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
+      
+      // Handle specific error cases
+      const errorMessage = error.message?.toLowerCase() || '';
+      if (errorMessage.includes('password')) {
+        toast({
+          title: "Password Error",
+          description: "Password must be at least 6 characters long",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes('email')) {
+        toast({
+          title: "Email Error",
+          description: "Please enter a valid email address",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
