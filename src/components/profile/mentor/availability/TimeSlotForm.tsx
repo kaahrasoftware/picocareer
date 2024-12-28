@@ -67,41 +67,29 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         return;
       }
 
-      // First try to update any existing slot for this date that might be marked as unavailable
-      const { data: existingSlot } = await supabase
+      // Insert new slot directly - we don't need to check for unavailable slots anymore
+      const { error } = await supabase
         .from('mentor_availability')
-        .select('id')
-        .eq('profile_id', profileId)
-        .eq('date_available', formattedDate)
-        .eq('is_available', false)
-        .single();
+        .insert({
+          profile_id: profileId,
+          date_available: formattedDate,
+          start_time: selectedStartTime,
+          end_time: selectedEndTime,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          is_available: true
+        });
 
-      if (existingSlot) {
-        // Update existing slot
-        const { error } = await supabase
-          .from('mentor_availability')
-          .update({
-            start_time: selectedStartTime,
-            end_time: selectedEndTime,
-            is_available: true
-          })
-          .eq('id', existingSlot.id);
-
-        if (error) throw error;
-      } else {
-        // Insert new slot
-        const { error } = await supabase
-          .from('mentor_availability')
-          .insert({
-            profile_id: profileId,
-            date_available: formattedDate,
-            start_time: selectedStartTime,
-            end_time: selectedEndTime,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            is_available: true
+      if (error) {
+        // If we get a unique constraint violation, it means we're trying to add a duplicate slot
+        if (error.code === '23505') {
+          toast({
+            title: "Error",
+            description: "This time slot already exists",
+            variant: "destructive",
           });
-
-        if (error) throw error;
+          return;
+        }
+        throw error;
       }
 
       toast({
