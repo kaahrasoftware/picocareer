@@ -14,14 +14,28 @@ export function useAuthSession() {
     queryFn: async () => {
       try {
         // First try to get the existing session
-        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        const { data: { session: existingSession }, error: sessionError } = 
+          await supabase.auth.getSession();
         
-        if (error) {
-          throw error;
+        if (sessionError) {
+          throw sessionError;
         }
-        
-        if (existingSession) {
-          // Refresh the session if it exists
+
+        if (!existingSession) {
+          // If no session exists, clear any stale data
+          queryClient.removeQueries({ queryKey: ['auth-session'] });
+          queryClient.removeQueries({ queryKey: ['profile'] });
+          queryClient.removeQueries({ queryKey: ['notifications'] });
+          localStorage.removeItem('picocareer_auth_token');
+          return null;
+        }
+
+        // If session exists but is close to expiry, refresh it
+        const expiresAt = existingSession?.expires_at || 0;
+        const isExpiringSoon = (expiresAt * 1000) - Date.now() < 5 * 60 * 1000; // 5 minutes
+
+        if (isExpiringSoon) {
+          console.log('Session expiring soon, refreshing...');
           const { data: { session: refreshedSession }, error: refreshError } = 
             await supabase.auth.refreshSession();
           
@@ -32,15 +46,9 @@ export function useAuthSession() {
           return refreshedSession;
         }
 
-        // If no session exists, clear any stale data
-        queryClient.removeQueries({ queryKey: ['auth-session'] });
-        queryClient.removeQueries({ queryKey: ['profile'] });
-        queryClient.removeQueries({ queryKey: ['notifications'] });
-        localStorage.removeItem('picocareer_auth_token');
-        
-        return null;
+        return existingSession;
       } catch (error: any) {
-        console.error('Error fetching session:', error);
+        console.error('Error in useAuthSession:', error);
         
         // Clear any stale session data
         await supabase.auth.signOut();
@@ -50,7 +58,7 @@ export function useAuthSession() {
         if (error.message !== 'Auth session missing!') {
           toast({
             title: "Authentication Error",
-            description: "Please try signing in again",
+            description: "Please sign in again",
             variant: "destructive",
           });
           
@@ -68,20 +76,22 @@ export function useAuthSession() {
   useQuery({
     queryKey: ['auth-listener'],
     queryFn: async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth event:', event);
-        
-        if (event === 'SIGNED_OUT') {
-          queryClient.removeQueries({ queryKey: ['auth-session'] });
-          queryClient.removeQueries({ queryKey: ['profile'] });
-          queryClient.removeQueries({ queryKey: ['notifications'] });
-          localStorage.removeItem('picocareer_auth_token');
-          navigate("/auth");
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          console.log('Setting new session data');
-          queryClient.setQueryData(['auth-session'], session);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log('Auth event:', event);
+          
+          if (event === 'SIGNED_OUT') {
+            queryClient.removeQueries({ queryKey: ['auth-session'] });
+            queryClient.removeQueries({ queryKey: ['profile'] });
+            queryClient.removeQueries({ queryKey: ['notifications'] });
+            localStorage.removeItem('picocareer_auth_token');
+            navigate("/auth");
+          } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            console.log('Setting new session data');
+            queryClient.setQueryData(['auth-session'], session);
+          }
         }
-      });
+      );
 
       return subscription;
     },
