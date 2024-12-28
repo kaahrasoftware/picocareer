@@ -15,14 +15,41 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
   useEffect(() => {
     const fetchSessionData = async () => {
       try {
-        // Extract session ID from the message using regex
-        const sessionIdMatch = message.match(/Session ID: ([a-f0-9-]+)/);
-        const sessionId = sessionIdMatch ? sessionIdMatch[1] : null;
+        // Try different patterns to extract session ID
+        let sessionId = null;
+        const patterns = [
+          /Session ID: ([a-f0-9-]+)/,
+          /session_id=([a-f0-9-]+)/,
+          /sessionId=([a-f0-9-]+)/,
+          /session\/([a-f0-9-]+)/
+        ];
+
+        for (const pattern of patterns) {
+          const match = message.match(pattern);
+          if (match) {
+            sessionId = match[1];
+            console.log('Found session ID using pattern:', pattern, 'ID:', sessionId);
+            break;
+          }
+        }
 
         if (!sessionId) {
           console.log('No session ID found in message:', message);
+          // Try to extract from URL if present
+          const urlMatch = message.match(/https?:\/\/[^\s]+/);
+          if (urlMatch) {
+            const url = new URL(urlMatch[0]);
+            sessionId = url.searchParams.get('session_id');
+            console.log('Extracted session ID from URL:', sessionId);
+          }
+        }
+
+        if (!sessionId) {
+          console.log('Could not extract session ID from message');
           return;
         }
+
+        console.log('Fetching session data for ID:', sessionId);
 
         const { data, error } = await supabase
           .from('mentor_sessions')
@@ -49,7 +76,10 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
         }
 
         if (data) {
+          console.log('Session data fetched successfully:', data);
           setSessionData(data as MentorSession);
+        } else {
+          console.log('No session data found for ID:', sessionId);
         }
       } catch (error) {
         console.error('Error in fetchSessionData:', error);
