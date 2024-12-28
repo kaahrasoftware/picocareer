@@ -25,11 +25,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Add error handling for failed requests
-supabase.handleError = (error: any) => {
+// Create a separate error handler function
+export const handleSupabaseError = (error: any) => {
   console.error('Supabase error:', error);
   if (error.status === 401) {
-    // Handle authentication errors
     console.error('Authentication error. Please check your API keys and authentication status.');
   }
 };
+
+// Add error handling to Supabase client methods
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    console.log('User signed out');
+  } else if (event === 'SIGNED_IN') {
+    console.log('User signed in');
+  } else if (event === 'TOKEN_REFRESHED') {
+    console.log('Token refreshed');
+  }
+});
