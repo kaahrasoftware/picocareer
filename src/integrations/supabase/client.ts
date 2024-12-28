@@ -24,3 +24,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
   }
 });
+
+// Add error handling for failed requests
+supabase.handleError = (error: any) => {
+  console.error('Supabase error:', error);
+  if (error.status === 401) {
+    // Handle authentication errors
+    console.error('Authentication error. Please check your API keys and authentication status.');
+  }
+};

@@ -2,58 +2,70 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Building, School, Trophy, Calendar } from "lucide-react";
+import { useMemo } from "react";
 
 export function StatisticsSection() {
   const { data: stats } = useQuery({
     queryKey: ['home-statistics'],
     queryFn: async () => {
-      const [
-        { count: mentorsCount },
-        { count: careersCount },
-        { count: majorsCount },
-        { count: schoolsCount },
-        { count: scholarshipsCount },
-        { count: sessionsCount }
-      ] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_type', 'mentor'),
-        supabase
-          .from('careers')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'Approved'),
-        supabase
-          .from('majors')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'Approved'),
-        supabase
-          .from('schools')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'Approved'),
-        supabase
-          .from('scholarships')
-          .select('id', { count: 'exact', head: true }),
-        supabase
-          .from('mentor_sessions')
-          .select('id', { count: 'exact', head: true })
-      ]);
+      try {
+        const [
+          { count: mentorsCount },
+          { count: careersCount },
+          { count: majorsCount },
+          { count: schoolsCount },
+          { count: scholarshipsCount },
+          { count: sessionsCount }
+        ] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_type', 'mentor'),
+          supabase
+            .from('careers')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'Approved'),
+          supabase
+            .from('majors')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'Approved'),
+          supabase
+            .from('schools')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'Approved'),
+          supabase
+            .from('scholarships')
+            .select('id', { count: 'exact', head: true }),
+          supabase
+            .from('mentor_sessions')
+            .select('id', { count: 'exact', head: true })
+        ]);
 
-      return {
-        mentors: mentorsCount || 0,
-        careers: careersCount || 0,
-        majors: majorsCount || 0,
-        schools: schoolsCount || 0,
-        scholarships: scholarshipsCount || 0,
-        sessions: sessionsCount || 0
-      };
+        return {
+          mentors: mentorsCount || 0,
+          careers: careersCount || 0,
+          majors: majorsCount || 0,
+          schools: schoolsCount || 0,
+          scholarships: scholarshipsCount || 0,
+          sessions: sessionsCount || 0
+        };
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+        return {
+          mentors: 0,
+          careers: 0,
+          majors: 0,
+          schools: 0,
+          scholarships: 0,
+          sessions: 0
+        };
+      }
     },
-    // Make sure the data is always fresh for all users
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    retry: 3 // Retry failed requests 3 times
+    retry: 3
   });
 
-  const items = [
+  const items = useMemo(() => [
     {
       label: "Active Mentors",
       value: stats?.mentors || 0,
@@ -90,7 +102,7 @@ export function StatisticsSection() {
       icon: Calendar,
       color: "bg-indigo-100 text-indigo-600"
     }
-  ];
+  ], [stats]);
 
   return (
     <section className="py-12">
