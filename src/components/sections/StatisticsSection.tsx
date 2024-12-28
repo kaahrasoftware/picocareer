@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, GraduationCap, Building, School, Trophy, Calendar } from "lucide-react";
+import { Users, Building, School, Trophy, Calendar } from "lucide-react";
 
 export function StatisticsSection() {
-  const { data: stats, refetch } = useQuery({
+  const { data: stats } = useQuery({
     queryKey: ['home-statistics'],
     queryFn: async () => {
       const [
@@ -38,6 +37,7 @@ export function StatisticsSection() {
         supabase
           .from('mentor_sessions')
           .select('id', { count: 'exact', head: true })
+          .eq('status', 'completed')
       ]);
 
       return {
@@ -50,29 +50,6 @@ export function StatisticsSection() {
       };
     }
   });
-
-  // Subscribe to real-time updates for mentor_sessions
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'mentor_sessions'
-        },
-        () => {
-          // Refetch statistics when any change occurs
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
 
   const items = [
     {
@@ -90,7 +67,7 @@ export function StatisticsSection() {
     {
       label: "Academic Programs",
       value: stats?.majors || 0,
-      icon: GraduationCap,
+      icon: School,
       color: "bg-green-100 text-green-600"
     },
     {
