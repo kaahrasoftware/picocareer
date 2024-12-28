@@ -105,7 +105,7 @@ export function useAvailableTimeSlots(
               
               const isOverlapping = bookingsData?.some(booking => {
                 const bookingTime = new Date(booking.scheduled_at);
-                const bookingDuration = booking.session_type.duration;
+                const bookingDuration = booking.session_type[0]?.duration || 0; // Access duration from the first item in the array
                 const bookingEnd = addMinutes(bookingTime, bookingDuration);
                 const slotEnd = addMinutes(slotStart, sessionDuration);
                 
