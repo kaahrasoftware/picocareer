@@ -1,18 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SearchResult } from "@/types/search";
-
-interface Company {
-  name: string;
-}
-
-interface School {
-  name: string;
-}
-
-interface Career {
-  title: string;
-}
+import type { SearchResult, CareerSearchResult, MajorSearchResult, MentorSearchResult } from "@/types/search";
 
 export function useSearchData(searchTerm: string) {
   return useQuery({
@@ -23,7 +11,7 @@ export function useSearchData(searchTerm: string) {
       // Search careers
       const { data: careers, error: careersError } = await supabase
         .from('careers')
-        .select('id, title, description')
+        .select('id, title, description, salary_range')
         .ilike('title', `%${searchTerm}%`);
 
       if (careersError) throw careersError;
@@ -31,7 +19,7 @@ export function useSearchData(searchTerm: string) {
       // Search majors
       const { data: majors, error: majorsError } = await supabase
         .from('majors')
-        .select('id, title, description')
+        .select('id, title, description, degree_levels, career_opportunities, common_courses')
         .ilike('title', `%${searchTerm}%`);
 
       if (majorsError) throw majorsError;
@@ -44,9 +32,10 @@ export function useSearchData(searchTerm: string) {
           full_name,
           bio,
           avatar_url,
-          company:companies!inner(name),
-          school:schools!inner(name),
-          position:careers!inner(title)
+          top_mentor,
+          company:companies(name),
+          school:schools(name),
+          position:careers!profiles_position_fkey(title)
         `)
         .eq('user_type', 'mentor')
         .ilike('full_name', `%${searchTerm}%`);
@@ -59,13 +48,17 @@ export function useSearchData(searchTerm: string) {
           id: career.id,
           title: career.title,
           description: career.description,
-          type: 'career' as const
+          type: 'career' as const,
+          salary_range: career.salary_range
         })) || []),
         ...(majors?.map(major => ({
           id: major.id,
           title: major.title,
           description: major.description,
-          type: 'major' as const
+          type: 'major' as const,
+          degree_levels: major.degree_levels,
+          career_opportunities: major.career_opportunities,
+          common_courses: major.common_courses
         })) || []),
         ...(mentors?.map(mentor => ({
           id: mentor.id,

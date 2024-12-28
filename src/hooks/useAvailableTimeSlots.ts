@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parse, addMinutes, isWithinInterval } from "date-fns";
+import { format, addMinutes } from "date-fns";
 import { startOfDay as getStartOfDay } from "date-fns";
+import type { SessionType } from "@/types/calendar";
 
 interface TimeSlot {
   time: string;
   available: boolean;
 }
 
-interface MentorSessionType {
-  duration: number;
-}
-
-export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, sessionDuration: number = 15) {
+export function useAvailableTimeSlots(
+  date: Date | undefined, 
+  mentorId: string, 
+  sessionDuration: number = 15
+) {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const { toast } = useToast();
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -133,7 +134,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
               // Check if this time slot overlaps with any existing booking
               const isOverlapping = bookingsData?.some(booking => {
                 const bookingTime = new Date(booking.scheduled_at);
-                const bookingDuration = (booking.session_type as MentorSessionType).duration || 60;
+                const bookingDuration = (booking.session_type as SessionType).duration || 60;
                 const bookingEnd = addMinutes(bookingTime, bookingDuration);
 
                 // Check if the current slot (considering session duration) overlaps with the booking

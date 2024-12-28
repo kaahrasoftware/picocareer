@@ -21,19 +21,17 @@ export function useSessionEvents(userId: string | undefined, startDate: Date, en
         `)
         .or(`mentor_id.eq.${userId},mentee_id.eq.${userId}`)
         .gte('scheduled_at', startDate.toISOString())
-        .lte('scheduled_at', endDate.toISOString());
+        .lte('scheduled_at', endDate.toISOString())
+        .single();
 
       if (error) throw error;
 
-      return data.map(session => ({
-        id: session.id,
-        scheduled_at: session.scheduled_at,
-        status: session.status,
-        notes: session.notes,
-        mentor: session.mentor,
-        mentee: session.mentee,
-        session_type: session.session_type[0]
-      })) as MentorSession[];
+      return {
+        ...data,
+        mentor: data.mentor[0],
+        mentee: data.mentee[0],
+        session_type: data.session_type[0]
+      } as MentorSession;
     },
     enabled: !!userId,
   });
