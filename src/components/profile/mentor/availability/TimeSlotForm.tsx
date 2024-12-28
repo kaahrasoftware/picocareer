@@ -17,6 +17,29 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const checkForOverlap = async (formattedDate: string, startTime: string, endTime: string) => {
+    const { data: existingSlots } = await supabase
+      .from('mentor_availability')
+      .select('start_time, end_time')
+      .eq('profile_id', profileId)
+      .eq('date_available', formattedDate)
+      .eq('is_available', true);
+
+    if (!existingSlots) return false;
+
+    // Convert times to comparable format (minutes since midnight)
+    const newStart = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+    const newEnd = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+
+    return existingSlots.some(slot => {
+      const slotStart = parseInt(slot.start_time.split(':')[0]) * 60 + parseInt(slot.start_time.split(':')[1]);
+      const slotEnd = parseInt(slot.end_time.split(':')[0]) * 60 + parseInt(slot.end_time.split(':')[1]);
+
+      // Check if the new slot overlaps with any existing slot
+      return (newStart < slotEnd && newEnd > slotStart);
+    });
+  };
+
   const handleSaveAvailability = async () => {
     if (!selectedDate || !selectedStartTime || !selectedEndTime) {
       toast({
@@ -31,19 +54,13 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     try {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
 
-      // First, check if there's any overlapping availability for this date and time
-      const { data: existingSlots } = await supabase
-        .from('mentor_availability')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('date_available', formattedDate)
-        .or(`start_time.lte.${selectedEndTime},end_time.gte.${selectedStartTime}`);
+      // Check for overlapping slots
+      const hasOverlap = await checkForOverlap(formattedDate, selectedStartTime, selectedEndTime);
 
-      if (existingSlots && existingSlots.length > 0) {
-        const overlappingSlot = existingSlots[0];
+      if (hasOverlap) {
         toast({
           title: "Time slot conflict",
-          description: `You already have availability set from ${format(new Date(`2000-01-01T${overlappingSlot.start_time}`), 'h:mm a')} to ${format(new Date(`2000-01-01T${overlappingSlot.end_time}`), 'h:mm a')} on this date`,
+          description: "This time slot overlaps with an existing availability slot",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -63,25 +80,17 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         });
 
       if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: "Duplicate time slot",
-            description: "This time slot is already set for this date",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        toast({
-          title: "Success",
-          description: "Availability has been set",
-        });
-        
-        setSelectedStartTime(undefined);
-        setSelectedEndTime(undefined);
-        onSuccess();
+        throw error;
       }
+
+      toast({
+        title: "Success",
+        description: "Availability has been set",
+      });
+      
+      setSelectedStartTime(undefined);
+      setSelectedEndTime(undefined);
+      onSuccess();
     } catch (error) {
       console.error('Error setting availability:', error);
       toast({
