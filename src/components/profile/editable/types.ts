@@ -32,3 +32,10 @@ export type InsertData = {
     status: Status;
   };
 }
+
+export type QueryResult = {
+  id: string;
+  title?: string;
+  name?: string;
+  status?: Status;
+}

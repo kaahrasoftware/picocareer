@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { FieldName, TableName, TitleField, InsertData } from "./types";
+import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -54,13 +54,22 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry
-      const insertData: InsertData[typeof tableName] = {
-        [titleField]: customValue,
-        ...(tableName === 'majors' || tableName === 'careers' 
-          ? { description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}` }
-          : {}),
-        status: 'Pending'
+      let insertData: Partial<InsertData[typeof tableName]> = {
+        status: 'Pending' as Status
       };
+
+      if (tableName === 'majors' || tableName === 'careers') {
+        insertData = {
+          ...insertData,
+          title: customValue,
+          description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`
+        };
+      } else {
+        insertData = {
+          ...insertData,
+          name: customValue
+        };
+      }
 
       const { data, error } = await supabase
         .from(tableName)
