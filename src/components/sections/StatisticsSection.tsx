@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Building, School, Trophy, Calendar } from "lucide-react";
+import { Users, Building, School, Trophy } from "lucide-react";
 
 export function StatisticsSection() {
   const { data: stats } = useQuery({
@@ -13,8 +13,7 @@ export function StatisticsSection() {
         { count: careersCount },
         { count: majorsCount },
         { count: schoolsCount },
-        { count: scholarshipsCount },
-        { count: sessionsCount }
+        { count: scholarshipsCount }
       ] = await Promise.all([
         supabase
           .from('profiles')
@@ -34,9 +33,6 @@ export function StatisticsSection() {
           .eq('status', 'Approved'),
         supabase
           .from('scholarships')
-          .select('id', { count: 'exact', head: true }),
-        supabase
-          .from('mentor_sessions')
           .select('id', { count: 'exact', head: true })
       ]);
 
@@ -45,8 +41,7 @@ export function StatisticsSection() {
         careers: careersCount,
         majors: majorsCount,
         schools: schoolsCount,
-        scholarships: scholarshipsCount,
-        sessions: sessionsCount
+        scholarships: scholarshipsCount
       });
 
       return {
@@ -54,8 +49,7 @@ export function StatisticsSection() {
         careers: careersCount || 0,
         majors: majorsCount || 0,
         schools: schoolsCount || 0,
-        scholarships: scholarshipsCount || 0,
-        sessions: sessionsCount || 0
+        scholarships: scholarshipsCount || 0
       };
     },
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
@@ -92,18 +86,12 @@ export function StatisticsSection() {
       value: stats?.scholarships || 0,
       icon: Trophy,
       color: "bg-rose-100 text-rose-600"
-    },
-    {
-      label: "Sessions Booked",
-      value: stats?.sessions || 0,
-      icon: Calendar,
-      color: "bg-indigo-100 text-indigo-600"
     }
   ];
 
   return (
     <section className="py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {items.map((item) => (
           <Card key={item.label} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
