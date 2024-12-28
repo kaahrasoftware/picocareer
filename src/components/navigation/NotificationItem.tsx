@@ -26,19 +26,21 @@ export function NotificationItem({ notification, isExpanded, onToggleExpand, onT
 
   const handleJoinMeeting = async (notification: Notification) => {
     try {
-      // Check if the notification is session-related and has a valid session ID
-      if (!notification.title.toLowerCase().includes('session') || !notification.action_url) {
+      // Check if the notification is session-related
+      if (!notification.title.toLowerCase().includes('session')) {
         throw new Error('Invalid session notification');
       }
 
-      // Extract session ID - handle both UUID and URL formats
-      const sessionId = notification.action_url.includes('/') 
-        ? notification.message.match(/Session ID: ([a-f0-9-]+)/)?.[1] // Try to extract from message
-        : notification.action_url; // Use directly if it's a UUID
+      // Extract session ID from the message using regex
+      const sessionIdMatch = notification.message.match(/Session ID: ([a-f0-9-]+)/);
+      const sessionId = sessionIdMatch ? sessionIdMatch[1] : null;
 
       if (!sessionId) {
+        console.error('No session ID found in message:', notification.message);
         throw new Error('No valid session ID found');
       }
+
+      console.log('Fetching meeting link for session:', sessionId);
 
       // Fetch the meeting link from mentor_sessions table
       const { data: sessionData, error } = await supabase
@@ -47,7 +49,10 @@ export function NotificationItem({ notification, isExpanded, onToggleExpand, onT
         .eq('id', sessionId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching session data:', error);
+        throw error;
+      }
 
       if (!sessionData) {
         throw new Error('Session not found');
@@ -59,19 +64,18 @@ export function NotificationItem({ notification, isExpanded, onToggleExpand, onT
           description: "This session has been cancelled and the meeting link is no longer valid",
           variant: "destructive",
         });
-        return;
+        return null;
       }
 
       if (!sessionData.meeting_link) {
         toast({
           title: "No meeting link available",
-          description: "The meeting link for this session is not available",
+          description: "The meeting link for this session is not available yet",
           variant: "destructive",
         });
-        return;
+        return null;
       }
 
-      // Return the meeting link instead of opening it directly
       return sessionData.meeting_link;
     } catch (error) {
       console.error('Error fetching meeting link:', error);
@@ -155,6 +159,7 @@ export function NotificationItem({ notification, isExpanded, onToggleExpand, onT
               onClick={async () => {
                 const meetingLink = await handleJoinMeeting(notification);
                 if (meetingLink) {
+                  // Open the meeting link in a new window
                   window.open(meetingLink, '_blank', 'noopener,noreferrer');
                 }
               }}
