@@ -19,23 +19,15 @@ export function SignUpForm() {
 
   const createProfile = async (userId: string, email: string, firstName: string, lastName: string) => {
     try {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
+      const { error } = await supabase.from('profiles').insert({
+        id: userId,
+        email: email,
+        first_name: firstName,
+        last_name: lastName,
+        user_type: 'mentee'
+      });
 
-      if (!existingProfile) {
-        const { error } = await supabase.from('profiles').insert({
-          id: userId,
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          user_type: 'mentee'
-        });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
     } catch (error) {
       console.error('Error in createProfile:', error);
       throw error;
@@ -64,23 +56,6 @@ export function SignUpForm() {
     }
 
     try {
-      // First, check if the email already exists
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (existingUser?.user) {
-        toast({
-          title: "Error",
-          description: "An account with this email already exists. Please sign in instead.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Proceed with signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -94,13 +69,12 @@ export function SignUpForm() {
       });
 
       if (error) {
-        if (error.message.includes("confirmation email")) {
+        if (error.message.includes("User already registered")) {
           toast({
-            title: "Email Service Error",
-            description: "We're experiencing issues with our email service. Please try again later or contact support.",
+            title: "Account exists",
+            description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
-          console.error('Email service error:', error);
           return;
         }
         throw error;
@@ -119,13 +93,11 @@ export function SignUpForm() {
           description: "Please check your email to verify your account before signing in.",
         });
 
-        // Navigate to sign-in tab
         navigate("/auth?tab=signin");
       }
     } catch (error: any) {
       console.error('Signup error:', error);
       
-      // Handle specific error cases
       const errorMessage = error.message?.toLowerCase() || '';
       if (errorMessage.includes('password')) {
         toast({
