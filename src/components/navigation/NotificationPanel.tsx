@@ -58,35 +58,57 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   const handleJoinMeeting = async (notification: Notification) => {
     try {
-      // Extract session ID from the notification
-      // The action_url should contain the session ID directly now
-      if (!notification.action_url) {
-        throw new Error('No session ID available');
+      // Check if the notification is session-related and has a valid session ID
+      if (!notification.title.toLowerCase().includes('session') || !notification.action_url) {
+        throw new Error('Invalid session notification');
+      }
+
+      // Extract session ID - handle both UUID and URL formats
+      const sessionId = notification.action_url.includes('/') 
+        ? notification.message.match(/Session ID: ([a-f0-9-]+)/)?.[1] // Try to extract from message
+        : notification.action_url; // Use directly if it's a UUID
+
+      if (!sessionId) {
+        throw new Error('No valid session ID found');
       }
 
       // Fetch the meeting link from mentor_sessions table
       const { data: sessionData, error } = await supabase
         .from('mentor_sessions')
-        .select('meeting_link')
-        .eq('id', notification.action_url)
+        .select('meeting_link, status')
+        .eq('id', sessionId)
         .maybeSingle();
 
       if (error) throw error;
 
-      if (sessionData?.meeting_link) {
-        window.open(sessionData.meeting_link, '_blank', 'noopener,noreferrer');
-      } else {
+      if (!sessionData) {
+        throw new Error('Session not found');
+      }
+
+      if (sessionData.status === 'cancelled') {
+        toast({
+          title: "Session Cancelled",
+          description: "This session has been cancelled and the meeting link is no longer valid",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!sessionData.meeting_link) {
         toast({
           title: "No meeting link available",
           description: "The meeting link for this session is not available",
           variant: "destructive",
         });
+        return;
       }
+
+      window.open(sessionData.meeting_link, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error fetching meeting link:', error);
       toast({
         title: "Error",
-        description: "Failed to retrieve meeting link",
+        description: "Failed to retrieve meeting link. Please try again.",
         variant: "destructive",
       });
     }
