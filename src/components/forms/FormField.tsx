@@ -102,7 +102,7 @@ export function FormField({
                   value={field.value || ""}
                   onValueChange={field.onChange}
                   options={options}
-                  placeholder={placeholder || "Select school"}
+                  placeholder={placeholder || "Select your school"}
                   tableName="schools"
                 />
               ) : name === "academic_major_id" ? (

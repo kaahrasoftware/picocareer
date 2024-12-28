@@ -30,7 +30,7 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
 
   if (fieldName === 'school_id') {
     return (
-      <div className="space-y-2">
+      <div className="space-y-4">
         <SelectWithCustomOption
           value={value}
           options={schools || []}
@@ -42,7 +42,7 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
           onCancel={onCancel}
         />
         <div className="flex gap-2 justify-end">
-          <Button onClick={onSave} size="sm">
+          <Button onClick={onSave} size="sm" variant="default">
             Save
           </Button>
           <Button onClick={onCancel} variant="outline" size="sm">
@@ -59,10 +59,10 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Enter text..."
-        className="min-h-[100px] bg-gray-50 rounded-md p-2 border"
+        className="min-h-[100px] bg-gray-50 dark:bg-gray-800 rounded-md p-2 border resize-y"
       />
       <div className="flex gap-2 justify-end">
-        <Button onClick={onSave} size="sm">
+        <Button onClick={onSave} size="sm" variant="default">
           Save
         </Button>
         <Button onClick={onCancel} variant="outline" size="sm">
