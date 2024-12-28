@@ -1,0 +1,135 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    console.log('Received calendar webhook');
+    
+    // Verify the request is from Google (you should implement proper verification)
+    const channelId = req.headers.get('X-Goog-Channel-ID');
+    const resourceId = req.headers.get('X-Goog-Resource-ID');
+    const state = req.headers.get('X-Goog-Resource-State');
+
+    console.log('Channel ID:', channelId);
+    console.log('Resource ID:', resourceId);
+    console.log('State:', state);
+
+    // Only process sync or update events
+    if (state !== 'sync' && state !== 'update') {
+      return new Response(JSON.stringify({ message: 'Ignored non-sync/update event' }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get the event data from the request body
+    const data = await req.json();
+    console.log('Webhook data:', data);
+
+    // If this is a cancellation event
+    if (data.status === 'cancelled') {
+      const calendarEventId = data.id;
+      
+      // Find the associated mentor session
+      const { data: session, error: sessionError } = await supabase
+        .from('mentor_sessions')
+        .select('*')
+        .eq('calendar_event_id', calendarEventId)
+        .single();
+
+      if (sessionError) {
+        console.error('Error finding session:', sessionError);
+        throw sessionError;
+      }
+
+      if (!session) {
+        console.log('No session found for calendar event:', calendarEventId);
+        return new Response(JSON.stringify({ message: 'No associated session found' }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Update the session status
+      const { error: updateError } = await supabase
+        .from('mentor_sessions')
+        .update({ 
+          status: 'cancelled',
+          notes: 'Cancelled via Google Calendar'
+        })
+        .eq('id', session.id);
+
+      if (updateError) {
+        console.error('Error updating session:', updateError);
+        throw updateError;
+      }
+
+      // Create notifications for both mentor and mentee
+      const notifications = [
+        {
+          profile_id: session.mentor_id,
+          title: 'Session Cancelled',
+          message: `Session has been cancelled via Google Calendar`,
+          type: 'session_cancelled',
+          action_url: '/profile?tab=calendar'
+        },
+        {
+          profile_id: session.mentee_id,
+          title: 'Session Cancelled',
+          message: `Session has been cancelled via Google Calendar`,
+          type: 'session_cancelled',
+          action_url: '/profile?tab=calendar'
+        }
+      ];
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (notificationError) {
+        console.error('Error creating notifications:', notificationError);
+        throw notificationError;
+      }
+
+      // Send cancellation emails
+      await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: session.id,
+          type: 'cancellation'
+        }
+      });
+
+      console.log('Successfully processed calendar cancellation');
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ message: 'Event processed' }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+  } catch (error) {
+    console.error('Error in calendar webhook:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
+  }
+});
