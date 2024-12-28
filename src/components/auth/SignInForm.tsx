@@ -6,19 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/ui/icons";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { PasswordResetDialog } from "./reset-password/PasswordResetDialog";
 
 export function SignInForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -97,41 +90,6 @@ export function SignInForm() {
     }
   };
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/auth?tab=signin`,
-      });
-
-      if (error) {
-        toast({
-          title: "Password Reset Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Password Reset Email Sent",
-        description: "Please check your email for password reset instructions.",
-      });
-      setIsResetDialogOpen(false);
-    } catch (error: any) {
-      console.error('Password reset error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -186,37 +144,14 @@ export function SignInForm() {
           />
         </div>
         <div className="flex justify-end">
-          <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="link"
-                className="px-0 font-normal text-sm text-muted-foreground hover:text-primary"
-              >
-                Forgot password?
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Reset Password</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handlePasswordReset} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
-                  <Input
-                    id="reset-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send Reset Instructions"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="link"
+            className="px-0 font-normal text-sm text-muted-foreground hover:text-primary"
+            onClick={() => setIsResetDialogOpen(true)}
+            type="button"
+          >
+            Forgot password?
+          </Button>
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Signing in..." : "Sign In"}
@@ -243,6 +178,11 @@ export function SignInForm() {
         <Icons.google className="mr-2 h-4 w-4" />
         Google
       </Button>
+
+      <PasswordResetDialog 
+        open={isResetDialogOpen}
+        onOpenChange={setIsResetDialogOpen}
+      />
     </div>
   );
 }
