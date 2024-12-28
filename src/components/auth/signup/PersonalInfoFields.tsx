@@ -35,7 +35,6 @@ export function PersonalInfoFields({
             value={firstName}
             onChange={onChange}
             required
-            className={hasError?.firstName ? "border-red-500" : ""}
           />
         </div>
         <div className="space-y-2">
@@ -49,7 +48,6 @@ export function PersonalInfoFields({
             value={lastName}
             onChange={onChange}
             required
-            className={hasError?.lastName ? "border-red-500" : ""}
           />
         </div>
       </div>
