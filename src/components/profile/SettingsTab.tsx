@@ -16,6 +16,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Define a list of common timezones
+const commonTimezones = [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Asia/Dubai',
+  'Australia/Sydney',
+  'Pacific/Auckland'
+];
+
 export function SettingsTab() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
@@ -29,8 +47,6 @@ export function SettingsTab() {
     });
   };
 
-  // Get all available timezones
-  const timezones = Intl.supportedValuesOf('timeZone');
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
@@ -74,7 +90,7 @@ export function SettingsTab() {
                 <SelectValue placeholder="Select your timezone" />
               </SelectTrigger>
               <SelectContent>
-                {timezones.map((tz) => (
+                {commonTimezones.map((tz) => (
                   <SelectItem key={tz} value={tz}>
                     {tz}
                   </SelectItem>
@@ -90,7 +106,6 @@ export function SettingsTab() {
       </div>
 
       {/* Other Settings */}
-      {/* Privacy & Security */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Lock className="h-5 w-5 text-primary" />
