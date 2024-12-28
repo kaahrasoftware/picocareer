@@ -16,29 +16,35 @@ export function useAuthSession() {
         // First try to get the existing session
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         
-        if (!existingSession) {
-          // If no session exists, try to refresh it
-          const { data: { session: refreshedSession }, error: refreshError } = 
-            await supabase.auth.refreshSession();
-            
-          if (refreshError) throw refreshError;
-          return refreshedSession;
+        if (existingSession) {
+          return existingSession;
         }
+
+        // If no session exists, clear any stale data
+        queryClient.removeQueries({ queryKey: ['auth-session'] });
+        queryClient.removeQueries({ queryKey: ['profile'] });
+        queryClient.removeQueries({ queryKey: ['notifications'] });
+        localStorage.removeItem('picocareer_auth_token');
         
-        return existingSession;
+        return null;
       } catch (error: any) {
         console.error('Error fetching session:', error);
+        
         // Clear any stale session data
         await supabase.auth.signOut();
         queryClient.clear();
         
-        toast({
-          title: "Authentication Error",
-          description: "Please try signing in again",
-          variant: "destructive",
-        });
+        // Only show toast and redirect if it's not an AuthSessionMissingError
+        if (error.message !== 'Auth session missing!') {
+          toast({
+            title: "Authentication Error",
+            description: "Please try signing in again",
+            variant: "destructive",
+          });
+          
+          navigate("/auth");
+        }
         
-        navigate("/auth");
         return null;
       }
     },
@@ -57,7 +63,6 @@ export function useAuthSession() {
           queryClient.removeQueries({ queryKey: ['auth-session'] });
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
-          // Clear any auth-related local storage
           localStorage.removeItem('picocareer_auth_token');
           navigate("/auth");
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
