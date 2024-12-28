@@ -484,6 +484,7 @@ export type Database = {
           scheduled_at: string
           session_type_id: string
           status: string | null
+          timezone: string
           updated_at: string
         }
         Insert: {
@@ -501,6 +502,7 @@ export type Database = {
           scheduled_at: string
           session_type_id: string
           status?: string | null
+          timezone?: string
           updated_at?: string
         }
         Update: {
@@ -518,6 +520,7 @@ export type Database = {
           scheduled_at?: string
           session_type_id?: string
           status?: string | null
+          timezone?: string
           updated_at?: string
         }
         Relationships: [
