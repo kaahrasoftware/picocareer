@@ -36,17 +36,11 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      
-      // Get the current user's ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User must be authenticated to upload files.');
-      
-      // Create a path that includes the user's ID as required by RLS
-      const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+      const fileName = `${Math.random()}.${fileExt}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file, { 
+        .upload(fileName, file, { 
           upsert: true,
           contentType: file.type
         });
@@ -57,7 +51,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
 
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       onChange(publicUrl);
       setPreview(publicUrl);
@@ -81,12 +75,9 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
   const handleRemove = async (onChange: (value: string) => void) => {
     try {
       if (preview) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('User must be authenticated to remove files.');
-
-        // Extract the file path from the URL
+        // Extract the file name from the URL
         const urlParts = preview.split('/');
-        const fileName = `${user.id}/${urlParts[urlParts.length - 1]}`;
+        const fileName = urlParts[urlParts.length - 1];
 
         const { error } = await supabase.storage
           .from(bucket)
