@@ -1,11 +1,4 @@
 import React from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SelectWithCustomOption } from "../SelectWithCustomOption";
 import { useFieldOptions } from "../useFieldOptions";
@@ -41,48 +34,18 @@ export function SelectField({
     }
   };
 
-  if (fieldName === 'company_id' || fieldName === 'school_id' || 
-      fieldName === 'academic_major_id' || fieldName === 'position') {
-    return (
-      <SelectWithCustomOption
-        value={value}
-        options={options}
-        placeholder={getPlaceholder()}
-        tableName={fieldName === 'company_id' ? 'companies' : 
-                  fieldName === 'school_id' ? 'schools' :
-                  fieldName === 'academic_major_id' ? 'majors' : 'careers'}
-        fieldName={fieldName}
-        titleField={fieldName === 'company_id' || fieldName === 'school_id' ? 'name' : 'title'}
-        handleSelectChange={(_, value) => onSave(value)}
-        onCancel={onCancel}
-      />
-    );
-  }
-
   return (
-    <div className="flex gap-2">
-      <Select 
-        value={value} 
-        onValueChange={onSave}
-      >
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder={getPlaceholder()} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.title || option.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Button 
-        onClick={onCancel} 
-        variant="outline" 
-        size="sm"
-      >
-        Cancel
-      </Button>
-    </div>
+    <SelectWithCustomOption
+      value={value}
+      options={options}
+      placeholder={getPlaceholder()}
+      tableName={fieldName === 'company_id' ? 'companies' : 
+                fieldName === 'school_id' ? 'schools' :
+                fieldName === 'academic_major_id' ? 'majors' : 'careers'}
+      fieldName={fieldName}
+      titleField={fieldName === 'company_id' || fieldName === 'school_id' ? 'name' : 'title'}
+      handleSelectChange={(_, value) => onSave(value)}
+      onCancel={onCancel}
+    />
   );
 }

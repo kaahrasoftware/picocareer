@@ -10,8 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import type { Database } from "@/integrations/supabase/types";
-import { FieldName, TableName, TitleField } from "./types";
+import { FieldName, TableName, TitleField, InsertData } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -55,12 +54,17 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry
+      const insertData: InsertData[typeof tableName] = {
+        [titleField]: customValue,
+        ...(tableName === 'majors' || tableName === 'careers' 
+          ? { description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}` }
+          : {}),
+        status: 'Pending'
+      };
+
       const { data, error } = await supabase
         .from(tableName)
-        .insert({
-          [titleField]: customValue,
-          status: 'Pending'
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -84,6 +88,10 @@ export function SelectWithCustomOption({
         variant: "destructive",
       });
     }
+  };
+
+  const displayValue = (option: { id: string; title?: string; name?: string }) => {
+    return option[titleField] || '';
   };
 
   if (showCustomInput) {
@@ -121,10 +129,6 @@ export function SelectWithCustomOption({
       </div>
     );
   }
-
-  const displayValue = (option: { id: string; title?: string; name?: string }) => {
-    return option[titleField] || '';
-  };
 
   return (
     <div className="w-full">
