@@ -1,26 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface SearchResult {
-  id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  type: 'career' | 'major' | 'mentor';
-}
+import { SearchResult } from "@/types/search";
 
 interface Company {
-  id: string;
   name: string;
 }
 
 interface School {
-  id: string;
   name: string;
 }
 
 interface Career {
-  id: string;
   title: string;
 }
 
@@ -53,6 +43,7 @@ export function useSearchData(searchTerm: string) {
           id,
           full_name,
           bio,
+          avatar_url,
           company:companies!inner(name),
           school:schools!inner(name),
           position:careers!inner(title)
@@ -79,10 +70,11 @@ export function useSearchData(searchTerm: string) {
         ...(mentors?.map(mentor => ({
           id: mentor.id,
           title: mentor.full_name,
-          description: `${(mentor.company as Company[])[0]?.name || ''} ${
-            (mentor.school as School[])[0]?.name || ''
-          } ${(mentor.position as Career[])[0]?.title || ''}`.trim(),
-          type: 'mentor' as const
+          description: `${mentor.company?.name || ''} ${mentor.school?.name || ''} ${mentor.position?.title || ''}`.trim(),
+          type: 'mentor' as const,
+          avatar_url: mentor.avatar_url,
+          position: mentor.position?.title || null,
+          top_mentor: mentor.top_mentor || false
         })) || [])
       ];
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parse, addMinutes, isWithinInterval } from "date-fns";
-import { startOfDay as getStartOfDay } from "date-fns"; // Renamed import to avoid conflict
+import { startOfDay as getStartOfDay } from "date-fns";
 
 interface TimeSlot {
   time: string;
