@@ -1,9 +1,10 @@
 import React from 'react';
 import { SelectWithCustomOption } from "../SelectWithCustomOption";
 import { useFieldOptions } from "../useFieldOptions";
+import { FieldName, TableName, TitleField } from "../types";
 
 interface SelectFieldProps {
-  fieldName: string;
+  fieldName: FieldName;
   value: string;
   onSave: (value: string) => void;
   onCancel: () => void;
@@ -32,7 +33,7 @@ export function SelectField({
     }
   };
 
-  const getTableName = () => {
+  const getTableName = (): TableName => {
     switch (fieldName) {
       case 'academic_major_id':
         return 'majors';
@@ -47,6 +48,10 @@ export function SelectField({
     }
   };
 
+  const getTitleField = (): TitleField => {
+    return fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title';
+  };
+
   return (
     <SelectWithCustomOption
       value={value}
@@ -54,7 +59,7 @@ export function SelectField({
       placeholder={getPlaceholder()}
       tableName={getTableName()}
       fieldName={fieldName}
-      titleField={fieldName === 'school_id' || fieldName === 'company_id' ? 'name' : 'title'}
+      titleField={getTitleField()}
       handleSelectChange={(_, value) => onSave(value)}
       onCancel={onCancel}
     />
