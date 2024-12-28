@@ -43,7 +43,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         .from('profiles')
         .select(`
           *,
-          company:companies(name),
+          company:companies(id, name),
           school:schools(name),
           academic_major:majors!profiles_academic_major_id_fkey(title),
           career:careers!profiles_position_fkey(title, id)
@@ -60,6 +60,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       
       return {
         ...data,
+        company_id: data.company?.id,
         company_name: data.company?.name,
         school_name: data.school?.name,
         academic_major: data.academic_major?.title,
