@@ -54,8 +54,8 @@ export function EditableField({
     }
   };
 
-  // Disable editing for company_name field
-  if (fieldName === 'company_name') {
+  // Disable editing for company_id field
+  if (fieldName === 'company_id') {
     return (
       <div className="flex items-center justify-between group">
         <span className="text-muted-foreground">{value || "Not set"}</span>
