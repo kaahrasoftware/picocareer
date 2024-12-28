@@ -67,20 +67,41 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         return;
       }
 
-      // If no conflicts, proceed with insertion
-      const { error } = await supabase
+      // First try to update any existing slot for this date that might be marked as unavailable
+      const { data: existingSlot } = await supabase
         .from('mentor_availability')
-        .insert({
-          profile_id: profileId,
-          date_available: formattedDate,
-          start_time: selectedStartTime,
-          end_time: selectedEndTime,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          is_available: true
-        });
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('date_available', formattedDate)
+        .eq('is_available', false)
+        .single();
 
-      if (error) {
-        throw error;
+      if (existingSlot) {
+        // Update existing slot
+        const { error } = await supabase
+          .from('mentor_availability')
+          .update({
+            start_time: selectedStartTime,
+            end_time: selectedEndTime,
+            is_available: true
+          })
+          .eq('id', existingSlot.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new slot
+        const { error } = await supabase
+          .from('mentor_availability')
+          .insert({
+            profile_id: profileId,
+            date_available: formattedDate,
+            start_time: selectedStartTime,
+            end_time: selectedEndTime,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            is_available: true
+          });
+
+        if (error) throw error;
       }
 
       toast({
