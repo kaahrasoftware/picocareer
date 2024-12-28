@@ -37,7 +37,6 @@ export function StatisticsSection() {
         supabase
           .from('mentor_sessions')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'completed')
       ]);
 
       return {
