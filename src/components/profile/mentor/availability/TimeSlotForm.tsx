@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { TimeSlotPicker } from "./TimeSlotPicker";
 
 interface TimeSlotFormProps {
   selectedDate: Date | undefined;
@@ -103,17 +102,69 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     }
   };
 
+  // Generate time slots for the full day in 30-minute increments
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
   return (
     <div className="space-y-4">
-      <TimeSlotPicker
-        selectedStartTime={selectedStartTime}
-        selectedEndTime={selectedEndTime}
-        onStartTimeSelect={setSelectedStartTime}
-        onEndTimeSelect={setSelectedEndTime}
-        onSave={handleSaveAvailability}
-        mentorId={profileId}
-        isSubmitting={isSubmitting}
-      />
+      <div>
+        <h4 className="font-medium mb-2">Start Time</h4>
+        <select
+          value={selectedStartTime}
+          onChange={(e) => setSelectedStartTime(e.target.value)}
+          className="w-full border border-input bg-background px-3 py-2 rounded-md"
+        >
+          <option value="">Select start time</option>
+          {timeSlots.map((time) => (
+            <option 
+              key={time} 
+              value={time}
+              disabled={selectedEndTime ? time >= selectedEndTime : false}
+            >
+              {time}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-2">End Time</h4>
+        <select
+          value={selectedEndTime}
+          onChange={(e) => setSelectedEndTime(e.target.value)}
+          className="w-full border border-input bg-background px-3 py-2 rounded-md"
+        >
+          <option value="">Select end time</option>
+          {timeSlots.map((time) => (
+            <option 
+              key={time} 
+              value={time}
+              disabled={selectedStartTime ? time <= selectedStartTime : false}
+            >
+              {time}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <Button 
+        onClick={handleSaveAvailability}
+        disabled={!selectedStartTime || !selectedEndTime || isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? "Saving..." : "Save Availability"}
+      </Button>
     </div>
   );
 }
