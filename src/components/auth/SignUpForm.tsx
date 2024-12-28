@@ -17,23 +17,6 @@ export function SignUpForm() {
     lastName: '',
   });
 
-  const createProfile = async (userId: string, email: string, firstName: string, lastName: string) => {
-    try {
-      const { error } = await supabase.from('profiles').insert({
-        id: userId,
-        email: email,
-        first_name: firstName,
-        last_name: lastName,
-        user_type: 'mentee'
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error in createProfile:', error);
-      throw error;
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -63,8 +46,7 @@ export function SignUpForm() {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth?tab=signin`
+          }
         }
       });
 
@@ -81,19 +63,29 @@ export function SignUpForm() {
       }
 
       if (data.user) {
-        await createProfile(
-          data.user.id,
-          formData.email,
-          formData.firstName,
-          formData.lastName
-        );
+        try {
+          const { error: profileError } = await supabase.from('profiles').insert({
+            id: data.user.id,
+            email: formData.email,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            user_type: 'mentee'
+          });
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account before signing in.",
-        });
+          if (profileError) throw profileError;
 
-        navigate("/auth?tab=signin");
+          toast({
+            title: "Account created!",
+            description: "Please check your email to verify your account before signing in.",
+          });
+
+          navigate("/auth?tab=signin");
+        } catch (profileError: any) {
+          console.error('Error creating profile:', profileError);
+          // If profile creation fails, clean up the auth user
+          await supabase.auth.signOut();
+          throw new Error('Failed to create user profile');
+        }
       }
     } catch (error: any) {
       console.error('Signup error:', error);
