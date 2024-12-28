@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
 
 export default function Auth() {
   const { data: mentors } = useQuery({
@@ -51,14 +52,16 @@ export default function Auth() {
             </Link>
           </div>
           
-          <div className="max-w-md space-y-8 text-center mt-auto">
-            <div className="space-y-4 flex flex-col items-center">
+          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md">
+            <div className="space-y-6 text-center w-full">
               <Button 
                 asChild
-                variant="ghost" 
-                className="text-xl font-semibold text-white hover:text-blue-400 hover:bg-transparent"
+                variant="default"
+                size="lg"
+                className="w-full max-w-xs bg-picocareer-primary hover:bg-picocareer-accent text-white font-semibold py-6 text-lg shadow-lg"
               >
-                <Link to="/mentor-registration">
+                <Link to="/mentor-registration" className="flex items-center justify-center gap-2">
+                  <UserPlus className="w-5 h-5" />
                   Become a Mentor
                 </Link>
               </Button>
