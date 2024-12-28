@@ -42,7 +42,6 @@ export function TimeSlotSelector({
     const [hours, minutes] = slot.time.split(':').map(Number);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    // Updated to use the correct number of arguments for formatInTimeZone
     return {
       time: formatInTimeZone(slotDate, userTimezone, 'HH:mm'),
       available: slot.available
