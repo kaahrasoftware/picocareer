@@ -1,108 +1,93 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface SearchResult {
+interface SearchResult {
   id: string;
-  title: string;
-  description: string;
+  title?: string;
+  name?: string;
+  description?: string;
   type: 'career' | 'major' | 'mentor';
 }
 
-export interface CareerSearchResult extends SearchResult {
-  type: 'career';
-  salary_range: string;
+interface Company {
+  id: string;
+  name: string;
 }
 
-export interface MajorSearchResult extends SearchResult {
-  type: 'major';
+interface School {
+  id: string;
+  name: string;
 }
 
-export interface MentorSearchResult extends SearchResult {
-  type: 'mentor';
-  avatar_url: string;
-  position: string;
-  top_mentor: boolean;
+interface Career {
+  id: string;
+  title: string;
 }
 
-export function useSearchData(query: string) {
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const { toast } = useToast();
+export function useSearchData(searchTerm: string) {
+  return useQuery({
+    queryKey: ['search', searchTerm],
+    queryFn: async () => {
+      if (!searchTerm) return [];
 
-  useEffect(() => {
-    async function search() {
-      if (!query.trim()) {
-        setResults([]);
-        return;
-      }
+      // Search careers
+      const { data: careers, error: careersError } = await supabase
+        .from('careers')
+        .select('id, title, description')
+        .ilike('title', `%${searchTerm}%`);
 
-      try {
-        const [careers, majors, mentors] = await Promise.all([
-          supabase
-            .from('careers')
-            .select('id, title, description, salary_range')
-            .textSearch('title', query)
-            .limit(5),
-          supabase
-            .from('majors')
-            .select('id, title, description')
-            .textSearch('title', query)
-            .limit(5),
-          supabase
-            .from('profiles')
-            .select(`
-              id,
-              full_name,
-              bio,
-              avatar_url,
-              company:companies(name),
-              school:schools(name),
-              position:careers!profiles_position_fkey(title),
-              top_mentor
-            `)
-            .eq('user_type', 'mentor')
-            .textSearch('full_name', query)
-            .limit(5)
-        ]);
+      if (careersError) throw careersError;
 
-        const searchResults: SearchResult[] = [
-          ...(careers.data?.map(career => ({
-            id: career.id,
-            title: career.title,
-            description: career.description,
-            type: 'career' as const,
-            salary_range: career.salary_range
-          })) || []),
-          ...(majors.data?.map(major => ({
-            id: major.id,
-            title: major.title,
-            description: major.description,
-            type: 'major' as const
-          })) || []),
-          ...(mentors.data?.map(mentor => ({
-            id: mentor.id,
-            title: mentor.full_name,
-            description: mentor.bio || '',
-            type: 'mentor' as const,
-            avatar_url: mentor.avatar_url,
-            position: mentor.position?.title || '',
-            top_mentor: mentor.top_mentor || false
-          })) || [])
-        ];
+      // Search majors
+      const { data: majors, error: majorsError } = await supabase
+        .from('majors')
+        .select('id, title, description')
+        .ilike('title', `%${searchTerm}%`);
 
-        setResults(searchResults);
-      } catch (error) {
-        console.error('Search error:', error);
-        toast({
-          title: "Error",
-          description: "Failed to perform search",
-          variant: "destructive",
-        });
-      }
-    }
+      if (majorsError) throw majorsError;
 
-    search();
-  }, [query, toast]);
+      // Search mentors
+      const { data: mentors, error: mentorsError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          bio,
+          company:companies!inner(name),
+          school:schools!inner(name),
+          position:careers!inner(title)
+        `)
+        .eq('user_type', 'mentor')
+        .ilike('full_name', `%${searchTerm}%`);
 
-  return { results };
+      if (mentorsError) throw mentorsError;
+
+      // Transform and combine results
+      const results: SearchResult[] = [
+        ...(careers?.map(career => ({
+          id: career.id,
+          title: career.title,
+          description: career.description,
+          type: 'career' as const
+        })) || []),
+        ...(majors?.map(major => ({
+          id: major.id,
+          title: major.title,
+          description: major.description,
+          type: 'major' as const
+        })) || []),
+        ...(mentors?.map(mentor => ({
+          id: mentor.id,
+          title: mentor.full_name,
+          description: `${(mentor.company as Company[])[0]?.name || ''} ${
+            (mentor.school as School[])[0]?.name || ''
+          } ${(mentor.position as Career[])[0]?.title || ''}`.trim(),
+          type: 'mentor' as const
+        })) || [])
+      ];
+
+      return results;
+    },
+    enabled: !!searchTerm,
+  });
 }
