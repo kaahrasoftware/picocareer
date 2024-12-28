@@ -1,108 +1,85 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { SearchResult } from "@/types/search";
 
-export interface SearchResult {
-  id: string;
+interface Company {
+  name: string;
+}
+
+interface School {
+  name: string;
+}
+
+interface Career {
   title: string;
-  description: string;
-  type: 'career' | 'major' | 'mentor';
 }
 
-export interface CareerSearchResult extends SearchResult {
-  type: 'career';
-  salary_range: string;
-}
+export function useSearchData(searchTerm: string) {
+  return useQuery({
+    queryKey: ['search', searchTerm],
+    queryFn: async () => {
+      if (!searchTerm) return [];
 
-export interface MajorSearchResult extends SearchResult {
-  type: 'major';
-}
+      // Search careers
+      const { data: careers, error: careersError } = await supabase
+        .from('careers')
+        .select('id, title, description')
+        .ilike('title', `%${searchTerm}%`);
 
-export interface MentorSearchResult extends SearchResult {
-  type: 'mentor';
-  avatar_url: string;
-  position: string;
-  top_mentor: boolean;
-}
+      if (careersError) throw careersError;
 
-export function useSearchData(query: string) {
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const { toast } = useToast();
+      // Search majors
+      const { data: majors, error: majorsError } = await supabase
+        .from('majors')
+        .select('id, title, description')
+        .ilike('title', `%${searchTerm}%`);
 
-  useEffect(() => {
-    async function search() {
-      if (!query.trim()) {
-        setResults([]);
-        return;
-      }
+      if (majorsError) throw majorsError;
 
-      try {
-        const [careers, majors, mentors] = await Promise.all([
-          supabase
-            .from('careers')
-            .select('id, title, description, salary_range')
-            .textSearch('title', query)
-            .limit(5),
-          supabase
-            .from('majors')
-            .select('id, title, description')
-            .textSearch('title', query)
-            .limit(5),
-          supabase
-            .from('profiles')
-            .select(`
-              id,
-              full_name,
-              bio,
-              avatar_url,
-              company:companies(name),
-              school:schools(name),
-              position:careers!profiles_position_fkey(title),
-              top_mentor
-            `)
-            .eq('user_type', 'mentor')
-            .textSearch('full_name', query)
-            .limit(5)
-        ]);
+      // Search mentors
+      const { data: mentors, error: mentorsError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          bio,
+          avatar_url,
+          company:companies!inner(name),
+          school:schools!inner(name),
+          position:careers!inner(title)
+        `)
+        .eq('user_type', 'mentor')
+        .ilike('full_name', `%${searchTerm}%`);
 
-        const searchResults: SearchResult[] = [
-          ...(careers.data?.map(career => ({
-            id: career.id,
-            title: career.title,
-            description: career.description,
-            type: 'career' as const,
-            salary_range: career.salary_range
-          })) || []),
-          ...(majors.data?.map(major => ({
-            id: major.id,
-            title: major.title,
-            description: major.description,
-            type: 'major' as const
-          })) || []),
-          ...(mentors.data?.map(mentor => ({
-            id: mentor.id,
-            title: mentor.full_name,
-            description: mentor.bio || '',
-            type: 'mentor' as const,
-            avatar_url: mentor.avatar_url,
-            position: mentor.position?.title || '',
-            top_mentor: mentor.top_mentor || false
-          })) || [])
-        ];
+      if (mentorsError) throw mentorsError;
 
-        setResults(searchResults);
-      } catch (error) {
-        console.error('Search error:', error);
-        toast({
-          title: "Error",
-          description: "Failed to perform search",
-          variant: "destructive",
-        });
-      }
-    }
+      // Transform and combine results
+      const results: SearchResult[] = [
+        ...(careers?.map(career => ({
+          id: career.id,
+          title: career.title,
+          description: career.description,
+          type: 'career' as const
+        })) || []),
+        ...(majors?.map(major => ({
+          id: major.id,
+          title: major.title,
+          description: major.description,
+          type: 'major' as const
+        })) || []),
+        ...(mentors?.map(mentor => ({
+          id: mentor.id,
+          title: mentor.full_name,
+          description: `${mentor.company?.name || ''} ${mentor.school?.name || ''} ${mentor.position?.title || ''}`.trim(),
+          type: 'mentor' as const,
+          avatar_url: mentor.avatar_url,
+          position: mentor.position?.title || null,
+          top_mentor: mentor.top_mentor || false
+        })) || [])
+      ];
 
-    search();
-  }, [query, toast]);
-
-  return { results };
+      return results;
+    },
+    enabled: !!searchTerm,
+  });
 }
