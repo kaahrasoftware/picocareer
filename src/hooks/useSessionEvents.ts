@@ -1,40 +1,63 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { MentorSession } from "@/types/database/session";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { CalendarEvent, MentorSession } from '@/types/calendar';
+import { useToast } from '@/hooks/use-toast';
 
-export function useSessionEvents(userId: string | undefined, startDate: Date, endDate: Date) {
-  return useQuery({
-    queryKey: ['session-events', userId, startDate, endDate],
-    queryFn: async () => {
-      if (!userId) return [];
+export function useSessionEvents(date: Date) {
+  const [data, setData] = useState<CalendarEvent[]>([]);
+  const { toast } = useToast();
 
-      const { data, error } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          scheduled_at,
-          status,
-          notes,
-          mentor:profiles!mentor_id(id, full_name),
-          mentee:profiles!mentee_id(id, full_name),
-          session_type:mentor_session_types(type, duration)
-        `)
-        .or(`mentor_id.eq.${userId},mentee_id.eq.${userId}`)
-        .gte('scheduled_at', startDate.toISOString())
-        .lte('scheduled_at', endDate.toISOString());
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
 
-      if (error) throw error;
+        const { data: sessions, error } = await supabase
+          .from('mentor_sessions')
+          .select(`
+            id,
+            scheduled_at,
+            status,
+            notes,
+            mentor:profiles!mentor_id(id, full_name),
+            mentee:profiles!mentee_id(id, full_name),
+            session_type:mentor_session_types(type, duration)
+          `)
+          .gte('scheduled_at', startOfDay.toISOString())
+          .lte('scheduled_at', endOfDay.toISOString());
 
-      return data.map(session => ({
-        id: session.id,
-        scheduled_at: session.scheduled_at,
-        status: session.status,
-        notes: session.notes,
-        mentor: session.mentor,
-        mentee: session.mentee,
-        session_type: session.session_type[0]
-      })) as MentorSession[];
-    },
-    enabled: !!userId,
-  });
+        if (error) throw error;
+
+        const events: CalendarEvent[] = (sessions as MentorSession[]).map(session => ({
+          id: session.id,
+          title: `Session with ${session.mentee.full_name}`,
+          description: session.notes || '',
+          start_time: session.scheduled_at,
+          end_time: new Date(new Date(session.scheduled_at).getTime() + (session.session_type.duration * 60 * 1000)).toISOString(),
+          event_type: 'session',
+          status: session.status,
+          session_details: session
+        }));
+
+        setData(events);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load calendar events",
+          variant: "destructive",
+        });
+      }
+    }
+
+    if (date) {
+      fetchEvents();
+    }
+  }, [date, toast]);
+
+  return { data };
 }

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://wurdmlkfkzuivvwxjmxk.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cmRtbGtma3p1aXZ2d3hqbXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDM3MjY0MDAsImV4cCI6MjAxOTMwMjQwMH0.C7LwWXHzZbKyXsMhxqTqms4ks0CHN5g-DQIxAyLzg8g';
+const supabaseAnonKey = 'YOUR_ANON_KEY'; // This will be replaced by the actual key
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -11,15 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'X-Client-Info': 'supabase-js-web'
-    }
-  },
-  db: {
-    schema: 'public'
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
+      'Content-Type': 'application/json'
     }
   }
 });
