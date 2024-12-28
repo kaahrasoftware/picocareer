@@ -6,10 +6,11 @@ export type TitleField = 'title' | 'name';
 
 export type Status = Database["public"]["Enums"]["status"];
 
-export type TableRecord = {
+export type QueryResult = {
   id: string;
   title?: string;
   name?: string;
+  status?: Status;
 };
 
 export type InsertData = {
@@ -31,11 +32,4 @@ export type InsertData = {
     description: string;
     status: Status;
   };
-}
-
-export type QueryResult = {
-  id: string;
-  title?: string;
-  name?: string;
-  status?: Status;
-}
+};

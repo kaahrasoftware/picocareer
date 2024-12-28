@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
+import { TableName, FieldName, TitleField, InsertData, Status, QueryResult } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -46,30 +46,26 @@ export function SelectWithCustomOption({
         .eq(titleField, customValue)
         .maybeSingle();
 
-      if (existingData) {
-        handleSelectChange(fieldName, existingData.id);
+      if (existingData && 'id' in existingData) {
+        const record = existingData as QueryResult;
+        handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
       }
 
       // Create new entry
-      let insertData: Partial<InsertData[typeof tableName]> = {
-        status: 'Pending' as Status
-      };
-
-      if (tableName === 'majors' || tableName === 'careers') {
-        insertData = {
-          ...insertData,
-          title: customValue,
-          description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`
-        };
-      } else {
-        insertData = {
-          ...insertData,
-          name: customValue
-        };
-      }
+      let insertData: InsertData[typeof tableName] = {
+        status: 'Pending' as Status,
+        ...(tableName === 'majors' || tableName === 'careers' 
+          ? {
+              title: customValue,
+              description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`
+            }
+          : {
+              name: customValue
+            })
+      } as InsertData[typeof tableName];
 
       const { data, error } = await supabase
         .from(tableName)
@@ -97,10 +93,6 @@ export function SelectWithCustomOption({
         variant: "destructive",
       });
     }
-  };
-
-  const displayValue = (option: { id: string; title?: string; name?: string }) => {
-    return option[titleField] || '';
   };
 
   if (showCustomInput) {
@@ -157,7 +149,7 @@ export function SelectWithCustomOption({
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.id} value={option.id}>
-              {displayValue(option)}
+              {option[titleField] || ''}
             </SelectItem>
           ))}
           <SelectItem value="other">Other (Add New)</SelectItem>
