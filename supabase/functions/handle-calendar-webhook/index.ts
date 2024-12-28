@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,7 +14,6 @@ serve(async (req: Request) => {
   try {
     console.log('Received calendar webhook');
     
-    // Verify the request is from Google (you should implement proper verification)
     const channelId = req.headers.get('X-Goog-Channel-ID');
     const resourceId = req.headers.get('X-Goog-Resource-ID');
     const state = req.headers.get('X-Goog-Resource-State');
@@ -36,89 +34,112 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the event data from the request body
     const data = await req.json();
     console.log('Webhook data:', data);
 
-    // If this is a cancellation event
-    if (data.status === 'cancelled') {
-      const calendarEventId = data.id;
-      
-      // Find the associated mentor session
-      const { data: session, error: sessionError } = await supabase
-        .from('mentor_sessions')
-        .select('*')
-        .eq('calendar_event_id', calendarEventId)
-        .single();
+    // Handle different calendar event states
+    const calendarEventId = data.id;
+    let notificationType: string;
+    let notificationTitle: string;
+    let notificationMessage: string;
+    let sessionStatus: string;
 
-      if (sessionError) {
-        console.error('Error finding session:', sessionError);
-        throw sessionError;
-      }
-
-      if (!session) {
-        console.log('No session found for calendar event:', calendarEventId);
-        return new Response(JSON.stringify({ message: 'No associated session found' }), {
+    switch (data.status) {
+      case 'cancelled':
+        notificationType = 'session_cancelled';
+        notificationTitle = 'Session Cancelled';
+        notificationMessage = 'Session has been cancelled via Google Calendar';
+        sessionStatus = 'cancelled';
+        break;
+      case 'confirmed':
+        notificationType = 'session_confirmed';
+        notificationTitle = 'Session Confirmed';
+        notificationMessage = 'Session has been confirmed in Google Calendar';
+        sessionStatus = 'confirmed';
+        break;
+      case 'tentative':
+        notificationType = 'session_updated';
+        notificationTitle = 'Session Update';
+        notificationMessage = 'Session details have been updated in Google Calendar';
+        sessionStatus = 'scheduled';
+        break;
+      default:
+        console.log('Unhandled calendar event status:', data.status);
+        return new Response(JSON.stringify({ message: 'Unhandled event status' }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-      }
+    }
 
-      // Update the session status
-      const { error: updateError } = await supabase
-        .from('mentor_sessions')
-        .update({ 
-          status: 'cancelled',
-          notes: 'Cancelled via Google Calendar'
-        })
-        .eq('id', session.id);
+    // Find the associated mentor session
+    const { data: session, error: sessionError } = await supabase
+      .from('mentor_sessions')
+      .select('*')
+      .eq('calendar_event_id', calendarEventId)
+      .single();
 
-      if (updateError) {
-        console.error('Error updating session:', updateError);
-        throw updateError;
-      }
+    if (sessionError) {
+      console.error('Error finding session:', sessionError);
+      throw sessionError;
+    }
 
-      // Create notifications for both mentor and mentee
-      const notifications = [
-        {
-          profile_id: session.mentor_id,
-          title: 'Session Cancelled',
-          message: `Session has been cancelled via Google Calendar`,
-          type: 'session_cancelled',
-          action_url: '/profile?tab=calendar'
-        },
-        {
-          profile_id: session.mentee_id,
-          title: 'Session Cancelled',
-          message: `Session has been cancelled via Google Calendar`,
-          type: 'session_cancelled',
-          action_url: '/profile?tab=calendar'
-        }
-      ];
-
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert(notifications);
-
-      if (notificationError) {
-        console.error('Error creating notifications:', notificationError);
-        throw notificationError;
-      }
-
-      // Send cancellation emails
-      await supabase.functions.invoke('send-session-email', {
-        body: { 
-          sessionId: session.id,
-          type: 'cancellation'
-        }
-      });
-
-      console.log('Successfully processed calendar cancellation');
-      return new Response(JSON.stringify({ success: true }), {
+    if (!session) {
+      console.log('No session found for calendar event:', calendarEventId);
+      return new Response(JSON.stringify({ message: 'No associated session found' }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ message: 'Event processed' }), {
+    // Update the session status
+    const { error: updateError } = await supabase
+      .from('mentor_sessions')
+      .update({ 
+        status: sessionStatus,
+        notes: `${notificationTitle} via Google Calendar`
+      })
+      .eq('id', session.id);
+
+    if (updateError) {
+      console.error('Error updating session:', updateError);
+      throw updateError;
+    }
+
+    // Create notifications for both mentor and mentee
+    const notifications = [
+      {
+        profile_id: session.mentor_id,
+        title: notificationTitle,
+        message: notificationMessage,
+        type: notificationType,
+        action_url: '/profile?tab=calendar'
+      },
+      {
+        profile_id: session.mentee_id,
+        title: notificationTitle,
+        message: notificationMessage,
+        type: notificationType,
+        action_url: '/profile?tab=calendar'
+      }
+    ];
+
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert(notifications);
+
+    if (notificationError) {
+      console.error('Error creating notifications:', notificationError);
+      throw notificationError;
+    }
+
+    // Send email notifications
+    await supabase.functions.invoke('send-session-email', {
+      body: { 
+        sessionId: session.id,
+        type: data.status === 'cancelled' ? 'cancellation' : 'update'
+      }
+    });
+
+    console.log('Successfully processed calendar event update');
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 

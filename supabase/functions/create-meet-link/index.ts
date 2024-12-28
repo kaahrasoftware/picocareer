@@ -1,85 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
+import { getAccessToken } from "./auth-utils.ts";
+import { createCalendarEvent, setupWebhook } from "./calendar-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const COMPANY_CALENDAR_EMAIL = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
-const SERVICE_ACCOUNT_EMAIL = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-const SERVICE_ACCOUNT_PRIVATE_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY');
-
-if (!COMPANY_CALENDAR_EMAIL || !SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_PRIVATE_KEY) {
-  throw new Error('Missing required Google service account credentials');
-}
-
-async function getAccessToken() {
-  try {
-    const claims = {
-      iss: SERVICE_ACCOUNT_EMAIL,
-      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
-      aud: 'https://oauth2.googleapis.com/token',
-      exp: getNumericDate(3600),
-      iat: getNumericDate(0),
-      sub: COMPANY_CALENDAR_EMAIL,
-    };
-
-    let privateKeyContent = SERVICE_ACCOUNT_PRIVATE_KEY;
-    if (!privateKeyContent.includes('-----BEGIN PRIVATE KEY-----')) {
-      privateKeyContent = `-----BEGIN PRIVATE KEY-----\n${privateKeyContent}\n-----END PRIVATE KEY-----`;
-    }
-    privateKeyContent = privateKeyContent.replace(/\\n/g, '\n');
-
-    const pemContent = privateKeyContent
-      .replace('-----BEGIN PRIVATE KEY-----', '')
-      .replace('-----END PRIVATE KEY-----', '')
-      .replace(/\s/g, '');
-
-    const binaryKey = Uint8Array.from(atob(pemContent), c => c.charCodeAt(0));
-    
-    const privateKey = await crypto.subtle.importKey(
-      "pkcs8",
-      binaryKey,
-      {
-        name: "RSASSA-PKCS1-v1_5",
-        hash: "SHA-256",
-      },
-      true,
-      ["sign"]
-    );
-
-    const jwt = await create(
-      { alg: "RS256", typ: "JWT" },
-      claims,
-      privateKey
-    );
-
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: jwt,
-      }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
-    }
-
-    return data.access_token;
-  } catch (error) {
-    console.error('Error in getAccessToken:', error);
-    throw error;
-  }
-}
-
-serve(async (req: Request): Promise<Response> => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -115,29 +44,6 @@ serve(async (req: Request): Promise<Response> => {
 
     const accessToken = await getAccessToken();
 
-    // Set up webhook for this calendar
-    const webhookResponse = await fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events/watch',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: crypto.randomUUID(), // Unique channel ID
-          type: 'web_hook',
-          address: `${Deno.env.get('SUPABASE_URL')}/functions/v1/handle-calendar-webhook`,
-        }),
-      }
-    );
-
-    if (!webhookResponse.ok) {
-      console.error('Failed to set up calendar webhook:', await webhookResponse.text());
-    } else {
-      console.log('Successfully set up calendar webhook');
-    }
-
     const startTime = new Date(session.scheduled_at);
     const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000);
 
@@ -168,31 +74,16 @@ serve(async (req: Request): Promise<Response> => {
     };
 
     console.log('Creating calendar event with Meet link...');
-    const calendarResponse = await fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(event),
-      }
-    );
-
-    if (!calendarResponse.ok) {
-      const errorData = await calendarResponse.json();
-      console.error('Failed to create calendar event:', errorData);
-      throw new Error('Failed to create calendar event');
-    }
-
-    const calendarEvent = await calendarResponse.json();
+    const calendarEvent = await createCalendarEvent(event, accessToken);
     const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri;
 
     if (!meetLink) {
       console.error('No Meet link in calendar event:', calendarEvent);
       throw new Error('Failed to generate Meet link');
     }
+
+    // Set up webhook for this calendar event
+    await setupWebhook('primary');
 
     console.log('Successfully created Meet link:', meetLink);
 
