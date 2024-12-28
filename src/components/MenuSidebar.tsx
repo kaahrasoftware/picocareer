@@ -16,8 +16,8 @@ export function MenuSidebar() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { session, isError } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { data: notifications = [] } = useNotifications(session);
+  const { data: profile } = useUserProfile(session?.user?.id);
+  const { data: notifications = [] } = useNotifications(session?.user?.id);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
