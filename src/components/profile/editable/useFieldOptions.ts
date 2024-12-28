@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FieldName, TableName, TitleField, TableRecord } from "./types";
+import { FieldName, TableName, TitleField } from "./types";
 
 const tableMap: Record<FieldName, TableName> = {
   academic_major_id: 'majors',

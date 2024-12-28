@@ -4,6 +4,8 @@ export type TableName = 'majors' | 'schools' | 'companies' | 'careers';
 export type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
 export type TitleField = 'title' | 'name';
 
+export type Status = Database["public"]["Enums"]["status"];
+
 export type TableRecord = {
   id: string;
   title?: string;
@@ -14,19 +16,19 @@ export type InsertData = {
   majors: {
     title: string;
     description: string;
-    status: Database["public"]["Enums"]["status"];
+    status: Status;
   };
   schools: {
     name: string;
-    status: Database["public"]["Enums"]["status"];
+    status: Status;
   };
   companies: {
     name: string;
-    status: Database["public"]["Enums"]["status"];
+    status: Status;
   };
   careers: {
     title: string;
     description: string;
-    status: Database["public"]["Enums"]["status"];
+    status: Status;
   };
 }
