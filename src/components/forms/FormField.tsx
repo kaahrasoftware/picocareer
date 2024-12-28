@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const degreeOptions = [
   "No Degree",
@@ -57,6 +59,70 @@ export function FormField({
   dependsOn,
   watch
 }: FormFieldProps) {
+  // Fetch schools data
+  const { data: schools } = useQuery({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: name === 'school_id'
+  });
+
+  // Fetch majors data
+  const { data: majors } = useQuery({
+    queryKey: ['majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: name === 'academic_major_id'
+  });
+
+  // Fetch companies data
+  const { data: companies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: name === 'company_id'
+  });
+
+  // Fetch careers data
+  const { data: careers } = useQuery({
+    queryKey: ['careers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: name === 'position'
+  });
+
   if (type === "image") {
     return (
       <ImageUpload
@@ -85,7 +151,7 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
-                  options={options}
+                  options={careers || []}
                   placeholder={placeholder || "Select position"}
                   tableName="careers"
                 />
@@ -93,7 +159,7 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
-                  options={options}
+                  options={companies || []}
                   placeholder={placeholder || "Select company"}
                   tableName="companies"
                 />
@@ -101,7 +167,7 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
-                  options={options}
+                  options={schools || []}
                   placeholder={placeholder || "Select your school"}
                   tableName="schools"
                 />
@@ -109,7 +175,7 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
-                  options={options}
+                  options={majors || []}
                   placeholder={placeholder || "Select major"}
                   tableName="majors"
                 />
