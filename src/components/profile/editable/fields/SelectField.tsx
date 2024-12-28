@@ -1,10 +1,9 @@
 import React from 'react';
 import { SelectWithCustomOption } from "../SelectWithCustomOption";
 import { useFieldOptions } from "../useFieldOptions";
-import { FieldName } from "../types";
 
 interface SelectFieldProps {
-  fieldName: FieldName;
+  fieldName: string;
   value: string;
   onSave: (value: string) => void;
   onCancel: () => void;
