@@ -13,6 +13,7 @@ interface InputFieldProps {
 }
 
 export function InputField({ value, onChange, onSave, onCancel, fieldName }: InputFieldProps) {
+  // Fetch schools data
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
@@ -28,6 +29,38 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
     enabled: fieldName === 'school_id'
   });
 
+  // Fetch majors data
+  const { data: majors } = useQuery({
+    queryKey: ['majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: fieldName === 'academic_major_id'
+  });
+
+  // Fetch companies data
+  const { data: companies } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: fieldName === 'company_id'
+  });
+
   if (fieldName === 'school_id') {
     return (
       <div className="space-y-4">
@@ -37,6 +70,56 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
           placeholder="Select your school"
           tableName="schools"
           fieldName="school_id"
+          titleField="name"
+          handleSelectChange={(_, value) => onChange(value)}
+          onCancel={onCancel}
+        />
+        <div className="flex gap-2 justify-end">
+          <Button onClick={onSave} size="sm" variant="default">
+            Save
+          </Button>
+          <Button onClick={onCancel} variant="outline" size="sm">
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (fieldName === 'academic_major_id') {
+    return (
+      <div className="space-y-4">
+        <SelectWithCustomOption
+          value={value}
+          options={majors || []}
+          placeholder="Select your major"
+          tableName="majors"
+          fieldName="academic_major_id"
+          titleField="title"
+          handleSelectChange={(_, value) => onChange(value)}
+          onCancel={onCancel}
+        />
+        <div className="flex gap-2 justify-end">
+          <Button onClick={onSave} size="sm" variant="default">
+            Save
+          </Button>
+          <Button onClick={onCancel} variant="outline" size="sm">
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (fieldName === 'company_id') {
+    return (
+      <div className="space-y-4">
+        <SelectWithCustomOption
+          value={value}
+          options={companies || []}
+          placeholder="Select your company"
+          tableName="companies"
+          fieldName="company_id"
           titleField="name"
           handleSelectChange={(_, value) => onChange(value)}
           onCancel={onCancel}
