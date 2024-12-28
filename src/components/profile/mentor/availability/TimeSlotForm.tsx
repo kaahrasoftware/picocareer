@@ -69,6 +69,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         return;
       }
 
+      // Get the correct day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+      const dayOfWeek = selectedDate.getDay();
+
       // Insert new availability slot
       const { error } = await supabase
         .from('mentor_availability')
@@ -80,7 +83,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           is_available: true,
           recurring: isRecurring,
-          day_of_week: isRecurring ? selectedDate.getDay() : null
+          day_of_week: isRecurring ? dayOfWeek : null
         });
 
       if (error) {
@@ -90,7 +93,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       toast({
         title: "Success",
         description: isRecurring 
-          ? "Weekly availability has been set"
+          ? `Weekly availability has been set for every ${format(selectedDate, 'EEEE')}`
           : "Availability has been set",
       });
       
