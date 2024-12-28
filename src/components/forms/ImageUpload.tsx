@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Upload, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -53,7 +53,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
         title: "Success",
         description: "Image uploaded successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -62,6 +62,15 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemove = (onChange: (value: string) => void) => {
+    onChange('');
+    setPreview(null);
+    toast({
+      title: "Success",
+      description: "Image removed successfully",
+    });
   };
 
   return (
@@ -93,12 +102,23 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                     ) : (
                       <Upload className="w-4 h-4" />
                     )}
-                    Upload Image
+                    {preview ? 'Change Image' : 'Upload Image'}
                   </label>
                 </Button>
                 {preview && (
-                  <div className="relative w-16 h-16 border rounded-md overflow-hidden">
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                  <div className="relative">
+                    <div className="relative w-16 h-16 border rounded-md overflow-hidden">
+                      <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => handleRemove(field.onChange)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
