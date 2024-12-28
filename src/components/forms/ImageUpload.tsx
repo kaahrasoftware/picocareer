@@ -22,7 +22,6 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
   const { session } = useAuthSession();
 
   useEffect(() => {
-    // Initialize preview if there's an existing value
     const fieldValue = control._getFieldState(name)?.value;
     if (fieldValue) {
       setPreview(fieldValue);
