@@ -125,8 +125,10 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
               <div className="flex items-center gap-4">
                 <Button
                   type="button"
-                  variant="outline"
-                  className={`w-[200px] relative ${uploading ? 'cursor-not-allowed opacity-70' : ''}`}
+                  variant={preview ? "secondary" : "outline"}
+                  className={`relative min-w-[200px] transition-all duration-200 ${
+                    uploading ? 'cursor-not-allowed opacity-70' : ''
+                  }`}
                   disabled={uploading}
                 >
                   <label className="flex items-center gap-2 cursor-pointer w-full justify-center">
@@ -151,14 +153,14 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                   </label>
                 </Button>
                 {preview && (
-                  <div className="relative">
-                    <div className="relative w-16 h-16 border rounded-md overflow-hidden bg-secondary/10">
+                  <div className="relative group">
+                    <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-secondary/10 transition-all duration-200 group-hover:shadow-md">
                       <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6"
+                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         onClick={() => handleRemove(field.onChange)}
                       >
                         <X className="h-4 w-4" />
@@ -170,7 +172,11 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
               <Input {...field} type="hidden" />
             </div>
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
+          {description && (
+            <FormDescription className="text-sm text-muted-foreground mt-2">
+              {description}
+            </FormDescription>
+          )}
           <FormMessage />
         </FormItem>
       )}
