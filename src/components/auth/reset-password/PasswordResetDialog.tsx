@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 interface PasswordResetDialogProps {
@@ -44,24 +43,47 @@ export function PasswordResetDialog({ open, onOpenChange }: PasswordResetDialogP
 
       if (error) {
         console.error('Password reset error:', error);
-        toast({
-          title: "Password Reset Failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Handle specific error cases
+        if (error.message.includes("Email rate limit exceeded")) {
+          toast({
+            title: "Too Many Attempts",
+            description: "Please wait a few minutes before trying again.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes("Email not found")) {
+          toast({
+            title: "Email Not Found",
+            description: "No account found with this email address.",
+            variant: "destructive",
+          });
+        } else if (error.status === 500) {
+          toast({
+            title: "Service Temporarily Unavailable",
+            description: "We're experiencing technical difficulties. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Password Reset Failed",
+            description: "Please try again later or contact support if the problem persists.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
       toast({
-        title: "Password Reset Email Sent",
-        description: "Please check your email for password reset instructions.",
+        title: "Check Your Email",
+        description: "If an account exists with this email, you'll receive password reset instructions.",
       });
       onOpenChange(false);
+      setResetEmail('');
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred. Please try again later.",
         variant: "destructive",
       });
     } finally {
