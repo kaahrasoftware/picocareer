@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -25,6 +26,9 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
+  const { getSetting } = useUserSettings(mentorId);
+  const mentorTimezone = getSetting('timezone') || 'UTC';
+
   console.log("TimeSlotSelector - User timezone:", userTimezone);
 
   const availableTimeSlots = useAvailableTimeSlots(
@@ -40,7 +44,7 @@ export function TimeSlotSelector({
     const [hours, minutes] = slot.time.split(':').map(Number);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    // Format the time in the user's timezone using the correct parameters
+    // Format the time in the user's timezone
     const formattedTime = formatInTimeZone(slotDate, userTimezone, 'HH:mm');
     console.log("TimeSlotSelector - Converting slot:", {
       originalTime: slot.time,
@@ -68,9 +72,13 @@ export function TimeSlotSelector({
         timeSlots={convertedTimeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
+        userTimezone={userTimezone}
+        mentorTimezone={mentorTimezone}
+        date={date}
       />
       <p className="text-xs text-muted-foreground mt-2">
         Times shown in your timezone ({userTimezone})
+        {userTimezone !== mentorTimezone && ` and mentor's timezone (${mentorTimezone})`}
       </p>
     </div>
   );

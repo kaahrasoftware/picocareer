@@ -1,4 +1,5 @@
 import { format, parse } from "date-fns";
+import { formatInTimeZone } from 'date-fns-tz';
 import { Button } from "@/components/ui/button";
 
 interface TimeSlotButtonProps {
@@ -6,19 +7,33 @@ interface TimeSlotButtonProps {
   available: boolean;
   isSelected: boolean;
   onSelect: (time: string) => void;
+  userTimezone: string;
+  mentorTimezone: string;
+  date: Date;
 }
 
 export function TimeSlotButton({ 
   time, 
   available, 
   isSelected, 
-  onSelect 
+  onSelect,
+  userTimezone,
+  mentorTimezone,
+  date
 }: TimeSlotButtonProps) {
-  // Parse the time and format it in 12-hour format
-  const formattedTime = format(
-    parse(time, 'HH:mm', new Date()),
-    'h:mm a'
-  );
+  // Create a date object for the time slot
+  const timeDate = new Date(date);
+  const [hours, minutes] = time.split(':').map(Number);
+  timeDate.setHours(hours, minutes, 0, 0);
+
+  // Format times in both timezones
+  const userTime = formatInTimeZone(timeDate, userTimezone, 'h:mm a');
+  const mentorTime = formatInTimeZone(timeDate, mentorTimezone, 'h:mm a');
+
+  // Only show both times if they're different
+  const displayTime = userTimezone === mentorTimezone 
+    ? userTime
+    : `${userTime} (${mentorTime} mentor's time)`;
 
   return (
     <Button
@@ -33,7 +48,7 @@ export function TimeSlotButton({
       disabled={!available}
       onClick={() => onSelect(time)}
     >
-      {formattedTime}
+      {displayTime}
     </Button>
   );
 }

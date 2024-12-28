@@ -11,13 +11,19 @@ interface TimeSlotsGridProps {
   timeSlots: TimeSlot[];
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
+  userTimezone: string;
+  mentorTimezone: string;
+  date: Date;
 }
 
 export function TimeSlotsGrid({ 
   title,
   timeSlots, 
   selectedTime, 
-  onTimeSelect 
+  onTimeSelect,
+  userTimezone,
+  mentorTimezone,
+  date
 }: TimeSlotsGridProps) {
   const availableSlots = timeSlots.filter(slot => slot.available);
 
@@ -48,7 +54,10 @@ export function TimeSlotsGrid({
               time={slot.time}
               available={slot.available}
               isSelected={selectedTime === slot.time}
-              onSelect={onTimeSelect}
+              onTimeSelect={onTimeSelect}
+              userTimezone={userTimezone}
+              mentorTimezone={mentorTimezone}
+              date={date}
             />
           ))}
         </div>
