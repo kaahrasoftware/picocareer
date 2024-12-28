@@ -42,14 +42,34 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       const { data, error } = await supabase
         .from('profiles')
         .select(`
-          *,
+          id,
+          first_name,
+          last_name,
+          avatar_url,
+          bio,
+          email,
+          position,
+          company_id,
+          school_id,
+          years_of_experience,
+          skills,
+          tools_used,
+          keywords,
+          fields_of_interest,
+          linkedin_url,
+          github_url,
+          website_url,
+          highest_degree,
+          academic_major_id,
+          location,
+          user_type,
           company:companies(id, name),
           school:schools(name),
           academic_major:majors!profiles_academic_major_id_fkey(title),
           career:careers!profiles_position_fkey(title, id)
         `)
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching profile:', error);
@@ -58,6 +78,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
 
       console.log('Fetched profile data:', data);
       
+      if (!data) return null;
+
       return {
         ...data,
         company_id: data.company?.id,
@@ -116,7 +138,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
             <div className="space-y-6 pb-6">
               <ProfileBio bio={profile.bio} profileId={profile.id} />
               
-              {/* Keywords Section */}
               {profile.keywords && profile.keywords.length > 0 && (
                 <div className="bg-muted rounded-lg p-4">
                   <h4 className="font-semibold mb-2">Keywords</h4>
@@ -133,7 +154,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                 </div>
               )}
 
-              {/* Fields of Interest Section */}
               {profile.fields_of_interest && profile.fields_of_interest.length > 0 && (
                 <div className="bg-muted rounded-lg p-4">
                   <h4 className="font-semibold mb-2">Fields of Interest</h4>

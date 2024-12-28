@@ -1,27 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import type { Session } from "@supabase/supabase-js";
+import { useToast } from "./use-toast";
 
-export function useNotifications(session: Session | null) {
+export function useNotifications(userId: string | undefined) {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['notifications', session?.user?.id],
+    queryKey: ['notifications', userId],
     queryFn: async () => {
-      if (!session?.user?.id) {
-        console.log('No authenticated session, skipping notifications fetch');
+      console.log('Fetching notifications for user:', userId);
+      
+      if (!userId) {
         return [];
       }
-      
+
       try {
-        console.log('Fetching notifications for user:', session.user.id);
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
-          .eq('profile_id', session.user.id)
+          .eq('profile_id', userId)
           .order('created_at', { ascending: false });
-        
+
         if (error) {
           console.error('Supabase query error:', error);
           throw error;
@@ -30,29 +29,17 @@ export function useNotifications(session: Session | null) {
         console.log('Notifications fetched successfully:', data?.length);
         return data || [];
       } catch (error: any) {
-        console.error('Failed to fetch notifications:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        
-        // Show error toast only on final retry
+        console.error('Failed to fetch notifications:', error);
         toast({
-          title: "Error loading notifications",
-          description: "Please check your connection and try again",
+          title: "Error",
+          description: "Failed to load notifications. Please try again later.",
           variant: "destructive",
         });
-        
-        throw error;
+        return [];
       }
     },
-    enabled: !!session?.user?.id,
+    enabled: !!userId,
     retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff with max 30s
-    refetchInterval: 30000, // Refetch every 30 seconds
-    meta: {
-      errorMessage: "Failed to load notifications. Please try again later."
-    }
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
