@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface ImageUploadProps {
   control: any;
@@ -18,9 +19,14 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>(null);
+  const { session } = useAuthSession();
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
     try {
+      if (!session?.user) {
+        throw new Error('You must be logged in to upload images.');
+      }
+
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
@@ -29,12 +35,16 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${Math.random()}.${fileExt}`;
+      // Include user ID in the path
+      const filePath = `${session.user.id}/${Math.random()}.${fileExt}`;
 
       // Upload image to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -54,6 +64,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
         description: "Image uploaded successfully",
       });
     } catch (error: any) {
+      console.error('Upload error:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -64,13 +75,40 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
     }
   };
 
-  const handleRemove = (onChange: (value: string) => void) => {
-    onChange('');
-    setPreview(null);
-    toast({
-      title: "Success",
-      description: "Image removed successfully",
-    });
+  const handleRemove = async (onChange: (value: string) => void) => {
+    try {
+      if (!session?.user) {
+        throw new Error('You must be logged in to remove images.');
+      }
+
+      if (preview) {
+        // Extract the file path from the public URL
+        const urlParts = preview.split('/');
+        const filePath = `${session.user.id}/${urlParts[urlParts.length - 1]}`;
+        
+        const { error } = await supabase.storage
+          .from(bucket)
+          .remove([filePath]);
+
+        if (error) {
+          throw error;
+        }
+      }
+
+      onChange('');
+      setPreview(null);
+      toast({
+        title: "Success",
+        description: "Image removed successfully",
+      });
+    } catch (error: any) {
+      console.error('Remove error:', error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
