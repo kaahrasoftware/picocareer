@@ -25,7 +25,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       // Query both regular and recurring availability for this date/day
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
-        .select('start_time, end_time, timezone, recurring, day_of_week')
+        .select('start_time, end_time, timezone, recurring, day_of_week, date_available')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
         .or(`date_available.eq.${formattedDate},and(recurring.eq.true,day_of_week.eq.${dayOfWeek})`);
@@ -78,7 +78,13 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
         try {
+          // Skip if this is a recurring slot but not for the current day
+          if (availability.recurring && availability.day_of_week !== dayOfWeek) {
+            return;
+          }
+
           const mentorTimezone = availability.timezone;
+          console.log("Processing availability:", availability);
           console.log("Mentor timezone:", mentorTimezone);
 
           // Create a base date for today to properly handle time comparisons
