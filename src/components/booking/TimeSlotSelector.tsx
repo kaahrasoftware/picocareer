@@ -1,4 +1,4 @@
-import { format, parse, addMinutes } from "date-fns";
+import { format, parse, addMinutes, isWithinInterval } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
@@ -42,7 +42,7 @@ export function TimeSlotSelector({
     const [hours, minutes] = slot.time.split(':').map(Number);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    // Updated to use the new format for formatInTimeZone
+    // In date-fns-tz v3, formatInTimeZone takes (date, timeZone, formatString)
     return {
       time: formatInTimeZone(slotDate, userTimezone, 'HH:mm'),
       available: slot.available
