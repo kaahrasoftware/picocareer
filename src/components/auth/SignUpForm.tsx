@@ -71,7 +71,8 @@ export function SignUpForm() {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth?tab=signin`
         }
       });
 
@@ -85,26 +86,16 @@ export function SignUpForm() {
           formData.lastName
         );
 
-        // Check if email confirmation is required
-        const { data: { user } } = await supabase.auth.getUser();
-        const needsEmailConfirmation = !user?.confirmed_at;
-
-        if (needsEmailConfirmation) {
-          toast({
-            title: "Account created!",
-            description: "Please check your email to verify your account before signing in.",
-          });
-        } else {
-          toast({
-            title: "Account created!",
-            description: "You can now sign in with your credentials.",
-          });
-        }
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account before signing in.",
+        });
 
         // Navigate to sign-in tab
         navigate("/auth?tab=signin");
       }
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: "Error",
         description: error.message,
