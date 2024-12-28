@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parse, addMinutes, isWithinInterval } from "date-fns";
-import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -21,13 +21,13 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       const formattedDate = format(date, 'yyyy-MM-dd');
       console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId);
       
-      // Query based on the specific date
+      // Query based on the specific date and ensure is_available is true
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
-        .select('start_time, end_time, timezone')
+        .select('start_time, end_time, timezone, recurring, day_of_week')
         .eq('profile_id', mentorId)
-        .eq('date_available', formattedDate)
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .or(`date_available.eq.${formattedDate},and(recurring.eq.true,day_of_week.eq.${date.getDay()})`);
 
       if (availabilityError) {
         console.error("Error fetching availability:", availabilityError);
@@ -80,31 +80,30 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
           const mentorTimezone = availability.timezone;
           console.log("Mentor timezone:", mentorTimezone);
 
-          // Create a base date for today to properly handle time comparisons
+          // Create a base date for today
           const baseDate = new Date(date);
           baseDate.setHours(0, 0, 0, 0);
 
-          // Parse start and end times in mentor's timezone
+          // Parse start and end times
           const [startHour, startMinute] = availability.start_time.split(':').map(Number);
           const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
+          // Convert times to user's timezone
           const startTime = toZonedTime(
-            fromZonedTime(new Date(baseDate.setHours(startHour, startMinute)), mentorTimezone),
+            new Date(baseDate.setHours(startHour, startMinute)),
             userTimezone
           );
 
           const endTime = toZonedTime(
-            fromZonedTime(new Date(baseDate.setHours(endHour, endMinute)), mentorTimezone),
+            new Date(baseDate.setHours(endHour, endMinute)),
             userTimezone
           );
 
-          let currentTime = startTime;
-          const increment = 15; // 15-minute increments
+          let currentTime = new Date(startTime);
 
           while (currentTime < endTime) {
             const timeString = format(currentTime, 'HH:mm');
-            const slotStart = new Date(date);
-            slotStart.setHours(currentTime.getHours(), currentTime.getMinutes());
+            const slotStart = new Date(currentTime);
             
             // Check if this time slot overlaps with any existing booking
             const isOverlapping = bookingsData?.some(booking => {
@@ -122,12 +121,16 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
               );
             });
 
-            slots.push({
-              time: timeString,
-              available: !isOverlapping
-            });
+            // Only add the slot if it's in the future
+            const now = new Date();
+            if (slotStart > now) {
+              slots.push({
+                time: timeString,
+                available: !isOverlapping
+              });
+            }
 
-            currentTime = addMinutes(currentTime, increment);
+            currentTime = addMinutes(currentTime, 15); // 15-minute increments
           }
         } catch (error) {
           console.error("Error processing availability slot:", error);

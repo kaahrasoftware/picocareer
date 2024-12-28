@@ -2,8 +2,12 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
+interface AvailableDate extends Date {
+  recurring?: boolean;
+}
+
 export function useAvailableDates(mentorId: string) {
-  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [availableDates, setAvailableDates] = useState<AvailableDate[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -14,7 +18,7 @@ export function useAvailableDates(mentorId: string) {
 
       const { data: availabilityData, error } = await supabase
         .from('mentor_availability')
-        .select('date_available, start_time, end_time')
+        .select('date_available, recurring, day_of_week')
         .eq('profile_id', mentorId)
         .eq('is_available', true);
 
@@ -29,12 +33,29 @@ export function useAvailableDates(mentorId: string) {
       }
 
       // Convert the date strings to Date objects
-      const dates = availabilityData?.map(availability => {
-        const date = new Date(availability.date_available);
-        // Reset the time part to midnight
-        date.setHours(0, 0, 0, 0);
-        return date;
-      }) || [];
+      const dates: AvailableDate[] = [];
+      
+      availabilityData?.forEach(availability => {
+        if (availability.recurring && availability.day_of_week !== null) {
+          // For recurring availability, add the next 3 months of that day
+          const today = new Date();
+          for (let i = 0; i < 90; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+            if (date.getDay() === availability.day_of_week) {
+              const recurringDate = new Date(date);
+              (recurringDate as AvailableDate).recurring = true;
+              dates.push(recurringDate as AvailableDate);
+            }
+          }
+        } else if (availability.date_available) {
+          // For specific dates
+          const date = new Date(availability.date_available);
+          date.setHours(0, 0, 0, 0);
+          (date as AvailableDate).recurring = false;
+          dates.push(date as AvailableDate);
+        }
+      });
 
       console.log("Available dates:", dates);
       setAvailableDates(dates);

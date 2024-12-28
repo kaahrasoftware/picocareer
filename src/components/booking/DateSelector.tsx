@@ -13,11 +13,21 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
   const availableDates = useAvailableDates(mentorId);
 
   const isDateAvailable = (date: Date) => {
-    return availableDates.some(availableDate => 
+    // Check for recurring availability (same day of week)
+    const dayOfWeek = date.getDay();
+    const hasRecurringSlot = availableDates.some(availableDate => 
+      availableDate.getDay() === dayOfWeek && 
+      availableDate.recurring === true
+    );
+
+    // Check for specific date availability
+    const hasSpecificSlot = availableDates.some(availableDate => 
       availableDate.getDate() === date.getDate() &&
       availableDate.getMonth() === date.getMonth() &&
       availableDate.getFullYear() === date.getFullYear()
     );
+
+    return hasRecurringSlot || hasSpecificSlot;
   };
 
   return (
