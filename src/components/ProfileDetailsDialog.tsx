@@ -16,6 +16,7 @@ import { ProfileLinks } from "./profile-details/ProfileLinks";
 import { useNavigate } from "react-router-dom";
 import { ProfileKeywords } from "./profile-details/ProfileKeywords";
 import { ProfileFieldsOfInterest } from "./profile-details/ProfileFieldsOfInterest";
+import { Button } from "@/components/ui/button";
 import type { ProfileDetails } from "@/types/profile";
 
 interface ProfileDetailsDialogProps {
@@ -66,7 +67,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           user_type,
           company:companies(id, name),
           school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
+          academic_major:majors(title),
           career:careers!profiles_position_fkey(title, id)
         `)
         .eq('id', userId)
@@ -92,7 +93,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         company_id: data.company?.id,
         company_name: data.company?.name,
         school_name: data.school?.name,
-        academic_major: data.academic_major?.title,
+        academic_major: data.academic_major,
         career_title: data.career?.title,
         career_id: data.career?.id
       } as ProfileDetails;

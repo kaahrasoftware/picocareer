@@ -25,4 +25,6 @@ export interface ProfileDetails {
   school: { name: string } | null;
   academic_major: { title: string } | null;
   career: { title: string; id: string } | null;
+  company_name?: string;
+  school_name?: string;
 }
