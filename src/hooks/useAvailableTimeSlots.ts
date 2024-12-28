@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parse, addMinutes, isWithinInterval, startOfDay } from "date-fns";
+import { format, parse, addMinutes, isWithinInterval } from "date-fns";
+import { startOfDay as getStartOfDay } from "date-fns"; // Renamed import to avoid conflict
 import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
@@ -20,7 +21,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
 
       const formattedDate = format(date, 'yyyy-MM-dd');
       const dayOfWeek = date.getDay(); // 0-6, where 0 is Sunday
-      const today = startOfDay(new Date());
+      const today = getStartOfDay(new Date()); // Using renamed import
       
       console.log("Fetching availability for:", {
         date: formattedDate,
