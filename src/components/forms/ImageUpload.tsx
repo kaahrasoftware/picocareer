@@ -22,7 +22,6 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
   const { session } = useAuthSession();
 
   useEffect(() => {
-    // Get the current field value using the control's getFieldState method
     const fieldValue = control.getFieldState(name)?.value;
     if (fieldValue) {
       setPreview(fieldValue);
@@ -86,7 +85,6 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
       }
 
       if (preview) {
-        // Extract the file path from the public URL
         const urlParts = preview.split('/');
         const filePath = `${session.user.id}/${urlParts[urlParts.length - 1]}`;
         
@@ -128,10 +126,10 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-[200px]"
+                  className={`w-[200px] relative ${uploading ? 'cursor-not-allowed opacity-70' : ''}`}
                   disabled={uploading}
                 >
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer w-full justify-center">
                     <input
                       type="file"
                       accept="image/*"
@@ -140,16 +138,21 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                       disabled={uploading}
                     />
                     {uploading ? (
-                      <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                      <>
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2">Uploading...</span>
+                      </>
                     ) : (
-                      <Upload className="w-4 h-4" />
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>{preview ? 'Change Image' : 'Upload Image'}</span>
+                      </>
                     )}
-                    {preview ? 'Change Image' : 'Upload Image'}
                   </label>
                 </Button>
                 {preview && (
                   <div className="relative">
-                    <div className="relative w-16 h-16 border rounded-md overflow-hidden">
+                    <div className="relative w-16 h-16 border rounded-md overflow-hidden bg-secondary/10">
                       <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                       <Button
                         type="button"
