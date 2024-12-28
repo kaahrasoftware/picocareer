@@ -12,6 +12,21 @@ export function NotificationSection() {
   const emailNotifications = getSetting('email_notifications') === 'true';
   const pushNotifications = getSetting('push_notifications') === 'true';
 
+  const handleNotificationChange = (type: 'email_notifications' | 'push_notifications', checked: boolean) => {
+    const currentSettings = {
+      email_notifications: getSetting('email_notifications') === 'true',
+      push_notifications: getSetting('push_notifications') === 'true'
+    };
+
+    updateSetting.mutate({
+      type: 'notifications',
+      value: JSON.stringify({
+        ...currentSettings,
+        [type]: checked
+      })
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -24,10 +39,7 @@ export function NotificationSection() {
         <Switch
           checked={emailNotifications}
           onCheckedChange={(checked) => {
-            updateSetting.mutate({
-              type: 'email_notifications',
-              value: checked.toString()
-            });
+            handleNotificationChange('email_notifications', checked);
           }}
         />
       </div>
@@ -41,10 +53,7 @@ export function NotificationSection() {
         <Switch
           checked={pushNotifications}
           onCheckedChange={(checked) => {
-            updateSetting.mutate({
-              type: 'push_notifications',
-              value: checked.toString()
-            });
+            handleNotificationChange('push_notifications', checked);
           }}
         />
       </div>

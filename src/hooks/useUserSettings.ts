@@ -2,14 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export type SettingType = 
-  | 'timezone' 
-  | 'notifications' 
-  | 'language' 
-  | 'theme'
-  | 'email_notifications'
-  | 'push_notifications'
-  | 'compact_mode';
+// This must match exactly what's in the database enum
+export type SettingType = "timezone" | "notifications" | "language" | "theme";
+
+// Helper type for UI-specific settings that map to our database settings
+export type UISettingType = {
+  email_notifications: boolean;
+  push_notifications: boolean;
+  compact_mode: boolean;
+  theme: string;
+  timezone: string;
+};
 
 interface UserSetting {
   id: string;
@@ -93,10 +96,35 @@ export function useUserSettings(profileId: string | undefined) {
     }
   });
 
-  const getSetting = (type: SettingType): string | null => {
+  // Helper function to convert database settings to UI settings
+  const getSetting = (type: keyof UISettingType): string | null => {
     if (!settings) return null;
-    const setting = settings.find(s => s.setting_type === type);
-    return setting?.setting_value || null;
+
+    switch (type) {
+      case 'email_notifications':
+      case 'push_notifications':
+        const notificationSetting = settings.find(s => s.setting_type === 'notifications');
+        if (!notificationSetting) return null;
+        const notifications = JSON.parse(notificationSetting.setting_value || '{}');
+        return notifications[type]?.toString() || 'false';
+      
+      case 'compact_mode':
+        const themeSetting = settings.find(s => s.setting_type === 'theme');
+        if (!themeSetting) return null;
+        const themeSettings = JSON.parse(themeSetting.setting_value || '{}');
+        return themeSettings.compact_mode?.toString() || 'false';
+      
+      case 'theme':
+        const theme = settings.find(s => s.setting_type === 'theme');
+        return theme?.setting_value || null;
+      
+      case 'timezone':
+        const timezone = settings.find(s => s.setting_type === 'timezone');
+        return timezone?.setting_value || null;
+      
+      default:
+        return null;
+    }
   };
 
   return {

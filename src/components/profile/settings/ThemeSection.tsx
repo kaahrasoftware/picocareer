@@ -12,6 +12,24 @@ export function ThemeSection() {
   const darkMode = getSetting('theme') === 'dark';
   const compactMode = getSetting('compact_mode') === 'true';
 
+  const handleThemeChange = (checked: boolean) => {
+    updateSetting.mutate({
+      type: 'theme',
+      value: checked ? 'dark' : 'light'
+    });
+  };
+
+  const handleCompactModeChange = (checked: boolean) => {
+    const currentTheme = getSetting('theme') || 'light';
+    updateSetting.mutate({
+      type: 'theme',
+      value: JSON.stringify({
+        theme: currentTheme,
+        compact_mode: checked
+      })
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -23,12 +41,7 @@ export function ThemeSection() {
         </div>
         <Switch
           checked={darkMode}
-          onCheckedChange={(checked) => {
-            updateSetting.mutate({
-              type: 'theme',
-              value: checked ? 'dark' : 'light'
-            });
-          }}
+          onCheckedChange={handleThemeChange}
         />
       </div>
       <div className="flex items-center justify-between">
@@ -40,12 +53,7 @@ export function ThemeSection() {
         </div>
         <Switch
           checked={compactMode}
-          onCheckedChange={(checked) => {
-            updateSetting.mutate({
-              type: 'compact_mode',
-              value: checked.toString()
-            });
-          }}
+          onCheckedChange={handleCompactModeChange}
         />
       </div>
     </div>
