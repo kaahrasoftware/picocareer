@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -9,11 +8,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck, CircleDot, ExternalLink } from "lucide-react";
+import { Bell, BellDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { NotificationItem } from "./NotificationItem";
 
 interface Notification {
   id: string;
@@ -33,7 +30,6 @@ interface NotificationPanelProps {
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
-  const { toast } = useToast();
 
   // Update local state when props change
   if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
@@ -54,64 +50,6 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     
     // Call the parent handler to update the database
     onMarkAsRead(notification.id);
-  };
-
-  const handleJoinMeeting = async (notification: Notification) => {
-    try {
-      // Check if the notification is session-related and has a valid session ID
-      if (!notification.title.toLowerCase().includes('session') || !notification.action_url) {
-        throw new Error('Invalid session notification');
-      }
-
-      // Extract session ID - handle both UUID and URL formats
-      const sessionId = notification.action_url.includes('/') 
-        ? notification.message.match(/Session ID: ([a-f0-9-]+)/)?.[1] // Try to extract from message
-        : notification.action_url; // Use directly if it's a UUID
-
-      if (!sessionId) {
-        throw new Error('No valid session ID found');
-      }
-
-      // Fetch the meeting link from mentor_sessions table
-      const { data: sessionData, error } = await supabase
-        .from('mentor_sessions')
-        .select('meeting_link, status')
-        .eq('id', sessionId)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!sessionData) {
-        throw new Error('Session not found');
-      }
-
-      if (sessionData.status === 'cancelled') {
-        toast({
-          title: "Session Cancelled",
-          description: "This session has been cancelled and the meeting link is no longer valid",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!sessionData.meeting_link) {
-        toast({
-          title: "No meeting link available",
-          description: "The meeting link for this session is not available",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      window.open(sessionData.meeting_link, '_blank', 'noopener,noreferrer');
-    } catch (error) {
-      console.error('Error fetching meeting link:', error);
-      toast({
-        title: "Error",
-        description: "Failed to retrieve meeting link. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -152,94 +90,15 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
             </p>
           ) : (
             <div className="space-y-4">
-              {localNotifications.map((notification) => {
-                const isExpanded = expandedIds.includes(notification.id);
-                return (
-                  <div
-                    key={notification.id}
-                    className={`p-4 rounded-lg border transition-colors ${
-                      notification.read 
-                        ? 'bg-zinc-900 border-zinc-800' 
-                        : 'bg-zinc-900/90 border-zinc-700'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-zinc-50 flex items-center gap-2">
-                            {notification.title}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-4 w-4 p-0 hover:bg-transparent"
-                              onClick={() => toggleReadStatus(notification)}
-                            >
-                              {notification.read ? (
-                                <CircleCheck className="h-4 w-4 text-emerald-500" />
-                              ) : (
-                                <CircleDot className="h-4 w-4 text-sky-500" />
-                              )}
-                            </Button>
-                          </h4>
-                          <span className="text-xs text-zinc-400">
-                            {format(new Date(notification.created_at), 'MMM d, h:mm a')}
-                          </span>
-                        </div>
-                        <p className={`text-sm text-zinc-400 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                          {notification.message}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-                        onClick={() => toggleExpand(notification.id)}
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 mr-1" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 mr-1" />
-                        )}
-                        {isExpanded ? 'Show less' : 'Read more'}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={notification.read ? 
-                          "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10" :
-                          "text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-                        }
-                        onClick={() => toggleReadStatus(notification)}
-                      >
-                        {notification.read ? 'Mark as unread' : 'Mark as read'}
-                      </Button>
-                    </div>
-                    {notification.action_url && isExpanded && (
-                      <div className="mt-3">
-                        {notification.title.toLowerCase().includes('session') ? (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="w-full bg-sky-500 hover:bg-sky-600 text-white"
-                            onClick={() => handleJoinMeeting(notification)}
-                          >
-                            Join Meeting <ExternalLink className="ml-2 h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Link
-                            to={notification.action_url}
-                            className="text-sm text-primary hover:underline block"
-                          >
-                            View details
-                          </Link>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {localNotifications.map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  isExpanded={expandedIds.includes(notification.id)}
+                  onToggleExpand={() => toggleExpand(notification.id)}
+                  onToggleRead={toggleReadStatus}
+                />
+              ))}
             </div>
           )}
         </ScrollArea>
