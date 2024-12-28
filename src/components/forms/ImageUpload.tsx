@@ -23,15 +23,10 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
 
   useEffect(() => {
     // Initialize preview if there's an existing value
-    const subscription = control._subjects.watch.subscribe({
-      next: (data: any) => {
-        if (data[name]) {
-          setPreview(data[name]);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    const fieldValue = control._getFieldState(name)?.value;
+    if (fieldValue) {
+      setPreview(fieldValue);
+    }
   }, [control, name]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {

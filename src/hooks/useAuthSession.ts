@@ -30,22 +30,6 @@ export function useAuthSession() {
           return null;
         }
 
-        // If session exists but is close to expiry, refresh it
-        const expiresAt = existingSession?.expires_at || 0;
-        const isExpiringSoon = (expiresAt * 1000) - Date.now() < 5 * 60 * 1000; // 5 minutes
-
-        if (isExpiringSoon) {
-          console.log('Session expiring soon, refreshing...');
-          const { data: { session: refreshedSession }, error: refreshError } = 
-            await supabase.auth.refreshSession();
-          
-          if (refreshError) {
-            throw refreshError;
-          }
-          
-          return refreshedSession;
-        }
-
         return existingSession;
       } catch (error: any) {
         console.error('Error in useAuthSession:', error);

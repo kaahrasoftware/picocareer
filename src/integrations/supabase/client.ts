@@ -18,11 +18,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Set up auth state change listener
 if (typeof window !== 'undefined') {
   supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
+    if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
       // Clear any auth-related local storage
       localStorage.removeItem('picocareer_auth_token');
-    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-      console.log('Auth state changed:', event);
+      
+      // Reload the page to ensure a clean state
+      window.location.href = '/auth';
     }
   });
 }
