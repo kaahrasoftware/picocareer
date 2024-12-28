@@ -45,7 +45,16 @@ export function NotificationItem({ notification, isExpanded, onToggleExpand, onT
       // Fetch the meeting link from mentor_sessions table
       const { data: sessionData, error } = await supabase
         .from('mentor_sessions')
-        .select('meeting_link, status')
+        .select(`
+          meeting_link,
+          status,
+          scheduled_at,
+          session_type:mentor_session_types(type, duration),
+          mentor:profiles!mentor_sessions_mentor_id_fkey(full_name),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(full_name),
+          meeting_platform,
+          notes
+        `)
         .eq('id', sessionId)
         .maybeSingle();
 
@@ -118,9 +127,22 @@ export function NotificationItem({ notification, isExpanded, onToggleExpand, onT
               {format(new Date(notification.created_at), 'MMM d, h:mm a')}
             </span>
           </div>
-          <p className={`text-sm text-zinc-400 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
-            {notification.message}
-          </p>
+          {isExpanded ? (
+            <div className="space-y-2 mt-3 text-sm text-zinc-400">
+              <p><span className="font-medium text-zinc-300">Mentor:</span> {notification.message.match(/Mentor: ([^\n]+)/)?.[1] || 'N/A'}</p>
+              <p><span className="font-medium text-zinc-300">Mentee:</span> {notification.message.match(/Mentee: ([^\n]+)/)?.[1] || 'N/A'}</p>
+              <p><span className="font-medium text-zinc-300">Start Time:</span> {notification.message.match(/Start Time: ([^\n]+)/)?.[1] || 'N/A'}</p>
+              <p><span className="font-medium text-zinc-300">Duration:</span> {notification.message.match(/Duration: ([^\n]+)/)?.[1] || 'N/A'}</p>
+              <p><span className="font-medium text-zinc-300">Platform:</span> {notification.message.match(/Platform: ([^\n]+)/)?.[1] || 'N/A'}</p>
+              {notification.message.includes('Note:') && (
+                <p><span className="font-medium text-zinc-300">Note:</span> {notification.message.match(/Note: ([^\n]+)/)?.[1] || 'N/A'}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
+              {notification.message}
+            </p>
+          )}
         </div>
       </div>
       <div className="flex items-center justify-between mt-2">
