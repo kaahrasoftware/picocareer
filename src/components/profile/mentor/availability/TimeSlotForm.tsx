@@ -67,7 +67,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         return;
       }
 
-      // Insert new slot directly - we don't need to check for unavailable slots anymore
+      // Insert new availability slot
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
@@ -80,15 +80,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         });
 
       if (error) {
-        // If we get a unique constraint violation, it means we're trying to add a duplicate slot
-        if (error.code === '23505') {
-          toast({
-            title: "Error",
-            description: "This time slot already exists",
-            variant: "destructive",
-          });
-          return;
-        }
         throw error;
       }
 
