@@ -2,7 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export type SettingType = 'timezone' | 'notifications' | 'language' | 'theme';
+export type SettingType = 
+  | 'timezone' 
+  | 'notifications' 
+  | 'language' 
+  | 'theme'
+  | 'email_notifications'
+  | 'push_notifications'
+  | 'compact_mode';
 
 interface UserSetting {
   id: string;

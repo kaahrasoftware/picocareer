@@ -2,7 +2,7 @@ import { format, parse } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
 import { Button } from "@/components/ui/button";
 
-interface TimeSlotButtonProps {
+export interface TimeSlotButtonProps {
   time: string;
   available: boolean;
   isSelected: boolean;

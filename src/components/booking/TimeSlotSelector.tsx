@@ -34,9 +34,9 @@ export function TimeSlotSelector({
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 
-    selectedSessionType?.duration || 60,
-    userTimezone
+    selectedSessionType?.duration || 60
   );
+  
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
   const convertedTimeSlots = availableTimeSlots.map(slot => {

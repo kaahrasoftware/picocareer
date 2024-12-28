@@ -54,7 +54,7 @@ export function TimeSlotsGrid({
               time={slot.time}
               available={slot.available}
               isSelected={selectedTime === slot.time}
-              onTimeSelect={onTimeSelect}
+              onSelect={onTimeSelect}
               userTimezone={userTimezone}
               mentorTimezone={mentorTimezone}
               date={date}
