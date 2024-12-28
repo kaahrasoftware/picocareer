@@ -50,7 +50,7 @@ export function useSearchData(searchTerm: string) {
           description: career.description,
           type: 'career' as const,
           salary_range: career.salary_range
-        })) || []),
+        } as CareerSearchResult)) || []),
         ...(majors?.map(major => ({
           id: major.id,
           title: major.title,
@@ -59,16 +59,16 @@ export function useSearchData(searchTerm: string) {
           degree_levels: major.degree_levels,
           career_opportunities: major.career_opportunities,
           common_courses: major.common_courses
-        })) || []),
+        } as MajorSearchResult)) || []),
         ...(mentors?.map(mentor => ({
           id: mentor.id,
           title: mentor.full_name,
-          description: `${mentor.company?.name || ''} ${mentor.school?.name || ''} ${mentor.position?.title || ''}`.trim(),
+          description: `${mentor.company?.[0]?.name || ''} ${mentor.school?.[0]?.name || ''} ${mentor.position?.[0]?.title || ''}`.trim(),
           type: 'mentor' as const,
           avatar_url: mentor.avatar_url,
-          position: mentor.position?.title || null,
+          position: mentor.position?.[0]?.title || null,
           top_mentor: mentor.top_mentor || false
-        })) || [])
+        } as MentorSearchResult)) || [])
       ];
 
       return results;
@@ -76,3 +76,5 @@ export function useSearchData(searchTerm: string) {
     enabled: !!searchTerm,
   });
 }
+
+export type { SearchResult };

@@ -24,15 +24,8 @@ export function useAvailableTimeSlots(
       if (!date || !mentorId) return;
 
       const formattedDate = format(date, 'yyyy-MM-dd');
-      const dayOfWeek = date.getDay(); // 0-6, where 0 is Sunday
+      const dayOfWeek = date.getDay();
       const today = getStartOfDay(new Date());
-      
-      console.log("Fetching availability for:", {
-        date: formattedDate,
-        dayOfWeek,
-        mentorId,
-        isInFuture: date >= today
-      });
       
       // Query both one-time and recurring availability
       const { data: availabilityData, error: availabilityError } = await supabase
@@ -41,8 +34,8 @@ export function useAvailableTimeSlots(
         .eq('profile_id', mentorId)
         .eq('is_available', true)
         .or(
-          `date_available.eq.${formattedDate},` + // One-time slots for this date
-          `and(recurring.eq.true,day_of_week.eq.${dayOfWeek},date_available.lte.${formattedDate})` // Recurring slots
+          `date_available.eq.${formattedDate},` +
+          `and(recurring.eq.true,day_of_week.eq.${dayOfWeek},date_available.lte.${formattedDate})`
         );
 
       if (availabilityError) {
@@ -55,8 +48,6 @@ export function useAvailableTimeSlots(
         return;
       }
 
-      console.log("Raw availability data:", availabilityData);
-
       // Get existing bookings for this date
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
@@ -68,6 +59,7 @@ export function useAvailableTimeSlots(
         .select(`
           scheduled_at,
           session_type:mentor_session_types!inner(
+            type,
             duration
           )
         `)
@@ -86,26 +78,14 @@ export function useAvailableTimeSlots(
         return;
       }
 
-      console.log("Bookings data:", bookingsData);
-
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
       if (availabilityData) {
         availabilityData.forEach((availability) => {
           try {
-            const mentorTimezone = availability.timezone;
-            console.log("Processing availability:", {
-              ...availability,
-              isRecurring: availability.recurring,
-              dayOfWeek: availability.day_of_week,
-              availabilityDate: availability.date_available
-            });
-
-            // Create a base date for today to properly handle time comparisons
             const baseDate = new Date(date);
             baseDate.setHours(0, 0, 0, 0);
 
-            // Parse start and end times in mentor's timezone
             const [startHour, startMinute] = availability.start_time.split(':').map(Number);
             const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
@@ -115,35 +95,24 @@ export function useAvailableTimeSlots(
             const endTime = new Date(baseDate);
             endTime.setHours(endHour, endMinute);
 
-            console.log("Converted times:", {
-              startTime: startTime.toISOString(),
-              endTime: endTime.toISOString(),
-              isRecurring: availability.recurring,
-              dayOfWeek: availability.day_of_week,
-              originalDate: availability.date_available
-            });
-
             let currentTime = startTime;
-            const increment = 15; // 15-minute increments
+            const increment = 15;
 
             while (currentTime < endTime) {
               const timeString = format(currentTime, 'HH:mm');
               const slotStart = new Date(date);
               slotStart.setHours(currentTime.getHours(), currentTime.getMinutes());
               
-              // Check if this time slot overlaps with any existing booking
               const isOverlapping = bookingsData?.some(booking => {
                 const bookingTime = new Date(booking.scheduled_at);
-                const bookingDuration = (booking.session_type as SessionType).duration || 60;
+                const bookingDuration = booking.session_type.duration;
                 const bookingEnd = addMinutes(bookingTime, bookingDuration);
-
-                // Check if the current slot (considering session duration) overlaps with the booking
                 const slotEnd = addMinutes(slotStart, sessionDuration);
                 
                 return (
-                  (slotStart >= bookingTime && slotStart < bookingEnd) || // Slot start falls within booking
-                  (slotEnd > bookingTime && slotEnd <= bookingEnd) || // Slot end falls within booking
-                  (slotStart <= bookingTime && slotEnd >= bookingEnd) // Slot encompasses booking
+                  (slotStart >= bookingTime && slotStart < bookingEnd) ||
+                  (slotEnd > bookingTime && slotEnd <= bookingEnd) ||
+                  (slotStart <= bookingTime && slotEnd >= bookingEnd)
                 );
               });
 
@@ -160,7 +129,6 @@ export function useAvailableTimeSlots(
         });
       }
 
-      console.log("Generated time slots:", slots);
       setAvailableTimeSlots(slots);
     }
 
