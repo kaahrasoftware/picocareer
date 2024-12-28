@@ -27,7 +27,6 @@ export function TimeSlotSelector({
 
   console.log("TimeSlotSelector - User timezone:", userTimezone);
 
-  // Use the custom hook to fetch available time slots, passing the session duration
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 
@@ -36,13 +35,12 @@ export function TimeSlotSelector({
   );
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
-  // Convert time slots to user's timezone
   const convertedTimeSlots = availableTimeSlots.map(slot => {
     const slotDate = new Date(date);
     const [hours, minutes] = slot.time.split(':').map(Number);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    // Format the time in the user's timezone
+    // Format the time in the user's timezone using the correct parameters
     const formattedTime = formatInTimeZone(slotDate, userTimezone, 'HH:mm');
     console.log("TimeSlotSelector - Converting slot:", {
       originalTime: slot.time,

@@ -1,6 +1,7 @@
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface DateSelectorProps {
   date: Date | undefined;
@@ -11,6 +12,8 @@ interface DateSelectorProps {
 
 export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
+  const { getSetting } = useUserSettings(mentorId);
+  const mentorTimezone = getSetting('timezone') || 'UTC';
 
   const isDateAvailable = (date: Date) => {
     // Check for recurring availability (same day of week)
@@ -55,6 +58,7 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
       />
       <div className="mt-4 text-sm text-gray-400">
         <p>Your timezone: {userTimezone}</p>
+        <p>Mentor's timezone: {mentorTimezone}</p>
         <p className="mt-1">Days highlighted in green are available for booking</p>
         {availableDates.length === 0 && (
           <p className="mt-1 text-yellow-500">No available dates found for this mentor</p>
