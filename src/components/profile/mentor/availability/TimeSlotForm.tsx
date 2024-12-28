@@ -60,7 +60,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       if (hasOverlap) {
         toast({
           title: "Time slot conflict",
-          description: "This time slot overlaps with an existing availability slot",
+          description: "This time slot overlaps with an existing availability slot. Please choose a different time.",
           variant: "destructive",
         });
         setIsSubmitting(false);
