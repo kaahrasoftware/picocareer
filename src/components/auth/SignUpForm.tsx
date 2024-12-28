@@ -39,6 +39,26 @@ export function SignUpForm() {
         return;
       }
 
+      // First, check if user exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast({
+          title: "Account Already Exists",
+          description: "An account with this email already exists. Please sign in instead.",
+          variant: "destructive",
+        });
+        // Switch to sign in tab after a short delay
+        setTimeout(() => {
+          navigate("/auth?tab=signin");
+        }, 1500);
+        return;
+      }
+
       // Attempt to sign up the user
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -60,6 +80,10 @@ export function SignUpForm() {
             description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
+          // Switch to sign in tab after a short delay
+          setTimeout(() => {
+            navigate("/auth?tab=signin");
+          }, 1500);
         } else if (error.message.includes("password")) {
           toast({
             title: "Invalid Password",
