@@ -61,88 +61,48 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
     enabled: fieldName === 'company_id'
   });
 
-  if (fieldName === 'school_id') {
-    return (
-      <div className="space-y-4">
-        <SelectWithCustomOption
-          value={value}
-          options={schools || []}
-          placeholder="Select your school"
-          tableName="schools"
-          fieldName="school_id"
-          titleField="name"
-          handleSelectChange={(_, value) => onChange(value)}
-          onCancel={onCancel}
-        />
-        <div className="flex gap-2 justify-end">
-          <Button onClick={onSave} size="sm" variant="default">
-            Save
-          </Button>
-          <Button onClick={onCancel} variant="outline" size="sm">
-            Cancel
-          </Button>
-        </div>
+  const renderSelectField = (options: any[], placeholder: string, tableName: 'schools' | 'majors' | 'companies', titleField: 'name' | 'title') => (
+    <div className="space-y-4 w-full max-w-md">
+      <SelectWithCustomOption
+        value={value}
+        options={options}
+        placeholder={placeholder}
+        tableName={tableName}
+        fieldName={fieldName as any}
+        titleField={titleField}
+        handleSelectChange={(_, value) => onChange(value)}
+        onCancel={onCancel}
+      />
+      <div className="flex gap-2 justify-end mt-4">
+        <Button onClick={onSave} size="sm" variant="default">
+          Save
+        </Button>
+        <Button onClick={onCancel} variant="outline" size="sm">
+          Cancel
+        </Button>
       </div>
-    );
+    </div>
+  );
+
+  if (fieldName === 'school_id') {
+    return renderSelectField(schools || [], "Select your school", "schools", "name");
   }
 
   if (fieldName === 'academic_major_id') {
-    return (
-      <div className="space-y-4">
-        <SelectWithCustomOption
-          value={value}
-          options={majors || []}
-          placeholder="Select your major"
-          tableName="majors"
-          fieldName="academic_major_id"
-          titleField="title"
-          handleSelectChange={(_, value) => onChange(value)}
-          onCancel={onCancel}
-        />
-        <div className="flex gap-2 justify-end">
-          <Button onClick={onSave} size="sm" variant="default">
-            Save
-          </Button>
-          <Button onClick={onCancel} variant="outline" size="sm">
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
+    return renderSelectField(majors || [], "Select your major", "majors", "title");
   }
 
   if (fieldName === 'company_id') {
-    return (
-      <div className="space-y-4">
-        <SelectWithCustomOption
-          value={value}
-          options={companies || []}
-          placeholder="Select your company"
-          tableName="companies"
-          fieldName="company_id"
-          titleField="name"
-          handleSelectChange={(_, value) => onChange(value)}
-          onCancel={onCancel}
-        />
-        <div className="flex gap-2 justify-end">
-          <Button onClick={onSave} size="sm" variant="default">
-            Save
-          </Button>
-          <Button onClick={onCancel} variant="outline" size="sm">
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
+    return renderSelectField(companies || [], "Select your company", "companies", "name");
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full max-w-md">
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Enter text..."
-        className="min-h-[100px] bg-gray-50 dark:bg-gray-800 rounded-md p-2 border resize-y"
+        className="min-h-[100px] bg-background border rounded-md p-2 resize-y focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <div className="flex gap-2 justify-end">
         <Button onClick={onSave} size="sm" variant="default">
