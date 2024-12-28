@@ -28,19 +28,19 @@ export function SignInForm() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
+      if (signInError) {
+        if (signInError.message.includes("Invalid login credentials")) {
           toast({
             title: "Invalid credentials",
             description: "Please check your email and password and try again.",
             variant: "destructive",
           });
-        } else if (error.message.includes("Email not confirmed")) {
+        } else if (signInError.message.includes("Email not confirmed")) {
           toast({
             title: "Email not verified",
             description: "Please check your email and verify your account before signing in.",
@@ -49,28 +49,33 @@ export function SignInForm() {
         } else {
           toast({
             title: "Sign in failed",
-            description: error.message,
+            description: signInError.message,
             variant: "destructive",
           });
         }
         return;
       }
 
-      if (data.user) {
+      if (authData.user) {
         // Get user profile to display their name in the welcome message
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('first_name')
-          .eq('id', data.user.id)
-          .single();
+          .eq('id', authData.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+        }
 
         const firstName = profileData?.first_name || 'back';
         
+        // Show welcome toast
         toast({
           title: `Welcome ${firstName}! 👋`,
           description: "You have successfully signed in.",
-          variant: "default",
         });
+
         navigate("/");
       }
     } catch (error: any) {
