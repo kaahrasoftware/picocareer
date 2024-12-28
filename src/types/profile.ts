@@ -1,0 +1,28 @@
+export interface ProfileDetails {
+  id: string;
+  avatar_url: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string | null;
+  bio: string | null;
+  email: string;
+  position: string | null;
+  company_id: string | null;
+  school_id: string | null;
+  years_of_experience: number;
+  skills: string[] | null;
+  tools_used: string[] | null;
+  keywords: string[] | null;
+  fields_of_interest: string[] | null;
+  linkedin_url: string | null;
+  github_url: string | null;
+  website_url: string | null;
+  highest_degree: string | null;
+  academic_major_id: string | null;
+  location: string | null;
+  user_type: string | null;
+  company: { id: string; name: string } | null;
+  school: { name: string } | null;
+  academic_major: { title: string } | null;
+  career: { title: string; id: string } | null;
+}

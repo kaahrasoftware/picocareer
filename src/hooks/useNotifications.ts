@@ -8,11 +8,7 @@ export function useNotifications(userId: string | undefined) {
   return useQuery({
     queryKey: ['notifications', userId],
     queryFn: async () => {
-      console.log('Fetching notifications for user:', userId);
-      
-      if (!userId) {
-        return [];
-      }
+      if (!userId) return [];
 
       try {
         const { data, error } = await supabase
@@ -21,25 +17,23 @@ export function useNotifications(userId: string | undefined) {
           .eq('profile_id', userId)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
+        if (error) throw error;
 
-        console.log('Notifications fetched successfully:', data?.length);
         return data || [];
-      } catch (error: any) {
+      } catch (error) {
         console.error('Failed to fetch notifications:', error);
         toast({
           title: "Error",
           description: "Failed to load notifications. Please try again later.",
           variant: "destructive",
         });
-        return [];
+        return []; // Return empty array instead of throwing to prevent UI disruption
       }
     },
     enabled: !!userId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: true,
   });
 }
