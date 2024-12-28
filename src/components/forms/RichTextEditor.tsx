@@ -16,7 +16,6 @@ const modules = {
     [{ 'align': [] }],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
     ['blockquote', 'code-block'],
-    ['link'],
     ['clean']
   ],
 };
@@ -27,8 +26,7 @@ const formats = [
   'color', 'background',
   'align',
   'list', 'bullet',
-  'blockquote', 'code-block',
-  'link'
+  'blockquote', 'code-block'
 ];
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
