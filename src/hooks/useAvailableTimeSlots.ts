@@ -3,11 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parse, addMinutes, isWithinInterval } from "date-fns";
 import { startOfDay as getStartOfDay } from "date-fns"; // Renamed import to avoid conflict
-import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
   available: boolean;
+}
+
+interface MentorSessionType {
+  duration: number;
 }
 
 export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, sessionDuration: number = 15) {
@@ -21,7 +24,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
 
       const formattedDate = format(date, 'yyyy-MM-dd');
       const dayOfWeek = date.getDay(); // 0-6, where 0 is Sunday
-      const today = getStartOfDay(new Date()); // Using renamed import
+      const today = getStartOfDay(new Date());
       
       console.log("Fetching availability for:", {
         date: formattedDate,
@@ -61,7 +64,12 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
 
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('mentor_sessions')
-        .select('scheduled_at, session_type:mentor_session_types(duration)')
+        .select(`
+          scheduled_at,
+          session_type:mentor_session_types!inner(
+            duration
+          )
+        `)
         .eq('mentor_id', mentorId)
         .gte('scheduled_at', startOfDay.toISOString())
         .lte('scheduled_at', endOfDay.toISOString())
@@ -81,77 +89,75 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
 
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
-      availabilityData?.forEach((availability) => {
-        try {
-          const mentorTimezone = availability.timezone;
-          console.log("Processing availability:", {
-            ...availability,
-            isRecurring: availability.recurring,
-            dayOfWeek: availability.day_of_week,
-            availabilityDate: availability.date_available
-          });
+      if (availabilityData) {
+        availabilityData.forEach((availability) => {
+          try {
+            const mentorTimezone = availability.timezone;
+            console.log("Processing availability:", {
+              ...availability,
+              isRecurring: availability.recurring,
+              dayOfWeek: availability.day_of_week,
+              availabilityDate: availability.date_available
+            });
 
-          // Create a base date for today to properly handle time comparisons
-          const baseDate = new Date(date);
-          baseDate.setHours(0, 0, 0, 0);
+            // Create a base date for today to properly handle time comparisons
+            const baseDate = new Date(date);
+            baseDate.setHours(0, 0, 0, 0);
 
-          // Parse start and end times in mentor's timezone
-          const [startHour, startMinute] = availability.start_time.split(':').map(Number);
-          const [endHour, endMinute] = availability.end_time.split(':').map(Number);
+            // Parse start and end times in mentor's timezone
+            const [startHour, startMinute] = availability.start_time.split(':').map(Number);
+            const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
-          const startTime = toZonedTime(
-            fromZonedTime(new Date(baseDate.setHours(startHour, startMinute)), mentorTimezone),
-            userTimezone
-          );
+            const startTime = new Date(baseDate);
+            startTime.setHours(startHour, startMinute);
 
-          const endTime = toZonedTime(
-            fromZonedTime(new Date(baseDate.setHours(endHour, endMinute)), mentorTimezone),
-            userTimezone
-          );
+            const endTime = new Date(baseDate);
+            endTime.setHours(endHour, endMinute);
 
-          console.log("Converted times:", {
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString(),
-            isRecurring: availability.recurring,
-            dayOfWeek: availability.day_of_week,
-            originalDate: availability.date_available
-          });
+            console.log("Converted times:", {
+              startTime: startTime.toISOString(),
+              endTime: endTime.toISOString(),
+              isRecurring: availability.recurring,
+              dayOfWeek: availability.day_of_week,
+              originalDate: availability.date_available
+            });
 
-          let currentTime = startTime;
-          const increment = 15; // 15-minute increments
+            let currentTime = startTime;
+            const increment = 15; // 15-minute increments
 
-          while (currentTime < endTime) {
-            const timeString = format(currentTime, 'HH:mm');
-            const slotStart = new Date(date);
-            slotStart.setHours(currentTime.getHours(), currentTime.getMinutes());
-            
-            // Check if this time slot overlaps with any existing booking
-            const isOverlapping = bookingsData?.some(booking => {
-              const bookingTime = new Date(booking.scheduled_at);
-              const bookingDuration = booking.session_type?.duration || 60;
-              const bookingEnd = addMinutes(bookingTime, bookingDuration);
-
-              // Check if the current slot (considering session duration) overlaps with the booking
-              const slotEnd = addMinutes(slotStart, sessionDuration);
+            while (currentTime < endTime) {
+              const timeString = format(currentTime, 'HH:mm');
+              const slotStart = new Date(date);
+              slotStart.setHours(currentTime.getHours(), currentTime.getMinutes());
               
-              return (
-                (slotStart >= bookingTime && slotStart < bookingEnd) || // Slot start falls within booking
-                (slotEnd > bookingTime && slotEnd <= bookingEnd) || // Slot end falls within booking
-                (slotStart <= bookingTime && slotEnd >= bookingEnd) // Slot encompasses booking
-              );
-            });
+              // Check if this time slot overlaps with any existing booking
+              const isOverlapping = bookingsData?.some(booking => {
+                const bookingTime = new Date(booking.scheduled_at);
+                const bookingDuration = (booking.session_type as MentorSessionType).duration || 60;
+                const bookingEnd = addMinutes(bookingTime, bookingDuration);
 
-            slots.push({
-              time: timeString,
-              available: !isOverlapping
-            });
+                // Check if the current slot (considering session duration) overlaps with the booking
+                const slotEnd = addMinutes(slotStart, sessionDuration);
+                
+                return (
+                  (slotStart >= bookingTime && slotStart < bookingEnd) || // Slot start falls within booking
+                  (slotEnd > bookingTime && slotEnd <= bookingEnd) || // Slot end falls within booking
+                  (slotStart <= bookingTime && slotEnd >= bookingEnd) // Slot encompasses booking
+                );
+              });
 
-            currentTime = addMinutes(currentTime, increment);
+              slots.push({
+                time: timeString,
+                available: !isOverlapping
+              });
+
+              currentTime = addMinutes(currentTime, increment);
+            }
+          } catch (error) {
+            console.error("Error processing availability slot:", error);
           }
-        } catch (error) {
-          console.error("Error processing availability slot:", error);
-        }
-      });
+        });
+      }
 
       console.log("Generated time slots:", slots);
       setAvailableTimeSlots(slots);

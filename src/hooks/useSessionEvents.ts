@@ -27,18 +27,20 @@ export function useSessionEvents(date: Date) {
           id,
           scheduled_at,
           notes,
+          status,
           mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
           mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
           session_type:mentor_session_types(type, duration)
         `)
         .gte('scheduled_at', startOfDay.toISOString())
         .lte('scheduled_at', endOfDay.toISOString())
-        .or(`mentor_id.eq.${user.id},mentee_id.eq.${user.id}`);
+        .or(`mentor_id.eq.${user.id},mentee_id.eq.${user.id}`)
+        .single();
 
       if (error) throw error;
 
-      // Transform MentorSession[] into CalendarEvent[] with timezone conversion
-      return (data as MentorSession[]).map(session => {
+      // Transform MentorSession[] into CalendarEvent[]
+      return (data as unknown as MentorSession[]).map(session => {
         // Convert scheduled_at to user's timezone
         const sessionStart = toZonedTime(new Date(session.scheduled_at), userTimezone);
         const sessionEnd = new Date(sessionStart.getTime() + session.session_type.duration * 60000);
