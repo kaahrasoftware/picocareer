@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { RichTextEditor } from "@/components/forms/RichTextEditor";
+import { Textarea } from "@/components/ui/textarea";
 
 interface InputFieldProps {
   value: string;
@@ -12,10 +12,11 @@ interface InputFieldProps {
 export function InputField({ value, onChange, onSave, onCancel }: InputFieldProps) {
   return (
     <div className="flex flex-col gap-2">
-      <RichTextEditor
+      <Textarea
         value={value}
-        onChange={onChange}
+        onChange={(e) => onChange(e.target.value)}
         placeholder="Enter text..."
+        className="min-h-[100px] bg-gray-50 rounded-md"
       />
       <div className="flex gap-2 justify-end">
         <Button onClick={onSave} size="sm">
