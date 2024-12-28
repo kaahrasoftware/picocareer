@@ -9,16 +9,6 @@ const tableMap: Record<FieldName, TableName> = {
   company_id: 'companies'
 };
 
-// Type guard to check if the data has the correct shape
-const isValidRecord = (item: any): item is TableRecord => {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    typeof item.id === 'string' &&
-    (typeof item.title === 'string' || typeof item.name === 'string')
-  );
-};
-
 export function useFieldOptions(fieldName: string) {
   return useQuery({
     queryKey: ['field-options', fieldName],
@@ -42,17 +32,10 @@ export function useFieldOptions(fieldName: string) {
           return [];
         }
 
-        if (!data) return [];
-
-        // Filter and map the data to ensure it matches our TableRecord interface
-        const validRecords = (data as any[])
-          .filter(isValidRecord)
-          .map(item => ({
-            id: item.id,
-            ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
-          }));
-
-        return validRecords;
+        return data?.map(item => ({
+          id: item.id,
+          ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
+        })) || [];
 
       } catch (error) {
         console.error('Error in query:', error);
