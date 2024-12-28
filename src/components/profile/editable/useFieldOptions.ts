@@ -19,15 +19,11 @@ const isValidRecord = (item: any): item is TableRecord => {
   );
 };
 
-export function useFieldOptions(fieldName: string) {
+export function useFieldOptions(fieldName: FieldName) {
   return useQuery({
     queryKey: ['field-options', fieldName],
     queryFn: async () => {
-      if (!['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)) {
-        return null;
-      }
-
-      const table = tableMap[fieldName as FieldName];
+      const table = tableMap[fieldName];
       const titleField: TitleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
 
       try {
@@ -59,6 +55,6 @@ export function useFieldOptions(fieldName: string) {
         return [];
       }
     },
-    enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
+    enabled: true
   });
 }
