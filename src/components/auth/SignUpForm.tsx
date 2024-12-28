@@ -30,8 +30,8 @@ export function SignUpForm() {
 
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       toast({
-        title: "Error",
-        description: "First name and last name are required",
+        title: "Missing Information",
+        description: "Please provide both first name and last name",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -39,6 +39,7 @@ export function SignUpForm() {
     }
 
     try {
+      // First, attempt to sign up the user
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -51,19 +52,38 @@ export function SignUpForm() {
       });
 
       if (error) {
+        // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
-            title: "Account exists",
+            title: "Account Exists",
             description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
-          return;
+        } else if (error.message.includes("password")) {
+          toast({
+            title: "Invalid Password",
+            description: "Password must be at least 6 characters long",
+            variant: "destructive",
+          });
+        } else if (error.message.includes("email")) {
+          toast({
+            title: "Invalid Email",
+            description: "Please enter a valid email address",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Sign Up Failed",
+            description: error.message,
+            variant: "destructive",
+          });
         }
-        throw error;
+        return;
       }
 
       if (data.user) {
         try {
+          // Create the user profile
           const { error: profileError } = await supabase.from('profiles').insert({
             id: data.user.id,
             email: formData.email,
@@ -72,44 +92,36 @@ export function SignUpForm() {
             user_type: 'mentee'
           });
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            // Clean up auth user if profile creation fails
+            await supabase.auth.signOut();
+            throw new Error('Failed to create user profile');
+          }
 
           toast({
-            title: "Account created!",
-            description: "Please check your email to verify your account before signing in.",
+            title: "Success!",
+            description: "Your account has been created. Please check your email to verify your account.",
           });
 
+          // Redirect to sign in page
           navigate("/auth?tab=signin");
         } catch (profileError: any) {
-          console.error('Error creating profile:', profileError);
-          // If profile creation fails, clean up the auth user
-          await supabase.auth.signOut();
-          throw new Error('Failed to create user profile');
+          console.error('Profile creation error:', profileError);
+          toast({
+            title: "Account Creation Failed",
+            description: "There was an error creating your profile. Please try again.",
+            variant: "destructive",
+          });
         }
       }
     } catch (error: any) {
-      console.error('Signup error:', error);
-      
-      const errorMessage = error.message?.toLowerCase() || '';
-      if (errorMessage.includes('password')) {
-        toast({
-          title: "Password Error",
-          description: "Password must be at least 6 characters long",
-          variant: "destructive",
-        });
-      } else if (errorMessage.includes('email')) {
-        toast({
-          title: "Email Error",
-          description: "Please enter a valid email address",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        });
-      }
+      console.error('Sign up error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -124,11 +136,18 @@ export function SignUpForm() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Google Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
+      console.error('Google sign in error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to sign in with Google. Please try again.",
         variant: "destructive",
       });
     }

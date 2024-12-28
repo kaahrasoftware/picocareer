@@ -28,23 +28,46 @@ export function SignInForm() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Invalid credentials",
+            description: "Please check your email and password and try again.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email not verified",
+            description: "Please check your email and verify your account before signing in.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Sign in failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+        return;
+      }
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
-      
-      navigate("/");
+      if (data.user) {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+        navigate("/");
+      }
     } catch (error: any) {
+      console.error('Sign in error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -61,11 +84,18 @@ export function SignInForm() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Google Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
+      console.error('Google sign in error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to sign in with Google. Please try again.",
         variant: "destructive",
       });
     }
