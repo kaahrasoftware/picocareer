@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,19 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
   const [preview, setPreview] = useState<string | null>(null);
   const { session } = useAuthSession();
 
+  useEffect(() => {
+    // Initialize preview if there's an existing value
+    const subscription = control._subjects.watch.subscribe({
+      next: (data: any) => {
+        if (data[name]) {
+          setPreview(data[name]);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [control, name]);
+
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
     try {
       if (!session?.user) {
@@ -35,7 +48,6 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      // Include user ID in the path
       const filePath = `${session.user.id}/${Math.random()}.${fileExt}`;
 
       // Upload image to Supabase Storage

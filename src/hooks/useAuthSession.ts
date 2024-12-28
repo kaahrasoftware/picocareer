@@ -14,10 +14,22 @@ export function useAuthSession() {
     queryFn: async () => {
       try {
         // First try to get the existing session
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
         
         if (existingSession) {
-          return existingSession;
+          // Refresh the session if it exists
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            throw refreshError;
+          }
+          
+          return refreshedSession;
         }
 
         // If no session exists, clear any stale data
