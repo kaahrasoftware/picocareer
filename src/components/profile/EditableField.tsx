@@ -5,7 +5,6 @@ import { EditButton } from "./editable/EditButton";
 import { TextField } from "./editable/fields/TextField";
 import { SelectField } from "./editable/fields/SelectField";
 import { DegreeField } from "./editable/fields/DegreeField";
-import { FieldName } from "./editable/types";
 
 export interface EditableFieldProps {
   label: string;
@@ -71,7 +70,7 @@ export function EditableField({
     if (['academic_major_id', 'school_id', 'company_id', 'position'].includes(fieldName)) {
       return (
         <SelectField
-          fieldName={fieldName as FieldName}
+          fieldName={fieldName}
           value={editValue}
           onSave={(value) => {
             updateField(value);
