@@ -1,12 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/ui/icons";
+import { PersonalInfoFields } from "./signup/PersonalInfoFields";
+import { SocialSignIn } from "./signup/SocialSignIn";
 
 export function SignUpForm() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -84,10 +85,24 @@ export function SignUpForm() {
           formData.lastName
         );
 
-        toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
-        });
+        // Check if email confirmation is required
+        const { data: { user } } = await supabase.auth.getUser();
+        const needsEmailConfirmation = !user?.confirmed_at;
+
+        if (needsEmailConfirmation) {
+          toast({
+            title: "Account created!",
+            description: "Please check your email to verify your account before signing in.",
+          });
+        } else {
+          toast({
+            title: "Account created!",
+            description: "You can now sign in with your credentials.",
+          });
+        }
+
+        // Navigate to sign-in tab
+        navigate("/auth?tab=signin");
       }
     } catch (error: any) {
       toast({
@@ -121,88 +136,20 @@ export function SignUpForm() {
 
   return (
     <form onSubmit={handleSignUp} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">
-            First Name <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="firstName"
-            name="firstName"
-            placeholder="John"
-            value={formData.firstName}
-            onChange={handleInputChange}
-            required
-            className={!formData.firstName.trim() ? "border-red-500" : ""}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">
-            Last Name <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="lastName"
-            name="lastName"
-            placeholder="Doe"
-            value={formData.lastName}
-            onChange={handleInputChange}
-            required
-            className={!formData.lastName.trim() ? "border-red-500" : ""}
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-email">
-          Email <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="signup-email"
-          name="email"
-          type="email"
-          placeholder="Enter your email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-password">
-          Password <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="signup-password"
-          name="password"
-          type="password"
-          placeholder="Create a password"
-          value={formData.password}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
+      <PersonalInfoFields
+        {...formData}
+        onChange={handleInputChange}
+        hasError={{
+          firstName: !formData.firstName.trim(),
+          lastName: !formData.lastName.trim()
+        }}
+      />
+      
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-
-      <Button
-        variant="outline"
-        type="button"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-      >
-        <Icons.google className="mr-2 h-4 w-4" />
-        Google
-      </Button>
+      <SocialSignIn onGoogleSignIn={handleGoogleSignIn} />
     </form>
   );
 }
