@@ -19,15 +19,16 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       if (!date || !mentorId) return;
 
       const formattedDate = format(date, 'yyyy-MM-dd');
-      console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId);
+      const dayOfWeek = date.getDay(); // 0-6, where 0 is Sunday
+      console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId, "day of week:", dayOfWeek);
       
-      // Query based on the specific date
+      // Query both regular and recurring availability for this date/day
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
-        .select('start_time, end_time, timezone')
+        .select('start_time, end_time, timezone, recurring, day_of_week')
         .eq('profile_id', mentorId)
-        .eq('date_available', formattedDate)
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .or(`date_available.eq.${formattedDate},and(recurring.eq.true,day_of_week.eq.${dayOfWeek})`);
 
       if (availabilityError) {
         console.error("Error fetching availability:", availabilityError);
