@@ -15,10 +15,17 @@ export function useUserSettings(profileId: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  console.log("useUserSettings - Profile ID:", profileId);
+
   const { data: settings } = useQuery({
     queryKey: ['user-settings', profileId],
     queryFn: async () => {
-      if (!profileId) return null;
+      if (!profileId) {
+        console.log("useUserSettings - No profile ID provided");
+        return null;
+      }
+      
+      console.log("useUserSettings - Fetching settings for profile:", profileId);
       
       const { data, error } = await supabase
         .from('user_settings')
@@ -26,10 +33,11 @@ export function useUserSettings(profileId: string | undefined) {
         .eq('profile_id', profileId);
       
       if (error) {
-        console.error('Error fetching user settings:', error);
+        console.error('useUserSettings - Error fetching settings:', error);
         return null;
       }
       
+      console.log("useUserSettings - Fetched settings:", data);
       return data as UserSetting[];
     },
     enabled: !!profileId
@@ -38,6 +46,8 @@ export function useUserSettings(profileId: string | undefined) {
   const updateSetting = useMutation({
     mutationFn: async ({ type, value }: { type: SettingType; value: string }) => {
       if (!profileId) throw new Error('No profile ID provided');
+
+      console.log("useUserSettings - Updating setting:", { profileId, type, value });
 
       const { data, error } = await supabase
         .from('user_settings')
@@ -51,7 +61,12 @@ export function useUserSettings(profileId: string | undefined) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('useUserSettings - Error updating setting:', error);
+        throw error;
+      }
+      
+      console.log("useUserSettings - Setting updated successfully:", data);
       return data;
     },
     onSuccess: () => {
@@ -62,7 +77,7 @@ export function useUserSettings(profileId: string | undefined) {
       });
     },
     onError: (error) => {
-      console.error('Error updating setting:', error);
+      console.error('useUserSettings - Mutation error:', error);
       toast({
         title: "Error",
         description: "Failed to update settings. Please try again.",

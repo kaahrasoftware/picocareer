@@ -25,7 +25,7 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
-  console.log("User timezone:", userTimezone);
+  console.log("TimeSlotSelector - User timezone:", userTimezone);
 
   // Use the custom hook to fetch available time slots, passing the session duration
   const availableTimeSlots = useAvailableTimeSlots(
@@ -34,7 +34,7 @@ export function TimeSlotSelector({
     selectedSessionType?.duration || 60,
     userTimezone
   );
-  console.log("Available time slots in selector:", availableTimeSlots);
+  console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
   // Convert time slots to user's timezone
   const convertedTimeSlots = availableTimeSlots.map(slot => {
@@ -42,13 +42,21 @@ export function TimeSlotSelector({
     const [hours, minutes] = slot.time.split(':').map(Number);
     slotDate.setHours(hours, minutes, 0, 0);
 
+    // Using formatInTimeZone with exactly 3 arguments
+    const formattedTime = formatInTimeZone(slotDate, userTimezone, 'HH:mm');
+    console.log("TimeSlotSelector - Converting slot:", {
+      originalTime: slot.time,
+      convertedTime: formattedTime,
+      timezone: userTimezone
+    });
+
     return {
-      time: formatInTimeZone(slotDate, userTimezone, 'HH:mm'),
+      time: formattedTime,
       available: slot.available
     };
   });
 
-  console.log("Converted time slots:", convertedTimeSlots);
+  console.log("TimeSlotSelector - Converted time slots:", convertedTimeSlots);
 
   return (
     <div>
