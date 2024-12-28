@@ -151,7 +151,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         onClick={() => handleRemove(field.onChange)}
                       >
                         <X className="h-4 w-4" />
