@@ -36,11 +36,10 @@ export function SignUpForm() {
           description: "Please provide both first name and last name",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
-      // First, attempt to sign up the user
+      // Attempt to sign up the user
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -55,7 +54,6 @@ export function SignUpForm() {
       if (error) {
         console.error('Sign up error:', error);
         
-        // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
             title: "Account Exists",
@@ -81,19 +79,20 @@ export function SignUpForm() {
             variant: "destructive",
           });
         }
-        setIsLoading(false);
         return;
       }
 
       if (data.user) {
         // Show success message
         toast({
-          title: "Success!",
+          title: "Success! 🎉",
           description: "Your account has been created. Please check your email to verify your account.",
         });
 
-        // Redirect to sign in page
-        navigate("/auth?tab=signin");
+        // Redirect to sign in page after a short delay
+        setTimeout(() => {
+          navigate("/auth?tab=signin");
+        }, 1500);
       }
     } catch (error: any) {
       console.error('Sign up error:', error);
