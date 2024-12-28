@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parse, addMinutes, isWithinInterval } from "date-fns";
+import { format, parse, addMinutes, isWithinInterval, startOfDay } from "date-fns";
 import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
@@ -20,7 +20,14 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
 
       const formattedDate = format(date, 'yyyy-MM-dd');
       const dayOfWeek = date.getDay(); // 0-6, where 0 is Sunday
-      console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId, "day of week:", dayOfWeek);
+      const today = startOfDay(new Date());
+      
+      console.log("Fetching availability for:", {
+        date: formattedDate,
+        dayOfWeek,
+        mentorId,
+        isInFuture: date >= today
+      });
       
       // Query both one-time and recurring availability
       const { data: availabilityData, error: availabilityError } = await supabase
@@ -28,7 +35,10 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
         .select('start_time, end_time, timezone, recurring, day_of_week, date_available')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
-        .or(`date_available.eq.${formattedDate},and(recurring.eq.true,day_of_week.eq.${dayOfWeek})`);
+        .or(
+          `date_available.eq.${formattedDate},` + // One-time slots for this date
+          `and(recurring.eq.true,day_of_week.eq.${dayOfWeek},date_available.lte.${formattedDate})` // Recurring slots
+        );
 
       if (availabilityError) {
         console.error("Error fetching availability:", availabilityError);
@@ -73,8 +83,12 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       availabilityData?.forEach((availability) => {
         try {
           const mentorTimezone = availability.timezone;
-          console.log("Processing availability:", availability);
-          console.log("Mentor timezone:", mentorTimezone);
+          console.log("Processing availability:", {
+            ...availability,
+            isRecurring: availability.recurring,
+            dayOfWeek: availability.day_of_week,
+            availabilityDate: availability.date_available
+          });
 
           // Create a base date for today to properly handle time comparisons
           const baseDate = new Date(date);
@@ -98,7 +112,8 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
             startTime: startTime.toISOString(),
             endTime: endTime.toISOString(),
             isRecurring: availability.recurring,
-            dayOfWeek: availability.day_of_week
+            dayOfWeek: availability.day_of_week,
+            originalDate: availability.date_available
           });
 
           let currentTime = startTime;
