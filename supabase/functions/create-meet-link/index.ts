@@ -28,25 +28,18 @@ async function getAccessToken() {
       sub: COMPANY_CALENDAR_EMAIL,
     };
 
-    // Clean and prepare the private key
     let privateKeyContent = SERVICE_ACCOUNT_PRIVATE_KEY;
-    
-    // If the key doesn't contain the PEM markers, add them
     if (!privateKeyContent.includes('-----BEGIN PRIVATE KEY-----')) {
       privateKeyContent = `-----BEGIN PRIVATE KEY-----\n${privateKeyContent}\n-----END PRIVATE KEY-----`;
     }
-    
-    // Remove any escaped newlines and replace with actual newlines
     privateKeyContent = privateKeyContent.replace(/\\n/g, '\n');
 
-    // Extract the key content between the PEM markers
     const pemContent = privateKeyContent
       .replace('-----BEGIN PRIVATE KEY-----', '')
       .replace('-----END PRIVATE KEY-----', '')
       .replace(/\s/g, '');
 
     try {
-      // Decode the base64 key
       const binaryKey = Uint8Array.from(atob(pemContent), c => c.charCodeAt(0));
       
       console.log('Importing private key...');
@@ -114,7 +107,6 @@ serve(async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get session details with explicit column selection
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
@@ -133,10 +125,8 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error('Session not found');
     }
 
-    // Get access token using service account
     const accessToken = await getAccessToken();
 
-    // Create Google Calendar event with Meet link
     const startTime = new Date(session.scheduled_at);
     const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000);
 
@@ -159,8 +149,28 @@ serve(async (req: Request): Promise<Response> => {
         createRequest: {
           requestId: sessionId,
           conferenceSolutionKey: { type: 'hangoutsMeet' },
+          // Add configuration to allow direct join
+          status: {
+            statusCode: 'success'
+          },
+          conferenceDataVersion: 1,
         },
+        // Set conference properties to allow direct join
+        entryPoints: [{
+          entryPointType: 'video',
+          uri: '',
+          label: session.session_type.type,
+          pin: '',
+          accessLevel: 'everyone'
+        }],
+        parameters: {
+          addAttendees: true,
+          allowExternalAttendees: false
+        }
       },
+      guestsCanModify: false,
+      guestsCanInviteOthers: false,
+      guestsCanSeeOtherGuests: true
     };
 
     console.log('Creating calendar event with Meet link...');
@@ -192,7 +202,6 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log('Successfully created Meet link:', meetLink);
 
-    // Update session with Meet link and calendar event ID
     const { error: updateError } = await supabase
       .from('mentor_sessions')
       .update({
