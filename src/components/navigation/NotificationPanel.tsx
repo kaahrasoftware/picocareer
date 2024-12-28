@@ -9,7 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck, CircleDot } from "lucide-react";
+import { Bell, BellDot, ChevronDown, ChevronUp, CircleCheck, CircleDot, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
@@ -51,6 +51,10 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     
     // Call the parent handler to update the database
     onMarkAsRead(notification.id);
+  };
+
+  const handleJoinMeeting = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -156,12 +160,25 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                       </Button>
                     </div>
                     {notification.action_url && isExpanded && (
-                      <Link
-                        to={notification.action_url}
-                        className="text-sm text-primary hover:underline mt-2 block"
-                      >
-                        View details
-                      </Link>
+                      <div className="mt-3">
+                        {notification.title.toLowerCase().includes('session') ? (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+                            onClick={() => handleJoinMeeting(notification.action_url!)}
+                          >
+                            Join Meeting <ExternalLink className="ml-2 h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Link
+                            to={notification.action_url}
+                            className="text-sm text-primary hover:underline block"
+                          >
+                            View details
+                          </Link>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
