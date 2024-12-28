@@ -56,14 +56,20 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     onMarkAsRead(notification.id);
   };
 
-  const handleJoinMeeting = async (sessionId: string) => {
+  const handleJoinMeeting = async (notification: Notification) => {
     try {
+      // Extract session ID from the notification
+      // The action_url should contain the session ID directly now
+      if (!notification.action_url) {
+        throw new Error('No session ID available');
+      }
+
       // Fetch the meeting link from mentor_sessions table
       const { data: sessionData, error } = await supabase
         .from('mentor_sessions')
         .select('meeting_link')
-        .eq('id', sessionId)
-        .single();
+        .eq('id', notification.action_url)
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -195,7 +201,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                             variant="default"
                             size="sm"
                             className="w-full bg-sky-500 hover:bg-sky-600 text-white"
-                            onClick={() => handleJoinMeeting(notification.action_url!)}
+                            onClick={() => handleJoinMeeting(notification)}
                           >
                             Join Meeting <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
