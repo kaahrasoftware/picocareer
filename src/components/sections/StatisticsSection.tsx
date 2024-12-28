@@ -7,6 +7,7 @@ export function StatisticsSection() {
   const { data: stats } = useQuery({
     queryKey: ['home-statistics'],
     queryFn: async () => {
+      console.log('Fetching statistics...');
       const [
         { count: mentorsCount },
         { count: careersCount },
@@ -39,6 +40,15 @@ export function StatisticsSection() {
           .select('id', { count: 'exact', head: true })
       ]);
 
+      console.log('Statistics fetched:', {
+        mentors: mentorsCount,
+        careers: careersCount,
+        majors: majorsCount,
+        schools: schoolsCount,
+        scholarships: scholarshipsCount,
+        sessions: sessionsCount
+      });
+
       return {
         mentors: mentorsCount || 0,
         careers: careersCount || 0,
@@ -48,7 +58,6 @@ export function StatisticsSection() {
         sessions: sessionsCount || 0
       };
     },
-    // Make sure the data is always fresh for all users
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     retry: 3 // Retry failed requests 3 times
   });
