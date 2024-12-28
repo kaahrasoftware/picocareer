@@ -105,18 +105,31 @@ export function useUserSettings(profileId: string | undefined) {
       case 'push_notifications':
         const notificationSetting = settings.find(s => s.setting_type === 'notifications');
         if (!notificationSetting) return null;
-        const notifications = JSON.parse(notificationSetting.setting_value || '{}');
-        return notifications[type]?.toString() || 'false';
+        try {
+          const notifications = JSON.parse(notificationSetting.setting_value);
+          return notifications[type]?.toString() || 'false';
+        } catch {
+          return 'false';
+        }
       
       case 'compact_mode':
         const themeSetting = settings.find(s => s.setting_type === 'theme');
         if (!themeSetting) return null;
-        const themeSettings = JSON.parse(themeSetting.setting_value || '{}');
-        return themeSettings.compact_mode?.toString() || 'false';
+        try {
+          const themeSettings = JSON.parse(themeSetting.setting_value);
+          return themeSettings.compact_mode?.toString() || 'false';
+        } catch {
+          return 'false';
+        }
       
       case 'theme':
         const theme = settings.find(s => s.setting_type === 'theme');
-        return theme?.setting_value || null;
+        try {
+          const themeSettings = JSON.parse(theme?.setting_value || '{}');
+          return themeSettings.theme || theme?.setting_value || null;
+        } catch {
+          return theme?.setting_value || null;
+        }
       
       case 'timezone':
         const timezone = settings.find(s => s.setting_type === 'timezone');

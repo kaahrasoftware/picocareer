@@ -15,7 +15,10 @@ export function ThemeSection() {
   const handleThemeChange = (checked: boolean) => {
     updateSetting.mutate({
       type: 'theme',
-      value: checked ? 'dark' : 'light'
+      value: JSON.stringify({
+        theme: checked ? 'dark' : 'light',
+        compact_mode: compactMode
+      })
     });
   };
 
