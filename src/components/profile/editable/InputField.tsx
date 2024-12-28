@@ -62,7 +62,7 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
   });
 
   const renderSelectField = (options: any[], placeholder: string, tableName: 'schools' | 'majors' | 'companies', titleField: 'name' | 'title') => (
-    <div className="space-y-4 w-full max-w-md">
+    <div className="w-full">
       <SelectWithCustomOption
         value={value}
         options={options}
@@ -97,14 +97,14 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-md">
+    <div className="w-full">
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Enter text..."
-        className="min-h-[100px] bg-background border rounded-md p-2 resize-y focus:outline-none focus:ring-2 focus:ring-primary"
+        className="w-full min-h-[100px] bg-background border rounded-md p-2 resize-y focus:outline-none focus:ring-2 focus:ring-primary"
       />
-      <div className="flex gap-2 justify-end">
+      <div className="flex gap-2 justify-end mt-4">
         <Button onClick={onSave} size="sm" variant="default">
           Save
         </Button>
