@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { TimeSlotInputs } from "./TimeSlotInputs";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface TimeSlotFormProps {
   selectedDate: Date | undefined;
@@ -17,26 +17,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
   const [selectedEndTime, setSelectedEndTime] = useState<string>();
   const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userTimezone, setUserTimezone] = useState<string>('UTC');
   const { toast } = useToast();
-
-  // Fetch user's timezone from settings
-  useEffect(() => {
-    const fetchUserTimezone = async () => {
-      const { data: settings } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', profileId)
-        .eq('setting_type', 'timezone')
-        .single();
-      
-      if (settings?.setting_value) {
-        setUserTimezone(settings.setting_value);
-      }
-    };
-
-    fetchUserTimezone();
-  }, [profileId]);
+  const { getSetting } = useUserSettings(profileId);
+  const userTimezone = getSetting('timezone') || 'UTC';
 
   const checkForOverlap = async (formattedDate: string, startTime: string, endTime: string) => {
     const { data: existingSlots } = await supabase
@@ -48,14 +31,12 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
     if (!existingSlots) return false;
 
-    // Convert times to comparable format (minutes since midnight)
     const newStart = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
     const newEnd = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
 
     return existingSlots.some(slot => {
       const slotStart = parseInt(slot.start_time.split(':')[0]) * 60 + parseInt(slot.start_time.split(':')[1]);
       const slotEnd = parseInt(slot.end_time.split(':')[0]) * 60 + parseInt(slot.end_time.split(':')[1]);
-
       return (newStart < slotEnd && newEnd > slotStart);
     });
   };
@@ -73,8 +54,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     setIsSubmitting(true);
     try {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-
-      // Check for overlapping slots
       const hasOverlap = await checkForOverlap(formattedDate, selectedStartTime, selectedEndTime);
 
       if (hasOverlap) {
@@ -87,10 +66,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         return;
       }
 
-      // Get the correct day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
       const dayOfWeek = selectedDate.getDay();
 
-      // Insert new availability slot
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
@@ -98,15 +75,13 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           date_available: formattedDate,
           start_time: selectedStartTime,
           end_time: selectedEndTime,
-          timezone: userTimezone, // Use the user's timezone from settings
+          timezone: userTimezone,
           is_available: true,
           recurring: isRecurring,
           day_of_week: isRecurring ? dayOfWeek : null
         });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -131,7 +106,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     }
   };
 
-  // Generate time slots for the full day in 30-minute increments
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -147,58 +121,16 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
   return (
     <div className="space-y-4">
-      <div>
-        <h4 className="font-medium mb-2">Start Time</h4>
-        <select
-          value={selectedStartTime}
-          onChange={(e) => setSelectedStartTime(e.target.value)}
-          className="w-full border border-input bg-background px-3 py-2 rounded-md"
-        >
-          <option value="">Select start time</option>
-          {timeSlots.map((time) => (
-            <option 
-              key={time} 
-              value={time}
-              disabled={selectedEndTime ? time >= selectedEndTime : false}
-            >
-              {time}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <h4 className="font-medium mb-2">End Time</h4>
-        <select
-          value={selectedEndTime}
-          onChange={(e) => setSelectedEndTime(e.target.value)}
-          className="w-full border border-input bg-background px-3 py-2 rounded-md"
-        >
-          <option value="">Select end time</option>
-          {timeSlots.map((time) => (
-            <option 
-              key={time} 
-              value={time}
-              disabled={selectedStartTime ? time <= selectedStartTime : false}
-            >
-              {time}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="recurring"
-          checked={isRecurring}
-          onCheckedChange={setIsRecurring}
-        />
-        <Label htmlFor="recurring">Make this a weekly recurring availability</Label>
-      </div>
-
-      <p className="text-sm text-muted-foreground">
-        Times shown in your timezone ({userTimezone})
-      </p>
+      <TimeSlotInputs
+        timeSlots={timeSlots}
+        selectedStartTime={selectedStartTime}
+        selectedEndTime={selectedEndTime}
+        isRecurring={isRecurring}
+        userTimezone={userTimezone}
+        onStartTimeSelect={setSelectedStartTime}
+        onEndTimeSelect={setSelectedEndTime}
+        onRecurringChange={setIsRecurring}
+      />
 
       <Button 
         onClick={handleSaveAvailability}

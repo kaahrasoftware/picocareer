@@ -392,7 +392,7 @@ export type Database = {
           profile_id: string
           recurring?: boolean | null
           start_time: string
-          timezone: string
+          timezone?: string
           updated_at?: string
         }
         Update: {
