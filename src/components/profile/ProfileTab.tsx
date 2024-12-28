@@ -152,7 +152,7 @@ export function ProfileTab() {
         handleSelectChange={handleSelectChange}
         handleSubmit={handleSubmit}
         setIsEditing={() => {}} // Not needed anymore since we're always in edit mode
-        isMentee={profile.user_type === 'mentee'}
+        isMentee={profile?.user_type === 'mentee'}
         majors={majors || []}
         companies={companies || []}
         schools={schools || []}
