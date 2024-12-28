@@ -14,14 +14,14 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
-  const { data: results = [], isLoading } = useSearchData(query);
+  const { data = [], isLoading } = useSearchData(query);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   
   const groupedResults = {
-    mentors: results.filter(item => item.type === 'mentor'),
-    careers: results.filter(item => item.type === 'career'),
-    majors: results.filter(item => item.type === 'major')
+    mentors: data.filter(item => item.type === 'mentor'),
+    careers: data.filter(item => item.type === 'career'),
+    majors: data.filter(item => item.type === 'major')
   };
 
   const renderResults = () => {

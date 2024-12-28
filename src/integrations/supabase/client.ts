@@ -1,45 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from './types';
 
-const supabaseUrl = 'https://wurdmlkfkzuivvwxjmxk.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cmRtbGtma3p1aXZ2d3hqbXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDM3MjY0MDAsImV4cCI6MjAxOTMwMjQwMH0.C7LwWXHzZbKyXsMhxqTqms4ks0CHN5g-DQIxAyLzg8g';
+const SUPABASE_URL = "https://wurdmlkfkzuivvwxjmxk.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cmRtbGtma3p1aXZ2d3hqbXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4NTE4MzgsImV4cCI6MjA0OTQyNzgzOH0.x4jgZjedKprq19f2A7QpMrWRHfan3f24Th6sfoy-2eg";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: true,
-    storageKey: 'picocareer_auth_token'
+    flowType: 'pkce',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'picocareer_auth_token',
   },
-  global: {
-    headers: {
-      'X-Client-Info': 'supabase-js-web'
-    }
-  },
-  db: {
-    schema: 'public'
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
-    }
-  }
 });
 
-// Create a separate error handler function
-export const handleSupabaseError = (error: any) => {
-  console.error('Supabase error:', error);
-  if (error.status === 401) {
-    console.error('Authentication error. Please check your API keys and authentication status.');
-  }
-};
-
-// Add error handling to Supabase client methods
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') {
-    console.log('User signed out');
-  } else if (event === 'SIGNED_IN') {
-    console.log('User signed in');
-  } else if (event === 'TOKEN_REFRESHED') {
-    console.log('Token refreshed');
-  }
-});
+// Set up auth state change listener
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      // Clear any auth-related local storage
+      localStorage.removeItem('picocareer_auth_token');
+    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      console.log('Auth state changed:', event);
+    }
+  });
+}

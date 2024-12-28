@@ -23,12 +23,7 @@ export function useNotifications(session: Session | null) {
           .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Supabase query error:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
+          console.error('Supabase query error:', error);
           throw error;
         }
 

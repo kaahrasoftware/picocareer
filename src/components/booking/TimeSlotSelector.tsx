@@ -25,9 +25,6 @@ export function TimeSlotSelector({
 
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   console.log("User timezone:", userTimezone);
-  console.log("Selected date:", date);
-  console.log("Selected date ISO:", date.toISOString());
-  console.log("Day of week:", date.getDay());
 
   // Use the custom hook to fetch available time slots, passing the session duration
   const availableTimeSlots = useAvailableTimeSlots(
