@@ -28,17 +28,18 @@ export function SignUpForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide both first name and last name",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      // Validate form data
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        toast({
+          title: "Missing Information",
+          description: "Please provide both first name and last name",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // First, attempt to sign up the user
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -52,6 +53,8 @@ export function SignUpForm() {
       });
 
       if (error) {
+        console.error('Sign up error:', error);
+        
         // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
@@ -78,42 +81,19 @@ export function SignUpForm() {
             variant: "destructive",
           });
         }
+        setIsLoading(false);
         return;
       }
 
       if (data.user) {
-        try {
-          // Create the user profile
-          const { error: profileError } = await supabase.from('profiles').insert({
-            id: data.user.id,
-            email: formData.email,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            user_type: 'mentee'
-          });
+        // Show success message
+        toast({
+          title: "Success!",
+          description: "Your account has been created. Please check your email to verify your account.",
+        });
 
-          if (profileError) {
-            console.error('Profile creation error:', profileError);
-            // Clean up auth user if profile creation fails
-            await supabase.auth.signOut();
-            throw new Error('Failed to create user profile');
-          }
-
-          toast({
-            title: "Success!",
-            description: "Your account has been created. Please check your email to verify your account.",
-          });
-
-          // Redirect to sign in page
-          navigate("/auth?tab=signin");
-        } catch (profileError: any) {
-          console.error('Profile creation error:', profileError);
-          toast({
-            title: "Account Creation Failed",
-            description: "There was an error creating your profile. Please try again.",
-            variant: "destructive",
-          });
-        }
+        // Redirect to sign in page
+        navigate("/auth?tab=signin");
       }
     } catch (error: any) {
       console.error('Sign up error:', error);
