@@ -1,200 +1,94 @@
-import React, { useState } from "react";
-import { ProfileBio } from "@/components/profile-details/ProfileBio";
-import { ProfileEducation } from "@/components/profile-details/ProfileEducation";
-import { ProfileLinks } from "@/components/profile-details/ProfileLinks";
-import { ProfileSkills } from "@/components/profile-details/ProfileSkills";
-import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import React from "react";
+import { ProfileEditForm } from "../profile-details/ProfileEditForm";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Profile } from "@/types/database/profiles";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-import type { Database } from "@/integrations/supabase/types";
-import { PersonalInfoSection } from "./sections/PersonalInfoSection";
-import { ProfessionalInfoSection } from "./sections/ProfessionalInfoSection";
-import { LocationSection } from "./sections/LocationSection";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
-type DegreeType = Database['public']['Enums']['degree'];
-
-interface ProfileTabProps {
-  profile: Profile | null;
-}
-
-export function ProfileTab({ profile }: ProfileTabProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: profile?.first_name || "",
-    last_name: profile?.last_name || "",
-    bio: profile?.bio || "",
-    position: profile?.position || "",
-    company_id: profile?.company_id || "",
-    school_id: profile?.school_id || "",
-    years_of_experience: profile?.years_of_experience || 0,
-    skills: profile?.skills?.join(", ") || "",
-    tools_used: profile?.tools_used?.join(", ") || "",
-    keywords: profile?.keywords?.join(", ") || "",
-    fields_of_interest: profile?.fields_of_interest?.join(", ") || "",
-    linkedin_url: profile?.linkedin_url || "",
-    github_url: profile?.github_url || "",
-    website_url: profile?.website_url || "",
-    highest_degree: (profile?.highest_degree as DegreeType) || "No Degree",
-    academic_major_id: profile?.academic_major_id || "",
-    location: profile?.location || "",
-  });
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Fetch all majors
+export function ProfileTab() {
+  const { profile, isLoading: profileLoading } = useUserProfile();
+  
+  // Fetch majors data
   const { data: majors } = useQuery({
     queryKey: ['majors'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('majors')
         .select('id, title')
+        .eq('status', 'Approved')
         .order('title');
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  // Fetch all companies
+  // Fetch companies data
   const { data: companies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
+        .eq('status', 'Approved')
         .order('name');
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  // Fetch all schools
+  // Fetch schools data
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('schools')
         .select('id, name')
+        .eq('status', 'Approved')
         .order('name');
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  if (!profile) return null;
-  
-  const isMentee = profile.user_type === 'mentee';
+  if (profileLoading || !profile) {
+    return <div>Loading...</div>;
+  }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const formData = {
+    first_name: profile.first_name || '',
+    last_name: profile.last_name || '',
+    bio: profile.bio || '',
+    position: profile.position || '',
+    company_id: profile.company_id || '',
+    school_id: profile.school_id || '',
+    years_of_experience: profile.years_of_experience || 0,
+    skills: profile.skills?.join(', ') || '',
+    tools_used: profile.tools_used?.join(', ') || '',
+    keywords: profile.keywords?.join(', ') || '',
+    fields_of_interest: profile.fields_of_interest?.join(', ') || '',
+    linkedin_url: profile.linkedin_url || '',
+    github_url: profile.github_url || '',
+    website_url: profile.website_url || '',
+    highest_degree: profile.highest_degree || 'No Degree',
+    academic_major_id: profile.academic_major_id || '',
+    location: profile.location || '',
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          bio: formData.bio,
-          position: formData.position,
-          company_id: formData.company_id || null,
-          school_id: formData.school_id || null,
-          years_of_experience: parseInt(formData.years_of_experience.toString()),
-          skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
-          tools_used: formData.tools_used.split(",").map(s => s.trim()).filter(Boolean),
-          keywords: formData.keywords.split(",").map(s => s.trim()).filter(Boolean),
-          fields_of_interest: formData.fields_of_interest.split(",").map(s => s.trim()).filter(Boolean),
-          linkedin_url: formData.linkedin_url,
-          github_url: formData.github_url,
-          website_url: formData.website_url,
-          highest_degree: formData.highest_degree as DegreeType,
-          academic_major_id: formData.academic_major_id,
-          location: formData.location,
-        })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
-      });
-      
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
-      
-      setIsEditing(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isEditing) {
-    return (
+  return (
+    <div className="max-w-4xl mx-auto p-6">
       <ProfileEditForm
         formData={formData}
-        handleInputChange={handleInputChange}
-        handleSelectChange={handleSelectChange}
-        handleSubmit={handleSubmit}
-        setIsEditing={setIsEditing}
-        isMentee={isMentee}
+        handleInputChange={() => {}}
+        handleSelectChange={() => {}}
+        handleSubmit={() => {}}
+        setIsEditing={() => {}}
+        isMentee={profile.user_type === 'mentee'}
         majors={majors || []}
         companies={companies || []}
         schools={schools || []}
       />
-    );
-  }
-
-  return (
-    <div className="flex flex-col space-y-6 max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <PersonalInfoSection profile={profile} />
-        <ProfileBio bio={profile?.bio} profileId={profile?.id || ''} />
-        <ProfileEducation 
-          academic_major={profile?.academic_major}
-          highest_degree={profile?.highest_degree}
-          school_name={profile?.school_name}
-          profileId={profile?.id || ''}
-        />
-        <LocationSection profile={profile} />
-        <ProfessionalInfoSection profile={profile} isMentee={isMentee} />
-        {!isMentee && profile?.skills && profile?.skills.length > 0 && (
-          <ProfileSkills
-            skills={profile.skills}
-            tools={profile.tools_used}
-            keywords={profile.keywords}
-            fieldsOfInterest={profile.fields_of_interest}
-          />
-        )}
-        <ProfileLinks
-          linkedin_url={profile?.linkedin_url}
-          github_url={profile?.github_url}
-          website_url={profile?.website_url}
-        />
-        <Button 
-          onClick={() => setIsEditing(true)}
-          className="w-full"
-        >
-          Edit Profile
-        </Button>
-      </div>
     </div>
   );
 }
