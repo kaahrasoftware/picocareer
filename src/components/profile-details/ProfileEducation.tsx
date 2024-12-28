@@ -21,7 +21,7 @@ export function ProfileEducation({ academic_major, highest_degree, school_name, 
         <EditableField
           label="Academic Major"
           value={academic_major}
-          fieldName="academic_major"
+          fieldName="academic_major_id"
           profileId={profileId}
         />
       </div>
@@ -31,7 +31,7 @@ export function ProfileEducation({ academic_major, highest_degree, school_name, 
         <EditableField
           label="School"
           value={school_name}
-          fieldName="school_name"
+          fieldName="school_id"
           profileId={profileId}
         />
       </div>
