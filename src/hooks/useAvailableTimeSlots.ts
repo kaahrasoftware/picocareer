@@ -22,7 +22,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       const dayOfWeek = date.getDay(); // 0-6, where 0 is Sunday
       console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId, "day of week:", dayOfWeek);
       
-      // Query both regular and recurring availability for this date/day
+      // Query both one-time and recurring availability
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('start_time, end_time, timezone, recurring, day_of_week, date_available')
@@ -40,13 +40,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
         return;
       }
 
-      console.log("Availability data:", availabilityData);
-
-      if (!availabilityData?.length) {
-        console.log("No availability found for this date");
-        setAvailableTimeSlots([]);
-        return;
-      }
+      console.log("Raw availability data:", availabilityData);
 
       // Get existing bookings for this date
       const startOfDay = new Date(date);
@@ -76,13 +70,8 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
 
       // Generate time slots based on availability
       const slots: TimeSlot[] = [];
-      availabilityData.forEach((availability) => {
+      availabilityData?.forEach((availability) => {
         try {
-          // Skip if this is a recurring slot but not for the current day
-          if (availability.recurring && availability.day_of_week !== dayOfWeek) {
-            return;
-          }
-
           const mentorTimezone = availability.timezone;
           console.log("Processing availability:", availability);
           console.log("Mentor timezone:", mentorTimezone);
