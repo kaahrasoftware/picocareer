@@ -122,44 +122,15 @@ export default function ProfilePage() {
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
           <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger 
-              value="profile"
-              className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Profile
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger 
-                value="dashboard"
-                className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-              >
-                Dashboard
-              </TabsTrigger>
-            )}
-            <TabsTrigger 
-              value="calendar"
-              className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Calendar
-            </TabsTrigger>
-            {canAccessMentorTab && (
-              <TabsTrigger 
-                value="mentor"
-                className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-              >
-                Mentor
-              </TabsTrigger>
-            )}
-            <TabsTrigger 
-              value="settings"
-              className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              Settings
-            </TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            {canAccessMentorTab && <TabsTrigger value="mentor">Mentor</TabsTrigger>}
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-6">
-            <ProfileTab profile={profile} />
+          <TabsContent value="profile">
+            {profile && <ProfileTab profile={profile} />}
           </TabsContent>
 
           {isAdmin && (

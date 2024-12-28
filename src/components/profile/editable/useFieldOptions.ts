@@ -31,10 +31,8 @@ export function useFieldOptions(fieldName: string) {
         return [];
       }
 
-      return (data as QueryResult[])?.map(item => ({
-        id: item.id,
-        ...(titleField === 'name' ? { name: item[titleField] } : { title: item[titleField] })
-      })) || [];
+      // Type assertion to ensure the data matches QueryResult type
+      return (data as unknown as QueryResult[]) || [];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });
