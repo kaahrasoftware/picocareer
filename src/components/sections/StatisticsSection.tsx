@@ -47,7 +47,10 @@ export function StatisticsSection() {
         scholarships: scholarshipsCount || 0,
         sessions: sessionsCount || 0
       };
-    }
+    },
+    // Make sure the data is always fresh for all users
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    retry: 3 // Retry failed requests 3 times
   });
 
   const items = [
