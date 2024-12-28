@@ -22,7 +22,8 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
   const { session } = useAuthSession();
 
   useEffect(() => {
-    const fieldValue = control._getFieldState(name)?.value;
+    // Get the current field value using the control's getFieldState method
+    const fieldValue = control.getFieldState(name)?.value;
     if (fieldValue) {
       setPreview(fieldValue);
     }
@@ -44,7 +45,6 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
       const fileExt = file.name.split('.').pop();
       const filePath = `${session.user.id}/${Math.random()}.${fileExt}`;
 
-      // Upload image to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, { 
@@ -56,12 +56,10 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
         throw uploadError;
       }
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath);
 
-      // Update form field with the public URL
       onChange(publicUrl);
       setPreview(publicUrl);
 
