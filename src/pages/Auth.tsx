@@ -52,7 +52,7 @@ export default function Auth() {
             </Link>
           </div>
           
-          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mt-20">
+          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mt-40">
             <div className="space-y-6 text-center w-full">
               <Button 
                 asChild
