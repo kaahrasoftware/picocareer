@@ -76,7 +76,19 @@ export function SignUpForm() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a confirmation email error
+        if (error.message.includes("confirmation email")) {
+          toast({
+            title: "Email Configuration Error",
+            description: "There was an issue with our email service. Please try again later or contact support.",
+            variant: "destructive",
+          });
+          console.error('Detailed signup error:', error);
+          return;
+        }
+        throw error;
+      }
 
       if (data.user) {
         await createProfile(
@@ -98,7 +110,7 @@ export function SignUpForm() {
       console.error('Signup error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
