@@ -12,6 +12,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { Button } from "@/components/ui/button";
 
 export default function Auth() {
   const { data: mentors } = useQuery({
@@ -51,13 +52,16 @@ export default function Auth() {
           </div>
           
           <div className="max-w-md space-y-8 text-center mt-auto">
-            <div className="space-y-4">
-              <Link 
-                to="/mentor-registration" 
-                className="text-xl font-semibold text-white hover:text-blue-400 underline decoration-blue-400 transition-colors"
+            <div className="space-y-4 flex flex-col items-center">
+              <Button 
+                asChild
+                variant="ghost" 
+                className="text-xl font-semibold text-white hover:text-blue-400 hover:bg-transparent"
               >
-                Become a Mentor
-              </Link>
+                <Link to="/mentor-registration">
+                  Become a Mentor
+                </Link>
+              </Button>
               <p className="text-gray-300">
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
