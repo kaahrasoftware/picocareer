@@ -20,6 +20,7 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(profile?.avatar_url || null);
   const { toast } = useToast();
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
@@ -34,7 +35,6 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     
     const file = event.target.files[0];
 
-    // Check file size and type
     if (file.size > MAX_FILE_SIZE) {
       toast({
         title: "File too large",
@@ -101,9 +101,22 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
     try {
       setUploading(true);
       const croppedBlob = await getCroppedImage();
+      
+      // Create a temporary URL for instant preview
+      const tempUrl = URL.createObjectURL(croppedBlob);
+      setPreviewUrl(tempUrl);
+      
       await onAvatarUpdate(croppedBlob);
+      
+      // Clean up the temporary URL after successful upload
+      URL.revokeObjectURL(tempUrl);
+      
       setCropDialogOpen(false);
       setSelectedImage(null);
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
     } catch (error) {
       console.error('Error saving avatar:', error);
       toast({
@@ -111,6 +124,8 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
         description: "Failed to save profile picture. Please try again.",
         variant: "destructive",
       });
+      // Revert to original avatar if update fails
+      setPreviewUrl(profile?.avatar_url || null);
     } finally {
       setUploading(false);
     }
@@ -125,7 +140,7 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
       <div className="absolute inset-[6px] rounded-full overflow-hidden">
         <Avatar className="h-full w-full">
           <AvatarImage 
-            src={profile.avatar_url || ''} 
+            src={previewUrl || ''} 
             alt={profile.full_name || ''}
             className="h-full w-full object-cover"
           />
