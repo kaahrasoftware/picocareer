@@ -28,7 +28,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
         .select('start_time, end_time, timezone, recurring, day_of_week, date_available')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
-        .or(`date_available.eq.${formattedDate},and(recurring.eq.true,day_of_week.eq.${dayOfWeek})`);
+        .or(`and(date_available.eq.${formattedDate},recurring.eq.false),and(recurring.eq.true,day_of_week.eq.${dayOfWeek})`);
 
       if (availabilityError) {
         console.error("Error fetching availability:", availabilityError);
@@ -93,6 +93,11 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
             fromZonedTime(new Date(baseDate.setHours(endHour, endMinute)), mentorTimezone),
             userTimezone
           );
+
+          console.log("Converted times:", {
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString()
+          });
 
           let currentTime = startTime;
           const increment = 15; // 15-minute increments
