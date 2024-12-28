@@ -5,8 +5,21 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Bell, Lock, User, Globe, Eye, Moon, Volume2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function SettingsTab() {
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting, updateSetting } = useUserSettings(profile?.id);
   const { toast } = useToast();
 
   const handleSave = () => {
@@ -15,6 +28,10 @@ export function SettingsTab() {
       description: "Your settings have been saved successfully.",
     });
   };
+
+  // Get all available timezones
+  const timezones = Intl.supportedValuesOf('timeZone');
+  const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
     <div className="space-y-6 p-4">
@@ -38,6 +55,41 @@ export function SettingsTab() {
 
       <Separator />
 
+      {/* Timezone Settings */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Globe className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">Timezone Settings</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="timezone">Timezone</Label>
+            <Select
+              value={currentTimezone}
+              onValueChange={(value) => {
+                updateSetting.mutate({ type: 'timezone', value });
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select your timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                {timezones.map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              Current time in {currentTimezone}:{' '}
+              {new Date().toLocaleTimeString('en-US', { timeZone: currentTimezone })}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Other Settings */}
       {/* Privacy & Security */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -122,40 +174,6 @@ export function SettingsTab() {
               </p>
             </div>
             <Switch />
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Language & Region */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Globe className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Language & Region</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="language">Language</Label>
-            <select
-              id="language"
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
-            >
-              <option value="en">English (US)</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
-            <select
-              id="timezone"
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
-            >
-              <option value="utc">UTC</option>
-              <option value="est">Eastern Time</option>
-              <option value="pst">Pacific Time</option>
-            </select>
           </div>
         </div>
       </div>

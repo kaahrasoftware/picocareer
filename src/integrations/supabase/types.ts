@@ -834,6 +834,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          setting_type: Database["public"]["Enums"]["setting_type"]
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          setting_type: Database["public"]["Enums"]["setting_type"]
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          setting_type?: Database["public"]["Enums"]["setting_type"]
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_comments: {
         Row: {
           content: string
@@ -1168,6 +1203,7 @@ export type Database = {
         | "Walkthrough"
         | "Group (2-3 Mentees)"
         | "Group (4-6 Mentees)"
+      setting_type: "timezone" | "notifications" | "language" | "theme"
       states:
         | "Alabama - AL"
         | "Alaska - AK"

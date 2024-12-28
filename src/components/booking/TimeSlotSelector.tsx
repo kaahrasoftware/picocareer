@@ -11,6 +11,7 @@ interface TimeSlotSelectorProps {
   onTimeSelect: (time: string) => void;
   selectedSessionType: SessionType | undefined;
   title?: string;
+  userTimezone?: string;
 }
 
 export function TimeSlotSelector({ 
@@ -19,18 +20,19 @@ export function TimeSlotSelector({
   selectedTime, 
   onTimeSelect,
   selectedSessionType,
-  title = "Start Time"
+  title = "Start Time",
+  userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   console.log("User timezone:", userTimezone);
 
   // Use the custom hook to fetch available time slots, passing the session duration
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 
-    selectedSessionType?.duration || 60
+    selectedSessionType?.duration || 60,
+    userTimezone
   );
   console.log("Available time slots in selector:", availableTimeSlots);
 

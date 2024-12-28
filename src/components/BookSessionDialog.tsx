@@ -10,6 +10,9 @@ import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
 
@@ -30,9 +33,12 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [note, setNote] = useState("");
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { toast } = useToast();
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting } = useUserSettings(profile?.id);
 
+  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const sessionTypes = useSessionTypes(mentor.id, open);
   const bookSession = useBookSession();
 
@@ -173,6 +179,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
                 selectedSessionType={selectedSessionTypeDetails}
+                userTimezone={userTimezone}
               />
             )}
 
