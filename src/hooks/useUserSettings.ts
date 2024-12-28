@@ -25,17 +25,12 @@ export function useUserSettings(profileId: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  console.log("useUserSettings - Profile ID:", profileId);
-
   const { data: settings } = useQuery({
     queryKey: ['user-settings', profileId],
     queryFn: async () => {
       if (!profileId) {
-        console.log("useUserSettings - No profile ID provided");
         return null;
       }
-      
-      console.log("useUserSettings - Fetching settings for profile:", profileId);
       
       const { data, error } = await supabase
         .from('user_settings')
@@ -43,11 +38,10 @@ export function useUserSettings(profileId: string | undefined) {
         .eq('profile_id', profileId);
       
       if (error) {
-        console.error('useUserSettings - Error fetching settings:', error);
+        console.error('Error fetching settings:', error);
         return null;
       }
       
-      console.log("useUserSettings - Fetched settings:", data);
       return data as UserSetting[];
     },
     enabled: !!profileId
@@ -56,8 +50,6 @@ export function useUserSettings(profileId: string | undefined) {
   const updateSetting = useMutation({
     mutationFn: async ({ type, value }: { type: SettingType; value: string }) => {
       if (!profileId) throw new Error('No profile ID provided');
-
-      console.log("useUserSettings - Updating setting:", { profileId, type, value });
 
       const { data, error } = await supabase
         .from('user_settings')
@@ -71,12 +63,7 @@ export function useUserSettings(profileId: string | undefined) {
         .select()
         .single();
 
-      if (error) {
-        console.error('useUserSettings - Error updating setting:', error);
-        throw error;
-      }
-      
-      console.log("useUserSettings - Setting updated successfully:", data);
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -87,7 +74,7 @@ export function useUserSettings(profileId: string | undefined) {
       });
     },
     onError: (error) => {
-      console.error('useUserSettings - Mutation error:', error);
+      console.error('Error updating setting:', error);
       toast({
         title: "Error",
         description: "Failed to update settings. Please try again.",
@@ -104,7 +91,7 @@ export function useUserSettings(profileId: string | undefined) {
       case 'email_notifications':
       case 'push_notifications':
         const notificationSetting = settings.find(s => s.setting_type === 'notifications');
-        if (!notificationSetting) return null;
+        if (!notificationSetting) return 'false';
         try {
           const notifications = JSON.parse(notificationSetting.setting_value);
           return notifications[type]?.toString() || 'false';
@@ -113,22 +100,16 @@ export function useUserSettings(profileId: string | undefined) {
         }
       
       case 'compact_mode':
+      case 'theme':
         const themeSetting = settings.find(s => s.setting_type === 'theme');
-        if (!themeSetting) return null;
+        if (!themeSetting) return type === 'theme' ? 'light' : 'false';
         try {
           const themeSettings = JSON.parse(themeSetting.setting_value);
-          return themeSettings.compact_mode?.toString() || 'false';
+          return type === 'theme' 
+            ? themeSettings.theme || 'light'
+            : themeSettings.compact_mode?.toString() || 'false';
         } catch {
-          return 'false';
-        }
-      
-      case 'theme':
-        const theme = settings.find(s => s.setting_type === 'theme');
-        try {
-          const themeSettings = JSON.parse(theme?.setting_value || '{}');
-          return themeSettings.theme || theme?.setting_value || null;
-        } catch {
-          return theme?.setting_value || null;
+          return type === 'theme' ? 'light' : 'false';
         }
       
       case 'timezone':

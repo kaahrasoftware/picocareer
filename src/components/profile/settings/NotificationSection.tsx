@@ -13,16 +13,11 @@ export function NotificationSection() {
   const pushNotifications = getSetting('push_notifications') === 'true';
 
   const handleNotificationChange = (type: 'email_notifications' | 'push_notifications', checked: boolean) => {
-    const currentSettings = {
-      email_notifications: getSetting('email_notifications') === 'true',
-      push_notifications: getSetting('push_notifications') === 'true'
-    };
-
     updateSetting.mutate({
       type: 'notifications',
       value: JSON.stringify({
-        ...currentSettings,
-        [type]: checked
+        email_notifications: type === 'email_notifications' ? checked : emailNotifications,
+        push_notifications: type === 'push_notifications' ? checked : pushNotifications
       })
     });
   };

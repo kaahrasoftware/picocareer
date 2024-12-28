@@ -23,11 +23,10 @@ export function ThemeSection() {
   };
 
   const handleCompactModeChange = (checked: boolean) => {
-    const currentTheme = getSetting('theme') || 'light';
     updateSetting.mutate({
       type: 'theme',
       value: JSON.stringify({
-        theme: currentTheme,
+        theme: darkMode ? 'dark' : 'light',
         compact_mode: checked
       })
     });
