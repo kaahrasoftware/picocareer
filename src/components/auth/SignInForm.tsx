@@ -57,9 +57,19 @@ export function SignInForm() {
       }
 
       if (data.user) {
+        // Get user profile to display their name in the welcome message
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', data.user.id)
+          .single();
+
+        const firstName = profileData?.first_name || 'back';
+        
         toast({
-          title: "Welcome back!",
+          title: `Welcome ${firstName}! 👋`,
           description: "You have successfully signed in.",
+          variant: "default",
         });
         navigate("/");
       }
