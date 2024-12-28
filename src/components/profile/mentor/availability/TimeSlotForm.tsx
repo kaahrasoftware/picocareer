@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,26 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
   const [selectedEndTime, setSelectedEndTime] = useState<string>();
   const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userTimezone, setUserTimezone] = useState<string>('UTC');
   const { toast } = useToast();
+
+  // Fetch user's timezone from settings
+  useEffect(() => {
+    const fetchUserTimezone = async () => {
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('setting_value')
+        .eq('profile_id', profileId)
+        .eq('setting_type', 'timezone')
+        .single();
+      
+      if (settings?.setting_value) {
+        setUserTimezone(settings.setting_value);
+      }
+    };
+
+    fetchUserTimezone();
+  }, [profileId]);
 
   const checkForOverlap = async (formattedDate: string, startTime: string, endTime: string) => {
     const { data: existingSlots } = await supabase
@@ -37,7 +56,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       const slotStart = parseInt(slot.start_time.split(':')[0]) * 60 + parseInt(slot.start_time.split(':')[1]);
       const slotEnd = parseInt(slot.end_time.split(':')[0]) * 60 + parseInt(slot.end_time.split(':')[1]);
 
-      // Check if the new slot overlaps with any existing slot
       return (newStart < slotEnd && newEnd > slotStart);
     });
   };
@@ -80,7 +98,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           date_available: formattedDate,
           start_time: selectedStartTime,
           end_time: selectedEndTime,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezone: userTimezone, // Use the user's timezone from settings
           is_available: true,
           recurring: isRecurring,
           day_of_week: isRecurring ? dayOfWeek : null
@@ -177,6 +195,10 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         />
         <Label htmlFor="recurring">Make this a weekly recurring availability</Label>
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        Times shown in your timezone ({userTimezone})
+      </p>
 
       <Button 
         onClick={handleSaveAvailability}
