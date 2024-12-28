@@ -11,14 +11,20 @@ export function useNotifications(userId: string | undefined) {
       if (!userId) return [];
 
       try {
+        console.log('Fetching notifications for user:', userId);
+        
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
           .eq('profile_id', userId)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching notifications:', error);
+          throw error;
+        }
 
+        console.log('Fetched notifications:', data);
         return data || [];
       } catch (error) {
         console.error('Failed to fetch notifications:', error);

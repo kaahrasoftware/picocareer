@@ -23,7 +23,7 @@ export interface ProfileDetails {
   user_type: string | null;
   company: { id: string; name: string } | null;
   school: { name: string } | null;
-  academic_major: { title: string } | null;
+  academic_major: string | null;
   career: { title: string; id: string } | null;
   company_name?: string;
   school_name?: string;

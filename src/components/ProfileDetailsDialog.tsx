@@ -93,7 +93,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         company_id: data.company?.id,
         company_name: data.company?.name,
         school_name: data.school?.name,
-        academic_major: data.academic_major,
+        academic_major: data.academic_major?.title,
         career_title: data.career?.title,
         career_id: data.career?.id
       } as ProfileDetails;
@@ -149,7 +149,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
               <ProfileFieldsOfInterest fields={profile.fields_of_interest} />
               <ProfileSkills skills={profile.skills} tools={profile.tools_used} />
               <ProfileEducation 
-                academic_major={profile.academic_major?.title} 
+                academic_major={profile.academic_major} 
                 highest_degree={profile.highest_degree}
                 school_name={profile.school_name}
                 profileId={profile.id}
