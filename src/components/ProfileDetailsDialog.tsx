@@ -157,9 +157,10 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                 profileId={profile.id}
               />
               <ProfileLinks 
-                linkedin_url={profile.linkedin_url}
-                github_url={profile.github_url}
-                website_url={profile.website_url}
+                linkedinUrl={profile.linkedin_url}
+                githubUrl={profile.github_url}
+                websiteUrl={profile.website_url}
+                profileId={profile.id}
               />
             </div>
           </ScrollArea>
