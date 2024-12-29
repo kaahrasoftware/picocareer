@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient } from "@tanstack/react-query";
 import { SelectField } from "../profile/editable/fields/SelectField";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 interface ProfileEditFormProps {
@@ -21,12 +20,33 @@ interface ProfileEditFormProps {
   onSuccess: () => void;
 }
 
+// Define the allowed field names type
+type FormFields = {
+  first_name: string;
+  last_name: string;
+  bio: string;
+  years_of_experience: number;
+  location: string;
+  skills: string;
+  tools_used: string;
+  keywords: string;
+  fields_of_interest: string;
+  linkedin_url: string;
+  github_url: string;
+  website_url: string;
+  position: string;
+  company_id: string;
+  school_id: string;
+  academic_major_id: string;
+  highest_degree: string;
+};
+
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [localProfile, setLocalProfile] = useState(profile);
   
-  const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm({
+  const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm<FormFields>({
     defaultValues: {
       first_name: profile.first_name || "",
       last_name: profile.last_name || "",
@@ -52,7 +72,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
   const watchedFields = watch();
 
   // Update local profile state when form fields change
-  const handleFieldChange = async (fieldName: string, value: any) => {
+  const handleFieldChange = (fieldName: keyof FormFields, value: any) => {
     setLocalProfile(prev => ({
       ...prev,
       [fieldName]: value
@@ -60,7 +80,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
     setValue(fieldName, value);
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormFields) => {
     try {
       // Convert comma-separated strings to arrays
       const formattedData = {
