@@ -42,7 +42,7 @@ export function CareerHeader({
       
       <div className="flex-1 min-w-0">
         <div className="relative mb-1">
-          <h3 className="font-semibold break-words pr-16">{title}</h3>
+          <h3 className="font-semibold break-words pr-16 text-left">{title}</h3>
           <Badge 
             variant="outline" 
             className="flex items-center gap-1 bg-transparent border-none absolute top-0 right-0"
