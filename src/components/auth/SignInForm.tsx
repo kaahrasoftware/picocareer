@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/ui/icons";
+import { ResetPasswordButton } from "./ResetPasswordButton";
+import { SocialSignIn } from "./SocialSignIn";
 
 export function SignInForm() {
   const navigate = useNavigate();
@@ -34,7 +35,6 @@ export function SignInForm() {
       });
 
       if (error) {
-        // Handle specific authentication errors
         if (error.message.includes("Invalid login credentials")) {
           toast({
             title: "Invalid credentials",
@@ -53,7 +53,6 @@ export function SignInForm() {
           return;
         }
 
-        // Handle network errors
         if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
           toast({
             title: "Connection Error",
@@ -82,27 +81,6 @@ export function SignInForm() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`
-        }
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      
-      toast({
-        title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -135,27 +113,9 @@ export function SignInForm() {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign In"}
       </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-
-      <Button
-        variant="outline"
-        type="button"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-      >
-        <Icons.google className="mr-2 h-4 w-4" />
-        Google
-      </Button>
+      
+      <ResetPasswordButton email={formData.email} />
+      <SocialSignIn />
     </form>
   );
 }
