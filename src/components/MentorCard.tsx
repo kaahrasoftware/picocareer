@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface MentorCardProps {
   id: string;
@@ -48,19 +48,19 @@ export function MentorCard(props: MentorCardProps) {
                   </Badge>
                 )}
               </div>
-              <h3 className="font-semibold truncate mb-2">{props.name}</h3>
-              <p className="text-sm font-medium mb-1 truncate text-foreground/90">
+              <h3 className="font-semibold truncate mb-2 text-left">{props.name}</h3>
+              <p className="text-sm font-medium mb-1 truncate text-foreground/90 text-left">
                 {props.career_title || props.title || "No position set"}
               </p>
               <div className="flex flex-col gap-1">
                 {props.company && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
                     <Building2 className="h-3 w-3 flex-shrink-0" />
                     <span className="truncate">{props.company}</span>
                   </div>
                 )}
                 {props.location && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
                     <span className="truncate">{props.location}</span>
                   </div>
@@ -72,7 +72,7 @@ export function MentorCard(props: MentorCardProps) {
           {/* Bio Section */}
           {props.bio && (
             <div className="w-full mb-4">
-              <p className="text-sm text-muted-foreground line-clamp-2">{props.bio}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2 text-left">{props.bio}</p>
             </div>
           )}
 
