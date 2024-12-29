@@ -18,22 +18,18 @@ export function SignUpForm() {
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [e.target.name]: e.target.value
     }));
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isLoading) return;
-    
     setIsLoading(true);
 
     try {
-      // Basic form validation
+      // Validate form data
       if (!formData.firstName.trim() || !formData.lastName.trim()) {
         toast({
           title: "Missing Information",
@@ -43,17 +39,8 @@ export function SignUpForm() {
         return;
       }
 
-      if (!formData.password || formData.password.length < 6) {
-        toast({
-          title: "Invalid Password",
-          description: "Password must be at least 6 characters long",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Attempt to sign up
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Attempt to sign up the user
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -64,41 +51,46 @@ export function SignUpForm() {
         }
       });
 
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
+      if (error) {
+        console.error('Sign up error:', error);
         
-        if (signUpError.message.includes("already registered")) {
+        if (error.message.includes("User already registered")) {
           toast({
             title: "Account Exists",
             description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
+          // Switch to sign in tab after a short delay
           setTimeout(() => {
             navigate("/auth?tab=signin");
           }, 1500);
+        } else if (error.message.includes("password")) {
+          toast({
+            title: "Invalid Password",
+            description: "Password must be at least 6 characters long",
+            variant: "destructive",
+          });
+        } else if (error.message.includes("email")) {
+          toast({
+            title: "Invalid Email",
+            description: "Please enter a valid email address",
+            variant: "destructive",
+          });
         } else {
           toast({
             title: "Sign Up Failed",
-            description: signUpError.message,
+            description: error.message,
             variant: "destructive",
           });
         }
         return;
       }
 
-      if (signUpData.user) {
+      if (data.user) {
         // Show success message
         toast({
           title: "Success! 🎉",
           description: "Your account has been created. Please check your email to verify your account.",
-        });
-
-        // Clear form data
-        setFormData({
-          email: '',
-          password: '',
-          firstName: '',
-          lastName: '',
         });
 
         // Redirect to sign in page after a short delay
@@ -107,7 +99,7 @@ export function SignUpForm() {
         }, 1500);
       }
     } catch (error: any) {
-      console.error('Unexpected sign up error:', error);
+      console.error('Sign up error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -155,11 +147,7 @@ export function SignUpForm() {
         }}
       />
       
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={isLoading}
-      >
+      <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
