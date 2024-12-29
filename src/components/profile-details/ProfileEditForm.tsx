@@ -20,6 +20,9 @@ interface ProfileEditFormProps {
   onSuccess: () => void;
 }
 
+// Define the degree type based on the database enum
+type Degree = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
+
 // Define the allowed field names type
 type FormFields = {
   first_name: string;
@@ -38,7 +41,7 @@ type FormFields = {
   company_id: string;
   school_id: string;
   academic_major_id: string;
-  highest_degree: string;
+  highest_degree: Degree;
 };
 
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
@@ -64,7 +67,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
       company_id: profile.company_id || "",
       school_id: profile.school_id || "",
       academic_major_id: profile.academic_major_id || "",
-      highest_degree: profile.highest_degree || "",
+      highest_degree: (profile.highest_degree as Degree) || "No Degree",
     }
   });
 
