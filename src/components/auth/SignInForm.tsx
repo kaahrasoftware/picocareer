@@ -27,31 +27,38 @@ export function SignInForm() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading) return;
+    
     setIsLoading(true);
 
     try {
+      // Basic validation
+      if (!formData.email.trim() || !formData.password.trim()) {
+        toast({
+          title: "Missing Information",
+          description: "Please provide both email and password",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
       if (signInError) {
-        if (signInError.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Invalid credentials",
-            description: "Please check your email and password and try again.",
-            variant: "destructive",
-          });
-        } else if (signInError.message.includes("Email not confirmed")) {
+        if (signInError.message.includes("Email not confirmed")) {
           toast({
             title: "Email not verified",
-            description: "Please check your email and verify your account before signing in.",
+            description: "Please check your email (including spam folder) and verify your account before signing in.",
             variant: "destructive",
           });
         } else {
           toast({
             title: "Sign in failed",
-            description: signInError.message,
+            description: "Please check your email and password and try again.",
             variant: "destructive",
           });
         }
