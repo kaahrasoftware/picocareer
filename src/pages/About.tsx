@@ -1,7 +1,39 @@
 import { Target, Flag, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function About() {
+  const { toast } = useToast();
+  
+  const { data: mentors = [], isLoading, error } = useQuery({
+    queryKey: ['team-members'],
+    queryFn: async () => {
+      console.log('Fetching team members...');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar_url, first_name, last_name')
+        .eq('user_type', 'mentor')
+        .limit(10)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching team members:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load team members. Please try again later.",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      return data || [];
+    },
+    retry: 2,
+    retryDelay: 1000,
+  });
+
   const teamMembers = [
     {
       name: "Rafik Tarbari",
