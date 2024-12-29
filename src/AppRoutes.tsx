@@ -1,18 +1,18 @@
 import { Routes, Route } from "react-router-dom";
 import { MenuSidebar } from "@/components/MenuSidebar";
-import { About } from "@/pages/About";
-import { Auth } from "@/pages/Auth";
-import { Blog } from "@/pages/Blog";
-import { BlogUpload } from "@/pages/BlogUpload";
-import { Career } from "@/pages/Career";
-import { CareerUpload } from "@/pages/CareerUpload";
-import { Index } from "@/pages/Index";
-import { MajorUpload } from "@/pages/MajorUpload";
-import { Mentor } from "@/pages/Mentor";
-import { MentorRegistration } from "@/pages/MentorRegistration";
-import { Profile } from "@/pages/Profile";
-import { Program } from "@/pages/Program";
-import { Video } from "@/pages/Video";
+import About from "@/pages/About";
+import Auth from "@/pages/Auth";
+import Blog from "@/pages/Blog";
+import BlogUpload from "@/pages/BlogUpload";
+import Career from "@/pages/Career";
+import CareerUpload from "@/pages/CareerUpload";
+import Index from "@/pages/Index";
+import MajorUpload from "@/pages/MajorUpload";
+import Mentor from "@/pages/Mentor";
+import MentorRegistration from "@/pages/MentorRegistration";
+import Profile from "@/pages/Profile";
+import Program from "@/pages/Program";
+import Video from "@/pages/Video";
 
 export function AppRoutes() {
   return (
