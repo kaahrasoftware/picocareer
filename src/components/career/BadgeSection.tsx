@@ -11,7 +11,7 @@ export function BadgeSection({ title, items, badgeClassName }: BadgeSectionProps
 
   return (
     <div className="mb-4">
-      <h4 className="text-sm font-medium mb-2 text-left">{title}</h4>
+      <h4 className="text-sm font-medium mb-2">{title}</h4>
       <div className="flex flex-wrap gap-1.5">
         {items.slice(0, 3).map((item) => (
           <Badge 
