@@ -6,12 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient } from "@tanstack/react-query";
+import { SelectField } from "../profile/editable/fields/SelectField";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProfileEditFormProps {
   profile: Profile & {
     company_name?: string | null;
     school_name?: string | null;
     academic_major?: string | null;
+    career_title?: string | null;
   };
   onCancel: () => void;
   onSuccess: () => void;
@@ -23,7 +26,11 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
   
   const { register, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: {
+      first_name: profile.first_name || "",
+      last_name: profile.last_name || "",
       bio: profile.bio || "",
+      years_of_experience: profile.years_of_experience || 0,
+      location: profile.location || "",
       skills: profile.skills?.join(", ") || "",
       tools_used: profile.tools_used?.join(", ") || "",
       keywords: profile.keywords?.join(", ") || "",
@@ -31,6 +38,11 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
       linkedin_url: profile.linkedin_url || "",
       github_url: profile.github_url || "",
       website_url: profile.website_url || "",
+      position: profile.position || "",
+      company_id: profile.company_id || "",
+      school_id: profile.school_id || "",
+      academic_major_id: profile.academic_major_id || "",
+      highest_degree: profile.highest_degree || "",
     }
   });
 
@@ -72,6 +84,98 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-6">
+      {/* Personal Information */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Personal Information</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">First Name</label>
+            <Input {...register("first_name")} />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Last Name</label>
+            <Input {...register("last_name")} />
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Location</label>
+          <Input {...register("location")} placeholder="City, Country" />
+        </div>
+      </div>
+
+      {/* Professional Information */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Professional Information</h4>
+        <div>
+          <label className="text-sm font-medium">Current Position</label>
+          <SelectField
+            fieldName="position"
+            value={profile.position || ""}
+            onSave={(value) => {
+              // Handle position update
+            }}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Company</label>
+          <SelectField
+            fieldName="company_id"
+            value={profile.company_id || ""}
+            onSave={(value) => {
+              // Handle company update
+            }}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Years of Experience</label>
+          <Input
+            type="number"
+            {...register("years_of_experience")}
+            min="0"
+          />
+        </div>
+      </div>
+
+      {/* Education */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Education</h4>
+        <div>
+          <label className="text-sm font-medium">School</label>
+          <SelectField
+            fieldName="school_id"
+            value={profile.school_id || ""}
+            onSave={(value) => {
+              // Handle school update
+            }}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Academic Major</label>
+          <SelectField
+            fieldName="academic_major_id"
+            value={profile.academic_major_id || ""}
+            onSave={(value) => {
+              // Handle major update
+            }}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Highest Degree</label>
+          <SelectField
+            fieldName="highest_degree"
+            value={profile.highest_degree || ""}
+            onSave={(value) => {
+              // Handle degree update
+            }}
+            onCancel={() => {}}
+          />
+        </div>
+      </div>
+
       {/* Bio Section */}
       <div className="bg-muted rounded-lg p-4">
         <h4 className="font-semibold mb-2">About</h4>
