@@ -37,12 +37,14 @@ export function useNotifications(session: Session | null) {
           code: error.code
         });
         
-        // Show error toast only on final retry
-        toast({
-          title: "Error loading notifications",
-          description: "Please check your connection and try again",
-          variant: "destructive",
-        });
+        // Only show error toast on final retry
+        if (!error.message?.includes('Failed to fetch')) {
+          toast({
+            title: "Error loading notifications",
+            description: "Please check your connection and try again",
+            variant: "destructive",
+          });
+        }
         
         throw error;
       }
