@@ -44,7 +44,7 @@ export function SignUpForm() {
         .from('profiles')
         .select('id')
         .eq('email', formData.email.toLowerCase())
-        .single();
+        .maybeSingle();
 
       if (emailCheckError && !emailCheckError.message.includes('No rows found')) {
         throw emailCheckError;
