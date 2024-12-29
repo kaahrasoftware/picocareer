@@ -36,6 +36,27 @@ export function SignUpForm() {
           description: "Please provide both first name and last name",
           variant: "destructive",
         });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast({
+          title: "Account Exists",
+          description: "An account with this email already exists. Please sign in instead.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          navigate("/auth?tab=signin");
+        }, 1500);
+        setIsLoading(false);
         return;
       }
 
@@ -60,7 +81,6 @@ export function SignUpForm() {
             description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
-          // Switch to sign in tab after a short delay
           setTimeout(() => {
             navigate("/auth?tab=signin");
           }, 1500);
