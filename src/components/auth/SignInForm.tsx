@@ -36,16 +36,17 @@ export function SignInForm() {
       });
 
       if (signInError) {
-        if (signInError.message.includes("Invalid login credentials")) {
+        if (signInError.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email Not Verified",
+            description: "Please check your email (including spam folder) and click the verification link to activate your account. Need help? Contact support.",
+            variant: "destructive",
+            duration: 6000,
+          });
+        } else if (signInError.message.includes("Invalid login credentials")) {
           toast({
             title: "Invalid credentials",
             description: "Please check your email and password and try again.",
-            variant: "destructive",
-          });
-        } else if (signInError.message.includes("Email not confirmed")) {
-          toast({
-            title: "Email not verified",
-            description: "Please check your email and verify your account before signing in.",
             variant: "destructive",
           });
         } else {
