@@ -7,7 +7,7 @@ interface CareerHeaderProps {
   salary_range?: string;
   image_url?: string;
   profiles_count?: number;
-  onImageClick?: () => void;  // Add new prop for click handler
+  onImageClick?: () => void;
 }
 
 export function CareerHeader({ 
@@ -60,7 +60,7 @@ export function CareerHeader({
         {salary_range && (
           <Badge 
             variant="outline" 
-            className="bg-[#FFDEE2] text-[#4B5563] mt-2"
+            className="bg-[#FFDEE2] text-[#4B5563] mt-2 block w-fit"
           >
             {salary_range}
           </Badge>
