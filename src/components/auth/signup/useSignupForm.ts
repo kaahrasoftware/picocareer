@@ -1,114 +1,82 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface SignupFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
 
 export function useSignupForm() {
+  const [formData, setFormData] = useState<SignupFormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isLoading) return;
-
-    // Basic form validation
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide both first name and last name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.password || formData.password.length < 6) {
-      toast({
-        title: "Invalid Password",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Attempt to sign up
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email.trim().toLowerCase(),
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
         password: formData.password,
         options: {
           data: {
-            first_name: formData.firstName.trim(),
-            last_name: formData.lastName.trim(),
-          }
-        }
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          },
+        },
       });
 
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
-        
-        if (signUpError.message.includes("already registered")) {
-          toast({
-            title: "Account Exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
-          });
-          setTimeout(() => {
-            navigate("/auth?tab=signin");
-          }, 1500);
-        } else {
-          toast({
-            title: "Sign Up Failed",
-            description: signUpError.message,
-            variant: "destructive",
-          });
-        }
-        return;
-      }
+      if (error) throw error;
 
-      if (signUpData.user) {
-        toast({
-          title: "Success! 🎉",
-          description: "Your account has been created. Please check your email to verify your account.",
-        });
-
-        setFormData({
-          email: '',
-          password: '',
-          firstName: '',
-          lastName: '',
-        });
-
-        setTimeout(() => {
-          navigate("/auth?tab=signin");
-        }, 1500);
-      }
-    } catch (error: any) {
-      console.error('Unexpected sign up error:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Account created successfully!",
+        description: "Please check your email to verify your account.",
+      });
+      
+      navigate("/auth?mode=signin");
+    } catch (error: any) {
+      toast({
         variant: "destructive",
+        title: "Error creating account",
+        description: error.message,
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error signing in with Google",
+        description: error.message,
+      });
     }
   };
 
@@ -116,6 +84,7 @@ export function useSignupForm() {
     formData,
     isLoading,
     handleInputChange,
-    handleSignUp
+    handleSignUp,
+    handleGoogleSignIn,
   };
 }

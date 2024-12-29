@@ -4,7 +4,7 @@ import { SocialSignIn } from "./signup/SocialSignIn";
 import { useSignupForm } from "./signup/useSignupForm";
 
 export function SignUpForm() {
-  const { formData, isLoading, handleInputChange, handleSignUp } = useSignupForm();
+  const { formData, isLoading, handleInputChange, handleSignUp, handleGoogleSignIn } = useSignupForm();
 
   return (
     <form onSubmit={handleSignUp} className="space-y-4">
@@ -21,7 +21,7 @@ export function SignUpForm() {
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
-      <SocialSignIn />
+      <SocialSignIn onGoogleSignIn={handleGoogleSignIn} />
     </form>
   );
 }
