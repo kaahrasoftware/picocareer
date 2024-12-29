@@ -26,6 +26,9 @@ export function SignUpForm() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading) return;
+    
     setIsLoading(true);
 
     try {
@@ -36,18 +39,17 @@ export function SignUpForm() {
           description: "Please provide both first name and last name",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
-      // Check if user already exists
-      const { data: existingUser } = await supabase
+      // First check if user exists in profiles
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', formData.email)
         .maybeSingle();
 
-      if (existingUser) {
+      if (existingProfile) {
         toast({
           title: "Account Exists",
           description: "An account with this email already exists. Please sign in instead.",
@@ -56,12 +58,11 @@ export function SignUpForm() {
         setTimeout(() => {
           navigate("/auth?tab=signin");
         }, 1500);
-        setIsLoading(false);
         return;
       }
 
-      // Attempt to sign up the user
-      const { data, error } = await supabase.auth.signUp({
+      // Attempt to sign up
+      const signUpResponse = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -72,10 +73,10 @@ export function SignUpForm() {
         }
       });
 
-      if (error) {
-        console.error('Sign up error:', error);
+      if (signUpResponse.error) {
+        console.error('Sign up error:', signUpResponse.error);
         
-        if (error.message.includes("User already registered")) {
+        if (signUpResponse.error.message.includes("User already registered")) {
           toast({
             title: "Account Exists",
             description: "An account with this email already exists. Please sign in instead.",
@@ -84,13 +85,13 @@ export function SignUpForm() {
           setTimeout(() => {
             navigate("/auth?tab=signin");
           }, 1500);
-        } else if (error.message.includes("password")) {
+        } else if (signUpResponse.error.message.includes("password")) {
           toast({
             title: "Invalid Password",
             description: "Password must be at least 6 characters long",
             variant: "destructive",
           });
-        } else if (error.message.includes("email")) {
+        } else if (signUpResponse.error.message.includes("email")) {
           toast({
             title: "Invalid Email",
             description: "Please enter a valid email address",
@@ -99,21 +100,19 @@ export function SignUpForm() {
         } else {
           toast({
             title: "Sign Up Failed",
-            description: error.message,
+            description: signUpResponse.error.message,
             variant: "destructive",
           });
         }
         return;
       }
 
-      if (data.user) {
-        // Show success message
+      if (signUpResponse.data.user) {
         toast({
           title: "Success! 🎉",
           description: "Your account has been created. Please check your email to verify your account.",
         });
 
-        // Redirect to sign in page after a short delay
         setTimeout(() => {
           navigate("/auth?tab=signin");
         }, 1500);
