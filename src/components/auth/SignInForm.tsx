@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/ui/icons";
+import { ResetPasswordButton } from "./ResetPasswordButton";
+import { SocialSignIn } from "./SocialSignIn";
 
 export function SignInForm() {
   const navigate = useNavigate();
@@ -34,7 +35,6 @@ export function SignInForm() {
       });
 
       if (error) {
-        // Handle specific authentication errors
         if (error.message.includes("Invalid login credentials")) {
           toast({
             title: "Invalid credentials",
@@ -53,7 +53,6 @@ export function SignInForm() {
           return;
         }
 
-        // Handle network errors
         if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
           toast({
             title: "Connection Error",
@@ -85,59 +84,6 @@ export function SignInForm() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`
-        }
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      
-      toast({
-        title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!formData.email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email address to reset your password.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(formData.email.toLowerCase(), {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Password Reset Email Sent",
-        description: "Please check your email for password reset instructions.",
-      });
-    } catch (error: any) {
-      console.error('Password reset error:', error);
-      
-      toast({
-        title: "Error",
-        description: "Failed to send password reset email. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <form onSubmit={handleSignIn} className="space-y-4">
       <div className="space-y-2">
@@ -153,17 +99,7 @@ export function SignInForm() {
         />
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="signin-password">Password</Label>
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 font-normal text-xs text-muted-foreground hover:text-primary"
-            onClick={handleResetPassword}
-          >
-            Forgot password?
-          </Button>
-        </div>
+        <Label htmlFor="signin-password">Password</Label>
         <Input
           id="signin-password"
           name="password"
@@ -177,27 +113,9 @@ export function SignInForm() {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign In"}
       </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-
-      <Button
-        variant="outline"
-        type="button"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-      >
-        <Icons.google className="mr-2 h-4 w-4" />
-        Google
-      </Button>
+      
+      <ResetPasswordButton email={formData.email} />
+      <SocialSignIn />
     </form>
   );
 }
