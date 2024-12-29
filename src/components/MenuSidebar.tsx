@@ -63,7 +63,7 @@ export function MenuSidebar() {
   // If there's an auth error, show sign in button
   if (isError) {
     return (
-      <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border z-50">
         <div className="container h-full mx-auto flex items-center justify-between px-4">
           <Link to="/">
             <img 
@@ -85,7 +85,7 @@ export function MenuSidebar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border z-50">
       <div className="container h-full mx-auto flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <Link to="/">
