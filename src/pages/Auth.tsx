@@ -16,26 +16,39 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 
 export default function Auth() {
-  const { data: mentors } = useQuery({
+  const { data: mentors, isError } = useQuery({
     queryKey: ['random-mentors'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, avatar_url, first_name, last_name')
-        .eq('user_type', 'mentor')
-        .limit(10)
-        .order('created_at', { ascending: false });
+      try {
+        console.log('Fetching mentors...');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, avatar_url, first_name, last_name')
+          .eq('user_type', 'mentor')
+          .limit(10)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+
+        console.log('Fetched mentors:', data?.length);
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching mentors:', error);
+        return []; // Return empty array on error to prevent UI breaking
+      }
     },
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   return (
     <div className="min-h-screen">
       <div className="flex min-h-screen">
         <div className="w-[40%] bg-[#2A2A2A] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMkEyQTJBIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')] p-8 flex flex-col items-center">
-          <div className="h-20" /> {/* Reduced spacing above logo */}
+          <div className="h-20" />
           <div className="flex flex-col items-center space-y-4">
             <Link to="/">
               <img 
@@ -71,46 +84,48 @@ export default function Auth() {
               </p>
               
               {/* Mentor Carousel */}
-              <div className="mt-8 flex justify-center items-center">
-                <Carousel
-                  opts={{
-                    align: "start",
-                    loop: true,
-                    dragFree: true,
-                  }}
-                  plugins={[
-                    Autoplay({
-                      delay: 2000,
-                      stopOnInteraction: false,
-                    }),
-                  ]}
-                  className="w-full max-w-xs mx-auto"
-                >
-                  <CarouselContent className="-ml-1">
-                    {mentors?.map((mentor) => (
-                      <CarouselItem key={mentor.id} className="basis-1/5 pl-1 flex items-center justify-center">
-                        <div className="relative w-12 h-12">
-                          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-                          <div className="absolute inset-[2px] rounded-full bg-background" />
-                          <div className="absolute inset-[4px] rounded-full overflow-hidden">
-                            <Avatar className="h-full w-full">
-                              <AvatarImage 
-                                src={mentor.avatar_url || ''} 
-                                alt={`${mentor.first_name} ${mentor.last_name}`}
-                                className="h-full w-full object-cover"
-                              />
-                              <AvatarFallback>
-                                {mentor.first_name?.[0]}
-                                {mentor.last_name?.[0]}
-                              </AvatarFallback>
-                            </Avatar>
+              {!isError && mentors && mentors.length > 0 && (
+                <div className="mt-8 flex justify-center items-center">
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: true,
+                      dragFree: true,
+                    }}
+                    plugins={[
+                      Autoplay({
+                        delay: 2000,
+                        stopOnInteraction: false,
+                      }),
+                    ]}
+                    className="w-full max-w-xs mx-auto"
+                  >
+                    <CarouselContent className="-ml-1">
+                      {mentors.map((mentor) => (
+                        <CarouselItem key={mentor.id} className="basis-1/5 pl-1 flex items-center justify-center">
+                          <div className="relative w-12 h-12">
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
+                            <div className="absolute inset-[2px] rounded-full bg-background" />
+                            <div className="absolute inset-[4px] rounded-full overflow-hidden">
+                              <Avatar className="h-full w-full">
+                                <AvatarImage 
+                                  src={mentor.avatar_url || ''} 
+                                  alt={`${mentor.first_name} ${mentor.last_name}`}
+                                  className="h-full w-full object-cover"
+                                />
+                                <AvatarFallback>
+                                  {mentor.first_name?.[0]}
+                                  {mentor.last_name?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
                           </div>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+                </div>
+              )}
             </div>
           </div>
         </div>
