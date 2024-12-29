@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/types/database/profiles";
+import { BadgeSection } from "@/components/career/BadgeSection";
 
 interface ProfileViewProps {
   profile: Profile & {
@@ -18,73 +19,50 @@ export function ProfileView({ profile }: ProfileViewProps) {
         <p className="text-muted-foreground">{profile.bio || "No bio provided"}</p>
       </div>
 
-      {/* Keywords Section */}
-      {profile.keywords && profile.keywords.length > 0 && (
-        <div className="bg-muted rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Keywords</h4>
-          <div className="flex flex-wrap gap-2">
-            {profile.keywords.map((keyword, index) => (
-              <Badge 
-                key={index}
-                className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
-              >
-                {keyword}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Fields of Interest */}
-      {profile.fields_of_interest && profile.fields_of_interest.length > 0 && (
-        <div className="bg-muted rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Fields of Interest</h4>
-          <div className="flex flex-wrap gap-2">
-            {profile.fields_of_interest.map((field, index) => (
-              <Badge 
-                key={index}
-                className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-              >
-                {field}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Skills and Tools */}
+      {/* Professional Info */}
       <div className="bg-muted rounded-lg p-4 space-y-4">
-        {profile.skills && profile.skills.length > 0 && (
-          <div>
-            <h4 className="font-semibold mb-2">Skills</h4>
-            <div className="flex flex-wrap gap-2">
-              {profile.skills.map((skill, index) => (
-                <Badge 
-                  key={index}
-                  className="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
-                >
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          </div>
+        <h4 className="font-semibold mb-2">Professional Information</h4>
+        {profile.position && (
+          <p className="text-muted-foreground">Position: {profile.position}</p>
         )}
+        {profile.company_name && (
+          <p className="text-muted-foreground">Company: {profile.company_name}</p>
+        )}
+        {profile.years_of_experience !== undefined && (
+          <p className="text-muted-foreground">
+            Years of Experience: {profile.years_of_experience}
+          </p>
+        )}
+        {profile.location && (
+          <p className="text-muted-foreground">Location: {profile.location}</p>
+        )}
+      </div>
 
-        {profile.tools_used && profile.tools_used.length > 0 && (
-          <div>
-            <h4 className="font-semibold mb-2">Tools</h4>
-            <div className="flex flex-wrap gap-2">
-              {profile.tools_used.map((tool, index) => (
-                <Badge 
-                  key={index}
-                  className="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-                >
-                  {tool}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Skills and Tools Section */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <BadgeSection
+          title="Skills"
+          items={profile.skills}
+          badgeClassName="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+        />
+
+        <BadgeSection
+          title="Tools"
+          items={profile.tools_used}
+          badgeClassName="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+        />
+
+        <BadgeSection
+          title="Keywords"
+          items={profile.keywords}
+          badgeClassName="bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
+        />
+
+        <BadgeSection
+          title="Fields of Interest"
+          items={profile.fields_of_interest}
+          badgeClassName="bg-[#E2D4F0] text-[#4B5563] hover:bg-[#D4C4E3] transition-colors border border-[#D4C4E3]"
+        />
       </div>
 
       {/* Education */}
