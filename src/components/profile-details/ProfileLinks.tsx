@@ -1,51 +1,48 @@
 import { Link, Github, Globe } from "lucide-react";
+import { EditableField } from "@/components/profile/EditableField";
 
 interface ProfileLinksProps {
-  linkedin_url: string | null;
-  github_url: string | null;
-  website_url: string | null;
+  linkedinUrl: string | null;
+  githubUrl: string | null;
+  websiteUrl: string | null;
+  profileId: string;
 }
 
-export function ProfileLinks({ linkedin_url, github_url, website_url }: ProfileLinksProps) {
-  if (!linkedin_url && !github_url && !website_url) return null;
+export function ProfileLinks({ linkedinUrl, githubUrl, websiteUrl, profileId }: ProfileLinksProps) {
+  if (!linkedinUrl && !githubUrl && !websiteUrl) return null;
 
   return (
-    <div className="bg-muted rounded-lg p-4">
-      <h4 className="font-semibold mb-2">Links</h4>
-      <div className="space-y-2">
-        {linkedin_url && (
-          <a 
-            href={linkedin_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Link className="h-4 w-4" />
-            <span>LinkedIn</span>
-          </a>
-        )}
-        {github_url && (
-          <a 
-            href={github_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Github className="h-4 w-4" />
-            <span>GitHub</span>
-          </a>
-        )}
-        {website_url && (
-          <a 
-            href={website_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Globe className="h-4 w-4" />
-            <span>Website</span>
-          </a>
-        )}
+    <div className="bg-muted rounded-lg p-4 space-y-3">
+      <h4 className="font-semibold">Links</h4>
+      
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Link className="h-4 w-4" />
+        <EditableField
+          label="LinkedIn URL"
+          value={linkedinUrl}
+          fieldName="linkedin_url"
+          profileId={profileId}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Github className="h-4 w-4" />
+        <EditableField
+          label="GitHub URL"
+          value={githubUrl}
+          fieldName="github_url"
+          profileId={profileId}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Globe className="h-4 w-4" />
+        <EditableField
+          label="Website URL"
+          value={websiteUrl}
+          fieldName="website_url"
+          profileId={profileId}
+        />
       </div>
     </div>
   );

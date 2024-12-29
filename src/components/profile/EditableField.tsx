@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { EditButton } from "./editable/EditButton";
-import { TextField } from "./editable/fields/TextField";
-import { SelectField } from "./editable/fields/SelectField";
-import { DegreeField } from "./editable/fields/DegreeField";
-import { FieldName } from "./editable/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Pencil, Save, X } from "lucide-react";
 
 export interface EditableFieldProps {
   label: string;
@@ -26,11 +24,11 @@ export function EditableField({
   const [editValue, setEditValue] = useState(value || "");
   const { toast } = useToast();
 
-  const updateField = async (newValue: string) => {
+  const updateField = async () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ [fieldName]: newValue })
+        .update({ [fieldName]: editValue })
         .eq('id', profileId);
 
       if (error) throw error;
@@ -41,7 +39,7 @@ export function EditableField({
       });
 
       if (onUpdate) {
-        onUpdate(newValue);
+        onUpdate(editValue);
       }
       setIsEditing(false);
     } catch (error) {
@@ -55,48 +53,39 @@ export function EditableField({
   };
 
   if (isEditing) {
-    if (fieldName === 'highest_degree') {
-      return (
-        <DegreeField
-          value={editValue}
-          onSave={(value) => {
-            updateField(value);
-            setEditValue(value);
-          }}
-          onCancel={() => setIsEditing(false)}
-        />
-      );
-    }
-
-    if (['academic_major_id', 'school_id', 'company_id', 'position'].includes(fieldName)) {
-      return (
-        <SelectField
-          fieldName={fieldName as FieldName}
-          value={editValue}
-          onSave={(value) => {
-            updateField(value);
-            setEditValue(value);
-          }}
-          onCancel={() => setIsEditing(false)}
-        />
-      );
-    }
-
     return (
-      <TextField
-        value={editValue}
-        onChange={setEditValue}
-        onSave={() => updateField(editValue)}
-        onCancel={() => setIsEditing(false)}
-        placeholder={`Enter ${label.toLowerCase()}`}
-      />
+      <div className="space-y-2">
+        <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          placeholder={`Enter ${label.toLowerCase()}`}
+          className="w-full"
+        />
+        <div className="flex gap-2 justify-end">
+          <Button onClick={updateField} size="sm">
+            <Save className="h-4 w-4 mr-1" />
+            Save
+          </Button>
+          <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">
+            <X className="h-4 w-4 mr-1" />
+            Cancel
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="flex items-center justify-between group">
       <span className="text-muted-foreground">{value || "Not set"}</span>
-      <EditButton onClick={() => setIsEditing(true)} />
+      <Button
+        variant="ghost"
+        size="icon"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={() => setIsEditing(true)}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
