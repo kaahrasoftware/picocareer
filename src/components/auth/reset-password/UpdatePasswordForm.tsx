@@ -15,13 +15,18 @@ export function UpdatePasswordForm() {
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log('Starting password update process...');
 
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
+      console.log('Password update response received');
+
       if (error) {
+        console.error('Password update error:', error);
+        
         if (error.message.includes("Password")) {
           toast({
             title: "Invalid Password",
@@ -38,6 +43,7 @@ export function UpdatePasswordForm() {
         return;
       }
 
+      console.log('Password updated successfully');
       toast({
         title: "Password Updated",
         description: "Your password has been successfully updated. Please sign in with your new password.",
