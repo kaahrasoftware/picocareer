@@ -8,6 +8,7 @@ import type { Profile } from "@/types/database/profiles";
 import { useQueryClient } from "@tanstack/react-query";
 import { SelectField } from "../profile/editable/fields/SelectField";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface ProfileEditFormProps {
   profile: Profile & {
@@ -23,8 +24,9 @@ interface ProfileEditFormProps {
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [localProfile, setLocalProfile] = useState(profile);
   
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+  const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm({
     defaultValues: {
       first_name: profile.first_name || "",
       last_name: profile.last_name || "",
@@ -45,6 +47,18 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
       highest_degree: profile.highest_degree || "",
     }
   });
+
+  // Watch all form fields for immediate updates
+  const watchedFields = watch();
+
+  // Update local profile state when form fields change
+  const handleFieldChange = async (fieldName: string, value: any) => {
+    setLocalProfile(prev => ({
+      ...prev,
+      [fieldName]: value
+    }));
+    setValue(fieldName, value);
+  };
 
   const onSubmit = async (data: any) => {
     try {
@@ -90,16 +104,26 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium">First Name</label>
-            <Input {...register("first_name")} />
+            <Input 
+              {...register("first_name")}
+              onChange={(e) => handleFieldChange("first_name", e.target.value)}
+            />
           </div>
           <div>
             <label className="text-sm font-medium">Last Name</label>
-            <Input {...register("last_name")} />
+            <Input 
+              {...register("last_name")}
+              onChange={(e) => handleFieldChange("last_name", e.target.value)}
+            />
           </div>
         </div>
         <div>
           <label className="text-sm font-medium">Location</label>
-          <Input {...register("location")} placeholder="City, Country" />
+          <Input 
+            {...register("location")}
+            onChange={(e) => handleFieldChange("location", e.target.value)}
+            placeholder="City, Country"
+          />
         </div>
       </div>
 
@@ -110,10 +134,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <label className="text-sm font-medium">Current Position</label>
           <SelectField
             fieldName="position"
-            value={profile.position || ""}
-            onSave={(value) => {
-              // Handle position update
-            }}
+            value={watchedFields.position}
+            onSave={(value) => handleFieldChange("position", value)}
             onCancel={() => {}}
           />
         </div>
@@ -121,10 +143,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <label className="text-sm font-medium">Company</label>
           <SelectField
             fieldName="company_id"
-            value={profile.company_id || ""}
-            onSave={(value) => {
-              // Handle company update
-            }}
+            value={watchedFields.company_id}
+            onSave={(value) => handleFieldChange("company_id", value)}
             onCancel={() => {}}
           />
         </div>
@@ -133,6 +153,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <Input
             type="number"
             {...register("years_of_experience")}
+            onChange={(e) => handleFieldChange("years_of_experience", parseInt(e.target.value))}
             min="0"
           />
         </div>
@@ -145,10 +166,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <label className="text-sm font-medium">School</label>
           <SelectField
             fieldName="school_id"
-            value={profile.school_id || ""}
-            onSave={(value) => {
-              // Handle school update
-            }}
+            value={watchedFields.school_id}
+            onSave={(value) => handleFieldChange("school_id", value)}
             onCancel={() => {}}
           />
         </div>
@@ -156,10 +175,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <label className="text-sm font-medium">Academic Major</label>
           <SelectField
             fieldName="academic_major_id"
-            value={profile.academic_major_id || ""}
-            onSave={(value) => {
-              // Handle major update
-            }}
+            value={watchedFields.academic_major_id}
+            onSave={(value) => handleFieldChange("academic_major_id", value)}
             onCancel={() => {}}
           />
         </div>
@@ -167,10 +184,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <label className="text-sm font-medium">Highest Degree</label>
           <SelectField
             fieldName="highest_degree"
-            value={profile.highest_degree || ""}
-            onSave={(value) => {
-              // Handle degree update
-            }}
+            value={watchedFields.highest_degree}
+            onSave={(value) => handleFieldChange("highest_degree", value)}
             onCancel={() => {}}
           />
         </div>
@@ -181,6 +196,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         <h4 className="font-semibold mb-2">About</h4>
         <Textarea
           {...register("bio")}
+          onChange={(e) => handleFieldChange("bio", e.target.value)}
           placeholder="Tell us about yourself..."
           className="min-h-[100px]"
         />
@@ -192,6 +208,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <h4 className="font-semibold mb-2">Skills</h4>
           <Input
             {...register("skills")}
+            onChange={(e) => handleFieldChange("skills", e.target.value)}
             placeholder="Enter skills (comma-separated)"
           />
         </div>
@@ -200,6 +217,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <h4 className="font-semibold mb-2">Tools</h4>
           <Input
             {...register("tools_used")}
+            onChange={(e) => handleFieldChange("tools_used", e.target.value)}
             placeholder="Enter tools (comma-separated)"
           />
         </div>
@@ -211,6 +229,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <h4 className="font-semibold mb-2">Keywords</h4>
           <Input
             {...register("keywords")}
+            onChange={(e) => handleFieldChange("keywords", e.target.value)}
             placeholder="Enter keywords (comma-separated)"
           />
         </div>
@@ -219,6 +238,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
           <h4 className="font-semibold mb-2">Fields of Interest</h4>
           <Input
             {...register("fields_of_interest")}
+            onChange={(e) => handleFieldChange("fields_of_interest", e.target.value)}
             placeholder="Enter fields of interest (comma-separated)"
           />
         </div>
@@ -230,14 +250,17 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         <div className="space-y-4">
           <Input
             {...register("linkedin_url")}
+            onChange={(e) => handleFieldChange("linkedin_url", e.target.value)}
             placeholder="LinkedIn URL"
           />
           <Input
             {...register("github_url")}
+            onChange={(e) => handleFieldChange("github_url", e.target.value)}
             placeholder="GitHub URL"
           />
           <Input
             {...register("website_url")}
+            onChange={(e) => handleFieldChange("website_url", e.target.value)}
             placeholder="Website URL"
           />
         </div>
