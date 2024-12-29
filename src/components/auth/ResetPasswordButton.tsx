@@ -21,18 +21,46 @@ export function ResetPasswordButton({ email }: ResetPasswordButtonProps) {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth?tab=signin`,
       });
 
       if (error) throw error;
 
       toast({
         title: "Password Reset Email Sent",
-        description: "Please check your email for password reset instructions.",
+        description: "Please check your email for password reset instructions. Don't forget to check your spam folder.",
       });
     } catch (error: any) {
       console.error('Password reset error:', error);
       
+      // Handle specific error cases
+      if (error.message?.includes("Email rate limit exceeded")) {
+        toast({
+          title: "Too Many Attempts",
+          description: "Please wait a few minutes before requesting another password reset.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (error.message?.includes("User not found")) {
+        toast({
+          title: "Email Not Found",
+          description: "No account was found with this email address.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (error.message?.includes("Failed to fetch") || error.message?.includes("NetworkError")) {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to the server. Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Error",
         description: "Failed to send password reset email. Please try again.",
