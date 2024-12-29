@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
 import { Footer } from "@/components/Footer";
-import { AppRoutes } from "./AppRoutes";
+import { AppRoutes } from "@/AppRoutes";
 import "./App.css";
 
 const queryClient = new QueryClient();
