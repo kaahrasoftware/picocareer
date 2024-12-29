@@ -32,51 +32,44 @@ export function SignUpForm() {
     setIsLoading(true);
 
     try {
-      // Validate form data
+      // Basic form validation
       if (!formData.firstName.trim() || !formData.lastName.trim()) {
         toast({
           title: "Missing Information",
           description: "Please provide both first name and last name",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
-      // First check if user exists in profiles
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formData.email)
-        .maybeSingle();
-
-      if (existingProfile) {
+      if (!formData.password || formData.password.length < 6) {
         toast({
-          title: "Account Exists",
-          description: "An account with this email already exists. Please sign in instead.",
+          title: "Invalid Password",
+          description: "Password must be at least 6 characters long",
           variant: "destructive",
         });
-        setTimeout(() => {
-          navigate("/auth?tab=signin");
-        }, 1500);
+        setIsLoading(false);
         return;
       }
 
       // Attempt to sign up
-      const signUpResponse = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth?tab=signin`
         }
       });
 
-      if (signUpResponse.error) {
-        console.error('Sign up error:', signUpResponse.error);
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
         
-        if (signUpResponse.error.message.includes("User already registered")) {
+        if (signUpError.message.includes("already registered")) {
           toast({
             title: "Account Exists",
             description: "An account with this email already exists. Please sign in instead.",
@@ -85,13 +78,13 @@ export function SignUpForm() {
           setTimeout(() => {
             navigate("/auth?tab=signin");
           }, 1500);
-        } else if (signUpResponse.error.message.includes("password")) {
+        } else if (signUpError.message.toLowerCase().includes("password")) {
           toast({
             title: "Invalid Password",
-            description: "Password must be at least 6 characters long",
+            description: "Password must be at least 6 characters long and meet security requirements",
             variant: "destructive",
           });
-        } else if (signUpResponse.error.message.includes("email")) {
+        } else if (signUpError.message.toLowerCase().includes("email")) {
           toast({
             title: "Invalid Email",
             description: "Please enter a valid email address",
@@ -100,25 +93,36 @@ export function SignUpForm() {
         } else {
           toast({
             title: "Sign Up Failed",
-            description: signUpResponse.error.message,
+            description: signUpError.message,
             variant: "destructive",
           });
         }
+        setIsLoading(false);
         return;
       }
 
-      if (signUpResponse.data.user) {
+      if (signUpData.user) {
+        // Show success message
         toast({
           title: "Success! 🎉",
           description: "Your account has been created. Please check your email to verify your account.",
         });
 
+        // Clear form data
+        setFormData({
+          email: '',
+          password: '',
+          firstName: '',
+          lastName: '',
+        });
+
+        // Redirect to sign in page after a short delay
         setTimeout(() => {
           navigate("/auth?tab=signin");
         }, 1500);
       }
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Unexpected sign up error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
