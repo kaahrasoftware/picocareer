@@ -27,7 +27,9 @@ export function MajorHeader({ title, description, profilesCount }: MajorHeaderPr
           </div>
         )}
       </div>
-      <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+      <p className="text-sm text-muted-foreground line-clamp-2 text-left">
+        {description}
+      </p>
     </div>
   );
 }
