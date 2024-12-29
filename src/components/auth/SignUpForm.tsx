@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PersonalInfoFields } from "./signup/PersonalInfoFields";
 import { SocialSignIn } from "./signup/SocialSignIn";
+import { useDebouncedCallback } from "use-debounce";
 
 export function SignUpForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,11 +19,41 @@ export function SignUpForm() {
     lastName: '',
   });
 
+  const checkEmailExists = useDebouncedCallback(async (email: string) => {
+    if (!email || !email.includes('@')) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking email:', error);
+        return;
+      }
+
+      if (data) {
+        setEmailError("An account with this email already exists. Please sign in instead.");
+      } else {
+        setEmailError(undefined);
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+    }
+  }, 500);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+
+    if (name === 'email') {
+      checkEmailExists(value);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -167,9 +199,14 @@ export function SignUpForm() {
           firstName: !formData.firstName.trim(),
           lastName: !formData.lastName.trim()
         }}
+        emailError={emailError}
       />
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isLoading || !!emailError}
+      >
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
