@@ -37,6 +37,17 @@ export function MainNavigation() {
         </li>
         <li>
           <Link 
+            to="/career" 
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/career") && "bg-primary/20 text-primary"
+            )}
+          >
+            Careers
+          </Link>
+        </li>
+        <li>
+          <Link 
             to="/mentor" 
             className={cn(
               "px-4 py-2 rounded-md transition-colors",
