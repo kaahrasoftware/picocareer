@@ -29,11 +29,42 @@ export function SignInForm() {
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email: formData.email.toLowerCase(),
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific authentication errors
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Invalid credentials",
+            description: "Please check your email and password and try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (error.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email not verified",
+            description: "Please check your email to verify your account. Don't forget to check your spam folder.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Handle network errors
+        if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+          toast({
+            title: "Connection Error",
+            description: "Unable to connect to the server. Please check your internet connection and try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        throw error;
+      }
 
       toast({
         title: "Welcome back!",
@@ -42,9 +73,11 @@ export function SignInForm() {
       
       navigate("/");
     } catch (error: any) {
+      console.error('Sign in error:', error);
+      
       toast({
         title: "Error",
-        description: error.message,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -63,9 +96,11 @@ export function SignInForm() {
 
       if (error) throw error;
     } catch (error: any) {
+      console.error('Google sign in error:', error);
+      
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to sign in with Google. Please try again.",
         variant: "destructive",
       });
     }
