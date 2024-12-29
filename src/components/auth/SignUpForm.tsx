@@ -17,31 +17,6 @@ export function SignUpForm() {
     lastName: '',
   });
 
-  const createProfile = async (userId: string, email: string, firstName: string, lastName: string) => {
-    try {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-      if (!existingProfile) {
-        const { error } = await supabase.from('profiles').insert({
-          id: userId,
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          user_type: 'mentee'
-        });
-
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error('Error in createProfile:', error);
-      throw error;
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -77,7 +52,6 @@ export function SignUpForm() {
       });
 
       if (error) {
-        // Check if it's a confirmation email error
         if (error.message.includes("confirmation email")) {
           toast({
             title: "Email Configuration Error",
@@ -91,13 +65,6 @@ export function SignUpForm() {
       }
 
       if (data.user) {
-        await createProfile(
-          data.user.id,
-          formData.email,
-          formData.firstName,
-          formData.lastName
-        );
-
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account before signing in.",
