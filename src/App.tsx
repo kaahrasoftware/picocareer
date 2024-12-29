@@ -6,12 +6,12 @@ import "./App.css";
 
 function AppContent() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <main className="flex-grow">
         <AppRoutes />
       </main>
-      <GoToTopButton />
       <Footer />
+      <GoToTopButton />
     </div>
   );
 }
