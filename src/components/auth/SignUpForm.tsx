@@ -39,23 +39,24 @@ export function SignUpForm() {
     }
 
     try {
-      // First check if user already exists
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      // Check if user exists using a safer method
+      const { data: { user: existingUser }, error: getUserError } = await supabase.auth.getUser();
+      
+      if (getUserError && !getUserError.message.includes("Invalid JWT")) {
+        throw getUserError;
+      }
 
-      if (existingUser?.user) {
+      if (existingUser) {
         toast({
           title: "Account exists",
-          description: "An account with this email already exists. Please sign in instead.",
+          description: "You already have an account. Please sign in instead.",
           variant: "destructive",
         });
         navigate("/auth?tab=signin");
         return;
       }
 
-      // If no existing user, proceed with signup
+      // Proceed with signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -89,7 +90,6 @@ export function SignUpForm() {
           return;
         }
 
-        // Generic error handling
         throw error;
       }
 
