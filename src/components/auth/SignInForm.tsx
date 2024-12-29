@@ -106,6 +106,38 @@ export function SignInForm() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to reset your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email.toLowerCase(), {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Please check your email for password reset instructions.",
+      });
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <form onSubmit={handleSignIn} className="space-y-4">
       <div className="space-y-2">
@@ -121,7 +153,17 @@ export function SignInForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="signin-password">Password</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="signin-password">Password</Label>
+          <Button
+            type="button"
+            variant="link"
+            className="px-0 font-normal text-xs text-muted-foreground hover:text-primary"
+            onClick={handleResetPassword}
+          >
+            Forgot password?
+          </Button>
+        </div>
         <Input
           id="signin-password"
           name="password"
