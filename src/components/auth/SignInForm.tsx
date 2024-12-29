@@ -29,26 +29,42 @@ export function SignInForm() {
     e.preventDefault();
     
     if (isLoading) return;
-    
+
+    // Validate form data
+    const email = formData.email.trim().toLowerCase();
+    const password = formData.password.trim();
+
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Basic validation
-      if (!formData.email.trim() || !formData.password.trim()) {
-        toast({
-          title: "Missing Information",
-          description: "Please provide both email and password",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
+        email,
+        password,
       });
 
       if (signInError) {
+        console.error('Sign in error:', signInError);
+        
         if (signInError.message.includes("Email not confirmed")) {
           toast({
             title: "Email not verified",
@@ -58,7 +74,7 @@ export function SignInForm() {
         } else {
           toast({
             title: "Sign in failed",
-            description: "Please check your email and password and try again.",
+            description: "Invalid email or password. Please try again.",
             variant: "destructive",
           });
         }
@@ -86,7 +102,7 @@ export function SignInForm() {
         navigate("/");
       }
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('Unexpected sign in error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
