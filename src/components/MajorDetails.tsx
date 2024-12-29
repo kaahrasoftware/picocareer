@@ -67,9 +67,9 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {formatProfileCount(major.profiles_count)} Users
-              </span>
+              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">
+                {formatProfileCount(major.profiles_count)} Mentors
+              </Badge>
             </div>
           </div>
         </DialogHeader>
