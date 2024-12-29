@@ -10,9 +10,7 @@ interface PersonalInfoFieldsProps {
   hasError?: {
     firstName?: boolean;
     lastName?: boolean;
-    email?: boolean;
   };
-  emailError?: string;
 }
 
 export function PersonalInfoFields({ 
@@ -21,8 +19,7 @@ export function PersonalInfoFields({
   email, 
   password, 
   onChange,
-  hasError,
-  emailError
+  hasError 
 }: PersonalInfoFieldsProps) {
   return (
     <>
@@ -66,11 +63,7 @@ export function PersonalInfoFields({
           value={email}
           onChange={onChange}
           required
-          className={emailError ? "border-red-500" : ""}
         />
-        {emailError && (
-          <p className="text-sm text-red-500 mt-1">{emailError}</p>
-        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-password">

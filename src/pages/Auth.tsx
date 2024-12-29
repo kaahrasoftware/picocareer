@@ -1,10 +1,7 @@
-import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
-import { UpdatePasswordForm } from "@/components/auth/reset-password/UpdatePasswordForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,12 +16,6 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 
 export default function Auth() {
-  const [searchParams] = useSearchParams();
-  const type = searchParams.get("type");
-
-  // Check if we're in a password reset flow
-  const isPasswordReset = type === "recovery";
-
   const { data: mentors } = useQuery({
     queryKey: ['random-mentors'],
     queryFn: async () => {
@@ -127,41 +118,27 @@ export default function Auth() {
         <div className="w-[60%] p-4">
           <div className="flex items-center justify-center min-h-full">
             <Card className="w-full max-w-md p-6 space-y-6">
-              {isPasswordReset ? (
-                <>
-                  <div className="space-y-2 text-center">
-                    <h1 className="text-2xl font-semibold tracking-tight">Reset Your Password</h1>
-                    <p className="text-sm text-muted-foreground">
-                      Please enter your new password below
-                    </p>
-                  </div>
-                  <UpdatePasswordForm />
-                </>
-              ) : (
-                <>
-                  <div className="space-y-2 text-center">
-                    <h1 className="text-2xl font-semibold tracking-tight">Welcome to PicoCareer</h1>
-                    <p className="text-sm text-muted-foreground">
-                      Connect with mentors, find your dream school, and career
-                    </p>
-                  </div>
+              <div className="space-y-2 text-center">
+                <h1 className="text-2xl font-semibold tracking-tight">Welcome to PicoCareer</h1>
+                <p className="text-sm text-muted-foreground">
+                  Connect with mentors, find your dream school, and career
+                </p>
+              </div>
 
-                  <Tabs defaultValue="signin" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="signin">Sign In</TabsTrigger>
-                      <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                    </TabsList>
+              <Tabs defaultValue="signin" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="signin">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
 
-                    <TabsContent value="signin">
-                      <SignInForm />
-                    </TabsContent>
+                <TabsContent value="signin">
+                  <SignInForm />
+                </TabsContent>
 
-                    <TabsContent value="signup">
-                      <SignUpForm />
-                    </TabsContent>
-                  </Tabs>
-                </>
-              )}
+                <TabsContent value="signup">
+                  <SignUpForm />
+                </TabsContent>
+              </Tabs>
             </Card>
           </div>
         </div>

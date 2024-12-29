@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/ui/icons";
-import { PasswordResetDialog } from "./reset-password/PasswordResetDialog";
 
 export function SignInForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,85 +25,26 @@ export function SignInForm() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isLoading) return;
-
-    // Validate form data
-    const email = formData.email.trim().toLowerCase();
-    const password = formData.password.trim();
-
-    if (!email || !password) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
 
-      if (signInError) {
-        console.error('Sign in error:', signInError);
-        
-        if (signInError.message.includes("Email not confirmed")) {
-          toast({
-            title: "Email not verified",
-            description: "Please check your email (including spam folder) and verify your account before signing in.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sign in failed",
-            description: "Invalid email or password. Please try again.",
-            variant: "destructive",
-          });
-        }
-        return;
-      }
+      if (error) throw error;
 
-      if (authData.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('first_name')
-          .eq('id', authData.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-        }
-
-        const firstName = profileData?.first_name || 'back';
-        
-        toast({
-          title: `Welcome ${firstName}! 👋`,
-          description: "You have successfully signed in.",
-        });
-
-        navigate("/");
-      }
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+      
+      navigate("/");
     } catch (error: any) {
-      console.error('Unexpected sign in error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -122,64 +61,45 @@ export function SignInForm() {
         }
       });
 
-      if (error) {
-        toast({
-          title: "Google Sign In Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      if (error) throw error;
     } catch (error: any) {
-      console.error('Google sign in error:', error);
       toast({
         title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSignIn} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="signin-email">Email</Label>
-          <Input
-            id="signin-email"
-            name="email"
-            type="email"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="signin-password">Password</Label>
-          <Input
-            id="signin-password"
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button
-            variant="link"
-            className="px-0 font-normal text-sm text-muted-foreground hover:text-primary"
-            onClick={() => setIsResetDialogOpen(true)}
-            type="button"
-          >
-            Forgot password?
-          </Button>
-        </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign In"}
-        </Button>
-      </form>
+    <form onSubmit={handleSignIn} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="signin-email">Email</Label>
+        <Input
+          id="signin-email"
+          name="email"
+          type="email"
+          placeholder="Enter your email"
+          value={formData.email}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="signin-password">Password</Label>
+        <Input
+          id="signin-password"
+          name="password"
+          type="password"
+          placeholder="Enter your password"
+          value={formData.password}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Signing in..." : "Sign In"}
+      </Button>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -201,11 +121,6 @@ export function SignInForm() {
         <Icons.google className="mr-2 h-4 w-4" />
         Google
       </Button>
-
-      <PasswordResetDialog 
-        open={isResetDialogOpen}
-        onOpenChange={setIsResetDialogOpen}
-      />
-    </div>
+    </form>
   );
 }

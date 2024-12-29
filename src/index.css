@@ -82,7 +82,7 @@
 
 /* Layout structure */
 .app-layout {
-  @apply min-h-screen flex flex-col w-full pt-16;
+  @apply min-h-screen flex flex-col w-full;
 }
 
 .main-content {

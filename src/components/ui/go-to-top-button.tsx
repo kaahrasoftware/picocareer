@@ -1,45 +1,47 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowUp } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { ChevronUp } from 'lucide-react';
+import { Button } from './button';
+import { cn } from '@/lib/utils';
 
 export function GoToTopButton() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
+      // Show button when page is scrolled up 300px
+      if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
       }
     };
 
-    window.addEventListener("scroll", toggleVisibility);
+    window.addEventListener('scroll', toggleVisibility);
 
     return () => {
-      window.removeEventListener("scroll", toggleVisibility);
+      window.removeEventListener('scroll', toggleVisibility);
     };
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: 'smooth',
     });
   };
 
-  if (!isVisible) {
-    return null;
-  }
-
   return (
     <Button
-      className="fixed bottom-8 right-8 rounded-full p-3 shadow-lg"
-      onClick={scrollToTop}
+      variant="secondary"
       size="icon"
-      variant="default"
+      className={cn(
+        'fixed bottom-8 right-8 z-50 rounded-full shadow-lg transition-opacity duration-200',
+        isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      )}
+      onClick={scrollToTop}
+      aria-label="Go to top"
     >
-      <ArrowUp className="h-5 w-5" />
+      <ChevronUp className="h-5 w-5" />
     </Button>
   );
 }

@@ -8,8 +8,6 @@ import { SettingsTab } from "@/components/profile/SettingsTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
 import { MentorTab } from "@/components/profile/MentorTab";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { MenuSidebar } from "@/components/MenuSidebar";
 import type { Profile } from "@/types/database/profiles";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -118,51 +116,44 @@ export default function ProfilePage() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="app-layout">
-        <MenuSidebar />
-        <div className="main-content">
-          <div className="container mx-auto px-4 py-8 max-w-5xl">
-            <div className="bg-background/60 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
-              <ProfileHeader profile={profile} />
-              
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
-                <TabsList className="grid w-full grid-cols-5 mb-6">
-                  <TabsTrigger value="profile">Profile</TabsTrigger>
-                  {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
-                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                  {canAccessMentorTab && <TabsTrigger value="mentor">Mentor</TabsTrigger>}
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
-                </TabsList>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="bg-background/60 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
+        <ProfileHeader profile={profile} />
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            {canAccessMentorTab && <TabsTrigger value="mentor">Mentor</TabsTrigger>}
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
 
-                <TabsContent value="profile">
-                  {profile && <ProfileTab profile={profile} />}
-                </TabsContent>
+          <TabsContent value="profile">
+            {profile && <ProfileTab profile={profile} />}
+          </TabsContent>
 
-                {isAdmin && (
-                  <TabsContent value="dashboard">
-                    <DashboardTab />
-                  </TabsContent>
-                )}
+          {isAdmin && (
+            <TabsContent value="dashboard">
+              <DashboardTab />
+            </TabsContent>
+          )}
 
-                <TabsContent value="calendar">
-                  <CalendarTab />
-                </TabsContent>
+          <TabsContent value="calendar">
+            <CalendarTab />
+          </TabsContent>
 
-                {canAccessMentorTab && (
-                  <TabsContent value="mentor">
-                    <MentorTab profile={profile} />
-                  </TabsContent>
-                )}
+          {canAccessMentorTab && (
+            <TabsContent value="mentor">
+              <MentorTab profile={profile} />
+            </TabsContent>
+          )}
 
-                <TabsContent value="settings">
-                  <SettingsTab />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        </div>
+          <TabsContent value="settings">
+            <SettingsTab />
+          </TabsContent>
+        </Tabs>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
