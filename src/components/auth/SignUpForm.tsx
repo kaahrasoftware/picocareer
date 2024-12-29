@@ -53,7 +53,7 @@ export function SignUpForm() {
         return;
       }
 
-      // Attempt to sign up
+      // Attempt to sign up without redirect URL
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -61,8 +61,7 @@ export function SignUpForm() {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth?tab=signin`
+          }
         }
       });
 
