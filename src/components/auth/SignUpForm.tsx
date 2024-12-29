@@ -39,17 +39,21 @@ export function SignUpForm() {
     }
 
     try {
-      // Check if user exists using a safer method
-      const { data: { user: existingUser }, error: getUserError } = await supabase.auth.getUser();
-      
-      if (getUserError && !getUserError.message.includes("Invalid JWT")) {
-        throw getUserError;
+      // Check if user exists by attempting to get user by email
+      const { data, error: emailCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email.toLowerCase())
+        .single();
+
+      if (emailCheckError && !emailCheckError.message.includes('No rows found')) {
+        throw emailCheckError;
       }
 
-      if (existingUser) {
+      if (data) {
         toast({
           title: "Account exists",
-          description: "You already have an account. Please sign in instead.",
+          description: "An account with this email already exists. Please sign in instead.",
           variant: "destructive",
         });
         navigate("/auth?tab=signin");
@@ -57,7 +61,7 @@ export function SignUpForm() {
       }
 
       // Proceed with signup
-      const { data, error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -93,7 +97,7 @@ export function SignUpForm() {
         throw error;
       }
 
-      if (data.user) {
+      if (signUpData.user) {
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account before signing in.",
