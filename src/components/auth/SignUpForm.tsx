@@ -1,157 +1,27 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { PersonalInfoFields } from "./signup/PersonalInfoFields";
+import { SignupFormFields } from "./signup/SignupFormFields";
 import { SocialSignIn } from "./signup/SocialSignIn";
+import { useSignupForm } from "./signup/useSignupForm";
 
 export function SignUpForm() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Validate form data
-      if (!formData.firstName.trim() || !formData.lastName.trim()) {
-        toast({
-          title: "Missing Information",
-          description: "Please provide both first name and last name",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Attempt to sign up the user
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Sign up error:', error);
-        
-        if (error.message.includes("User already registered")) {
-          toast({
-            title: "Account Exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
-          });
-          // Switch to sign in tab after a short delay
-          setTimeout(() => {
-            navigate("/auth?tab=signin");
-          }, 1500);
-        } else if (error.message.includes("password")) {
-          toast({
-            title: "Invalid Password",
-            description: "Password must be at least 6 characters long",
-            variant: "destructive",
-          });
-        } else if (error.message.includes("email")) {
-          toast({
-            title: "Invalid Email",
-            description: "Please enter a valid email address",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sign Up Failed",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-        return;
-      }
-
-      if (data.user) {
-        // Show success message
-        toast({
-          title: "Success! 🎉",
-          description: "Your account has been created. Please check your email to verify your account.",
-        });
-
-        // Redirect to sign in page after a short delay
-        setTimeout(() => {
-          navigate("/auth?tab=signin");
-        }, 1500);
-      }
-    } catch (error: any) {
-      console.error('Sign up error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`
-        }
-      });
-
-      if (error) {
-        toast({
-          title: "Google Sign In Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  const { formData, isLoading, handleInputChange, handleSignUp } = useSignupForm();
 
   return (
     <form onSubmit={handleSignUp} className="space-y-4">
-      <PersonalInfoFields
-        {...formData}
+      <SignupFormFields
+        formData={formData}
         onChange={handleInputChange}
-        hasError={{
-          firstName: !formData.firstName.trim(),
-          lastName: !formData.lastName.trim()
-        }}
       />
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isLoading}
+      >
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
-      <SocialSignIn onGoogleSignIn={handleGoogleSignIn} />
+      <SocialSignIn />
     </form>
   );
 }

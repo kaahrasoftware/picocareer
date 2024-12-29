@@ -1,29 +1,17 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface PersonalInfoFieldsProps {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  hasError?: {
-    firstName?: boolean;
-    lastName?: boolean;
-    email?: boolean;
+interface SignupFormFieldsProps {
+  formData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
   };
-  emailError?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function PersonalInfoFields({ 
-  firstName, 
-  lastName, 
-  email, 
-  password, 
-  onChange,
-  hasError,
-  emailError
-}: PersonalInfoFieldsProps) {
+export function SignupFormFields({ formData, onChange }: SignupFormFieldsProps) {
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
@@ -35,7 +23,7 @@ export function PersonalInfoFields({
             id="firstName"
             name="firstName"
             placeholder="John"
-            value={firstName}
+            value={formData.firstName}
             onChange={onChange}
             required
           />
@@ -48,7 +36,7 @@ export function PersonalInfoFields({
             id="lastName"
             name="lastName"
             placeholder="Doe"
-            value={lastName}
+            value={formData.lastName}
             onChange={onChange}
             required
           />
@@ -63,14 +51,10 @@ export function PersonalInfoFields({
           name="email"
           type="email"
           placeholder="Enter your email"
-          value={email}
+          value={formData.email}
           onChange={onChange}
           required
-          className={emailError ? "border-red-500" : ""}
         />
-        {emailError && (
-          <p className="text-sm text-red-500 mt-1">{emailError}</p>
-        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-password">
@@ -81,7 +65,7 @@ export function PersonalInfoFields({
           name="password"
           type="password"
           placeholder="Create a password"
-          value={password}
+          value={formData.password}
           onChange={onChange}
           required
         />

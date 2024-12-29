@@ -27,31 +27,54 @@ export function SignInForm() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading) return;
+
+    // Validate form data
+    const email = formData.email.trim().toLowerCase();
+    const password = formData.password.trim();
+
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email,
+        password,
       });
 
       if (signInError) {
-        if (signInError.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Invalid credentials",
-            description: "Please check your email and password and try again.",
-            variant: "destructive",
-          });
-        } else if (signInError.message.includes("Email not confirmed")) {
+        console.error('Sign in error:', signInError);
+        
+        if (signInError.message.includes("Email not confirmed")) {
           toast({
             title: "Email not verified",
-            description: "Please check your email and verify your account before signing in.",
+            description: "Please check your email (including spam folder) and verify your account before signing in.",
             variant: "destructive",
           });
         } else {
           toast({
             title: "Sign in failed",
-            description: signInError.message,
+            description: "Invalid email or password. Please try again.",
             variant: "destructive",
           });
         }
@@ -79,7 +102,7 @@ export function SignInForm() {
         navigate("/");
       }
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('Unexpected sign in error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
