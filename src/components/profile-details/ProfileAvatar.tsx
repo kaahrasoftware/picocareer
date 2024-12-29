@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
-import { type Crop } from 'react-image-crop';
 import { useToast } from "@/hooks/use-toast";
-import { ImageCropDialog } from "./ImageCropDialog";
-import { processImage, MAX_FILE_SIZE } from "@/utils/imageProcessing";
+import { processImage } from "@/utils/imageProcessing";
 
 interface ProfileAvatarProps {
   profile: {
@@ -12,116 +10,42 @@ interface ProfileAvatarProps {
     avatar_url: string | null;
     full_name: string | null;
   } | null;
-  onAvatarUpdate: (croppedBlob: Blob) => Promise<void>;
+  onAvatarUpdate: (blob: Blob) => Promise<void>;
 }
 
 export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
-  const [cropDialogOpen, setCropDialogOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile?.avatar_url || null);
   const { toast } = useToast();
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 100,
-    height: 100,
-    x: 0,
-    y: 0,
-  });
 
   const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
     
     const file = event.target.files[0];
-
-    if (file.size > MAX_FILE_SIZE) {
-      toast({
-        title: "File too large",
-        description: "Please select an image under 5MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-      setSelectedImage(reader.result as string);
-      setCropDialogOpen(true);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const getCroppedImage = async (): Promise<Blob> => {
-    if (!imageRef || !crop) {
-      throw new Error('No image or crop data');
-    }
-
-    const canvas = document.createElement('canvas');
-    const scaleX = imageRef.naturalWidth / imageRef.width;
-    const scaleY = imageRef.naturalHeight / imageRef.height;
-    
-    canvas.width = crop.width * scaleX;
-    canvas.height = crop.height * scaleY;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('No 2d context');
-    }
-
-    ctx.drawImage(
-      imageRef,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width * scaleX,
-      crop.height * scaleY
-    );
-
-    const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.9);
-    });
-
-    return processImage(blob);
-  };
-
-  const handleSaveAvatar = async () => {
     try {
       setUploading(true);
-      const croppedBlob = await getCroppedImage();
+      
+      // Process the image (resize/compress if needed)
+      const processedBlob = await processImage(file);
       
       // Create a temporary URL for instant preview
-      const tempUrl = URL.createObjectURL(croppedBlob);
+      const tempUrl = URL.createObjectURL(processedBlob);
       setPreviewUrl(tempUrl);
       
-      await onAvatarUpdate(croppedBlob);
+      await onAvatarUpdate(processedBlob);
       
       // Clean up the temporary URL after successful upload
       URL.revokeObjectURL(tempUrl);
       
-      setCropDialogOpen(false);
-      setSelectedImage(null);
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
     } catch (error) {
-      console.error('Error saving avatar:', error);
+      console.error('Error updating avatar:', error);
       toast({
         title: "Error",
-        description: "Failed to save profile picture. Please try again.",
+        description: "Failed to update profile picture. Please try again.",
         variant: "destructive",
       });
       // Revert to original avatar if update fails
@@ -162,17 +86,6 @@ export function ProfileAvatar({ profile, onAvatarUpdate }: ProfileAvatarProps) {
           <Upload className="w-6 h-6 text-white" />
         )}
       </label>
-
-      <ImageCropDialog
-        open={cropDialogOpen}
-        onOpenChange={setCropDialogOpen}
-        selectedImage={selectedImage}
-        crop={crop}
-        onCropChange={setCrop}
-        onImageLoad={setImageRef}
-        onSave={handleSaveAvatar}
-        uploading={uploading}
-      />
     </div>
   );
 }
