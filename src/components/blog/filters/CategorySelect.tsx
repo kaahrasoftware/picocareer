@@ -1,9 +1,12 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "../data/categories";
+import { Database } from "@/integrations/supabase/types";
+
+type Categories = Database["public"]["Enums"]["categories"];
 
 interface CategorySelectProps {
-  selectedCategory: string;
-  setSelectedCategory: (value: string) => void;
+  selectedCategory: Categories | "_all";
+  setSelectedCategory: (value: Categories | "_all") => void;
 }
 
 export function CategorySelect({ selectedCategory, setSelectedCategory }: CategorySelectProps) {

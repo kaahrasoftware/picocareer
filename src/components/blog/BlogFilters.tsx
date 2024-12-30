@@ -2,12 +2,15 @@ import { SearchInput } from "./filters/SearchInput";
 import { CategorySelect } from "./filters/CategorySelect";
 import { SubcategorySelect } from "./filters/SubcategorySelect";
 import { RecentToggle } from "./filters/RecentToggle";
+import { Database } from "@/integrations/supabase/types";
+
+type Categories = Database["public"]["Enums"]["categories"];
 
 interface BlogFiltersProps {
   searchQuery: string;
   setSearchQuery: (value: string) => void;
-  selectedCategory: string;
-  setSelectedCategory: (value: string) => void;
+  selectedCategory: Categories | "_all";
+  setSelectedCategory: (value: Categories | "_all") => void;
   selectedSubcategory: string;
   setSelectedSubcategory: (value: string) => void;
   showRecentOnly: boolean;
