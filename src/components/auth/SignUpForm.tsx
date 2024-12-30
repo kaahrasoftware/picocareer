@@ -39,6 +39,8 @@ export function SignUpForm() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -49,11 +51,12 @@ export function SignUpForm() {
           description: "First name and last name are required",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
-      // Attempt signup
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Attempt signup with metadata
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -64,9 +67,8 @@ export function SignUpForm() {
         }
       });
 
-      if (signUpError) {
-        // Handle specific signup errors
-        if (signUpError.message.includes("User already registered")) {
+      if (error) {
+        if (error.message.includes("User already registered")) {
           toast({
             title: "Account exists",
             description: "An account with this email already exists. Please sign in instead.",
@@ -75,33 +77,29 @@ export function SignUpForm() {
           navigate("/auth?tab=signin");
           return;
         }
-        throw signUpError;
+        throw error;
       }
 
-      if (signUpData.user) {
-        // Create profile after successful signup
-        await createProfile(signUpData.user.id);
-        
-        toast({
-          title: "Account created!",
-          description: "Please check your email (including spam folder) to verify your account before signing in.",
-        });
-        navigate("/auth?tab=signin");
+      if (data.user) {
+        try {
+          await createProfile(data.user.id);
+          toast({
+            title: "Account created!",
+            description: "Please check your email (including spam folder) to verify your account before signing in.",
+          });
+          navigate("/auth?tab=signin");
+        } catch (profileError: any) {
+          console.error('Profile creation error:', profileError);
+          toast({
+            title: "Error",
+            description: "Account created but profile setup failed. Please try signing in.",
+            variant: "destructive",
+          });
+          navigate("/auth?tab=signin");
+        }
       }
     } catch (error: any) {
       console.error('Signup error:', error);
-      
-      // Handle network errors
-      if (error.message?.includes("Failed to fetch") || error.message?.includes("NetworkError")) {
-        toast({
-          title: "Connection Error",
-          description: "Unable to connect to the server. Please check your internet connection and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Generic error toast
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
