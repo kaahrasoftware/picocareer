@@ -46,17 +46,17 @@ export const blogFormFields: FormFieldProps[] = [
   {
     name: "categories",
     label: "Categories",
-    type: "categories",
-    placeholder: "Select categories",
-    description: "Choose one or more categories for your blog post",
+    type: "array",
+    placeholder: "Add relevant categories",
+    description: "Separate categories with commas",
     required: true,
   },
   {
     name: "subcategories",
     label: "Subcategories",
-    type: "subcategories",
-    placeholder: "Select subcategories",
-    description: "Choose relevant subcategories based on your selected categories",
+    type: "array",
+    placeholder: "Add subcategories if applicable",
+    description: "Separate subcategories with commas",
   },
   {
     name: "other_notes",
