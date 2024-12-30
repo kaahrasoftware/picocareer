@@ -4,6 +4,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
+import { timeZones } from "./timezones";
 
 export function TimezoneSection() {
   const { session } = useAuthSession();
@@ -11,9 +12,6 @@ export function TimezoneSection() {
   const { getSetting, updateSetting } = useUserSettings(profile?.id);
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  // Get all IANA timezone names
-  const timezones = Intl.supportedValuesOf('timeZone');
 
   const handleTimezoneChange = async (value: string) => {
     try {
@@ -46,7 +44,7 @@ export function TimezoneSection() {
           <SelectValue placeholder="Select your timezone" />
         </SelectTrigger>
         <SelectContent>
-          {timezones.map((tz) => (
+          {timeZones.map((tz) => (
             <SelectItem key={tz} value={tz}>
               {tz} ({new Date().toLocaleTimeString('en-US', { timeZone: tz })})
             </SelectItem>
