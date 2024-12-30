@@ -123,6 +123,15 @@ export function FormField({
     enabled: name === 'position'
   });
 
+  const handleArrayInput = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
+    const value = e.target.value;
+    // Split by commas, trim whitespace, and filter out empty strings
+    const arrayValue = value.split(',')
+      .map(item => item.trim())
+      .filter(item => item !== '');
+    onChange(arrayValue);
+  };
+
   if (type === "image") {
     return (
       <ImageUpload
@@ -239,7 +248,11 @@ export function FormField({
                 placeholder={placeholder}
               />
             ) : type === "array" ? (
-              <Input {...field} placeholder={`${placeholder} (comma-separated)`} />
+              <Input 
+                {...field}
+                onChange={(e) => handleArrayInput(e, field.onChange)}
+                placeholder={`${placeholder} (comma-separated)`}
+              />
             ) : (
               <Input {...field} placeholder={placeholder} />
             )}
