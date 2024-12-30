@@ -7,23 +7,24 @@ export type SessionTypeEnum =
   | "Grad Application"
   | "TOEFL Exam Prep Advice"
   | "IELTS Exam Prep Advice"
-  | "Mock Interview"
-  | "Career Guidance"
-  | "Portfolio Review"
-  | "Technical Interview Prep"
-  | "Behavioral Interview Prep"
-  | "Job Search Strategy"
-  | "Networking Tips"
-  | "Industry Insights"
-  | "Skill Development Plan"
-  | "Work-Life Balance"
-  | "Leadership Development"
-  | "Entrepreneurship Advice"
-  | "Graduate School Prep"
-  | "Research Guidance"
-  | "Writing Help"
-  | "Presentation Skills"
-  | "Public Speaking"
+  | "Duolingo Exam Prep Advice"
+  | "SAT Exam Prep Advise"
+  | "ACT Exam Prep Advice"
+  | "GRE Exam Prep Advice"
+  | "GMAT Exam Prep Advice"
+  | "MCAT Exam Prep Advice"
+  | "LSAT Exam Prep Advice"
+  | "DAT Exam Prep Advice"
+  | "Advice for PhD Students"
+  | "How to Find Grants/Fellowships"
+  | "Grant Writing Guidance"
+  | "Interview Prep"
+  | "How to Succeed as a College Student"
+  | "Investment Strategies"
+  | "Study Abroad Programs"
+  | "Tips for F-1 Students"
+  | "College Application Last Review"
+  | "Application Essays Review"
   | "I need someone to practice my presentation with";
 
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
@@ -33,22 +34,25 @@ export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Campus France",
   "Undergrad Application",
   "Grad Application",
-  "Mock Interview",
-  "Career Guidance",
-  "Portfolio Review",
-  "Technical Interview Prep",
-  "Behavioral Interview Prep",
-  "Job Search Strategy",
-  "Networking Tips",
-  "Industry Insights",
-  "Skill Development Plan",
-  "Work-Life Balance",
-  "Leadership Development",
-  "Entrepreneurship Advice",
-  "Graduate School Prep",
-  "Research Guidance",
-  "Writing Help",
-  "Presentation Skills",
-  "Public Speaking",
+  "TOEFL Exam Prep Advice",
+  "IELTS Exam Prep Advice",
+  "Duolingo Exam Prep Advice",
+  "SAT Exam Prep Advise",
+  "ACT Exam Prep Advice",
+  "GRE Exam Prep Advice",
+  "GMAT Exam Prep Advice",
+  "MCAT Exam Prep Advice",
+  "LSAT Exam Prep Advice",
+  "DAT Exam Prep Advice",
+  "Advice for PhD Students",
+  "How to Find Grants/Fellowships",
+  "Grant Writing Guidance",
+  "Interview Prep",
+  "How to Succeed as a College Student",
+  "Investment Strategies",
+  "Study Abroad Programs",
+  "Tips for F-1 Students",
+  "College Application Last Review",
+  "Application Essays Review",
   "I need someone to practice my presentation with"
 ];

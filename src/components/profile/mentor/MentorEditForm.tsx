@@ -13,13 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/types/database/profiles";
-import type { Database } from "@/integrations/supabase/types";
-
-type SessionType = Database["public"]["Enums"]["session_type"];
+import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
 
 interface SessionTypeData {
   id?: string;
-  type: SessionType;
+  type: SessionTypeEnum;
   duration: number;
   price: number;
   description: string | null;
@@ -107,14 +105,6 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
     }
   };
 
-  const sessionTypeOptions: SessionType[] = [
-    "Introduction",
-    "Quick-Advice",
-    "Walkthrough",
-    "Group (2-3 Mentees)",
-    "Group (4-6 Mentees)"
-  ];
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Session Types */}
@@ -124,7 +114,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
           <div key={index} className="space-y-4 p-4 border rounded-lg">
             <Select
               value={session.type}
-              onValueChange={(value: SessionType) => {
+              onValueChange={(value: SessionTypeEnum) => {
                 const newTypes = [...sessionTypes];
                 newTypes[index] = { ...newTypes[index], type: value };
                 setSessionTypes(newTypes);
@@ -134,7 +124,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
                 <SelectValue placeholder="Select session type" />
               </SelectTrigger>
               <SelectContent>
-                {sessionTypeOptions.map((type) => (
+                {SESSION_TYPE_OPTIONS.map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>
@@ -179,7 +169,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
           type="button"
           variant="outline"
           onClick={() => setSessionTypes([...sessionTypes, {
-            type: "Introduction",
+            type: "First Touch",
             duration: 30,
             price: 0,
             description: null
