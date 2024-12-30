@@ -42,6 +42,7 @@ export default function Auth() {
     },
     retry: 3, // Retry failed requests 3 times
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
   return (
@@ -83,7 +84,7 @@ export default function Auth() {
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
               
-              {/* Mentor Carousel */}
+              {/* Only show mentor carousel if we have data and no errors */}
               {!isError && mentors && mentors.length > 0 && (
                 <div className="mt-8 flex justify-center items-center">
                   <Carousel
