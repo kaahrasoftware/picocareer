@@ -1,7 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignInForm } from "@/components/auth/SignInForm";
-import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,12 +35,12 @@ export default function Auth() {
         return data || [];
       } catch (error) {
         console.error('Error fetching mentors:', error);
-        throw error; // Let React Query handle the retry
+        throw error;
       }
     },
-    retry: 3, // Retry failed requests 3 times
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 1000 * 60 * 5,
   });
 
   return (
@@ -84,7 +82,6 @@ export default function Auth() {
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
               
-              {/* Only show mentor carousel if we have data and no errors */}
               {!isError && mentors && mentors.length > 0 && (
                 <div className="mt-8 flex justify-center items-center">
                   <Carousel
@@ -141,20 +138,7 @@ export default function Auth() {
                 </p>
               </div>
 
-              <Tabs defaultValue="signin" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="signin">
-                  <SignInForm />
-                </TabsContent>
-
-                <TabsContent value="signup">
-                  <SignUpForm />
-                </TabsContent>
-              </Tabs>
+              <SignInForm />
             </Card>
           </div>
         </div>
