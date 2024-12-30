@@ -12,6 +12,8 @@ import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileHeader } from "./profile-details/ProfileHeader";
 import { ProfileEditForm } from "./profile-details/ProfileEditForm";
 import { ProfileView } from "./profile-details/ProfileView";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -22,13 +24,30 @@ interface ProfileDetailsDialogProps {
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        if (error.message.includes('session_not_found')) {
+          toast({
+            title: "Session expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return null;
+        }
+        throw error;
+      }
+      
       return user;
     },
+    retry: false
   });
 
   const { data: profile, isLoading } = useQuery({
