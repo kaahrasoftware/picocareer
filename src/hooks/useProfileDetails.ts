@@ -11,26 +11,26 @@ export function useProfileDetails(userId: string, open: boolean) {
     queryKey: ['current-user'],
     queryFn: async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          if (error.message.includes('session_not_found')) {
-            console.log('Session expired, redirecting to auth page');
-            toast({
-              title: "Session expired",
-              description: "Please sign in again to continue.",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return null;
-          }
-          throw error;
+        if (!session) {
+          console.log('No active session found, redirecting to auth');
+          navigate("/auth");
+          return null;
         }
         
-        return user;
+        return session.user;
       } catch (error) {
         console.error('Error fetching current user:', error);
-        throw error;
+        if (error.message?.includes('session_not_found')) {
+          toast({
+            title: "Session expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
+        return null;
       }
     },
     retry: false
