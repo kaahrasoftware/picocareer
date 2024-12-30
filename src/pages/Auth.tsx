@@ -37,7 +37,7 @@ export default function Auth() {
         return data || [];
       } catch (error) {
         console.error('Error fetching mentors:', error);
-        return []; // Return empty array on error to prevent UI breaking
+        throw error; // Let React Query handle the retry
       }
     },
     retry: 3, // Retry failed requests 3 times
