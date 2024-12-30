@@ -639,26 +639,32 @@ export type Database = {
           company_id: string | null
           created_at: string
           email: string
+          facebook_url: string | null
           fields_of_interest: string[] | null
           first_name: string | null
           full_name: string | null
           github_url: string | null
           highest_degree: Database["public"]["Enums"]["degree"] | null
           id: string
+          instagram_url: string | null
           keywords: string[] | null
+          languages: Database["public"]["Enums"]["language"][] | null
           last_name: string | null
           linkedin_url: string | null
           location: string | null
           position: string | null
           school_id: string | null
           skills: string[] | null
+          tiktok_url: string | null
           tools_used: string[] | null
           top_mentor: boolean | null
           total_booked_sessions: number | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
           website_url: string | null
+          X_url: string | null
           years_of_experience: number | null
+          youtube_url: string | null
         }
         Insert: {
           academic_major_id?: string | null
@@ -667,26 +673,32 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email: string
+          facebook_url?: string | null
           fields_of_interest?: string[] | null
           first_name?: string | null
           full_name?: string | null
           github_url?: string | null
           highest_degree?: Database["public"]["Enums"]["degree"] | null
           id?: string
+          instagram_url?: string | null
           keywords?: string[] | null
+          languages?: Database["public"]["Enums"]["language"][] | null
           last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
+          tiktok_url?: string | null
           tools_used?: string[] | null
           top_mentor?: boolean | null
           total_booked_sessions?: number | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
+          X_url?: string | null
           years_of_experience?: number | null
+          youtube_url?: string | null
         }
         Update: {
           academic_major_id?: string | null
@@ -695,26 +707,32 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email?: string
+          facebook_url?: string | null
           fields_of_interest?: string[] | null
           first_name?: string | null
           full_name?: string | null
           github_url?: string | null
           highest_degree?: Database["public"]["Enums"]["degree"] | null
           id?: string
+          instagram_url?: string | null
           keywords?: string[] | null
+          languages?: Database["public"]["Enums"]["language"][] | null
           last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
+          tiktok_url?: string | null
           tools_used?: string[] | null
           top_mentor?: boolean | null
           total_booked_sessions?: number | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
+          X_url?: string | null
           years_of_experience?: number | null
+          youtube_url?: string | null
         }
         Relationships: [
           {
@@ -1201,11 +1219,33 @@ export type Database = {
         | "blog_posted"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
-        | "Introduction"
-        | "Quick-Advice"
-        | "Walkthrough"
-        | "Group (2-3 Mentees)"
-        | "Group (4-6 Mentees)"
+        | "First Touch"
+        | "Know About your Career"
+        | "Resume/CV Review"
+        | "Campus France"
+        | "Undergrad Application"
+        | "Grad Application"
+        | "TOEFL Exam Prep Advice"
+        | "IELTS Exam Prep Advice"
+        | "Duolingo Exam Prep Advice"
+        | "SAT Exam Prep Advise"
+        | "ACT Exam Prep Advice"
+        | "GRE Exam Prep Advice"
+        | "GMAT Exam Prep Advice"
+        | "MCAT Exam Prep Advice"
+        | "LSAT Exam Prep Advice"
+        | "DAT Exam Prep Advice"
+        | "Advice for PhD Students"
+        | "How to Find Grants/Fellowships"
+        | "Grant Writing Guidance"
+        | "Interview Prep"
+        | "How to Succeed as a College Student"
+        | "Investment Strategies"
+        | "Study Abroad Programs"
+        | "Tips for F-1 Students"
+        | "College Application Last Review"
+        | "Application Essays Review"
+        | "I need someone to practice my presentation with"
       setting_type: "timezone" | "notifications" | "language" | "theme"
       states:
         | "Alabama - AL"
