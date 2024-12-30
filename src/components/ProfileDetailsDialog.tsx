@@ -138,10 +138,10 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                 isOwnProfile ? (
                   <Button 
                     size="lg"
-                    onClick={() => navigate("/profile")}
+                    onClick={() => setIsEditing(!isEditing)}
                     className="absolute right-0 top-16"
                   >
-                    Edit Profile
+                    {isEditing ? "Cancel Editing" : "Edit Profile"}
                   </Button>
                 ) : (
                   <Button 
