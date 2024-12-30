@@ -9,12 +9,15 @@ import { BlogPagination } from "@/components/blog/BlogPagination";
 import { BlogGrid } from "@/components/blog/BlogGrid";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type Categories = Database["public"]["Enums"]["categories"];
 
 const ITEMS_PER_PAGE = 6;
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("_all");
+  const [selectedCategory, setSelectedCategory] = useState<Categories | "_all">("_all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("_all");
   const [showRecentOnly, setShowRecentOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
