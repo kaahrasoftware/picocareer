@@ -1,4 +1,4 @@
-import { format, parse, addMinutes, isWithinInterval } from "date-fns";
+import { format } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
@@ -30,6 +30,7 @@ export function TimeSlotSelector({
   const mentorTimezone = getSetting('timezone') || 'UTC';
 
   console.log("TimeSlotSelector - User timezone:", userTimezone);
+  console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
 
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
@@ -39,6 +40,7 @@ export function TimeSlotSelector({
   
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
+  // Convert time slots to user's timezone while preserving the original date
   const convertedTimeSlots = availableTimeSlots.map(slot => {
     const slotDate = new Date(date);
     const [hours, minutes] = slot.time.split(':').map(Number);
