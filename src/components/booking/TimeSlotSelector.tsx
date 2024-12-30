@@ -3,7 +3,8 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -26,8 +27,27 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
-  const { getSetting } = useUserSettings(mentorId);
-  const mentorTimezone = getSetting('timezone') || 'UTC';
+  // Fetch mentor's timezone from their availability record for this date
+  const { data: mentorTimezone } = useQuery({
+    queryKey: ['mentorAvailabilityTimezone', mentorId, date],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('timezone')
+        .eq('profile_id', mentorId)
+        .eq('date_available', format(date, 'yyyy-MM-dd'))
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching mentor timezone:', error);
+        return 'UTC';
+      }
+
+      console.log('Fetched mentor timezone from availability:', data?.timezone);
+      return data?.timezone || 'UTC';
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
 
   console.log("TimeSlotSelector - User timezone:", userTimezone);
   console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
@@ -75,7 +95,7 @@ export function TimeSlotSelector({
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
         userTimezone={userTimezone}
-        mentorTimezone={mentorTimezone}
+        mentorTimezone={mentorTimezone || 'UTC'}
         date={date}
       />
       <p className="text-xs text-muted-foreground mt-2">
