@@ -3,46 +3,52 @@ import { Label } from "@/components/ui/label";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
-
-const commonTimezones = [
-  'UTC',
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'America/Toronto',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Berlin',
-  'Asia/Tokyo',
-  'Asia/Shanghai',
-  'Asia/Dubai',
-  'Australia/Sydney',
-  'Pacific/Auckland'
-];
+import { useToast } from "@/hooks/use-toast";
 
 export function TimezoneSection() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { getSetting, updateSetting } = useUserSettings(profile?.id);
+  const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Get all IANA timezone names
+  const timezones = Intl.supportedValuesOf('timeZone');
+
+  const handleTimezoneChange = async (value: string) => {
+    try {
+      await updateSetting.mutate({ 
+        type: 'timezone', 
+        value 
+      });
+      
+      toast({
+        title: "Timezone updated",
+        description: "Your timezone has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update timezone. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
       <Label htmlFor="timezone">Timezone</Label>
       <Select
         value={currentTimezone}
-        onValueChange={(value) => {
-          updateSetting.mutate({ type: 'timezone', value });
-        }}
+        onValueChange={handleTimezoneChange}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select your timezone" />
         </SelectTrigger>
         <SelectContent>
-          {commonTimezones.map((tz) => (
+          {timezones.map((tz) => (
             <SelectItem key={tz} value={tz}>
-              {tz}
+              {tz} ({new Date().toLocaleTimeString('en-US', { timeZone: tz })})
             </SelectItem>
           ))}
         </SelectContent>
