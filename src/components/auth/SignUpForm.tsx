@@ -52,27 +52,6 @@ export function SignUpForm() {
     }
 
     try {
-      // Check if user exists by attempting to get user by email
-      const { data, error: emailCheckError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formData.email.toLowerCase())
-        .maybeSingle();
-
-      if (emailCheckError && !emailCheckError.message.includes('No rows found')) {
-        throw emailCheckError;
-      }
-
-      if (data) {
-        toast({
-          title: "Account exists",
-          description: "An account with this email already exists. Please sign in instead.",
-          variant: "destructive",
-        });
-        navigate("/auth?tab=signin");
-        return;
-      }
-
       // Proceed with signup
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -97,14 +76,26 @@ export function SignUpForm() {
       }
 
       if (signUpData.user) {
-        // Create profile after successful signup
-        await createProfile(signUpData.user.id);
+        try {
+          // Create profile after successful signup
+          await createProfile(signUpData.user.id);
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email (including spam folder) to verify your account before signing in.",
-        });
-        navigate("/auth?tab=signin");
+          toast({
+            title: "Account created!",
+            description: "Please check your email (including spam folder) to verify your account before signing in.",
+          });
+          navigate("/auth?tab=signin");
+        } catch (profileError: any) {
+          console.error('Profile creation error:', profileError);
+          // If profile creation fails, we should delete the auth user
+          await supabase.auth.admin.deleteUser(signUpData.user.id);
+          
+          toast({
+            title: "Error",
+            description: "There was an issue creating your profile. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -114,16 +105,6 @@ export function SignUpForm() {
         toast({
           title: "Connection Error",
           description: "Unable to connect to the server. Please check your internet connection and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Handle database errors
-      if (error.message?.includes("Database error")) {
-        toast({
-          title: "System Error",
-          description: "There was an issue creating your account. Please try again in a few moments.",
           variant: "destructive",
         });
         return;
