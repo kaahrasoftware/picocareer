@@ -43,10 +43,10 @@ export function MultiSelectField({
                   <CommandItem
                     key={option}
                     onSelect={() => {
-                      const currentValues = field.value || [];
-                      const newValues = currentValues.includes(option)
-                        ? currentValues.filter((v: string) => v !== option)
-                        : [...currentValues, option];
+                      const values = field.value || []; // Ensure field.value is an array
+                      const newValues = values.includes(option)
+                        ? values.filter((v: string) => v !== option)
+                        : [...values, option];
                       field.onChange(newValues);
                     }}
                   >
