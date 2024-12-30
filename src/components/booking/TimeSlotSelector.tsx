@@ -30,6 +30,7 @@ export function TimeSlotSelector({
     queryFn: async () => {
       const formattedDate = format(date, 'yyyy-MM-dd');
       
+      // First try to get specific date availability
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('timezone, start_time, end_time')
@@ -58,7 +59,27 @@ export function TimeSlotSelector({
           return { timezone: 'UTC', start_time: null, end_time: null };
         }
 
-        return recurringData || { timezone: 'UTC', start_time: null, end_time: null };
+        if (recurringData) {
+          // For recurring slots, we need to combine the date with the time
+          const startDate = new Date(formattedDate);
+          const endDate = new Date(formattedDate);
+          
+          if (recurringData.start_time && recurringData.end_time) {
+            const [startHour, startMinute] = format(new Date(recurringData.start_time), 'HH:mm').split(':');
+            const [endHour, endMinute] = format(new Date(recurringData.end_time), 'HH:mm').split(':');
+            
+            startDate.setHours(parseInt(startHour), parseInt(startMinute));
+            endDate.setHours(parseInt(endHour), parseInt(endMinute));
+            
+            return {
+              ...recurringData,
+              start_time: startDate.toISOString(),
+              end_time: endDate.toISOString()
+            };
+          }
+        }
+        
+        return { timezone: 'UTC', start_time: null, end_time: null };
       }
 
       console.log('Fetched mentor availability:', data);

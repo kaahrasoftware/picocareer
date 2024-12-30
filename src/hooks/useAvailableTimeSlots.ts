@@ -81,18 +81,20 @@ export function useAvailableTimeSlots(
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
         try {
+          if (!availability.start_time || !availability.end_time) return;
+
           // Create a base date for today
           const baseDate = new Date(date);
           baseDate.setHours(0, 0, 0, 0);
 
-          // Parse start and end times
-          const startTime = parse(availability.start_time, 'HH:mm', baseDate);
-          const endTime = parse(availability.end_time, 'HH:mm', baseDate);
+          // Parse the timestamps from the database
+          const startTime = new Date(availability.start_time);
+          const endTime = new Date(availability.end_time);
 
           let currentTime = startTime;
 
           while (currentTime < endTime) {
-            const timeString = format(currentTime, 'HH:mm');
+            const timeString = formatInTimeZone(currentTime, mentorTimezone, 'HH:mm');
             const slotStart = new Date(currentTime);
             
             // Check if this time slot overlaps with any existing booking
