@@ -41,64 +41,69 @@ export function SignUpForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      toast({
-        title: "Error",
-        description: "First name and last name are required",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        toast({
+          title: "Error",
+          description: "First name and last name are required",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if email exists first
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        toast({
+          title: "Account exists",
+          description: "An account with this email already exists. Please sign in instead.",
+          variant: "destructive",
+        });
+        navigate("/auth?tab=signin");
+        return;
+      }
+
       // Proceed with signup
-      const { data: signUpData, error } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth?tab=signin`
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          }
         }
       });
 
-      if (error) {
-        if (error.message.includes("User already registered")) {
-          toast({
-            title: "Account exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
-          });
-          navigate("/auth?tab=signin");
-          return;
-        }
-
-        throw error;
-      }
+      if (signUpError) throw signUpError;
 
       if (signUpData.user) {
-        try {
-          // Create profile after successful signup
-          await createProfile(signUpData.user.id);
-
-          toast({
-            title: "Account created!",
-            description: "Please check your email (including spam folder) to verify your account before signing in.",
-          });
-          navigate("/auth?tab=signin");
-        } catch (profileError: any) {
-          console.error('Profile creation error:', profileError);
-          
-          toast({
-            title: "Error",
-            description: "Your account was created but there was an issue setting up your profile. Please try signing in.",
-            variant: "destructive",
-          });
-          navigate("/auth?tab=signin");
-        }
+        await createProfile(signUpData.user.id);
+        
+        toast({
+          title: "Account created!",
+          description: "Please check your email (including spam folder) to verify your account before signing in.",
+        });
+        navigate("/auth?tab=signin");
       }
     } catch (error: any) {
       console.error('Signup error:', error);
       
+      if (error.message?.includes("User already registered")) {
+        toast({
+          title: "Account exists",
+          description: "An account with this email already exists. Please sign in instead.",
+          variant: "destructive",
+        });
+        navigate("/auth?tab=signin");
+        return;
+      }
+
       // Handle network errors
       if (error.message?.includes("Failed to fetch") || error.message?.includes("NetworkError")) {
         toast({
