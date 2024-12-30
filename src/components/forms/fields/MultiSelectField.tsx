@@ -21,7 +21,7 @@ export function MultiSelectField({
   placeholder,
   description,
   required = false,
-  options
+  options = [] // Provide default empty array
 }: MultiSelectFieldProps) {
   return (
     <FormField
@@ -38,7 +38,7 @@ export function MultiSelectField({
               <CommandInput placeholder={placeholder} />
               <CommandEmpty>No options found.</CommandEmpty>
               <CommandGroup className="max-h-48 overflow-auto">
-                {options.map((option) => (
+                {(options || []).map((option) => ( // Add null check with empty array fallback
                   <CommandItem
                     key={option}
                     onSelect={() => {
