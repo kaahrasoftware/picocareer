@@ -60,13 +60,12 @@ export function SignUpForm() {
 
     try {
       // Check if email already exists in profiles
-      const { data: existingProfile } = await supabase
+      const { data: existingProfiles } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', formData.email.toLowerCase())
-        .single();
+        .eq('email', formData.email.toLowerCase());
 
-      if (existingProfile) {
+      if (existingProfiles && existingProfiles.length > 0) {
         toast({
           title: "Account exists",
           description: "An account with this email already exists. Please sign in instead.",
