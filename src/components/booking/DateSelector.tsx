@@ -23,7 +23,7 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
         .select('setting_value')
         .eq('profile_id', mentorId)
         .eq('setting_type', 'timezone')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching mentor timezone:', error);
