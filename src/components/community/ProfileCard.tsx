@@ -75,8 +75,9 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           {/* Skills Section */}
           {profile.skills?.length > 0 && (
             <div className="w-full mb-4">
+              <h4 className="text-sm font-medium mb-2">Skills</h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.skills.slice(0, 5).map((skill) => (
+                {profile.skills.map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
@@ -85,14 +86,42 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                     {skill}
                   </Badge>
                 ))}
-                {(profile.skills?.length || 0) > 5 && (
+              </div>
+            </div>
+          )}
+
+          {/* Fields of Interest Section */}
+          {profile.fields_of_interest?.length > 0 && (
+            <div className="w-full mb-4">
+              <h4 className="text-sm font-medium mb-2">Fields of Interest</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {profile.fields_of_interest.map((field) => (
                   <Badge 
+                    key={field} 
+                    variant="secondary" 
+                    className="text-xs bg-[#E2D4F0] text-[#4B5563] hover:bg-[#D4C4E3] transition-colors border border-[#D4C4E3]"
+                  >
+                    {field}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Keywords Section */}
+          {profile.keywords?.length > 0 && (
+            <div className="w-full mb-4">
+              <h4 className="text-sm font-medium mb-2">Keywords</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {profile.keywords.map((keyword) => (
+                  <Badge 
+                    key={keyword} 
                     variant="secondary" 
                     className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
                   >
-                    +{(profile.skills?.length || 0) - 5} more
+                    {keyword}
                   </Badge>
-                )}
+                ))}
               </div>
             </div>
           )}
