@@ -1,5 +1,4 @@
 import { format } from "date-fns";
-import { formatInTimeZone } from 'date-fns-tz';
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
@@ -52,7 +51,7 @@ export function TimeSlotSelector({
     date, 
     mentorId, 
     selectedSessionType?.duration || 60,
-    mentorTimezone // Pass mentor timezone to hook
+    mentorTimezone
   );
 
   console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);

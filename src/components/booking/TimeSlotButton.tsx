@@ -6,7 +6,6 @@ interface TimeSlotButtonProps {
   available: boolean;
   isSelected: boolean;
   onSelect: (time: string) => void;
-  userTimezone: string;
   mentorTimezone: string;
   date: Date;
 }

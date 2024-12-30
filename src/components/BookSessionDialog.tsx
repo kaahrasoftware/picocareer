@@ -10,7 +10,6 @@ import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
@@ -36,9 +35,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { getSetting } = useUserSettings(profile?.id);
 
-  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const sessionTypes = useSessionTypes(mentor.id, open);
   const bookSession = useBookSession();
 
@@ -162,7 +159,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
           <DateSelector
             date={date}
             onDateSelect={setDate}
-            userTimezone={userTimezone}
             mentorId={mentor.id}
           />
 
@@ -179,7 +175,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
                 selectedSessionType={selectedSessionTypeDetails}
-                userTimezone={userTimezone}
               />
             )}
 
