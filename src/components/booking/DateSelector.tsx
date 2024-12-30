@@ -18,42 +18,50 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
   const { data: mentorSettings } = useQuery({
     queryKey: ['mentorSettings', mentorId],
     queryFn: async () => {
-      // First verify the profile exists
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', mentorId)
-        .maybeSingle();
+      try {
+        // First verify the profile exists
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', mentorId)
+          .maybeSingle();
 
-      if (profileError) {
-        console.error('Error fetching mentor profile:', profileError);
+        if (profileError) {
+          console.error('Error fetching mentor profile:', profileError);
+          return 'UTC';
+        }
+
+        if (!profile) {
+          console.error('Mentor profile not found');
+          return 'UTC';
+        }
+
+        // Then fetch their timezone setting
+        const { data: settings, error: settingsError } = await supabase
+          .from('user_settings')
+          .select('setting_value')
+          .eq('profile_id', profile.id)
+          .eq('setting_type', 'timezone')
+          .maybeSingle();
+
+        if (settingsError) {
+          console.error('Error fetching mentor timezone:', settingsError);
+          return 'UTC';
+        }
+        
+        console.log('Mentor settings:', settings);
+        console.log('Fetched mentor timezone:', settings?.setting_value);
+        return settings?.setting_value || 'UTC';
+      } catch (error) {
+        console.error('Unexpected error fetching mentor timezone:', error);
         return 'UTC';
       }
-
-      if (!profile) {
-        console.error('Mentor profile not found');
-        return 'UTC';
-      }
-
-      // Then fetch their timezone setting
-      const { data: settings, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', profile.id)
-        .eq('setting_type', 'timezone')
-        .maybeSingle();
-
-      if (settingsError) {
-        console.error('Error fetching mentor timezone:', settingsError);
-        return 'UTC';
-      }
-      
-      console.log('Fetched mentor timezone:', settings?.setting_value);
-      return settings?.setting_value || 'UTC';
-    }
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const mentorTimezone = mentorSettings || 'UTC';
+  console.log('Final mentor timezone:', mentorTimezone);
 
   const isDateAvailable = (date: Date) => {
     // Check for recurring availability (same day of week)
