@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
 import { Trash2, Clock } from "lucide-react";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface TimeSlot {
   id: string;
@@ -17,6 +19,10 @@ interface ExistingTimeSlotsProps {
 }
 
 export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
+  const { profile } = useUserProfile();
+  const { getSetting } = useUserSettings(profile?.id);
+  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   if (slots.length === 0) return null;
 
   return (
@@ -26,14 +32,16 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
         {slots.map((slot) => {
           const date = new Date(slot.date_available);
           const formattedDate = format(date, 'MMM d, yyyy');
+          
+          // Convert times from mentor's timezone to user's timezone
           const startTime = formatInTimeZone(
             `${slot.date_available}T${slot.start_time}`,
-            slot.timezone,
+            userTimezone,
             'h:mm a'
           );
           const endTime = formatInTimeZone(
             `${slot.date_available}T${slot.end_time}`,
-            slot.timezone,
+            userTimezone,
             'h:mm a'
           );
 
@@ -49,7 +57,7 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
                   <span>{formattedDate}</span>
-                  <span className="text-xs">({slot.timezone})</span>
+                  <span className="text-xs">({userTimezone})</span>
                 </div>
               </div>
               <Button
