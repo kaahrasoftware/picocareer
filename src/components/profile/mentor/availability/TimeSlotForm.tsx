@@ -96,7 +96,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           profile_id: profileId,
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
-          timezone: userTimezone,
           is_available: true,
           recurring: isRecurring,
           day_of_week: isRecurring ? dayOfWeek : null
