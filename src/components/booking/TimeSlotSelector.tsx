@@ -28,36 +28,37 @@ export function TimeSlotSelector({
   if (!date) return null;
 
   // Fetch mentor's timezone from their availability record for this date
-  const { data: mentorTimezone } = useQuery({
+  const { data: mentorAvailability } = useQuery({
     queryKey: ['mentorAvailabilityTimezone', mentorId, date],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mentor_availability')
-        .select('timezone')
+        .select('timezone, start_time, end_time')
         .eq('profile_id', mentorId)
         .eq('date_available', format(date, 'yyyy-MM-dd'))
         .maybeSingle();
 
       if (error) {
         console.error('Error fetching mentor timezone:', error);
-        return 'UTC';
+        return { timezone: 'UTC', start_time: null, end_time: null };
       }
 
-      console.log('Fetched mentor timezone from availability:', data?.timezone);
-      return data?.timezone || 'UTC';
+      console.log('Fetched mentor availability:', data);
+      return data || { timezone: 'UTC', start_time: null, end_time: null };
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
-  console.log("TimeSlotSelector - User timezone:", userTimezone);
-  console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
-
+  const mentorTimezone = mentorAvailability?.timezone || 'UTC';
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 
-    selectedSessionType?.duration || 60
+    selectedSessionType?.duration || 60,
+    mentorTimezone // Pass mentor timezone to hook
   );
-  
+
+  console.log("TimeSlotSelector - User timezone:", userTimezone);
+  console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
   // Convert time slots to user's timezone while preserving the original date
@@ -66,16 +67,16 @@ export function TimeSlotSelector({
     const [hours, minutes] = slot.time.split(':').map(Number);
     slotDate.setHours(hours, minutes, 0, 0);
 
-    // Format the time in the user's timezone
-    const formattedTime = formatInTimeZone(slotDate, userTimezone, 'HH:mm');
+    // Format the time in both timezones for comparison
+    const userTime = formatInTimeZone(slotDate, userTimezone, 'HH:mm');
     console.log("TimeSlotSelector - Converting slot:", {
       originalTime: slot.time,
-      convertedTime: formattedTime,
+      convertedTime: userTime,
       timezone: userTimezone
     });
 
     return {
-      time: formattedTime,
+      time: userTime,
       available: slot.available
     };
   });
@@ -95,7 +96,7 @@ export function TimeSlotSelector({
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
         userTimezone={userTimezone}
-        mentorTimezone={mentorTimezone || 'UTC'}
+        mentorTimezone={mentorTimezone}
         date={date}
       />
       <p className="text-xs text-muted-foreground mt-2">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { format, parse, addMinutes, isWithinInterval } from "date-fns";
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
@@ -9,10 +9,14 @@ interface TimeSlot {
   available: boolean;
 }
 
-export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, sessionDuration: number = 15) {
+export function useAvailableTimeSlots(
+  date: Date | undefined, 
+  mentorId: string, 
+  sessionDuration: number = 15,
+  mentorTimezone: string = 'UTC'
+) {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const { toast } = useToast();
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     async function fetchAvailability() {
@@ -77,26 +81,23 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
         try {
-          const mentorTimezone = availability.timezone;
-          console.log("Mentor timezone:", mentorTimezone);
-
           // Create a base date for today
           const baseDate = new Date(date);
           baseDate.setHours(0, 0, 0, 0);
 
-          // Parse start and end times
+          // Parse start and end times in mentor's timezone
           const [startHour, startMinute] = availability.start_time.split(':').map(Number);
           const [endHour, endMinute] = availability.end_time.split(':').map(Number);
 
-          // Convert times to user's timezone
+          // Create dates in mentor's timezone
           const startTime = toZonedTime(
             new Date(baseDate.setHours(startHour, startMinute)),
-            userTimezone
+            mentorTimezone
           );
 
           const endTime = toZonedTime(
             new Date(baseDate.setHours(endHour, endMinute)),
-            userTimezone
+            mentorTimezone
           );
 
           let currentTime = new Date(startTime);
@@ -144,7 +145,7 @@ export function useAvailableTimeSlots(date: Date | undefined, mentorId: string, 
     if (date && mentorId) {
       fetchAvailability();
     }
-  }, [date, mentorId, sessionDuration, toast, userTimezone]);
+  }, [date, mentorId, sessionDuration, toast, mentorTimezone]);
 
   return availableTimeSlots;
 }
