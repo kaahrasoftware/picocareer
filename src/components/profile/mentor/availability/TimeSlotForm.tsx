@@ -19,7 +19,17 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { getSetting } = useUserSettings(profileId);
-  const userTimezone = getSetting('timezone') || 'UTC';
+  const userTimezone = getSetting('timezone');
+
+  useEffect(() => {
+    if (!userTimezone) {
+      toast({
+        title: "Timezone not set",
+        description: "Please set your timezone in settings before setting availability",
+        variant: "destructive",
+      });
+    }
+  }, [userTimezone, toast]);
 
   const checkForOverlap = async (formattedDate: string, startTime: string, endTime: string) => {
     const { data: existingSlots } = await supabase
@@ -46,6 +56,15 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       toast({
         title: "Missing information",
         description: "Please select both start and end times",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!userTimezone) {
+      toast({
+        title: "Timezone not set",
+        description: "Please set your timezone in settings before setting availability",
         variant: "destructive",
       });
       return;
@@ -126,7 +145,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         selectedStartTime={selectedStartTime}
         selectedEndTime={selectedEndTime}
         isRecurring={isRecurring}
-        userTimezone={userTimezone}
+        userTimezone={userTimezone || 'Not set'}
         onStartTimeSelect={setSelectedStartTime}
         onEndTimeSelect={setSelectedEndTime}
         onRecurringChange={setIsRecurring}
@@ -134,7 +153,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
       <Button 
         onClick={handleSaveAvailability}
-        disabled={!selectedStartTime || !selectedEndTime || isSubmitting}
+        disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
         className="w-full"
       >
         {isSubmitting ? "Saving..." : "Save Availability"}
