@@ -30,22 +30,29 @@ export function SignUpForm() {
     setIsLoading(true);
 
     try {
-      // First, check if email already exists
-      const { data: existingProfiles } = await supabase
+      // First, check if email already exists using maybeSingle() instead of single()
+      const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', formData.email.toLowerCase())
-        .single();
+        .maybeSingle();
 
-      if (existingProfiles) {
+      if (profileError) {
+        console.error('Error checking existing profile:', profileError);
+        throw profileError;
+      }
+
+      if (existingProfile) {
         toast({
           title: "Account already exists",
           description: "Please sign in instead.",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
+      // Proceed with signup
       const { error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
@@ -66,7 +73,6 @@ export function SignUpForm() {
           });
           return;
         }
-
         throw signUpError;
       }
 
@@ -81,7 +87,7 @@ export function SignUpForm() {
       
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
