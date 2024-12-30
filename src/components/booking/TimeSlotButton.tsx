@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { formatInTimeZone } from 'date-fns-tz';
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface TimeSlotButtonProps {
   time: string;
@@ -18,12 +21,18 @@ export function TimeSlotButton({
   mentorTimezone,
   date
 }: TimeSlotButtonProps) {
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting } = useUserSettings(profile?.id || '');
+  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const slotDate = new Date(date);
   const [hours, minutes] = time.split(':').map(Number);
   slotDate.setHours(hours, minutes, 0, 0);
 
-  // Format time in mentor timezone only
+  // Format time in both mentor's and user's timezone
   const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
+  const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
 
   return (
     <Button
@@ -33,9 +42,9 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start">
-        <span>{mentorTime}</span>
+        <span>{userTime}</span>
         <span className="text-xs text-muted-foreground">
-          ({mentorTimezone})
+          Mentor's time: {mentorTime} ({mentorTimezone})
         </span>
       </div>
     </Button>
