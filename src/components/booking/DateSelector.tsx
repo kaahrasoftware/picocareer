@@ -1,7 +1,6 @@
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,7 +25,12 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
         .eq('setting_type', 'timezone')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching mentor timezone:', error);
+        return 'UTC';
+      }
+      
+      console.log('Fetched mentor timezone:', data?.setting_value);
       return data?.setting_value || 'UTC';
     }
   });
