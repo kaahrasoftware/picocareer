@@ -24,19 +24,6 @@ export function SignUpForm() {
     }));
   };
 
-  const createProfile = async (userId: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .insert({
-        id: userId,
-        email: formData.email.toLowerCase(),
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-      });
-
-    if (error) throw error;
-  };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -55,11 +42,12 @@ export function SignUpForm() {
         return;
       }
 
-      // Attempt signup with metadata
+      // First, attempt the signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth?tab=signin`,
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
@@ -75,29 +63,52 @@ export function SignUpForm() {
             variant: "destructive",
           });
           navigate("/auth?tab=signin");
-          return;
-        }
-        throw error;
-      }
-
-      if (data.user) {
-        try {
-          await createProfile(data.user.id);
+        } else {
           toast({
-            title: "Account created!",
-            description: "Please check your email (including spam folder) to verify your account before signing in.",
-          });
-          navigate("/auth?tab=signin");
-        } catch (profileError: any) {
-          console.error('Profile creation error:', profileError);
-          toast({
-            title: "Error",
-            description: "Account created but profile setup failed. Please try signing in.",
+            title: "Signup Error",
+            description: error.message,
             variant: "destructive",
           });
-          navigate("/auth?tab=signin");
         }
+        return;
       }
+
+      if (!data.user?.id) {
+        toast({
+          title: "Error",
+          description: "Failed to create account. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Then create the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email: formData.email.toLowerCase(),
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+        });
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        // Even if profile creation fails, the account was created
+        toast({
+          title: "Account Created",
+          description: "Account created but profile setup incomplete. Please try signing in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Please check your email (including spam folder) to verify your account before signing in.",
+        });
+      }
+      
+      navigate("/auth?tab=signin");
+
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
