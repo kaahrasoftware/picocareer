@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/SignInForm";
+import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +13,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Auth() {
   const { data: mentors = [], isError } = useQuery({
@@ -138,7 +140,18 @@ export default function Auth() {
                 </p>
               </div>
 
-              <SignInForm />
+              <Tabs defaultValue="signin" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="signin">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+                <TabsContent value="signin">
+                  <SignInForm />
+                </TabsContent>
+                <TabsContent value="signup">
+                  <SignUpForm />
+                </TabsContent>
+              </Tabs>
             </Card>
           </div>
         </div>
