@@ -29,7 +29,7 @@ export function FormField({
   type = "text",
   bucket = "images",
   required = false,
-  options = [],
+  options = [], // Provide default empty array
   dependsOn,
   watch
 }: FormFieldProps) {

@@ -11,7 +11,7 @@ interface MultiSelectFieldProps {
   placeholder?: string;
   description?: string;
   required?: boolean;
-  options: string[];
+  options?: string[];
 }
 
 export function MultiSelectField({
