@@ -1,5 +1,5 @@
 import React from "react";
-import { FormField as FormFieldBase } from "@/components/ui/form";
+import { FormField as FormFieldBase, FormItem } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "./ImageUpload";
 import { RichTextEditor } from "./RichTextEditor";
@@ -192,6 +192,7 @@ export function FormField({
                 placeholder={placeholder}
                 description={description}
                 required={required}
+                type="text"
               />
             );
 
@@ -214,7 +215,7 @@ export function FormField({
                 label={label}
                 placeholder={placeholder}
                 description={description}
-                type={type}
+                type={type === "number" ? "number" : "text"}
                 required={required}
               />
             );
