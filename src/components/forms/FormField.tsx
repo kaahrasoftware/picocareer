@@ -1,43 +1,21 @@
 import React from "react";
-import {
-  FormField as FormFieldBase,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { FormField as FormFieldBase } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "./ImageUpload";
 import { RichTextEditor } from "./RichTextEditor";
 import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { BasicInputField } from "./fields/BasicInputField";
+import { CategoryField } from "./fields/CategoryField";
+import { SubcategoryField } from "./fields/SubcategoryField";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const degreeOptions = [
-  "No Degree",
-  "High School",
-  "Associate",
-  "Bachelor",
-  "Master",
-  "MD",
-  "PhD"
-] as const;
 
 export interface FormFieldProps {
   name: string;
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "multiselect" | "select";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "category" | "subcategory" | "select";
   bucket?: string;
   required?: boolean;
   options?: Array<{ id: string; title?: string; name?: string; }>;
@@ -59,7 +37,6 @@ export function FormField({
   dependsOn,
   watch
 }: FormFieldProps) {
-  // Fetch schools data
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
@@ -68,14 +45,12 @@ export function FormField({
         .select('id, name')
         .eq('status', 'Approved')
         .order('name');
-      
       if (error) throw error;
       return data || [];
     },
     enabled: name === 'school_id'
   });
 
-  // Fetch majors data
   const { data: majors } = useQuery({
     queryKey: ['majors'],
     queryFn: async () => {
@@ -84,14 +59,12 @@ export function FormField({
         .select('id, title')
         .eq('status', 'Approved')
         .order('title');
-      
       if (error) throw error;
       return data || [];
     },
     enabled: name === 'academic_major_id'
   });
 
-  // Fetch companies data
   const { data: companies } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
@@ -100,14 +73,12 @@ export function FormField({
         .select('id, name')
         .eq('status', 'Approved')
         .order('name');
-      
       if (error) throw error;
       return data || [];
     },
     enabled: name === 'company_id'
   });
 
-  // Fetch careers data
   const { data: careers } = useQuery({
     queryKey: ['careers'],
     queryFn: async () => {
@@ -116,21 +87,11 @@ export function FormField({
         .select('id, title')
         .eq('status', 'Approved')
         .order('title');
-      
       if (error) throw error;
       return data || [];
     },
     enabled: name === 'position'
   });
-
-  const handleArrayInput = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
-    const value = e.target.value;
-    // Split by commas, trim whitespace, and filter out empty strings
-    const arrayValue = value.split(',')
-      .map(item => item.trim())
-      .filter(item => item !== '');
-    onChange(arrayValue);
-  };
 
   if (type === "image") {
     return (
@@ -148,15 +109,32 @@ export function FormField({
     <FormFieldBase
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>
-            {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </FormLabel>
-          <FormControl>
-            {type === "select" ? (
-              name === "position" ? (
+      render={({ field }) => {
+        switch (type) {
+          case "category":
+            return (
+              <CategoryField
+                field={field}
+                label={label}
+                description={description}
+                required={required}
+              />
+            );
+          
+          case "subcategory":
+            return (
+              <SubcategoryField
+                field={field}
+                label={label}
+                description={description}
+                required={required}
+                selectedCategory={watch && watch(dependsOn || "")}
+              />
+            );
+
+          case "select":
+            if (name === "position") {
+              return (
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
@@ -164,7 +142,9 @@ export function FormField({
                   placeholder={placeholder || "Select position"}
                   tableName="careers"
                 />
-              ) : name === "company_id" ? (
+              );
+            } else if (name === "company_id") {
+              return (
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
@@ -172,7 +152,9 @@ export function FormField({
                   placeholder={placeholder || "Select company"}
                   tableName="companies"
                 />
-              ) : name === "school_id" ? (
+              );
+            } else if (name === "school_id") {
+              return (
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
@@ -180,7 +162,9 @@ export function FormField({
                   placeholder={placeholder || "Select your school"}
                   tableName="schools"
                 />
-              ) : name === "academic_major_id" ? (
+              );
+            } else if (name === "academic_major_id") {
+              return (
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
@@ -188,79 +172,54 @@ export function FormField({
                   placeholder={placeholder || "Select major"}
                   tableName="majors"
                 />
-              ) : (
-                <Select
-                  value={field.value || ""}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={placeholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {options.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.title || option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )
-            ) : type === "degree" ? (
-              <Select
-                value={field.value || ""}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={placeholder || "Select a degree"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {degreeOptions.map((degree) => (
-                    <SelectItem key={degree} value={degree}>
-                      {degree}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : type === "textarea" && name === "content" ? (
-              <RichTextEditor
-                value={field.value || ''}
-                onChange={field.onChange}
-                placeholder={placeholder}
-              />
-            ) : type === "textarea" ? (
-              <Input
-                {...field}
-                placeholder={placeholder}
-                className="min-h-[100px]"
-              />
-            ) : type === "checkbox" ? (
-              <div className="flex flex-row items-start space-x-3 space-y-0">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+              );
+            }
+
+          case "textarea":
+            if (name === "content") {
+              return (
+                <RichTextEditor
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  placeholder={placeholder}
                 />
-              </div>
-            ) : type === "number" ? (
-              <Input
-                {...field}
-                type="number"
-                onChange={e => field.onChange(parseFloat(e.target.value))}
+              );
+            }
+            return (
+              <BasicInputField
+                field={field}
+                label={label}
                 placeholder={placeholder}
+                description={description}
+                required={required}
               />
-            ) : type === "array" ? (
-              <Input 
-                {...field}
-                onChange={(e) => handleArrayInput(e, field.onChange)}
-                placeholder={`${placeholder} (comma-separated)`}
+            );
+
+          case "checkbox":
+            return (
+              <FormItem>
+                <div className="flex flex-row items-start space-x-3 space-y-0">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </div>
+              </FormItem>
+            );
+
+          default:
+            return (
+              <BasicInputField
+                field={field}
+                label={label}
+                placeholder={placeholder}
+                description={description}
+                type={type}
+                required={required}
               />
-            ) : (
-              <Input {...field} placeholder={placeholder} />
-            )}
-          </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
-        </FormItem>
-      )}
+            );
+        }
+      }}
     />
   );
 }

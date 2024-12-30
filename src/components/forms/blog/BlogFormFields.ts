@@ -6,8 +6,8 @@ export const blogSchema = z.object({
   summary: z.string().min(1, "Summary is required"),
   content: z.string().min(50, "Content should be at least 50 characters long"),
   cover_image_url: z.string().min(1, "Cover image is required"),
-  categories: z.array(z.string()).min(1, "At least one category is required"),
-  subcategories: z.array(z.string()).optional(),
+  categories: z.string().min(1, "At least one category is required"),
+  subcategories: z.string().optional(),
   other_notes: z.string().optional(),
 });
 
@@ -46,17 +46,16 @@ export const blogFormFields: FormFieldProps[] = [
   {
     name: "categories",
     label: "Categories",
-    type: "array",
-    placeholder: "Add relevant categories",
-    description: "Separate categories with commas",
+    type: "category",
+    description: "Select the main category for your blog post",
     required: true,
   },
   {
     name: "subcategories",
     label: "Subcategories",
-    type: "array",
-    placeholder: "Add subcategories if applicable",
-    description: "Separate subcategories with commas",
+    type: "subcategory",
+    description: "Select relevant subcategories",
+    dependsOn: "categories",
   },
   {
     name: "other_notes",
