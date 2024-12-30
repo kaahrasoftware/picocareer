@@ -5,7 +5,7 @@ import { Database } from "@/integrations/supabase/types";
 type Categories = Database["public"]["Enums"]["categories"];
 
 interface SubcategorySelectProps {
-  selectedCategory: string;
+  selectedCategory: Categories | "_all";
   selectedSubcategory: string;
   setSelectedSubcategory: (value: string) => void;
 }
@@ -21,7 +21,7 @@ export function SubcategorySelect({
       onValueChange={setSelectedSubcategory}
       disabled={!selectedCategory || selectedCategory === "_all"}
     >
-      <SelectTrigger className="w-full md:w-[200px]">
+      <SelectTrigger className="w-full">
         <SelectValue placeholder="Select subcategory" />
       </SelectTrigger>
       <SelectContent>
