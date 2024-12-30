@@ -24,6 +24,19 @@ export function SignUpForm() {
     }));
   };
 
+  const createProfile = async (userId: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: formData.email.toLowerCase(),
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+      });
+
+    if (error) throw error;
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -39,9 +52,6 @@ export function SignUpForm() {
     }
 
     try {
-      // Add delay before checking email to ensure DB consistency
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       // Check if user exists by attempting to get user by email
       const { data, error: emailCheckError } = await supabase
         .from('profiles')
@@ -63,35 +73,16 @@ export function SignUpForm() {
         return;
       }
 
-      // Add delay before signup to ensure DB consistency
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       // Proceed with signup
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-          },
           emailRedirectTo: `${window.location.origin}/auth?tab=signin`
         }
       });
 
       if (error) {
-        // Handle database error specifically
-        if (error.message.includes("Database error")) {
-          toast({
-            title: "System Error",
-            description: "We're experiencing technical difficulties. Please try again in a few moments.",
-            variant: "destructive",
-          });
-          console.error('Database error during signup:', error);
-          return;
-        }
-
-        // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
             title: "Account exists",
@@ -102,22 +93,16 @@ export function SignUpForm() {
           return;
         }
 
-        if (error.message.includes("confirmation email")) {
-          toast({
-            title: "Email Configuration Error",
-            description: "There was an issue with our email service. Please try again later or contact support.",
-            variant: "destructive",
-          });
-          return;
-        }
-
         throw error;
       }
 
       if (signUpData.user) {
+        // Create profile after successful signup
+        await createProfile(signUpData.user.id);
+
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account before signing in.",
+          description: "Please check your email (including spam folder) to verify your account before signing in.",
         });
         navigate("/auth?tab=signin");
       }
@@ -188,6 +173,10 @@ export function SignUpForm() {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
+
+      <p className="text-sm text-muted-foreground text-center">
+        You'll need to verify your email address before signing in.
+      </p>
 
       <SocialSignIn onGoogleSignIn={handleGoogleSignIn} />
     </form>
