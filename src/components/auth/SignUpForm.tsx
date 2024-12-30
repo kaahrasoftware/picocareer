@@ -59,13 +59,19 @@ export function SignUpForm() {
     setIsLoading(true);
 
     try {
-      // Check if email already exists in profiles
-      const { data: existingProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formData.email.toLowerCase());
+      // First check if the email exists in auth.users
+      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: formData.email.toLowerCase()
+        }
+      });
 
-      if (existingProfiles && existingProfiles.length > 0) {
+      if (getUserError) {
+        console.error('Error checking existing user:', getUserError);
+        throw new Error("Failed to check existing user");
+      }
+
+      if (users && users.length > 0) {
         toast({
           title: "Account exists",
           description: "An account with this email already exists. Please sign in instead.",
@@ -80,7 +86,6 @@ export function SignUpForm() {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth?tab=signin`,
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
@@ -108,7 +113,7 @@ export function SignUpForm() {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // If profile creation fails, we should clean up the auth user
+        // If profile creation fails, clean up the auth user
         await supabase.auth.signOut();
         throw new Error("Failed to create profile");
       }
