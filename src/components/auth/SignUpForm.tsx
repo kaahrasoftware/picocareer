@@ -42,6 +42,7 @@ export function SignUpForm() {
     setIsLoading(true);
 
     try {
+      // Basic validation
       if (!formData.firstName.trim() || !formData.lastName.trim()) {
         toast({
           title: "Error",
@@ -51,24 +52,7 @@ export function SignUpForm() {
         return;
       }
 
-      // Check if email exists first
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formData.email.toLowerCase())
-        .single();
-
-      if (existingUser) {
-        toast({
-          title: "Account exists",
-          description: "An account with this email already exists. Please sign in instead.",
-          variant: "destructive",
-        });
-        navigate("/auth?tab=signin");
-        return;
-      }
-
-      // Proceed with signup
+      // Attempt signup
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -80,9 +64,22 @@ export function SignUpForm() {
         }
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        // Handle specific signup errors
+        if (signUpError.message.includes("User already registered")) {
+          toast({
+            title: "Account exists",
+            description: "An account with this email already exists. Please sign in instead.",
+            variant: "destructive",
+          });
+          navigate("/auth?tab=signin");
+          return;
+        }
+        throw signUpError;
+      }
 
       if (signUpData.user) {
+        // Create profile after successful signup
         await createProfile(signUpData.user.id);
         
         toast({
@@ -94,16 +91,6 @@ export function SignUpForm() {
     } catch (error: any) {
       console.error('Signup error:', error);
       
-      if (error.message?.includes("User already registered")) {
-        toast({
-          title: "Account exists",
-          description: "An account with this email already exists. Please sign in instead.",
-          variant: "destructive",
-        });
-        navigate("/auth?tab=signin");
-        return;
-      }
-
       // Handle network errors
       if (error.message?.includes("Failed to fetch") || error.message?.includes("NetworkError")) {
         toast({
