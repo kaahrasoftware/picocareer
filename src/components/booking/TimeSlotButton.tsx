@@ -16,7 +16,6 @@ export function TimeSlotButton({
   available, 
   isSelected, 
   onSelect,
-  userTimezone,
   mentorTimezone,
   date
 }: TimeSlotButtonProps) {
@@ -24,8 +23,7 @@ export function TimeSlotButton({
   const [hours, minutes] = time.split(':').map(Number);
   slotDate.setHours(hours, minutes, 0, 0);
 
-  // Format times in both timezones
-  const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
+  // Format time in mentor timezone only
   const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
 
   return (
@@ -36,12 +34,10 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start">
-        <span>{userTime}</span>
-        {userTimezone !== mentorTimezone && (
-          <span className="text-xs text-muted-foreground">
-            {mentorTime} ({mentorTimezone})
-          </span>
-        )}
+        <span>{mentorTime}</span>
+        <span className="text-xs text-muted-foreground">
+          ({mentorTimezone})
+        </span>
       </div>
     </Button>
   );
