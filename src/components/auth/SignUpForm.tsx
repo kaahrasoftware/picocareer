@@ -39,11 +39,8 @@ export function SignUpForm() {
     }
 
     try {
-      // Add delay before checking email to ensure DB consistency
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       // Check if user exists by attempting to get user by email
-      const { data, error: emailCheckError } = await supabase
+      const { data: existingUser, error: emailCheckError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', formData.email.toLowerCase())
@@ -53,7 +50,7 @@ export function SignUpForm() {
         throw emailCheckError;
       }
 
-      if (data) {
+      if (existingUser) {
         toast({
           title: "Account exists",
           description: "An account with this email already exists. Please sign in instead.",
@@ -62,9 +59,6 @@ export function SignUpForm() {
         navigate("/auth?tab=signin");
         return;
       }
-
-      // Add delay before signup to ensure DB consistency
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Proceed with signup
       const { data: signUpData, error } = await supabase.auth.signUp({
@@ -80,17 +74,6 @@ export function SignUpForm() {
       });
 
       if (error) {
-        // Handle database error specifically
-        if (error.message.includes("Database error")) {
-          toast({
-            title: "System Error",
-            description: "We're experiencing technical difficulties. Please try again in a few moments.",
-            variant: "destructive",
-          });
-          console.error('Database error during signup:', error);
-          return;
-        }
-
         // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
@@ -102,22 +85,13 @@ export function SignUpForm() {
           return;
         }
 
-        if (error.message.includes("confirmation email")) {
-          toast({
-            title: "Email Configuration Error",
-            description: "There was an issue with our email service. Please try again later or contact support.",
-            variant: "destructive",
-          });
-          return;
-        }
-
         throw error;
       }
 
       if (signUpData.user) {
         toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account before signing in.",
+          title: "Check your email",
+          description: "We've sent you a confirmation email. Please check your inbox (and spam folder) to verify your account before signing in.",
         });
         navigate("/auth?tab=signin");
       }
@@ -129,16 +103,6 @@ export function SignUpForm() {
         toast({
           title: "Connection Error",
           description: "Unable to connect to the server. Please check your internet connection and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Handle database errors
-      if (error.message?.includes("Database error")) {
-        toast({
-          title: "System Error",
-          description: "There was an issue creating your account. Please try again in a few moments.",
           variant: "destructive",
         });
         return;
@@ -188,6 +152,11 @@ export function SignUpForm() {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
+
+      <div className="text-sm text-muted-foreground text-center">
+        By signing up, you'll receive a confirmation email. 
+        Please check your inbox and spam folder.
+      </div>
 
       <SocialSignIn onGoogleSignIn={handleGoogleSignIn} />
     </form>
