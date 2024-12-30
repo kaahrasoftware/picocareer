@@ -15,11 +15,14 @@ export function SubcategorySelect({
   selectedSubcategory, 
   setSelectedSubcategory 
 }: SubcategorySelectProps) {
+  // Only disable if no category is selected or if "_all" is selected
+  const isDisabled = !selectedCategory || selectedCategory === "_all";
+  
   return (
     <Select 
       value={selectedSubcategory} 
       onValueChange={setSelectedSubcategory}
-      disabled={!selectedCategory || selectedCategory === "_all"}
+      disabled={isDisabled}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Select subcategory" />
@@ -27,7 +30,7 @@ export function SubcategorySelect({
       <SelectContent>
         <SelectItem value="_all">All Subcategories</SelectItem>
         {selectedCategory && selectedCategory !== "_all" && 
-          subcategories[selectedCategory as Categories]?.map((subcategory) => (
+          subcategories[selectedCategory]?.map((subcategory) => (
             <SelectItem key={subcategory} value={subcategory}>
               {subcategory}
             </SelectItem>
