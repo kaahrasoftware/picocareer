@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { formatInTimeZone } from 'date-fns-tz';
+import { Trash2, Clock } from "lucide-react";
 
 interface TimeSlot {
   id: string;
   start_time: string;
   end_time: string;
+  timezone: string;
+  date_available: string;
 }
 
 interface ExistingTimeSlotsProps {
@@ -20,30 +23,46 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
     <div className="mt-6 space-y-3">
       <h4 className="font-medium">Available Time Slots</h4>
       <div className="grid gap-2 sm:grid-cols-2">
-        {slots.map((slot) => (
-          <div 
-            key={slot.id}
-            className="flex items-center justify-between p-4 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">
-                {format(new Date(`2000-01-01T${slot.start_time}`), 'h:mm a')} - 
-                {format(new Date(`2000-01-01T${slot.end_time}`), 'h:mm a')}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {parseInt(slot.end_time) - parseInt(slot.start_time)} hour slot
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(slot.id)}
-              className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+        {slots.map((slot) => {
+          const date = new Date(slot.date_available);
+          const formattedDate = format(date, 'MMM d, yyyy');
+          const startTime = formatInTimeZone(
+            `${slot.date_available}T${slot.start_time}`,
+            slot.timezone,
+            'h:mm a'
+          );
+          const endTime = formatInTimeZone(
+            `${slot.date_available}T${slot.end_time}`,
+            slot.timezone,
+            'h:mm a'
+          );
+
+          return (
+            <div 
+              key={slot.id}
+              className="flex items-center justify-between p-4 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium">
+                  {startTime} - {endTime}
+                </span>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{formattedDate}</span>
+                  <span className="text-xs">({slot.timezone})</span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(slot.id)}
+                className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
