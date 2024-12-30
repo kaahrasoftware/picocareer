@@ -770,6 +770,7 @@ export type Database = {
       }
       schools: {
         Row: {
+          acceptance_rate: number | null
           created_at: string
           id: string
           location: Database["public"]["Enums"]["states"] | null
@@ -780,6 +781,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          acceptance_rate?: number | null
           created_at?: string
           id?: string
           location?: Database["public"]["Enums"]["states"] | null
@@ -790,6 +792,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          acceptance_rate?: number | null
           created_at?: string
           id?: string
           location?: Database["public"]["Enums"]["states"] | null
