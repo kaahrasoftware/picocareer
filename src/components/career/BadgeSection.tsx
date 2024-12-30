@@ -1,12 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import { ReactNode } from "react";
 
 interface BadgeSectionProps {
   title: string;
   items?: string[];
   badgeClassName: string;
+  icon?: ReactNode;
 }
 
-export function BadgeSection({ title, items, badgeClassName }: BadgeSectionProps) {
+export function BadgeSection({ title, items, badgeClassName, icon }: BadgeSectionProps) {
   if (!items || items.length === 0) return null;
 
   const displayItems = items.slice(0, 3);
@@ -14,7 +16,10 @@ export function BadgeSection({ title, items, badgeClassName }: BadgeSectionProps
 
   return (
     <div className="mb-4">
-      <h4 className="text-sm font-medium mb-2 text-left">{title}</h4>
+      <h4 className="text-sm font-medium mb-2 text-left flex items-center gap-2">
+        {icon}
+        {title}
+      </h4>
       <div className="flex flex-wrap gap-1.5">
         {displayItems.map((item) => (
           <Badge 

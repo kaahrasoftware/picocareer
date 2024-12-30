@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { Database } from "@/integrations/supabase/types";
-
-type SessionTypeEnum = Database["public"]["Enums"]["session_type"];
+import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
@@ -18,22 +16,14 @@ interface SessionTypeFormProps {
   existingTypes: SessionTypeEnum[];
 }
 
-const sessionTypeOptions: SessionTypeEnum[] = [
-  "Introduction",
-  "Quick-Advice",
-  "Walkthrough",
-  "Group (2-3 Mentees)",
-  "Group (4-6 Mentees)"
-];
-
 export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTypeFormProps) {
-  const [type, setType] = useState<SessionTypeEnum>("Introduction");
+  const [type, setType] = useState<SessionTypeEnum>("First Touch");
   const [duration, setDuration] = useState('30');
   const [price, setPrice] = useState('0');
   const [description, setDescription] = useState('');
 
   // Filter out already used session types
-  const availableTypes = sessionTypeOptions.filter(type => !existingTypes.includes(type));
+  const availableTypes = SESSION_TYPE_OPTIONS.filter(type => !existingTypes.includes(type));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
