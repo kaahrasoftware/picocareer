@@ -14,24 +14,42 @@ interface DateSelectorProps {
 export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
   
-  // Fetch mentor's timezone in real-time
+  // First fetch the mentor's profile to ensure we have valid data
   const { data: mentorSettings } = useQuery({
     queryKey: ['mentorSettings', mentorId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First verify the profile exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', mentorId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching mentor profile:', profileError);
+        return 'UTC';
+      }
+
+      if (!profile) {
+        console.error('Mentor profile not found');
+        return 'UTC';
+      }
+
+      // Then fetch their timezone setting
+      const { data: settings, error: settingsError } = await supabase
         .from('user_settings')
         .select('setting_value')
-        .eq('profile_id', mentorId)
+        .eq('profile_id', profile.id)
         .eq('setting_type', 'timezone')
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching mentor timezone:', error);
+      if (settingsError) {
+        console.error('Error fetching mentor timezone:', settingsError);
         return 'UTC';
       }
       
-      console.log('Fetched mentor timezone:', data?.setting_value);
-      return data?.setting_value || 'UTC';
+      console.log('Fetched mentor timezone:', settings?.setting_value);
+      return settings?.setting_value || 'UTC';
     }
   });
 
