@@ -1,55 +1,44 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { FormField, FormFieldProps } from "./FormField";
+import { Form } from "@/components/ui/form";
+import { FormField } from "./FormField";
+import { FormFieldProps } from "./FormField";
 
 interface GenericUploadFormProps {
   fields: FormFieldProps[];
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: any) => void;
   buttonText?: string;
-  validationSchema?: any;
+  isSubmitting?: boolean;
 }
 
 export function GenericUploadForm({ 
   fields, 
   onSubmit, 
-  buttonText = "Upload", 
-  validationSchema 
+  buttonText = "Submit",
+  isSubmitting = false 
 }: GenericUploadFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm({
-    resolver: validationSchema ? zodResolver(validationSchema) : undefined,
-  });
+  const form = useForm();
 
   const handleSubmit = async (data: any) => {
-    setIsSubmitting(true);
-    try {
-      await onSubmit(data);
-      form.reset();
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await onSubmit(data);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="space-y-6">
-          {fields.map((field) => (
-            <FormField
-              key={field.name}
-              control={form.control}
-              {...field}
-            />
-          ))}
-        </div>
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Uploading..." : buttonText}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {fields.map((field, index) => (
+          <FormField
+            key={index}
+            control={form.control}
+            {...field}
+          />
+        ))}
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : buttonText}
         </Button>
       </form>
     </Form>

@@ -42,6 +42,24 @@ export default function MajorUpload() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // First check if a major with this title already exists
+      const { data: existingMajor } = await supabase
+        .from('majors')
+        .select('id, title')
+        .eq('title', data.title)
+        .single();
+
+      if (existingMajor) {
+        toast({
+          title: "Major already exists",
+          description: `A major with the title "${data.title}" already exists.`,
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // If no existing major, proceed with insertion
       const { error } = await supabase
         .from('majors')
         .insert([
@@ -78,6 +96,7 @@ export default function MajorUpload() {
         fields={majorFormFields}
         onSubmit={handleSubmit}
         buttonText="Upload Major"
+        isSubmitting={isSubmitting}
       />
     </div>
   );
