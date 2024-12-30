@@ -87,14 +87,13 @@ export function SignUpForm() {
           navigate("/auth?tab=signin");
         } catch (profileError: any) {
           console.error('Profile creation error:', profileError);
-          // If profile creation fails, we should delete the auth user
-          await supabase.auth.admin.deleteUser(signUpData.user.id);
           
           toast({
             title: "Error",
-            description: "There was an issue creating your profile. Please try again.",
+            description: "Your account was created but there was an issue setting up your profile. Please try signing in.",
             variant: "destructive",
           });
+          navigate("/auth?tab=signin");
         }
       }
     } catch (error: any) {
