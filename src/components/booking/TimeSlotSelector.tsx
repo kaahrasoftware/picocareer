@@ -4,6 +4,7 @@ import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -24,23 +25,51 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
-  // Fetch mentor's availability for this date
-  const { data: mentorAvailability } = useQuery({
-    queryKey: ['mentorAvailabilityTimezone', mentorId, date],
+  // Fetch mentor's timezone from user_settings
+  const { data: mentorSettings } = useQuery({
+    queryKey: ['mentor-timezone', mentorId],
     queryFn: async () => {
-      const formattedDate = format(date, 'yyyy-MM-dd');
-      
-      // First try to get specific date availability
       const { data, error } = await supabase
-        .from('mentor_availability')
-        .select('timezone, start_time, end_time')
+        .from('user_settings')
+        .select('setting_value')
         .eq('profile_id', mentorId)
-        .eq('date_available', formattedDate)
+        .eq('setting_type', 'timezone')
         .maybeSingle();
 
       if (error) {
         console.error('Error fetching mentor timezone:', error);
-        return { timezone: 'UTC', start_time: null, end_time: null };
+        return { timezone: 'UTC' };
+      }
+
+      return {
+        timezone: data?.setting_value || 'UTC'
+      };
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Fetch mentor's availability for this date
+  const { data: mentorAvailability } = useQuery({
+    queryKey: ['mentorAvailabilityTimezone', mentorId, date],
+    queryFn: async () => {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', mentorId)
+        .eq('is_available', true)
+        .gte('start_date_time', startOfDay.toISOString())
+        .lte('start_date_time', endOfDay.toISOString())
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching mentor availability:', error);
+        return null;
       }
 
       // If no specific date availability, check for recurring availability
@@ -48,47 +77,45 @@ export function TimeSlotSelector({
         const dayOfWeek = date.getDay();
         const { data: recurringData, error: recurringError } = await supabase
           .from('mentor_availability')
-          .select('timezone, start_time, end_time')
+          .select('*')
           .eq('profile_id', mentorId)
           .eq('recurring', true)
           .eq('day_of_week', dayOfWeek)
+          .eq('is_available', true)
           .maybeSingle();
 
         if (recurringError) {
           console.error('Error fetching recurring availability:', recurringError);
-          return { timezone: 'UTC', start_time: null, end_time: null };
+          return null;
         }
 
         if (recurringData) {
           // For recurring slots, we need to combine the date with the time
-          const startDate = new Date(formattedDate);
-          const endDate = new Date(formattedDate);
+          const startDate = new Date(date);
+          const endDate = new Date(date);
           
-          if (recurringData.start_time && recurringData.end_time) {
-            const [startHour, startMinute] = format(new Date(recurringData.start_time), 'HH:mm').split(':');
-            const [endHour, endMinute] = format(new Date(recurringData.end_time), 'HH:mm').split(':');
+          if (recurringData.start_date_time && recurringData.end_date_time) {
+            const startDateTime = new Date(recurringData.start_date_time);
+            const endDateTime = new Date(recurringData.end_date_time);
             
-            startDate.setHours(parseInt(startHour), parseInt(startMinute));
-            endDate.setHours(parseInt(endHour), parseInt(endMinute));
+            startDate.setHours(startDateTime.getHours(), startDateTime.getMinutes());
+            endDate.setHours(endDateTime.getHours(), endDateTime.getMinutes());
             
             return {
               ...recurringData,
-              start_time: startDate.toISOString(),
-              end_time: endDate.toISOString()
+              start_date_time: startDate.toISOString(),
+              end_date_time: endDate.toISOString()
             };
           }
         }
-        
-        return { timezone: 'UTC', start_time: null, end_time: null };
       }
 
-      console.log('Fetched mentor availability:', data);
       return data;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
-  const mentorTimezone = mentorAvailability?.timezone || 'UTC';
+  const mentorTimezone = mentorSettings?.timezone || 'UTC';
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 

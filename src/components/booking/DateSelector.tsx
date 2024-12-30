@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface DateSelectorProps {
   date: Date | undefined;
@@ -13,24 +14,46 @@ interface DateSelectorProps {
 export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
   
-  // Fetch mentor's availability details including timezone and available times
+  // Fetch mentor's timezone from user_settings
+  const { data: mentorSettings } = useQuery({
+    queryKey: ['mentor-timezone', mentorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('setting_value')
+        .eq('profile_id', mentorId)
+        .eq('setting_type', 'timezone')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching mentor timezone:', error);
+        return { timezone: 'UTC' };
+      }
+
+      return {
+        timezone: data?.setting_value || 'UTC'
+      };
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Fetch mentor's availability details
   const { data: mentorAvailability } = useQuery({
     queryKey: ['mentorAvailability', mentorId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mentor_availability')
-        .select('timezone, start_time, end_time, date_available, recurring, day_of_week')
+        .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true);
 
       if (error) {
         console.error('Error fetching mentor availability:', error);
-        return { timezone: 'UTC', availabilities: [] };
+        return { availabilities: [] };
       }
 
       console.log('Fetched mentor availability:', data);
       return {
-        timezone: data?.[0]?.timezone || 'UTC',
         availabilities: data || []
       };
     },
@@ -48,10 +71,15 @@ export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps
     );
 
     // Check for specific date availability
-    const formattedDate = format(date, 'yyyy-MM-dd');
-    const hasSpecificSlot = mentorAvailability.availabilities.some(availability => 
-      availability.date_available === formattedDate
-    );
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const hasSpecificSlot = mentorAvailability.availabilities.some(availability => {
+      const availabilityStart = new Date(availability.start_date_time);
+      return availabilityStart >= startOfDay && availabilityStart <= endOfDay;
+    });
 
     return hasRecurringSlot || hasSpecificSlot;
   };
@@ -80,7 +108,7 @@ export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps
         }}
       />
       <div className="mt-4 text-sm text-gray-400">
-        <p>Mentor's timezone: {mentorAvailability?.timezone || 'Loading...'}</p>
+        <p>Mentor's timezone: {mentorSettings?.timezone || 'Loading...'}</p>
         <p className="mt-1">Days highlighted in green are available for booking</p>
         {availableDates.length === 0 && (
           <p className="mt-1 text-yellow-500">No available dates found for this mentor</p>

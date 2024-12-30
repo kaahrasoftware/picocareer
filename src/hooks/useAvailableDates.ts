@@ -18,7 +18,7 @@ export function useAvailableDates(mentorId: string) {
 
       const { data: availabilityData, error } = await supabase
         .from('mentor_availability')
-        .select('date_available, recurring, day_of_week')
+        .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true);
 
@@ -48,9 +48,9 @@ export function useAvailableDates(mentorId: string) {
               dates.push(recurringDate as AvailableDate);
             }
           }
-        } else if (availability.date_available) {
+        } else {
           // For specific dates
-          const date = new Date(availability.date_available);
+          const date = new Date(availability.start_date_time);
           date.setHours(0, 0, 0, 0);
           (date as AvailableDate).recurring = false;
           dates.push(date as AvailableDate);

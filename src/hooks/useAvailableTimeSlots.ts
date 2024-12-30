@@ -22,16 +22,21 @@ export function useAvailableTimeSlots(
     async function fetchAvailability() {
       if (!date || !mentorId) return;
 
-      const formattedDate = format(date, 'yyyy-MM-dd');
-      console.log("Fetching availability for date:", formattedDate, "mentor:", mentorId);
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      console.log("Fetching availability for date:", startOfDay, "mentor:", mentorId);
       
       // Query based on the specific date and ensure is_available is true
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
-        .select('start_time, end_time, timezone, recurring, day_of_week')
+        .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
-        .or(`date_available.eq.${formattedDate},and(recurring.eq.true,day_of_week.eq.${date.getDay()})`);
+        .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`);
 
       if (availabilityError) {
         console.error("Error fetching availability:", availabilityError);
@@ -52,11 +57,6 @@ export function useAvailableTimeSlots(
       }
 
       // Get existing bookings for this date
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('mentor_sessions')
         .select('scheduled_at, session_type:mentor_session_types(duration)')
@@ -81,15 +81,25 @@ export function useAvailableTimeSlots(
       const slots: TimeSlot[] = [];
       availabilityData.forEach((availability) => {
         try {
-          if (!availability.start_time || !availability.end_time) return;
+          if (!availability.start_date_time || !availability.end_date_time) return;
 
-          // Create a base date for today
-          const baseDate = new Date(date);
-          baseDate.setHours(0, 0, 0, 0);
+          let startTime: Date;
+          let endTime: Date;
 
-          // Parse the timestamps from the database
-          const startTime = new Date(availability.start_time);
-          const endTime = new Date(availability.end_time);
+          if (availability.recurring) {
+            // For recurring slots, combine the selected date with the time from availability
+            const availabilityStart = new Date(availability.start_date_time);
+            const availabilityEnd = new Date(availability.end_date_time);
+            
+            startTime = new Date(date);
+            startTime.setHours(availabilityStart.getHours(), availabilityStart.getMinutes());
+            
+            endTime = new Date(date);
+            endTime.setHours(availabilityEnd.getHours(), availabilityEnd.getMinutes());
+          } else {
+            startTime = new Date(availability.start_date_time);
+            endTime = new Date(availability.end_date_time);
+          }
 
           let currentTime = startTime;
 
