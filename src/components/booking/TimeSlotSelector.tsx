@@ -28,11 +28,13 @@ export function TimeSlotSelector({
   const { data: mentorAvailability } = useQuery({
     queryKey: ['mentorAvailabilityTimezone', mentorId, date],
     queryFn: async () => {
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('timezone, start_time, end_time')
         .eq('profile_id', mentorId)
-        .eq('date_available', format(date, 'yyyy-MM-dd'))
+        .eq('date_available', formattedDate)
         .maybeSingle();
 
       if (error) {
@@ -40,8 +42,27 @@ export function TimeSlotSelector({
         return { timezone: 'UTC', start_time: null, end_time: null };
       }
 
+      // If no specific date availability, check for recurring availability
+      if (!data) {
+        const dayOfWeek = date.getDay();
+        const { data: recurringData, error: recurringError } = await supabase
+          .from('mentor_availability')
+          .select('timezone, start_time, end_time')
+          .eq('profile_id', mentorId)
+          .eq('recurring', true)
+          .eq('day_of_week', dayOfWeek)
+          .maybeSingle();
+
+        if (recurringError) {
+          console.error('Error fetching recurring availability:', recurringError);
+          return { timezone: 'UTC', start_time: null, end_time: null };
+        }
+
+        return recurringData || { timezone: 'UTC', start_time: null, end_time: null };
+      }
+
       console.log('Fetched mentor availability:', data);
-      return data || { timezone: 'UTC', start_time: null, end_time: null };
+      return data;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
