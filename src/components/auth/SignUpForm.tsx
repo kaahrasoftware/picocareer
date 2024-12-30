@@ -59,19 +59,18 @@ export function SignUpForm() {
     setIsLoading(true);
 
     try {
-      // First check if the email exists in auth.users
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: formData.email.toLowerCase()
-        }
-      });
+      // Check if a profile with this email already exists
+      const { data: existingProfiles, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email.toLowerCase());
 
-      if (getUserError) {
-        console.error('Error checking existing user:', getUserError);
-        throw new Error("Failed to check existing user");
+      if (profileCheckError) {
+        console.error('Error checking existing profile:', profileCheckError);
+        throw new Error("Failed to check existing profile");
       }
 
-      if (users && users.length > 0) {
+      if (existingProfiles && existingProfiles.length > 0) {
         toast({
           title: "Account exists",
           description: "An account with this email already exists. Please sign in instead.",
