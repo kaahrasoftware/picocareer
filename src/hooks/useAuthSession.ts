@@ -13,6 +13,7 @@ export function useAuthSession() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
+        // First try to get existing session
         const { data: { session: existingSession }, error: sessionError } = 
           await supabase.auth.getSession();
         
@@ -26,8 +27,25 @@ export function useAuthSession() {
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
           localStorage.removeItem('picocareer_auth_token');
+          
+          // Only navigate to auth if we're not already there
+          if (window.location.pathname !== '/auth') {
+            navigate("/auth");
+          }
           return null;
         }
+
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+              queryClient.clear();
+              navigate("/auth");
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              queryClient.invalidateQueries({ queryKey: ['auth-session'] });
+            }
+          }
+        );
 
         return existingSession;
       } catch (error: any) {
