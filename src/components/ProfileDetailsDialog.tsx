@@ -120,6 +120,19 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     };
   }, [userId, open, queryClient]);
 
+  const handleBookSession = () => {
+    if (!currentUser) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to book a session.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    setBookingOpen(true);
+  };
+
   if (isLoading || !profile) {
     return null;
   }
@@ -146,7 +159,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
                 ) : (
                   <Button 
                     size="lg"
-                    onClick={() => setBookingOpen(true)}
+                    onClick={handleBookSession}
                     className="absolute right-0 top-16"
                   >
                     Book a Session
