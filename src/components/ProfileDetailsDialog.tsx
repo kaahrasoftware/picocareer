@@ -30,22 +30,28 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) {
-        if (error.message.includes('session_not_found')) {
-          toast({
-            title: "Session expired",
-            description: "Please sign in again to continue.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-          return null;
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          if (error.message.includes('session_not_found')) {
+            console.log('Session expired, redirecting to auth page');
+            toast({
+              title: "Session expired",
+              description: "Please sign in again to continue.",
+              variant: "destructive",
+            });
+            navigate("/auth");
+            return null;
+          }
+          throw error;
         }
+        
+        return user;
+      } catch (error) {
+        console.error('Error fetching current user:', error);
         throw error;
       }
-      
-      return user;
     },
     retry: false
   });
