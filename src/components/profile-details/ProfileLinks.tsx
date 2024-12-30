@@ -1,5 +1,6 @@
 import { Link, Github, Globe } from "lucide-react";
 import { EditableField } from "@/components/profile/EditableField";
+import { Button } from "@/components/ui/button";
 
 interface ProfileLinksProps {
   linkedinUrl: string | null;
@@ -15,34 +16,60 @@ export function ProfileLinks({ linkedinUrl, githubUrl, websiteUrl, profileId }: 
     <div className="bg-muted rounded-lg p-4 space-y-3">
       <h4 className="font-semibold">Links</h4>
       
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Link className="h-4 w-4" />
-        <EditableField
-          label="LinkedIn URL"
-          value={linkedinUrl}
-          fieldName="linkedin_url"
-          profileId={profileId}
-        />
-      </div>
+      <div className="flex gap-2">
+        {linkedinUrl && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            asChild
+          >
+            <a 
+              href={linkedinUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="LinkedIn Profile"
+            >
+              <Link className="h-5 w-5" />
+            </a>
+          </Button>
+        )}
 
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Github className="h-4 w-4" />
-        <EditableField
-          label="GitHub URL"
-          value={githubUrl}
-          fieldName="github_url"
-          profileId={profileId}
-        />
-      </div>
+        {githubUrl && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            asChild
+          >
+            <a 
+              href={githubUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="GitHub Profile"
+            >
+              <Github className="h-5 w-5" />
+            </a>
+          </Button>
+        )}
 
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Globe className="h-4 w-4" />
-        <EditableField
-          label="Website URL"
-          value={websiteUrl}
-          fieldName="website_url"
-          profileId={profileId}
-        />
+        {websiteUrl && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            asChild
+          >
+            <a 
+              href={websiteUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="Personal Website"
+            >
+              <Globe className="h-5 w-5" />
+            </a>
+          </Button>
+        )}
       </div>
     </div>
   );
