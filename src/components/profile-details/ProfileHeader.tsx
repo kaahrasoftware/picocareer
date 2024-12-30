@@ -3,6 +3,7 @@ import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProfileHeaderProps {
   profile: {
@@ -16,38 +17,71 @@ interface ProfileHeaderProps {
     location?: string | null;
     top_mentor?: boolean | null;
     user_type?: string | null;
+    position?: string | null;
+    academic_major_id?: string | null;
+    school_id?: string | null;
   };
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const { toast } = useToast();
+
+  // Fetch additional profile details
+  const { data: profileDetails } = useQuery({
+    queryKey: ['profileDetails', profile.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          career:careers!profiles_position_fkey(title),
+          school:schools!profiles_school_id_fkey(name),
+          academic_major:majors!profiles_academic_major_id_fkey(title)
+        `)
+        .eq('id', profile.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile details:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch profile details",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!profile.id,
+  });
   
   if (!profile) return null;
 
   // Determine primary and secondary display text based on whether the user is a student or professional
-  const primaryText = profile.career?.title || profile.academic_major || "No position/major set";
-  const secondaryText = profile.career?.title 
-    ? profile.company_name || "No company set"
-    : profile.school_name || "No school set";
+  const primaryText = profileDetails?.career?.title || 
+                     profileDetails?.academic_major?.title || 
+                     "No position/major set";
+                     
+  const secondaryText = profileDetails?.career?.title 
+    ? profileDetails?.school?.name || "No company set"
+    : profileDetails?.school?.name || "No school set";
 
   const handleAvatarUpdate = async (blob: Blob) => {
     try {
-      const fileExt = 'jpg'; // Since we're converting to JPEG in the image processing
+      const fileExt = 'jpg';
       const filePath = `${profile.id}.${fileExt}`;
 
-      // Upload the blob to Supabase storage
       const { error: uploadError, data } = await supabase.storage
         .from('avatars')
         .upload(filePath, blob, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update the profile with the new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -95,18 +129,27 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         </div>
         <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
         <div className="flex flex-col gap-1 mt-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            {profile.career?.title ? (
+          {profileDetails?.career?.title ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Building2 className="h-4 w-4 flex-shrink-0" />
-            ) : (
+              <span>{secondaryText}</span>
+            </div>
+          ) : profileDetails?.school?.name && (
+            <div className="flex items-center gap-2 text-muted-foreground">
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
-            )}
-            <span>{secondaryText}</span>
-          </div>
+              <span>{profileDetails.school.name}</span>
+            </div>
+          )}
           {profile.location && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-4 w-4 flex-shrink-0" />
               <span>{profile.location}</span>
+            </div>
+          )}
+          {profileDetails?.academic_major?.title && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <GraduationCap className="h-4 w-4 flex-shrink-0" />
+              <span>{profileDetails.academic_major.title}</span>
             </div>
           )}
         </div>
