@@ -1,12 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 export function useAuthSession() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   // Get initial session and listen for auth changes
   const { data: session, isError } = useQuery({
@@ -27,11 +25,6 @@ export function useAuthSession() {
           queryClient.removeQueries({ queryKey: ['profile'] });
           queryClient.removeQueries({ queryKey: ['notifications'] });
           localStorage.removeItem('picocareer_auth_token');
-          
-          // Only navigate to auth if we're not already there
-          if (window.location.pathname !== '/auth') {
-            navigate("/auth");
-          }
           return null;
         }
 
@@ -40,7 +33,6 @@ export function useAuthSession() {
           async (event, session) => {
             if (event === 'SIGNED_OUT') {
               queryClient.clear();
-              navigate("/auth");
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               queryClient.invalidateQueries({ queryKey: ['auth-session'] });
             }
@@ -55,15 +47,13 @@ export function useAuthSession() {
         await supabase.auth.signOut();
         queryClient.clear();
         
-        // Only show toast and redirect if it's not an AuthSessionMissingError
+        // Only show toast if it's not an AuthSessionMissingError
         if (error.message !== 'Auth session missing!') {
           toast({
             title: "Authentication Error",
             description: "Please sign in again",
             variant: "destructive",
           });
-          
-          navigate("/auth");
         }
         
         return null;

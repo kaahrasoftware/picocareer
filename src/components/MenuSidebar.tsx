@@ -49,7 +49,7 @@ export function MenuSidebar() {
       if (error) throw error;
       
       queryClient.clear();
-      navigate("/auth");
+      navigate("/");
     } catch (error) {
       console.error('Error signing out:', error);
       toast({
@@ -59,30 +59,6 @@ export function MenuSidebar() {
       });
     }
   };
-
-  // If there's an auth error, show sign in button
-  if (isError) {
-    return (
-      <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
-        <div className="container h-full mx-auto flex items-center justify-between px-4">
-          <Link to="/">
-            <img 
-              src="/lovable-uploads/2b1bee0a-4952-41f3-8220-963b51130b04.png" 
-              alt="PicoCareer Logo" 
-              className="h-10"
-            />
-          </Link>
-          <Button 
-            variant="default" 
-            onClick={() => navigate("/auth")}
-            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-          >
-            Sign in
-          </Button>
-        </div>
-      </header>
-    );
-  }
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
