@@ -24,24 +24,41 @@ export function SignUpForm() {
     }));
   };
 
+  const validatePassword = (password: string) => {
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    return hasLowerCase && hasUpperCase && hasNumber;
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isLoading) return;
+
+    // Basic validation
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast({
+        title: "Error",
+        description: "First name and last name are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Password validation
+    if (!validatePassword(formData.password)) {
+      toast({
+        title: "Invalid Password",
+        description: "Password must contain at least one lowercase letter, one uppercase letter, and one number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Basic validation
-      if (!formData.firstName.trim() || !formData.lastName.trim()) {
-        toast({
-          title: "Error",
-          description: "First name and last name are required",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
       // First, attempt the signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -94,7 +111,6 @@ export function SignUpForm() {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // Even if profile creation fails, the account was created
         toast({
           title: "Account Created",
           description: "Account created but profile setup incomplete. Please try signing in.",
@@ -147,7 +163,8 @@ export function SignUpForm() {
         onChange={handleInputChange}
         hasError={{
           firstName: !formData.firstName.trim(),
-          lastName: !formData.lastName.trim()
+          lastName: !formData.lastName.trim(),
+          password: !validatePassword(formData.password)
         }}
       />
       
