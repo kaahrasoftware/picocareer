@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { blogFormFields } from "@/components/forms/blog/BlogFormFields";
+import { Card } from "@/components/ui/card";
 
 export default function BlogUpload() {
   const { toast } = useToast();
@@ -59,7 +60,7 @@ export default function BlogUpload() {
         description: "Blog post has been submitted for review",
       });
 
-      window.location.reload();
+      navigate("/blog");
     } catch (error: any) {
       console.error('Error uploading blog:', error);
       toast({
@@ -73,13 +74,22 @@ export default function BlogUpload() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Upload Blog Post</h1>
-      <GenericUploadForm 
-        fields={blogFormFields}
-        onSubmit={handleSubmit}
-        buttonText="Upload Blog Post"
-      />
+    <div className="container max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Create Blog Post</h1>
+        <p className="text-muted-foreground mt-2">
+          Share your knowledge and experiences with the community
+        </p>
+      </div>
+
+      <Card className="p-6">
+        <GenericUploadForm 
+          fields={blogFormFields}
+          onSubmit={handleSubmit}
+          buttonText="Submit Blog Post"
+          isSubmitting={isSubmitting}
+        />
+      </Card>
     </div>
   );
 }
