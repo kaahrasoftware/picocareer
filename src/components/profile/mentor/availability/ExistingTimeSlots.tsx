@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { Trash2, Clock } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface TimeSlot {
   id: string;
@@ -19,8 +20,9 @@ interface ExistingTimeSlotsProps {
 }
 
 export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
-  const { profile } = useUserProfile();
-  const { getSetting } = useUserSettings(profile?.id);
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   if (slots.length === 0) return null;
