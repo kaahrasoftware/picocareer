@@ -33,15 +33,19 @@ export default function Auth() {
           throw error;
         }
 
+        if (!data) {
+          console.log('No mentors found');
+          return [];
+        }
+
         console.log('Fetched mentors:', data?.length);
-        return data || [];
+        return data;
       } catch (error) {
         console.error('Error fetching mentors:', error);
-        throw error;
+        return [];
       }
     },
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: false,
     staleTime: 1000 * 60 * 5,
   });
 
