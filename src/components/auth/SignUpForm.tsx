@@ -39,6 +39,9 @@ export function SignUpForm() {
     }
 
     try {
+      // Add delay before checking email to ensure DB consistency
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Check if user exists by attempting to get user by email
       const { data, error: emailCheckError } = await supabase
         .from('profiles')
@@ -60,6 +63,9 @@ export function SignUpForm() {
         return;
       }
 
+      // Add delay before signup to ensure DB consistency
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Proceed with signup
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -74,6 +80,17 @@ export function SignUpForm() {
       });
 
       if (error) {
+        // Handle database error specifically
+        if (error.message.includes("Database error")) {
+          toast({
+            title: "System Error",
+            description: "We're experiencing technical difficulties. Please try again in a few moments.",
+            variant: "destructive",
+          });
+          console.error('Database error during signup:', error);
+          return;
+        }
+
         // Handle specific error cases
         if (error.message.includes("User already registered")) {
           toast({
