@@ -672,7 +672,7 @@ export type Database = {
           full_name?: string | null
           github_url?: string | null
           highest_degree?: Database["public"]["Enums"]["degree"] | null
-          id: string
+          id?: string
           keywords?: string[] | null
           last_name?: string | null
           linkedin_url?: string | null

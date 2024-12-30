@@ -59,8 +59,25 @@ export function SignUpForm() {
     setIsLoading(true);
 
     try {
-      // First, attempt the signup
-      const { data, error } = await supabase.auth.signUp({
+      // Check if email already exists in profiles
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email.toLowerCase())
+        .single();
+
+      if (existingProfile) {
+        toast({
+          title: "Account exists",
+          description: "An account with this email already exists. Please sign in instead.",
+          variant: "destructive",
+        });
+        navigate("/auth?tab=signin");
+        return;
+      }
+
+      // Attempt the signup
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -72,38 +89,19 @@ export function SignUpForm() {
         }
       });
 
-      if (error) {
-        if (error.message.includes("User already registered")) {
-          toast({
-            title: "Account exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
-          });
-          navigate("/auth?tab=signin");
-        } else {
-          toast({
-            title: "Signup Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-        return;
+      if (signUpError) {
+        throw signUpError;
       }
 
-      if (!data.user?.id) {
-        toast({
-          title: "Error",
-          description: "Failed to create account. Please try again.",
-          variant: "destructive",
-        });
-        return;
+      if (!authData.user?.id) {
+        throw new Error("Failed to create account");
       }
 
-      // Then create the profile
+      // Create the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: data.user.id,
+          id: authData.user.id,
           email: formData.email.toLowerCase(),
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -111,17 +109,15 @@ export function SignUpForm() {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        toast({
-          title: "Account Created",
-          description: "Account created but profile setup incomplete. Please try signing in.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Please check your email (including spam folder) to verify your account before signing in.",
-        });
+        // If profile creation fails, we should clean up the auth user
+        await supabase.auth.signOut();
+        throw new Error("Failed to create profile");
       }
+
+      toast({
+        title: "Success",
+        description: "Please check your email (including spam folder) to verify your account before signing in.",
+      });
       
       navigate("/auth?tab=signin");
 
@@ -129,7 +125,7 @@ export function SignUpForm() {
       console.error('Signup error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
