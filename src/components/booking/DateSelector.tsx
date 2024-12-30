@@ -14,54 +14,27 @@ interface DateSelectorProps {
 export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
   
-  // First fetch the mentor's profile to ensure we have valid data
-  const { data: mentorSettings } = useQuery({
-    queryKey: ['mentorSettings', mentorId],
+  // Fetch mentor's timezone from their availability record
+  const { data: mentorTimezone } = useQuery({
+    queryKey: ['mentorTimezone', mentorId],
     queryFn: async () => {
-      try {
-        // First verify the profile exists
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', mentorId)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('timezone')
+        .eq('profile_id', mentorId)
+        .limit(1)
+        .single();
 
-        if (profileError) {
-          console.error('Error fetching mentor profile:', profileError);
-          return 'UTC';
-        }
-
-        if (!profile) {
-          console.error('Mentor profile not found');
-          return 'UTC';
-        }
-
-        // Then fetch their timezone setting
-        const { data: settings, error: settingsError } = await supabase
-          .from('user_settings')
-          .select('setting_value')
-          .eq('profile_id', profile.id)
-          .eq('setting_type', 'timezone')
-          .maybeSingle();
-
-        if (settingsError) {
-          console.error('Error fetching mentor timezone:', settingsError);
-          return 'UTC';
-        }
-        
-        console.log('Mentor settings:', settings);
-        console.log('Fetched mentor timezone:', settings?.setting_value);
-        return settings?.setting_value || 'UTC';
-      } catch (error) {
-        console.error('Unexpected error fetching mentor timezone:', error);
+      if (error) {
+        console.error('Error fetching mentor timezone:', error);
         return 'UTC';
       }
+
+      console.log('Fetched mentor timezone:', data?.timezone);
+      return data?.timezone || 'UTC';
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
-
-  const mentorTimezone = mentorSettings || 'UTC';
-  console.log('Final mentor timezone:', mentorTimezone);
 
   const isDateAvailable = (date: Date) => {
     // Check for recurring availability (same day of week)
@@ -106,7 +79,7 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
       />
       <div className="mt-4 text-sm text-gray-400">
         <p>Your timezone: {userTimezone}</p>
-        <p>Mentor's timezone: {mentorTimezone}</p>
+        <p>Mentor's timezone: {mentorTimezone || 'Loading...'}</p>
         <p className="mt-1">Days highlighted in green are available for booking</p>
         {availableDates.length === 0 && (
           <p className="mt-1 text-yellow-500">No available dates found for this mentor</p>
