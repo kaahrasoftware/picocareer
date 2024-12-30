@@ -1,5 +1,4 @@
-import { Link, Github, Globe } from "lucide-react";
-import { EditableField } from "@/components/profile/EditableField";
+import { Linkedin, Github, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProfileLinksProps {
@@ -30,7 +29,7 @@ export function ProfileLinks({ linkedinUrl, githubUrl, websiteUrl, profileId }: 
               rel="noopener noreferrer"
               aria-label="LinkedIn Profile"
             >
-              <Link className="h-5 w-5" />
+              <Linkedin className="h-5 w-5" />
             </a>
           </Button>
         )}
