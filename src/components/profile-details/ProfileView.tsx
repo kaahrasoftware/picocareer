@@ -3,6 +3,7 @@ import type { Profile } from "@/types/database/profiles";
 import { BadgeSection } from "@/components/career/BadgeSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ProfileLinks } from "./ProfileLinks";
 
 interface ProfileViewProps {
   profile: Profile & {
@@ -106,18 +107,12 @@ export function ProfileView({ profile }: ProfileViewProps) {
       </div>
 
       {/* Links */}
-      <div className="bg-muted rounded-lg p-4 space-y-3">
-        <h4 className="font-semibold">Links</h4>
-        {profile.linkedin_url && (
-          <p className="text-muted-foreground">LinkedIn: {profile.linkedin_url}</p>
-        )}
-        {profile.github_url && (
-          <p className="text-muted-foreground">GitHub: {profile.github_url}</p>
-        )}
-        {profile.website_url && (
-          <p className="text-muted-foreground">Website: {profile.website_url}</p>
-        )}
-      </div>
+      <ProfileLinks
+        linkedinUrl={profile.linkedin_url}
+        githubUrl={profile.github_url}
+        websiteUrl={profile.website_url}
+        profileId={profile.id}
+      />
     </div>
   );
 }
