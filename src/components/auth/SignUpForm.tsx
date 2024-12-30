@@ -14,6 +14,7 @@ export function SignUpForm() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     firstName: '',
     lastName: '',
   });
@@ -27,6 +28,16 @@ export function SignUpForm() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -143,6 +154,19 @@ export function SignUpForm() {
           type="password"
           placeholder="Create a password"
           value={formData.password}
+          onChange={handleInputChange}
+          required
+          minLength={6}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="signup-confirmPassword">Confirm Password</Label>
+        <Input
+          id="signup-confirmPassword"
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm your password"
+          value={formData.confirmPassword}
           onChange={handleInputChange}
           required
           minLength={6}
