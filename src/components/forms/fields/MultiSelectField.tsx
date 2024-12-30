@@ -39,11 +39,11 @@ export function MultiSelectField({
               <CommandInput placeholder={placeholder} />
               <CommandEmpty>No options found.</CommandEmpty>
               <CommandGroup className="max-h-48 overflow-auto">
-                {options.map((option) => (
+                {(options || []).map((option) => (
                   <CommandItem
                     key={option}
                     onSelect={() => {
-                      const values = field.value || []; // Ensure field.value is an array
+                      const values = Array.isArray(field.value) ? field.value : []; // Ensure field.value is an array
                       const newValues = values.includes(option)
                         ? values.filter((v: string) => v !== option)
                         : [...values, option];
@@ -53,7 +53,7 @@ export function MultiSelectField({
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        (field.value || []).includes(option) ? "opacity-100" : "opacity-0"
+                        Array.isArray(field.value) && field.value.includes(option) ? "opacity-100" : "opacity-0"
                       )}
                     />
                     {option}
@@ -62,7 +62,7 @@ export function MultiSelectField({
               </CommandGroup>
             </Command>
           </FormControl>
-          {(field.value || []).length > 0 && (
+          {Array.isArray(field.value) && field.value.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {field.value.map((value: string) => (
                 <Badge
