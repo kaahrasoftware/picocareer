@@ -38,7 +38,7 @@ export function MultiSelectField({
               <CommandInput placeholder={placeholder} />
               <CommandEmpty>No options found.</CommandEmpty>
               <CommandGroup className="max-h-48 overflow-auto">
-                {(options || []).map((option) => ( // Add null check with empty array fallback
+                {(options || []).map((option) => (
                   <CommandItem
                     key={option}
                     onSelect={() => {
