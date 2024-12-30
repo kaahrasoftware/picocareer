@@ -16,7 +16,7 @@ export function SubcategorySelect({
   setSelectedSubcategory 
 }: SubcategorySelectProps) {
   // Only disable if no category is selected or if "_all" is selected
-  const isDisabled = !selectedCategory || selectedCategory === "_all";
+  const isDisabled = selectedCategory === "_all";
   
   return (
     <Select 
@@ -24,7 +24,7 @@ export function SubcategorySelect({
       onValueChange={setSelectedSubcategory}
       disabled={isDisabled}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full md:w-[200px]">
         <SelectValue placeholder="Select subcategory" />
       </SelectTrigger>
       <SelectContent>
