@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { Clock } from "lucide-react";
+import { formatInTimeZone } from "date-fns-tz";
 import { format } from "date-fns";
-import { formatInTimeZone } from 'date-fns-tz';
-import { Trash2, Clock } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -10,16 +10,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface TimeSlot {
   id: string;
-  start_time: string;
-  end_time: string;
-  timezone: string;
-  date_available: string;
   profile_id: string;
+  start_date_time: string;
+  end_date_time: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week: number | null;
 }
 
 interface ExistingTimeSlotsProps {
   slots: TimeSlot[];
-  onDelete: (slotId: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
@@ -52,40 +53,40 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
   if (slots.length === 0) return null;
 
   return (
-    <div className="mt-6 space-y-3">
-      <h4 className="font-medium">Available Time Slots</h4>
-      <div className="grid gap-2 sm:grid-cols-2">
+    <div className="space-y-4">
+      <h4 className="font-medium">Existing Time Slots</h4>
+      <div className="space-y-2">
         {slots.map((slot) => {
-          const date = new Date(slot.date_available);
-          const formattedDate = format(date, 'MMM d, yyyy');
+          const startDate = new Date(slot.start_date_time);
+          const formattedDate = format(startDate, 'MMM d, yyyy');
           
           // Convert times to both user's and mentor's timezone
           const startTimeUser = formatInTimeZone(
-            `${slot.date_available}T${slot.start_time}`,
+            startDate,
             userTimezone,
             'h:mm a'
           );
           const endTimeUser = formatInTimeZone(
-            `${slot.date_available}T${slot.end_time}`,
+            new Date(slot.end_date_time),
             userTimezone,
             'h:mm a'
           );
 
           const startTimeMentor = formatInTimeZone(
-            `${slot.date_available}T${slot.start_time}`,
+            startDate,
             mentorTimezone,
             'h:mm a'
           );
           const endTimeMentor = formatInTimeZone(
-            `${slot.date_available}T${slot.end_time}`,
+            new Date(slot.end_date_time),
             mentorTimezone,
             'h:mm a'
           );
 
           return (
-            <div 
+            <div
               key={slot.id}
-              className="flex items-center justify-between p-4 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+              className="flex items-center justify-between rounded-lg border p-4"
             >
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium">
@@ -98,15 +99,17 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
                   </div>
                   <span>Your timezone: {userTimezone}</span>
                   <span>Mentor's time: {startTimeMentor} - {endTimeMentor} ({mentorTimezone})</span>
+                  {slot.recurring && (
+                    <span className="text-primary">Recurring weekly</span>
+                  )}
                 </div>
               </div>
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={() => onDelete(slot.id)}
-                className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
               >
-                <Trash2 className="h-4 w-4" />
+                Delete
               </Button>
             </div>
           );

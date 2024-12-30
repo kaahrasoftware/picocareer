@@ -21,11 +21,19 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   }, [selectedDate, profileId]);
 
   const fetchAvailability = async () => {
+    const startOfDay = new Date(selectedDate!);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(selectedDate!);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const { data, error } = await supabase
       .from('mentor_availability')
       .select('*')
       .eq('profile_id', profileId)
-      .eq('date_available', format(selectedDate!, 'yyyy-MM-dd'));
+      .gte('start_date_time', startOfDay.toISOString())
+      .lte('start_date_time', endOfDay.toISOString())
+      .eq('is_available', true);
 
     if (error) {
       console.error('Error fetching availability:', error);
