@@ -1,8 +1,7 @@
-import { format, parse } from "date-fns";
-import { formatInTimeZone } from 'date-fns-tz';
 import { Button } from "@/components/ui/button";
+import { formatInTimeZone } from 'date-fns-tz';
 
-export interface TimeSlotButtonProps {
+interface TimeSlotButtonProps {
   time: string;
   available: boolean;
   isSelected: boolean;
@@ -21,34 +20,29 @@ export function TimeSlotButton({
   mentorTimezone,
   date
 }: TimeSlotButtonProps) {
-  // Create a date object for the time slot
-  const timeDate = new Date(date);
+  const slotDate = new Date(date);
   const [hours, minutes] = time.split(':').map(Number);
-  timeDate.setHours(hours, minutes, 0, 0);
+  slotDate.setHours(hours, minutes, 0, 0);
 
   // Format times in both timezones
-  const userTime = formatInTimeZone(timeDate, userTimezone, 'h:mm a');
-  const mentorTime = formatInTimeZone(timeDate, mentorTimezone, 'h:mm a');
-
-  // Only show both times if they're different
-  const displayTime = userTimezone === mentorTimezone 
-    ? userTime
-    : `${userTime} (${mentorTime} mentor's time)`;
+  const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
+  const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
 
   return (
     <Button
       variant={isSelected ? "default" : "outline"}
-      className={`
-        ${!available ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/90'} 
-        ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-background hover:text-primary-foreground'} 
-        py-2 px-3 h-auto text-sm font-medium rounded-md transition-colors
-        w-full text-center justify-center
-        border border-input shadow-sm
-      `}
+      className="w-full justify-start"
       disabled={!available}
       onClick={() => onSelect(time)}
     >
-      {displayTime}
+      <div className="flex flex-col items-start">
+        <span>{userTime}</span>
+        {userTimezone !== mentorTimezone && (
+          <span className="text-xs text-muted-foreground">
+            {mentorTime} ({mentorTimezone})
+          </span>
+        )}
+      </div>
     </Button>
   );
 }
