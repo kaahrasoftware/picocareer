@@ -373,12 +373,12 @@ export type Database = {
           created_at: string
           date_available: string
           day_of_week: number | null
-          end_time: string
+          end_time: string | null
           id: string
           is_available: boolean | null
           profile_id: string
           recurring: boolean | null
-          start_time: string
+          start_time: string | null
           timezone: string
           updated_at: string
         }
@@ -386,12 +386,12 @@ export type Database = {
           created_at?: string
           date_available: string
           day_of_week?: number | null
-          end_time: string
+          end_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id: string
           recurring?: boolean | null
-          start_time: string
+          start_time?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -399,12 +399,12 @@ export type Database = {
           created_at?: string
           date_available?: string
           day_of_week?: number | null
-          end_time?: string
+          end_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id?: string
           recurring?: boolean | null
-          start_time?: string
+          start_time?: string | null
           timezone?: string
           updated_at?: string
         }

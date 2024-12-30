@@ -7,11 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface DateSelectorProps {
   date: Date | undefined;
   onDateSelect: (date: Date | undefined) => void;
-  userTimezone: string;
   mentorId: string;
 }
 
-export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: DateSelectorProps) {
+export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
   
   // Fetch mentor's availability details including timezone and available times
