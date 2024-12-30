@@ -14,41 +14,44 @@ interface DateSelectorProps {
 export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
   
-  // Fetch mentor's timezone from their availability record
-  const { data: mentorTimezone } = useQuery({
-    queryKey: ['mentorTimezone', mentorId],
+  // Fetch mentor's availability details including timezone and available times
+  const { data: mentorAvailability } = useQuery({
+    queryKey: ['mentorAvailability', mentorId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mentor_availability')
-        .select('timezone')
+        .select('timezone, start_time, end_time, date_available, recurring, day_of_week')
         .eq('profile_id', mentorId)
-        .limit(1)
-        .single();
+        .eq('is_available', true);
 
       if (error) {
-        console.error('Error fetching mentor timezone:', error);
-        return 'UTC';
+        console.error('Error fetching mentor availability:', error);
+        return { timezone: 'UTC', availabilities: [] };
       }
 
-      console.log('Fetched mentor timezone:', data?.timezone);
-      return data?.timezone || 'UTC';
+      console.log('Fetched mentor availability:', data);
+      return {
+        timezone: data?.[0]?.timezone || 'UTC',
+        availabilities: data || []
+      };
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const isDateAvailable = (date: Date) => {
+    if (!mentorAvailability?.availabilities) return false;
+
     // Check for recurring availability (same day of week)
     const dayOfWeek = date.getDay();
-    const hasRecurringSlot = availableDates.some(availableDate => 
-      availableDate.getDay() === dayOfWeek && 
-      availableDate.recurring === true
+    const hasRecurringSlot = mentorAvailability.availabilities.some(availability => 
+      availability.recurring === true && 
+      availability.day_of_week === dayOfWeek
     );
 
     // Check for specific date availability
-    const hasSpecificSlot = availableDates.some(availableDate => 
-      availableDate.getDate() === date.getDate() &&
-      availableDate.getMonth() === date.getMonth() &&
-      availableDate.getFullYear() === date.getFullYear()
+    const formattedDate = format(date, 'yyyy-MM-dd');
+    const hasSpecificSlot = mentorAvailability.availabilities.some(availability => 
+      availability.date_available === formattedDate
     );
 
     return hasRecurringSlot || hasSpecificSlot;
@@ -78,8 +81,7 @@ export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: Dat
         }}
       />
       <div className="mt-4 text-sm text-gray-400">
-        <p>Your timezone: {userTimezone}</p>
-        <p>Mentor's timezone: {mentorTimezone || 'Loading...'}</p>
+        <p>Mentor's timezone: {mentorAvailability?.timezone || 'Loading...'}</p>
         <p className="mt-1">Days highlighted in green are available for booking</p>
         {availableDates.length === 0 && (
           <p className="mt-1 text-yellow-500">No available dates found for this mentor</p>

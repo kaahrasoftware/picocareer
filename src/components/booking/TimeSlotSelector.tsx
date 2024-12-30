@@ -13,7 +13,6 @@ interface TimeSlotSelectorProps {
   onTimeSelect: (time: string) => void;
   selectedSessionType: SessionType | undefined;
   title?: string;
-  userTimezone?: string;
 }
 
 export function TimeSlotSelector({ 
@@ -22,12 +21,11 @@ export function TimeSlotSelector({
   selectedTime, 
   onTimeSelect,
   selectedSessionType,
-  title = "Start Time",
-  userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  title = "Start Time"
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
-  // Fetch mentor's timezone from their availability record for this date
+  // Fetch mentor's availability for this date
   const { data: mentorAvailability } = useQuery({
     queryKey: ['mentorAvailabilityTimezone', mentorId, date],
     queryFn: async () => {
@@ -57,31 +55,8 @@ export function TimeSlotSelector({
     mentorTimezone // Pass mentor timezone to hook
   );
 
-  console.log("TimeSlotSelector - User timezone:", userTimezone);
   console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
-
-  // Convert time slots to user's timezone while preserving the original date
-  const convertedTimeSlots = availableTimeSlots.map(slot => {
-    const slotDate = new Date(date);
-    const [hours, minutes] = slot.time.split(':').map(Number);
-    slotDate.setHours(hours, minutes, 0, 0);
-
-    // Format the time in both timezones for comparison
-    const userTime = formatInTimeZone(slotDate, userTimezone, 'HH:mm');
-    console.log("TimeSlotSelector - Converting slot:", {
-      originalTime: slot.time,
-      convertedTime: userTime,
-      timezone: userTimezone
-    });
-
-    return {
-      time: userTime,
-      available: slot.available
-    };
-  });
-
-  console.log("TimeSlotSelector - Converted time slots:", convertedTimeSlots);
 
   return (
     <div>
@@ -92,16 +67,14 @@ export function TimeSlotSelector({
       )}
       <TimeSlotsGrid
         title={title}
-        timeSlots={convertedTimeSlots}
+        timeSlots={availableTimeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
-        userTimezone={userTimezone}
         mentorTimezone={mentorTimezone}
         date={date}
       />
       <p className="text-xs text-muted-foreground mt-2">
-        Times shown in your timezone ({userTimezone})
-        {userTimezone !== mentorTimezone && ` and mentor's timezone (${mentorTimezone})`}
+        Times shown in mentor's timezone ({mentorTimezone})
       </p>
     </div>
   );
