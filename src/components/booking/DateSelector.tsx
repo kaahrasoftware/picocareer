@@ -2,6 +2,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DateSelectorProps {
   date: Date | undefined;
@@ -12,8 +14,24 @@ interface DateSelectorProps {
 
 export function DateSelector({ date, onDateSelect, userTimezone, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
-  const { getSetting } = useUserSettings(mentorId);
-  const mentorTimezone = getSetting('timezone') || 'UTC';
+  
+  // Fetch mentor's timezone in real-time
+  const { data: mentorSettings } = useQuery({
+    queryKey: ['mentorSettings', mentorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('setting_value')
+        .eq('profile_id', mentorId)
+        .eq('setting_type', 'timezone')
+        .single();
+
+      if (error) throw error;
+      return data?.setting_value || 'UTC';
+    }
+  });
+
+  const mentorTimezone = mentorSettings || 'UTC';
 
   const isDateAvailable = (date: Date) => {
     // Check for recurring availability (same day of week)
