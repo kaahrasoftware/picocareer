@@ -15,7 +15,7 @@ export function MenuSidebar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { session, isError } = useAuthSession();
+  const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { data: notifications = [] } = useNotifications(session);
 

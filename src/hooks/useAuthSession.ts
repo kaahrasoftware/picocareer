@@ -6,12 +6,10 @@ export function useAuthSession() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get initial session and listen for auth changes
   const { data: session, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
-        // First try to get existing session
         const { data: { session: existingSession }, error: sessionError } = 
           await supabase.auth.getSession();
         
@@ -29,15 +27,13 @@ export function useAuthSession() {
         }
 
         // Set up auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (event === 'SIGNED_OUT') {
-              queryClient.clear();
-            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              queryClient.invalidateQueries({ queryKey: ['auth-session'] });
-            }
+        supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_OUT') {
+            queryClient.clear();
+          } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            queryClient.invalidateQueries({ queryKey: ['auth-session'] });
           }
-        );
+        });
 
         return existingSession;
       } catch (error: any) {
@@ -61,6 +57,9 @@ export function useAuthSession() {
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
   });
 
   return { session, isError };
