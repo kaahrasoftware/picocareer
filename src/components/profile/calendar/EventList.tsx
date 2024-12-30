@@ -1,15 +1,23 @@
 import React from "react";
 import { format, parse, isValid } from "date-fns";
 import { CalendarEvent, Availability } from "@/types/calendar";
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface EventListProps {
   events: CalendarEvent[];
   availability?: Availability[];
   isMentor?: boolean;
   onEventClick?: (event: CalendarEvent) => void;
+  timezone?: string;
 }
 
-export function EventList({ events, availability = [], isMentor = false, onEventClick }: EventListProps) {
+export function EventList({ 
+  events, 
+  availability = [], 
+  isMentor = false, 
+  onEventClick,
+  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
+}: EventListProps) {
   const getEventColor = (type: CalendarEvent['event_type'], status?: string) => {
     if (type === 'session' && status === 'cancelled') {
       return 'border-red-500/20 bg-red-500/10';
@@ -20,39 +28,6 @@ export function EventList({ events, availability = [], isMentor = false, onEvent
         return 'border-blue-500/20 bg-blue-500/10';
       default:
         return 'border-gray-500/20 bg-gray-500/10';
-    }
-  };
-
-  const formatTimeString = (timeStr: string) => {
-    try {
-      // Handle ISO datetime strings
-      if (timeStr.includes('T')) {
-        const date = new Date(timeStr);
-        if (isValid(date)) {
-          return format(date, 'h:mm a');
-        }
-      }
-      
-      // Handle date strings (YYYY-MM-DD)
-      if (timeStr.includes('-') && timeStr.length === 10) {
-        const date = new Date(timeStr);
-        if (isValid(date)) {
-          return format(date, 'h:mm a');
-        }
-      }
-      
-      // Handle time-only strings (HH:mm)
-      if (timeStr.match(/^\d{2}:\d{2}$/)) {
-        const date = parse(timeStr, 'HH:mm', new Date());
-        if (isValid(date)) {
-          return format(date, 'h:mm a');
-        }
-      }
-      
-      return timeStr; // Return original string if all parsing attempts fail
-    } catch (error) {
-      console.error('Error formatting time:', timeStr, error);
-      return timeStr;
     }
   };
 
@@ -71,7 +46,7 @@ export function EventList({ events, availability = [], isMentor = false, onEvent
           <div className="flex justify-between items-start">
             <h4 className="font-medium">{event.title}</h4>
             <span className="text-sm text-muted-foreground">
-              {formatTimeString(event.start_time)}
+              {formatInTimeZone(new Date(event.start_time), timezone, 'h:mm a')}
             </span>
           </div>
           {event.description && (
@@ -89,15 +64,21 @@ export function EventList({ events, availability = [], isMentor = false, onEvent
 
       {isMentor && availability.map((slot, index) => (
         <div
-          key={`${slot.date_available}-${slot.start_time}-${index}`}
+          key={`${slot.start_date_time}-${index}`}
           className="p-3 rounded-lg border border-purple-500/20 bg-purple-500/10"
         >
           <div className="flex justify-between items-start">
             <h4 className="font-medium">Available for Booking</h4>
             <span className="text-sm text-muted-foreground">
-              {formatTimeString(slot.start_time)} - {formatTimeString(slot.end_time)}
+              {formatInTimeZone(new Date(slot.start_date_time), timezone, 'h:mm a')} - 
+              {formatInTimeZone(new Date(slot.end_date_time), timezone, ' h:mm a')}
             </span>
           </div>
+          {slot.recurring && (
+            <span className="text-sm text-muted-foreground mt-1 block">
+              Recurring weekly
+            </span>
+          )}
         </div>
       ))}
     </div>

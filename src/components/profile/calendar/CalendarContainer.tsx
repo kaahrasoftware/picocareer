@@ -12,9 +12,13 @@ interface CalendarContainerProps {
 export function CalendarContainer({ selectedDate, setSelectedDate, availability }: CalendarContainerProps) {
   // Function to determine if a date has availability set
   const hasAvailability = (date: Date) => {
-    return availability?.some(slot => 
-      slot.date_available === format(date, 'yyyy-MM-dd') && slot.is_available
-    );
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return availability?.some(slot => {
+      if (slot.recurring) {
+        return slot.day_of_week === date.getDay();
+      }
+      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr && slot.is_available;
+    });
   };
 
   return (

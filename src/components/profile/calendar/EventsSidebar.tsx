@@ -60,7 +60,7 @@ export function EventsSidebar({
 
               {isMentor && availability.map((slot, index) => (
                 <AvailabilitySlot
-                  key={`${slot.date_available}-${slot.start_time}-${index}`}
+                  key={`${slot.start_date_time}-${index}`}
                   slot={slot}
                   date={date}
                   timezone={timezone}

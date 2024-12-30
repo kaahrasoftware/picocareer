@@ -11,46 +11,38 @@ interface AvailabilitySlotProps {
 }
 
 export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: AvailabilitySlotProps) {
-  const getSlotPosition = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
+  const getSlotPosition = (dateTime: string) => {
+    const date = new Date(dateTime);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
     return (hours * cellHeight * 2 + (minutes / 30) * cellHeight);
   };
 
-  const calculateSlotHeight = (startTime: string, endTime: string) => {
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const [endHours, endMinutes] = endTime.split(':').map(Number);
-    const diffInMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
+  const calculateSlotHeight = (startDateTime: string, endDateTime: string) => {
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+    const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
     return (diffInMinutes / 30) * cellHeight;
   };
 
-  const slotDate = new Date(date);
-  const [startHour, startMinute] = slot.start_time.split(':').map(Number);
-  slotDate.setHours(startHour, startMinute);
-
   return (
     <div
-      key={`${slot.date_available}-${slot.start_time}-${index}`}
+      key={`${slot.start_date_time}-${index}`}
       className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
       style={{
-        top: `${getSlotPosition(slot.start_time) + cellHeight}px`,
-        height: `${calculateSlotHeight(slot.start_time, slot.end_time)}px`,
+        top: `${getSlotPosition(slot.start_date_time) + cellHeight}px`,
+        height: `${calculateSlotHeight(slot.start_date_time, slot.end_date_time)}px`,
         zIndex: 5
       }}
     >
       <div className="flex flex-col gap-1">
         <h4 className="font-medium text-sm leading-tight truncate">
           Available for Booking
+          {slot.recurring && " (Recurring)"}
         </h4>
         <span className="text-xs text-muted-foreground">
-          {formatInTimeZone(slotDate, timezone, 'h:mm a')} - 
-          {formatInTimeZone(
-            new Date(slotDate).setHours(
-              parseInt(slot.end_time.split(':')[0]), 
-              parseInt(slot.end_time.split(':')[1])
-            ),
-            timezone,
-            ' h:mm a'
-          )}
+          {formatInTimeZone(new Date(slot.start_date_time), timezone, 'h:mm a')} - 
+          {formatInTimeZone(new Date(slot.end_date_time), timezone, ' h:mm a')}
         </span>
       </div>
     </div>
