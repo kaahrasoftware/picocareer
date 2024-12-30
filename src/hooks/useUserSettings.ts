@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// This must match exactly what's in the database enum
 export type SettingType = "timezone" | "notifications" | "language" | "theme";
 
+// Helper type for UI-specific settings that map to our database settings
 export type UISettingType = {
   email_notifications: boolean;
   push_notifications: boolean;
@@ -27,7 +29,6 @@ export function useUserSettings(profileId: string | undefined) {
     queryKey: ['user-settings', profileId],
     queryFn: async () => {
       if (!profileId) {
-        console.log('No profile ID provided for settings query');
         return null;
       }
       
@@ -43,7 +44,7 @@ export function useUserSettings(profileId: string | undefined) {
       
       return data as UserSetting[];
     },
-    enabled: !!profileId // Only run query if profileId exists
+    enabled: !!profileId
   });
 
   const updateSetting = useMutation({
@@ -82,6 +83,7 @@ export function useUserSettings(profileId: string | undefined) {
     }
   });
 
+  // Helper function to convert database settings to UI settings
   const getSetting = (type: keyof UISettingType): string | null => {
     if (!settings) return null;
 
@@ -112,7 +114,7 @@ export function useUserSettings(profileId: string | undefined) {
       
       case 'timezone':
         const timezone = settings.find(s => s.setting_type === 'timezone');
-        return timezone?.setting_value || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return timezone?.setting_value || null;
       
       default:
         return null;

@@ -9,7 +9,6 @@ interface ProfileViewProps {
     company_name?: string | null;
     school_name?: string | null;
     academic_major?: string | null;
-    career_title?: string | null;
   };
 }
 
@@ -48,7 +47,7 @@ export function ProfileView({ profile }: ProfileViewProps) {
       <div className="bg-muted rounded-lg p-4 space-y-4">
         <h4 className="font-semibold mb-2">Professional Information</h4>
         <p className="text-muted-foreground">
-          Position: {profile.career_title || careerDetails?.title || "None"}
+          Position: {careerDetails?.title || "None"}
         </p>
         {profile.company_name && (
           <p className="text-muted-foreground">Company: {profile.company_name}</p>

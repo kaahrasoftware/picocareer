@@ -1,11 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export function useAuthSession() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
+  // Get initial session and listen for auth changes
   const { data: session, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
@@ -26,15 +29,6 @@ export function useAuthSession() {
           return null;
         }
 
-        // Set up auth state change listener
-        supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'SIGNED_OUT') {
-            queryClient.clear();
-          } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            queryClient.invalidateQueries({ queryKey: ['auth-session'] });
-          }
-        });
-
         return existingSession;
       } catch (error: any) {
         console.error('Error in useAuthSession:', error);
@@ -43,13 +37,15 @@ export function useAuthSession() {
         await supabase.auth.signOut();
         queryClient.clear();
         
-        // Only show toast if it's not an AuthSessionMissingError
+        // Only show toast and redirect if it's not an AuthSessionMissingError
         if (error.message !== 'Auth session missing!') {
           toast({
             title: "Authentication Error",
             description: "Please sign in again",
             variant: "destructive",
           });
+          
+          navigate("/auth");
         }
         
         return null;
@@ -57,9 +53,6 @@ export function useAuthSession() {
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
   });
 
   return { session, isError };
