@@ -27,6 +27,7 @@ export function MultiSelectField({
     <FormField
       control={control}
       name={name}
+      defaultValue={[]} // Initialize with empty array
       render={({ field }) => (
         <FormItem>
           <FormLabel>
@@ -38,14 +39,14 @@ export function MultiSelectField({
               <CommandInput placeholder={placeholder} />
               <CommandEmpty>No options found.</CommandEmpty>
               <CommandGroup className="max-h-48 overflow-auto">
-                {(options || []).map((option) => (
+                {options.map((option) => (
                   <CommandItem
                     key={option}
                     onSelect={() => {
-                      const values = field.value || [];
-                      const newValues = values.includes(option)
-                        ? values.filter((v: string) => v !== option)
-                        : [...values, option];
+                      const currentValues = field.value || [];
+                      const newValues = currentValues.includes(option)
+                        ? currentValues.filter((v: string) => v !== option)
+                        : [...currentValues, option];
                       field.onChange(newValues);
                     }}
                   >

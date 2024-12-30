@@ -68,7 +68,7 @@ export function FormField({
         placeholder={placeholder}
         description={description}
         required={required}
-        options={categories || []}
+        options={categories}
       />
     );
   }
@@ -87,7 +87,7 @@ export function FormField({
         placeholder={placeholder}
         description={description}
         required={required}
-        options={availableSubcategories || []}
+        options={availableSubcategories}
       />
     );
   }
@@ -97,7 +97,7 @@ export function FormField({
       <SelectWithCustomOption
         value={watch?.(name) || ""}
         onValueChange={(value) => control?.setValue(name, value)}
-        options={options || []}
+        options={options}
         placeholder={placeholder || `Select ${label.toLowerCase()}`}
         tableName={name === "position" ? "careers" : 
                   name === "company_id" ? "companies" :
