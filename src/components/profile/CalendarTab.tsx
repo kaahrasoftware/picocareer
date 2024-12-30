@@ -52,11 +52,18 @@ export function CalendarTab() {
     queryFn: async () => {
       if (!session?.user?.id || !selectedDate) return [];
 
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
       const { data, error } = await supabase
         .from('mentor_availability')
-        .select('date_available, start_time, end_time, is_available')
+        .select('*')
         .eq('profile_id', session.user.id)
-        .eq('date_available', format(selectedDate, 'yyyy-MM-dd'));
+        .eq('is_available', true)
+        .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
 
       if (error) throw error;
       return data;

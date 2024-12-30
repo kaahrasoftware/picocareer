@@ -31,23 +31,19 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     }
   }, [userTimezone, toast]);
 
-  const checkForOverlap = async (formattedDate: string, startTime: string, endTime: string) => {
+  const checkForOverlap = async (startDateTime: Date, endDateTime: Date) => {
     const { data: existingSlots } = await supabase
       .from('mentor_availability')
-      .select('start_time, end_time')
+      .select('start_date_time, end_date_time')
       .eq('profile_id', profileId)
-      .eq('date_available', formattedDate)
       .eq('is_available', true);
 
     if (!existingSlots) return false;
 
-    const newStart = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-    const newEnd = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
-
     return existingSlots.some(slot => {
-      const slotStart = parseInt(slot.start_time.split(':')[0]) * 60 + parseInt(slot.start_time.split(':')[1]);
-      const slotEnd = parseInt(slot.end_time.split(':')[0]) * 60 + parseInt(slot.end_time.split(':')[1]);
-      return (newStart < slotEnd && newEnd > slotStart);
+      const slotStart = new Date(slot.start_date_time);
+      const slotEnd = new Date(slot.end_date_time);
+      return (startDateTime < slotEnd && endDateTime > slotStart);
     });
   };
 
@@ -72,8 +68,15 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
     setIsSubmitting(true);
     try {
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      const hasOverlap = await checkForOverlap(formattedDate, selectedStartTime, selectedEndTime);
+      const startDateTime = new Date(selectedDate);
+      const [startHours, startMinutes] = selectedStartTime.split(':').map(Number);
+      startDateTime.setHours(startHours, startMinutes, 0, 0);
+
+      const endDateTime = new Date(selectedDate);
+      const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
+      endDateTime.setHours(endHours, endMinutes, 0, 0);
+
+      const hasOverlap = await checkForOverlap(startDateTime, endDateTime);
 
       if (hasOverlap) {
         toast({
@@ -91,9 +94,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
         .from('mentor_availability')
         .insert({
           profile_id: profileId,
-          date_available: formattedDate,
-          start_time: selectedStartTime,
-          end_time: selectedEndTime,
+          start_date_time: startDateTime.toISOString(),
+          end_date_time: endDateTime.toISOString(),
           timezone: userTimezone,
           is_available: true,
           recurring: isRecurring,

@@ -34,8 +34,11 @@ export interface CalendarEvent {
 }
 
 export interface Availability {
-  date_available: string;
-  start_time: string;
-  end_time: string;
+  id: string;
+  profile_id: string;
+  start_date_time: string;
+  end_date_time: string;
   is_available: boolean;
+  recurring?: boolean;
+  day_of_week?: number;
 }
