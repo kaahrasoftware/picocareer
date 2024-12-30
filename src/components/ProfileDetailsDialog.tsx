@@ -7,13 +7,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileHeader } from "./profile-details/ProfileHeader";
 import { ProfileEditForm } from "./profile-details/ProfileEditForm";
 import { ProfileView } from "./profile-details/ProfileView";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -26,6 +27,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
@@ -90,6 +92,33 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     },
     enabled: !!userId && open,
   });
+
+  // Subscribe to real-time changes
+  useEffect(() => {
+    if (!open || !userId) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`
+        },
+        (payload) => {
+          console.log('Profile changed:', payload);
+          // Invalidate and refetch the profile query
+          queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, open, queryClient]);
 
   if (isLoading || !profile) {
     return null;
