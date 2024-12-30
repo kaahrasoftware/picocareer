@@ -28,6 +28,9 @@ interface MentorCardProps {
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const displaySkills = props.skills?.slice(0, 3) || [];
+  const remainingSkills = (props.skills?.length || 0) - 3;
+
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -80,7 +83,7 @@ export function MentorCard(props: MentorCardProps) {
           {props.skills?.length > 0 && (
             <div className="w-full mb-4">
               <div className="flex flex-wrap gap-1.5">
-                {props.skills.slice(0, 5).map((skill) => (
+                {displaySkills.map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
@@ -89,12 +92,12 @@ export function MentorCard(props: MentorCardProps) {
                     {skill}
                   </Badge>
                 ))}
-                {(props.skills?.length || 0) > 5 && (
+                {remainingSkills > 0 && (
                   <Badge 
                     variant="secondary" 
                     className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
                   >
-                    +{(props.skills?.length || 0) - 5} more
+                    +{remainingSkills} more
                   </Badge>
                 )}
               </div>
