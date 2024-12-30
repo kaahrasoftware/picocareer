@@ -15,7 +15,6 @@ import { ProfileView } from "./profile-details/ProfileView";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Share2 } from "lucide-react";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -25,6 +24,7 @@ interface ProfileDetailsDialogProps {
 
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -120,35 +120,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     };
   }, [userId, open, queryClient]);
 
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/mentor?profile=${userId}`;
-    
-    try {
-      if (navigator.share) {
-        // Use native sharing if available
-        await navigator.share({
-          title: `${profile?.full_name}'s Profile`,
-          text: `Check out ${profile?.full_name}'s mentor profile on PicoCareer!`,
-          url: shareUrl
-        });
-      } else {
-        // Fallback to clipboard copy
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link copied!",
-          description: "Profile link has been copied to your clipboard.",
-        });
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      toast({
-        title: "Sharing failed",
-        description: "There was an error sharing this profile.",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (isLoading || !profile) {
     return null;
   }
@@ -163,38 +134,38 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           <DialogHeader className="p-6 pb-0">
             <div className="relative">
               <ProfileHeader profile={profile} />
-              <div className="absolute right-0 top-16 flex gap-2">
-                {isMentor && (
-                  isOwnProfile ? (
-                    <Button 
-                      size="lg"
-                      onClick={() => navigate("/profile")}
-                    >
-                      Edit Profile
-                    </Button>
-                  ) : (
-                    <Button 
-                      size="lg"
-                      onClick={() => setBookingOpen(true)}
-                    >
-                      Book a Session
-                    </Button>
-                  )
-                )}
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </div>
+              {isMentor && (
+                isOwnProfile ? (
+                  <Button 
+                    size="lg"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="absolute right-0 top-16"
+                  >
+                    {isEditing ? "Cancel Editing" : "Edit Profile"}
+                  </Button>
+                ) : (
+                  <Button 
+                    size="lg"
+                    onClick={() => setBookingOpen(true)}
+                    className="absolute right-0 top-16"
+                  >
+                    Book a Session
+                  </Button>
+                )
+              )}
             </div>
           </DialogHeader>
 
           <ScrollArea className="flex-1 px-6">
-            <ProfileView profile={profile} />
+            {isEditing ? (
+              <ProfileEditForm 
+                profile={profile} 
+                onCancel={() => setIsEditing(false)}
+                onSuccess={() => setIsEditing(false)}
+              />
+            ) : (
+              <ProfileView profile={profile} />
+            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>

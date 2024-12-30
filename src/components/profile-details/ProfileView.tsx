@@ -1,8 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/types/database/profiles";
 import { BadgeSection } from "@/components/career/BadgeSection";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileViewProps {
   profile: Profile & {
@@ -13,28 +11,6 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ profile }: ProfileViewProps) {
-  // Fetch career details if position is set
-  const { data: careerDetails } = useQuery({
-    queryKey: ['career', profile.position],
-    queryFn: async () => {
-      if (!profile.position) return null;
-      
-      const { data, error } = await supabase
-        .from('careers')
-        .select('title')
-        .eq('id', profile.position)
-        .single();
-
-      if (error) {
-        console.error('Error fetching career details:', error);
-        return null;
-      }
-
-      return data;
-    },
-    enabled: !!profile.position
-  });
-
   return (
     <div className="space-y-6 pb-6">
       {/* Bio Section */}
@@ -46,9 +22,9 @@ export function ProfileView({ profile }: ProfileViewProps) {
       {/* Professional Info */}
       <div className="bg-muted rounded-lg p-4 space-y-4">
         <h4 className="font-semibold mb-2">Professional Information</h4>
-        <p className="text-muted-foreground">
-          Position: {careerDetails?.title || "None"}
-        </p>
+        {profile.position && (
+          <p className="text-muted-foreground">Position: {profile.position}</p>
+        )}
         {profile.company_name && (
           <p className="text-muted-foreground">Company: {profile.company_name}</p>
         )}
