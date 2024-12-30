@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 
 export default function Auth() {
-  const { data: mentors, isError } = useQuery({
+  const { data: mentors = [], isError } = useQuery({
     queryKey: ['random-mentors'],
     queryFn: async () => {
       try {
