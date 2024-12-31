@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
-import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
+import { Building2, GraduationCap, Award, MapPin, Bookmark } from "lucide-react";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useState } from "react";
 
 interface ProfileHeaderProps {
   profile: {
@@ -22,6 +24,9 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const { toast } = useToast();
+  const { session } = useAuthSession();
+  const queryClient = useQueryClient();
+  const [isBookmarking, setIsBookmarking] = useState(false);
 
   // Only fetch additional details if we have a profile
   const { data: profileDetails } = useQuery({
@@ -52,6 +57,82 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     },
     enabled: !!profile?.id,
   });
+
+  // Check if the current user has bookmarked this profile
+  const { data: isBookmarked } = useQuery({
+    queryKey: ['bookmark', profile?.id, session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id || !profile?.id) return false;
+      
+      const { data, error } = await supabase
+        .from('user_bookmarks')
+        .select('id')
+        .eq('profile_id', session.user.id)
+        .eq('content_id', profile.id)
+        .eq('content_type', 'mentor')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking bookmark:', error);
+        return false;
+      }
+
+      return !!data;
+    },
+    enabled: !!session?.user?.id && !!profile?.id,
+  });
+
+  const handleBookmarkClick = async () => {
+    if (!session?.user?.id || !profile?.id || isBookmarking) return;
+
+    setIsBookmarking(true);
+    try {
+      if (isBookmarked) {
+        // Remove bookmark
+        const { error } = await supabase
+          .from('user_bookmarks')
+          .delete()
+          .eq('profile_id', session.user.id)
+          .eq('content_id', profile.id)
+          .eq('content_type', 'mentor');
+
+        if (error) throw error;
+
+        toast({
+          title: "Bookmark removed",
+          description: "Mentor removed from your bookmarks",
+        });
+      } else {
+        // Add bookmark
+        const { error } = await supabase
+          .from('user_bookmarks')
+          .insert({
+            profile_id: session.user.id,
+            content_id: profile.id,
+            content_type: 'mentor'
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Bookmarked",
+          description: "Mentor added to your bookmarks",
+        });
+      }
+
+      // Invalidate the bookmark query to refresh the state
+      queryClient.invalidateQueries({ queryKey: ['bookmark', profile.id, session.user.id] });
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update bookmark",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
   
   if (!profile || !profileDetails) return null;
 
@@ -124,6 +205,18 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
                 mentor
               </Badge>
             )
+          )}
+          {session?.user?.id && session.user.id !== profile.id && (
+            <button
+              onClick={handleBookmarkClick}
+              disabled={isBookmarking}
+              className="ml-auto p-2 hover:bg-muted rounded-full transition-colors"
+              aria-label={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+            >
+              <Bookmark 
+                className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`}
+              />
+            </button>
           )}
         </div>
         {primaryText && (

@@ -1363,6 +1363,10 @@ export type Database = {
         }
         Returns: unknown
       }
+      mark_past_sessions_completed: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       match_profiles_with_majors: {
         Args: Record<PropertyKey, never>
         Returns: undefined
