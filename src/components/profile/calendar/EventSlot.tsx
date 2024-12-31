@@ -100,6 +100,9 @@ export function EventSlot({
       onClick={() => onClick?.(event)}
     >
       <div className="flex flex-col h-full overflow-hidden">
+        <p className="text-xs text-white/90 mb-1">
+          {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </p>
         <div className="flex justify-between items-start">
           <p className="text-xs font-medium truncate">{event.title}</p>
           <Button
@@ -111,9 +114,6 @@ export function EventSlot({
             <Trash2 className="h-4 w-4 text-white" />
           </Button>
         </div>
-        <p className="text-xs text-white/90">
-          {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </p>
         {height >= cellHeight * 2 && event.description && (
           <p className="text-xs text-white/90 mt-1 line-clamp-2">
             {event.description}
