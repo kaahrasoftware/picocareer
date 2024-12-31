@@ -33,7 +33,7 @@ export function HeaderBadges({
 
   if (showSalaryBadgeOnly && salaryRange) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between w-full">
         <Badge 
           variant="outline"
           className={badgeStyles.outline}
