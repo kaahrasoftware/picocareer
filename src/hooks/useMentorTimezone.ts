@@ -19,7 +19,7 @@ export function useMentorTimezone(mentorId: string | undefined) {
         .select('setting_value')
         .eq('profile_id', mentorId)
         .eq('setting_type', 'timezone')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching mentor timezone:', error);
@@ -31,14 +31,10 @@ export function useMentorTimezone(mentorId: string | undefined) {
         throw error;
       }
 
+      // If no timezone is set, return a default timezone
       if (!data?.setting_value) {
-        console.error('No timezone found for mentor:', mentorId);
-        toast({
-          title: "Warning",
-          description: "Mentor's timezone is not set",
-          variant: "destructive",
-        });
-        throw new Error('Mentor timezone not found');
+        console.warn('No timezone found for mentor:', mentorId);
+        return 'UTC';
       }
 
       console.log('Mentor timezone fetched:', data.setting_value);
