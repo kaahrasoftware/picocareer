@@ -76,13 +76,14 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
         
         // Track search interaction
         if (debouncedSearch.length >= 3) {
+          const user = await supabase.auth.getUser();
           addEvent('search', {
             interaction_data: {
               query: debouncedSearch,
               results_count: data?.length || 0
             },
             page_path: location.pathname,
-            profile_id: (await supabase.auth.getUser()).data.user?.id
+            profile_id: user.data.user?.id
           });
         }
       } catch (error) {
