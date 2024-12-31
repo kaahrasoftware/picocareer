@@ -75,7 +75,7 @@ serve(async (req: Request) => {
       reminders: {
         useDefault: true
       },
-      // Configure meeting for automatic access
+      // Force open access configuration
       conferenceProperties: {
         allowedConferenceSolutionTypes: ['hangoutsMeet'],
         accessLevel: 'open',
@@ -87,7 +87,9 @@ serve(async (req: Request) => {
         allowAnonymousUsers: true,
         allowExternalGuests: true,
         allowedAttendeeTypes: ['internal', 'external'],
-        autoAcceptRequests: true
+        autoAcceptRequests: true,
+        accessRole: 'reader',
+        visibility: 'default'
       }
     };
 
