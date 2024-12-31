@@ -1,6 +1,6 @@
-import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatInTimeZone } from 'date-fns-tz';
+import { isSameDay } from 'date-fns';
 import { CalendarEvent, Availability } from "@/types/calendar";
 import { TimeGrid } from "./TimeGrid";
 import { TimeGridLines } from "./TimeGridLines";
@@ -28,8 +28,11 @@ export function EventsSidebar({
 }: EventsSidebarProps) {
   const CELL_HEIGHT = 52;
 
-  // Filter out cancelled events
-  const activeEvents = events.filter(event => event.status !== 'cancelled');
+  // Filter events for the selected date and exclude cancelled events
+  const activeEvents = events.filter(event => {
+    const eventDate = new Date(event.start_time);
+    return event.status !== 'cancelled' && isSameDay(eventDate, date);
+  });
 
   // Calculate overlapping events and their positions
   const getEventPositions = (events: CalendarEvent[]) => {
