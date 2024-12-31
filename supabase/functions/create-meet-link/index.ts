@@ -77,11 +77,19 @@ serve(async (req: Request) => {
       reminders: {
         useDefault: true
       },
-      // Set meeting access to open
+      // Configure open access settings
       conferenceProperties: {
         allowedConferenceSolutionTypes: ['hangoutsMeet'],
         accessLevel: 'open',
         defaultSolutionKey: { type: 'hangoutsMeet' }
+      },
+      // Additional settings for open access
+      settings: {
+        joinModerationLevel: 'OFF',
+        allowAnonymousUsers: true,
+        allowExternalGuests: true,
+        allowedAttendeeTypes: ['internal', 'external'],
+        autoAcceptRequests: true
       }
     };
 
