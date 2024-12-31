@@ -2,9 +2,7 @@ import { format } from "date-fns";
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -25,28 +23,7 @@ export function TimeSlotSelector({
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
-  // Fetch mentor's timezone from user_settings
-  const { data: mentorSettings } = useQuery({
-    queryKey: ['mentor-timezone', mentorId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', mentorId)
-        .eq('setting_type', 'timezone')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching mentor timezone:', error);
-        return { timezone: 'UTC' };
-      }
-
-      return {
-        timezone: data?.setting_value || 'UTC'
-      };
-    },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-  });
+  const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
 
   // Fetch mentor's availability for this date
   const { data: mentorAvailability } = useQuery({
@@ -115,12 +92,11 @@ export function TimeSlotSelector({
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
-  const mentorTimezone = mentorSettings?.timezone || 'UTC';
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 
     selectedSessionType?.duration || 60,
-    mentorTimezone
+    mentorTimezone || 'UTC'
   );
 
   console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
@@ -138,11 +114,11 @@ export function TimeSlotSelector({
         timeSlots={availableTimeSlots}
         selectedTime={selectedTime}
         onTimeSelect={onTimeSelect}
-        mentorTimezone={mentorTimezone}
+        mentorTimezone={mentorTimezone || 'UTC'}
         date={date}
       />
       <p className="text-xs text-muted-foreground mt-2">
-        Times shown in mentor's timezone ({mentorTimezone})
+        Times shown in mentor's timezone ({isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'})
       </p>
     </div>
   );

@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { useAvailableDates } from "@/hooks/useAvailableDates";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 
 interface DateSelectorProps {
   date: Date | undefined;
@@ -13,30 +13,8 @@ interface DateSelectorProps {
 
 export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps) {
   const availableDates = useAvailableDates(mentorId);
+  const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
   
-  // Fetch mentor's timezone from user_settings
-  const { data: mentorSettings } = useQuery({
-    queryKey: ['mentor-timezone', mentorId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', mentorId)
-        .eq('setting_type', 'timezone')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching mentor timezone:', error);
-        return { timezone: 'UTC' };
-      }
-
-      return {
-        timezone: data?.setting_value || 'UTC'
-      };
-    },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-  });
-
   // Fetch mentor's availability details
   const { data: mentorAvailability } = useQuery({
     queryKey: ['mentorAvailability', mentorId],
@@ -108,7 +86,7 @@ export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps
         }}
       />
       <div className="mt-4 text-sm text-gray-400">
-        <p>Mentor's timezone: {mentorSettings?.timezone || 'Loading...'}</p>
+        <p>Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone}</p>
         <p className="mt-1">Days highlighted in green are available for booking</p>
         {availableDates.length === 0 && (
           <p className="mt-1 text-yellow-500">No available dates found for this mentor</p>
