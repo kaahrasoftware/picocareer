@@ -18,6 +18,10 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { trackSearch } = useSearchAnalytics();
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
   useEffect(() => {
     const fetchResults = async () => {
       if (debouncedSearch.length < 3) {
@@ -72,7 +76,9 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
         setSearchResults(data || []);
         
         // Track search analytics
-        await trackSearch(debouncedSearch, data?.length || 0);
+        if (trackSearch && debouncedSearch.length >= 3) {
+          await trackSearch(debouncedSearch, data?.length || 0);
+        }
       } catch (error) {
         console.error('Error in search:', error);
       } finally {
@@ -105,7 +111,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
         <SearchInput
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={handleSearchChange}
           onFocus={() => setIsFocused(true)}
           className={className}
           placeholder={placeholder}
