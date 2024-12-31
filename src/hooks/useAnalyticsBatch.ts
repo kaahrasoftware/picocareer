@@ -1,9 +1,13 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from 'react-router-dom';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 interface BatchedEvent {
-  event_type: string;
-  data: any;
+  interaction_type: "page_view" | "click" | "search" | "bookmark" | "content_view";
+  interaction_data?: any;
+  element_id?: string;
+  element_type?: string;
   timestamp: number;
 }
 
@@ -13,9 +17,11 @@ const BATCH_INTERVAL = 5000; // 5 seconds
 export function useAnalyticsBatch() {
   const batchRef = useRef<BatchedEvent[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const location = useLocation();
+  const { session } = useAuthSession();
 
   const flushEvents = useCallback(async () => {
-    if (batchRef.current.length === 0) return;
+    if (batchRef.current.length === 0 || !session?.user) return;
 
     const events = [...batchRef.current];
     batchRef.current = [];
@@ -24,8 +30,12 @@ export function useAnalyticsBatch() {
       const { error } = await supabase
         .from('user_interactions')
         .insert(events.map(event => ({
-          interaction_type: event.event_type,
-          interaction_data: event.data,
+          profile_id: session.user.id,
+          interaction_type: event.interaction_type,
+          interaction_data: event.interaction_data,
+          element_id: event.element_id,
+          element_type: event.element_type,
+          page_path: location.pathname,
           created_at: new Date(event.timestamp).toISOString()
         })));
 
@@ -39,19 +49,28 @@ export function useAnalyticsBatch() {
       // Re-add failed events to the batch
       batchRef.current = [...events, ...batchRef.current];
     }
-  }, []);
+  }, [location.pathname, session?.user]);
 
-  const addEvent = useCallback((eventType: string, data: any) => {
+  const addEvent = useCallback((
+    eventType: BatchedEvent['interaction_type'],
+    data?: any,
+    elementId?: string,
+    elementType?: string
+  ) => {
+    if (!session?.user) return;
+    
     batchRef.current.push({
-      event_type: eventType,
-      data,
+      interaction_type: eventType,
+      interaction_data: data,
+      element_id: elementId,
+      element_type: elementType,
       timestamp: Date.now()
     });
 
     if (batchRef.current.length >= BATCH_SIZE) {
       flushEvents();
     }
-  }, [flushEvents]);
+  }, [flushEvents, session?.user]);
 
   useEffect(() => {
     // Set up periodic flush

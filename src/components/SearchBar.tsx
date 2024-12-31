@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Building2, MapPin, GraduationCap } from "lucide-react";
+import { useAnalyticsBatch } from "@/hooks/useAnalyticsBatch";
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -16,6 +17,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const { addEvent } = useAnalyticsBatch();
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -69,6 +71,14 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
 
         console.log('Search results:', data);
         setSearchResults(data || []);
+        
+        // Track search interaction
+        if (debouncedSearch.length >= 3) {
+          addEvent('search', {
+            query: debouncedSearch,
+            results_count: data?.length || 0
+          });
+        }
       } catch (error) {
         console.error('Error in search:', error);
       } finally {
@@ -77,7 +87,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
     };
 
     fetchResults();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, addEvent]);
 
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -179,4 +189,3 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
       )}
     </div>
   );
-};
