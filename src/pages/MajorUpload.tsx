@@ -51,11 +51,9 @@ export default function MajorUpload() {
         throw new Error('Description is required');
       }
 
-      // Format the data before submission
       const formattedData = formatMajorData(data);
       console.log('Formatted data:', formattedData);
 
-      // Use RPC call to check and insert major
       const { data: result, error } = await supabase
         .rpc('check_and_insert_major', {
           major_data: formattedData
@@ -93,14 +91,25 @@ export default function MajorUpload() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Upload Major</h1>
-      <GenericUploadForm 
-        fields={majorFormFields}
-        onSubmit={handleSubmit}
-        buttonText="Upload Major"
-        isSubmitting={isSubmitting}
-      />
+    <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h1 className="text-2xl font-bold mb-6 text-center">Upload New Major</h1>
+        <div className="mb-6 p-4 bg-blue-50 rounded-md">
+          <h2 className="text-lg font-semibold mb-2 text-blue-800">Guidelines for Submission</h2>
+          <ul className="list-disc pl-5 space-y-1 text-blue-700">
+            <li>Fill in all required fields marked with an asterisk (*)</li>
+            <li>For array fields, enter one item per line</li>
+            <li>Provide detailed and accurate information to help students make informed decisions</li>
+            <li>Review all information before submission</li>
+          </ul>
+        </div>
+        <GenericUploadForm 
+          fields={majorFormFields}
+          onSubmit={handleSubmit}
+          buttonText="Submit Major for Review"
+          isSubmitting={isSubmitting}
+        />
+      </div>
     </div>
   );
 }
