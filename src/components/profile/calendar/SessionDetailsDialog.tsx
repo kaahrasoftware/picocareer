@@ -117,7 +117,7 @@ export function SessionDetailsDialog({
 
   return (
     <Dialog open={!!session} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto bg-background border-border">
+      <DialogContent className="sm:max-w-[425px] bg-background border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Session Details</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -125,7 +125,7 @@ export function SessionDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
           <SessionInfo session={session} userTimezone={userTimezone} />
           <SessionActions
             session={session}
