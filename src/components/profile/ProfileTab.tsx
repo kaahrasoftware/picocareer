@@ -4,47 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
 import { EditableField } from "@/components/profile/EditableField";
-import type { Profile } from "@/types/database/profiles";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
-interface ProfileTabProps {
-  profile: Profile & {
-    company_name?: string | null;
-    school_name?: string | null;
-    academic_major?: string | null;
-    career_title?: string | null;
-  };
-}
-
-export function ProfileTab({ profile }: ProfileTabProps) {
+export function ProfileTab() {
   const [isEditing, setIsEditing] = useState(false);
+  const { data: profile } = useUserProfile();
 
-  if (!profile) return null;
+  if (!profile) {
+    return null;
+  }
+
+  if (isEditing) {
+    return <ProfileEditForm onCancel={() => setIsEditing(false)} />;
+  }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-left">Profile Details</h2>
-        <Button 
-          onClick={() => setIsEditing(!isEditing)}
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button
           variant="outline"
+          size="sm"
           className="gap-2"
+          onClick={() => setIsEditing(true)}
         >
           <Pencil className="h-4 w-4" />
-          {isEditing ? "Cancel Editing" : "Edit Profile"}
+          Edit Profile
         </Button>
       </div>
-      
-      {isEditing ? (
-        <ProfileEditForm 
-          profile={profile} 
-          onCancel={() => setIsEditing(false)}
-          onSuccess={() => setIsEditing(false)}
-        />
-      ) : (
-        <>
-          <div className="bg-muted rounded-lg p-6 shadow-sm space-y-4">
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Personal Information</h4>
+
+      <div className="grid gap-6">
+        {/* Personal Information */}
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-6 space-y-4">
+              <h3 className="text-lg font-semibold">Personal Information</h3>
               <EditableField
                 label="First Name"
                 value={profile.first_name}
@@ -59,35 +52,32 @@ export function ProfileTab({ profile }: ProfileTabProps) {
                 profileId={profile.id}
                 placeholder="Add your last name"
               />
-              <EditableField
-                label="Location"
-                value={profile.location}
-                fieldName="location"
-                profileId={profile.id}
-                placeholder="Add your location"
-              />
             </div>
           </div>
+        </div>
 
-          <ProfileBio 
-            bio={profile.bio} 
-            profileId={profile.id}
-          />
+        {/* Bio Section */}
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Bio</h3>
+            <ProfileBio bio={profile.bio} />
+          </div>
+        </div>
 
-          <div className="bg-muted rounded-lg p-6 shadow-sm">
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Education</h4>
-              <EditableField
-                label="School"
-                value={profile.school_name || ''}
-                fieldName="school_id"
-                profileId={profile.id}
-                placeholder="Select your school"
-              />
+        {/* School Information */}
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">School Information</h3>
+            <div className="text-sm text-muted-foreground">
+              {profile.school_id ? (
+                "School information available"
+              ) : (
+                "No school information added"
+              )}
             </div>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
