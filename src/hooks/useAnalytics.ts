@@ -13,7 +13,31 @@ interface InteractionData {
 
 export function useAnalytics() {
   const { session } = useAuthSession();
-  const debouncedTrackInteraction = useDebounce((data: InteractionData) => trackInteraction(data), 1000);
+
+  const trackInteraction = async (data: InteractionData) => {
+    if (!session?.user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_interactions')
+        .insert({
+          profile_id: session.user.id,
+          interaction_type: data.interactionType,
+          element_id: data.elementId,
+          element_type: data.elementType,
+          page_path: data.pagePath,
+          interaction_data: data.interactionData,
+        });
+
+      if (error) {
+        console.error('Error tracking interaction:', error);
+      }
+    } catch (error) {
+      console.error('Error tracking interaction:', error);
+    }
+  };
+
+  const debouncedTrackInteraction = useDebounce(trackInteraction, 1000);
 
   const trackPageView = async (pagePath: string) => {
     if (!session?.user?.id) return;
@@ -41,35 +65,6 @@ export function useAnalytics() {
       }
     } catch (error) {
       console.error('Error tracking page view:', error);
-    }
-  };
-
-  const trackInteraction = async ({
-    elementId,
-    elementType,
-    interactionType,
-    pagePath,
-    interactionData
-  }: InteractionData) => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('user_interactions')
-        .insert({
-          profile_id: session.user.id,
-          interaction_type: interactionType,
-          element_id: elementId,
-          element_type: elementType,
-          page_path: pagePath,
-          interaction_data: interactionData,
-        });
-
-      if (error) {
-        console.error('Error tracking interaction:', error);
-      }
-    } catch (error) {
-      console.error('Error tracking interaction:', error);
     }
   };
 
