@@ -24,7 +24,7 @@ export function EventsSidebar({
   onEventClick,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
-  const CELL_HEIGHT = 26; // Height for 30-minute intervals
+  const CELL_HEIGHT = 52; // Doubled from 26 to 52
 
   // Filter out cancelled events
   const activeEvents = events.filter(event => event.status !== 'cancelled');
@@ -45,7 +45,7 @@ export function EventsSidebar({
           <div className="relative grid grid-cols-[80px_1fr] gap-4">
             <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
 
-            <div className="relative border-l border-border min-h-[1248px]">
+            <div className="relative border-l border-border min-h-[2496px]"> {/* Doubled from 1248px to 2496px */}
               <TimeGridLines cellHeight={CELL_HEIGHT} />
 
               {activeEvents.map((event) => (
