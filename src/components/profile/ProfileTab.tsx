@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { ProfileBio } from "@/components/profile-details/ProfileBio";
 import { ProfileEducation } from "@/components/profile-details/ProfileEducation";
-import { ProfileSkills } from "@/components/profile-details/ProfileSkills";
-import { ProfileLinks } from "@/components/profile-details/ProfileLinks";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
@@ -46,32 +42,43 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         />
       ) : (
         <>
+          <div className="bg-muted rounded-lg p-6 shadow-sm space-y-4">
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Personal Information</h4>
+              <EditableField
+                label="First Name"
+                value={profile.first_name}
+                fieldName="first_name"
+                profileId={profile.id}
+                placeholder="Add your first name"
+              />
+              <EditableField
+                label="Last Name"
+                value={profile.last_name}
+                fieldName="last_name"
+                profileId={profile.id}
+                placeholder="Add your last name"
+              />
+            </div>
+          </div>
+
           <ProfileBio 
             bio={profile.bio} 
             profileId={profile.id}
           />
 
-          <ProfileEducation
-            academic_major={profile.academic_major}
-            highest_degree={profile.highest_degree}
-            school_name={profile.school_name}
-            profileId={profile.id}
-          />
-
-          <ProfileSkills
-            skills={profile.skills}
-            tools={profile.tools_used}
-            keywords={profile.keywords}
-            fieldsOfInterest={profile.fields_of_interest}
-            profileId={profile.id}
-          />
-
-          <ProfileLinks
-            linkedinUrl={profile.linkedin_url}
-            githubUrl={profile.github_url}
-            websiteUrl={profile.website_url}
-            profileId={profile.id}
-          />
+          <div className="bg-muted rounded-lg p-6 shadow-sm">
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Education</h4>
+              <EditableField
+                label="School"
+                value={profile.school_name || ''}
+                fieldName="school_id"
+                profileId={profile.id}
+                placeholder="Select your school"
+              />
+            </div>
+          </div>
         </>
       )}
     </div>
