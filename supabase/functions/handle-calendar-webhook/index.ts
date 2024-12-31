@@ -89,13 +89,20 @@ serve(async (req: Request) => {
       });
     }
 
-    // Update the session status
+    // Update the session status and add cancellation note if applicable
+    const updateData: any = {
+      status: sessionStatus,
+      notes: data.status === 'cancelled' ? 'Cancelled via Google Calendar' : `${notificationTitle} via Google Calendar`
+    };
+
+    // If cancelled, update the last_calendar_sync
+    if (data.status === 'cancelled') {
+      updateData.last_calendar_sync = new Date().toISOString();
+    }
+
     const { error: updateError } = await supabase
       .from('mentor_sessions')
-      .update({ 
-        status: sessionStatus,
-        notes: `${notificationTitle} via Google Calendar`
-      })
+      .update(updateData)
       .eq('id', session.id);
 
     if (updateError) {
