@@ -72,17 +72,17 @@ serve(async (req: Request) => {
       ],
       conferenceData: {
         createRequest: {
-          requestId: sessionId,
+          requestId: crypto.randomUUID(),
           conferenceSolutionKey: { type: 'hangoutsMeet' },
-          status: {
-            statusCode: "confirmed"
-          }
-        },
+          status: { statusCode: 'success' }
+        }
       },
       guestsCanModify: false,
       guestsCanInviteOthers: false,
       guestsCanSeeOtherGuests: true,
-      conferenceDataVersion: 1
+      reminders: {
+        useDefault: true
+      }
     };
 
     console.log('Creating calendar event with Meet link...');
@@ -95,9 +95,6 @@ serve(async (req: Request) => {
 
     const meetLink = calendarEvent.conferenceData.entryPoints[0].uri;
     console.log('Successfully created Meet link:', meetLink);
-
-    // Set up webhook for this calendar event
-    await setupWebhook('primary');
 
     // Update the session with the Meet link
     const { error: updateError } = await supabase
