@@ -16,7 +16,17 @@ export async function createCalendarEvent(eventDetails: any, accessToken: string
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(eventDetails),
+      body: JSON.stringify({
+        ...eventDetails,
+        conferenceData: {
+          ...eventDetails.conferenceData,
+          createRequest: {
+            ...eventDetails.conferenceData.createRequest,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+            status: { statusCode: 'success' }
+          }
+        }
+      }),
     }
   );
 
@@ -29,35 +39,4 @@ export async function createCalendarEvent(eventDetails: any, accessToken: string
   const eventData = await calendarResponse.json();
   console.log('Calendar event created successfully:', eventData);
   return eventData;
-}
-
-export async function setupWebhook(calendarId: string) {
-  const accessToken = await getAccessToken();
-  
-  const webhookResponse = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/watch`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: crypto.randomUUID(),
-        type: 'web_hook',
-        address: `${Deno.env.get('SUPABASE_URL')}/functions/v1/handle-calendar-webhook`,
-        params: {
-          ttl: '604800', // 7 days in seconds
-        },
-        events: ['cancelled', 'confirmed', 'updated', 'deleted']
-      }),
-    }
-  );
-
-  if (!webhookResponse.ok) {
-    console.error('Failed to set up calendar webhook:', await webhookResponse.text());
-    throw new Error('Failed to set up calendar webhook');
-  }
-
-  return await webhookResponse.json();
 }
