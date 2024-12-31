@@ -73,6 +73,44 @@ export function SessionActions({
     }
   };
 
+  const handleCancelSession = async () => {
+    if (!canCancel || !session.session_details?.id) return;
+    
+    try {
+      // First try to cancel the Google Calendar event
+      if (session.session_details.meeting_platform === 'google_meet') {
+        const { error: meetError } = await supabase.functions.invoke('cancel-meet-link', {
+          body: { sessionId: session.session_details.id }
+        });
+
+        if (meetError) {
+          console.error('Error cancelling Google Calendar event:', meetError);
+          toast({
+            title: "Warning",
+            description: "There was an issue cancelling the calendar event. The session will still be cancelled.",
+            variant: "destructive"
+          });
+        }
+      }
+
+      // Then cancel the session in our database
+      await onCancel();
+      onClose();
+      
+      toast({
+        title: "Session Cancelled",
+        description: "The session has been cancelled and notifications have been sent.",
+      });
+    } catch (error) {
+      console.error('Error in handleCancelSession:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel the session. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (session.status === 'cancelled') {
     return (
       <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
@@ -119,7 +157,7 @@ export function SessionActions({
           
           <Button
             variant="destructive"
-            onClick={onCancel}
+            onClick={handleCancelSession}
             disabled={!cancellationNote.trim() || isCancelling}
             className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
           >
