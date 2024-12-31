@@ -12,8 +12,8 @@ import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
 interface MentorCardProps {
   id: string;
-  title?: string;
-  company?: string;
+  title?: string;  // Made optional
+  company?: string; // Made optional to match Mentor type
   imageUrl: string;
   name: string;
   stats: {
@@ -32,16 +32,9 @@ interface MentorCardProps {
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleCardClick = () => {
-    setDialogOpen(true);
-  };
-
   return (
     <>
-      <Card 
-        className="group relative overflow-hidden p-6 h-full flex flex-col cursor-pointer hover:shadow-lg transition-all duration-300"
-        onClick={handleCardClick}
-      >
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
         <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative flex flex-col h-full">
           {/* Header Section with Avatar and Basic Info */}
@@ -105,6 +98,17 @@ export function MentorCard(props: MentorCardProps) {
               </div>
             </div>
           )}
+
+          {/* Button Section */}
+          <div className="mt-auto w-full">
+            <Button 
+              variant="outline" 
+              className="w-full bg-background hover:bg-muted/50 transition-colors"
+              onClick={() => setDialogOpen(true)}
+            >
+              View Profile
+            </Button>
+          </div>
         </div>
       </Card>
 
