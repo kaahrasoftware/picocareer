@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users } from "lucide-react";
+import { Users, Bookmark } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { AboutSection } from "./major-details/AboutSection";
 import { AcademicRequirements } from "./major-details/AcademicRequirements";
@@ -15,6 +15,9 @@ import { SkillsAndTools } from "./major-details/SkillsAndTools";
 import { AdditionalInfo } from "./major-details/AdditionalInfo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface MajorDetailsProps {
   major: Major;
@@ -23,6 +26,10 @@ interface MajorDetailsProps {
 }
 
 export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const { toast } = useToast();
+  const { session } = useAuthSession();
+
   const { data: majorWithCareers } = useQuery({
     queryKey: ['major-careers', major.id],
     queryFn: async () => {
@@ -42,6 +49,69 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
     },
     enabled: open && !!major.id,
   });
+
+  // Check if the major is bookmarked
+  useQuery({
+    queryKey: ['major-bookmark', major.id, session?.user.id],
+    queryFn: async () => {
+      if (!session?.user.id) return null;
+      
+      const { data, error } = await supabase
+        .from('user_bookmarks')
+        .select('*')
+        .eq('profile_id', session.user.id)
+        .eq('content_type', 'major')
+        .eq('content_id', major.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setIsBookmarked(!!data);
+      return data;
+    },
+    enabled: open && !!major.id && !!session?.user.id,
+  });
+
+  const handleBookmarkToggle = async () => {
+    if (!session?.user.id) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to bookmark majors",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (isBookmarked) {
+        await supabase
+          .from('user_bookmarks')
+          .delete()
+          .eq('profile_id', session.user.id)
+          .eq('content_type', 'major')
+          .eq('content_id', major.id);
+      } else {
+        await supabase
+          .from('user_bookmarks')
+          .insert({
+            profile_id: session.user.id,
+            content_type: 'major',
+            content_id: major.id,
+          });
+      }
+      
+      setIsBookmarked(!isBookmarked);
+      toast({
+        title: isBookmarked ? "Major unbookmarked" : "Major bookmarked",
+        description: isBookmarked ? "Major removed from your bookmarks" : "Major added to your bookmarks",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update bookmark",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!major) return null;
 
@@ -65,11 +135,19 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">
+            <div className="flex flex-col items-end gap-2">
+              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-2">
+                <Users className="h-4 w-4" />
                 {formatProfileCount(major.profiles_count)} Mentors
               </Badge>
+              <div className="w-[120px] flex justify-center">
+                <Bookmark 
+                  className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
+                    isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
+                  }`}
+                  onClick={handleBookmarkToggle}
+                />
+              </div>
             </div>
           </div>
         </DialogHeader>
