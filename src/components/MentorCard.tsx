@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MajorDetails } from "./MajorDetails";
+import { MajorHeader } from "./major/MajorHeader";
+import { MajorSalary } from "./major/MajorSalary";
+import { MajorSkillsList } from "./major/MajorSkillsList";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
 interface MentorCardProps {
   id: string;
@@ -28,9 +30,6 @@ interface MentorCardProps {
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const displaySkills = props.skills?.slice(0, 3) || [];
-  const remainingSkills = (props.skills?.length || 0) - 3;
-
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -38,10 +37,12 @@ export function MentorCard(props: MentorCardProps) {
         <div className="relative flex flex-col h-full">
           {/* Header Section with Avatar and Basic Info */}
           <div className="flex items-start gap-4 mb-4">
-            <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
-              <AvatarImage src={props.imageUrl} alt={props.name} />
-              <AvatarFallback>{props.name[0]}</AvatarFallback>
-            </Avatar>
+            <ProfileAvatar
+              avatarUrl={props.imageUrl}
+              fallback={props.name[0]}
+              size="md"
+              editable={false}
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 {props.top_mentor && (
@@ -83,7 +84,7 @@ export function MentorCard(props: MentorCardProps) {
           {props.skills?.length > 0 && (
             <div className="w-full mb-4">
               <div className="flex flex-wrap gap-1.5">
-                {displaySkills.map((skill) => (
+                {props.skills.map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
@@ -92,14 +93,6 @@ export function MentorCard(props: MentorCardProps) {
                     {skill}
                   </Badge>
                 ))}
-                {remainingSkills > 0 && (
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-                  >
-                    +{remainingSkills} more
-                  </Badge>
-                )}
               </div>
             </div>
           )}
