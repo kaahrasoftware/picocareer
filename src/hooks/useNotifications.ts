@@ -16,25 +16,43 @@ export function useNotifications(session: Session | null) {
       
       try {
         console.log('Fetching notifications for user:', session.user.id);
-        const { data, error, status } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('profile_id', session.user.id)
-          .order('created_at', { ascending: false });
         
-        if (error) {
-          console.error('Supabase query error:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-            status
-          });
-          throw error;
-        }
+        // Add retry logic with exponential backoff
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries) {
+          try {
+            const { data, error, status } = await supabase
+              .from('notifications')
+              .select('*')
+              .eq('profile_id', session.user.id)
+              .order('created_at', { ascending: false });
+            
+            if (error) {
+              console.error('Supabase query error:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code,
+                status
+              });
+              throw error;
+            }
 
-        console.log('Notifications fetched successfully:', data?.length);
-        return data || [];
+            console.log('Notifications fetched successfully:', data?.length);
+            return data || [];
+          } catch (retryError: any) {
+            retryCount++;
+            if (retryCount === maxRetries) {
+              throw retryError;
+            }
+            // Exponential backoff: wait longer between each retry
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+          }
+        }
+        
+        return []; // Fallback empty array if all retries fail
       } catch (error: any) {
         console.error('Failed to fetch notifications:', {
           message: error.message,
