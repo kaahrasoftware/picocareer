@@ -42,12 +42,14 @@ export function HeaderBadges({
           {salaryRange}
         </Badge>
         {onBookmarkToggle && (
-          <Bookmark 
-            className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
-              isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
-            }`}
-            onClick={onBookmarkToggle}
-          />
+          <div className="w-[120px] flex justify-center"> {/* Match mentor badge width */}
+            <Bookmark 
+              className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
+                isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
+              }`}
+              onClick={onBookmarkToggle}
+            />
+          </div>
         )}
       </div>
     );
