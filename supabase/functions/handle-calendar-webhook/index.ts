@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,21 +21,24 @@ serve(async (req: Request) => {
     const resourceId = req.headers.get('X-Goog-Resource-ID');
     const state = req.headers.get('X-Goog-Resource-State');
 
-    console.log('Channel ID:', channelId);
-    console.log('Resource ID:', resourceId);
-    console.log('State:', state);
+    console.log({
+      channelId,
+      resourceId,
+      state,
+      headers: Object.fromEntries(req.headers.entries())
+    });
 
-    // Only process sync or update events
-    if (state !== 'sync' && state !== 'update') {
-      console.log('Ignoring non-sync/update event:', state);
-      return new Response(JSON.stringify({ message: 'Ignored non-sync/update event' }), {
+    // Only process sync, update, or exists events
+    if (!['sync', 'update', 'exists'].includes(state || '')) {
+      console.log('Ignoring event with state:', state);
+      return new Response(JSON.stringify({ message: 'Ignored event' }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY
     );
 
     const data = await req.json();
@@ -71,7 +77,7 @@ serve(async (req: Request) => {
         });
     }
 
-    // Find the associated mentor session
+    // Find the associated mentor session with attendee details
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
@@ -82,22 +88,34 @@ serve(async (req: Request) => {
       .eq('calendar_event_id', calendarEventId)
       .single();
 
-    if (sessionError) {
+    if (sessionError || !session) {
       console.error('Error finding session:', sessionError);
-      throw sessionError;
+      return new Response(
+        JSON.stringify({ error: 'Session not found' }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
     }
 
-    if (!session) {
-      console.log('No session found for calendar event:', calendarEventId);
-      return new Response(JSON.stringify({ message: 'No associated session found' }), {
+    console.log('Found session:', {
+      id: session.id,
+      mentor: session.mentor.full_name,
+      mentee: session.mentee.full_name,
+      status: session.status
+    });
+
+    // Check if this update has already been processed
+    if (session.calendar_event_etag === data.etag) {
+      console.log('Update already processed, skipping');
+      return new Response(JSON.stringify({ message: 'Update already processed' }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log('Found session:', session.id);
-
-    // Update the session status and add cancellation note if applicable
-    const updateData: any = {
+    // Update the session status and metadata
+    const updateData = {
       status: sessionStatus,
       notes: data.status === 'cancelled' ? 'Cancelled via Google Calendar' : `${notificationTitle} via Google Calendar`,
       calendar_event_etag: data.etag,
@@ -114,7 +132,11 @@ serve(async (req: Request) => {
       throw updateError;
     }
 
-    console.log('Updated session status:', sessionStatus);
+    console.log('Updated session:', {
+      id: session.id,
+      status: sessionStatus,
+      etag: data.etag
+    });
 
     // Create notifications for both mentor and mentee
     const notifications = [
@@ -143,7 +165,10 @@ serve(async (req: Request) => {
       throw notificationError;
     }
 
-    console.log('Created notifications for mentor and mentee');
+    console.log('Created notifications for:', notifications.map(n => ({
+      profile_id: n.profile_id,
+      title: n.title
+    })));
 
     // Send email notifications
     try {
