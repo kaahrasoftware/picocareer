@@ -39,9 +39,10 @@ export function useSessionEvents() {
           scheduled_at,
           status,
           meeting_link,
-          mentor:mentor_id(id, full_name, avatar_url),
-          mentee:mentee_id(id, full_name, avatar_url),
-          session_type:session_type_id(type, duration)
+          notes,
+          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name, avatar_url),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name, avatar_url),
+          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration)
         `)
         .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`);
 
@@ -66,7 +67,10 @@ export function useSessionEvents() {
         event_type: 'session',
         status: session.status,
         session_details: {
+          id: session.id,
+          scheduled_at: session.scheduled_at,
           status: session.status,
+          notes: session.notes,
           meeting_link: session.meeting_link,
           mentor: session.mentor,
           mentee: session.mentee,
