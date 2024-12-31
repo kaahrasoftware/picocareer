@@ -58,14 +58,16 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   
   if (!profile) return null;
 
+  const isMentee = profile.user_type === 'mentee';
+
   // Determine primary and secondary display text based on whether the user is a student or professional
-  const primaryText = profileDetails?.career?.title || 
+  const primaryText = !isMentee ? (profileDetails?.career?.title || 
                      profileDetails?.academic_major?.title || 
-                     "No position/major set";
+                     "No position/major set") : null;
                      
-  const secondaryText = profileDetails?.career?.title 
+  const secondaryText = !isMentee ? (profileDetails?.career?.title 
     ? profileDetails?.school?.name || "No company set"
-    : profileDetails?.school?.name || "No school set";
+    : profileDetails?.school?.name || "No school set") : null;
 
   const handleAvatarUpdate = async (blob: Blob) => {
     try {
@@ -127,9 +129,11 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             )
           )}
         </div>
-        <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
+        {primaryText && (
+          <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
+        )}
         <div className="flex flex-col gap-1 mt-2">
-          {profileDetails?.career?.title ? (
+          {!isMentee && profileDetails?.career?.title ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Building2 className="h-4 w-4 flex-shrink-0" />
               <span>{secondaryText}</span>
@@ -146,7 +150,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
               <span>{profile.location}</span>
             </div>
           )}
-          {profileDetails?.academic_major?.title && (
+          {!isMentee && profileDetails?.academic_major?.title && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
               <span>{profileDetails.academic_major.title}</span>
