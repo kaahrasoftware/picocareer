@@ -7,9 +7,10 @@ import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 
 interface SearchBarProps {
   className?: string;
+  placeholder?: string;
 }
 
-export const SearchBar = ({ className = "" }: SearchBarProps) => {
+export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -107,6 +108,7 @@ export const SearchBar = ({ className = "" }: SearchBarProps) => {
           onChange={setSearchQuery}
           onFocus={() => setIsFocused(true)}
           className={className}
+          placeholder={placeholder}
         />
       </div>
       
