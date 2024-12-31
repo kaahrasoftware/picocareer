@@ -189,3 +189,4 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
       )}
     </div>
   );
+};
