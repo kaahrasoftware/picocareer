@@ -5,17 +5,25 @@ import { Pencil } from "lucide-react";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
 import { EditableField } from "@/components/profile/EditableField";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useSession } from "@supabase/auth-helpers-react";
 
 export function ProfileTab() {
   const [isEditing, setIsEditing] = useState(false);
-  const { data: profile } = useUserProfile();
+  const session = useSession();
+  const { data: profile } = useUserProfile(session);
 
   if (!profile) {
     return null;
   }
 
   if (isEditing) {
-    return <ProfileEditForm onCancel={() => setIsEditing(false)} />;
+    return (
+      <ProfileEditForm 
+        profile={profile} 
+        onCancel={() => setIsEditing(false)}
+        onSuccess={() => setIsEditing(false)}
+      />
+    );
   }
 
   return (
@@ -60,7 +68,7 @@ export function ProfileTab() {
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4">Bio</h3>
-            <ProfileBio bio={profile.bio} />
+            <ProfileBio bio={profile.bio} profileId={profile.id} />
           </div>
         </div>
 
