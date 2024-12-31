@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "@/types/calendar";
 import { format } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz";
 
 interface EventSlotProps {
   event: CalendarEvent;
@@ -16,8 +16,8 @@ export function EventSlot({
   onClick,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventSlotProps) {
-  const startTime = utcToZonedTime(new Date(event.start_time), timezone);
-  const endTime = utcToZonedTime(new Date(event.end_time), timezone);
+  const startTime = toZonedTime(new Date(event.start_time), timezone);
+  const endTime = toZonedTime(new Date(event.end_time), timezone);
   
   const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
   const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
@@ -27,16 +27,16 @@ export function EventSlot({
   const height = (duration / 30) * cellHeight;
 
   const getEventColor = () => {
-    switch (event.event_type) {
-      case "session":
-        return "bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/30";
-      case "webinar":
-        return "bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30";
-      case "holiday":
-        return "bg-green-500/20 hover:bg-green-500/30 border-green-500/30";
-      default:
-        return "bg-gray-500/20 hover:bg-gray-500/30 border-gray-500/30";
+    if (event.event_type === "session") {
+      return "bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/30";
     }
+    if (event.event_type === "webinar") {
+      return "bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30";
+    }
+    if (event.event_type === "holiday") {
+      return "bg-green-500/20 hover:bg-green-500/30 border-green-500/30";
+    }
+    return "bg-gray-500/20 hover:bg-gray-500/30 border-gray-500/30";
   };
 
   return (
@@ -47,7 +47,7 @@ export function EventSlot({
       )}
       style={{
         top: `${top}px`,
-        height: `${Math.max(height, cellHeight)}px`, // Ensure minimum height of one cell
+        height: `${Math.max(height, cellHeight)}px`,
       }}
       onClick={() => onClick?.(event)}
     >
