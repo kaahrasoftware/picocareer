@@ -58,7 +58,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
 
       if (error) throw error;
       
-      console.log('Career with relations:', data);
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
@@ -76,7 +75,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         .eq('profile_id', session.user.id)
         .eq('content_id', careerId)
         .eq('content_type', 'career')
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       setIsBookmarked(!!data);
@@ -122,7 +121,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     }
   };
 
-  // Subscribe to real-time updates for the careers table
   useEffect(() => {
     if (!open || !careerId) return;
 
