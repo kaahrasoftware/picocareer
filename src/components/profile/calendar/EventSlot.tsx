@@ -90,7 +90,7 @@ export function EventSlot({
   return (
     <div
       className={cn(
-        "absolute p-2 border rounded-md cursor-pointer transition-colors group",
+        "absolute p-2 border rounded-md cursor-pointer transition-colors group z-20", // Added z-20
         getEventColor()
       )}
       style={{

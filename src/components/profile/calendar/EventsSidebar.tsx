@@ -114,6 +114,19 @@ export function EventsSidebar({
             <div className="relative border-l border-border min-h-[2496px]">
               <TimeGridLines cellHeight={CELL_HEIGHT} />
 
+              {/* Render availability slots first (lower z-index) */}
+              {isMentor && availability.map((slot, index) => (
+                <AvailabilitySlot
+                  key={`${slot.start_date_time}-${index}`}
+                  slot={slot}
+                  date={date}
+                  timezone={timezone}
+                  index={index}
+                  cellHeight={CELL_HEIGHT}
+                />
+              ))}
+
+              {/* Render events last (higher z-index) */}
               {activeEvents.map((event) => (
                 <EventSlot
                   key={event.id}
@@ -123,17 +136,6 @@ export function EventsSidebar({
                   onDelete={onEventDelete}
                   cellHeight={CELL_HEIGHT}
                   position={eventPositions.get(event.id)}
-                />
-              ))}
-
-              {isMentor && availability.map((slot, index) => (
-                <AvailabilitySlot
-                  key={`${slot.start_date_time}-${index}`}
-                  slot={slot}
-                  date={date}
-                  timezone={timezone}
-                  index={index}
-                  cellHeight={CELL_HEIGHT}
                 />
               ))}
             </div>

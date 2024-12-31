@@ -28,11 +28,11 @@ export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: Av
   return (
     <div
       key={`${slot.start_date_time}-${index}`}
-      className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors"
+      className="absolute left-2 right-2 p-3 rounded-lg border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40 transition-colors z-10" // Added z-10
       style={{
         top: `${getSlotPosition(slot.start_date_time) + cellHeight}px`,
         height: `${calculateSlotHeight(slot.start_date_time, slot.end_date_time)}px`,
-        zIndex: 5
+        zIndex: 10
       }}
     >
       <div className="flex flex-col gap-1">
