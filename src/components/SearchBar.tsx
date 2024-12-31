@@ -74,7 +74,7 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
         
         // Track search interaction
         if (debouncedSearch.length >= 3) {
-          addEvent('search', {
+          addEvent("search", {
             query: debouncedSearch,
             results_count: data?.length || 0
           });

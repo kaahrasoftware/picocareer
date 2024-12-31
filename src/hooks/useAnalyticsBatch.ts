@@ -3,11 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from 'react-router-dom';
 import { useAuthSession } from '@/hooks/useAuthSession';
 
+type InteractionType = "page_view" | "click" | "search" | "bookmark" | "content_view";
+
 interface BatchedEvent {
-  interaction_type: "page_view" | "click" | "search" | "bookmark" | "content_view";
+  interaction_type: InteractionType;
   interaction_data?: any;
   element_id?: string;
   element_type?: string;
+  page_path: string;
+  profile_id: string;
   timestamp: number;
 }
 
@@ -35,7 +39,7 @@ export function useAnalyticsBatch() {
           interaction_data: event.interaction_data,
           element_id: event.element_id,
           element_type: event.element_type,
-          page_path: location.pathname,
+          page_path: event.page_path,
           created_at: new Date(event.timestamp).toISOString()
         })));
 
@@ -52,7 +56,7 @@ export function useAnalyticsBatch() {
   }, [location.pathname, session?.user]);
 
   const addEvent = useCallback((
-    eventType: BatchedEvent['interaction_type'],
+    eventType: InteractionType,
     data?: any,
     elementId?: string,
     elementType?: string
@@ -64,13 +68,15 @@ export function useAnalyticsBatch() {
       interaction_data: data,
       element_id: elementId,
       element_type: elementType,
+      page_path: location.pathname,
+      profile_id: session.user.id,
       timestamp: Date.now()
     });
 
     if (batchRef.current.length >= BATCH_SIZE) {
       flushEvents();
     }
-  }, [flushEvents, session?.user]);
+  }, [flushEvents, session?.user, location.pathname]);
 
   useEffect(() => {
     // Set up periodic flush
