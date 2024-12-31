@@ -55,6 +55,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       const now = new Date();
       const completed_sessions = sessions.filter(s => new Date(s.scheduled_at) < now).length;
       const upcoming_sessions = sessions.filter(s => new Date(s.scheduled_at) >= now).length;
+      const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
       
       const total_hours = sessions.reduce((acc, session) => {
         const sessionType = sessionTypesResponse.data.find(st => st.id === session.session_type_id);
@@ -87,6 +88,7 @@ export function MentorTab({ profile }: MentorTabProps) {
           total_sessions,
           completed_sessions,
           upcoming_sessions,
+          cancelled_sessions,
           total_hours,
           session_data
         }
