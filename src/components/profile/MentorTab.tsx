@@ -62,7 +62,9 @@ export function MentorTab({ profile }: MentorTabProps) {
     if (sessionsResponse && sessionTypesResponse) {
       const sessions = sessionsResponse;
       const now = new Date();
-      const completed_sessions = sessions.filter(s => new Date(s.scheduled_at) < now).length;
+      
+      // Count completed sessions based on status
+      const completed_sessions = sessions.filter(s => s.status === 'completed').length;
       const upcoming_sessions = sessions.filter(s => new Date(s.scheduled_at) >= now).length;
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
       
