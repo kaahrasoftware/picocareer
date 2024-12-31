@@ -59,7 +59,7 @@ serve(async (req: Request) => {
         timeZone: 'UTC',
       },
       attendees: [
-        { email: session.mentor.email, responseStatus: 'accepted' }, // Mentor is automatically accepted
+        { email: session.mentor.email, responseStatus: 'accepted' },
         { email: session.mentee.email }
       ],
       conferenceData: {
@@ -68,16 +68,14 @@ serve(async (req: Request) => {
           conferenceSolutionKey: { type: 'hangoutsMeet' },
         }
       },
-      // Allow participants to join without asking
       guestsCanModify: false,
       guestsCanInviteOthers: false,
       guestsCanSeeOtherGuests: true,
       conferenceDataVersion: 1,
-      // Configure meeting for automatic access
       reminders: {
         useDefault: true
       },
-      // Configure open access settings
+      // Configure meeting for automatic access
       conferenceProperties: {
         allowedConferenceSolutionTypes: ['hangoutsMeet'],
         accessLevel: 'open',
@@ -93,7 +91,7 @@ serve(async (req: Request) => {
       }
     };
 
-    console.log('Creating calendar event with Meet link...');
+    console.log('Creating calendar event with Meet link...', JSON.stringify(event, null, 2));
     const calendarEvent = await createCalendarEvent(event, accessToken);
     const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri;
 
