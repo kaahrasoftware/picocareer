@@ -108,12 +108,14 @@ export function SessionActions({
 
       {canCancel && (
         <>
-          <Textarea
-            placeholder="Please provide a reason for cancellation..."
-            value={cancellationNote}
-            onChange={(e) => onCancellationNoteChange(e.target.value)}
-            className="h-24 resize-none bg-muted"
-          />
+          <div className="flex justify-center">
+            <Textarea
+              placeholder="Please provide a reason for cancellation..."
+              value={cancellationNote}
+              onChange={(e) => onCancellationNoteChange(e.target.value)}
+              className="h-24 resize-none bg-muted w-3/4"
+            />
+          </div>
           
           <Button
             variant="destructive"
