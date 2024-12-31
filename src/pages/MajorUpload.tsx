@@ -55,11 +55,9 @@ export default function MajorUpload() {
 
     const formattedData = { ...data };
     
-    // Format array fields
     arrayFields.forEach(field => {
       if (formattedData[field]) {
         if (typeof formattedData[field] === 'string') {
-          // Convert comma-separated string to array and ensure proper PostgreSQL array format
           formattedData[field] = formattedData[field]
             .split(',')
             .map((item: string) => item.trim())
@@ -85,45 +83,29 @@ export default function MajorUpload() {
         throw new Error('Title is required');
       }
 
-      // First check if a major with this title already exists
-      const { data: existingMajor, error: searchError } = await supabase
-        .from('majors')
-        .select('id, title')
-        .eq('title', data.title)
-        .maybeSingle();
-
-      if (searchError) {
-        console.error('Search error:', searchError);
-        throw searchError;
-      }
-
-      if (existingMajor) {
-        toast({
-          title: "Major already exists",
-          description: `A major with the title "${data.title}" already exists.`,
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Format the data before insertion
+      // Format the data before checking/insertion
       const formattedData = formatArrayData(data);
-
-      // Log the formatted data for debugging
       console.log('Formatted data:', formattedData);
 
-      // If no existing major, proceed with insertion without returning data
-      const { error: insertError } = await supabase
-        .from('majors')
-        .insert([{
-          ...formattedData,
-          status: 'Pending'
-        }]);
+      // Use RPC call to check and insert major
+      const { data: result, error } = await supabase
+        .rpc('check_and_insert_major', {
+          major_data: {
+            ...formattedData,
+            status: 'Pending'
+          }
+        });
 
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
+      if (error) {
+        if (error.message.includes('already exists')) {
+          toast({
+            title: "Major already exists",
+            description: `A major with the title "${data.title}" already exists.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
       }
 
       toast({
