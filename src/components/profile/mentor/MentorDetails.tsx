@@ -16,7 +16,7 @@ export function MentorDetails({ profile }: MentorDetailsProps) {
           <li><strong>Company:</strong> {profile.company_name}</li>
           <li><strong>School:</strong> {profile.school_name}</li>
           <li><strong>Academic Major:</strong> {profile.academic_major}</li>
-          <li><strong>Career Title:</strong> {profile.career_title}</li>
+          <li><strong>Career Title:</strong> {profile.career?.title}</li>
         </ul>
       </div>
     </div>
