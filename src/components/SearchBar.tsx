@@ -5,9 +5,12 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 
-interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+interface SearchBarProps {
+  className?: string;
+  placeholder?: string;
+}
 
-export const SearchBar = ({ className, ...props }: SearchBarProps) => {
+export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -104,7 +107,8 @@ export const SearchBar = ({ className, ...props }: SearchBarProps) => {
           value={searchQuery}
           onChange={setSearchQuery}
           onFocus={() => setIsFocused(true)}
-          {...props}
+          className={className}
+          placeholder={placeholder}
         />
       </div>
       
