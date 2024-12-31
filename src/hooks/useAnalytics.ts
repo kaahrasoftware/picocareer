@@ -3,10 +3,12 @@ import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAnalyticsBatch } from './useAnalyticsBatch';
 import { useDebounce } from './useDebounce';
 
+type InteractionType = 'page_view' | 'click' | 'search' | 'bookmark' | 'content_view';
+
 interface InteractionData {
-  elementId: string;
-  elementType: string;
-  interactionType: 'click' | 'search' | 'bookmark' | 'content_view' | 'page_view';
+  elementId?: string;
+  elementType?: string;
+  interactionType: InteractionType;
   pagePath: string;
   interactionData?: any;
 }
@@ -21,7 +23,10 @@ export function useAnalytics() {
 
       addEvent(data.interactionType, {
         profile_id: session.user.id,
-        ...data,
+        element_id: data.elementId,
+        element_type: data.elementType,
+        page_path: data.pagePath,
+        interaction_data: data.interactionData,
       });
     },
     [session?.user?.id, addEvent]
@@ -34,7 +39,9 @@ export function useAnalytics() {
       addEvent('page_view', {
         profile_id: session.user.id,
         page_path: pagePath,
-        timestamp: new Date().toISOString(),
+        interaction_data: {
+          timestamp: new Date().toISOString(),
+        },
       });
     },
     [session?.user?.id, addEvent]
