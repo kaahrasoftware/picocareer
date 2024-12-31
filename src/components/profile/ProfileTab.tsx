@@ -4,48 +4,47 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
 import { EditableField } from "@/components/profile/EditableField";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useSession } from "@supabase/auth-helpers-react";
+import type { Profile } from "@/types/database/profiles";
 
-export function ProfileTab() {
+interface ProfileTabProps {
+  profile: Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career_title?: string | null;
+  };
+}
+
+export function ProfileTab({ profile }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const session = useSession();
-  const { data: profile } = useUserProfile(session);
 
-  if (!profile) {
-    return null;
-  }
-
-  if (isEditing) {
-    return (
-      <ProfileEditForm 
-        profile={profile} 
-        onCancel={() => setIsEditing(false)}
-        onSuccess={() => setIsEditing(false)}
-      />
-    );
-  }
+  if (!profile) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button
+    <div className="space-y-6 max-w-3xl mx-auto">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-left">Profile Details</h2>
+        <Button 
+          onClick={() => setIsEditing(!isEditing)}
           variant="outline"
-          size="sm"
           className="gap-2"
-          onClick={() => setIsEditing(true)}
         >
           <Pencil className="h-4 w-4" />
-          Edit Profile
+          {isEditing ? "Cancel Editing" : "Edit Profile"}
         </Button>
       </div>
-
-      <div className="grid gap-6">
-        {/* Personal Information */}
-        <div className="space-y-4">
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-            <div className="p-6 space-y-4">
-              <h3 className="text-lg font-semibold">Personal Information</h3>
+      
+      {isEditing ? (
+        <ProfileEditForm 
+          profile={profile} 
+          onCancel={() => setIsEditing(false)}
+          onSuccess={() => setIsEditing(false)}
+        />
+      ) : (
+        <>
+          <div className="bg-muted rounded-lg p-6 shadow-sm space-y-4">
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Personal Information</h4>
               <EditableField
                 label="First Name"
                 value={profile.first_name}
@@ -60,32 +59,35 @@ export function ProfileTab() {
                 profileId={profile.id}
                 placeholder="Add your last name"
               />
+              <EditableField
+                label="Location"
+                value={profile.location}
+                fieldName="location"
+                profileId={profile.id}
+                placeholder="Add your location"
+              />
             </div>
           </div>
-        </div>
 
-        {/* Bio Section */}
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Bio</h3>
-            <ProfileBio bio={profile.bio} profileId={profile.id} />
-          </div>
-        </div>
+          <ProfileBio 
+            bio={profile.bio} 
+            profileId={profile.id}
+          />
 
-        {/* School Information */}
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">School Information</h3>
-            <div className="text-sm text-muted-foreground">
-              {profile.school_id ? (
-                "School information available"
-              ) : (
-                "No school information added"
-              )}
+          <div className="bg-muted rounded-lg p-6 shadow-sm">
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Education</h4>
+              <EditableField
+                label="School"
+                value={profile.school_name || ''}
+                fieldName="school_id"
+                profileId={profile.id}
+                placeholder="Select your school"
+              />
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

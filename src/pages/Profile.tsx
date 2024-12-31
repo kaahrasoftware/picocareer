@@ -8,6 +8,7 @@ import { SettingsTab } from "@/components/profile/SettingsTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
 import { MentorTab } from "@/components/profile/MentorTab";
+import type { Profile } from "@/types/database/profiles";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -99,6 +100,7 @@ export default function ProfilePage() {
     retry: false
   });
 
+  // If not authorized and trying to access restricted tabs, switch to profile
   useEffect(() => {
     if ((!isAdmin && activeTab === 'dashboard') || (!canAccessMentorTab && activeTab === 'mentor')) {
       setActiveTab('profile');
@@ -128,7 +130,7 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="profile">
-            <ProfileTab />
+            {profile && <ProfileTab profile={profile} />}
           </TabsContent>
 
           {isAdmin && (
