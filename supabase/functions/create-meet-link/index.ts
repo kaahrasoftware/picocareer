@@ -77,7 +77,7 @@ serve(async (req: Request) => {
       // Set join permissions to allow automatic joining
       hangoutLink: {
         accessLevel: 'reader',
-        allowExternalGuests: false,
+        allowExternalGuests: true,
         defaultToJoin: true
       }
     };
