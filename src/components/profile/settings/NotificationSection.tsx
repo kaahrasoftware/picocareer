@@ -33,9 +33,7 @@ export function NotificationSection() {
         </div>
         <Switch
           checked={emailNotifications}
-          onCheckedChange={(checked) => {
-            handleNotificationChange('email_notifications', checked);
-          }}
+          onCheckedChange={(checked) => handleNotificationChange('email_notifications', checked)}
         />
       </div>
       <div className="flex items-center justify-between">
@@ -47,9 +45,7 @@ export function NotificationSection() {
         </div>
         <Switch
           checked={pushNotifications}
-          onCheckedChange={(checked) => {
-            handleNotificationChange('push_notifications', checked);
-          }}
+          onCheckedChange={(checked) => handleNotificationChange('push_notifications', checked)}
         />
       </div>
     </div>
