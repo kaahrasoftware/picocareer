@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CircularProgress } from "@/components/ui/circular-progress";
 import { CheckCircle, AlertCircle, XCircle, Bookmark } from "lucide-react";
 
 interface SessionStats {
@@ -110,7 +109,7 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
             <p className="text-sm font-medium text-muted-foreground">Profile Bookmarks</p>
             <Bookmark className="w-5 h-5 text-blue-500" />
           </div>
-          <p className="text-2xl font-bold">{stats.bookmark_count || 0}</p>
+          <p className="text-2xl font-bold">{stats.bookmark_count}</p>
         </div>
       </Card>
 
