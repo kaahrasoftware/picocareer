@@ -66,7 +66,6 @@ serve(async (req: Request) => {
         createRequest: {
           requestId: sessionId,
           conferenceSolutionKey: { type: 'hangoutsMeet' },
-          status: { statusCode: 'success' }
         }
       },
       // Allow participants to join without asking
@@ -74,12 +73,21 @@ serve(async (req: Request) => {
       guestsCanInviteOthers: false,
       guestsCanSeeOtherGuests: true,
       conferenceDataVersion: 1,
-      // Set join permissions to allow automatic joining
-      hangoutLink: {
-        accessLevel: 'reader',
-        allowExternalGuests: true,
-        defaultToJoin: true
-      }
+      // Configure meeting for automatic access
+      reminders: {
+        useDefault: true
+      },
+      // Set join permissions
+      entryPoints: [{
+        entryPointType: 'video',
+        uri: '',
+        label: 'Meet',
+        pin: '',
+        accessCode: '',
+        meetingCode: '',
+        passcode: '',
+        password: ''
+      }]
     };
 
     console.log('Creating calendar event with Meet link...');
