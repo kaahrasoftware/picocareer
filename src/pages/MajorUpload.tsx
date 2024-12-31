@@ -77,7 +77,8 @@ export default function MajorUpload() {
         description: "Your major information has been submitted and will be reviewed by our team. You will be notified once it's approved.",
       });
 
-      navigate("/majors");
+      // Reset the form by forcing a re-render of GenericUploadForm with a new key
+      setFormKey(prev => prev + 1);
     } catch (error: any) {
       console.error('Error uploading major:', error);
       toast({
@@ -89,6 +90,9 @@ export default function MajorUpload() {
       setIsSubmitting(false);
     }
   };
+
+  // Add a state to force form reset
+  const [formKey, setFormKey] = useState(0);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -104,6 +108,7 @@ export default function MajorUpload() {
           </ul>
         </div>
         <GenericUploadForm 
+          key={formKey}
           fields={majorFormFields}
           onSubmit={handleSubmit}
           buttonText="Submit Major for Review"
