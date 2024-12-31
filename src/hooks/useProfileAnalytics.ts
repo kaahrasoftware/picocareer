@@ -1,11 +1,11 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function useProfileAnalytics() {
   const location = useLocation();
-  const { trackPageView, trackInteraction, updatePageViewExit } = useAnalytics();
-  const startTime = Date.now();
+  const { trackPageView, trackInteraction } = useAnalytics();
+  const startTime = useRef(Date.now());
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -30,7 +30,7 @@ export function useProfileAnalytics() {
 
     // Track page exit
     const cleanup = () => {
-      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+      const timeSpent = Math.floor((Date.now() - startTime.current) / 1000);
       trackInteraction({
         elementId: 'profile-page',
         elementType: 'page',
@@ -38,7 +38,6 @@ export function useProfileAnalytics() {
         pagePath: currentPath,
         interactionData: { timeSpent }
       });
-      updatePageViewExit(currentPath);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -49,7 +48,7 @@ export function useProfileAnalytics() {
       window.removeEventListener('beforeunload', cleanup);
       cleanup();
     };
-  }, [location.pathname, trackPageView, trackInteraction, updatePageViewExit, startTime]);
+  }, [location.pathname, trackPageView, trackInteraction]);
 
   const handleTabChange = useCallback((value: string) => {
     trackInteraction({
@@ -71,19 +70,8 @@ export function useProfileAnalytics() {
     });
   }, [trackInteraction, location.pathname]);
 
-  const handleBookmark = useCallback((contentId: string, contentType: string) => {
-    trackInteraction({
-      elementId: `bookmark-${contentId}`,
-      elementType: 'bookmark',
-      interactionType: 'bookmark',
-      pagePath: location.pathname,
-      interactionData: { contentType }
-    });
-  }, [trackInteraction, location.pathname]);
-
   return {
     handleTabChange,
     handleSearch,
-    handleBookmark,
   };
 }
