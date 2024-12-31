@@ -12,7 +12,7 @@ export default function Profile() {
 
   return (
     <div className="container py-6 space-y-6">
-      <ProfileHeader profile={profile} />
+      <ProfileHeader profile={profile} session={session} />
       <div className="grid w-full grid-cols-5 mb-6">
         <ProfileTabs 
           profile={profile} 

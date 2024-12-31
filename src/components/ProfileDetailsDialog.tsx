@@ -58,6 +58,15 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     retry: false
   });
 
+  const { data: session } = useQuery({
+    queryKey: ['auth-session'],
+    queryFn: async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return session;
+    },
+  });
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
@@ -146,7 +155,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         <DialogContent className="max-w-2xl h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
           <DialogHeader className="p-6 pb-0">
             <div className="relative">
-              <ProfileHeader profile={profile} />
+              <ProfileHeader profile={profile} session={session} />
               {isMentor && (
                 isOwnProfile ? (
                   <Button 
