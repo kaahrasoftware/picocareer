@@ -16,14 +16,20 @@ export function useNotifications(session: Session | null) {
       
       try {
         console.log('Fetching notifications for user:', session.user.id);
-        const { data, error } = await supabase
+        const { data, error, status } = await supabase
           .from('notifications')
           .select('*')
           .eq('profile_id', session.user.id)
           .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Supabase query error:', error);
+          console.error('Supabase query error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            status
+          });
           throw error;
         }
 
