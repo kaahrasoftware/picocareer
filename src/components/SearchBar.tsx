@@ -4,7 +4,6 @@ import { MentorSearchResults } from "./search/MentorSearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
-import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface SearchBarProps {
   className?: string;
@@ -18,11 +17,6 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { trackSearch } = useSearchAnalytics();
-  const { session } = useAuthSession();
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -77,10 +71,8 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
         console.log('Search results:', data);
         setSearchResults(data || []);
         
-        // Track search analytics only if user is authenticated
-        if (trackSearch && debouncedSearch.length >= 3 && session?.user) {
-          await trackSearch(debouncedSearch, data?.length || 0);
-        }
+        // Track search analytics
+        await trackSearch(debouncedSearch, data?.length || 0);
       } catch (error) {
         console.error('Error in search:', error);
       } finally {
@@ -89,7 +81,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     };
 
     fetchResults();
-  }, [debouncedSearch, trackSearch, session]);
+  }, [debouncedSearch, trackSearch]);
 
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -113,7 +105,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
         <SearchInput
           value={searchQuery}
-          onChange={handleSearchChange}
+          onChange={setSearchQuery}
           onFocus={() => setIsFocused(true)}
           className={className}
           placeholder={placeholder}
