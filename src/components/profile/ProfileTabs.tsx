@@ -14,15 +14,19 @@ interface ProfileTabsProps {
 }
 
 export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps) {
+  const isAdmin = profile?.user_type === 'admin';
+
   return (
     <Tabs 
       defaultValue="profile" 
       className="col-span-5"
       onValueChange={onTabChange}
     >
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full" style={{ 
+        gridTemplateColumns: `repeat(${isAdmin ? 6 : 5}, minmax(0, 1fr))`
+      }}>
         <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
         <TabsTrigger value="calendar">Calendar</TabsTrigger>
         {isMentor && <TabsTrigger value="mentor">Mentor</TabsTrigger>}
         <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
@@ -33,9 +37,11 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <ProfileTab profile={profile} />
       </TabsContent>
 
-      <TabsContent value="dashboard" className="space-y-6">
-        <DashboardTab />
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="dashboard" className="space-y-6">
+          <DashboardTab />
+        </TabsContent>
+      )}
 
       <TabsContent value="calendar" className="space-y-6">
         <CalendarTab />
