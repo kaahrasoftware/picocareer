@@ -56,7 +56,7 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
   const cancellationStatus = getCancellationStatus(cancellationScore);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="p-4">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
@@ -71,13 +71,6 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Completed</p>
           <p className="text-2xl font-bold">{stats.completed_sessions}</p>
-        </div>
-      </Card>
-
-      <Card className="p-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Upcoming</p>
-          <p className="text-2xl font-bold">{stats.upcoming_sessions}</p>
         </div>
       </Card>
 
