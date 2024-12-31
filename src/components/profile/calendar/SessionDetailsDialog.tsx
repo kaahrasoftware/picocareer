@@ -12,11 +12,12 @@ import { SessionActions } from "./dialog/SessionActions";
 import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
   onClose: () => void;
-  onCancel: () => void;
+  onCancel: () => Promise<void>;
   cancellationNote: string;
   onCancellationNoteChange: (note: string) => void;
 }
@@ -30,11 +31,13 @@ export function SessionDetailsDialog({
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
+  const { data: userSettings } = useUserSettings();
 
   if (!session?.session_details) return null;
 
   const isMentor = authSession?.user?.id === session.session_details.mentor.id;
   const feedbackType = isMentor ? 'mentor_feedback' : 'mentee_feedback';
+  const userTimezone = userSettings?.timezone || 'UTC';
 
   return (
     <>
@@ -44,7 +47,7 @@ export function SessionDetailsDialog({
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <SessionInfo session={session} />
+          <SessionInfo session={session} userTimezone={userTimezone} />
 
           {session.session_details.status === 'scheduled' && (
             <>
