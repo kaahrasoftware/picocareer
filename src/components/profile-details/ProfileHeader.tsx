@@ -10,25 +10,22 @@ interface ProfileHeaderProps {
     id: string;
     avatar_url: string | null;
     full_name: string | null;
-    career: { title: string; id: string } | null;
-    company_name?: string | null;
-    school_name?: string | null;
-    academic_major?: string | null;
+    position?: string | null;
+    company_id?: string | null;
+    school_id?: string | null;
+    academic_major_id?: string | null;
     location?: string | null;
     top_mentor?: boolean | null;
     user_type?: string | null;
-    position?: string | null;
-    academic_major_id?: string | null;
-    school_id?: string | null;
-  };
+  } | null;
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const { toast } = useToast();
 
-  // Fetch additional profile details
+  // Only fetch additional details if we have a profile
   const { data: profileDetails } = useQuery({
-    queryKey: ['profileDetails', profile.id],
+    queryKey: ['profileDetails', profile?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -38,7 +35,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           school:schools!profiles_school_id_fkey(name),
           academic_major:majors!profiles_academic_major_id_fkey(title)
         `)
-        .eq('id', profile.id)
+        .eq('id', profile?.id)
         .single();
 
       if (error) {
@@ -53,10 +50,10 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       return data;
     },
-    enabled: !!profile.id,
+    enabled: !!profile?.id,
   });
   
-  if (!profile) return null;
+  if (!profile || !profileDetails) return null;
 
   const isMentee = profile.user_type === 'mentee';
 
