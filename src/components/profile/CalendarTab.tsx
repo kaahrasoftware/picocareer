@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { CalendarEvent } from "@/types/calendar";
 import { CalendarHeader } from "./calendar/CalendarHeader";
@@ -72,7 +71,7 @@ export function CalendarTab() {
   });
 
   // Get calendar events using our custom hook
-  const { data: events = [], isLoading: isEventsLoading } = useSessionEvents(selectedDate || new Date());
+  const { data: events = [], isLoading: isEventsLoading } = useSessionEvents();
 
   const handleCancelSession = async () => {
     if (!selectedSession?.session_details) return;

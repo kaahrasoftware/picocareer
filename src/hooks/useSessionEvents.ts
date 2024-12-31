@@ -31,7 +31,7 @@ export function useSessionEvents() {
         });
       }
 
-      // Fetch mentor sessions
+      // Fetch mentor sessions with proper column specification
       const { data: sessions, error } = await supabase
         .from("mentor_sessions")
         .select(`
@@ -39,20 +39,9 @@ export function useSessionEvents() {
           scheduled_at,
           status,
           meeting_link,
-          mentor:mentor_id(
-            id,
-            full_name,
-            avatar_url
-          ),
-          mentee:mentee_id(
-            id,
-            full_name,
-            avatar_url
-          ),
-          session_type:session_type_id(
-            type,
-            duration
-          )
+          mentor:mentor_id(id, full_name, avatar_url),
+          mentee:mentee_id(id, full_name, avatar_url),
+          session_type:session_type_id(type, duration)
         `)
         .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`);
 
@@ -68,11 +57,14 @@ export function useSessionEvents() {
             ? session.mentee.full_name
             : session.mentor.full_name
         }`,
-        start: new Date(session.scheduled_at),
-        end: new Date(
+        description: `Mentoring session`,
+        start_time: session.scheduled_at,
+        end_time: new Date(
           new Date(session.scheduled_at).getTime() +
             (session.session_type?.duration || 60) * 60 * 1000
-        ),
+        ).toISOString(),
+        event_type: 'session',
+        status: session.status,
         session_details: {
           status: session.status,
           meeting_link: session.meeting_link,
