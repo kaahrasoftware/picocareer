@@ -4,6 +4,7 @@ import { ProfileEducation } from "@/components/profile-details/ProfileEducation"
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
+import { EditableField } from "@/components/profile/EditableField";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabProps {
