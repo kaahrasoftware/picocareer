@@ -1,78 +1,65 @@
-import React from 'react';
-import { formatInTimeZone } from 'date-fns-tz';
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "@/types/calendar";
+import { format } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 
 interface EventSlotProps {
   event: CalendarEvent;
-  timezone: string;
-  onEventClick?: (event: CalendarEvent) => void;
   cellHeight: number;
+  onClick?: (event: CalendarEvent) => void;
+  timezone?: string;
 }
 
-export function EventSlot({ event, timezone, onEventClick, cellHeight }: EventSlotProps) {
-  const getEventColor = (type: CalendarEvent['event_type'], status?: string, sessionType?: string) => {
-    if (type === 'session') {
-      if (status === 'cancelled') {
-        return 'border-red-500/20 bg-red-500/5 opacity-75 cursor-not-allowed hover:bg-red-500/5';
-      }
-      switch(sessionType?.toLowerCase()) {
-        case 'mentorship':
-          return 'border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 hover:border-purple-500/40';
-        case 'career_guidance':
-          return 'border-green-500/30 bg-green-500/20 hover:bg-green-500/30 hover:border-green-500/40';
-        case 'technical':
-          return 'border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/30 hover:border-blue-500/40';
-        case 'interview_prep':
-          return 'border-orange-500/30 bg-orange-500/20 hover:bg-orange-500/30 hover:border-orange-500/40';
-        case 'resume_review':
-          return 'border-pink-500/30 bg-pink-500/20 hover:bg-pink-500/30 hover:border-pink-500/40';
-        default:
-          return 'border-violet-500/30 bg-violet-500/20 hover:bg-violet-500/30 hover:border-violet-500/40';
-      }
+export function EventSlot({ 
+  event, 
+  cellHeight, 
+  onClick,
+  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
+}: EventSlotProps) {
+  const startTime = utcToZonedTime(new Date(event.start_time), timezone);
+  const endTime = utcToZonedTime(new Date(event.end_time), timezone);
+  
+  const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+  const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+  const duration = endMinutes - startMinutes;
+  
+  const top = (startMinutes / 30) * cellHeight;
+  const height = (duration / 30) * cellHeight;
+
+  const getEventColor = () => {
+    switch (event.event_type) {
+      case "session":
+        return "bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/30";
+      case "webinar":
+        return "bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30";
+      case "holiday":
+        return "bg-green-500/20 hover:bg-green-500/30 border-green-500/30";
+      default:
+        return "bg-gray-500/20 hover:bg-gray-500/30 border-gray-500/30";
     }
-    return 'border-gray-500/30 bg-gray-500/20 hover:bg-gray-500/30 hover:border-gray-500/40';
-  };
-
-  const getEventPosition = () => {
-    const startDate = new Date(event.start_time);
-    const hours = startDate.getHours();
-    const minutes = startDate.getMinutes();
-    return hours * cellHeight * 2 + (minutes / 30) * cellHeight;
-  };
-
-  const calculateEventHeight = () => {
-    const start = new Date(event.start_time);
-    const end = new Date(event.end_time);
-    const diffInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-    return (diffInMinutes / 30) * cellHeight;
   };
 
   return (
     <div
       className={cn(
-        "absolute left-2 right-2 px-2 py-1 rounded-lg transition-all duration-200",
-        "shadow-sm inline-flex items-center",
-        event.status !== 'cancelled' && "hover:shadow-md hover:translate-y-[-1px]",
-        getEventColor(
-          event.event_type, 
-          event.status,
-          event.session_details?.session_type?.type
-        )
+        "absolute left-0 right-0 p-2 border rounded-md cursor-pointer transition-colors",
+        getEventColor()
       )}
       style={{
-        top: `${getEventPosition()}px`,
-        height: `${calculateEventHeight()}px`,
-        zIndex: 10
+        top: `${top}px`,
+        height: `${Math.max(height, cellHeight)}px`, // Ensure minimum height of one cell
       }}
-      onClick={() => event.status !== 'cancelled' && onEventClick?.(event)}
+      onClick={() => onClick?.(event)}
     >
-      <div className="flex items-center justify-between min-w-0 w-full">
-        <h4 className="font-medium text-sm leading-tight truncate">
-          {event.title}
-        </h4>
-        {event.status === 'cancelled' && (
-          <span className="text-red-500 text-xs font-medium ml-1 whitespace-nowrap">(Cancelled)</span>
+      <div className="flex flex-col h-full overflow-hidden">
+        <p className="text-xs font-medium truncate">{event.title}</p>
+        <p className="text-xs text-muted-foreground">
+          {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
+        </p>
+        {height >= cellHeight * 2 && event.description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+            {event.description}
+          </p>
         )}
       </div>
     </div>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { formatInTimeZone } from 'date-fns-tz';
+import { format } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 
 interface TimeGridProps {
   timezone: string;
@@ -7,25 +7,27 @@ interface TimeGridProps {
 }
 
 export function TimeGrid({ timezone, cellHeight }: TimeGridProps) {
-  // Generate time slots from 00:00 to 23:30 in 30-minute increments
-  const timeSlots = Array.from({ length: 48 }, (_, i) => {
-    const date = new Date();
-    date.setHours(Math.floor(i / 2), (i % 2) * 30, 0, 0);
-    return formatInTimeZone(date, timezone, 'h:mm a');
-  });
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const now = new Date();
+  const zonedDate = utcToZonedTime(now, timezone);
 
   return (
-    <div className="relative" style={{ paddingTop: `${cellHeight / 2}px` }}>
-      {timeSlots.map((time, index) => (
+    <div className="relative">
+      {hours.map((hour) => (
         <div
-          key={time}
-          className="text-sm text-muted-foreground"
-          style={{ 
-            height: `${cellHeight}px`,
-            lineHeight: `${cellHeight}px`
-          }}
+          key={hour}
+          className="flex items-start justify-end pr-2 text-xs text-muted-foreground"
+          style={{ height: `${cellHeight * 2}px` }} // Multiply by 2 for hour blocks
         >
-          {time}
+          <span className="sticky top-0">
+            {format(
+              utcToZonedTime(
+                new Date(zonedDate.setHours(hour, 0, 0, 0)),
+                timezone
+              ),
+              "h aa"
+            )}
+          </span>
         </div>
       ))}
     </div>
