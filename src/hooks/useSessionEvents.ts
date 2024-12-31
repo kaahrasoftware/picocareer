@@ -7,28 +7,13 @@ import type { CalendarEvent } from "@/types/calendar";
 export function useSessionEvents() {
   const { session } = useAuthSession();
   const { toast } = useToast();
+  const currentUserId = session?.user?.id;
 
   return useQuery({
     queryKey: ["session-events"],
     queryFn: async () => {
-      if (!session?.user) {
+      if (!currentUserId) {
         throw new Error("No user session found");
-      }
-
-      // First check if user has timezone set
-      const { data: userSettings } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', session.user.id)
-        .eq('setting_type', 'timezone')
-        .single();
-
-      if (!userSettings?.setting_value) {
-        toast({
-          title: "Timezone not set",
-          description: "Please set your timezone in settings to ensure accurate scheduling.",
-          variant: "destructive",
-        });
       }
 
       // Fetch mentor sessions with proper column specification
@@ -40,13 +25,29 @@ export function useSessionEvents() {
           status,
           meeting_link,
           notes,
-          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name, avatar_url),
-          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name, avatar_url),
-          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration)
+          mentor:profiles!mentor_sessions_mentor_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(
+            type,
+            duration
+          )
         `)
-        .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`);
+        .or(`mentor_id.eq.${currentUserId},mentee_id.eq.${currentUserId}`);
 
       if (error) {
+        toast({
+          title: "Error fetching sessions",
+          description: error.message,
+          variant: "destructive",
+        });
         throw error;
       }
 
@@ -54,7 +55,7 @@ export function useSessionEvents() {
       const events: CalendarEvent[] = sessions.map((session) => ({
         id: session.id,
         title: `Session with ${
-          session.mentor.id === session.user.id
+          session.mentor.id === currentUserId
             ? session.mentee.full_name
             : session.mentor.full_name
         }`,
