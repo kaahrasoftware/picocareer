@@ -47,7 +47,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <CalendarTab />
       </TabsContent>
 
-      {isMentor && (
+      {isMentor && profile && (
         <TabsContent value="mentor" className="space-y-6">
           <MentorTab profile={profile} />
         </TabsContent>

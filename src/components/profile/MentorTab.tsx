@@ -7,18 +7,22 @@ import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import type { Profile } from "@/types/database/profiles";
 
 interface MentorTabProps {
-  profileId: string;
+  profile: Profile;
 }
 
-export function MentorTab({ profileId }: MentorTabProps) {
+export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
+  const profileId = profile?.id;
 
   // Fetch mentor sessions
   const { data: sessionsResponse } = useQuery({
     queryKey: ["mentor-sessions", profileId],
     queryFn: async () => {
+      if (!profileId) return null;
+      
       const { data, error } = await supabase
         .from("mentor_sessions")
         .select(`
@@ -33,12 +37,15 @@ export function MentorTab({ profileId }: MentorTabProps) {
       if (error) throw error;
       return data;
     },
+    enabled: !!profileId
   });
 
   // Fetch session types
   const { data: sessionTypesResponse } = useQuery({
     queryKey: ["session-types", profileId],
     queryFn: async () => {
+      if (!profileId) return null;
+
       const { data, error } = await supabase
         .from("mentor_session_types")
         .select("*")
@@ -47,6 +54,7 @@ export function MentorTab({ profileId }: MentorTabProps) {
       if (error) throw error;
       return data;
     },
+    enabled: !!profileId
   });
 
   // Calculate stats
@@ -62,7 +70,7 @@ export function MentorTab({ profileId }: MentorTabProps) {
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
       const total_hours = sessions.reduce((acc, session) => {
-        const sessionType = sessionTypesResponse.data.find(st => st.id === session.session_type_id);
+        const sessionType = sessionTypesResponse.find(st => st.id === session.session_type_id);
         return acc + (sessionType?.duration || 60) / 60;
       }, 0);
 
@@ -107,6 +115,8 @@ export function MentorTab({ profileId }: MentorTabProps) {
   // Check timezone setting
   useEffect(() => {
     const checkTimezone = async () => {
+      if (!profileId) return;
+
       const { data, error } = await supabase
         .from('user_settings')
         .select('setting_value')
@@ -128,6 +138,8 @@ export function MentorTab({ profileId }: MentorTabProps) {
     checkTimezone();
   }, [profileId, toast]);
 
+  if (!profileId) return null;
+
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsList>
@@ -142,15 +154,26 @@ export function MentorTab({ profileId }: MentorTabProps) {
       </TabsContent>
 
       <TabsContent value="details">
-        <MentorDetails profileId={profileId} />
+        <MentorDetails profile={profile} />
       </TabsContent>
 
       <TabsContent value="session-types">
-        <SessionTypeManager profileId={profileId} />
+        <SessionTypeManager 
+          profileId={profileId} 
+          sessionTypes={sessionTypesResponse || []}
+          onUpdate={() => {
+            // Refetch session types
+          }}
+        />
       </TabsContent>
 
       <TabsContent value="availability">
-        <AvailabilityManager profileId={profileId} />
+        <AvailabilityManager 
+          profileId={profileId}
+          onUpdate={() => {
+            // Refetch availability
+          }}
+        />
       </TabsContent>
     </Tabs>
   );
