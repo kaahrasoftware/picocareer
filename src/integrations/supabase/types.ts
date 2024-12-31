@@ -1246,7 +1246,13 @@ export type Database = {
         | "College Application Last Review"
         | "Application Essays Review"
         | "I need someone to practice my presentation with"
-      setting_type: "timezone" | "notifications" | "language" | "theme"
+      setting_type:
+        | "timezone"
+        | "notifications"
+        | "language"
+        | "theme"
+        | "notification_preferences"
+        | "language_preference"
       states:
         | "Alabama - AL"
         | "Alaska - AK"

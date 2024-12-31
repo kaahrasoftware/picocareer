@@ -3,15 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 // This must match exactly what's in the database enum
-export type SettingType = "timezone" | "notifications" | "language" | "theme";
+export type SettingType = 
+  | "timezone" 
+  | "notifications" 
+  | "language" 
+  | "theme" 
+  | "notification_preferences"
+  | "language_preference";
 
-// Helper type for UI-specific settings that map to our database settings
+// Helper type for UI-specific settings
 export type UISettingType = {
   email_notifications: boolean;
   push_notifications: boolean;
   compact_mode: boolean;
   theme: string;
   timezone: string;
+  notification_preferences: string;
+  language_preference: string;
 };
 
 interface UserSetting {
@@ -87,38 +95,26 @@ export function useUserSettings(profileId: string | undefined) {
   const getSetting = (type: keyof UISettingType): string | null => {
     if (!settings) return null;
 
-    switch (type) {
-      case 'email_notifications':
-      case 'push_notifications':
-        const notificationSetting = settings.find(s => s.setting_type === 'notifications');
-        if (!notificationSetting) return 'false';
-        try {
-          const notifications = JSON.parse(notificationSetting.setting_value);
-          return notifications[type]?.toString() || 'false';
-        } catch {
-          return 'false';
-        }
-      
-      case 'compact_mode':
-      case 'theme':
-        const themeSetting = settings.find(s => s.setting_type === 'theme');
-        if (!themeSetting) return type === 'theme' ? 'light' : 'false';
-        try {
-          const themeSettings = JSON.parse(themeSetting.setting_value);
-          return type === 'theme' 
-            ? themeSettings.theme || 'light'
-            : themeSettings.compact_mode?.toString() || 'false';
-        } catch {
-          return type === 'theme' ? 'light' : 'false';
-        }
-      
-      case 'timezone':
-        const timezone = settings.find(s => s.setting_type === 'timezone');
-        return timezone?.setting_value || null;
-      
-      default:
-        return null;
+    const setting = settings.find(s => s.setting_type === type);
+    if (!setting) {
+      // Return defaults based on setting type
+      switch (type) {
+        case 'notification_preferences':
+          return JSON.stringify({
+            email_notifications: true,
+            push_notifications: true
+          });
+        case 'language_preference':
+          return 'en';
+        case 'theme':
+          return 'light';
+        case 'timezone':
+          return null;
+        default:
+          return null;
+      }
     }
+    return setting.setting_value;
   };
 
   return {
