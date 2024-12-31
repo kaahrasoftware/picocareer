@@ -33,21 +33,23 @@ export function HeaderBadges({
 
   if (showSalaryBadgeOnly && salaryRange) {
     return (
-      <Badge 
-        variant="outline"
-        className={`${badgeStyles.outline} pr-8 relative`}
-      >
-        <DollarSign className="h-4 w-4" />
-        {salaryRange}
+      <div className="flex items-center gap-2">
+        <Badge 
+          variant="outline"
+          className={badgeStyles.outline}
+        >
+          <DollarSign className="h-4 w-4" />
+          {salaryRange}
+        </Badge>
         {onBookmarkToggle && (
           <Bookmark 
-            className={`h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform ${
+            className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
               isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
             }`}
             onClick={onBookmarkToggle}
           />
         )}
-      </Badge>
+      </div>
     );
   }
 
@@ -64,18 +66,10 @@ export function HeaderBadges({
       {salaryRange && (
         <Badge 
           variant="outline"
-          className={`${badgeStyles.outline} pr-8 relative`}
+          className={badgeStyles.outline}
         >
           <DollarSign className="h-4 w-4" />
           {salaryRange}
-          {onBookmarkToggle && (
-            <Bookmark 
-              className={`h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform ${
-                isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
-              }`}
-              onClick={onBookmarkToggle}
-            />
-          )}
         </Badge>
       )}
     </div>
