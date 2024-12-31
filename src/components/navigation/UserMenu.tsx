@@ -1,46 +1,58 @@
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
-interface Profile {
-  avatar_url: string | null;
-  full_name: string | null;
-}
-
-interface UserMenuProps {
-  session: any;
-  profile: Profile | null;
-  onSignOut: () => void;
-}
-
-export function UserMenu({ session, profile, onSignOut }: UserMenuProps) {
+export function UserMenu() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { profile } = useUserProfile();
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-12 w-12 rounded-full p-0 border-0 hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-          <div className="absolute inset-[3px] rounded-full bg-background" />
-          <Avatar className="h-10 w-10 relative">
-            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || session.user.email || ''} />
-            <AvatarFallback>{profile?.full_name?.[0] || session.user.email?.[0].toUpperCase()}</AvatarFallback>
-          </Avatar>
-        </Button>
+        <button className="outline-none">
+          <ProfileAvatar
+            avatarUrl={profile?.avatar_url}
+            fallback={profile?.full_name?.[0] || "U"}
+            size="sm"
+            editable={false}
+          />
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate("/profile")}>
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onSignOut}>
-          Sign out
+        <DropdownMenuItem onClick={() => navigate("/profile/settings")}>
+          Settings
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
