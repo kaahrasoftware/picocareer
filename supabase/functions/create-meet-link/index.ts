@@ -73,7 +73,15 @@ serve(async (req: Request) => {
       guestsCanSeeOtherGuests: true,
       conferenceDataVersion: 1,
       reminders: {
-        useDefault: true
+        useDefault: false,
+        overrides: [
+          { method: 'email', minutes: 24 * 60 }, // 24 hours
+          { method: 'popup', minutes: 24 * 60 }, // 24 hours
+          { method: 'email', minutes: 30 },      // 30 minutes
+          { method: 'popup', minutes: 30 },      // 30 minutes
+          { method: 'email', minutes: 10 },      // 10 minutes
+          { method: 'popup', minutes: 10 }       // 10 minutes
+        ]
       },
       // Force open access configuration
       conferenceProperties: {
