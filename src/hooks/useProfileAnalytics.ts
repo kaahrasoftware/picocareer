@@ -20,13 +20,13 @@ export function useProfileAnalytics() {
       
       // Only track if scroll position has changed significantly (more than 25%)
       if (Math.abs(scrollPosition - lastScrollPosition) > maxScroll * 0.25) {
-        trackInteraction(
-          'profile-scroll',
-          'scroll',
-          'content_view',
-          location.pathname,
-          { scrollPercentage }
-        );
+        trackInteraction({
+          elementId: 'profile-scroll',
+          elementType: 'scroll',
+          interactionType: 'content_view',
+          pagePath: location.pathname,
+          interactionData: { scrollPercentage }
+        });
         setLastScrollPosition(scrollPosition);
       }
     };
@@ -34,13 +34,13 @@ export function useProfileAnalytics() {
     // Track page exit
     const cleanup = () => {
       const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-      trackInteraction(
-        'profile-page',
-        'page',
-        'page_view',
-        location.pathname,
-        { timeSpent }
-      );
+      trackInteraction({
+        elementId: 'profile-page',
+        elementType: 'page',
+        interactionType: 'page_view',
+        pagePath: location.pathname,
+        interactionData: { timeSpent }
+      });
       updatePageViewExit(location.pathname);
     };
 
@@ -55,33 +55,33 @@ export function useProfileAnalytics() {
   }, [location.pathname, startTime, lastScrollPosition, trackInteraction, trackPageView, updatePageViewExit]);
 
   const handleTabChange = (value: string) => {
-    trackInteraction(
-      `tab-${value}`,
-      'tab',
-      'click',
-      location.pathname,
-      { tabName: value }
-    );
+    trackInteraction({
+      elementId: `tab-${value}`,
+      elementType: 'tab',
+      interactionType: 'click',
+      pagePath: location.pathname,
+      interactionData: { tabName: value }
+    });
   };
 
   const handleSearch = (query: string) => {
-    trackInteraction(
-      'profile-search',
-      'search',
-      'search',
-      location.pathname,
-      { searchQuery: query }
-    );
+    trackInteraction({
+      elementId: 'profile-search',
+      elementType: 'search',
+      interactionType: 'search',
+      pagePath: location.pathname,
+      interactionData: { searchQuery: query }
+    });
   };
 
   const handleBookmark = (contentId: string, contentType: string) => {
-    trackInteraction(
-      `bookmark-${contentId}`,
-      'bookmark',
-      'bookmark',
-      location.pathname,
-      { contentType }
-    );
+    trackInteraction({
+      elementId: `bookmark-${contentId}`,
+      elementType: 'bookmark',
+      interactionType: 'bookmark',
+      pagePath: location.pathname,
+      interactionData: { contentType }
+    });
   };
 
   return {

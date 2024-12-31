@@ -3,21 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useDebounce } from '@/hooks/useDebounce';
 
+interface InteractionData {
+  elementId: string;
+  elementType: string;
+  interactionType: 'click' | 'search' | 'bookmark' | 'content_view' | 'page_view';
+  pagePath: string;
+  interactionData?: any;
+}
+
 export function useAnalytics() {
   const { session } = useAuthSession();
-  const debouncedTrackInteraction = useDebounce((data: any) => trackInteraction(
-    data.elementId,
-    data.elementType,
-    data.interactionType,
-    data.pagePath,
-    data.interactionData
-  ), 1000);
+  const debouncedTrackInteraction = useDebounce((data: InteractionData) => trackInteraction(data), 1000);
 
   const trackPageView = async (pagePath: string) => {
     if (!session?.user?.id) return;
 
     try {
-      // First try to find an existing page view for this session
       const { data: existingView } = await supabase
         .from('user_page_views')
         .select('id, entry_time')
@@ -27,7 +28,6 @@ export function useAnalytics() {
         .maybeSingle();
 
       if (!existingView) {
-        // Create new page view if none exists
         const { error } = await supabase
           .from('user_page_views')
           .insert({
@@ -44,13 +44,13 @@ export function useAnalytics() {
     }
   };
 
-  const trackInteraction = async (
-    elementId: string,
-    elementType: string,
-    interactionType: 'click' | 'search' | 'bookmark' | 'content_view' | 'page_view',
-    pagePath: string,
-    interactionData?: any
-  ) => {
+  const trackInteraction = async ({
+    elementId,
+    elementType,
+    interactionType,
+    pagePath,
+    interactionData
+  }: InteractionData) => {
     if (!session?.user?.id) return;
 
     try {
