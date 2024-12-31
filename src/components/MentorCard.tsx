@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Award, Building2, MapPin } from "lucide-react";
 import { MajorDetails } from "./MajorDetails";
 import { MajorHeader } from "./major/MajorHeader";
 import { MajorSalary } from "./major/MajorSalary";
