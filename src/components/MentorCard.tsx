@@ -1,93 +1,122 @@
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Award, Building2, MapPin } from "lucide-react";
+import { MajorDetails } from "./MajorDetails";
+import { MajorHeader } from "./major/MajorHeader";
+import { MajorSalary } from "./major/MajorSalary";
+import { MajorSkillsList } from "./major/MajorSkillsList";
+import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { Building2, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
 
 interface MentorCardProps {
   id: string;
+  title?: string;  // Made optional
+  company?: string; // Made optional to match Mentor type
+  imageUrl: string;
   name: string;
-  avatar_url: string | null;
-  position?: string | null;
-  company?: string | null;
-  location?: string | null;
+  stats: {
+    mentees: string;
+    connected: string;
+    recordings: string;
+  };
+  top_mentor?: boolean;
+  position?: string;
+  career_title?: string;
+  location?: string;
+  bio?: string;
   skills?: string[];
-  onClick?: () => void;
 }
 
 export function MentorCard(props: MentorCardProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
-    <Card 
-      className="relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-      onClick={props.onClick}
-    >
-      <Link
-        to="#"
-        onClick={(e) => {
-          e.preventDefault();
-          props.onClick?.();
-        }}
-        className="block p-6"
-      >
-        <div className="flex flex-col items-center text-center">
-          <ProfileAvatar
-            avatarUrl={props.avatar_url}
-            fallback={props.name?.[0] || "?"}
-            size="lg"
-          />
-
-          <div className="mt-4 space-y-2">
-            <h3 className="text-lg font-semibold leading-none tracking-tight">
-              {props.name}
-            </h3>
-
-            {props.position && (
-              <p className="text-sm text-muted-foreground">
-                {props.position}
+    <>
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative flex flex-col h-full">
+          {/* Header Section with Avatar and Basic Info */}
+          <div className="flex items-start gap-4 mb-4">
+            <ProfileAvatar
+              avatarUrl={props.imageUrl}
+              fallback={props.name[0]}
+              size="md"
+              editable={false}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                {props.top_mentor && (
+                  <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
+                    <Award className="h-3 w-3" />
+                    Top Mentor
+                  </Badge>
+                )}
+              </div>
+              <h3 className="font-semibold truncate mb-2 text-left">{props.name}</h3>
+              <p className="text-sm font-medium mb-1 truncate text-foreground/90 text-left">
+                {props.career_title || props.title || "No position set"}
               </p>
-            )}
-
-            {props.company && (
-              <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-                <Building2 className="h-3 w-3" />
-                <span>{props.company}</span>
+              <div className="flex flex-col gap-1">
+                {props.company && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
+                    <Building2 className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{props.company}</span>
+                  </div>
+                )}
+                {props.location && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{props.location}</span>
+                  </div>
+                )}
               </div>
-            )}
-
-            {props.location && (
-              <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-3 w-3" />
-                <span>{props.location}</span>
-              </div>
-            )}
+            </div>
           </div>
 
-          {/* Skills Section - Limited to 3 items with +X more */}
+          {/* Bio Section */}
+          {props.bio && (
+            <div className="w-full mb-4">
+              <p className="text-sm text-muted-foreground line-clamp-2 text-left">{props.bio}</p>
+            </div>
+          )}
+
+          {/* Skills Section */}
           {props.skills?.length > 0 && (
             <div className="w-full mb-4">
               <div className="flex flex-wrap gap-1.5">
-                {props.skills.slice(0, 3).map((skill) => (
+                {props.skills.map((skill) => (
                   <Badge 
                     key={skill} 
-                    variant="secondary"
-                    className="bg-primary/10 text-primary hover:bg-primary/20"
+                    variant="secondary" 
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
                   >
                     {skill}
                   </Badge>
                 ))}
-                {props.skills.length > 3 && (
-                  <Badge 
-                    variant="outline"
-                    className="bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors border border-gray-200"
-                  >
-                    +{props.skills.length - 3} more
-                  </Badge>
-                )}
               </div>
             </div>
           )}
+
+          {/* Button Section */}
+          <div className="mt-auto w-full">
+            <Button 
+              variant="outline" 
+              className="w-full bg-background hover:bg-muted/50 transition-colors"
+              onClick={() => setDialogOpen(true)}
+            >
+              View Profile
+            </Button>
+          </div>
         </div>
-      </Link>
-    </Card>
+      </Card>
+
+      <ProfileDetailsDialog
+        userId={props.id}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
+    </>
   );
 }

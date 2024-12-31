@@ -3,7 +3,7 @@ export interface Mentor {
   name: string;
   title?: string;
   company?: string;
-  avatar_url: string; // Changed from imageUrl to avatar_url
+  imageUrl: string;
   stats: {
     mentees: string;
     connected: string;

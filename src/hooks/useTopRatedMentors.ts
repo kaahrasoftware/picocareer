@@ -30,7 +30,7 @@ export const useTopRatedMentors = () => {
           id: mentor.id,
           title: mentor.position || "Mentor",
           company: mentor.company?.name || "",
-          avatar_url: mentor.avatar_url || "", // Changed from imageUrl to avatar_url
+          imageUrl: mentor.avatar_url || "",
           name: mentor.full_name || "",
           stats: {
             mentees: `${Math.floor(Math.random() * 900 + 100)}`,
