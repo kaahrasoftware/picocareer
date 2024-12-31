@@ -4,8 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { EmailSection } from "./settings/EmailSection";
 import { TimezoneSection } from "./settings/TimezoneSection";
 import { NotificationSection } from "./settings/NotificationSection";
-import { ThemeSection } from "./settings/ThemeSection";
-import { Mail, Globe, Bell, Eye } from "lucide-react";
+import { Mail, Globe, Bell } from "lucide-react";
 
 export function SettingsTab() {
   const { session } = useAuthSession();
@@ -44,17 +43,6 @@ export function SettingsTab() {
           <h3 className="text-lg font-semibold">Notifications</h3>
         </div>
         <NotificationSection />
-      </div>
-
-      <Separator />
-
-      {/* Appearance */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Eye className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Appearance</h3>
-        </div>
-        <ThemeSection />
       </div>
     </div>
   );
