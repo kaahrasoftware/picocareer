@@ -16,60 +16,73 @@ export function BookmarksTab() {
       if (!session?.user?.id) return null;
 
       try {
+        // First get all bookmarks for the user
         const { data, error } = await supabase
           .from('user_bookmarks')
           .select(`
             id,
             content_type,
-            content_id,
-            profiles!content_id (
-              id,
-              full_name,
-              avatar_url,
-              position,
-              user_type
-            ),
-            careers!content_id (
-              id,
-              title,
-              description
-            ),
-            majors!content_id (
-              id,
-              title,
-              description
-            )
+            content_id
           `)
-          .eq('profile_id', session.user.id)
-          .maybeSingle(); // Changed from single() to maybeSingle()
+          .eq('profile_id', session.user.id);
 
         if (error) {
           console.error('Error fetching bookmarks:', error);
           return null;
         }
 
-        if (!data) return {};
+        if (!data || data.length === 0) return {};
 
-        // Group bookmarks by content type
-        const grouped = data.reduce((acc: any, bookmark) => {
-          const type = bookmark.content_type;
-          if (!acc[type]) acc[type] = [];
-          
-          // Add the relevant content based on type
-          switch (type) {
-            case 'mentor':
-              if (bookmark.profiles) acc[type].push(bookmark.profiles);
-              break;
-            case 'career':
-              if (bookmark.careers) acc[type].push(bookmark.careers);
-              break;
-            case 'major':
-              if (bookmark.majors) acc[type].push(bookmark.majors);
-              break;
-          }
-          
-          return acc;
-        }, {});
+        // Group bookmarks by type for separate queries
+        const mentorIds = data.filter(b => b.content_type === 'mentor').map(b => b.content_id);
+        const careerIds = data.filter(b => b.content_type === 'career').map(b => b.content_id);
+        const majorIds = data.filter(b => b.content_type === 'major').map(b => b.content_id);
+
+        // Fetch mentor profiles
+        const mentorPromise = mentorIds.length > 0 ? 
+          supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, position, user_type')
+            .in('id', mentorIds) : 
+          Promise.resolve({ data: [] });
+
+        // Fetch careers
+        const careerPromise = careerIds.length > 0 ?
+          supabase
+            .from('careers')
+            .select('id, title, description')
+            .in('id', careerIds) :
+          Promise.resolve({ data: [] });
+
+        // Fetch majors
+        const majorPromise = majorIds.length > 0 ?
+          supabase
+            .from('majors')
+            .select('id, title, description')
+            .in('id', majorIds) :
+          Promise.resolve({ data: [] });
+
+        // Wait for all queries to complete
+        const [mentorResult, careerResult, majorResult] = await Promise.all([
+          mentorPromise,
+          careerPromise,
+          majorPromise
+        ]);
+
+        // Group results by type
+        const grouped: any = {};
+        
+        if (mentorResult.data && mentorResult.data.length > 0) {
+          grouped.mentor = mentorResult.data;
+        }
+        
+        if (careerResult.data && careerResult.data.length > 0) {
+          grouped.career = careerResult.data;
+        }
+        
+        if (majorResult.data && majorResult.data.length > 0) {
+          grouped.major = majorResult.data;
+        }
 
         return grouped;
       } catch (error) {
