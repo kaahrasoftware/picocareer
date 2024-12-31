@@ -31,13 +31,23 @@ export function SessionDetailsDialog({
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
-  const { data: userSettings } = useUserSettings();
+  const [attendance, setAttendance] = useState(false);
+  const { getSetting } = useUserSettings();
+  const userTimezone = getSetting('timezone') || 'UTC';
 
   if (!session?.session_details) return null;
 
   const isMentor = authSession?.user?.id === session.session_details.mentor.id;
   const feedbackType = isMentor ? 'mentor_feedback' : 'mentee_feedback';
-  const userTimezone = userSettings?.timezone || 'UTC';
+  
+  // Calculate if session can be cancelled (more than 1 hour before start)
+  const canCancel = session.session_details.status === 'scheduled' && 
+    new Date(session.session_details.scheduled_at) > new Date(Date.now() + 60 * 60 * 1000);
+
+  // Can mark attendance if session is scheduled and within 15 minutes of start time
+  const sessionTime = new Date(session.session_details.scheduled_at);
+  const canMarkAttendance = session.session_details.status === 'scheduled' && 
+    Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
 
   return (
     <>
@@ -57,6 +67,14 @@ export function SessionDetailsDialog({
                 onChange={(e) => onCancellationNoteChange(e.target.value)}
               />
               <SessionActions
+                session={session}
+                canCancel={canCancel}
+                canMarkAttendance={canMarkAttendance}
+                attendance={attendance}
+                setAttendance={setAttendance}
+                isCancelling={false}
+                cancellationNote={cancellationNote}
+                onCancellationNoteChange={onCancellationNoteChange}
                 onCancel={onCancel}
                 onClose={onClose}
               />
