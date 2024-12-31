@@ -18,7 +18,7 @@ export function MentorTab({ profile }: MentorTabProps) {
   const profileId = profile?.id;
 
   // Fetch mentor sessions
-  const { data: sessionsResponse } = useQuery({
+  const { data: sessionsResponse, refetch: refetchSessions } = useQuery({
     queryKey: ["mentor-sessions", profileId],
     queryFn: async () => {
       if (!profileId) return null;
@@ -41,7 +41,7 @@ export function MentorTab({ profile }: MentorTabProps) {
   });
 
   // Fetch session types
-  const { data: sessionTypesResponse } = useQuery({
+  const { data: sessionTypesResponse, refetch: refetchSessionTypes } = useQuery({
     queryKey: ["session-types", profileId],
     queryFn: async () => {
       if (!profileId) return null;
@@ -161,18 +161,14 @@ export function MentorTab({ profile }: MentorTabProps) {
         <SessionTypeManager 
           profileId={profileId} 
           sessionTypes={sessionTypesResponse || []}
-          onUpdate={() => {
-            // Refetch session types
-          }}
+          onUpdate={refetchSessionTypes}
         />
       </TabsContent>
 
       <TabsContent value="availability">
         <AvailabilityManager 
           profileId={profileId}
-          onUpdate={() => {
-            // Refetch availability
-          }}
+          onUpdate={refetchSessions}
         />
       </TabsContent>
     </Tabs>

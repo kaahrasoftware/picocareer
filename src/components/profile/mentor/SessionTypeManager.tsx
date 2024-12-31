@@ -17,7 +17,7 @@ interface SessionTypeManagerProps {
   onUpdate: () => void;
 }
 
-export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: SessionTypeManagerProps) {
+export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
 
