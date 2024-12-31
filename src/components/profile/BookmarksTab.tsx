@@ -15,59 +15,66 @@ export function BookmarksTab() {
     queryFn: async () => {
       if (!session?.user?.id) return null;
 
-      const { data, error } = await supabase
-        .from('user_bookmarks')
-        .select(`
-          id,
-          content_type,
-          content_id,
-          profiles!content_id (
+      try {
+        const { data, error } = await supabase
+          .from('user_bookmarks')
+          .select(`
             id,
-            full_name,
-            avatar_url,
-            position,
-            user_type
-          ),
-          careers!content_id (
-            id,
-            title,
-            description
-          ),
-          majors!content_id (
-            id,
-            title,
-            description
-          )
-        `)
-        .eq('profile_id', session.user.id);
+            content_type,
+            content_id,
+            profiles!content_id (
+              id,
+              full_name,
+              avatar_url,
+              position,
+              user_type
+            ),
+            careers!content_id (
+              id,
+              title,
+              description
+            ),
+            majors!content_id (
+              id,
+              title,
+              description
+            )
+          `)
+          .eq('profile_id', session.user.id);
 
-      if (error) {
-        console.error('Error fetching bookmarks:', error);
+        if (error) {
+          console.error('Error fetching bookmarks:', error);
+          return null;
+        }
+
+        if (!data || data.length === 0) return {};
+
+        // Group bookmarks by content type
+        const grouped = data.reduce((acc: any, bookmark) => {
+          const type = bookmark.content_type;
+          if (!acc[type]) acc[type] = [];
+          
+          // Add the relevant content based on type
+          switch (type) {
+            case 'mentor':
+              if (bookmark.profiles) acc[type].push(bookmark.profiles);
+              break;
+            case 'career':
+              if (bookmark.careers) acc[type].push(bookmark.careers);
+              break;
+            case 'major':
+              if (bookmark.majors) acc[type].push(bookmark.majors);
+              break;
+          }
+          
+          return acc;
+        }, {});
+
+        return grouped;
+      } catch (error) {
+        console.error('Error in bookmark query:', error);
         return null;
       }
-
-      // Group bookmarks by content type
-      const grouped = data.reduce((acc: any, bookmark) => {
-        const type = bookmark.content_type;
-        if (!acc[type]) acc[type] = [];
-        
-        // Add the relevant content based on type
-        switch (type) {
-          case 'mentor':
-            if (bookmark.profiles) acc[type].push(bookmark.profiles);
-            break;
-          case 'career':
-            if (bookmark.careers) acc[type].push(bookmark.careers);
-            break;
-          case 'major':
-            if (bookmark.majors) acc[type].push(bookmark.majors);
-            break;
-        }
-        
-        return acc;
-      }, {});
-
-      return grouped;
     },
     enabled: !!session?.user?.id,
   });

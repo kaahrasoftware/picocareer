@@ -33,7 +33,7 @@ export function SessionDetailsDialog({
   const [showFeedback, setShowFeedback] = useState(false);
   const [attendance, setAttendance] = useState(false);
   const { getSetting } = useUserSettings();
-  const userTimezone = getSetting('timezone') || 'UTC';
+  const userTimezone = getSetting('timezone');
 
   if (!session?.session_details) return null;
 
@@ -57,7 +57,7 @@ export function SessionDetailsDialog({
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <SessionInfo session={session} userTimezone={userTimezone} />
+          <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
           {session.session_details.status === 'scheduled' && (
             <>
