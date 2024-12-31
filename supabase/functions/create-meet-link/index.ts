@@ -59,14 +59,15 @@ serve(async (req: Request) => {
         timeZone: 'UTC',
       },
       attendees: [
-        { email: session.mentor.email },
-        { email: session.mentee.email },
+        { email: session.mentor.email, responseStatus: 'accepted' }, // Mentor is automatically accepted
+        { email: session.mentee.email }
       ],
       conferenceData: {
         createRequest: {
           requestId: sessionId,
           conferenceSolutionKey: { type: 'hangoutsMeet' },
-        },
+          status: { statusCode: 'success' }
+        }
       },
       guestsCanModify: false,
       guestsCanInviteOthers: false,
