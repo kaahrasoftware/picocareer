@@ -57,6 +57,24 @@ export function MentorTab({ profile }: MentorTabProps) {
     enabled: !!profileId
   });
 
+  // Fetch bookmark count
+  const { data: bookmarkCount = 0 } = useQuery({
+    queryKey: ["profile-bookmarks", profileId],
+    queryFn: async () => {
+      if (!profileId) return 0;
+
+      const { count, error } = await supabase
+        .from("user_bookmarks")
+        .select("*", { count: 'exact', head: true })
+        .eq("content_type", "profile")
+        .eq("content_id", profileId);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!profileId
+  });
+
   // Calculate stats
   const stats = (() => {
     if (sessionsResponse && sessionTypesResponse) {
@@ -108,7 +126,8 @@ export function MentorTab({ profile }: MentorTabProps) {
         cancelled_sessions,
         unique_mentees,
         total_hours,
-        session_data
+        session_data,
+        bookmark_count: bookmarkCount
       }
     }
     return null;
