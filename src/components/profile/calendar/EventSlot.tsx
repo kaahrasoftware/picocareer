@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "@/types/calendar";
 import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { toZonedTime } from 'date-fns-tz';
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ interface EventSlotProps {
   event: CalendarEvent;
   cellHeight: number;
   onClick?: (event: CalendarEvent) => void;
+  onDelete?: (event: CalendarEvent) => void;
   timezone?: string;
 }
 
@@ -18,6 +19,7 @@ export function EventSlot({
   event, 
   cellHeight, 
   onClick,
+  onDelete,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventSlotProps) {
   const { toast } = useToast();
@@ -70,6 +72,9 @@ export function EventSlot({
         title: "Event deleted",
         description: "The event has been successfully removed from your calendar.",
       });
+
+      // Call the onDelete callback to update the UI
+      onDelete?.(event);
     } catch (error) {
       console.error('Error deleting event:', error);
       toast({

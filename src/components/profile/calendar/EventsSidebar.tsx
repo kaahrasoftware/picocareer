@@ -13,6 +13,7 @@ interface EventsSidebarProps {
   availability?: Availability[];
   isMentor?: boolean;
   onEventClick?: (event: CalendarEvent) => void;
+  onEventDelete?: (event: CalendarEvent) => void;
   timezone?: string;
 }
 
@@ -22,6 +23,7 @@ export function EventsSidebar({
   availability = [], 
   isMentor = false, 
   onEventClick,
+  onEventDelete,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
   const CELL_HEIGHT = 52;
@@ -54,6 +56,7 @@ export function EventsSidebar({
                   event={event}
                   timezone={timezone}
                   onClick={onEventClick}
+                  onDelete={onEventDelete}
                   cellHeight={CELL_HEIGHT}
                 />
               ))}

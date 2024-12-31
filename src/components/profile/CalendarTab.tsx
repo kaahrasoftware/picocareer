@@ -73,6 +73,13 @@ export function CalendarTab() {
   // Get calendar events using our custom hook
   const { data: events = [], isLoading: isEventsLoading } = useSessionEvents();
 
+  const handleEventDelete = (deletedEvent: CalendarEvent) => {
+    // Update the events list by filtering out the deleted event
+    queryClient.setQueryData(['session-events'], (oldEvents: CalendarEvent[] = []) => {
+      return oldEvents.filter(event => event.id !== deletedEvent.id);
+    });
+  };
+
   const handleCancelSession = async () => {
     if (!selectedSession?.session_details) return;
 
@@ -185,6 +192,7 @@ export function CalendarTab() {
               availability={availability}
               isMentor={isMentor}
               onEventClick={setSelectedSession}
+              onEventDelete={handleEventDelete}
             />
           </div>
         )}
