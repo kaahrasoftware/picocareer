@@ -1,10 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Building2, GraduationCap, Award, MapPin, Bookmark } from "lucide-react";
-import { ProfileAvatar } from "./ProfileAvatar";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 interface ProfileHeaderProps {
@@ -12,55 +11,52 @@ interface ProfileHeaderProps {
     id: string;
     avatar_url: string | null;
     full_name: string | null;
-    position?: string | null;
-    company_id?: string | null;
-    school_id?: string | null;
-    academic_major_id?: string | null;
-    location?: string | null;
-    top_mentor?: boolean | null;
     user_type?: string | null;
+    top_mentor?: boolean | null;
+    career_title?: string | null;
+    school_name?: string | null;
+    company_name?: string | null;
+    location?: string | null;
+    academic_major?: string | null;
   } | null;
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
-  const { toast } = useToast();
-  const { session } = useAuthSession();
-  const queryClient = useQueryClient();
   const [isBookmarking, setIsBookmarking] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Only fetch additional details if we have a profile
-  const { data: profileDetails } = useQuery({
-    queryKey: ['profileDetails', profile?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  if (!profile) return null;
+
+  const handleAvatarUpdate = async (url: string) => {
+    try {
+      const { error: updateError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          career:careers!profiles_position_fkey(title),
-          school:schools!profiles_school_id_fkey(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title)
-        `)
-        .eq('id', profile?.id)
-        .maybeSingle(); // Changed from single() to maybeSingle()
+        .update({ avatar_url: url })
+        .eq('id', profile.id);
 
-      if (error) {
-        console.error('Error fetching profile details:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch profile details",
-          variant: "destructive",
-        });
-        return null;
-      }
+      if (updateError) throw updateError;
 
-      return data;
-    },
-    enabled: !!profile?.id,
-  });
+      // Invalidate and refetch profile data
+      queryClient.invalidateQueries({ queryKey: ['profile', profile.id] });
+
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Check if the current user has bookmarked this profile
   const { data: isBookmarked } = useQuery({
-    queryKey: ['bookmark', profile?.id, session?.user?.id],
+    queryKey: ['bookmark', profile.id, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id || !profile?.id) return false;
       
@@ -71,7 +67,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           .eq('profile_id', session.user.id)
           .eq('content_id', profile.id)
           .eq('content_type', 'mentor')
-          .maybeSingle(); // Changed from single() to maybeSingle()
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error checking bookmark:', error);
@@ -139,60 +135,13 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     }
   };
   
-  if (!profile || !profileDetails) return null;
-
-  const isMentee = profile.user_type === 'mentee';
-
-  // Determine primary and secondary display text based on whether the user is a student or professional
-  const primaryText = !isMentee ? (profileDetails?.career?.title || 
-                     profileDetails?.academic_major?.title || 
-                     "No position/major set") : null;
-                     
-  const secondaryText = !isMentee ? (profileDetails?.career?.title 
-    ? profileDetails?.school?.name || "No company set"
-    : profileDetails?.school?.name || "No school set") : null;
-
-  const handleAvatarUpdate = async (blob: Blob) => {
-    try {
-      const fileExt = 'jpg';
-      const filePath = `${profile.id}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, blob, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
-
-    } catch (error) {
-      console.error('Error updating avatar:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile picture. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="flex items-center gap-6 ml-6">
       <ProfileAvatar 
-        profile={profile} 
+        avatarUrl={profile.avatar_url}
+        fallback={profile.full_name?.[0] || 'U'}
+        size="lg"
+        editable={true}
         onAvatarUpdate={handleAvatarUpdate}
       />
 
@@ -224,19 +173,17 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             </button>
           )}
         </div>
-        {primaryText && (
-          <p className="text-lg font-medium text-foreground/90">{primaryText}</p>
-        )}
         <div className="flex flex-col gap-1 mt-2">
-          {!isMentee && profileDetails?.career?.title ? (
+          {profile.career_title && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Building2 className="h-4 w-4 flex-shrink-0" />
-              <span>{secondaryText}</span>
+              <span>{profile.company_name || "No company set"}</span>
             </div>
-          ) : profileDetails?.school?.name && (
+          )}
+          {profile.school_name && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
-              <span>{profileDetails.school.name}</span>
+              <span>{profile.school_name}</span>
             </div>
           )}
           {profile.location && (
@@ -245,10 +192,10 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
               <span>{profile.location}</span>
             </div>
           )}
-          {!isMentee && profileDetails?.academic_major?.title && (
+          {profile.academic_major && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
-              <span>{profileDetails.academic_major.title}</span>
+              <span>{profile.academic_major}</span>
             </div>
           )}
         </div>

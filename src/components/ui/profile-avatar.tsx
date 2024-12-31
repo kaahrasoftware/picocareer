@@ -1,108 +1,101 @@
-import { useState } from "react";
+import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { processImage } from "@/utils/imageProcessing";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null;
   fallback: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg";
   editable?: boolean;
-  onAvatarUpdate?: (blob: Blob) => Promise<void>;
-  className?: string;
+  onAvatarUpdate?: (url: string) => void;
 }
-
-const sizeClasses = {
-  sm: "h-10 w-10",
-  md: "h-16 w-16",
-  lg: "h-20 w-20",
-  xl: "h-24 w-24",
-};
 
 export function ProfileAvatar({ 
   avatarUrl, 
   fallback, 
-  size = "md",
+  size = "md", 
   editable = false,
-  onAvatarUpdate,
-  className = ""
+  onAvatarUpdate 
 }: ProfileAvatarProps) {
-  const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(avatarUrl);
+  const [uploading, setUploading] = React.useState(false);
   const { toast } = useToast();
 
-  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0 || !onAvatarUpdate) return;
-    
-    const file = event.target.files[0];
+  const sizeClasses = {
+    sm: "h-10 w-10",
+    md: "h-16 w-16",
+    lg: "h-24 w-24"
+  };
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      if (!onAvatarUpdate) return;
       setUploading(true);
       
-      // Process the image (resize/compress if needed)
-      const processedBlob = await processImage(file);
-      
-      // Create a temporary URL for instant preview
-      const tempUrl = URL.createObjectURL(processedBlob);
-      setPreviewUrl(tempUrl);
-      
-      await onAvatarUpdate(processedBlob);
-      
-      // Clean up the temporary URL after successful upload
-      URL.revokeObjectURL(tempUrl);
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      onAvatarUpdate(publicUrl);
       
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
     } catch (error) {
-      console.error('Error updating avatar:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile picture. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
-      // Revert to original avatar if update fails
-      setPreviewUrl(avatarUrl);
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div className={`relative group ${sizeClasses[size]} ${className}`}>
-      {editable && (
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-      )}
-      {editable && (
-        <div className="absolute inset-[3px] rounded-full bg-background" />
-      )}
-      <div className={`${editable ? "absolute inset-[6px]" : ""} rounded-full overflow-hidden`}>
-        <Avatar className="h-full w-full">
-          <AvatarImage 
-            src={previewUrl || ''} 
-            alt={fallback}
-            className="h-full w-full object-cover"
-          />
-          <AvatarFallback>{fallback}</AvatarFallback>
-        </Avatar>
-      </div>
+    <div className="relative group">
+      <Avatar className={`${sizeClasses[size]} ring-2 ring-background shadow-lg`}>
+        <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
+        <AvatarFallback>{fallback}</AvatarFallback>
+      </Avatar>
       
-      {editable && onAvatarUpdate && (
-        <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageSelect}
-            disabled={uploading}
-          />
-          {uploading ? (
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
+      {editable && (
+        <>
+          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
             <Upload className="w-6 h-6 text-white" />
+          </label>
+          
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
           )}
-        </label>
+        </>
       )}
     </div>
   );
