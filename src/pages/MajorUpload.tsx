@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
+import { formatMajorData } from "@/utils/majorFormatting";
 
 export default function MajorUpload() {
   const { toast } = useToast();
@@ -36,67 +37,32 @@ export default function MajorUpload() {
     return () => subscription.unsubscribe();
   }, [navigate, toast]);
 
-  const formatArrayData = (data: any) => {
-    const arrayFields = [
-      'learning_objectives',
-      'common_courses',
-      'interdisciplinary_connections',
-      'certifications_to_consider',
-      'degree_levels',
-      'affiliated_programs',
-      'transferable_skills',
-      'tools_knowledge',
-      'skill_match',
-      'professional_associations',
-      'common_difficulties',
-      'career_opportunities',
-      'majors_to_consider_switching_to'
-    ];
-
-    const formattedData = { ...data };
-    
-    arrayFields.forEach(field => {
-      if (formattedData[field]) {
-        if (typeof formattedData[field] === 'string') {
-          formattedData[field] = formattedData[field]
-            .split(',')
-            .map((item: string) => item.trim())
-            .filter(Boolean);
-        } else if (!Array.isArray(formattedData[field])) {
-          formattedData[field] = [];
-        }
-      } else {
-        formattedData[field] = [];
-      }
-    });
-
-    return formattedData;
-  };
-
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      if (!data.title) {
+      if (!data.title?.trim()) {
         throw new Error('Title is required');
       }
 
-      // Format the data before checking/insertion
-      const formattedData = formatArrayData(data);
+      if (!data.description?.trim()) {
+        throw new Error('Description is required');
+      }
+
+      // Format the data before submission
+      const formattedData = formatMajorData(data);
       console.log('Formatted data:', formattedData);
 
       // Use RPC call to check and insert major
       const { data: result, error } = await supabase
         .rpc('check_and_insert_major', {
-          major_data: {
-            ...formattedData,
-            status: 'Pending'
-          }
+          major_data: formattedData
         });
 
       if (error) {
+        console.error('Error from RPC:', error);
         if (error.message.includes('already exists')) {
           toast({
             title: "Major already exists",
