@@ -72,10 +72,16 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={`${sizeClasses[size]} ring-2 ring-background shadow-lg`}>
-        <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
-        <AvatarFallback>{fallback}</AvatarFallback>
-      </Avatar>
+      {/* Outer gradient border */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 p-[3px] -m-[3px]">
+        {/* Inner gradient border */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 p-[2px] -m-[2px]">
+          <Avatar className={`${sizeClasses[size]} relative ring-2 ring-background shadow-lg`}>
+            <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
+            <AvatarFallback>{fallback}</AvatarFallback>
+          </Avatar>
+        </div>
+      </div>
       
       {editable && (
         <>
