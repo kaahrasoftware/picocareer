@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { CircularProgress } from "@/components/ui/circular-progress";
+import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 interface SessionStats {
   total_sessions: number;
@@ -19,6 +21,40 @@ interface MentorshipStatsProps {
 }
 
 export function MentorshipStats({ stats }: MentorshipStatsProps) {
+  // Calculate cancellation score
+  const cancellationScore = (stats.cancelled_sessions / stats.total_sessions) * 100;
+  
+  // Determine status and styling based on score
+  const getCancellationStatus = (score: number) => {
+    if (score <= 5) {
+      return {
+        label: "Excellent",
+        color: "text-green-500",
+        bgColor: "bg-green-50",
+        borderColor: "border-green-200",
+        icon: <CheckCircle className="w-5 h-5 text-green-500" />
+      };
+    } else if (score <= 15) {
+      return {
+        label: "Good",
+        color: "text-yellow-500",
+        bgColor: "bg-yellow-50",
+        borderColor: "border-yellow-200",
+        icon: <AlertCircle className="w-5 h-5 text-yellow-500" />
+      };
+    } else {
+      return {
+        label: "Fair",
+        color: "text-red-500",
+        bgColor: "bg-red-50",
+        borderColor: "border-red-200",
+        icon: <XCircle className="w-5 h-5 text-red-500" />
+      };
+    }
+  };
+
+  const cancellationStatus = getCancellationStatus(cancellationScore);
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
       <Card className="p-4">
@@ -49,6 +85,21 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Cancelled</p>
           <p className="text-2xl font-bold">{stats.cancelled_sessions}</p>
+        </div>
+      </Card>
+
+      <Card className={`p-4 ${cancellationStatus.bgColor} ${cancellationStatus.borderColor} border-2`}>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Cancellation Score</p>
+            {cancellationStatus.icon}
+          </div>
+          <p className={`text-2xl font-bold ${cancellationStatus.color}`}>
+            {cancellationScore.toFixed(1)}%
+          </p>
+          <p className={`text-sm font-medium ${cancellationStatus.color}`}>
+            {cancellationStatus.label}
+          </p>
         </div>
       </Card>
 
