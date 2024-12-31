@@ -29,7 +29,7 @@ export function SessionDetailsDialog({
   cancellationNote,
   onCancellationNoteChange,
 }: SessionDetailsDialogProps) {
-  const { session: authSession } = useAuthSession({ initialSession: null });
+  const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
   const [attendance, setAttendance] = useState(false);
   const { getSetting } = useUserSettings();
