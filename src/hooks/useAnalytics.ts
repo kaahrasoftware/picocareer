@@ -1,6 +1,7 @@
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useCallback } from 'react';
 
 interface InteractionData {
   elementId: string;
@@ -13,7 +14,7 @@ interface InteractionData {
 export function useAnalytics() {
   const { session } = useAuthSession();
 
-  const trackInteractionImpl = async (data: InteractionData) => {
+  const trackInteractionImpl = useCallback(async (data: InteractionData) => {
     if (!session?.user?.id) return;
 
     try {
@@ -34,11 +35,11 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Error tracking interaction:', error);
     }
-  };
+  }, [session?.user?.id]);
 
-  const debouncedTrackInteraction = useDebounce(trackInteractionImpl, 1000);
+  const trackInteraction = useDebounce(trackInteractionImpl, 1000);
 
-  const trackPageView = async (pagePath: string) => {
+  const trackPageView = useCallback(async (pagePath: string) => {
     if (!session?.user?.id) return;
 
     try {
@@ -65,9 +66,9 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Error tracking page view:', error);
     }
-  };
+  }, [session?.user?.id]);
 
-  const trackContentEngagement = async (
+  const trackContentEngagement = useCallback(async (
     contentType: string,
     contentId: string,
     timeSpent: number,
@@ -92,9 +93,9 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Error tracking content engagement:', error);
     }
-  };
+  }, [session?.user?.id]);
 
-  const updatePageViewExit = async (pagePath: string) => {
+  const updatePageViewExit = useCallback(async (pagePath: string) => {
     if (!session?.user?.id) return;
 
     try {
@@ -111,11 +112,11 @@ export function useAnalytics() {
     } catch (error) {
       console.error('Error updating page view exit time:', error);
     }
-  };
+  }, [session?.user?.id]);
 
   return {
     trackPageView,
-    trackInteraction: debouncedTrackInteraction,
+    trackInteraction,
     trackContentEngagement,
     updatePageViewExit,
   };

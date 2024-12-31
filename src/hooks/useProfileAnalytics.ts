@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function useProfileAnalytics() {
   const location = useLocation();
   const { trackPageView, trackInteraction, updatePageViewExit } = useAnalytics();
-  const [startTime] = useState(Date.now());
-  const [lastScrollPosition, setLastScrollPosition] = useState(0);
+  const startTime = Date.now();
 
   useEffect(() => {
     // Track initial page view
@@ -18,17 +17,13 @@ export function useProfileAnalytics() {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercentage = Math.round((scrollPosition / maxScroll) * 100);
       
-      // Only track if scroll position has changed significantly (more than 25%)
-      if (Math.abs(scrollPosition - lastScrollPosition) > maxScroll * 0.25) {
-        trackInteraction({
-          elementId: 'profile-scroll',
-          elementType: 'scroll',
-          interactionType: 'content_view',
-          pagePath: location.pathname,
-          interactionData: { scrollPercentage }
-        });
-        setLastScrollPosition(scrollPosition);
-      }
+      trackInteraction({
+        elementId: 'profile-scroll',
+        elementType: 'scroll',
+        interactionType: 'content_view',
+        pagePath: location.pathname,
+        interactionData: { scrollPercentage }
+      });
     };
 
     // Track page exit
@@ -52,9 +47,9 @@ export function useProfileAnalytics() {
       window.removeEventListener('beforeunload', cleanup);
       cleanup();
     };
-  }, [location.pathname, startTime, lastScrollPosition, trackInteraction, trackPageView, updatePageViewExit]);
+  }, [location.pathname, trackPageView, trackInteraction, updatePageViewExit]);
 
-  const handleTabChange = (value: string) => {
+  const handleTabChange = useCallback((value: string) => {
     trackInteraction({
       elementId: `tab-${value}`,
       elementType: 'tab',
@@ -62,9 +57,9 @@ export function useProfileAnalytics() {
       pagePath: location.pathname,
       interactionData: { tabName: value }
     });
-  };
+  }, [trackInteraction, location.pathname]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     trackInteraction({
       elementId: 'profile-search',
       elementType: 'search',
@@ -72,9 +67,9 @@ export function useProfileAnalytics() {
       pagePath: location.pathname,
       interactionData: { searchQuery: query }
     });
-  };
+  }, [trackInteraction, location.pathname]);
 
-  const handleBookmark = (contentId: string, contentType: string) => {
+  const handleBookmark = useCallback((contentId: string, contentType: string) => {
     trackInteraction({
       elementId: `bookmark-${contentId}`,
       elementType: 'bookmark',
@@ -82,7 +77,7 @@ export function useProfileAnalytics() {
       pagePath: location.pathname,
       interactionData: { contentType }
     });
-  };
+  }, [trackInteraction, location.pathname]);
 
   return {
     handleTabChange,
