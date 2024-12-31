@@ -19,7 +19,7 @@ export function useAnalytics() {
     (data: InteractionData) => {
       if (!session?.user?.id) return;
 
-      addEvent('interaction', {
+      addEvent(data.interactionType, {
         profile_id: session.user.id,
         ...data,
       });
