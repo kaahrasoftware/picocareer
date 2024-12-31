@@ -101,8 +101,8 @@ export function MentorCard(props: MentorCardProps) {
                 ))}
                 {remainingCount > 0 && (
                   <Badge 
-                    variant="outline"
-                    className="bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors border border-gray-200"
+                    variant="secondary"
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
                   >
                     +{remainingCount} more
                   </Badge>
