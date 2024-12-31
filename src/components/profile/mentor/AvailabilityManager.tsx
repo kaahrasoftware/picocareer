@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { TimeSlotForm } from "./availability/TimeSlotForm";
+import { UnavailableTimeForm } from "./availability/UnavailableTimeForm";
 import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
 
 interface AvailabilityManagerProps {
@@ -14,6 +15,7 @@ interface AvailabilityManagerProps {
 export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManagerProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("available");
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -32,8 +34,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       .select('*')
       .eq('profile_id', profileId)
       .gte('start_date_time', startOfDay.toISOString())
-      .lte('start_date_time', endOfDay.toISOString())
-      .eq('is_available', true);
+      .lte('start_date_time', endOfDay.toISOString());
 
     if (error) {
       console.error('Error fetching availability:', error);
@@ -82,14 +83,34 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
           </div>
           
           {selectedDate && (
-            <TimeSlotForm
-              selectedDate={selectedDate}
-              profileId={profileId}
-              onSuccess={() => {
-                fetchAvailability();
-                onUpdate();
-              }}
-            />
+            <div>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="available">Available Times</TabsTrigger>
+                  <TabsTrigger value="unavailable">Unavailable Times</TabsTrigger>
+                </TabsList>
+                <TabsContent value="available">
+                  <TimeSlotForm
+                    selectedDate={selectedDate}
+                    profileId={profileId}
+                    onSuccess={() => {
+                      fetchAvailability();
+                      onUpdate();
+                    }}
+                  />
+                </TabsContent>
+                <TabsContent value="unavailable">
+                  <UnavailableTimeForm
+                    selectedDate={selectedDate}
+                    profileId={profileId}
+                    onSuccess={() => {
+                      fetchAvailability();
+                      onUpdate();
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
         </div>
 

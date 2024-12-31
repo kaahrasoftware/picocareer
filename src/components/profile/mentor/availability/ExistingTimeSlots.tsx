@@ -7,6 +7,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface TimeSlot {
   id: string;
@@ -86,11 +87,15 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
           return (
             <div
               key={slot.id}
-              className="flex items-center justify-between rounded-lg border p-4"
+              className={cn(
+                "flex items-center justify-between rounded-lg border p-4",
+                !slot.is_available && "bg-destructive/10 border-destructive/20"
+              )}
             >
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium">
                   {startTimeUser} - {endTimeUser}
+                  {!slot.is_available && " (Unavailable)"}
                 </span>
                 <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
@@ -105,7 +110,7 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
                 </div>
               </div>
               <Button
-                variant="outline"
+                variant={slot.is_available ? "outline" : "destructive"}
                 size="sm"
                 onClick={() => onDelete(slot.id)}
               >
