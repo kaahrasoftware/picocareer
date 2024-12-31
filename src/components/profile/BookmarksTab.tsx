@@ -40,14 +40,15 @@ export function BookmarksTab() {
               description
             )
           `)
-          .eq('profile_id', session.user.id);
+          .eq('profile_id', session.user.id)
+          .maybeSingle(); // Changed from single() to maybeSingle()
 
         if (error) {
           console.error('Error fetching bookmarks:', error);
           return null;
         }
 
-        if (!data || data.length === 0) return {};
+        if (!data) return {};
 
         // Group bookmarks by content type
         const grouped = data.reduce((acc: any, bookmark) => {
