@@ -25,11 +25,10 @@ export default function Mentor() {
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-  const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const { toast } = useToast();
 
   const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles', availabilityFilter],
+    queryKey: ['profiles'],
     queryFn: async () => {
       console.log('Fetching profiles...');
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,14 +41,9 @@ export default function Mentor() {
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title, id),
-            mentor_availability!inner(id, is_available)
+            career:careers!profiles_position_fkey(title, id)
           `)
           .eq('user_type', 'mentor');
-
-        if (availabilityFilter === "available") {
-          query = query.eq('mentor_availability.is_available', true);
-        }
 
         if (searchQuery) {
           query = query.or(
@@ -164,8 +158,6 @@ export default function Mentor() {
                 schools={schools}
                 fields={fields}
                 allSkills={allSkills}
-                availabilityFilter={availabilityFilter}
-                onAvailabilityChange={setAvailabilityFilter}
               />
 
               {error ? (
