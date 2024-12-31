@@ -1,123 +1,98 @@
+import React from "react";
 import { Card } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CircularProgress } from "@/components/ui/circular-progress";
-import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
-
-interface SessionStats {
-  total_sessions: number;
-  completed_sessions: number;
-  upcoming_sessions: number;
-  cancelled_sessions: number;
-  unique_mentees: number;
-  total_hours: number;
-  session_data: {
-    name: string;
-    sessions: number;
-  }[];
-}
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Bookmark, Calendar, Clock, Star, Users } from "lucide-react";
 
 interface MentorshipStatsProps {
-  stats: SessionStats;
+  profileId: string;
 }
 
-export function MentorshipStats({ stats }: MentorshipStatsProps) {
-  // Calculate cancellation score
-  const cancellationScore = (stats.cancelled_sessions / stats.total_sessions) * 100;
-  
-  // Determine status and styling based on score
-  const getCancellationStatus = (score: number) => {
-    if (score <= 5) {
-      return {
-        label: "Excellent",
-        color: "text-green-500",
-        bgColor: "bg-green-50",
-        borderColor: "border-green-200",
-        icon: <CheckCircle className="w-5 h-5 text-green-500" />
-      };
-    } else if (score <= 15) {
-      return {
-        label: "Good",
-        color: "text-yellow-500",
-        bgColor: "bg-yellow-50",
-        borderColor: "border-yellow-200",
-        icon: <AlertCircle className="w-5 h-5 text-yellow-500" />
-      };
-    } else {
-      return {
-        label: "Fair",
-        color: "text-red-500",
-        bgColor: "bg-red-50",
-        borderColor: "border-red-200",
-        icon: <XCircle className="w-5 h-5 text-red-500" />
-      };
-    }
-  };
+export function MentorshipStats({ profileId }: MentorshipStatsProps) {
+  const { data: stats } = useQuery({
+    queryKey: ['mentorship-stats', profileId],
+    queryFn: async () => {
+      try {
+        const [sessionsResponse, bookmarksResponse] = await Promise.all([
+          supabase
+            .from('mentor_sessions')
+            .select('id, status')
+            .eq('mentor_id', profileId),
+          supabase
+            .from('user_bookmarks')
+            .select('id')
+            .eq('profile_id', profileId)
+        ]);
 
-  const cancellationStatus = getCancellationStatus(cancellationScore);
+        if (sessionsResponse.error) throw sessionsResponse.error;
+        if (bookmarksResponse.error) throw bookmarksResponse.error;
+
+        const sessions = sessionsResponse.data || [];
+        const totalSessions = sessions.length;
+        const completedSessions = sessions.filter(s => s.status === 'completed').length;
+        const cancelledSessions = sessions.filter(s => s.status === 'cancelled').length;
+        const bookmarksCount = bookmarksResponse.data?.length || 0;
+
+        return {
+          totalSessions,
+          completedSessions,
+          cancelledSessions,
+          bookmarksCount
+        };
+      } catch (error) {
+        console.error('Error fetching mentorship stats:', error);
+        return null;
+      }
+    },
+    enabled: !!profileId,
+  });
+
+  if (!stats) return null;
+
+  const cancellationRate = stats.totalSessions > 0
+    ? ((stats.cancelledSessions / stats.totalSessions) * 100).toFixed(1)
+    : '0';
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       <Card className="p-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
-          <p className="text-2xl font-bold">{stats.total_sessions}</p>
-          <p className="text-xs text-muted-foreground">
-            {stats.total_hours} hours total
-          </p>
+        <div className="flex items-center space-x-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium">Total Sessions</h3>
         </div>
+        <p className="text-2xl font-bold mt-2">{stats.totalSessions}</p>
       </Card>
 
       <Card className="p-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Completed</p>
-          <p className="text-2xl font-bold">{stats.completed_sessions}</p>
+        <div className="flex items-center space-x-2">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium">Completed</h3>
         </div>
+        <p className="text-2xl font-bold mt-2">{stats.completedSessions}</p>
       </Card>
 
       <Card className="p-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Cancelled</p>
-          <p className="text-2xl font-bold">{stats.cancelled_sessions}</p>
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium">Cancellation Rate</h3>
         </div>
-      </Card>
-
-      <Card className={`p-4 ${cancellationStatus.bgColor} ${cancellationStatus.borderColor} border-2`}>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Cancellation Score</p>
-            {cancellationStatus.icon}
-          </div>
-          <p className={`text-2xl font-bold ${cancellationStatus.color}`}>
-            {cancellationScore.toFixed(1)}%
-          </p>
-          <p className={`text-sm font-medium ${cancellationStatus.color}`}>
-            {cancellationStatus.label}
-          </p>
-        </div>
+        <p className="text-2xl font-bold mt-2">{cancellationRate}%</p>
       </Card>
 
       <Card className="p-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Unique Mentees</p>
-          <p className="text-2xl font-bold">{stats.unique_mentees}</p>
+        <div className="flex items-center space-x-2">
+          <Star className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium">Rating</h3>
         </div>
+        <p className="text-2xl font-bold mt-2">-</p>
       </Card>
 
-      <Card className="col-span-full p-4">
-        <div className="space-y-2">
-          <h3 className="font-medium">Session Activity</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.session_data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="sessions" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+      <Card className="p-4">
+        <div className="flex items-center space-x-2">
+          <Bookmark className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium">Bookmarks</h3>
         </div>
+        <p className="text-2xl font-bold mt-2">{stats.bookmarksCount}</p>
       </Card>
     </div>
   );
