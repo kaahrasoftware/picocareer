@@ -51,6 +51,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         last_name: data.last_name,
         bio: data.bio,
         location: data.location,
+        school_id: data.school_id,
         ...(isMentee ? {} : {
           position: data.position,
           company_id: data.company_id,
@@ -97,6 +98,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
       <PersonalSection 
         register={register}
         handleFieldChange={handleFieldChange}
+        schoolId={localProfile.school_id}
       />
       
       <BioSection 

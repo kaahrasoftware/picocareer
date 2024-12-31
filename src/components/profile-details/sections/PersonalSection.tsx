@@ -1,13 +1,35 @@
-import { Input } from "@/components/ui/input";
 import { UseFormRegister } from "react-hook-form";
+import { Input } from "@/components/ui/input";
 import { FormFields } from "../types/form-types";
+import { CustomSelect } from "../form-sections/education/CustomSelect";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PersonalSectionProps {
   register: UseFormRegister<FormFields>;
   handleFieldChange: (field: keyof FormFields, value: any) => void;
+  schoolId?: string;
 }
 
-export function PersonalSection({ register, handleFieldChange }: PersonalSectionProps) {
+export function PersonalSection({ register, handleFieldChange, schoolId }: PersonalSectionProps) {
+  const { data: schools = [] } = useQuery({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) {
+        console.error('Error fetching schools:', error);
+        throw error;
+      }
+      
+      return data || [];
+    }
+  });
+
   return (
     <div className="bg-muted rounded-lg p-4 space-y-4">
       <h4 className="font-semibold">Personal Information</h4>
@@ -33,6 +55,18 @@ export function PersonalSection({ register, handleFieldChange }: PersonalSection
           {...register("location")}
           onChange={(e) => handleFieldChange("location", e.target.value)}
           placeholder="City, Country"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">School</label>
+        <CustomSelect
+          value={schoolId || ''}
+          options={schools}
+          placeholder="School"
+          handleSelectChange={(_, value) => handleFieldChange("school_id", value)}
+          tableName="schools"
+          fieldName="school_id"
+          titleField="name"
         />
       </div>
     </div>
