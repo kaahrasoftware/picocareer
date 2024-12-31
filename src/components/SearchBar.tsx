@@ -18,87 +18,83 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const debouncedSearch = useDebounce(searchQuery, 300);
   const { trackSearch } = useSearchAnalytics();
   const { session } = useAuthSession();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
+  const handleSearch = async (value: string) => {
+    if (value.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsLoading(true);
+    console.log('Fetching results for query:', value);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          avatar_url,
+          position,
+          location,
+          bio,
+          skills,
+          tools_used,
+          keywords,
+          fields_of_interest,
+          highest_degree,
+          company:companies(name),
+          school:schools(name),
+          academic_major:majors!profiles_academic_major_id_fkey(title),
+          career:careers!profiles_position_fkey(title)
+        `)
+        .eq('user_type', 'mentor')
+        .or(
+          `first_name.ilike.%${value}%,` +
+          `last_name.ilike.%${value}%,` +
+          `full_name.ilike.%${value}%,` +
+          `bio.ilike.%${value}%,` +
+          `location.ilike.%${value}%,` +
+          `skills.cs.{${value}},` +
+          `tools_used.cs.{${value}},` +
+          `keywords.cs.{${value}},` +
+          `fields_of_interest.cs.{${value}}`
+        )
+        .limit(5);
+
+      if (error) throw error;
+
+      console.log('Search results:', data);
+      setSearchResults(data || []);
+      
+      // Only track search if user is authenticated
+      if (session?.user?.id) {
+        await trackSearch(value, data?.length || 0);
+      }
+    } catch (error) {
+      console.error('Error in search:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to fetch search results. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      if (debouncedSearch.length < 3) {
-        setSearchResults([]);
-        return;
-      }
+  // Use debounce for search
+  const debouncedSearch = useDebounce(handleSearch, 300);
 
-      setIsLoading(true);
-      console.log('Fetching results for query:', debouncedSearch);
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            avatar_url,
-            position,
-            location,
-            bio,
-            skills,
-            tools_used,
-            keywords,
-            fields_of_interest,
-            highest_degree,
-            company:companies(name),
-            school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title)
-          `)
-          .eq('user_type', 'mentor')
-          .or(
-            `first_name.ilike.%${debouncedSearch}%,` +
-            `last_name.ilike.%${debouncedSearch}%,` +
-            `full_name.ilike.%${debouncedSearch}%,` +
-            `bio.ilike.%${debouncedSearch}%,` +
-            `location.ilike.%${debouncedSearch}%,` +
-            `skills.cs.{${debouncedSearch}},` +
-            `tools_used.cs.{${debouncedSearch}},` +
-            `keywords.cs.{${debouncedSearch}},` +
-            `fields_of_interest.cs.{${debouncedSearch}}`
-          )
-          .limit(5);
-
-        if (error) {
-          console.error('Error fetching search results:', error);
-          return;
-        }
-
-        console.log('Search results:', data);
-        setSearchResults(data || []);
-        
-        // Only track search if user is authenticated
-        if (session?.user?.id) {
-          await trackSearch(debouncedSearch, data?.length || 0);
-        }
-      } catch (error) {
-        console.error('Error in search:', error);
-        toast({
-          title: "Search Error",
-          description: "Failed to fetch search results. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchResults();
-  }, [debouncedSearch, trackSearch, session?.user?.id, toast]);
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    debouncedSearch(value);
+  };
 
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
