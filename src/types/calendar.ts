@@ -1,5 +1,5 @@
 export interface SessionType {
-  type: string;  // Changed from union type to string to match database
+  type: string;
   duration: number;
 }
 
