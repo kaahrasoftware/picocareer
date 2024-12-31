@@ -31,6 +31,67 @@ export function EventsSidebar({
   // Filter out cancelled events
   const activeEvents = events.filter(event => event.status !== 'cancelled');
 
+  // Calculate overlapping events and their positions
+  const getEventPositions = (events: CalendarEvent[]) => {
+    const sortedEvents = [...events].sort((a, b) => 
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    );
+
+    const positions = new Map<string, { left: number; width: number }>();
+    const overlaps = new Map<string, Set<string>>();
+
+    // Find overlapping events
+    for (let i = 0; i < sortedEvents.length; i++) {
+      const event = sortedEvents[i];
+      const eventStart = new Date(event.start_time);
+      const eventEnd = new Date(event.end_time);
+      const overlappingEvents = new Set<string>();
+
+      for (let j = 0; j < sortedEvents.length; j++) {
+        if (i === j) continue;
+        const otherEvent = sortedEvents[j];
+        const otherStart = new Date(otherEvent.start_time);
+        const otherEnd = new Date(otherEvent.end_time);
+
+        if (eventStart < otherEnd && eventEnd > otherStart) {
+          overlappingEvents.add(otherEvent.id);
+        }
+      }
+
+      overlaps.set(event.id, overlappingEvents);
+    }
+
+    // Calculate positions for each event
+    sortedEvents.forEach(event => {
+      const overlappingEvents = overlaps.get(event.id) || new Set();
+      const totalOverlaps = overlappingEvents.size + 1;
+      const usedPositions = new Set<number>();
+
+      // Check positions already taken by overlapping events
+      overlappingEvents.forEach(overlapId => {
+        const pos = positions.get(overlapId);
+        if (pos) {
+          usedPositions.add(Math.floor(pos.left / (100 / totalOverlaps)));
+        }
+      });
+
+      // Find first available position
+      let position = 0;
+      while (usedPositions.has(position)) {
+        position++;
+      }
+
+      positions.set(event.id, {
+        left: (position * (100 / totalOverlaps)),
+        width: (100 / totalOverlaps)
+      });
+    });
+
+    return positions;
+  };
+
+  const eventPositions = getEventPositions(activeEvents);
+
   return (
     <div className="w-[600px] bg-background border border-border rounded-lg p-4">
       <div className="space-y-4">
@@ -58,6 +119,7 @@ export function EventsSidebar({
                   onClick={onEventClick}
                   onDelete={onEventDelete}
                   cellHeight={CELL_HEIGHT}
+                  position={eventPositions.get(event.id)}
                 />
               ))}
 

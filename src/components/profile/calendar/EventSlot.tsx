@@ -13,6 +13,10 @@ interface EventSlotProps {
   onClick?: (event: CalendarEvent) => void;
   onDelete?: (event: CalendarEvent) => void;
   timezone?: string;
+  position?: {
+    left: number;
+    width: number;
+  };
 }
 
 export function EventSlot({ 
@@ -20,7 +24,8 @@ export function EventSlot({
   cellHeight, 
   onClick,
   onDelete,
-  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
+  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+  position = { left: 0, width: 100 }
 }: EventSlotProps) {
   const { toast } = useToast();
   const startTime = toZonedTime(new Date(event.start_time), timezone);
@@ -47,11 +52,10 @@ export function EventSlot({
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event details from opening
+    e.stopPropagation();
 
     try {
       if (event.event_type === 'session' && event.session_details) {
-        // For sessions, we need to cancel in the mentor_sessions table
         const { error } = await supabase
           .from('mentor_sessions')
           .update({ status: 'cancelled' })
@@ -59,7 +63,6 @@ export function EventSlot({
 
         if (error) throw error;
       } else {
-        // For other event types, delete from calendar_events
         const { error } = await supabase
           .from('calendar_events')
           .delete()
@@ -73,7 +76,6 @@ export function EventSlot({
         description: "The event has been successfully removed from your calendar.",
       });
 
-      // Call the onDelete callback to update the UI
       onDelete?.(event);
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -88,12 +90,14 @@ export function EventSlot({
   return (
     <div
       className={cn(
-        "absolute left-0 right-0 p-2 border rounded-md cursor-pointer transition-colors group",
+        "absolute p-2 border rounded-md cursor-pointer transition-colors group",
         getEventColor()
       )}
       style={{
         top: `${top}px`,
         height: `${Math.max(height, cellHeight)}px`,
+        left: `${position.left}%`,
+        width: `${position.width}%`,
       }}
       onClick={() => onClick?.(event)}
     >
