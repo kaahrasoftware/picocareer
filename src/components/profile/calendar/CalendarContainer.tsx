@@ -27,6 +27,7 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         mode="single"
         selected={selectedDate}
         onSelect={setSelectedDate}
+        defaultMonth={selectedDate} // Add this line to maintain the selected month
         className="rounded-md border bg-kahra-darker"
         modifiers={{
           hasAvailability: (date) => hasAvailability(date)
