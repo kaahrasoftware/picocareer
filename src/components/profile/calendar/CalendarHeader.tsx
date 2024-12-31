@@ -19,9 +19,6 @@ export function CalendarHeader({ isMentor }: CalendarHeaderProps) {
         <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
           Webinars
         </Badge>
-        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-          Holidays
-        </Badge>
         {isMentor && (
           <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
             Available
