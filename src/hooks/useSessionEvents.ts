@@ -20,9 +20,22 @@ export function useSessionEvents(date: Date) {
           scheduled_at,
           status,
           notes,
-          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
-          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
-          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration),
+          mentor:profiles!mentor_sessions_mentor_id_fkey(
+            id,
+            full_name,
+            user_settings!inner(
+              setting_value,
+              setting_type
+            )
+          ),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(
+            id,
+            full_name
+          ),
+          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(
+            type,
+            duration
+          ),
           meeting_link,
           meeting_platform,
           attendance_confirmed
@@ -38,6 +51,11 @@ export function useSessionEvents(date: Date) {
       const events: CalendarEvent[] = sessions.map(session => {
         const startTime = new Date(session.scheduled_at);
         const endTime = new Date(startTime.getTime() + (session.session_type?.duration || 60) * 60000);
+        
+        // Find mentor's timezone from user_settings
+        const mentorTimezone = session.mentor?.user_settings?.find(
+          setting => setting.setting_type === 'timezone'
+        )?.setting_value || 'UTC';
 
         return {
           id: session.id,
@@ -55,7 +73,8 @@ export function useSessionEvents(date: Date) {
             notes: session.notes,
             mentor: {
               id: session.mentor?.id || '',
-              full_name: session.mentor?.full_name || ''
+              full_name: session.mentor?.full_name || '',
+              timezone: mentorTimezone
             },
             mentee: {
               id: session.mentee?.id || '',
