@@ -59,7 +59,7 @@ export default function MajorUpload() {
     arrayFields.forEach(field => {
       if (formattedData[field]) {
         if (typeof formattedData[field] === 'string') {
-          // Convert comma-separated string to array
+          // Convert comma-separated string to array and ensure proper PostgreSQL array format
           formattedData[field] = formattedData[field]
             .split(',')
             .map(item => item.trim())
@@ -92,7 +92,10 @@ export default function MajorUpload() {
         .eq('title', data.title)
         .maybeSingle();
 
-      if (searchError) throw searchError;
+      if (searchError) {
+        console.error('Search error:', searchError);
+        throw searchError;
+      }
 
       if (existingMajor) {
         toast({
@@ -107,6 +110,9 @@ export default function MajorUpload() {
       // Format the data before insertion
       const formattedData = formatArrayData(data);
 
+      // Log the formatted data for debugging
+      console.log('Formatted data:', formattedData);
+
       // If no existing major, proceed with insertion
       const { error: insertError } = await supabase
         .from('majors')
@@ -115,14 +121,17 @@ export default function MajorUpload() {
           status: 'Pending'
         }]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
 
       toast({
         title: "Success",
         description: "Major information has been submitted for review",
       });
 
-      window.location.reload();
+      navigate("/majors");
     } catch (error: any) {
       console.error('Error uploading major:', error);
       toast({
