@@ -85,7 +85,10 @@ export function useAnalytics() {
     }
   }, [session?.user?.id]);
 
-  const trackInteraction = useDebounce(trackInteractionImpl, 1000);
+  const trackInteraction = useCallback((data: InteractionData) => {
+    const debouncedFn = useDebounce(trackInteractionImpl, 1000);
+    debouncedFn(data);
+  }, [trackInteractionImpl]);
 
   return {
     trackInteraction,
