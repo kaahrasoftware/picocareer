@@ -15,8 +15,12 @@ import { CareerMentorList } from "./career-details/CareerMentorList";
 import { HeaderBadges } from "./career-details/HeaderBadges";
 import { AcademicMajorsSection } from "./career-details/AcademicMajorsSection";
 import { KeywordsSection } from "./career-details/KeywordsSection";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { Button } from "./ui/button";
+import { Bookmark } from "lucide-react";
+import { toast } from "sonner";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -35,6 +39,8 @@ type CareerWithMajors = Tables<"careers"> & {
 
 export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDetailsDialogProps) {
   const queryClient = useQueryClient();
+  const { session } = useAuthSession();
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   const { data: career, isLoading } = useQuery({
     queryKey: ['career', careerId],
@@ -57,6 +63,64 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     },
     enabled: open && !!careerId,
   });
+
+  // Check if the career is bookmarked
+  useQuery({
+    queryKey: ['career-bookmark', careerId, session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('user_bookmarks')
+        .select('id')
+        .eq('profile_id', session.user.id)
+        .eq('content_id', careerId)
+        .eq('content_type', 'career')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setIsBookmarked(!!data);
+      return data;
+    },
+    enabled: open && !!careerId && !!session?.user?.id,
+  });
+
+  const handleBookmarkToggle = async () => {
+    if (!session?.user?.id) {
+      toast.error("Please sign in to bookmark careers");
+      return;
+    }
+
+    try {
+      if (isBookmarked) {
+        const { error } = await supabase
+          .from('user_bookmarks')
+          .delete()
+          .eq('profile_id', session.user.id)
+          .eq('content_id', careerId)
+          .eq('content_type', 'career');
+
+        if (error) throw error;
+        setIsBookmarked(false);
+        toast.success("Career removed from bookmarks");
+      } else {
+        const { error } = await supabase
+          .from('user_bookmarks')
+          .insert({
+            profile_id: session.user.id,
+            content_id: careerId,
+            content_type: 'career'
+          });
+
+        if (error) throw error;
+        setIsBookmarked(true);
+        toast.success("Career added to bookmarks");
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      toast.error("Failed to update bookmark");
+    }
+  };
 
   // Subscribe to real-time updates for the careers table
   useEffect(() => {
@@ -98,15 +162,25 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <DialogHeader className="p-4 pb-0">
-          <div className="relative">
+          <div className="relative flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold text-foreground pr-24">
               {career.title}
             </DialogTitle>
-            <HeaderBadges 
-              profilesCount={career.profiles_count || 0}
-              salaryRange={career.salary_range}
-            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBookmarkToggle}
+              className="absolute right-0 top-0"
+            >
+              <Bookmark 
+                className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} 
+              />
+            </Button>
           </div>
+          <HeaderBadges 
+            profilesCount={career.profiles_count || 0}
+            salaryRange={career.salary_range}
+          />
         </DialogHeader>
         
         <ScrollArea className="h-[calc(85vh-120px)]">
