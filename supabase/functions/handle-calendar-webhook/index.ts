@@ -24,6 +24,7 @@ serve(async (req: Request) => {
 
     // Only process sync or update events
     if (state !== 'sync' && state !== 'update') {
+      console.log('Ignoring non-sync/update event:', state);
       return new Response(JSON.stringify({ message: 'Ignored non-sync/update event' }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -35,7 +36,7 @@ serve(async (req: Request) => {
     );
 
     const data = await req.json();
-    console.log('Webhook data:', data);
+    console.log('Webhook data:', JSON.stringify(data, null, 2));
 
     // Handle different calendar event states
     const calendarEventId = data.id;
@@ -73,7 +74,11 @@ serve(async (req: Request) => {
     // Find the associated mentor session
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
-      .select('*')
+      .select(`
+        *,
+        mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name, email),
+        mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name, email)
+      `)
       .eq('calendar_event_id', calendarEventId)
       .single();
 
@@ -89,16 +94,15 @@ serve(async (req: Request) => {
       });
     }
 
+    console.log('Found session:', session.id);
+
     // Update the session status and add cancellation note if applicable
     const updateData: any = {
       status: sessionStatus,
-      notes: data.status === 'cancelled' ? 'Cancelled via Google Calendar' : `${notificationTitle} via Google Calendar`
+      notes: data.status === 'cancelled' ? 'Cancelled via Google Calendar' : `${notificationTitle} via Google Calendar`,
+      calendar_event_etag: data.etag,
+      last_calendar_sync: new Date().toISOString()
     };
-
-    // If cancelled, update the last_calendar_sync
-    if (data.status === 'cancelled') {
-      updateData.last_calendar_sync = new Date().toISOString();
-    }
 
     const { error: updateError } = await supabase
       .from('mentor_sessions')
@@ -110,19 +114,21 @@ serve(async (req: Request) => {
       throw updateError;
     }
 
+    console.log('Updated session status:', sessionStatus);
+
     // Create notifications for both mentor and mentee
     const notifications = [
       {
-        profile_id: session.mentor_id,
+        profile_id: session.mentor.id,
         title: notificationTitle,
-        message: notificationMessage,
+        message: `Session with ${session.mentee.full_name} has been ${data.status}. ${notificationMessage}`,
         type: notificationType,
         action_url: '/profile?tab=calendar'
       },
       {
-        profile_id: session.mentee_id,
+        profile_id: session.mentee.id,
         title: notificationTitle,
-        message: notificationMessage,
+        message: `Session with ${session.mentor.full_name} has been ${data.status}. ${notificationMessage}`,
         type: notificationType,
         action_url: '/profile?tab=calendar'
       }
@@ -137,13 +143,21 @@ serve(async (req: Request) => {
       throw notificationError;
     }
 
+    console.log('Created notifications for mentor and mentee');
+
     // Send email notifications
-    await supabase.functions.invoke('send-session-email', {
-      body: { 
-        sessionId: session.id,
-        type: data.status === 'cancelled' ? 'cancellation' : 'update'
-      }
-    });
+    try {
+      await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: session.id,
+          type: data.status === 'cancelled' ? 'cancellation' : 'update'
+        }
+      });
+      console.log('Email notifications sent successfully');
+    } catch (emailError) {
+      console.error('Error sending email notifications:', emailError);
+      // Don't throw here, we still want to return success for the webhook
+    }
 
     console.log('Successfully processed calendar event update');
     return new Response(JSON.stringify({ success: true }), {
