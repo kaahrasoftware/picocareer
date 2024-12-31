@@ -77,17 +77,12 @@ serve(async (req: Request) => {
       reminders: {
         useDefault: true
       },
-      // Set join permissions
-      entryPoints: [{
-        entryPointType: 'video',
-        uri: '',
-        label: 'Meet',
-        pin: '',
-        accessCode: '',
-        meetingCode: '',
-        passcode: '',
-        password: ''
-      }]
+      // Set meeting access to open
+      conferenceProperties: {
+        allowedConferenceSolutionTypes: ['hangoutsMeet'],
+        accessLevel: 'open',
+        defaultSolutionKey: { type: 'hangoutsMeet' }
+      }
     };
 
     console.log('Creating calendar event with Meet link...');
