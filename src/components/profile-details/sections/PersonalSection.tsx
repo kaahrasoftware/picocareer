@@ -58,7 +58,6 @@ export function PersonalSection({ register, handleFieldChange, schoolId }: Perso
         />
       </div>
       <div>
-        <label className="text-sm font-medium">School</label>
         <CustomSelect
           value={schoolId || ''}
           options={schools}
