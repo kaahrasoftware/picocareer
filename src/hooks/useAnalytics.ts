@@ -1,23 +1,43 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export function useAnalytics() {
   const { session } = useAuthSession();
+  const debouncedTrackInteraction = useDebounce((data: any) => trackInteraction(
+    data.elementId,
+    data.elementType,
+    data.interactionType,
+    data.pagePath,
+    data.interactionData
+  ), 1000);
 
   const trackPageView = async (pagePath: string) => {
     if (!session?.user?.id) return;
 
     try {
-      const { error } = await supabase
+      // First try to find an existing page view for this session
+      const { data: existingView } = await supabase
         .from('user_page_views')
-        .insert({
-          profile_id: session.user.id,
-          page_path: pagePath,
-        });
+        .select('id, entry_time')
+        .eq('profile_id', session.user.id)
+        .eq('page_path', pagePath)
+        .is('exit_time', null)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error tracking page view:', error);
+      if (!existingView) {
+        // Create new page view if none exists
+        const { error } = await supabase
+          .from('user_page_views')
+          .insert({
+            profile_id: session.user.id,
+            page_path: pagePath,
+          });
+
+        if (error) {
+          console.error('Error tracking page view:', error);
+        }
       }
     } catch (error) {
       console.error('Error tracking page view:', error);
@@ -80,9 +100,29 @@ export function useAnalytics() {
     }
   };
 
+  const updatePageViewExit = async (pagePath: string) => {
+    if (!session?.user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_page_views')
+        .update({ exit_time: new Date().toISOString() })
+        .eq('profile_id', session.user.id)
+        .eq('page_path', pagePath)
+        .is('exit_time', null);
+
+      if (error) {
+        console.error('Error updating page view exit time:', error);
+      }
+    } catch (error) {
+      console.error('Error updating page view exit time:', error);
+    }
+  };
+
   return {
     trackPageView,
-    trackInteraction,
+    trackInteraction: debouncedTrackInteraction,
     trackContentEngagement,
+    updatePageViewExit,
   };
 }
