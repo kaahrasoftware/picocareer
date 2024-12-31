@@ -72,9 +72,9 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      {/* Blue gradient border container */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 p-[3px]">
-        <div className="h-full w-full bg-background rounded-full">
+      {/* Blue gradient border container with increased padding */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 p-[4px] -m-1">
+        <div className="h-full w-full bg-background rounded-full flex items-center justify-center">
           <Avatar className={`${sizeClasses[size]} ring-2 ring-background shadow-lg`}>
             <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
             <AvatarFallback>{fallback}</AvatarFallback>
@@ -82,7 +82,7 @@ export function ProfileAvatar({
         </div>
       </div>
       
-      {/* Maintain the same dimensions as the border container */}
+      {/* Spacer to maintain layout */}
       <Avatar className={`${sizeClasses[size]} opacity-0`}>
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>
