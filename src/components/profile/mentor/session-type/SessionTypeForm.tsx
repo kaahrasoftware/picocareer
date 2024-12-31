@@ -19,7 +19,6 @@ interface SessionTypeFormProps {
 export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTypeFormProps) {
   const [type, setType] = useState<SessionTypeEnum>("First Touch");
   const [duration, setDuration] = useState('30');
-  const [price, setPrice] = useState('0');
   const [description, setDescription] = useState('');
 
   // Filter out already used session types
@@ -27,7 +26,12 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ type, duration, price, description });
+    onSubmit({ 
+      type, 
+      duration, 
+      price: '0', // Set default price to 0
+      description 
+    });
   };
 
   return (
@@ -51,26 +55,14 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Duration (minutes)</label>
-          <Input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            placeholder="Duration (minutes)"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Price ($)</label>
-          <Input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price ($)"
-          />
-        </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Duration (minutes)</label>
+        <Input
+          type="number"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          placeholder="Duration (minutes)"
+        />
       </div>
 
       <div className="space-y-2">
