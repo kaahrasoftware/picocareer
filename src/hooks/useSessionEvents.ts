@@ -16,6 +16,24 @@ export function useSessionEvents() {
         throw new Error("No user session found");
       }
 
+      // First check if user has timezone set
+      const { data: userSettings, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('setting_value')
+        .eq('profile_id', currentUserId)
+        .eq('setting_type', 'timezone')
+        .single();
+
+      if (settingsError) {
+        console.error('Error fetching user timezone:', settingsError);
+      } else if (!userSettings?.setting_value) {
+        toast({
+          title: "Timezone not set",
+          description: "Please set your timezone in settings to ensure accurate scheduling.",
+          variant: "destructive",
+        });
+      }
+
       // Fetch mentor sessions with proper column specification
       const { data: sessions, error } = await supabase
         .from("mentor_sessions")
