@@ -1,8 +1,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -12,15 +10,13 @@ import { AboutSection } from "./career-details/AboutSection";
 import { SkillsAndTools } from "./career-details/SkillsAndTools";
 import { AdditionalInfo } from "./career-details/AdditionalInfo";
 import { CareerMentorList } from "./career-details/CareerMentorList";
-import { HeaderBadges } from "./career-details/HeaderBadges";
 import { AcademicMajorsSection } from "./career-details/AcademicMajorsSection";
 import { KeywordsSection } from "./career-details/KeywordsSection";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Button } from "./ui/button";
-import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
+import { DialogHeaderSection } from "./career-details/DialogHeaderSection";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -159,27 +155,13 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-        <DialogHeader className="p-4 pb-0">
-          <div className="relative flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-foreground pr-24">
-              {career.title}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBookmarkToggle}
-              className="absolute right-0 top-0"
-            >
-              <Bookmark 
-                className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} 
-              />
-            </Button>
-          </div>
-          <HeaderBadges 
-            profilesCount={career.profiles_count || 0}
-            salaryRange={career.salary_range}
-          />
-        </DialogHeader>
+        <DialogHeaderSection
+          title={career.title}
+          profilesCount={career.profiles_count || 0}
+          salaryRange={career.salary_range}
+          isBookmarked={isBookmarked}
+          onBookmarkToggle={handleBookmarkToggle}
+        />
         
         <ScrollArea className="h-[calc(85vh-120px)]">
           <div className="space-y-6 p-4">
