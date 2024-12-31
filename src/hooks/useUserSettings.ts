@@ -64,7 +64,8 @@ export function useUserSettings(profileId: string | undefined) {
         .upsert({
           profile_id: profileId,
           setting_type: type,
-          setting_value: value
+          setting_value: value,
+          updated_at: new Date().toISOString() // Add the updated_at field
         }, {
           onConflict: 'profile_id,setting_type'
         })
