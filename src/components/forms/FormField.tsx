@@ -7,6 +7,7 @@ import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
 import { BasicInputField } from "./fields/BasicInputField";
 import { CategoryField } from "./fields/CategoryField";
 import { SubcategoryField } from "./fields/SubcategoryField";
+import { FeatureField } from "./fields/FeatureField";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -198,14 +199,11 @@ export function FormField({
 
           case "checkbox":
             return (
-              <FormItem>
-                <div className="flex flex-row items-start space-x-3 space-y-0">
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </div>
-              </FormItem>
+              <FeatureField
+                field={field}
+                label={label}
+                description={description}
+              />
             );
 
           default:
