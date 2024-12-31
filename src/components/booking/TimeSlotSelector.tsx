@@ -3,6 +3,8 @@ import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
