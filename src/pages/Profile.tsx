@@ -17,7 +17,7 @@ export default function Profile() {
     <div className="container py-6 space-y-6">
       <div className="grid w-full grid-cols-5 mb-6">
         <Tabs defaultValue="profile" className="col-span-5">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
