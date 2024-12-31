@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface InteractionData {
@@ -14,7 +13,7 @@ interface InteractionData {
 export function useAnalytics() {
   const { session } = useAuthSession();
 
-  const trackInteraction = async (data: InteractionData) => {
+  const trackInteractionImpl = async (data: InteractionData) => {
     if (!session?.user?.id) return;
 
     try {
@@ -37,7 +36,7 @@ export function useAnalytics() {
     }
   };
 
-  const debouncedTrackInteraction = useDebounce(trackInteraction, 1000);
+  const debouncedTrackInteraction = useDebounce(trackInteractionImpl, 1000);
 
   const trackPageView = async (pagePath: string) => {
     if (!session?.user?.id) return;
