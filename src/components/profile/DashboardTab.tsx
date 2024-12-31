@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AnalyticsOverview } from "./dashboard/analytics/AnalyticsOverview";
-import { ContentStatusCard } from "./dashboard/ContentStatusCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ContentStatusCard } from "./dashboard/ContentStatusCard";
 
 export function DashboardTab() {
   const { data: contentStats, refetch: refetchContent } = useQuery({
@@ -58,10 +57,6 @@ export function DashboardTab() {
 
   return (
     <div className="space-y-8 p-6">
-      {/* Analytics Overview */}
-      <AnalyticsOverview />
-
-      {/* Content Status Overview */}
       <Card>
         <CardHeader>
           <CardTitle>Content Status Overview</CardTitle>
