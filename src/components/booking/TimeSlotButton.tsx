@@ -26,13 +26,20 @@ export function TimeSlotButton({
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  // Create UTC date from the provided date and time
   const slotDate = new Date(date);
   const [hours, minutes] = time.split(':').map(Number);
   slotDate.setHours(hours, minutes, 0, 0);
 
-  // Format time in both mentor's and user's timezone
+  // First convert UTC to mentor's timezone, then to user's timezone
   const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
   const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
+
+  console.log('TimeSlotButton - UTC time:', slotDate.toISOString());
+  console.log('TimeSlotButton - Mentor timezone:', mentorTimezone);
+  console.log('TimeSlotButton - Mentor time:', mentorTime);
+  console.log('TimeSlotButton - User timezone:', userTimezone);
+  console.log('TimeSlotButton - User time:', userTime);
 
   return (
     <Button
