@@ -1,6 +1,13 @@
 import { getAccessToken } from "./auth-utils.ts";
 
 export async function createCalendarEvent(eventDetails: any, accessToken: string) {
+  console.log('Creating calendar event with details:', {
+    summary: eventDetails.summary,
+    startTime: eventDetails.start.dateTime,
+    endTime: eventDetails.end.dateTime,
+    attendees: eventDetails.attendees
+  });
+
   const calendarResponse = await fetch(
     'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1',
     {
@@ -16,10 +23,12 @@ export async function createCalendarEvent(eventDetails: any, accessToken: string
   if (!calendarResponse.ok) {
     const errorData = await calendarResponse.json();
     console.error('Failed to create calendar event:', errorData);
-    throw new Error('Failed to create calendar event');
+    throw new Error(`Failed to create calendar event: ${JSON.stringify(errorData)}`);
   }
 
-  return await calendarResponse.json();
+  const eventData = await calendarResponse.json();
+  console.log('Calendar event created successfully:', eventData);
+  return eventData;
 }
 
 export async function setupWebhook(calendarId: string) {
@@ -40,7 +49,6 @@ export async function setupWebhook(calendarId: string) {
         params: {
           ttl: '604800', // 7 days in seconds
         },
-        // Include all event changes we want to monitor
         events: ['cancelled', 'confirmed', 'updated', 'deleted']
       }),
     }
