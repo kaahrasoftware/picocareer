@@ -2,6 +2,10 @@ import { cn } from "@/lib/utils";
 import { CalendarEvent } from "@/types/calendar";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventSlotProps {
   event: CalendarEvent;
@@ -16,6 +20,7 @@ export function EventSlot({
   onClick,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventSlotProps) {
+  const { toast } = useToast();
   const startTime = toZonedTime(new Date(event.start_time), timezone);
   const endTime = toZonedTime(new Date(event.end_time), timezone);
   
@@ -39,10 +44,46 @@ export function EventSlot({
     return "bg-gray-500/20 hover:bg-gray-500/30 border-gray-500/30";
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event details from opening
+
+    try {
+      if (event.event_type === 'session' && event.session_details) {
+        // For sessions, we need to cancel in the mentor_sessions table
+        const { error } = await supabase
+          .from('mentor_sessions')
+          .update({ status: 'cancelled' })
+          .eq('id', event.session_details.id);
+
+        if (error) throw error;
+      } else {
+        // For other event types, delete from calendar_events
+        const { error } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('id', event.id);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Event deleted",
+        description: "The event has been successfully removed from your calendar.",
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the event. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div
       className={cn(
-        "absolute left-0 right-0 p-2 border rounded-md cursor-pointer transition-colors",
+        "absolute left-0 right-0 p-2 border rounded-md cursor-pointer transition-colors group",
         getEventColor()
       )}
       style={{
@@ -52,7 +93,17 @@ export function EventSlot({
       onClick={() => onClick?.(event)}
     >
       <div className="flex flex-col h-full overflow-hidden">
-        <p className="text-xs font-medium truncate">{event.title}</p>
+        <div className="flex justify-between items-start">
+          <p className="text-xs font-medium truncate">{event.title}</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
         <p className="text-xs text-muted-foreground">
           {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
         </p>
