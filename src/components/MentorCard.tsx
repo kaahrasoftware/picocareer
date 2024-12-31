@@ -82,11 +82,11 @@ export function MentorCard(props: MentorCardProps) {
             </div>
           )}
 
-          {/* Skills Section */}
+          {/* Skills Section - Limited to 3 items */}
           {props.skills?.length > 0 && (
             <div className="w-full mb-4">
               <div className="flex flex-wrap gap-1.5">
-                {props.skills.map((skill) => (
+                {props.skills.slice(0, 3).map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
