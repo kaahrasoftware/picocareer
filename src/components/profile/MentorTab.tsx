@@ -59,14 +59,14 @@ export function MentorTab({ profile }: MentorTabProps) {
 
   // Fetch bookmark count
   const { data: bookmarkCount = 0 } = useQuery({
-    queryKey: ["profile-bookmarks", profileId],
+    queryKey: ["mentor-bookmarks", profileId],
     queryFn: async () => {
       if (!profileId) return 0;
 
       const { count, error } = await supabase
         .from("user_bookmarks")
         .select("*", { count: 'exact', head: true })
-        .eq("content_type", "profile")
+        .eq("content_type", "mentor")
         .eq("content_id", profileId);
 
       if (error) throw error;
