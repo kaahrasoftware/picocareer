@@ -8,8 +8,10 @@ export function useProfileAnalytics() {
   const startTime = Date.now();
 
   useEffect(() => {
+    const currentPath = location.pathname;
+    
     // Track initial page view
-    trackPageView(location.pathname);
+    trackPageView(currentPath);
     
     // Set up scroll tracking
     const handleScroll = () => {
@@ -21,7 +23,7 @@ export function useProfileAnalytics() {
         elementId: 'profile-scroll',
         elementType: 'scroll',
         interactionType: 'content_view',
-        pagePath: location.pathname,
+        pagePath: currentPath,
         interactionData: { scrollPercentage }
       });
     };
@@ -33,10 +35,10 @@ export function useProfileAnalytics() {
         elementId: 'profile-page',
         elementType: 'page',
         interactionType: 'page_view',
-        pagePath: location.pathname,
+        pagePath: currentPath,
         interactionData: { timeSpent }
       });
-      updatePageViewExit(location.pathname);
+      updatePageViewExit(currentPath);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -47,7 +49,7 @@ export function useProfileAnalytics() {
       window.removeEventListener('beforeunload', cleanup);
       cleanup();
     };
-  }, [location.pathname, trackPageView, trackInteraction, updatePageViewExit]);
+  }, [location.pathname, trackPageView, trackInteraction, updatePageViewExit, startTime]);
 
   const handleTabChange = useCallback((value: string) => {
     trackInteraction({

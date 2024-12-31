@@ -68,33 +68,6 @@ export function useAnalytics() {
     }
   }, [session?.user?.id]);
 
-  const trackContentEngagement = useCallback(async (
-    contentType: string,
-    contentId: string,
-    timeSpent: number,
-    scrollDepth?: number
-  ) => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('content_engagement')
-        .insert({
-          profile_id: session.user.id,
-          content_type: contentType,
-          content_id: contentId,
-          time_spent: timeSpent,
-          scroll_depth: scrollDepth,
-        });
-
-      if (error) {
-        console.error('Error tracking content engagement:', error);
-      }
-    } catch (error) {
-      console.error('Error tracking content engagement:', error);
-    }
-  }, [session?.user?.id]);
-
   const updatePageViewExit = useCallback(async (pagePath: string) => {
     if (!session?.user?.id) return;
 
@@ -115,9 +88,8 @@ export function useAnalytics() {
   }, [session?.user?.id]);
 
   return {
-    trackPageView,
     trackInteraction,
-    trackContentEngagement,
+    trackPageView,
     updatePageViewExit,
   };
 }
