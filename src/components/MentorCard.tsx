@@ -32,6 +32,10 @@ interface MentorCardProps {
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Get the first 3 skills and calculate remaining count
+  const displaySkills = props.skills?.slice(0, 3) || [];
+  const remainingCount = props.skills ? props.skills.length - 3 : 0;
+
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -86,7 +90,7 @@ export function MentorCard(props: MentorCardProps) {
           {props.skills?.length > 0 && (
             <div className="w-full mb-4">
               <div className="flex flex-wrap gap-1.5">
-                {props.skills.map((skill) => (
+                {displaySkills.map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
@@ -95,6 +99,14 @@ export function MentorCard(props: MentorCardProps) {
                     {skill}
                   </Badge>
                 ))}
+                {remainingCount > 0 && (
+                  <Badge 
+                    variant="outline"
+                    className="bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors border border-gray-200"
+                  >
+                    +{remainingCount} more
+                  </Badge>
+                )}
               </div>
             </div>
           )}
