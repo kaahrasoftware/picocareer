@@ -119,7 +119,7 @@ export function SessionActions({
             variant="destructive"
             onClick={onCancel}
             disabled={!cancellationNote.trim() || isCancelling}
-            className="w-full"
+            className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
           >
             {isCancelling ? "Cancelling..." : "Cancel Session"}
           </Button>
