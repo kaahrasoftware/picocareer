@@ -72,7 +72,9 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
         setSearchResults(data || []);
         
         // Track search analytics
-        await trackSearch(debouncedSearch, data?.length || 0);
+        if (trackSearch) {
+          await trackSearch(debouncedSearch, data?.length || 0);
+        }
       } catch (error) {
         console.error('Error in search:', error);
       } finally {
@@ -100,12 +102,16 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     };
   }, []);
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
   return (
     <div className="relative w-full search-container">
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
         <SearchInput
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={handleSearchChange}
           onFocus={() => setIsFocused(true)}
           className={className}
           placeholder={placeholder}
