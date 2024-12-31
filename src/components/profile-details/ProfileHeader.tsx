@@ -54,7 +54,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         toast({
           title: "Timezone Not Set",
           description: "Please set your timezone in settings for better scheduling experience",
-          variant: "warning",
+          variant: "default",
         });
       }
 
