@@ -178,8 +178,9 @@ export function BookmarksTab() {
 
       {selectedProfile && (
         <ProfileDetailsDialog
-          profileId={selectedProfile}
-          onClose={() => setSelectedProfile(null)}
+          userId={selectedProfile}
+          open={!!selectedProfile}
+          onOpenChange={(open) => !open && setSelectedProfile(null)}
         />
       )}
     </Card>
