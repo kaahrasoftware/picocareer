@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getAccessToken } from "./auth-utils.ts";
-import { createCalendarEvent } from "./calendar-utils.ts";
+import { createCalendarEvent, setupWebhook } from "./calendar-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,7 +24,6 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch session details with mentor and mentee information
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
@@ -43,14 +42,7 @@ serve(async (req: Request) => {
       throw new Error('Session not found');
     }
 
-    console.log('Session details fetched:', {
-      mentorEmail: session.mentor.email,
-      menteeEmail: session.mentee.email,
-      scheduledAt: session.scheduled_at
-    });
-
     const accessToken = await getAccessToken();
-    console.log('Google Calendar access token obtained');
 
     const startTime = new Date(session.scheduled_at);
     const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000);
@@ -68,36 +60,33 @@ serve(async (req: Request) => {
       },
       attendees: [
         { email: session.mentor.email },
-        { email: session.mentee.email }
+        { email: session.mentee.email },
       ],
       conferenceData: {
         createRequest: {
-          requestId: crypto.randomUUID(),
+          requestId: sessionId,
           conferenceSolutionKey: { type: 'hangoutsMeet' },
-          status: { statusCode: 'success' }
-        }
+        },
       },
       guestsCanModify: false,
       guestsCanInviteOthers: false,
-      guestsCanSeeOtherGuests: true,
-      conferenceDataVersion: 1,
-      reminders: {
-        useDefault: true
-      }
+      guestsCanSeeOtherGuests: true
     };
 
     console.log('Creating calendar event with Meet link...');
     const calendarEvent = await createCalendarEvent(event, accessToken);
-    
-    if (!calendarEvent.conferenceData?.entryPoints?.[0]?.uri) {
-      console.error('Calendar event created but no Meet link found:', calendarEvent);
+    const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri;
+
+    if (!meetLink) {
+      console.error('No Meet link in calendar event:', calendarEvent);
       throw new Error('Failed to generate Meet link');
     }
 
-    const meetLink = calendarEvent.conferenceData.entryPoints[0].uri;
+    // Set up webhook for this calendar event
+    await setupWebhook('primary');
+
     console.log('Successfully created Meet link:', meetLink);
 
-    // Update the session with the Meet link
     const { error: updateError } = await supabase
       .from('mentor_sessions')
       .update({
