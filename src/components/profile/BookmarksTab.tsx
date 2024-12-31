@@ -6,9 +6,12 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookmarkX } from "lucide-react";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 
 export function BookmarksTab() {
   const { session } = useAuthSession();
+  const [selectedProfile, setSelectedProfile] = React.useState<string | null>(null);
 
   const { data: bookmarks, isLoading } = useQuery({
     queryKey: ['bookmarks', session?.user?.id],
@@ -16,7 +19,6 @@ export function BookmarksTab() {
       if (!session?.user?.id) return null;
 
       try {
-        // First get all bookmarks for the user
         const { data, error } = await supabase
           .from('user_bookmarks')
           .select(`
@@ -33,20 +35,24 @@ export function BookmarksTab() {
 
         if (!data || data.length === 0) return {};
 
-        // Group bookmarks by type for separate queries
         const mentorIds = data.filter(b => b.content_type === 'mentor').map(b => b.content_id);
         const careerIds = data.filter(b => b.content_type === 'career').map(b => b.content_id);
         const majorIds = data.filter(b => b.content_type === 'major').map(b => b.content_id);
 
-        // Fetch mentor profiles
         const mentorPromise = mentorIds.length > 0 ? 
           supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, position, user_type')
+            .select(`
+              id, 
+              full_name, 
+              avatar_url, 
+              position,
+              user_type,
+              company:companies(name)
+            `)
             .in('id', mentorIds) : 
           Promise.resolve({ data: [] });
 
-        // Fetch careers
         const careerPromise = careerIds.length > 0 ?
           supabase
             .from('careers')
@@ -54,7 +60,6 @@ export function BookmarksTab() {
             .in('id', careerIds) :
           Promise.resolve({ data: [] });
 
-        // Fetch majors
         const majorPromise = majorIds.length > 0 ?
           supabase
             .from('majors')
@@ -62,14 +67,12 @@ export function BookmarksTab() {
             .in('id', majorIds) :
           Promise.resolve({ data: [] });
 
-        // Wait for all queries to complete
         const [mentorResult, careerResult, majorResult] = await Promise.all([
           mentorPromise,
           careerPromise,
           majorPromise
         ]);
 
-        // Group results by type
         const grouped: any = {};
         
         if (mentorResult.data && mentorResult.data.length > 0) {
@@ -131,26 +134,54 @@ export function BookmarksTab() {
         </TabsList>
 
         {Object.entries(bookmarks).map(([type, items]: [string, any[]]) => (
-          <TabsContent key={type} value={type} className="space-y-4">
-            {items.map((item) => (
-              <Card key={item.id} className="p-4">
-                <h3 className="font-semibold text-lg mb-2">
-                  {type === 'mentor' ? item.full_name : item.title}
-                </h3>
-                {type === 'mentor' ? (
-                  <p className="text-muted-foreground">
-                    {item.user_type === 'mentor' ? 'Mentor' : 'User'}
-                  </p>
-                ) : (
-                  <p className="text-muted-foreground line-clamp-2">
-                    {item.description}
-                  </p>
-                )}
-              </Card>
-            ))}
+          <TabsContent key={type} value={type}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {items.map((item) => (
+                <Card 
+                  key={item.id} 
+                  className={`p-4 ${type === 'mentor' ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
+                  onClick={() => type === 'mentor' && setSelectedProfile(item.id)}
+                >
+                  {type === 'mentor' ? (
+                    <div className="flex flex-col items-center text-center">
+                      <ProfileAvatar
+                        avatarUrl={item.avatar_url}
+                        fallback={item.full_name?.charAt(0) || '?'}
+                        size="md"
+                      />
+                      <h3 className="font-semibold text-lg mt-3 mb-1">
+                        {item.full_name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {item.position ? bookmarks.careers?.find((c: any) => c.id === item.position)?.title : 'No position set'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.company?.name || 'No company set'}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-semibold text-lg mb-2">
+                        {item.title}
+                      </h3>
+                      <p className="text-muted-foreground line-clamp-2">
+                        {item.description}
+                      </p>
+                    </>
+                  )}
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         ))}
       </Tabs>
+
+      {selectedProfile && (
+        <ProfileDetailsDialog
+          profileId={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+        />
+      )}
     </Card>
   );
 }
