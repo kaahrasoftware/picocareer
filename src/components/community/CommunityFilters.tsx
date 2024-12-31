@@ -28,6 +28,8 @@ export interface CommunityFiltersProps {
   locations?: string[];
   companies?: string[];
   schools?: string[];
+  availabilityFilter?: string;
+  onAvailabilityChange?: (value: string) => void;
 }
 
 export function CommunityFilters({
@@ -54,6 +56,8 @@ export function CommunityFilters({
   locations,
   companies,
   schools,
+  availabilityFilter = "all",
+  onAvailabilityChange,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -83,23 +87,35 @@ export function CommunityFilters({
           </div>
 
           <div className="flex gap-4">
-            <div className="flex-1 max-w-[60%]">
+            <div className="flex-1 max-w-[40%]">
               <SearchInput 
                 value={searchQuery} 
                 onChange={onSearchChange}
                 className={`transition-all duration-200 ${
                   isScrolled ? 'h-8 text-sm' : 'h-10'
                 }`}
-                placeholder="Search by title, description, skills..."
+                placeholder="Search by name, title..."
               />
             </div>
 
-            <div className="flex-1 max-w-[40%]">
+            <div className="flex-1 max-w-[30%]">
               <SelectFilter
                 value={fieldFilter}
                 onValueChange={onFieldChange}
                 placeholder="Category"
                 options={fields}
+                className={`transition-all duration-200 ${
+                  isScrolled ? 'h-8 text-sm' : 'h-10'
+                }`}
+              />
+            </div>
+
+            <div className="flex-1 max-w-[30%]">
+              <SelectFilter
+                value={availabilityFilter}
+                onValueChange={onAvailabilityChange}
+                placeholder="Availability"
+                options={["all", "available"]}
                 className={`transition-all duration-200 ${
                   isScrolled ? 'h-8 text-sm' : 'h-10'
                 }`}
