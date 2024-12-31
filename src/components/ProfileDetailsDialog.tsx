@@ -1,17 +1,9 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
-import { ProfileHeader } from "./profile-details/ProfileHeader";
-import { ProfileEditForm } from "./profile-details/ProfileEditForm";
-import { ProfileView } from "./profile-details/ProfileView";
+import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -152,44 +144,15 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-          <DialogHeader className="p-6 pb-0">
-            <div className="relative">
-              <ProfileHeader profile={profile} session={session} />
-              {isMentor && (
-                isOwnProfile ? (
-                  <Button 
-                    size="lg"
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="absolute right-0 top-16"
-                  >
-                    {isEditing ? "Cancel Editing" : "Edit Profile"}
-                  </Button>
-                ) : (
-                  <Button 
-                    size="lg"
-                    onClick={handleBookSession}
-                    className="absolute right-0 top-16"
-                  >
-                    Book a Session
-                  </Button>
-                )
-              )}
-            </div>
-          </DialogHeader>
-
-          <ScrollArea className="flex-1 px-6">
-            {isEditing ? (
-              <ProfileEditForm 
-                profile={profile} 
-                onCancel={() => setIsEditing(false)}
-                onSuccess={() => setIsEditing(false)}
-              />
-            ) : (
-              <ProfileView profile={profile} />
-            )}
-          </ScrollArea>
-        </DialogContent>
+        <ProfileDialogContent
+          profile={profile}
+          session={session}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          isOwnProfile={isOwnProfile}
+          isMentor={isMentor}
+          handleBookSession={handleBookSession}
+        />
       </Dialog>
 
       {!isOwnProfile && (
