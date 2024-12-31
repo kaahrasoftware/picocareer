@@ -110,8 +110,7 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
       <Button 
         onClick={handleSaveUnavailability}
         disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
-        className="w-full"
-        variant="destructive"
+        className="w-full bg-red-600 hover:bg-red-700 text-white"
       >
         {isSubmitting ? "Saving..." : "Mark as Unavailable"}
       </Button>
