@@ -248,6 +248,47 @@ export type Database = {
         }
         Relationships: []
       }
+      content_engagement: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          profile_id: string
+          scroll_depth: number | null
+          time_spent: number
+          updated_at: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          scroll_depth?: number | null
+          time_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          scroll_depth?: number | null
+          time_spent?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_engagement_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_subscriptions: {
         Row: {
           created_at: string
@@ -822,6 +863,114 @@ export type Database = {
         }
         Relationships: []
       }
+      search_history: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          results_count: number | null
+          search_query: string
+          search_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          results_count?: number | null
+          search_query: string
+          search_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          results_count?: number | null
+          search_query?: string
+          search_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_history_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_bookmarks: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_bookmarks_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_interactions: {
+        Row: {
+          created_at: string
+          element_id: string | null
+          element_type: string | null
+          id: string
+          interaction_data: Json | null
+          interaction_type: Database["public"]["Enums"]["interaction_type"]
+          page_path: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          element_id?: string | null
+          element_type?: string | null
+          id?: string
+          interaction_data?: Json | null
+          interaction_type: Database["public"]["Enums"]["interaction_type"]
+          page_path: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          element_id?: string | null
+          element_type?: string | null
+          id?: string
+          interaction_data?: Json | null
+          interaction_type?: Database["public"]["Enums"]["interaction_type"]
+          page_path?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_oauth_tokens: {
         Row: {
           access_token: string
@@ -854,6 +1003,41 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      user_page_views: {
+        Row: {
+          created_at: string
+          entry_time: string
+          exit_time: string | null
+          id: string
+          page_path: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_time?: string
+          exit_time?: string | null
+          id?: string
+          page_path: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_time?: string
+          exit_time?: string | null
+          id?: string
+          page_path?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_page_views_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_settings: {
         Row: {
@@ -1178,6 +1362,12 @@ export type Database = {
         | "Master"
         | "MD"
         | "PhD"
+      interaction_type:
+        | "page_view"
+        | "click"
+        | "search"
+        | "bookmark"
+        | "content_view"
       language:
         | "English"
         | "Spanish"
