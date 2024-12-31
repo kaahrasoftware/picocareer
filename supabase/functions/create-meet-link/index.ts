@@ -69,9 +69,17 @@ serve(async (req: Request) => {
           status: { statusCode: 'success' }
         }
       },
+      // Allow participants to join without asking
       guestsCanModify: false,
       guestsCanInviteOthers: false,
-      guestsCanSeeOtherGuests: true
+      guestsCanSeeOtherGuests: true,
+      conferenceDataVersion: 1,
+      // Set join permissions to allow automatic joining
+      hangoutLink: {
+        accessLevel: 'reader',
+        allowExternalGuests: false,
+        defaultToJoin: true
+      }
     };
 
     console.log('Creating calendar event with Meet link...');
