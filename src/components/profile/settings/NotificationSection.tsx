@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useEffect } from "react";
 
 export function NotificationSection() {
   const { session } = useAuthSession();
@@ -11,6 +12,19 @@ export function NotificationSection() {
 
   const emailNotifications = getSetting('email_notifications') === 'true';
   const pushNotifications = getSetting('push_notifications') === 'true';
+
+  // Set default notifications on first load if no settings exist
+  useEffect(() => {
+    if (profile?.id && getSetting('notifications') === null) {
+      updateSetting.mutate({
+        type: 'notifications',
+        value: JSON.stringify({
+          email_notifications: true,
+          push_notifications: true
+        })
+      });
+    }
+  }, [profile?.id]);
 
   const handleNotificationChange = (type: 'email_notifications' | 'push_notifications', checked: boolean) => {
     updateSetting.mutate({
