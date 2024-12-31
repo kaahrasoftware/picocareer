@@ -41,7 +41,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           academic_major:majors!profiles_academic_major_id_fkey(title)
         `)
         .eq('id', profile?.id)
-        .single();
+        .maybeSingle(); // Changed from single() to maybeSingle()
 
       if (error) {
         console.error('Error fetching profile details:', error);
@@ -64,20 +64,25 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
     queryFn: async () => {
       if (!session?.user?.id || !profile?.id) return false;
       
-      const { data, error } = await supabase
-        .from('user_bookmarks')
-        .select('id')
-        .eq('profile_id', session.user.id)
-        .eq('content_id', profile.id)
-        .eq('content_type', 'mentor')
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('user_bookmarks')
+          .select('id')
+          .eq('profile_id', session.user.id)
+          .eq('content_id', profile.id)
+          .eq('content_type', 'mentor')
+          .maybeSingle(); // Changed from single() to maybeSingle()
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking bookmark:', error);
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking bookmark:', error);
+          return false;
+        }
+
+        return !!data;
+      } catch (error) {
+        console.error('Error in bookmark query:', error);
         return false;
       }
-
-      return !!data;
     },
     enabled: !!session?.user?.id && !!profile?.id,
   });
