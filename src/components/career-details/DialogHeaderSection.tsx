@@ -18,15 +18,27 @@ export function DialogHeaderSection({
 }: DialogHeaderSectionProps) {
   return (
     <DialogHeader className="p-4 pb-0">
-      <DialogTitle className="text-2xl font-bold text-foreground">
-        {title}
-      </DialogTitle>
-      <HeaderBadges 
-        profilesCount={profilesCount}
-        salaryRange={salaryRange}
-        isBookmarked={isBookmarked}
-        onBookmarkToggle={onBookmarkToggle}
-      />
+      <div className="flex justify-between items-center">
+        <DialogTitle className="text-2xl font-bold text-foreground">
+          {title}
+        </DialogTitle>
+        <HeaderBadges 
+          profilesCount={profilesCount}
+          salaryRange={salaryRange}
+          isBookmarked={isBookmarked}
+          onBookmarkToggle={onBookmarkToggle}
+          showMentorBadgeOnly
+        />
+      </div>
+      <div className="mt-2">
+        <HeaderBadges 
+          profilesCount={profilesCount}
+          salaryRange={salaryRange}
+          isBookmarked={isBookmarked}
+          onBookmarkToggle={onBookmarkToggle}
+          showSalaryBadgeOnly
+        />
+      </div>
     </DialogHeader>
   );
 }
