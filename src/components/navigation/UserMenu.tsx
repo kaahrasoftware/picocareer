@@ -11,11 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export function UserMenu() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile } = useUserProfile();
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
 
   const handleSignOut = async () => {
     try {

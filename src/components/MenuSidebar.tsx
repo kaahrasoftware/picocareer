@@ -109,11 +109,7 @@ export function MenuSidebar() {
           )}
 
           {session?.user ? (
-            <UserMenu
-              session={session}
-              profile={profile}
-              onSignOut={handleSignOut}
-            />
+            <UserMenu />
           ) : (
             <Button 
               variant="default" 
