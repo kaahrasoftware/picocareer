@@ -1,91 +1,98 @@
-import React, { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Pencil, Save, X } from "lucide-react";
+import React, { useState } from 'react';
+import { EditButton } from './editable/EditButton';
+import { TextField } from './editable/fields/TextField';
+import { SelectField } from './editable/fields/SelectField';
+import { DegreeField } from './editable/fields/DegreeField';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-export interface EditableFieldProps {
+interface EditableFieldProps {
   label: string;
-  value: string | null;
+  value: string | undefined | null;
   fieldName: string;
   profileId: string;
-  onUpdate?: (value: string) => void;
 }
 
-export function EditableField({ 
-  label, 
-  value, 
-  fieldName, 
-  profileId, 
-  onUpdate 
-}: EditableFieldProps) {
+export function EditableField({ label, value, fieldName, profileId }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value || "");
   const { toast } = useToast();
 
-  const updateField = async () => {
+  const handleSave = async (newValue: string) => {
     try {
+      console.log('Updating profile field:', { fieldName, newValue });
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ [fieldName]: editValue })
+        .update({ [fieldName]: newValue })
         .eq('id', profileId);
 
-      if (error) throw error;
-      
+      if (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+      }
+
       toast({
         title: "Success",
-        description: "Field updated successfully",
+        description: "Profile updated successfully",
       });
-
-      if (onUpdate) {
-        onUpdate(editValue);
-      }
+      
       setIsEditing(false);
     } catch (error) {
-      console.error('Error updating field:', error);
+      console.error('Failed to update profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update field",
+        description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  if (isEditing) {
-    return (
-      <div className="space-y-2">
-        <Input
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          placeholder={`Enter ${label.toLowerCase()}`}
-          className="w-full"
-        />
-        <div className="flex gap-2 justify-end">
-          <Button onClick={updateField} size="sm">
-            <Save className="h-4 w-4 mr-1" />
-            Save
-          </Button>
-          <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">
-            <X className="h-4 w-4 mr-1" />
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const renderEditField = () => {
+    if (!isEditing) return null;
+
+    switch (fieldName) {
+      case 'position':
+        return (
+          <SelectField
+            fieldName={fieldName}
+            value={value || ''}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        );
+      case 'highest_degree':
+        return (
+          <DegreeField
+            value={value || ''}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        );
+      default:
+        return (
+          <TextField
+            value={value || ''}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        );
+    }
+  };
 
   return (
-    <div className="flex items-center justify-between group">
-      <span className="text-muted-foreground">{value || "Not set"}</span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={() => setIsEditing(true)}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{label}</span>
+        <EditButton onClick={() => setIsEditing(true)} />
+      </div>
+      
+      {isEditing ? (
+        renderEditField()
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {value || 'Not set'}
+        </p>
+      )}
     </div>
   );
 }
