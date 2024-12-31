@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { Building2, GraduationCap, Award, MapPin } from "lucide-react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { useState } from "react";
 import type { Profile } from "@/types/database/profiles";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
 interface ProfileCardProps {
   profile: Profile & {
@@ -31,10 +31,12 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         <div className="relative flex flex-col h-full">
           {/* Header Section with Avatar and Basic Info */}
           <div className="flex items-start gap-4 mb-4">
-            <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
-              <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || 'User'} />
-              <AvatarFallback>{profile.full_name?.[0] || 'U'}</AvatarFallback>
-            </Avatar>
+            <ProfileAvatar
+              avatarUrl={profile.avatar_url}
+              fallback={profile.full_name?.[0] || 'U'}
+              size="md"
+              editable={false}
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 {profile.top_mentor && (
