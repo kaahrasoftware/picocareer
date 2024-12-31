@@ -1,16 +1,13 @@
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { useQueryClient } from "@tanstack/react-query";
+import { SelectField } from "../profile/editable/fields/SelectField";
 import { useState } from "react";
-import { PersonalSection } from "./form-sections/PersonalSection";
-import { ProfessionalSection } from "./form-sections/ProfessionalSection";
-import { EducationSection } from "./form-sections/EducationSection";
-import { FormFields } from "./types";
 
 interface ProfileEditFormProps {
   profile: Profile & {
@@ -23,11 +20,34 @@ interface ProfileEditFormProps {
   onSuccess: () => void;
 }
 
+// Define the degree type based on the database enum
+type Degree = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
+
+// Define the allowed field names type
+type FormFields = {
+  first_name: string;
+  last_name: string;
+  bio: string;
+  years_of_experience: number;
+  location: string;
+  skills: string;
+  tools_used: string;
+  keywords: string;
+  fields_of_interest: string;
+  linkedin_url: string;
+  github_url: string;
+  website_url: string;
+  position: string;
+  company_id: string;
+  school_id: string;
+  academic_major_id: string;
+  highest_degree: Degree;
+};
+
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [localProfile, setLocalProfile] = useState(profile);
-  const isMentor = profile.user_type === 'mentor';
   
   const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm<FormFields>({
     defaultValues: {
@@ -47,10 +67,14 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
       company_id: profile.company_id || "",
       school_id: profile.school_id || "",
       academic_major_id: profile.academic_major_id || "",
-      highest_degree: (profile.highest_degree as string) || "No Degree",
+      highest_degree: (profile.highest_degree as Degree) || "No Degree",
     }
   });
 
+  // Watch all form fields for immediate updates
+  const watchedFields = watch();
+
+  // Update local profile state when form fields change
   const handleFieldChange = (fieldName: keyof FormFields, value: any) => {
     setLocalProfile(prev => ({
       ...prev,
@@ -61,6 +85,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
 
   const onSubmit = async (data: FormFields) => {
     try {
+      // Convert comma-separated strings to arrays
       const formattedData = {
         ...data,
         skills: data.skills ? data.skills.split(",").map((s: string) => s.trim()) : [],
@@ -96,24 +121,100 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-6">
-      <PersonalSection 
-        register={register}
-        handleFieldChange={handleFieldChange}
-      />
+      {/* Personal Information */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Personal Information</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">First Name</label>
+            <Input 
+              {...register("first_name")}
+              onChange={(e) => handleFieldChange("first_name", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Last Name</label>
+            <Input 
+              {...register("last_name")}
+              onChange={(e) => handleFieldChange("last_name", e.target.value)}
+            />
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Location</label>
+          <Input 
+            {...register("location")}
+            onChange={(e) => handleFieldChange("location", e.target.value)}
+            placeholder="City, Country"
+          />
+        </div>
+      </div>
 
-      <ProfessionalSection 
-        register={register}
-        watch={watch}
-        handleFieldChange={handleFieldChange}
-        isMentor={isMentor}
-      />
+      {/* Professional Information */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Professional Information</h4>
+        <div>
+          <label className="text-sm font-medium">Current Position</label>
+          <SelectField
+            fieldName="position"
+            value={watchedFields.position}
+            onSave={(value) => handleFieldChange("position", value)}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Company</label>
+          <SelectField
+            fieldName="company_id"
+            value={watchedFields.company_id}
+            onSave={(value) => handleFieldChange("company_id", value)}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Years of Experience</label>
+          <Input
+            type="number"
+            {...register("years_of_experience")}
+            onChange={(e) => handleFieldChange("years_of_experience", parseInt(e.target.value))}
+            min="0"
+          />
+        </div>
+      </div>
 
-      <EducationSection 
-        watch={watch}
-        handleFieldChange={handleFieldChange}
-        isMentor={isMentor}
-      />
+      {/* Education */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Education</h4>
+        <div>
+          <label className="text-sm font-medium">School</label>
+          <SelectField
+            fieldName="school_id"
+            value={watchedFields.school_id}
+            onSave={(value) => handleFieldChange("school_id", value)}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Academic Major</label>
+          <SelectField
+            fieldName="academic_major_id"
+            value={watchedFields.academic_major_id}
+            onSave={(value) => handleFieldChange("academic_major_id", value)}
+            onCancel={() => {}}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Highest Degree</label>
+          <SelectField
+            fieldName="highest_degree"
+            value={watchedFields.highest_degree}
+            onSave={(value) => handleFieldChange("highest_degree", value)}
+            onCancel={() => {}}
+          />
+        </div>
+      </div>
 
+      {/* Bio Section */}
       <div className="bg-muted rounded-lg p-4">
         <h4 className="font-semibold mb-2">About</h4>
         <Textarea
@@ -124,71 +225,71 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         />
       </div>
 
-      {isMentor && (
-        <>
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div>
-              <h4 className="font-semibold mb-2">Skills</h4>
-              <Input
-                {...register("skills")}
-                onChange={(e) => handleFieldChange("skills", e.target.value)}
-                placeholder="Enter skills (comma-separated)"
-              />
-            </div>
+      {/* Skills Section */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <div>
+          <h4 className="font-semibold mb-2">Skills</h4>
+          <Input
+            {...register("skills")}
+            onChange={(e) => handleFieldChange("skills", e.target.value)}
+            placeholder="Enter skills (comma-separated)"
+          />
+        </div>
 
-            <div>
-              <h4 className="font-semibold mb-2">Tools</h4>
-              <Input
-                {...register("tools_used")}
-                onChange={(e) => handleFieldChange("tools_used", e.target.value)}
-                placeholder="Enter tools (comma-separated)"
-              />
-            </div>
-          </div>
+        <div>
+          <h4 className="font-semibold mb-2">Tools</h4>
+          <Input
+            {...register("tools_used")}
+            onChange={(e) => handleFieldChange("tools_used", e.target.value)}
+            placeholder="Enter tools (comma-separated)"
+          />
+        </div>
+      </div>
 
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <div>
-              <h4 className="font-semibold mb-2">Keywords</h4>
-              <Input
-                {...register("keywords")}
-                onChange={(e) => handleFieldChange("keywords", e.target.value)}
-                placeholder="Enter keywords (comma-separated)"
-              />
-            </div>
+      {/* Keywords and Fields of Interest */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <div>
+          <h4 className="font-semibold mb-2">Keywords</h4>
+          <Input
+            {...register("keywords")}
+            onChange={(e) => handleFieldChange("keywords", e.target.value)}
+            placeholder="Enter keywords (comma-separated)"
+          />
+        </div>
 
-            <div>
-              <h4 className="font-semibold mb-2">Fields of Interest</h4>
-              <Input
-                {...register("fields_of_interest")}
-                onChange={(e) => handleFieldChange("fields_of_interest", e.target.value)}
-                placeholder="Enter fields of interest (comma-separated)"
-              />
-            </div>
-          </div>
+        <div>
+          <h4 className="font-semibold mb-2">Fields of Interest</h4>
+          <Input
+            {...register("fields_of_interest")}
+            onChange={(e) => handleFieldChange("fields_of_interest", e.target.value)}
+            placeholder="Enter fields of interest (comma-separated)"
+          />
+        </div>
+      </div>
 
-          <div className="bg-muted rounded-lg p-4 space-y-4">
-            <h4 className="font-semibold mb-2">Links</h4>
-            <div className="space-y-4">
-              <Input
-                {...register("linkedin_url")}
-                onChange={(e) => handleFieldChange("linkedin_url", e.target.value)}
-                placeholder="LinkedIn URL"
-              />
-              <Input
-                {...register("github_url")}
-                onChange={(e) => handleFieldChange("github_url", e.target.value)}
-                placeholder="GitHub URL"
-              />
-              <Input
-                {...register("website_url")}
-                onChange={(e) => handleFieldChange("website_url", e.target.value)}
-                placeholder="Website URL"
-              />
-            </div>
-          </div>
-        </>
-      )}
+      {/* Links Section */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold mb-2">Links</h4>
+        <div className="space-y-4">
+          <Input
+            {...register("linkedin_url")}
+            onChange={(e) => handleFieldChange("linkedin_url", e.target.value)}
+            placeholder="LinkedIn URL"
+          />
+          <Input
+            {...register("github_url")}
+            onChange={(e) => handleFieldChange("github_url", e.target.value)}
+            placeholder="GitHub URL"
+          />
+          <Input
+            {...register("website_url")}
+            onChange={(e) => handleFieldChange("website_url", e.target.value)}
+            placeholder="Website URL"
+          />
+        </div>
+      </div>
 
+      {/* Form Actions */}
       <div className="flex justify-end gap-4">
         <Button
           type="button"

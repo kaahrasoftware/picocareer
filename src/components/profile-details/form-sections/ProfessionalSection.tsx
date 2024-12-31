@@ -1,47 +1,77 @@
+import { CustomSelect } from "./education/CustomSelect";
 import { Input } from "@/components/ui/input";
-import { SelectField } from "@/components/profile/editable/fields/SelectField";
-import { UseFormRegister, UseFormWatch } from "react-hook-form";
-import { FormFields } from "../types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-interface ProfessionalSectionProps {
-  register: UseFormRegister<FormFields>;
-  watch: UseFormWatch<FormFields>;
-  handleFieldChange: (fieldName: keyof FormFields, value: any) => void;
-  isMentor: boolean;
+interface Company {
+  id: string;
+  name: string;
 }
 
-export function ProfessionalSection({ register, watch, handleFieldChange, isMentor }: ProfessionalSectionProps) {
-  if (!isMentor) return null;
+interface ProfessionalSectionProps {
+  position: string;
+  companyId: string;
+  yearsOfExperience: number;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSelectChange: (name: string, value: string) => void;
+  companies: Company[];
+}
 
-  const watchedFields = watch();
+export function ProfessionalSection({
+  position,
+  companyId,
+  yearsOfExperience,
+  handleInputChange,
+  handleSelectChange,
+  companies,
+}: ProfessionalSectionProps) {
+  // Fetch careers for the position select
+  const { data: careers } = useQuery({
+    queryKey: ['careers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   return (
-    <div className="bg-muted rounded-lg p-4 space-y-4">
-      <h4 className="font-semibold">Professional Information</h4>
-      <div>
-        <label className="text-sm font-medium">Current Position</label>
-        <SelectField
-          fieldName="position"
-          value={watchedFields.position}
-          onSave={(value) => handleFieldChange("position", value)}
-          onCancel={() => {}}
-        />
-      </div>
-      <div>
-        <label className="text-sm font-medium">Company</label>
-        <SelectField
-          fieldName="company_id"
-          value={watchedFields.company_id}
-          onSave={(value) => handleFieldChange("company_id", value)}
-          onCancel={() => {}}
-        />
-      </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Professional Experience</h3>
+
+      <CustomSelect
+        value={position}
+        options={careers || []}
+        placeholder="Select Position"
+        handleSelectChange={handleSelectChange}
+        tableName="careers"
+        fieldName="position"
+        titleField="title"
+      />
+
+      <CustomSelect
+        value={companyId}
+        options={companies}
+        placeholder="Company"
+        handleSelectChange={handleSelectChange}
+        tableName="companies"
+        fieldName="company_id"
+        titleField="name"
+      />
+
       <div>
         <label className="text-sm font-medium">Years of Experience</label>
         <Input
+          name="years_of_experience"
           type="number"
-          {...register("years_of_experience")}
-          onChange={(e) => handleFieldChange("years_of_experience", parseInt(e.target.value))}
+          value={yearsOfExperience}
+          onChange={handleInputChange}
+          className="mt-1"
           min="0"
         />
       </div>
