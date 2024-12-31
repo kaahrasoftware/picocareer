@@ -10,7 +10,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 
 export default function Profile() {
   const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session?.user?.id);
+  const { data: profile } = useUserProfile(session);
   const isMentor = profile?.user_type === "mentor";
 
   return (
