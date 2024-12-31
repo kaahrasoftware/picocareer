@@ -93,6 +93,23 @@ export function SessionActions({
         }
       }
 
+      // Restore mentor availability if there's an availability slot ID
+      if (session.session_details.availability_slot_id) {
+        const { error: availabilityError } = await supabase
+          .from('mentor_availability')
+          .update({ is_available: true })
+          .eq('id', session.session_details.availability_slot_id);
+
+        if (availabilityError) {
+          console.error('Error restoring mentor availability:', availabilityError);
+          toast({
+            title: "Warning",
+            description: "There was an issue restoring mentor availability.",
+            variant: "destructive"
+          });
+        }
+      }
+
       // Then cancel the session in our database
       await onCancel();
       onClose();

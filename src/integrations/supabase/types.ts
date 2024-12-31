@@ -506,6 +506,7 @@ export type Database = {
       mentor_sessions: {
         Row: {
           attendance_confirmed: boolean | null
+          availability_slot_id: string | null
           calendar_event_etag: string | null
           calendar_event_id: string | null
           created_at: string
@@ -525,6 +526,7 @@ export type Database = {
         }
         Insert: {
           attendance_confirmed?: boolean | null
+          availability_slot_id?: string | null
           calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
@@ -544,6 +546,7 @@ export type Database = {
         }
         Update: {
           attendance_confirmed?: boolean | null
+          availability_slot_id?: string | null
           calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
@@ -562,6 +565,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mentor_sessions_availability_slot_id_fkey"
+            columns: ["availability_slot_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_availability"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mentor_sessions_mentee_id_fkey"
             columns: ["mentee_id"]
