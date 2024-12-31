@@ -9,6 +9,8 @@ export function useProfileAnalytics() {
 
   useEffect(() => {
     const currentPath = location.pathname;
+    const currentTrackInteraction = trackInteraction;
+    const currentUpdatePageViewExit = updatePageViewExit;
     
     // Track initial page view
     trackPageView(currentPath);
@@ -19,7 +21,7 @@ export function useProfileAnalytics() {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercentage = Math.round((scrollPosition / maxScroll) * 100);
       
-      trackInteraction({
+      currentTrackInteraction({
         elementId: 'profile-scroll',
         elementType: 'scroll',
         interactionType: 'content_view',
@@ -31,14 +33,14 @@ export function useProfileAnalytics() {
     // Track page exit
     const cleanup = () => {
       const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-      trackInteraction({
+      currentTrackInteraction({
         elementId: 'profile-page',
         elementType: 'page',
         interactionType: 'page_view',
         pagePath: currentPath,
         interactionData: { timeSpent }
       });
-      updatePageViewExit(currentPath);
+      currentUpdatePageViewExit(currentPath);
     };
 
     window.addEventListener('scroll', handleScroll);

@@ -1,7 +1,7 @@
-import { useAuthSession } from '@/hooks/useAuthSession';
-import { supabase } from '@/integrations/supabase/client';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useCallback } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface InteractionData {
   elementId: string;
@@ -36,8 +36,6 @@ export function useAnalytics() {
       console.error('Error tracking interaction:', error);
     }
   }, [session?.user?.id]);
-
-  const trackInteraction = useDebounce(trackInteractionImpl, 1000);
 
   const trackPageView = useCallback(async (pagePath: string) => {
     if (!session?.user?.id) return;
@@ -86,6 +84,8 @@ export function useAnalytics() {
       console.error('Error updating page view exit time:', error);
     }
   }, [session?.user?.id]);
+
+  const trackInteraction = useDebounce(trackInteractionImpl, 1000);
 
   return {
     trackInteraction,
