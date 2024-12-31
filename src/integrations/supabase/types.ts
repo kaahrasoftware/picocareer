@@ -908,6 +908,64 @@ export type Database = {
           },
         ]
       }
+      session_feedback: {
+        Row: {
+          created_at: string
+          feedback_type: Database["public"]["Enums"]["feedback_type"]
+          from_profile_id: string
+          id: string
+          notes: string | null
+          rating: number
+          recommend: boolean | null
+          session_id: string
+          to_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_type: Database["public"]["Enums"]["feedback_type"]
+          from_profile_id: string
+          id?: string
+          notes?: string | null
+          rating: number
+          recommend?: boolean | null
+          session_id: string
+          to_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          from_profile_id?: string
+          id?: string
+          notes?: string | null
+          rating?: number
+          recommend?: boolean | null
+          session_id?: string
+          to_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_feedback_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_feedback_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_bookmarks: {
         Row: {
           content_id: string
@@ -1316,6 +1374,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      send_session_feedback_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       set_limit: {
         Args: {
           "": number
@@ -1372,6 +1434,7 @@ export type Database = {
         | "Master"
         | "MD"
         | "PhD"
+      feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
         | "page_view"
         | "click"
