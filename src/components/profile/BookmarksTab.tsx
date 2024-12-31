@@ -48,7 +48,8 @@ export function BookmarksTab() {
               avatar_url, 
               position,
               user_type,
-              company:companies(name)
+              company:companies(name),
+              careers!profiles_position_fkey(title)
             `)
             .in('id', mentorIds) : 
           Promise.resolve({ data: [] });
@@ -153,10 +154,7 @@ export function BookmarksTab() {
                         {item.full_name}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-1">
-                        {item.position ? bookmarks.careers?.find((c: any) => c.id === item.position)?.title : 'No position set'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.company?.name || 'No company set'}
+                        {item.careers?.title || 'No position set'} | {item.company?.name || 'No company set'}
                       </p>
                     </div>
                   ) : (
