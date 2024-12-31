@@ -119,8 +119,7 @@ export default function MajorUpload() {
         .insert([{
           ...formattedData,
           status: 'Pending'
-        }])
-        .select();  // Add .select() to ensure proper query formatting
+        }]);
 
       if (insertError) {
         console.error('Insert error:', insertError);
