@@ -27,7 +27,7 @@ export default function Profile() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            <ProfileTab />
+            <ProfileTab profile={profile || null} />
           </TabsContent>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -40,7 +40,7 @@ export default function Profile() {
 
           {isMentor && (
             <TabsContent value="mentor" className="space-y-6">
-              <MentorTab />
+              <MentorTab profile={profile || null} />
             </TabsContent>
           )}
 
