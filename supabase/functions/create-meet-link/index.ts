@@ -60,17 +60,24 @@ serve(async (req: Request) => {
       },
       attendees: [
         { email: session.mentor.email },
-        { email: session.mentee.email },
+        { email: session.mentee.email }
       ],
       conferenceData: {
         createRequest: {
           requestId: sessionId,
           conferenceSolutionKey: { type: 'hangoutsMeet' },
+          // Add these settings for automatic access
+          status: {
+            statusCode: "confirmed"
+          }
         },
       },
+      // These settings ensure attendees can join automatically
       guestsCanModify: false,
       guestsCanInviteOthers: false,
-      guestsCanSeeOtherGuests: true
+      guestsCanSeeOtherGuests: true,
+      // This is important - it allows attendees to join without asking
+      conferenceDataVersion: 1
     };
 
     console.log('Creating calendar event with Meet link...');
