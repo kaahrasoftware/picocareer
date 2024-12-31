@@ -11,9 +11,18 @@ interface EditableFieldProps {
   value: string | undefined | null;
   fieldName: string;
   profileId: string;
+  className?: string;
+  placeholder?: string;
 }
 
-export function EditableField({ label, value, fieldName, profileId }: EditableFieldProps) {
+export function EditableField({ 
+  label, 
+  value, 
+  fieldName, 
+  profileId,
+  className,
+  placeholder 
+}: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
@@ -74,6 +83,7 @@ export function EditableField({ label, value, fieldName, profileId }: EditableFi
             value={value || ''}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
+            placeholder={placeholder}
           />
         );
     }
@@ -89,8 +99,8 @@ export function EditableField({ label, value, fieldName, profileId }: EditableFi
       {isEditing ? (
         renderEditField()
       ) : (
-        <p className="text-sm text-muted-foreground">
-          {value || 'Not set'}
+        <p className={`text-sm ${className || 'text-muted-foreground'}`}>
+          {value || placeholder || 'Not set'}
         </p>
       )}
     </div>
