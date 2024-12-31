@@ -32,7 +32,7 @@ export function SessionDetailsDialog({
   const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
   const [attendance, setAttendance] = useState(false);
-  const { getSetting } = useUserSettings();
+  const { getSetting } = useUserSettings({ userId: authSession?.user?.id });
   const userTimezone = getSetting('timezone');
 
   if (!session?.session_details) return null;
