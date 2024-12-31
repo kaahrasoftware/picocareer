@@ -36,18 +36,63 @@ export default function MajorUpload() {
     return () => subscription.unsubscribe();
   }, [navigate, toast]);
 
+  const formatArrayData = (data: any) => {
+    const arrayFields = [
+      'learning_objectives',
+      'common_courses',
+      'interdisciplinary_connections',
+      'certifications_to_consider',
+      'degree_levels',
+      'affiliated_programs',
+      'transferable_skills',
+      'tools_knowledge',
+      'skill_match',
+      'professional_associations',
+      'common_difficulties',
+      'career_opportunities',
+      'majors_to_consider_switching_to'
+    ];
+
+    const formattedData = { ...data };
+    
+    // Format array fields
+    arrayFields.forEach(field => {
+      if (formattedData[field]) {
+        if (typeof formattedData[field] === 'string') {
+          // Convert comma-separated string to array
+          formattedData[field] = formattedData[field]
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean);
+        } else if (!Array.isArray(formattedData[field])) {
+          formattedData[field] = [];
+        }
+      } else {
+        formattedData[field] = [];
+      }
+    });
+
+    return formattedData;
+  };
+
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      if (!data.title) {
+        throw new Error('Title is required');
+      }
+
       // First check if a major with this title already exists
-      const { data: existingMajor } = await supabase
+      const { data: existingMajor, error: searchError } = await supabase
         .from('majors')
         .select('id, title')
         .eq('title', data.title)
-        .single();
+        .maybeSingle();
+
+      if (searchError) throw searchError;
 
       if (existingMajor) {
         toast({
@@ -59,17 +104,18 @@ export default function MajorUpload() {
         return;
       }
 
-      // If no existing major, proceed with insertion
-      const { error } = await supabase
-        .from('majors')
-        .insert([
-          {
-            ...data,
-            status: 'Pending'
-          }
-        ]);
+      // Format the data before insertion
+      const formattedData = formatArrayData(data);
 
-      if (error) throw error;
+      // If no existing major, proceed with insertion
+      const { error: insertError } = await supabase
+        .from('majors')
+        .insert([{
+          ...formattedData,
+          status: 'Pending'
+        }]);
+
+      if (insertError) throw insertError;
 
       toast({
         title: "Success",
