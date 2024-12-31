@@ -113,7 +113,7 @@ export default function MajorUpload() {
       // Log the formatted data for debugging
       console.log('Formatted data:', formattedData);
 
-      // If no existing major, proceed with insertion
+      // If no existing major, proceed with insertion without returning data
       const { error: insertError } = await supabase
         .from('majors')
         .insert([{
