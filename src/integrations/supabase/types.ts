@@ -465,9 +465,11 @@ export type Database = {
       mentor_sessions: {
         Row: {
           attendance_confirmed: boolean | null
+          calendar_event_etag: string | null
           calendar_event_id: string | null
           created_at: string
           id: string
+          last_calendar_sync: string | null
           meeting_link: string | null
           meeting_platform:
             | Database["public"]["Enums"]["meeting_platform"]
@@ -482,9 +484,11 @@ export type Database = {
         }
         Insert: {
           attendance_confirmed?: boolean | null
+          calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
           id?: string
+          last_calendar_sync?: string | null
           meeting_link?: string | null
           meeting_platform?:
             | Database["public"]["Enums"]["meeting_platform"]
@@ -499,9 +503,11 @@ export type Database = {
         }
         Update: {
           attendance_confirmed?: boolean | null
+          calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
           id?: string
+          last_calendar_sync?: string | null
           meeting_link?: string | null
           meeting_platform?:
             | Database["public"]["Enums"]["meeting_platform"]
