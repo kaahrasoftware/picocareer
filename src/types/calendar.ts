@@ -19,6 +19,7 @@ export interface MentorSession {
   meeting_link?: string | null;
   meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram';
   attendance_confirmed?: boolean;
+  availability_slot_id?: string | null;
 }
 
 export interface CalendarEvent {
