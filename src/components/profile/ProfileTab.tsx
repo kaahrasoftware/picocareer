@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ProfileBio } from "@/components/profile-details/ProfileBio";
-import { ProfileEducation } from "@/components/profile-details/ProfileEducation";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
@@ -59,6 +58,13 @@ export function ProfileTab({ profile }: ProfileTabProps) {
                 fieldName="last_name"
                 profileId={profile.id}
                 placeholder="Add your last name"
+              />
+              <EditableField
+                label="Location"
+                value={profile.location}
+                fieldName="location"
+                profileId={profile.id}
+                placeholder="Add your location"
               />
             </div>
           </div>
