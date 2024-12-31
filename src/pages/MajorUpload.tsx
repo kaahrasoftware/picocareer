@@ -62,7 +62,7 @@ export default function MajorUpload() {
           // Convert comma-separated string to array and ensure proper PostgreSQL array format
           formattedData[field] = formattedData[field]
             .split(',')
-            .map(item => item.trim())
+            .map((item: string) => item.trim())
             .filter(Boolean);
         } else if (!Array.isArray(formattedData[field])) {
           formattedData[field] = [];
@@ -119,7 +119,8 @@ export default function MajorUpload() {
         .insert([{
           ...formattedData,
           status: 'Pending'
-        }]);
+        }])
+        .select();  // Add .select() to ensure proper query formatting
 
       if (insertError) {
         console.error('Insert error:', insertError);
