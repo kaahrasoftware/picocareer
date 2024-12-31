@@ -73,8 +73,8 @@ export default function MajorUpload() {
       }
 
       toast({
-        title: "Success",
-        description: "Major information has been submitted for review",
+        title: "Major submitted successfully",
+        description: "Your major information has been submitted and will be reviewed by our team. You will be notified once it's approved.",
       });
 
       navigate("/majors");
