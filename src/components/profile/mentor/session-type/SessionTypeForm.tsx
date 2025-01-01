@@ -29,24 +29,49 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const onSubmit = async (data: SessionTypeFormData) => {
     try {
       setIsSubmitting(true);
-      console.log('Submitting session type:', data);
+      console.log('Attempting to add session type:', data);
+
+      // Check if session type already exists for this mentor
+      const { data: existingType } = await supabase
+        .from('mentor_session_types')
+        .select('id, type')
+        .eq('profile_id', profileId)
+        .eq('type', data.type)
+        .single();
+
+      console.log('Existing type check result:', existingType);
+
+      if (existingType) {
+        console.log('Found existing session type:', existingType);
+        toast({
+          title: "Error",
+          description: `You already have a "${data.type}" session type created.`,
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
           profile_id: profileId,
           type: data.type,
-          duration: data.duration,
+          duration: parseInt(data.duration.toString()),
           price: 0,
           description: data.description || null,
           meeting_platform: data.meeting_platform,
-          telegram_username: data.telegram_username || null,
+          telegram_username: data.telegram_username?.startsWith('@') 
+            ? data.telegram_username 
+            : data.telegram_username ? `@${data.telegram_username}` : null,
           phone_number: data.phone_number || null
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating session type:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
