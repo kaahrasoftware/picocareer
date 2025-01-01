@@ -20,7 +20,7 @@ const platforms = [
 ] as const;
 
 export function PlatformSelect({ form }: PlatformSelectProps) {
-  const selectedPlatforms = form.watch("meeting_platform") || [];
+  const selectedPlatforms = form.watch("meeting_platform") ?? [];
 
   return (
     <FormField
