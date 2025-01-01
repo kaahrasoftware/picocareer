@@ -1,5 +1,9 @@
 import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { useSessionTypeManager } from "./hooks/useSessionTypeManager";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import type { Database } from "@/integrations/supabase/types";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
@@ -11,6 +15,7 @@ interface SessionTypeManagerProps {
 }
 
 export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
+  const [showForm, setShowForm] = useState(false);
   const { sessionTypes: fetchedSessionTypes, isLoading, handleDeleteSessionType } = useSessionTypeManager(profileId);
 
   if (isLoading) {
@@ -22,7 +27,29 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button 
+          onClick={() => setShowForm(true)} 
+          className="flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Session Type
+        </Button>
+      </div>
+
+      {showForm && (
+        <SessionTypeForm
+          profileId={profileId}
+          onSuccess={() => {
+            setShowForm(false);
+            onUpdate();
+          }}
+          onCancel={() => setShowForm(false)}
+          existingTypes={fetchedSessionTypes}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {fetchedSessionTypes.map((sessionType) => (
           <SessionTypeCard
