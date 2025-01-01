@@ -7,7 +7,6 @@ import { FormField } from "@/components/forms/FormField";
 import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FeatureField } from "@/components/forms/fields/FeatureField";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
@@ -126,13 +125,9 @@ export function MentorRegistrationForm({
           <FormField
             control={form.control}
             name="background_check_consent"
-            render={({ field }) => (
-              <FeatureField
-                field={field}
-                label="I consent to a background check"
-                description="By checking this box, you agree to allow us to conduct a background check using the information provided above."
-              />
-            )}
+            type="checkbox"
+            label="I consent to a background check"
+            description="By checking this box, you agree to allow us to conduct a background check using the information provided above."
           />
         </Card>
 
