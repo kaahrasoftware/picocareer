@@ -36,14 +36,14 @@ export const majorFormFields = [
   },
   { 
     name: "interdisciplinary_connections", 
-    label: "Related Fields", 
+    label: "Interdisciplinary Connections", 
     type: "array" as const, 
     placeholder: "e.g., Mathematics, Physics", 
     description: "List related academic fields" 
   },
   { 
     name: "job_prospects", 
-    label: "Career Opportunities", 
+    label: "Job Prospects", 
     type: "textarea" as const, 
     placeholder: "Describe potential career paths and job market outlook...", 
     description: "Detailed overview of career opportunities and industry demand" 
@@ -98,7 +98,7 @@ export const majorFormFields = [
   },
   { 
     name: "passion_for_subject", 
-    label: "Required Interest Areas", 
+    label: "You are a Good fit if", 
     placeholder: "e.g., Strong interest in technology and problem-solving", 
     description: "Describe the interests that align well with this major" 
   },
@@ -118,7 +118,7 @@ export const majorFormFields = [
   },
   { 
     name: "global_applicability", 
-    label: "International Opportunities", 
+    label: "Global Adaptability", 
     type: "textarea" as const, 
     placeholder: "Describe worldwide career opportunities and relevance...", 
     description: "Overview of how this major applies globally" 
@@ -132,7 +132,7 @@ export const majorFormFields = [
   },
   { 
     name: "career_opportunities", 
-    label: "Specific Job Titles", 
+    label: "Career Opportunities", 
     type: "array" as const, 
     placeholder: "e.g., Software Engineer, Data Scientist", 
     description: "List specific job titles graduates can pursue" 
