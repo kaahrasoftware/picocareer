@@ -5,9 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
-import type { MeetingPlatform } from "@/types/calendar";
-import { BasicInputField } from "@/components/forms/fields/BasicInputField";
+import { SessionTypeEnum, SESSION_TYPE_OPTIONS, MeetingPlatform } from "@/types/session";
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
@@ -16,8 +14,6 @@ interface SessionTypeFormProps {
     price: string;
     description: string;
     meeting_platform: MeetingPlatform[];
-    telegram_username?: string;
-    phone_number?: string;
   }) => void;
   onCancel: () => void;
   existingTypes: SessionTypeEnum[];
@@ -30,8 +26,6 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
   const [duration, setDuration] = useState('30');
   const [description, setDescription] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<MeetingPlatform[]>(["Google Meet"]);
-  const [telegramUsername, setTelegramUsername] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
 
   // Filter out already used session types
   const availableTypes = SESSION_TYPE_OPTIONS.filter(type => !existingTypes.includes(type));
@@ -43,11 +37,7 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
       duration, 
       price: '0', // Set default price to 0
       description,
-      meeting_platform: selectedPlatforms,
-      ...(selectedPlatforms.includes("Telegram") && { telegram_username: telegramUsername }),
-      ...(selectedPlatforms.includes("WhatsApp") || selectedPlatforms.includes("Phone Call") 
-        ? { phone_number: phoneNumber }
-        : {}),
+      meeting_platform: selectedPlatforms
     });
   };
 
@@ -57,19 +47,7 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
         ? current.filter(p => p !== platform)
         : [...current, platform]
     );
-
-    // Reset related fields when platform is unselected
-    if (platform === "Telegram" && !selectedPlatforms.includes("Telegram")) {
-      setTelegramUsername('');
-    }
-    if ((platform === "WhatsApp" || platform === "Phone Call") && 
-        !selectedPlatforms.includes("WhatsApp") && 
-        !selectedPlatforms.includes("Phone Call")) {
-      setPhoneNumber('');
-    }
   };
-
-  const needsPhoneNumber = selectedPlatforms.includes("WhatsApp") || selectedPlatforms.includes("Phone Call");
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,37 +107,6 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
           ))}
         </div>
       </div>
-
-      {selectedPlatforms.includes("Telegram") && (
-        <div className="space-y-2">
-          <BasicInputField
-            label="Telegram Username"
-            placeholder="@username"
-            required
-            type="text"
-            field={{
-              value: telegramUsername,
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => setTelegramUsername(e.target.value)
-            }}
-          />
-        </div>
-      )}
-
-      {needsPhoneNumber && (
-        <div className="space-y-2">
-          <BasicInputField
-            label="Phone Number"
-            placeholder="+1 (919) 919-0000"
-            required
-            type="text"
-            field={{
-              value: phoneNumber,
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(e.target.value)
-            }}
-            description="Include country code, e.g. +1 for USA"
-          />
-        </div>
-      )}
 
       <div className="flex gap-2 justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
