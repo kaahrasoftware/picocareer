@@ -110,10 +110,6 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             position={profile.position}
             companyId={profile.company_id}
             yearsOfExperience={profile.years_of_experience}
-            skills={profile.skills}
-            toolsUsed={profile.tools_used}
-            keywords={profile.keywords}
-            fieldsOfInterest={profile.fields_of_interest}
             profileId={profile.id}
           />
 

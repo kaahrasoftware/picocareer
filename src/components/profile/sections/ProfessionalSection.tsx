@@ -5,10 +5,6 @@ interface ProfessionalSectionProps {
   position: string | null;
   companyId: string | null;
   yearsOfExperience: number | null;
-  skills: string[] | null;
-  toolsUsed: string[] | null;
-  keywords: string[] | null;
-  fieldsOfInterest: string[] | null;
   profileId: string;
 }
 
@@ -16,10 +12,6 @@ export function ProfessionalSection({
   position,
   companyId,
   yearsOfExperience,
-  skills,
-  toolsUsed,
-  keywords,
-  fieldsOfInterest,
   profileId
 }: ProfessionalSectionProps) {
   return (
@@ -46,34 +38,6 @@ export function ProfessionalSection({
           fieldName="years_of_experience"
           profileId={profileId}
           placeholder="Add your years of experience"
-        />
-        <EditableField
-          label="Skills"
-          value={skills?.join(", ")}
-          fieldName="skills"
-          profileId={profileId}
-          placeholder="Add your skills (comma-separated)"
-        />
-        <EditableField
-          label="Tools Used"
-          value={toolsUsed?.join(", ")}
-          fieldName="tools_used"
-          profileId={profileId}
-          placeholder="Add tools you use (comma-separated)"
-        />
-        <EditableField
-          label="Keywords"
-          value={keywords?.join(", ")}
-          fieldName="keywords"
-          profileId={profileId}
-          placeholder="Add keywords (comma-separated)"
-        />
-        <EditableField
-          label="Fields of Interest"
-          value={fieldsOfInterest?.join(", ")}
-          fieldName="fields_of_interest"
-          profileId={profileId}
-          placeholder="Add your fields of interest (comma-separated)"
         />
       </div>
     </div>
