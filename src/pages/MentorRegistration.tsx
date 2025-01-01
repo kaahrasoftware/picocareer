@@ -12,7 +12,6 @@ export default function MentorRegistration() {
       <MentorRegistrationForm
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
-        schema={mentorRegistrationSchema}
         careers={careers}
         companies={companies}
         schools={schools}
