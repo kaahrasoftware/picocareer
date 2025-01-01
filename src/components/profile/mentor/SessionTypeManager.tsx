@@ -48,6 +48,27 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     phone_number?: string;
   }) => {
     try {
+      // Check if this session type already exists for this mentor
+      const { data: existingTypes, error: checkError } = await supabase
+        .from('mentor_session_types')
+        .select('id, type')
+        .eq('profile_id', profileId)
+        .eq('type', data.type);
+
+      if (checkError) {
+        console.error('Error checking existing types:', checkError);
+        throw checkError;
+      }
+
+      if (existingTypes && existingTypes.length > 0) {
+        toast({
+          title: "Session type exists",
+          description: `You already have a "${data.type}" session type configured.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const sessionTypeData = {
         profile_id: profileId,
         type: data.type,
@@ -62,11 +83,11 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
       const { data: insertedData, error: insertError } = await supabase
         .from('mentor_session_types')
         .insert(sessionTypeData)
-        .select()
-        .single();
+        .select();
 
       if (insertError) {
         console.error('Insert error:', insertError);
+        // Still handle the unique constraint violation as a fallback
         if (insertError.code === '23505') {
           toast({
             title: "Session type exists",
