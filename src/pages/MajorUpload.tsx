@@ -5,19 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
 import { formatMajorData } from "@/utils/majorFormatting";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 export default function MajorUpload() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
-    const checkAccess = async () => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast({
           title: "Authentication required",
@@ -25,33 +21,27 @@ export default function MajorUpload() {
           variant: "destructive",
         });
         navigate("/auth");
-        return;
-      }
-
-      if (!profile) {
-        return; // Wait for profile to load
-      }
-
-      const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
-      if (!allowedTypes.includes(profile.user_type)) {
-        toast({
-          title: "Access Denied",
-          description: "You don't have permission to upload majors",
-          variant: "destructive",
-        });
-        navigate("/");
       }
     };
 
-    checkAccess();
-  }, [session, profile, navigate, toast]);
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      if (!session?.user?.id) {
-        throw new Error('User not authenticated');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
       if (!data.title?.trim()) {
         throw new Error('Title is required');
@@ -63,11 +53,10 @@ export default function MajorUpload() {
 
       const formattedData = {
         ...formatMajorData(data),
-        author_id: session.user.id,
-        status: 'Pending'
+        author_id: user.id
       };
       
-      console.log('Submitting major with data:', formattedData);
+      console.log('Formatted data:', formattedData);
 
       const { data: result, error } = await supabase
         .rpc('check_and_insert_major', {
@@ -85,20 +74,6 @@ export default function MajorUpload() {
           return;
         }
         throw error;
-      }
-
-      // Create notification for admin review
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          profile_id: session.user.id,
-          title: 'Major Submitted for Review',
-          message: `Your major "${data.title}" has been submitted and is pending review.`,
-          type: 'major_update'
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
       }
 
       toast({
@@ -120,9 +95,8 @@ export default function MajorUpload() {
     }
   };
 
-  if (!session || !profile) {
-    return null; // Don't render anything while checking authentication
-  }
+  // Add a state to force form reset
+  const [formKey, setFormKey] = useState(0);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -132,6 +106,7 @@ export default function MajorUpload() {
           <h2 className="text-lg font-semibold mb-2 text-blue-800">Guidelines for Submission</h2>
           <ul className="list-disc pl-5 space-y-1 text-blue-700">
             <li>Fill in all required fields marked with an asterisk (*)</li>
+            <li>For array fields, enter one item per line</li>
             <li>Provide detailed and accurate information to help students make informed decisions</li>
             <li>Review all information before submission</li>
           </ul>
