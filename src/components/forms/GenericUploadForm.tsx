@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormField } from "./FormField";
 import { FormFieldProps } from "./FormField";
+import { useToast } from "@/hooks/use-toast";
 
 interface GenericUploadFormProps {
   fields: (FormFieldProps & { defaultValue?: any })[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void>;
   buttonText?: string;
   isSubmitting?: boolean;
 }
@@ -17,6 +18,7 @@ export function GenericUploadForm({
   buttonText = "Submit",
   isSubmitting = false 
 }: GenericUploadFormProps) {
+  const { toast } = useToast();
   const form = useForm({
     defaultValues: fields.reduce((acc, field) => ({
       ...acc,
@@ -25,7 +27,25 @@ export function GenericUploadForm({
   });
 
   const handleSubmit = async (data: any) => {
-    await onSubmit(data);
+    try {
+      console.log('Submitting form data:', data);
+      await onSubmit(data);
+      
+      // Reset form after successful submission
+      form.reset();
+      
+      toast({
+        title: "Success",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
