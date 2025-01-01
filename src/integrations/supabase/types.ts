@@ -1529,7 +1529,6 @@ export type Database = {
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
         | "First Touch"
-        | "Know About your Career"
         | "Resume/CV Review"
         | "Campus France"
         | "Undergrad Application"
@@ -1555,7 +1554,6 @@ export type Database = {
         | "College Application Last Review"
         | "Application Essays Review"
         | "I need someone to practice my presentation with"
-        | "Code review"
       setting_type:
         | "timezone"
         | "notifications"

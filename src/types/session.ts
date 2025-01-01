@@ -1,6 +1,5 @@
 export type SessionTypeEnum = 
   | "First Touch"
-  | "Know About your Career"
   | "Resume/CV Review"
   | "Campus France"
   | "Undergrad Application"
@@ -29,7 +28,6 @@ export type SessionTypeEnum =
 
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "First Touch",
-  "Know About your Career",
   "Resume/CV Review",
   "Campus France",
   "Undergrad Application",
