@@ -49,19 +49,28 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     phone_number?: string;
   }) => {
     try {
+      console.log('Adding session type:', data);
+      console.log('Current session types:', fetchedSessionTypes);
+
+      // Check if session type with same type and duration exists
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
-        .select('id')
+        .select('id, type, duration')
         .eq('profile_id', profileId)
         .eq('type', data.type)
+        .eq('duration', parseInt(data.duration))
         .maybeSingle();
 
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Error checking existing session type:', checkError);
+        throw checkError;
+      }
 
       if (existingType) {
+        console.log('Found existing session type:', existingType);
         toast({
           title: "Session type exists",
-          description: "You already have this type of session configured.",
+          description: `You already have a ${data.type} session type with ${data.duration} minutes duration.`,
           variant: "destructive",
         });
         return;
@@ -72,18 +81,23 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         profile_id: profileId,
         type: data.type,
         duration: parseInt(data.duration),
-        price: parseFloat(data.price),
+        price: 0.00, // Default price set to 0.00
         description: data.description || null,
         meeting_platform: data.meeting_platform,
         telegram_username: data.telegram_username || null,
         phone_number: data.phone_number || null
       };
 
+      console.log('Submitting session type data:', sessionTypeData);
+
       const { error } = await supabase
         .from('mentor_session_types')
         .insert(sessionTypeData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding session type:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -127,6 +141,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     }
   };
 
+  // Get unique types from fetched session types
   const existingTypes = fetchedSessionTypes.map(st => st.type);
 
   if (isLoading) {
