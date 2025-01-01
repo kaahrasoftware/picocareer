@@ -28,9 +28,12 @@ export function EditableField({
   const [isLocalEditing, setIsLocalEditing] = useState(false);
   const { toast } = useToast();
 
+  // Array of field names that should be treated as arrays
+  const arrayFields = ['languages', 'skills', 'tools_used', 'keywords', 'fields_of_interest'];
+
   const formatValueForSave = (fieldName: string, value: string) => {
     // Handle array fields
-    if (fieldName === 'languages') {
+    if (arrayFields.includes(fieldName)) {
       return value.split(',').map(item => item.trim()).filter(Boolean);
     }
     return value;
