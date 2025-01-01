@@ -25,21 +25,21 @@ export const majorFormFields = [
     label: "Learning Objectives", 
     type: "array" as const, 
     placeholder: "e.g., Critical thinking, Problem solving", 
-    description: "Enter key learning outcomes, one per line" 
+    description: "Enter key learning outcomes" 
   },
   { 
     name: "common_courses", 
     label: "Common Courses", 
     type: "array" as const, 
     placeholder: "e.g., Introduction to Programming, Data Structures", 
-    description: "List typical courses in this major, one per line" 
+    description: "List typical courses in this major" 
   },
   { 
     name: "interdisciplinary_connections", 
     label: "Related Fields", 
     type: "array" as const, 
     placeholder: "e.g., Mathematics, Physics", 
-    description: "List related academic fields, one per line" 
+    description: "List related academic fields" 
   },
   { 
     name: "job_prospects", 
@@ -53,21 +53,21 @@ export const majorFormFields = [
     label: "Recommended Certifications", 
     type: "array" as const, 
     placeholder: "e.g., AWS Certified Solutions Architect, PMP", 
-    description: "List relevant professional certifications, one per line" 
+    description: "List relevant professional certifications" 
   },
   { 
     name: "degree_levels", 
     label: "Available Degree Levels", 
     type: "array" as const, 
     placeholder: "e.g., Bachelor's, Master's, Ph.D.", 
-    description: "List available degree levels, one per line" 
+    description: "List available degree levels" 
   },
   { 
     name: "affiliated_programs", 
     label: "Affiliated Programs", 
     type: "array" as const, 
     placeholder: "e.g., Research initiatives, Industry partnerships", 
-    description: "List related programs or partnerships, one per line" 
+    description: "List related programs or partnerships" 
   },
   { 
     name: "gpa_expectations", 
@@ -81,14 +81,14 @@ export const majorFormFields = [
     label: "Transferable Skills", 
     type: "array" as const, 
     placeholder: "e.g., Communication, Leadership", 
-    description: "List key transferable skills gained, one per line" 
+    description: "List key transferable skills gained" 
   },
   { 
     name: "tools_knowledge", 
     label: "Technical Skills & Tools", 
     type: "array" as const, 
     placeholder: "e.g., Python, SPSS, AutoCAD", 
-    description: "List specific tools or technologies used, one per line" 
+    description: "List specific tools or technologies used" 
   },
   { 
     name: "potential_salary", 
@@ -107,14 +107,14 @@ export const majorFormFields = [
     label: "Required Skills", 
     type: "array" as const, 
     placeholder: "e.g., Mathematical aptitude, Analytical thinking", 
-    description: "List essential skills needed to succeed, one per line" 
+    description: "List essential skills needed to succeed" 
   },
   { 
     name: "professional_associations", 
     label: "Professional Organizations", 
     type: "array" as const, 
     placeholder: "e.g., IEEE, American Psychological Association", 
-    description: "List relevant professional organizations, one per line" 
+    description: "List relevant professional organizations" 
   },
   { 
     name: "global_applicability", 
@@ -128,14 +128,14 @@ export const majorFormFields = [
     label: "Common Challenges", 
     type: "array" as const, 
     placeholder: "e.g., Complex mathematics, Heavy workload", 
-    description: "List typical challenges students face, one per line" 
+    description: "List typical challenges students face" 
   },
   { 
     name: "career_opportunities", 
     label: "Specific Job Titles", 
     type: "array" as const, 
     placeholder: "e.g., Software Engineer, Data Scientist", 
-    description: "List specific job titles graduates can pursue, one per line" 
+    description: "List specific job titles graduates can pursue" 
   },
   { 
     name: "intensity", 
@@ -160,6 +160,6 @@ export const majorFormFields = [
     label: "Alternative Majors", 
     type: "array" as const, 
     placeholder: "e.g., Information Technology, Data Science", 
-    description: "List related majors students might consider, one per line" 
+    description: "List related majors students might consider" 
   }
 ];

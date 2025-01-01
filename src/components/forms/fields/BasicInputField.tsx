@@ -41,7 +41,11 @@ export function BasicInputField({
           }
         />
       </FormControl>
-      {description && <FormDescription>{description}</FormDescription>}
+      {description && (
+        <FormDescription className="text-sky-600/70">
+          {description}
+        </FormDescription>
+      )}
       <FormMessage />
     </FormItem>
   );
