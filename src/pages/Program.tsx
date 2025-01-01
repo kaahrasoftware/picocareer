@@ -1,147 +1,150 @@
+import { useState } from "react";
+import { CareerListDialog } from "@/components/CareerListDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
-import { CommunityFilters } from "@/components/community/CommunityFilters";
-import { MenuSidebar } from "@/components/MenuSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { useToast } from "@/hooks/use-toast";
-import { MajorCard } from "@/components/MajorCard";
-import { LoadMoreButton } from "@/components/community/LoadMoreButton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CareerFilters } from "@/components/career/CareerFilters";
+import { CareerResults } from "@/components/career/CareerResults";
+import { Button } from "@/components/ui/button";
 
-export default function Program() {
+export default function Career() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-  const [displayCount, setDisplayCount] = useState(12);
-  const { toast } = useToast();
+  const [industryFilter, setIndustryFilter] = useState("all");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
+  const [skillSearchQuery, setSkillSearchQuery] = useState("");
+  const [popularFilter, setPopularFilter] = useState<string>("all");
+  const [visibleCount, setVisibleCount] = useState(9);
+  const LOAD_MORE_INCREMENT = 3;
 
-  const { data: majors = [], isLoading, error } = useQuery({
-    queryKey: ['majors'],
+  const { data: careers = [], isLoading } = useQuery({
+    queryKey: ["careers"],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('majors')
-          .select('*')
-          .eq('status', 'Approved')
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from("careers")
+        .select("*")
+        .eq('status', 'Approved')
+        .eq('complete_career', true)  // Only fetch complete careers
+        .order("created_at", { ascending: false });
 
-        if (error) throw error;
-        return data;
-      } catch (err) {
-        console.error('Error fetching majors:', err);
-        toast({
-          title: "Error loading majors",
-          description: "There was an error loading the majors. Please try again later.",
-          variant: "destructive",
-        });
-        throw err;
-      }
+      if (error) throw error;
+      return data;
     },
-    retry: 2,
-    retryDelay: 1000,
   });
 
-  const filteredMajors = majors?.filter(major => {
+  // Extract unique values for filters
+  const industries = Array.from(new Set(careers.map(career => career.industry).filter(Boolean)));
+  const allSkills = Array.from(new Set(careers.flatMap(career => career.required_skills || []))).sort();
+
+  const filteredCareers = careers.filter((career) => {
     const searchableFields = [
-      major.title,
-      major.description,
-      ...(major.learning_objectives || []),
-      ...(major.common_courses || []),
-      ...(major.interdisciplinary_connections || []),
-      major.job_prospects,
-      ...(major.certifications_to_consider || []),
-      ...(major.degree_levels || []),
-      ...(major.affiliated_programs || []),
-      ...(major.transferable_skills || []),
-      ...(major.tools_knowledge || []),
-      major.passion_for_subject,
-      ...(major.skill_match || []),
-      ...(major.professional_associations || []),
-      major.global_applicability,
-      ...(major.common_difficulties || []),
-      ...(major.majors_to_consider_switching_to || []),
-      ...(major.career_opportunities || []),
-      major.intensity,
-      major.stress_level,
-      major.dropout_rates
-    ].filter(Boolean).map(field => field.toLowerCase());
+      career.title,
+      career.description,
+      ...(career.required_skills || []),
+      ...(career.required_tools || []),
+      career.job_outlook,
+      career.industry,
+      career.work_environment,
+      career.growth_potential,
+      ...(career.keywords || []),
+      ...(career.transferable_skills || []),
+      ...(career.careers_to_consider_switching_to || []),
+      ...(career.required_education || []),
+      ...(career.academic_majors || []),
+      career.important_note
+    ].filter(Boolean).join(" ").toLowerCase();
 
-    const matchesSearch = searchQuery === "" || 
-      searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
+    const matchesSearch = searchQuery === "" || searchableFields.includes(searchQuery.toLowerCase());
+    const matchesIndustry = industryFilter === "all" || career.industry === industryFilter;
+    const matchesSkills = selectedSkills.length === 0 || 
+      (career.required_skills && selectedSkills.some(skill => 
+        career.required_skills.includes(skill)
+      ));
+    const matchesPopular = popularFilter === "all" || 
+      (popularFilter === "popular" ? career.popular : 
+       popularFilter === "rare" ? career.rare :
+       popularFilter === "new" ? career.new_career : true);
 
-    const matchesField = !fieldFilter || 
-      (major.category || []).includes(fieldFilter);
-
-    return matchesSearch && matchesField;
+    return matchesSearch && matchesIndustry && matchesSkills && matchesPopular;
   });
 
-  const fields = Array.from(new Set(majors?.flatMap(m => m.category || []) || [])).sort();
-  const displayedMajors = filteredMajors?.slice(0, displayCount);
-  const hasMore = displayCount < (filteredMajors?.length || 0);
+  const visibleCareers = filteredCareers.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredCareers.length;
 
   const handleLoadMore = () => {
-    setDisplayCount(prev => Math.min(prev + 3, filteredMajors?.length || 0));
+    setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
   };
 
-  return (
-    <SidebarProvider>
-      <div className="app-layout">
-        <MenuSidebar />
-        <div className="main-content">
-          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-            <div className="space-y-8">
-              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
-                <div className="transform transition-transform duration-200 py-2">
-                  <h1 className="text-xl font-bold">Academic Programs</h1>
-                </div>
-                
-                <div className="transform transition-all duration-200 -mx-2">
-                  <CommunityFilters
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    fieldFilter={fieldFilter}
-                    onFieldChange={setFieldFilter}
-                    fields={fields}
-                  />
-                </div>
-              </div>
-
-              {error ? (
-                <div className="text-center py-8">
-                  <p className="text-destructive">Failed to load academic programs.</p>
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className="mt-4 text-primary hover:underline"
-                  >
-                    Try refreshing the page
-                  </button>
-                </div>
-              ) : isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-[300px] rounded-lg border bg-card animate-pulse" />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {displayedMajors?.map((major) => (
-                      <MajorCard key={major.id} {...major} />
-                    ))}
-                  </div>
-                  
-                  <div className="flex justify-center mt-8">
-                    <LoadMoreButton 
-                      hasMore={hasMore} 
-                      isLoading={isLoading} 
-                      onClick={handleLoadMore} 
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-64" />
+            ))}
           </div>
         </div>
       </div>
-    </SidebarProvider>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col space-y-12">
+        <section className="space-y-8">
+          {/* Make the header and filters sticky with a compact design */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+            <div className="transform transition-transform duration-200 py-2">
+              <h2 className="text-xl font-bold">Explore All Careers</h2>
+              <p className="text-sm text-muted-foreground">
+                Find the perfect career path that matches your interests and skills
+              </p>
+            </div>
+            
+            <div className="transform transition-all duration-200 -mx-2">
+              <CareerFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                industryFilter={industryFilter}
+                setIndustryFilter={setIndustryFilter}
+                selectedSkills={selectedSkills}
+                setSelectedSkills={setSelectedSkills}
+                isSkillsDropdownOpen={isSkillsDropdownOpen}
+                setIsSkillsDropdownOpen={setIsSkillsDropdownOpen}
+                skillSearchQuery={skillSearchQuery}
+                setSkillSearchQuery={setSkillSearchQuery}
+                popularFilter={popularFilter}
+                setPopularFilter={setPopularFilter}
+                industries={industries}
+                allSkills={allSkills}
+              />
+            </div>
+          </div>
+
+          <CareerResults filteredCareers={visibleCareers} />
+          
+          {hasMore && (
+            <div className="flex justify-center mt-8">
+              <Button 
+                variant="outline" 
+                onClick={handleLoadMore}
+                className="min-w-[200px]"
+              >
+                Load More Careers
+              </Button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <CareerListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        careers={careers}
+      />
+    </div>
   );
 }
