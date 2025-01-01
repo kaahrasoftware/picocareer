@@ -1502,7 +1502,7 @@ export type Database = {
         | "Ewe"
         | "Twi"
         | "Anufo"
-      meeting_platform: "google_meet" | "whatsapp" | "telegram"
+      meeting_platform: "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call"
       notification_type:
         | "session_booked"
         | "session_cancelled"
