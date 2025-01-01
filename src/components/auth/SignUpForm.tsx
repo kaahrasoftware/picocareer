@@ -49,17 +49,23 @@ export function SignUpForm() {
         .maybeSingle();
 
       if (profileError) {
+        setIsLoading(false);
         console.error('Error checking existing profile:', profileError);
-        throw profileError;
+        toast({
+          title: "Error",
+          description: "An error occurred while checking your email. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       if (existingProfile) {
+        setIsLoading(false);
         toast({
           title: "Account already exists",
           description: "Please sign in instead.",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
@@ -76,6 +82,7 @@ export function SignUpForm() {
       });
 
       if (signUpError) {
+        setIsLoading(false);
         if (signUpError.message.includes("Password")) {
           toast({
             title: "Invalid password",

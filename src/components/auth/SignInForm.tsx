@@ -35,6 +35,8 @@ export function SignInForm() {
       });
 
       if (error) {
+        setIsLoading(false);
+        
         if (error.message.includes("Invalid login credentials")) {
           toast({
             title: "Invalid credentials",
@@ -62,7 +64,12 @@ export function SignInForm() {
           return;
         }
 
-        throw error;
+        toast({
+          title: "Error",
+          description: error.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       toast({
