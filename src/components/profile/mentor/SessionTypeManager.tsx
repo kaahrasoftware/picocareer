@@ -93,11 +93,11 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
       const { data: insertedData, error: insertError } = await supabase
         .from('mentor_session_types')
         .insert(sessionTypeData)
-        .select();
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Insert error:', insertError);
-        // Still handle the unique constraint violation as a fallback
         if (insertError.code === '23505') {
           toast({
             title: "Session type exists",
