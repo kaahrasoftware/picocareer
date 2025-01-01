@@ -117,6 +117,7 @@ export function useMentorRegistration() {
 
       // Format the data according to the profiles table schema
       const formattedData = {
+        id: user.id, // Important: Include the user ID for upsert
         first_name: data.first_name.trim(),
         last_name: data.last_name.trim(),
         email: data.email.trim(),
@@ -142,28 +143,25 @@ export function useMentorRegistration() {
         instagram_url: data.instagram_url?.trim() || null,
         tiktok_url: data.tiktok_url?.trim() || null,
         youtube_url: data.youtube_url?.trim() || null,
-        // Convert languages string to array and cast to the correct enum type
         languages: data.languages ? 
           data.languages.split(',')
             .map((lang: string) => lang.trim())
-            .filter(Boolean) as Database["public"]["Enums"]["language"][]
+            .filter(Boolean)
           : null
       };
 
       console.log('Formatted data for submission:', formattedData);
 
-      const { error: upsertError } = await supabase
+      const { data: upsertData, error: upsertError } = await supabase
         .from('profiles')
-        .upsert(formattedData, {
-          onConflict: 'id',
-          ignoreDuplicates: false
-        })
-        .eq('id', user.id);
+        .upsert(formattedData);
 
       if (upsertError) {
         console.error('Database upsert error:', upsertError);
         throw upsertError;
       }
+
+      console.log('Upsert response:', upsertData);
 
       await sendAdminNotification(formattedData);
 
@@ -174,11 +172,11 @@ export function useMentorRegistration() {
       });
 
       window.location.reload();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering mentor:', error);
       toast({
         title: "Error",
-        description: "Failed to submit mentor application. Please try again.",
+        description: error.message || "Failed to submit mentor application. Please try again.",
         variant: "destructive",
       });
     } finally {
