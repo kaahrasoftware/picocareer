@@ -159,10 +159,18 @@ export function MentorRegistrationForm({
         <div className="flex justify-end">
           <Button 
             type="submit" 
+            size="lg"
             className="w-full sm:w-auto min-w-[200px]" 
             disabled={isSubmitting || !form.watch("background_check_consent")}
           >
-            {isSubmitting ? "Submitting..." : "Register as Mentor"}
+            {isSubmitting ? (
+              <>
+                <span className="mr-2">Submitting...</span>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </>
+            ) : (
+              "Register as Mentor"
+            )}
           </Button>
         </div>
       </form>
