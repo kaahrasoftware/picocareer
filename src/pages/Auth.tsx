@@ -4,7 +4,7 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -14,8 +14,18 @@ import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export default function Auth() {
+  const { session } = useAuthSession();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users away from auth page
+  if (session?.user) {
+    navigate('/');
+    return null;
+  }
+
   const { data: mentors = [], isError } = useQuery({
     queryKey: ['random-mentors'],
     queryFn: async () => {
