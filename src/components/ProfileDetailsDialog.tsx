@@ -21,61 +21,36 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
-            console.log('Session expired, redirecting to auth page');
-            await supabase.auth.signOut(); // Clear any stale session data
-            queryClient.clear(); // Clear query cache
-            
-            toast({
-              title: "Session expired",
-              description: "Please sign in again to continue.",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return null;
-          }
-          throw error;
-        }
-        
-        return user;
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-        throw error;
-      }
-    },
-    retry: false,
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-  });
-
-  const { data: session } = useQuery({
+  const { data: session, isError: sessionError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
-            await supabase.auth.signOut();
-            queryClient.clear();
-            navigate("/auth");
-            return null;
-          }
-          throw error;
-        }
+        if (error) throw error;
         return session;
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching session:', error);
         return null;
       }
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        return user;
+      } catch (error: any) {
+        console.error('Error fetching current user:', error);
+        return null;
+      }
+    },
+    retry: false,
+    enabled: !!session,
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -111,7 +86,26 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       };
     },
     enabled: !!userId && open && !!session,
+    retry: 1,
   });
+
+  // Handle authentication errors
+  useEffect(() => {
+    if (sessionError) {
+      console.log('Session error detected, signing out...');
+      const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        queryClient.clear();
+        toast({
+          title: "Session expired",
+          description: "Please sign in again to continue.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      };
+      handleSignOut();
+    }
+  }, [sessionError, navigate, queryClient, toast]);
 
   // Subscribe to real-time changes
   useEffect(() => {
