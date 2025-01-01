@@ -71,6 +71,28 @@ export function EditableField({
     enabled: fieldName === 'company_id' && !!value
   });
 
+  // Fetch academic major details if academic_major_id is set
+  const { data: majorDetails } = useQuery({
+    queryKey: ['major', value],
+    queryFn: async () => {
+      if (fieldName !== 'academic_major_id' || !value) return null;
+      
+      const { data, error } = await supabase
+        .from('majors')
+        .select('title')
+        .eq('id', value)
+        .single();
+
+      if (error) {
+        console.error('Error fetching major details:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: fieldName === 'academic_major_id' && !!value
+  });
+
   const handleSave = async (newValue: string) => {
     try {
       console.log('Updating profile field:', { fieldName, newValue });
@@ -140,6 +162,9 @@ export function EditableField({
     }
     if (fieldName === 'company_id' && companyDetails?.name) {
       return companyDetails.name;
+    }
+    if (fieldName === 'academic_major_id' && majorDetails?.title) {
+      return majorDetails.title;
     }
     return value || placeholder || 'Not set';
   };
