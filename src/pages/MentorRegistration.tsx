@@ -3,7 +3,6 @@ import { MentorRegistrationForm } from "@/components/forms/mentor/MentorRegistra
 import { MentorRegistrationHeader } from "@/components/mentor/registration/MentorRegistrationHeader";
 import { useMentorRegistration } from "@/components/mentor/registration/useMentorRegistration";
 import { MenuSidebar } from "@/components/MenuSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function MentorRegistration() {
   const { isSubmitting, onSubmit, careers, companies, schools, majors } = useMentorRegistration();

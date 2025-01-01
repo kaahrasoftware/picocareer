@@ -12,6 +12,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useNotifications } from "@/hooks/useNotifications";
 
 export function MenuSidebar() {
+  // Move all hooks to the top level
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -60,29 +61,26 @@ export function MenuSidebar() {
     }
   };
 
-  // If there's an auth error, show sign in button
-  if (isError) {
-    return (
-      <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
-        <div className="container h-full mx-auto flex items-center justify-between px-4">
-          <Link to="/">
-            <img 
-              src="/lovable-uploads/2b1bee0a-4952-41f3-8220-963b51130b04.png" 
-              alt="PicoCareer Logo" 
-              className="h-10"
-            />
-          </Link>
-          <Button 
-            variant="default" 
-            onClick={() => navigate("/auth")}
-            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-          >
-            Sign in
-          </Button>
-        </div>
-      </header>
-    );
-  }
+  const renderAuthenticatedContent = () => (
+    <div className="flex items-center gap-4 ml-auto">
+      <NotificationPanel
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={handleMarkAsRead}
+      />
+      <UserMenu />
+    </div>
+  );
+
+  const renderUnauthenticatedContent = () => (
+    <Button 
+      variant="default" 
+      onClick={() => navigate("/auth")}
+      className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+    >
+      Sign in
+    </Button>
+  );
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
@@ -100,25 +98,7 @@ export function MenuSidebar() {
         <MainNavigation />
 
         <div className="flex items-center gap-4 ml-auto">
-          {session?.user && (
-            <NotificationPanel
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onMarkAsRead={handleMarkAsRead}
-            />
-          )}
-
-          {session?.user ? (
-            <UserMenu />
-          ) : (
-            <Button 
-              variant="default" 
-              onClick={() => navigate("/auth")}
-              className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-            >
-              Sign in
-            </Button>
-          )}
+          {session?.user ? renderAuthenticatedContent() : renderUnauthenticatedContent()}
         </div>
       </div>
     </header>
