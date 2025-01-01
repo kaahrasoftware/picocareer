@@ -4,6 +4,7 @@ import { SelectField } from './editable/fields/SelectField';
 import { DegreeField } from './editable/fields/DegreeField';
 import { SocialLinkField } from './editable/fields/SocialLinkField';
 import { DetailField } from './editable/fields/DetailField';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface EditableFieldProps {
   label: string;
@@ -63,6 +64,7 @@ export function EditableField({
     switch (fieldName) {
       case 'position':
       case 'company_id':
+      case 'school_id':
         return (
           <SelectField
             fieldName={fieldName}

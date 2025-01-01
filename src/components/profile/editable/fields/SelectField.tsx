@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { SelectWithCustomOption } from "../SelectWithCustomOption";
 import { useFieldOptions } from "../useFieldOptions";
 import { FieldName } from "../types";
@@ -29,8 +28,6 @@ export function SelectField({
         return 'Select company';
       case 'position':
         return 'Select position';
-      case 'highest_degree':
-        return 'Select degree';
       default:
         return 'Select option';
     }
