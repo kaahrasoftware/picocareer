@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,51 +6,16 @@ import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
 import { formatMajorData } from "@/utils/majorFormatting";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function MajorUpload() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { session } = useAuthSession();
-  const queryClient = useQueryClient();
 
-  // Get user profile to check permissions
-  const { data: profile } = useQuery({
-    queryKey: ['profile', session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', session.user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
-        if (error.message.includes('session_not_found')) {
-          queryClient.clear();
-          localStorage.removeItem('picocareer_auth_token');
-          toast({
-            title: "Session expired",
-            description: "Please sign in again to continue.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-        }
-        return null;
-      }
-      return data;
-    },
-    enabled: !!session?.user?.id,
-    retry: false,
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-  });
-
-  // Check authentication and authorization
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast({
           title: "Authentication required",
@@ -58,23 +23,21 @@ export default function MajorUpload() {
           variant: "destructive",
         });
         navigate("/auth");
-        return;
-      }
-
-      // Only allow users with specific roles to access this page
-      const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
-      if (profile && !allowedTypes.includes(profile.user_type)) {
-        toast({
-          title: "Access denied",
-          description: "You don't have permission to upload majors",
-          variant: "destructive",
-        });
-        navigate("/");
       }
     };
 
     checkAuth();
-  }, [session, profile, navigate, toast]);
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
