@@ -89,7 +89,7 @@ export default function Auth() {
                 size="lg"
                 className="w-full max-w-xs bg-picocareer-primary hover:bg-picocareer-accent text-white font-semibold py-6 text-lg shadow-lg"
               >
-                <Link to="/mentor-registration" className="flex items-center justify-center gap-2">
+                <Link to="/mentor/register" className="flex items-center justify-center gap-2">
                   <UserPlus className="w-5 h-5" />
                   Become a Mentor
                 </Link>
