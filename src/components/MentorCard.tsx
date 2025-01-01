@@ -12,8 +12,8 @@ import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
 interface MentorCardProps {
   id: string;
-  title?: string;  // Made optional
-  company?: string; // Made optional to match Mentor type
+  title?: string;
+  company?: string;
   imageUrl: string;
   name: string;
   stats: {
