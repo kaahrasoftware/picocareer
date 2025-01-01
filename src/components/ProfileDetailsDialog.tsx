@@ -30,8 +30,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         if (error) {
           if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
             console.log('Session expired, redirecting to auth page');
-            await supabase.auth.signOut(); // Clear any stale session data
-            queryClient.clear(); // Clear query cache
+            await supabase.auth.signOut();
+            queryClient.clear();
             
             toast({
               title: "Session expired",
