@@ -1,16 +1,10 @@
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { EditableField } from "@/components/profile/EditableField";
-import { ProfileBio } from "@/components/profile-details/ProfileBio";
-import { Card } from "@/components/ui/card";
-import { ProfessionalSection } from "./sections/ProfessionalSection";
-import { EducationSection } from "./sections/EducationSection";
-import { SocialSection } from "./sections/SocialSection";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Pencil, X } from "lucide-react";
-import { useState } from "react";
-import type { Profile } from "@/types/database/profiles";
+import { ProfileBio } from "@/components/profile-details/ProfileBio";
+import { EducationSection } from "./sections/EducationSection";
+import { SocialSection } from "./sections/SocialSection";
+import { Profile } from "@/types/database/profiles";
 
 interface ProfileTabProps {
   profile: Profile | null;
@@ -18,7 +12,7 @@ interface ProfileTabProps {
 
 export function ProfileTab({ profile }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
-  
+
   if (!profile) return null;
 
   const toggleEdit = () => {
@@ -56,7 +50,6 @@ export function ProfileTab({ profile }: ProfileTabProps) {
               value={profile.first_name}
               fieldName="first_name"
               profileId={profile.id}
-              placeholder="Add your first name"
               isEditing={isEditing}
             />
             <EditableField
@@ -64,7 +57,6 @@ export function ProfileTab({ profile }: ProfileTabProps) {
               value={profile.last_name}
               fieldName="last_name"
               profileId={profile.id}
-              placeholder="Add your last name"
               isEditing={isEditing}
             />
           </div>
@@ -84,27 +76,10 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             value={profile.location}
             fieldName="location"
             profileId={profile.id}
-            placeholder="Add your location"
-            isEditing={isEditing}
-          />
-          <EditableField
-            label="Languages"
-            value={profile.languages?.join(", ")}
-            fieldName="languages"
-            profileId={profile.id}
-            placeholder="Add languages (comma-separated)"
             isEditing={isEditing}
           />
         </div>
       </div>
-
-      <ProfessionalSection 
-        position={profile.position}
-        companyId={profile.company_id}
-        yearsOfExperience={profile.years_of_experience}
-        profileId={profile.id}
-        isEditing={isEditing}
-      />
 
       <EducationSection 
         academicMajorId={profile.academic_major_id}

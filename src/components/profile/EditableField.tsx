@@ -1,14 +1,13 @@
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { SelectField } from './editable/fields/SelectField';
-import { DegreeField } from './editable/fields/DegreeField';
-import { SocialLinkField } from './editable/fields/SocialLinkField';
-import { DetailField } from './editable/fields/DetailField';
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { SelectField } from "./editable/fields/SelectField";
+import { DegreeField } from "./editable/fields/DegreeField";
+import { DetailField } from "./editable/fields/DetailField";
 
 interface EditableFieldProps {
   label: string;
-  value: string | undefined | null;
+  value: string | null;
   fieldName: string;
   profileId: string;
   className?: string;
@@ -16,10 +15,10 @@ interface EditableFieldProps {
   isEditing?: boolean;
 }
 
-export function EditableField({ 
-  label, 
-  value, 
-  fieldName, 
+export function EditableField({
+  label,
+  value,
+  fieldName,
   profileId,
   className,
   placeholder,
@@ -30,17 +29,12 @@ export function EditableField({
 
   const handleSave = async (newValue: string) => {
     try {
-      console.log('Updating profile field:', { fieldName, newValue });
-      
       const { error } = await supabase
         .from('profiles')
         .update({ [fieldName]: newValue })
         .eq('id', profileId);
 
-      if (error) {
-        console.error('Error updating profile:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -52,7 +46,7 @@ export function EditableField({
       console.error('Failed to update profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: "Failed to update profile",
         variant: "destructive",
       });
     }
@@ -64,6 +58,9 @@ export function EditableField({
 
     switch (fieldName) {
       case 'position':
+      case 'academic_major_id':
+      case 'company_id':
+      case 'school_id':
         return (
           <SelectField
             fieldName={fieldName}
@@ -91,28 +88,17 @@ export function EditableField({
     <div className="space-y-2">
       {label && <span className="text-sm font-medium">{label}</span>}
       
-      {isSocialField ? (
-        <SocialLinkField
-          value={value || null}
+      {renderEditField() || (
+        <DetailField
+          value={value}
           fieldName={fieldName}
+          placeholder={placeholder}
+          className={className}
           onSave={handleSave}
           isEditing={isEditing && isLocalEditing}
           onEditClick={() => isEditing && setIsLocalEditing(true)}
           onCancelEdit={() => setIsLocalEditing(false)}
         />
-      ) : (
-        renderEditField() || (
-          <DetailField
-            value={value || null}
-            fieldName={fieldName}
-            placeholder={placeholder}
-            className={className}
-            onSave={handleSave}
-            isEditing={isEditing && isLocalEditing}
-            onEditClick={() => isEditing && setIsLocalEditing(true)}
-            onCancelEdit={() => setIsLocalEditing(false)}
-          />
-        )
       )}
     </div>
   );
