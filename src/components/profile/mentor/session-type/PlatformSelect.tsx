@@ -42,8 +42,8 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                     !field.value?.length && "text-muted-foreground"
                   )}
                 >
-                  {(field.value ?? []).length > 0
-                    ? `${(field.value ?? []).length} platform${(field.value ?? []).length > 1 ? "s" : ""} selected`
+                  {(field.value?.length ?? 0) > 0
+                    ? `${field.value?.length ?? 0} platform${(field.value?.length ?? 0) > 1 ? "s" : ""} selected`
                     : "Select platforms"}
                 </Button>
               </PopoverTrigger>
@@ -60,9 +60,15 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                           onSelect={() => {
                             const currentValue = field.value ?? [];
                             if (currentValue.includes(platform)) {
-                              field.onChange(currentValue.filter(x => x !== platform));
+                              form.setValue(
+                                "meeting_platform",
+                                currentValue.filter(x => x !== platform)
+                              );
                             } else {
-                              field.onChange([...currentValue, platform]);
+                              form.setValue(
+                                "meeting_platform",
+                                [...currentValue, platform]
+                              );
                             }
                           }}
                         >
