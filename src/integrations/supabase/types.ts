@@ -1501,6 +1501,7 @@ export type Database = {
         | "profile_update"
         | "mentor_request"
         | "blog_posted"
+        | "major_update"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
         | "First Touch"
