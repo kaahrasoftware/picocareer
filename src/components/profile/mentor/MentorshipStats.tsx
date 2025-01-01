@@ -21,7 +21,9 @@ interface MentorshipStatsProps {
 
 export function MentorshipStats({ stats }: MentorshipStatsProps) {
   // Calculate cancellation score
-  const cancellationScore = (stats.cancelled_sessions / stats.total_sessions) * 100;
+  const cancellationScore = stats.total_sessions > 0 
+    ? (stats.cancelled_sessions / stats.total_sessions) * 100 
+    : 0;
   
   // Determine status and styling based on score
   const getCancellationStatus = (score: number) => {
