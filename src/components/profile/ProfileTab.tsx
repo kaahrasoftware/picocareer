@@ -6,11 +6,13 @@ import { Card } from "@/components/ui/card";
 import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SocialSection } from "./sections/SocialSection";
+import type { Profile } from "@/types/database/profiles";
 
-export function ProfileTab() {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
+interface ProfileTabProps {
+  profile: Profile | null;
+}
 
+export function ProfileTab({ profile }: ProfileTabProps) {
   if (!profile) return null;
 
   const isMentor = profile.user_type === 'mentor';
