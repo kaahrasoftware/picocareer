@@ -5,6 +5,7 @@ import { ProfileBio } from "@/components/profile-details/ProfileBio";
 import { EducationSection } from "./sections/EducationSection";
 import { SocialSection } from "./sections/SocialSection";
 import { Profile } from "@/types/database/profiles";
+import { EditableField } from "@/components/profile/EditableField";
 
 interface ProfileTabProps {
   profile: Profile | null;
