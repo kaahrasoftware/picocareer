@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/forms/FormField";
 import { mentorFormFields, mentorRegistrationSchema } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
@@ -26,6 +27,7 @@ export function MentorRegistrationForm({
   schools = [],
   majors = [],
 }: MentorRegistrationFormProps) {
+  const { toast } = useToast();
   const form = useForm<FormValues>({
     resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
@@ -36,8 +38,24 @@ export function MentorRegistrationForm({
   const handleSubmit = async (data: FormValues) => {
     try {
       await onSubmit(data);
+      
+      // Show success toast
+      toast({
+        title: "Application Received",
+        description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
+      });
+      
+      // Reset form
+      form.reset({
+        background_check_consent: false
+      });
     } catch (error) {
       console.error('Error submitting form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit mentor application. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
