@@ -92,18 +92,28 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   // Handle authentication errors
   useEffect(() => {
     if (sessionError) {
-      console.log('Session error detected, signing out...');
-      const handleSignOut = async () => {
-        await supabase.auth.signOut();
+      console.log('Session error detected, handling cleanup...');
+      const handleAuthError = async () => {
+        // First clear local storage and query cache
+        localStorage.removeItem('picocareer_auth_token');
         queryClient.clear();
-        toast({
-          title: "Session expired",
-          description: "Please sign in again to continue.",
-          variant: "destructive",
-        });
-        navigate("/auth");
+        
+        try {
+          // Attempt to sign out, but don't wait for it
+          supabase.auth.signOut().catch(error => {
+            console.log('Sign out error (expected if session invalid):', error);
+          });
+        } finally {
+          // Show toast and redirect regardless of sign out result
+          toast({
+            title: "Session expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
       };
-      handleSignOut();
+      handleAuthError();
     }
   }, [sessionError, navigate, queryClient, toast]);
 
