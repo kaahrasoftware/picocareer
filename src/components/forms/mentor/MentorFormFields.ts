@@ -21,6 +21,11 @@ export const mentorRegistrationSchema = z.object({
   linkedin_url: z.string().url("Invalid LinkedIn URL"),
   github_url: z.string().url("Invalid GitHub URL").optional(),
   website_url: z.string().url("Invalid website URL").optional(),
+  X_url: z.string().url("Invalid X URL").optional(),
+  facebook_url: z.string().url("Invalid Facebook URL").optional(),
+  instagram_url: z.string().url("Invalid Instagram URL").optional(),
+  tiktok_url: z.string().url("Invalid TikTok URL").optional(),
+  youtube_url: z.string().url("Invalid YouTube URL").optional(),
 });
 
 export const mentorFormFields: FormFieldProps[] = [
@@ -154,5 +159,35 @@ export const mentorFormFields: FormFieldProps[] = [
     label: "Personal Website",
     type: "text",
     placeholder: "https://yourwebsite.com"
+  },
+  {
+    name: "X_url",
+    label: "X (Twitter) Profile",
+    type: "text",
+    placeholder: "https://x.com/username"
+  },
+  {
+    name: "facebook_url",
+    label: "Facebook Profile",
+    type: "text",
+    placeholder: "https://facebook.com/username"
+  },
+  {
+    name: "instagram_url",
+    label: "Instagram Profile",
+    type: "text",
+    placeholder: "https://instagram.com/username"
+  },
+  {
+    name: "tiktok_url",
+    label: "TikTok Profile",
+    type: "text",
+    placeholder: "https://tiktok.com/@username"
+  },
+  {
+    name: "youtube_url",
+    label: "YouTube Channel",
+    type: "text",
+    placeholder: "https://youtube.com/@username"
   }
 ];
