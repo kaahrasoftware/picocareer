@@ -24,7 +24,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch session types
   const { data: fetchedSessionTypes = [], isLoading } = useQuery({
     queryKey: ['mentor-session-types', profileId],
     queryFn: async () => {
@@ -49,12 +48,11 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     phone_number?: string;
   }) => {
     try {
-      // Format the data according to the database schema
       const sessionTypeData = {
         profile_id: profileId,
         type: data.type,
         duration: parseInt(data.duration),
-        price: 0.00, // Default price set to 0.00
+        price: 0.00,
         description: data.description || null,
         meeting_platform: data.meeting_platform,
         telegram_username: data.telegram_username || null,
@@ -63,10 +61,10 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
 
       const { error } = await supabase
         .from('mentor_session_types')
-        .insert(sessionTypeData);
+        .insert(sessionTypeData)
+        .single();
 
       if (error) {
-        // Check for unique constraint violation
         if (error.code === '23505') {
           toast({
             title: "Session type exists",
@@ -83,13 +81,13 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         description: "Session type added successfully",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['mentor-session-types'] });
+      await queryClient.invalidateQueries({ queryKey: ['mentor-session-types'] });
       setShowForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding session type:', error);
       toast({
         title: "Error",
-        description: "Failed to add session type. Please try again.",
+        description: error.message || "Failed to add session type. Please try again.",
         variant: "destructive",
       });
     }
@@ -120,7 +118,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     }
   };
 
-  // Get unique types from fetched session types
   const existingTypes = fetchedSessionTypes.map(st => st.type);
 
   if (isLoading) {
