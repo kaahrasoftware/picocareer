@@ -15,11 +15,12 @@ import { PlatformFields } from "./PlatformFields";
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const form = useForm<SessionTypeFormData>({
-    defaultValues: {
-      meeting_platform: ["Google Meet"],
-    }
-  });
+  const form = useForm<SessionTypeFormData>();
+
+  const selectedPlatforms = form.watch("meeting_platform") || [];
+  const showTelegramField = selectedPlatforms.includes("Telegram");
+  const showPhoneField = selectedPlatforms.includes("Phone Call");
+  const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
 
   const availableTypes = SESSION_TYPE_OPTIONS.filter(
     type => !existingTypes.some(existing => existing.type === type)
@@ -65,10 +66,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  const selectedPlatforms = form.watch("meeting_platform") || [];
-  const showTelegramField = selectedPlatforms.includes("Telegram");
-  const showPhoneField = selectedPlatforms.includes("Phone Call");
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
@@ -113,6 +110,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           form={form}
           showTelegramField={showTelegramField}
           showPhoneField={showPhoneField}
+          showWhatsAppField={showWhatsAppField}
         />
 
         <div className="flex justify-end gap-2">

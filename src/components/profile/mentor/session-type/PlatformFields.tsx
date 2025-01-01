@@ -7,9 +7,10 @@ interface PlatformFieldsProps {
   form: UseFormReturn<SessionTypeFormData>;
   showTelegramField: boolean;
   showPhoneField: boolean;
+  showWhatsAppField: boolean;
 }
 
-export function PlatformFields({ form, showTelegramField, showPhoneField }: PlatformFieldsProps) {
+export function PlatformFields({ form, showTelegramField, showPhoneField, showWhatsAppField }: PlatformFieldsProps) {
   return (
     <>
       {showTelegramField && (
@@ -39,11 +40,11 @@ export function PlatformFields({ form, showTelegramField, showPhoneField }: Plat
         />
       )}
 
-      {showPhoneField && (
+      {(showPhoneField || showWhatsAppField) && (
         <FormField
           control={form.control}
           name="phone_number"
-          rules={{ required: "Phone number is required for phone call sessions" }}
+          rules={{ required: "Phone number is required for phone call/WhatsApp sessions" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
