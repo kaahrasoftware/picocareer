@@ -41,9 +41,9 @@ export function ProfileDialogContent({
               </Button>
             ) : (
               <Button 
-                size="lg"
+                size="sm"
                 onClick={handleBookSession}
-                className="absolute right-0 top-16"
+                className="absolute right-0 top-16 px-4"
               >
                 Book a Session
               </Button>
