@@ -52,13 +52,12 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
       console.log('Adding session type:', data);
       console.log('Current session types:', fetchedSessionTypes);
 
-      // Check if session type with same type and duration exists
+      // Check if session type with same type exists (regardless of duration)
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
-        .select('id, type, duration')
+        .select('id, type')
         .eq('profile_id', profileId)
         .eq('type', data.type)
-        .eq('duration', parseInt(data.duration))
         .maybeSingle();
 
       if (checkError) {
@@ -70,7 +69,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         console.log('Found existing session type:', existingType);
         toast({
           title: "Session type exists",
-          description: `You already have a ${data.type} session type with ${data.duration} minutes duration.`,
+          description: `You already have a ${data.type} session type configured.`,
           variant: "destructive",
         });
         return;
