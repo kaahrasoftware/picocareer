@@ -14,15 +14,12 @@ export function useMentorStats(profileId: string | undefined) {
           id,
           scheduled_at,
           status,
-          session_type_id,
-          mentee_id,
-          session_type:mentor_session_types(
-            duration
-          )
+          mentee_id
         `)
         .eq("mentor_id", profileId);
 
       if (error) throw error;
+      console.log('Fetched sessions:', data);
       return data;
     },
     enabled: !!profileId
@@ -47,18 +44,18 @@ export function useMentorStats(profileId: string | undefined) {
 
   // Calculate stats
   const stats = (() => {
-    if (sessionsResponse && sessionTypesResponse) {
+    if (sessionsResponse) {
       const sessions = sessionsResponse;
       const now = new Date();
       
+      const total_sessions = sessions.length;
       const completed_sessions = sessions.filter(s => s.status === 'completed').length;
       const upcoming_sessions = sessions.filter(s => new Date(s.scheduled_at) >= now).length;
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
-      const total_hours = sessions.reduce((acc, session) => {
-        return acc + (session.session_type?.duration || 60) / 60;
-      }, 0);
+      // For total hours, we'll use a default duration of 1 hour per session
+      const total_hours = sessions.length; // Simplified to 1 hour per session
 
       const last6Months = Array.from({ length: 6 }, (_, i) => {
         const date = new Date();
@@ -81,8 +78,6 @@ export function useMentorStats(profileId: string | undefined) {
           sessions: count
         };
       });
-
-      const total_sessions = sessions.length;
 
       return {
         total_sessions,
