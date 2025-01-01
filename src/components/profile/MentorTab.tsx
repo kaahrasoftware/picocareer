@@ -15,7 +15,7 @@ interface MentorTabProps {
 export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
-  const { stats, refetchSessions, refetchSessionTypes } = useMentorStats(profileId);
+  const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
 
   // Check timezone setting
   useEffect(() => {
@@ -60,6 +60,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       <TabsContent value="session-types">
         <SessionTypeManager 
           profileId={profileId} 
+          sessionTypes={sessionTypes || []}
           onUpdate={refetchSessionTypes}
         />
       </TabsContent>
