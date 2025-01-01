@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SocialSection } from "./sections/SocialSection";
+import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabProps {
@@ -16,6 +17,22 @@ export function ProfileTab({ profile }: ProfileTabProps) {
   if (!profile) return null;
 
   const isMentor = profile.user_type === 'mentor';
+
+  const renderTags = (items: string[] | null, bgColor: string) => {
+    if (!items || items.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-2">
+        {items.map((item, index) => (
+          <Badge 
+            key={`${item}-${index}`}
+            className={`${bgColor} text-gray-700 hover:${bgColor}`}
+          >
+            {item}
+          </Badge>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -61,6 +78,29 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             profileId={profile.id}
             placeholder="Add languages (comma-separated)"
           />
+        </div>
+      </div>
+
+      {/* Skills and Expertise Section */}
+      <div className="bg-muted rounded-lg p-6 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4">Skills & Expertise</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Skills</label>
+            {renderTags(profile.skills, "bg-[#F2FCE2]")}
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Tools Used</label>
+            {renderTags(profile.tools_used, "bg-[#D3E4FD]")}
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Keywords</label>
+            {renderTags(profile.keywords, "bg-[#FFDEE2]")}
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Fields of Interest</label>
+            {renderTags(profile.fields_of_interest, "bg-[#E5DEFF]")}
+          </div>
         </div>
       </div>
 
