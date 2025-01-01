@@ -25,6 +25,7 @@ export default function Career() {
         .from("careers")
         .select("*")
         .eq('status', 'Approved')
+        .eq('complete_career', true)  // Only fetch complete careers
         .order("created_at", { ascending: false });
 
       if (error) throw error;
