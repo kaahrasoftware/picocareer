@@ -1,96 +1,95 @@
-import React, { useState } from 'react';
-import { ProfileBio } from "@/components/profile-details/ProfileBio";
-import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
-import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { EditableField } from "@/components/profile/EditableField";
-import type { Profile } from "@/types/database/profiles";
+import { ProfileBio } from "@/components/profile-details/ProfileBio";
+import { Card } from "@/components/ui/card";
+import { ProfessionalSection } from "./sections/ProfessionalSection";
+import { EducationSection } from "./sections/EducationSection";
+import { SocialSection } from "./sections/SocialSection";
 
-interface ProfileTabProps {
-  profile: Profile & {
-    company_name?: string | null;
-    school_name?: string | null;
-    academic_major?: string | null;
-    career_title?: string | null;
-  };
-}
-
-export function ProfileTab({ profile }: ProfileTabProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export function ProfileTab() {
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
 
   if (!profile) return null;
 
-  return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-left">Profile Details</h2>
-        <Button 
-          onClick={() => setIsEditing(!isEditing)}
-          variant="outline"
-          className="gap-2"
-        >
-          <Pencil className="h-4 w-4" />
-          {isEditing ? "Cancel Editing" : "Edit Profile"}
-        </Button>
-      </div>
-      
-      {isEditing ? (
-        <ProfileEditForm 
-          profile={profile} 
-          onCancel={() => setIsEditing(false)}
-          onSuccess={() => setIsEditing(false)}
-        />
-      ) : (
-        <>
-          <div className="bg-muted rounded-lg p-6 shadow-sm space-y-4">
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Personal Information</h4>
-              <EditableField
-                label="First Name"
-                value={profile.first_name}
-                fieldName="first_name"
-                profileId={profile.id}
-                placeholder="Add your first name"
-              />
-              <EditableField
-                label="Last Name"
-                value={profile.last_name}
-                fieldName="last_name"
-                profileId={profile.id}
-                placeholder="Add your last name"
-              />
-            </div>
-          </div>
+  const isMentor = profile.user_type === 'mentor';
 
-          <ProfileBio 
-            bio={profile.bio} 
+  return (
+    <div className="space-y-6">
+      <div className="bg-muted rounded-lg p-6 shadow-sm">
+        <div className="space-y-4">
+          <EditableField
+            label="First Name"
+            value={profile.first_name}
+            fieldName="first_name"
+            profileId={profile.id}
+            placeholder="Add your first name"
+          />
+          <EditableField
+            label="Last Name"
+            value={profile.last_name}
+            fieldName="last_name"
+            profileId={profile.id}
+            placeholder="Add your last name"
+          />
+        </div>
+      </div>
+
+      <ProfileBio 
+        bio={profile.bio} 
+        profileId={profile.id}
+      />
+
+      <div className="bg-muted rounded-lg p-6 shadow-sm">
+        <div className="space-y-4">
+          <EditableField
+            label="Location"
+            value={profile.location}
+            fieldName="location"
+            profileId={profile.id}
+            placeholder="Add your location"
+          />
+          <EditableField
+            label="Languages"
+            value={profile.languages?.join(", ")}
+            fieldName="languages"
+            profileId={profile.id}
+            placeholder="Add languages (comma-separated)"
+          />
+        </div>
+      </div>
+
+      {isMentor && (
+        <>
+          <ProfessionalSection 
+            position={profile.position}
+            companyId={profile.company_id}
+            yearsOfExperience={profile.years_of_experience}
+            skills={profile.skills}
+            toolsUsed={profile.tools_used}
+            keywords={profile.keywords}
+            fieldsOfInterest={profile.fields_of_interest}
             profileId={profile.id}
           />
 
-          <div className="bg-muted rounded-lg p-6 shadow-sm">
-            <div className="space-y-4">
-              <EditableField
-                label="Location"
-                value={profile.location}
-                fieldName="location"
-                profileId={profile.id}
-                placeholder="Add your location"
-              />
-            </div>
-          </div>
+          <EducationSection 
+            academicMajorId={profile.academic_major_id}
+            highestDegree={profile.highest_degree}
+            profileId={profile.id}
+          />
 
-          <div className="bg-muted rounded-lg p-6 shadow-sm">
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Education</h4>
-              <EditableField
-                label="School"
-                value={profile.school_name || ''}
-                fieldName="school_id"
-                profileId={profile.id}
-                placeholder="Select your school"
-              />
-            </div>
-          </div>
+          <SocialSection 
+            linkedinUrl={profile.linkedin_url}
+            githubUrl={profile.github_url}
+            websiteUrl={profile.website_url}
+            xUrl={profile.X_url}
+            facebookUrl={profile.facebook_url}
+            tiktokUrl={profile.tiktok_url}
+            youtubeUrl={profile.youtube_url}
+            instagramUrl={profile.instagram_url}
+            profileId={profile.id}
+          />
         </>
       )}
     </div>
