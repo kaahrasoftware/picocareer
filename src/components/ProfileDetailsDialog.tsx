@@ -21,23 +21,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const handleAuthError = async (error: any) => {
-    console.error('Authentication error:', error);
-    
-    // Clear any stale session data
-    await supabase.auth.signOut();
-    queryClient.clear();
-    
-    toast({
-      title: "Session expired",
-      description: "Please sign in again to continue.",
-      variant: "destructive",
-    });
-    
-    navigate("/auth");
-    return null;
-  };
-
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
@@ -45,11 +28,18 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
-          if (error.message.includes('session_not_found') || 
-              error.message.includes('refresh_token_not_found') ||
-              error.message.includes('Invalid Refresh Token')) {
-            console.log('Session expired or invalid, redirecting to auth page');
-            return handleAuthError(error);
+          if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
+            console.log('Session expired, redirecting to auth page');
+            await supabase.auth.signOut(); // Clear any stale session data
+            queryClient.clear(); // Clear query cache
+            
+            toast({
+              title: "Session expired",
+              description: "Please sign in again to continue.",
+              variant: "destructive",
+            });
+            navigate("/auth");
+            return null;
           }
           throw error;
         }
@@ -57,7 +47,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         return user;
       } catch (error) {
         console.error('Error fetching current user:', error);
-        return handleAuthError(error);
+        throw error;
       }
     },
     retry: false,
@@ -70,17 +60,18 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          if (error.message.includes('session_not_found') || 
-              error.message.includes('refresh_token_not_found') ||
-              error.message.includes('Invalid Refresh Token')) {
-            return handleAuthError(error);
+          if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
+            await supabase.auth.signOut();
+            queryClient.clear();
+            navigate("/auth");
+            return null;
           }
           throw error;
         }
         return session;
       } catch (error) {
         console.error('Error fetching session:', error);
-        return handleAuthError(error);
+        return null;
       }
     },
     retry: false,
