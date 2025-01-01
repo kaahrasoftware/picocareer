@@ -37,7 +37,6 @@ export function SocialLinkField({
       case 'instagram_url':
         return <Instagram className="h-5 w-5" />;
       case 'tiktok_url':
-        // Since TikTok icon isn't available in lucide-react, we'll use a text fallback
         return <span className="font-semibold text-sm">TikTok</span>;
       case 'youtube_url':
         return <Youtube className="h-5 w-5" />;

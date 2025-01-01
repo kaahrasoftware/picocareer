@@ -6,13 +6,14 @@ import { DegreeField } from './editable/fields/DegreeField';
 import { SocialLinkField } from './editable/fields/SocialLinkField';
 import { DetailField } from './editable/fields/DetailField';
 
-interface EditableFieldProps {
+export interface EditableFieldProps {
   label: string;
   value: string | undefined | null;
   fieldName: string;
   profileId: string;
   className?: string;
   placeholder?: string;
+  isEditing?: boolean;
 }
 
 export function EditableField({ 
@@ -21,9 +22,10 @@ export function EditableField({
   fieldName, 
   profileId,
   className,
-  placeholder 
+  placeholder,
+  isEditing = false
 }: EditableFieldProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isLocalEditing, setIsLocalEditing] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async (newValue: string) => {
@@ -45,7 +47,7 @@ export function EditableField({
         description: "Profile updated successfully",
       });
       
-      setIsEditing(false);
+      setIsLocalEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast({
@@ -57,7 +59,7 @@ export function EditableField({
   };
 
   const renderEditField = () => {
-    if (!isEditing) return null;
+    if (!isEditing && !isLocalEditing) return null;
 
     switch (fieldName) {
       case 'position':
@@ -66,7 +68,7 @@ export function EditableField({
             fieldName={fieldName}
             value={value || ''}
             onSave={handleSave}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => setIsLocalEditing(false)}
           />
         );
       case 'highest_degree':
@@ -74,7 +76,7 @@ export function EditableField({
           <DegreeField
             value={value || ''}
             onSave={handleSave}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => setIsLocalEditing(false)}
           />
         );
       default:
@@ -93,9 +95,9 @@ export function EditableField({
           value={value || null}
           fieldName={fieldName}
           onSave={handleSave}
-          isEditing={isEditing}
-          onEditClick={() => setIsEditing(true)}
-          onCancelEdit={() => setIsEditing(false)}
+          isEditing={isEditing || isLocalEditing}
+          onEditClick={() => setIsLocalEditing(true)}
+          onCancelEdit={() => setIsLocalEditing(false)}
         />
       ) : (
         renderEditField() || (
@@ -105,9 +107,9 @@ export function EditableField({
             placeholder={placeholder}
             className={className}
             onSave={handleSave}
-            isEditing={isEditing}
-            onEditClick={() => setIsEditing(true)}
-            onCancelEdit={() => setIsEditing(false)}
+            isEditing={isEditing || isLocalEditing}
+            onEditClick={() => setIsLocalEditing(true)}
+            onCancelEdit={() => setIsLocalEditing(false)}
           />
         )
       )}
