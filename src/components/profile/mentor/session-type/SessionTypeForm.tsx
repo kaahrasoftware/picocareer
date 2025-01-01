@@ -8,6 +8,7 @@ import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
 import type { MeetingPlatform } from "@/types/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
@@ -32,6 +33,7 @@ interface FormValues {
 }
 
 export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTypeFormProps) {
+  const { toast } = useToast();
   const form = useForm<FormValues>({
     defaultValues: {
       type: SESSION_TYPE_OPTIONS[0],
@@ -48,11 +50,37 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
   const availableTypes = SESSION_TYPE_OPTIONS.filter(type => !existingTypes.includes(type));
 
   const handleSubmit = (data: FormValues) => {
-    onSubmit({
+    // Validate required fields based on selected platforms
+    if (selectedPlatforms.includes("Telegram") && !data.telegram_username) {
+      toast({
+        title: "Error",
+        description: "Telegram username is required when Telegram is selected",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if ((selectedPlatforms.includes("WhatsApp") || selectedPlatforms.includes("Phone Call")) && !data.phone_number) {
+      toast({
+        title: "Error",
+        description: "Phone number is required for WhatsApp or Phone Call",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Only include contact fields if their respective platforms are selected
+    const submissionData = {
       ...data,
       price: '0', // Set default price to 0
       meeting_platform: selectedPlatforms,
-    });
+      telegram_username: selectedPlatforms.includes("Telegram") ? data.telegram_username : undefined,
+      phone_number: (selectedPlatforms.includes("WhatsApp") || selectedPlatforms.includes("Phone Call")) 
+        ? data.phone_number 
+        : undefined,
+    };
+
+    onSubmit(submissionData);
   };
 
   const togglePlatform = (platform: MeetingPlatform) => {
