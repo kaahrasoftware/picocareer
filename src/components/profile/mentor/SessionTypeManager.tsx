@@ -153,6 +153,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     }
   };
 
+  // Get list of existing session types for this mentor
   const existingTypes = fetchedSessionTypes.map(st => st.type);
 
   if (isLoading) {
