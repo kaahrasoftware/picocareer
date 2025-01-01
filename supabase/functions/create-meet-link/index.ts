@@ -24,6 +24,7 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Fetch session details with related data
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
@@ -42,105 +43,104 @@ serve(async (req: Request) => {
       throw new Error('Session not found');
     }
 
-    const accessToken = await getAccessToken();
+    console.log('Session details fetched:', session);
 
-    const startTime = new Date(session.scheduled_at);
-    const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000);
+    try {
+      const accessToken = await getAccessToken();
+      console.log('Got Google Calendar access token');
 
-    const event = {
-      summary: `${session.session_type.type} Session with ${session.mentee.full_name}`,
-      description: session.notes || 'No additional notes',
-      start: {
-        dateTime: startTime.toISOString(),
-        timeZone: 'UTC',
-      },
-      end: {
-        dateTime: endTime.toISOString(),
-        timeZone: 'UTC',
-      },
-      attendees: [
-        { email: session.mentor.email, responseStatus: 'accepted' },
-        { email: session.mentee.email }
-      ],
-      conferenceData: {
-        createRequest: {
-          requestId: sessionId,
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
+      const startTime = new Date(session.scheduled_at);
+      const endTime = new Date(startTime.getTime() + session.session_type.duration * 60000);
+
+      const event = {
+        summary: `${session.session_type.type} Session with ${session.mentee.full_name}`,
+        description: session.notes || 'No additional notes',
+        start: {
+          dateTime: startTime.toISOString(),
+          timeZone: 'UTC',
+        },
+        end: {
+          dateTime: endTime.toISOString(),
+          timeZone: 'UTC',
+        },
+        attendees: [
+          { email: session.mentor.email, responseStatus: 'accepted' },
+          { email: session.mentee.email }
+        ],
+        conferenceData: {
+          createRequest: {
+            requestId: sessionId,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          }
+        },
+        guestsCanModify: false,
+        guestsCanInviteOthers: false,
+        guestsCanSeeOtherGuests: true,
+        conferenceDataVersion: 1,
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'email', minutes: 24 * 60 },
+            { method: 'popup', minutes: 24 * 60 },
+            { method: 'email', minutes: 30 },
+            { method: 'popup', minutes: 30 },
+            { method: 'email', minutes: 10 },
+            { method: 'popup', minutes: 10 }
+          ]
         }
-      },
-      guestsCanModify: false,
-      guestsCanInviteOthers: false,
-      guestsCanSeeOtherGuests: true,
-      conferenceDataVersion: 1,
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 24 * 60 }, // 24 hours
-          { method: 'popup', minutes: 24 * 60 }, // 24 hours
-          { method: 'email', minutes: 30 },      // 30 minutes
-          { method: 'popup', minutes: 30 },      // 30 minutes
-          { method: 'email', minutes: 10 },      // 10 minutes
-          { method: 'popup', minutes: 10 }       // 10 minutes
-        ]
-      },
-      // Force open access configuration
-      conferenceProperties: {
-        allowedConferenceSolutionTypes: ['hangoutsMeet'],
-        accessLevel: 'open',
-        defaultSolutionKey: { type: 'hangoutsMeet' }
-      },
-      // Additional settings for open access
-      settings: {
-        joinModerationLevel: 'OFF',
-        allowAnonymousUsers: true,
-        allowExternalGuests: true,
-        allowedAttendeeTypes: ['internal', 'external'],
-        autoAcceptRequests: true,
-        accessRole: 'reader',
-        visibility: 'default'
+      };
+
+      console.log('Creating calendar event with Meet link...', JSON.stringify(event, null, 2));
+      const calendarEvent = await createCalendarEvent(event, accessToken);
+      
+      if (!calendarEvent || !calendarEvent.conferenceData) {
+        console.error('Calendar event created but no conference data:', calendarEvent);
+        throw new Error('Failed to create Meet link');
       }
-    };
 
-    console.log('Creating calendar event with Meet link...', JSON.stringify(event, null, 2));
-    const calendarEvent = await createCalendarEvent(event, accessToken);
-    const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri;
-
-    if (!meetLink) {
-      console.error('No Meet link in calendar event:', calendarEvent);
-      throw new Error('Failed to generate Meet link');
-    }
-
-    // Set up webhook for this calendar event
-    await setupWebhook('primary');
-
-    console.log('Successfully created Meet link:', meetLink);
-
-    const { error: updateError } = await supabase
-      .from('mentor_sessions')
-      .update({
-        meeting_link: meetLink,
-        calendar_event_id: calendarEvent.id,
-      })
-      .eq('id', sessionId);
-
-    if (updateError) {
-      console.error('Failed to update session with Meet link:', updateError);
-      throw new Error('Failed to update session with Meet link');
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        meetLink,
-        calendarEventId: calendarEvent.id 
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+      const meetLink = calendarEvent.conferenceData?.entryPoints?.[0]?.uri;
+      if (!meetLink) {
+        console.error('No Meet link in calendar event:', calendarEvent);
+        throw new Error('Failed to generate Meet link');
       }
-    );
+
+      console.log('Successfully created Meet link:', meetLink);
+
+      // Set up webhook for this calendar event
+      await setupWebhook('primary');
+
+      // Update session with Meet link
+      const { error: updateError } = await supabase
+        .from('mentor_sessions')
+        .update({
+          meeting_link: meetLink,
+          calendar_event_id: calendarEvent.id,
+        })
+        .eq('id', sessionId);
+
+      if (updateError) {
+        console.error('Failed to update session with Meet link:', updateError);
+        throw new Error('Failed to update session with Meet link');
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          meetLink,
+          calendarEventId: calendarEvent.id 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+
+    } catch (error) {
+      console.error('Error in Google Calendar operations:', error);
+      throw error;
+    }
 
   } catch (error) {
     console.error('Error creating Meet link:', error);
