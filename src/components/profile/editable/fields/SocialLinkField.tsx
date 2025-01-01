@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Facebook, Github, Globe, Instagram, Linkedin, TikTok, Twitter, Youtube } from "lucide-react";
+import { Facebook, Github, Globe, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
 import { EditButton } from "../EditButton";
 import { TextField } from "./TextField";
 
@@ -37,7 +37,8 @@ export function SocialLinkField({
       case 'instagram_url':
         return <Instagram className="h-5 w-5" />;
       case 'tiktok_url':
-        return <TikTok className="h-5 w-5" />;
+        // Since TikTok icon isn't available in lucide-react, we'll use a text fallback
+        return <span className="font-semibold text-sm">TikTok</span>;
       case 'youtube_url':
         return <Youtube className="h-5 w-5" />;
       default:
