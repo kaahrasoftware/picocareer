@@ -3,18 +3,27 @@ import { EditableField } from "@/components/profile/EditableField";
 interface EducationSectionProps {
   academicMajorId: string | null;
   highestDegree: string | null;
+  schoolId: string | null;  // Add schoolId to props
   profileId: string;
 }
 
 export function EducationSection({
   academicMajorId,
   highestDegree,
+  schoolId,  // Add schoolId parameter
   profileId
 }: EducationSectionProps) {
   return (
     <div className="bg-muted rounded-lg p-6 shadow-sm">
       <h3 className="text-lg font-semibold mb-4">Education</h3>
       <div className="space-y-4">
+        <EditableField
+          label="School"
+          value={schoolId}
+          fieldName="school_id"
+          profileId={profileId}
+          placeholder="Select your school"
+        />
         <EditableField
           label="Academic Major"
           value={academicMajorId}
