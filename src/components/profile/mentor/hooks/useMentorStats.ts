@@ -42,31 +42,6 @@ export function useMentorStats(profileId: string | undefined) {
     enabled: !!profileId
   });
 
-  // Fetch bookmark count
-  const { data: bookmarkCount = 0 } = useQuery({
-    queryKey: ["mentor-bookmarks", profileId],
-    queryFn: async () => {
-      if (!profileId) return 0;
-
-      console.log('Fetching bookmark count for profile:', profileId);
-
-      const { count, error } = await supabase
-        .from("user_bookmarks")
-        .select("*", { count: 'exact', head: true })
-        .eq("content_type", "mentor")
-        .eq("content_id", profileId);
-
-      if (error) {
-        console.error('Error fetching bookmark count:', error);
-        throw error;
-      }
-
-      console.log('Bookmark count result:', count);
-      return count || 0;
-    },
-    enabled: !!profileId
-  });
-
   // Calculate stats
   const stats = (() => {
     if (sessionsResponse && sessionTypesResponse) {
@@ -114,8 +89,7 @@ export function useMentorStats(profileId: string | undefined) {
         cancelled_sessions,
         unique_mentees,
         total_hours,
-        session_data,
-        bookmark_count: bookmarkCount
+        session_data
       }
     }
     return null;

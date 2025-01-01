@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CheckCircle, AlertCircle, XCircle, Bookmark } from "lucide-react";
+import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 interface SessionStats {
   total_sessions: number;
@@ -9,7 +9,6 @@ interface SessionStats {
   cancelled_sessions: number;
   unique_mentees: number;
   total_hours: number;
-  bookmark_count: number;
   session_data: {
     name: string;
     sessions: number;
@@ -100,16 +99,6 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Unique Mentees</p>
           <p className="text-2xl font-bold">{stats.unique_mentees}</p>
-        </div>
-      </Card>
-
-      <Card className="p-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Profile Bookmarks</p>
-            <Bookmark className="w-5 h-5 text-blue-500" />
-          </div>
-          <p className="text-2xl font-bold">{stats.bookmark_count}</p>
         </div>
       </Card>
 
