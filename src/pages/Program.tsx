@@ -7,7 +7,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { MajorCard } from "@/components/MajorCard";
 import { LoadMoreButton } from "@/components/community/LoadMoreButton";
-import { BrowserRouter } from "react-router-dom";
 
 export default function Program() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,67 +83,65 @@ export default function Program() {
   };
 
   return (
-    <BrowserRouter>
-      <SidebarProvider>
-        <div className="app-layout">
-          <MenuSidebar />
-          <div className="main-content">
-            <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-              <div className="space-y-8">
-                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
-                  <div className="transform transition-transform duration-200 py-2">
-                    <h1 className="text-xl font-bold">Academic Programs</h1>
+    <SidebarProvider>
+      <div className="app-layout">
+        <MenuSidebar />
+        <div className="main-content">
+          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+            <div className="space-y-8">
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+                <div className="transform transition-transform duration-200 py-2">
+                  <h1 className="text-xl font-bold">Academic Programs</h1>
+                </div>
+                
+                <div className="transform transition-all duration-200 -mx-2">
+                  <CommunityFilters
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    fieldFilter={fieldFilter}
+                    onFieldChange={setFieldFilter}
+                    fields={fields}
+                  />
+                </div>
+              </div>
+
+              {error ? (
+                <div className="text-center py-8">
+                  <p className="text-destructive">Failed to load academic programs.</p>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-4 text-primary hover:underline"
+                  >
+                    Try refreshing the page
+                  </button>
+                </div>
+              ) : isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-[300px] rounded-lg border bg-card animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {displayedMajors?.map((major) => (
+                      <MajorCard key={major.id} {...major} />
+                    ))}
                   </div>
                   
-                  <div className="transform transition-all duration-200 -mx-2">
-                    <CommunityFilters
-                      searchQuery={searchQuery}
-                      onSearchChange={setSearchQuery}
-                      fieldFilter={fieldFilter}
-                      onFieldChange={setFieldFilter}
-                      fields={fields}
+                  <div className="flex justify-center mt-8">
+                    <LoadMoreButton 
+                      hasMore={hasMore} 
+                      isLoading={isLoading} 
+                      onClick={handleLoadMore} 
                     />
                   </div>
                 </div>
-
-                {error ? (
-                  <div className="text-center py-8">
-                    <p className="text-destructive">Failed to load academic programs.</p>
-                    <button 
-                      onClick={() => window.location.reload()} 
-                      className="mt-4 text-primary hover:underline"
-                    >
-                      Try refreshing the page
-                    </button>
-                  </div>
-                ) : isLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="h-[300px] rounded-lg border bg-card animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {displayedMajors?.map((major) => (
-                        <MajorCard key={major.id} {...major} />
-                      ))}
-                    </div>
-                    
-                    <div className="flex justify-center mt-8">
-                      <LoadMoreButton 
-                        hasMore={hasMore} 
-                        isLoading={isLoading} 
-                        onClick={handleLoadMore} 
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
-      </SidebarProvider>
-    </BrowserRouter>
+      </div>
+    </SidebarProvider>
   );
 }
