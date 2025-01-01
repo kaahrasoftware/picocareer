@@ -6,24 +6,45 @@ import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
 import { formatMajorData } from "@/utils/majorFormatting";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 export default function MajorUpload() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
   const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
-    if (!session) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to upload major information",
-        variant: "destructive",
-      });
-      navigate("/auth");
-    }
-  }, [session, navigate, toast]);
+    const checkAccess = async () => {
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to upload major information",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      if (!profile) {
+        return; // Wait for profile to load
+      }
+
+      const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
+      if (!allowedTypes.includes(profile.user_type)) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to upload majors",
+          variant: "destructive",
+        });
+        navigate("/");
+      }
+    };
+
+    checkAccess();
+  }, [session, profile, navigate, toast]);
 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -98,6 +119,10 @@ export default function MajorUpload() {
       setIsSubmitting(false);
     }
   };
+
+  if (!session || !profile) {
+    return null; // Don't render anything while checking authentication
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
