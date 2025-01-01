@@ -5,6 +5,7 @@ import { SelectField } from './editable/fields/SelectField';
 import { DegreeField } from './editable/fields/DegreeField';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface EditableFieldProps {
   label: string;
@@ -25,6 +26,50 @@ export function EditableField({
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
+
+  // Fetch career details if position is set
+  const { data: careerDetails } = useQuery({
+    queryKey: ['career', value],
+    queryFn: async () => {
+      if (fieldName !== 'position' || !value) return null;
+      
+      const { data, error } = await supabase
+        .from('careers')
+        .select('title')
+        .eq('id', value)
+        .single();
+
+      if (error) {
+        console.error('Error fetching career details:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: fieldName === 'position' && !!value
+  });
+
+  // Fetch company details if company_id is set
+  const { data: companyDetails } = useQuery({
+    queryKey: ['company', value],
+    queryFn: async () => {
+      if (fieldName !== 'company_id' || !value) return null;
+      
+      const { data, error } = await supabase
+        .from('companies')
+        .select('name')
+        .eq('id', value)
+        .single();
+
+      if (error) {
+        console.error('Error fetching company details:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: fieldName === 'company_id' && !!value
+  });
 
   const handleSave = async (newValue: string) => {
     try {
@@ -89,6 +134,16 @@ export function EditableField({
     }
   };
 
+  const renderValue = () => {
+    if (fieldName === 'position' && careerDetails?.title) {
+      return careerDetails.title;
+    }
+    if (fieldName === 'company_id' && companyDetails?.name) {
+      return companyDetails.name;
+    }
+    return value || placeholder || 'Not set';
+  };
+
   return (
     <div className="space-y-2">
       {label && <span className="text-sm font-medium">{label}</span>}
@@ -98,7 +153,7 @@ export function EditableField({
       ) : (
         <div className="flex items-center justify-between">
           <p className={`text-sm ${className || 'text-muted-foreground'}`}>
-            {value || placeholder || 'Not set'}
+            {renderValue()}
           </p>
           <EditButton onClick={() => setIsEditing(true)} />
         </div>
