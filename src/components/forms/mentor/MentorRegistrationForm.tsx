@@ -47,6 +47,7 @@ export function MentorRegistrationForm({
       academic_major_id: "",
       highest_degree: "",
       location: "",
+      languages: "",
       skills: "",
       tools_used: "",
       keywords: "",
@@ -64,13 +65,12 @@ export function MentorRegistrationForm({
 
   const handleSubmit = async (data: FormValues) => {
     try {
-      // Log form data before submission for debugging
       console.log('Form data before submission:', data);
       
-      // Ensure years_of_experience is a number
       const formattedData = {
         ...data,
-        years_of_experience: Number(data.years_of_experience)
+        years_of_experience: Number(data.years_of_experience),
+        languages: data.languages ? data.languages.split(',').map(lang => lang.trim()) : []
       };
 
       await onSubmit(formattedData);
@@ -97,7 +97,7 @@ export function MentorRegistrationForm({
   );
 
   const professionalFields = mentorFormFields.filter(field => 
-    ['position', 'company_id', 'years_of_experience', 'bio'].includes(field.name)
+    ['position', 'company_id', 'years_of_experience', 'bio', 'location', 'languages'].includes(field.name)
   );
 
   const educationFields = mentorFormFields.filter(field => 

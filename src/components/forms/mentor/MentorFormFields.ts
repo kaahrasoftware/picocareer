@@ -26,6 +26,7 @@ export const mentorRegistrationSchema = z.object({
   instagram_url: z.string().url("Invalid Instagram URL").optional(),
   tiktok_url: z.string().url("Invalid TikTok URL").optional(),
   youtube_url: z.string().url("Invalid YouTube URL").optional(),
+  languages: z.string().optional(),
   background_check_consent: z.boolean().refine((val) => val === true, {
     message: "You must consent to the background check to register as a mentor"
   })
@@ -115,6 +116,13 @@ export const mentorFormFields: FormFieldProps[] = [
     type: "text",
     placeholder: "City, Country",
     required: true
+  },
+  {
+    name: "languages",
+    label: "Languages",
+    type: "array",
+    placeholder: "Enter languages you speak (comma-separated)",
+    description: "List all languages you're comfortable mentoring in"
   },
   {
     name: "skills",
