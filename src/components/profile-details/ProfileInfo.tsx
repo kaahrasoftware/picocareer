@@ -14,7 +14,13 @@ export function ProfileInfo({ careerTitle, companyName, schoolName, location, ac
       {careerTitle && (
         <div className="flex items-center gap-2 text-muted-foreground">
           <Building2 className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{companyName || "No company set"}</span>
+          <span className="truncate">{careerTitle}</span>
+        </div>
+      )}
+      {companyName && (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Building2 className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">{companyName}</span>
         </div>
       )}
       {schoolName && (
