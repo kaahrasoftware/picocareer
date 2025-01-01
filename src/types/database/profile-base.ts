@@ -7,4 +7,10 @@ export interface ProfileBase {
   email: string;
   created_at: string;
   updated_at: string;
+  X_url: string | null;
+  tiktok_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
+  languages: string[] | null;
 }
