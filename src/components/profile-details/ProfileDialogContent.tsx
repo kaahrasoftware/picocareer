@@ -28,12 +28,12 @@ export function ProfileDialogContent({
   return (
     <DialogContent className="max-w-2xl h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
       <DialogHeader className="p-6 pb-0">
-        <div className="relative">
+        <div className="relative pb-12">
           <ProfileHeader profile={profile} session={session} />
           {isMentor && (
             isOwnProfile ? (
               <Button 
-                size="lg"
+                size="sm"
                 onClick={() => setIsEditing(!isEditing)}
                 className="absolute right-0 top-16"
               >
@@ -43,7 +43,7 @@ export function ProfileDialogContent({
               <Button 
                 size="sm"
                 onClick={handleBookSession}
-                className="absolute right-0 top-16 px-4"
+                className="absolute left-1/2 -translate-x-1/2 bottom-0 px-4"
               >
                 Book a Session
               </Button>
