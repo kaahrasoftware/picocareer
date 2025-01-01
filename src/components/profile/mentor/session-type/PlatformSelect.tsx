@@ -52,43 +52,46 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                   <CommandInput placeholder="Search platforms..." />
                   <CommandEmpty>No platform found.</CommandEmpty>
                   <CommandGroup>
-                    {platforms.map((platform) => (
-                      <CommandItem
-                        key={platform}
-                        onSelect={() => {
-                          const currentValue = field.value || [];
-                          if (currentValue.includes(platform)) {
-                            field.onChange(currentValue.filter(x => x !== platform));
-                          } else {
-                            field.onChange([...currentValue, platform]);
-                          }
-                        }}
-                      >
-                        <div
-                          className={cn(
-                            "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                            field.value?.includes(platform)
-                              ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible"
-                          )}
+                    {platforms.map((platform) => {
+                      const isSelected = field.value?.includes(platform) || false;
+                      return (
+                        <CommandItem
+                          key={platform}
+                          onSelect={() => {
+                            const currentValue = field.value || [];
+                            if (currentValue.includes(platform)) {
+                              field.onChange(currentValue.filter(x => x !== platform));
+                            } else {
+                              field.onChange([...currentValue, platform]);
+                            }
+                          }}
                         >
-                          <svg
-                            className={cn("h-4 w-4")}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
+                          <div
+                            className={cn(
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "opacity-50 [&_svg]:invisible"
+                            )}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </div>
-                        {platform}
-                      </CommandItem>
-                    ))}
+                            <svg
+                              className={cn("h-4 w-4")}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </div>
+                          {platform}
+                        </CommandItem>
+                      );
+                    })}
                   </CommandGroup>
                 </Command>
               </PopoverContent>
@@ -106,7 +109,8 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                   <X
                     className="h-3 w-3 cursor-pointer"
                     onClick={() => {
-                      field.onChange(selectedPlatforms.filter(p => p !== platform));
+                      const currentValue = field.value || [];
+                      field.onChange(currentValue.filter(p => p !== platform));
                     }}
                   />
                 </Badge>
