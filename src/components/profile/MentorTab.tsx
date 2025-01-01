@@ -1,60 +1,43 @@
-import { supabase } from "@/integrations/supabase/client";
-import { MentorshipStats } from "./mentor/MentorshipStats";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
-import { useMentorStats } from "./mentor/hooks/useMentorStats";
-import type { Profile } from "@/types/database/profiles";
+import { MentorshipStats } from "./mentor/MentorshipStats";
+import { useToast } from "@/components/ui/use-toast";
 
 interface MentorTabProps {
-  profile: Profile;
+  profileId: string;
 }
 
-export function MentorTab({ profile }: MentorTabProps) {
+export function MentorTab({ profileId }: MentorTabProps) {
   const { toast } = useToast();
-  const profileId = profile?.id;
-  const { stats, refetchSessions, refetchSessionTypes } = useMentorStats(profileId);
 
-  // Check timezone setting
-  useEffect(() => {
-    const checkTimezone = async () => {
-      if (!profileId) return;
-
+  const { refetch: refetchSessionTypes } = useQuery({
+    queryKey: ['session-types', profileId],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', profileId)
-        .eq('setting_type', 'timezone')
-        .maybeSingle();
+        .from('mentor_session_types')
+        .select('*')
+        .eq('profile_id', profileId);
 
       if (error) {
-        console.error('Error checking timezone:', error);
-      } else if (!data?.setting_value) {
+        console.error('Error fetching session types:', error);
         toast({
-          title: "Timezone not set",
-          description: "Please set your timezone in settings to ensure accurate scheduling.",
+          title: "Error",
+          description: "Failed to fetch session types",
           variant: "destructive",
         });
+        throw error;
       }
-    };
 
-    checkTimezone();
-  }, [profileId, toast]);
-
-  if (!profileId) return null;
+      return data;
+    },
+  });
 
   return (
     <Tabs defaultValue="stats" className="w-full">
-      <TabsList>
-        <TabsTrigger value="stats">Stats</TabsTrigger>
-        <TabsTrigger value="session-types">Session Types</TabsTrigger>
-        <TabsTrigger value="availability">Availability</TabsTrigger>
-      </TabsList>
-
       <TabsContent value="stats">
-        {stats && <MentorshipStats stats={stats} />}
+        <MentorshipStats profileId={profileId} />
       </TabsContent>
 
       <TabsContent value="session-types">
@@ -65,10 +48,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       </TabsContent>
 
       <TabsContent value="availability">
-        <AvailabilityManager 
-          profileId={profileId}
-          onUpdate={refetchSessions}
-        />
+        <AvailabilityManager profileId={profileId} />
       </TabsContent>
     </Tabs>
   );
