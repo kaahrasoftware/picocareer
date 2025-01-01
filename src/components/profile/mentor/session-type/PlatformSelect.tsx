@@ -1,7 +1,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -73,30 +73,14 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                               );
                             }
                           }}
+                          className="flex items-center gap-2 px-4 py-2"
                         >
-                          <div
-                            className={cn(
-                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : "opacity-50 [&_svg]:invisible"
+                          <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-primary">
+                            {isSelected && (
+                              <Check className="h-3 w-3 text-primary" />
                             )}
-                          >
-                            <svg
-                              className={cn("h-4 w-4")}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
                           </div>
-                          {platform}
+                          <span className="flex-1">{platform}</span>
                         </CommandItem>
                       );
                     })}
