@@ -26,6 +26,9 @@ export const mentorRegistrationSchema = z.object({
   instagram_url: z.string().url("Invalid Instagram URL").optional(),
   tiktok_url: z.string().url("Invalid TikTok URL").optional(),
   youtube_url: z.string().url("Invalid YouTube URL").optional(),
+  background_check_consent: z.boolean().refine((val) => val === true, {
+    message: "You must consent to the background check to register as a mentor"
+  })
 });
 
 export const mentorFormFields: FormFieldProps[] = [

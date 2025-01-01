@@ -7,6 +7,7 @@ import { FormField } from "@/components/forms/FormField";
 import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { FeatureField } from "@/components/forms/fields/FeatureField";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
@@ -29,6 +30,9 @@ export function MentorRegistrationForm({
 }: MentorRegistrationFormProps) {
   const form = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      background_check_consent: false
+    }
   });
 
   // Group fields by category for better organization
@@ -118,11 +122,25 @@ export function MentorRegistrationForm({
           </div>
         </Card>
 
+        <Card className="p-6">
+          <FormField
+            control={form.control}
+            name="background_check_consent"
+            render={({ field }) => (
+              <FeatureField
+                field={field}
+                label="I consent to a background check"
+                description="By checking this box, you agree to allow us to conduct a background check using the information provided above."
+              />
+            )}
+          />
+        </Card>
+
         <div className="flex justify-end">
           <Button 
             type="submit" 
             className="w-full sm:w-auto min-w-[200px]" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !form.watch("background_check_consent")}
           >
             {isSubmitting ? "Submitting..." : "Register as Mentor"}
           </Button>
