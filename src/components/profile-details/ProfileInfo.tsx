@@ -29,16 +29,16 @@ export function ProfileInfo({ careerTitle, companyName, schoolName, location, ac
           <span className="truncate">{schoolName}</span>
         </div>
       )}
-      {location && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <MapPin className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{location}</span>
-        </div>
-      )}
       {academicMajor && (
         <div className="flex items-center gap-2 text-muted-foreground">
           <GraduationCap className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">{academicMajor}</span>
+        </div>
+      )}
+      {location && (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <MapPin className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">{location}</span>
         </div>
       )}
     </div>
