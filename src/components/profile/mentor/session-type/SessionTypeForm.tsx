@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { SessionTypeEnum, SESSION_TYPE_OPTIONS, MeetingPlatform } from "@/types/session";
+import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
+import type { MeetingPlatform } from "@/types/calendar";
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
