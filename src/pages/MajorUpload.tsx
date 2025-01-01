@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
 import { formatMajorData } from "@/utils/majorFormatting";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export default function MajorUpload() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { session } = useAuthSession();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,8 +42,7 @@ export default function MajorUpload() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!session?.user?.id) throw new Error('User not authenticated');
 
       if (!data.title?.trim()) {
         throw new Error('Title is required');
@@ -53,7 +54,7 @@ export default function MajorUpload() {
 
       const formattedData = {
         ...formatMajorData(data),
-        author_id: user.id
+        author_id: session.user.id
       };
       
       console.log('Formatted data:', formattedData);
