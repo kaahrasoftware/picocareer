@@ -28,13 +28,23 @@ export function EditableField({
   const [isLocalEditing, setIsLocalEditing] = useState(false);
   const { toast } = useToast();
 
+  const formatValueForSave = (fieldName: string, value: string) => {
+    // Handle array fields
+    if (fieldName === 'languages') {
+      return value.split(',').map(item => item.trim()).filter(Boolean);
+    }
+    return value;
+  };
+
   const handleSave = async (newValue: string) => {
     try {
       console.log('Updating profile field:', { fieldName, newValue });
       
+      const formattedValue = formatValueForSave(fieldName, newValue);
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ [fieldName]: newValue })
+        .update({ [fieldName]: formattedValue })
         .eq('id', profileId);
 
       if (error) {
