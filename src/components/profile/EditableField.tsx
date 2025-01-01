@@ -23,7 +23,7 @@ export function EditableField({
   profileId,
   className,
   placeholder,
-  isEditing = true // Default to true for backward compatibility
+  isEditing = true
 }: EditableFieldProps) {
   const [isLocalEditing, setIsLocalEditing] = useState(false);
   const { toast } = useToast();
@@ -47,7 +47,7 @@ export function EditableField({
         description: "Profile updated successfully",
       });
       
-      setIsEditing(false);
+      setIsLocalEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast({
@@ -69,7 +69,7 @@ export function EditableField({
             fieldName={fieldName}
             value={value || ''}
             onSave={handleSave}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => setIsLocalEditing(false)}
           />
         );
       case 'highest_degree':
@@ -77,7 +77,7 @@ export function EditableField({
           <DegreeField
             value={value || ''}
             onSave={handleSave}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => setIsLocalEditing(false)}
           />
         );
       default:

@@ -3,15 +3,17 @@ import { EditableField } from "@/components/profile/EditableField";
 interface EducationSectionProps {
   academicMajorId: string | null;
   highestDegree: string | null;
-  schoolId: string | null;  // Add schoolId to props
+  schoolId: string | null;
   profileId: string;
+  isEditing?: boolean;
 }
 
 export function EducationSection({
   academicMajorId,
   highestDegree,
-  schoolId,  // Add schoolId parameter
-  profileId
+  schoolId,
+  profileId,
+  isEditing = true
 }: EducationSectionProps) {
   return (
     <div className="bg-muted rounded-lg p-6 shadow-sm">
@@ -23,6 +25,7 @@ export function EducationSection({
           fieldName="school_id"
           profileId={profileId}
           placeholder="Select your school"
+          isEditing={isEditing}
         />
         <EditableField
           label="Academic Major"
@@ -30,6 +33,7 @@ export function EducationSection({
           fieldName="academic_major_id"
           profileId={profileId}
           placeholder="Select your academic major"
+          isEditing={isEditing}
         />
         <EditableField
           label="Highest Degree"
@@ -37,6 +41,7 @@ export function EducationSection({
           fieldName="highest_degree"
           profileId={profileId}
           placeholder="Select your highest degree"
+          isEditing={isEditing}
         />
       </div>
     </div>
