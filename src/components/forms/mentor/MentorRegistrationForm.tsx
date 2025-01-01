@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/forms/FormField";
 import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
@@ -16,6 +16,7 @@ interface MentorRegistrationFormProps {
   companies?: any[];
   schools?: any[];
   majors?: any[];
+  defaultValues?: any;
 }
 
 export function MentorRegistrationForm({
@@ -26,6 +27,7 @@ export function MentorRegistrationForm({
   companies = [],
   schools = [],
   majors = [],
+  defaultValues
 }: MentorRegistrationFormProps) {
   const form = useForm({
     resolver: zodResolver(schema),
@@ -33,6 +35,15 @@ export function MentorRegistrationForm({
       background_check_consent: false
     }
   });
+
+  // Update form values when defaultValues change
+  useEffect(() => {
+    if (defaultValues) {
+      Object.keys(defaultValues).forEach(key => {
+        form.setValue(key, defaultValues[key]);
+      });
+    }
+  }, [defaultValues, form]);
 
   // Group fields by category for better organization
   const personalFields = mentorFormFields.filter(field => 
