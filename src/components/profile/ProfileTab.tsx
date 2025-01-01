@@ -80,6 +80,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           <EducationSection 
             academicMajorId={profile.academic_major_id}
             highestDegree={profile.highest_degree}
+            schoolId={profile.school_id}
             profileId={profile.id}
           />
 
