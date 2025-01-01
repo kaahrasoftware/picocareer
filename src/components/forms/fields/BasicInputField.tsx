@@ -39,6 +39,7 @@ export function BasicInputField({
             ? (e) => field.onChange(parseFloat(e.target.value))
             : field.onChange
           }
+          className="placeholder:text-gray-400"
         />
       </FormControl>
       {description && (
