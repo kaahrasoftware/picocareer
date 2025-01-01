@@ -17,7 +17,7 @@ export function useNotifications(session: Session | null) {
       try {
         console.log('Fetching notifications for user:', session.user.id);
         
-        const { data, error, status } = await supabase
+        const { data, error } = await supabase
           .from('notifications')
           .select('*')
           .eq('profile_id', session.user.id)
@@ -28,8 +28,7 @@ export function useNotifications(session: Session | null) {
             message: error.message,
             details: error.details,
             hint: error.hint,
-            code: error.code,
-            status
+            code: error.code
           });
           throw error;
         }
@@ -37,12 +36,7 @@ export function useNotifications(session: Session | null) {
         console.log('Notifications fetched successfully:', data?.length);
         return data || [];
       } catch (error: any) {
-        console.error('Failed to fetch notifications:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        console.error('Failed to fetch notifications:', error);
         
         toast({
           title: "Error loading notifications",
@@ -55,12 +49,12 @@ export function useNotifications(session: Session | null) {
     },
     enabled: !!session?.user?.id,
     staleTime: 30000, // Consider data fresh for 30 seconds
-    gcTime: 1000 * 60 * 5, // Keep data in cache for 5 minutes (renamed from cacheTime)
+    gcTime: 1000 * 60 * 5, // Keep data in cache for 5 minutes
     refetchInterval: 30000, // Only refetch every 30 seconds
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: true, // Fetch on mount
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     meta: {
       errorMessage: "Failed to load notifications. Please try again later."
     }
