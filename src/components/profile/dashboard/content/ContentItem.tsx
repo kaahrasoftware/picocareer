@@ -20,6 +20,14 @@ export function ContentItem({ item, handleStatusChange, getStatusColor }: Conten
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Transform array data for form fields
+  const prepareFieldData = (field: any, value: any) => {
+    if (field.type === "array" && Array.isArray(value)) {
+      return value.join(", ");
+    }
+    return value;
+  };
+
   const handleSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
@@ -87,7 +95,7 @@ export function ContentItem({ item, handleStatusChange, getStatusColor }: Conten
           <GenericUploadForm
             fields={majorFormFields.map(field => ({
               ...field,
-              defaultValue: item[field.name]
+              defaultValue: prepareFieldData(field, item[field.name])
             }))}
             onSubmit={handleSubmit}
             buttonText="Update Major"

@@ -5,7 +5,7 @@ import { FormField } from "./FormField";
 import { FormFieldProps } from "./FormField";
 
 interface GenericUploadFormProps {
-  fields: FormFieldProps[];
+  fields: (FormFieldProps & { defaultValue?: any })[];
   onSubmit: (data: any) => void;
   buttonText?: string;
   isSubmitting?: boolean;
@@ -17,7 +17,12 @@ export function GenericUploadForm({
   buttonText = "Submit",
   isSubmitting = false 
 }: GenericUploadFormProps) {
-  const form = useForm();
+  const form = useForm({
+    defaultValues: fields.reduce((acc, field) => ({
+      ...acc,
+      [field.name]: field.defaultValue || (field.type === "array" ? [] : "")
+    }), {})
+  });
 
   const handleSubmit = async (data: any) => {
     await onSubmit(data);
