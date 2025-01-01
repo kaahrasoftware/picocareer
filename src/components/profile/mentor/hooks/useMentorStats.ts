@@ -10,22 +10,21 @@ export function useMentorStats(profileId: string | undefined) {
       
       const { data, error } = await supabase
         .from("mentor_sessions")
-        .select(`
-          id,
-          scheduled_at,
-          status,
-          mentee_id
-        `)
+        .select("*")
         .eq("mentor_id", profileId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching sessions:', error);
+        throw error;
+      }
+      
       console.log('Fetched sessions:', data);
       return data;
     },
     enabled: !!profileId
   });
 
-  // Fetch session types
+  // Fetch session types (needed for reference)
   const { data: sessionTypesResponse, refetch: refetchSessionTypes } = useQuery({
     queryKey: ["session-types", profileId],
     queryFn: async () => {
@@ -36,7 +35,10 @@ export function useMentorStats(profileId: string | undefined) {
         .select("*")
         .eq("profile_id", profileId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching session types:', error);
+        throw error;
+      }
       return data;
     },
     enabled: !!profileId
@@ -57,6 +59,7 @@ export function useMentorStats(profileId: string | undefined) {
       // For total hours, we'll use a default duration of 1 hour per session
       const total_hours = sessions.length; // Simplified to 1 hour per session
 
+      // Calculate session data for the last 6 months
       const last6Months = Array.from({ length: 6 }, (_, i) => {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
@@ -79,6 +82,16 @@ export function useMentorStats(profileId: string | undefined) {
         };
       });
 
+      console.log('Calculated stats:', {
+        total_sessions,
+        completed_sessions,
+        upcoming_sessions,
+        cancelled_sessions,
+        unique_mentees,
+        total_hours,
+        session_data
+      });
+
       return {
         total_sessions,
         completed_sessions,
@@ -87,7 +100,7 @@ export function useMentorStats(profileId: string | undefined) {
         unique_mentees,
         total_hours,
         session_data
-      }
+      };
     }
     return null;
   })();
