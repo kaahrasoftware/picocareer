@@ -141,19 +141,24 @@ export function useMentorRegistration() {
         facebook_url: data.facebook_url?.trim() || null,
         instagram_url: data.instagram_url?.trim() || null,
         tiktok_url: data.tiktok_url?.trim() || null,
-        youtube_url: data.youtube_url?.trim() || null
+        youtube_url: data.youtube_url?.trim() || null,
+        languages: data.languages?.trim() || null
       };
 
       console.log('Formatted data for submission:', formattedData);
 
-      const { error: updateError } = await supabase
+      // Use upsert instead of update to handle both new and existing profiles
+      const { error: upsertError } = await supabase
         .from('profiles')
-        .update(formattedData)
+        .upsert(formattedData, {
+          onConflict: 'id',
+          ignoreDuplicates: false
+        })
         .eq('id', user.id);
 
-      if (updateError) {
-        console.error('Database update error:', updateError);
-        throw updateError;
+      if (upsertError) {
+        console.error('Database upsert error:', upsertError);
+        throw upsertError;
       }
 
       await sendAdminNotification(formattedData);
