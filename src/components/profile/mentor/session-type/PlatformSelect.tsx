@@ -42,7 +42,7 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                     !field.value?.length && "text-muted-foreground"
                   )}
                 >
-                  {field.value?.length > 0
+                  {(field.value ?? []).length > 0
                     ? `${field.value.length} platform${field.value.length > 1 ? "s" : ""} selected`
                     : "Select platforms"}
                 </Button>
