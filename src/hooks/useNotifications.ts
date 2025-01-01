@@ -55,7 +55,7 @@ export function useNotifications(session: Session | null) {
     },
     enabled: !!session?.user?.id,
     staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 1000 * 60 * 5, // Keep data in cache for 5 minutes
+    gcTime: 1000 * 60 * 5, // Keep data in cache for 5 minutes (renamed from cacheTime)
     refetchInterval: 30000, // Only refetch every 30 seconds
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: true, // Fetch on mount
