@@ -31,19 +31,21 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
   const [studyLevelFilter, setStudyLevelFilter] = useState<string>("all");
   const [skillsFilter, setSkillsFilter] = useState<string>("");
 
-  const filteredCareers = careers.filter((career) => {
-    const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || career.industry === categoryFilter;
-    const matchesSalary = salaryFilter === "all" || (career.salary_range && career.salary_range.includes(salaryFilter));
-    const matchesStudyLevel = studyLevelFilter === "all" || 
-      (career.required_education && career.required_education.includes(studyLevelFilter));
-    const matchesSkills = !skillsFilter || 
-      (career.required_skills && career.required_skills.some(skill => 
-        skill.toLowerCase().includes(skillsFilter.toLowerCase())
-      ));
+  const filteredCareers = careers
+    .filter(career => career.complete_career) // First filter for complete careers
+    .filter((career) => {
+      const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === "all" || career.industry === categoryFilter;
+      const matchesSalary = salaryFilter === "all" || (career.salary_range && career.salary_range.includes(salaryFilter));
+      const matchesStudyLevel = studyLevelFilter === "all" || 
+        (career.required_education && career.required_education.includes(studyLevelFilter));
+      const matchesSkills = !skillsFilter || 
+        (career.required_skills && career.required_skills.some(skill => 
+          skill.toLowerCase().includes(skillsFilter.toLowerCase())
+        ));
 
-    return matchesSearch && matchesCategory && matchesSalary && matchesStudyLevel && matchesSkills;
-  });
+      return matchesSearch && matchesCategory && matchesSalary && matchesStudyLevel && matchesSkills;
+    });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

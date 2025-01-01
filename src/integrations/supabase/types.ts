@@ -135,6 +135,7 @@ export type Database = {
         Row: {
           academic_majors: string[] | null
           careers_to_consider_switching_to: string[] | null
+          complete_career: boolean | null
           created_at: string
           description: string
           featured: boolean | null
@@ -163,6 +164,7 @@ export type Database = {
         Insert: {
           academic_majors?: string[] | null
           careers_to_consider_switching_to?: string[] | null
+          complete_career?: boolean | null
           created_at?: string
           description: string
           featured?: boolean | null
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           academic_majors?: string[] | null
           careers_to_consider_switching_to?: string[] | null
+          complete_career?: boolean | null
           created_at?: string
           description?: string
           featured?: boolean | null
