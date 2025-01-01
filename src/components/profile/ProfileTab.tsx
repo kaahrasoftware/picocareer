@@ -1,6 +1,7 @@
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { EditableField } from "@/components/profile/EditableField";
+import { ProfileBio } from "@/components/profile-details/ProfileBio";
 import { Card } from "@/components/ui/card";
 import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
@@ -38,6 +39,11 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           </div>
         </div>
       </div>
+
+      <ProfileBio 
+        bio={profile.bio} 
+        profileId={profile.id}
+      />
 
       <div className="bg-muted rounded-lg p-6 shadow-sm">
         <div className="space-y-4">
