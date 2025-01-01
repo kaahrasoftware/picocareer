@@ -93,6 +93,28 @@ export function EditableField({
     enabled: fieldName === 'academic_major_id' && !!value
   });
 
+  // Fetch school details if school_id is set
+  const { data: schoolDetails } = useQuery({
+    queryKey: ['school', value],
+    queryFn: async () => {
+      if (fieldName !== 'school_id' || !value) return null;
+      
+      const { data, error } = await supabase
+        .from('schools')
+        .select('name')
+        .eq('id', value)
+        .single();
+
+      if (error) {
+        console.error('Error fetching school details:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: fieldName === 'school_id' && !!value
+  });
+
   const handleSave = async (newValue: string) => {
     try {
       console.log('Updating profile field:', { fieldName, newValue });
@@ -165,6 +187,9 @@ export function EditableField({
     }
     if (fieldName === 'academic_major_id' && majorDetails?.title) {
       return majorDetails.title;
+    }
+    if (fieldName === 'school_id' && schoolDetails?.name) {
+      return schoolDetails.name;
     }
     return value || placeholder || 'Not set';
   };
