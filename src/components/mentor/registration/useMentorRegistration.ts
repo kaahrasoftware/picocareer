@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import type { Database } from "@/integrations/supabase/types";
+
+type UserType = Database["public"]["Enums"]["user_type"];
 
 export function useMentorRegistration() {
   const { toast } = useToast();
@@ -133,7 +136,7 @@ export function useMentorRegistration() {
         school_id: data.school_id,
         academic_major_id: data.academic_major_id,
         location: data.location.trim(),
-        user_type: 'mentor',
+        user_type: 'mentor' as UserType,
         X_url: data.X_url?.trim() || null,
         facebook_url: data.facebook_url?.trim() || null,
         instagram_url: data.instagram_url?.trim() || null,
