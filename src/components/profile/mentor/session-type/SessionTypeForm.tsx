@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
 import type { MeetingPlatform } from "@/types/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState } from "react"; // Added missing import
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
@@ -77,7 +77,7 @@ export function SessionTypeForm({ onSubmit, onCancel, existingTypes }: SessionTy
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="max-h-[70vh] overflow-y-auto pr-4 space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="type"
