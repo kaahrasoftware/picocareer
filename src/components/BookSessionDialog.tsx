@@ -57,31 +57,34 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         throw new Error(sessionResult.error || 'Failed to book session');
       }
 
+      console.log('Session booked successfully, creating meet link...');
+
       if (formData.meetingPlatform === 'Google Meet') {
         try {
+          console.log('Invoking create-meet-link function for session:', sessionResult.sessionId);
+          
           const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
-            body: { sessionId: sessionResult.sessionId }
+            body: { 
+              sessionId: sessionResult.sessionId 
+            }
           });
 
           if (meetError) {
             console.error('Error creating meet link:', meetError);
-            toast({
-              title: "Google Meet Error",
-              description: "Session booked, but there was an issue creating the meeting link. We'll send you the link via email shortly.",
-              variant: "destructive"
-            });
+            throw meetError;
           }
-        } catch (meetError) {
-          console.error('Error with Google Meet integration:', meetError);
-          toast({
-            title: "Google Meet Error",
-            description: "Session booked, but there was an issue with Google Meet integration. We'll send you the link via email shortly.",
-            variant: "destructive"
-          });
+
+          console.log('Meet link created successfully:', meetData);
+
+        } catch (meetError: any) {
+          console.error('Detailed error creating meet link:', meetError);
+          throw new Error(`Failed to create Google Meet link: ${meetError.message}`);
         }
       }
 
       try {
+        console.log('Setting up notifications and sending emails...');
+        
         await Promise.all([
           supabase.functions.invoke('schedule-session-notifications', {
             body: { sessionId: sessionResult.sessionId }
@@ -93,6 +96,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             }
           })
         ]);
+
+        console.log('Notifications and emails sent successfully');
       } catch (notificationError) {
         console.error('Error with notifications/emails:', notificationError);
         toast({
@@ -110,10 +115,10 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error booking session:', error);
+      console.error('Detailed booking error:', error);
       toast({
         title: "Booking Error",
-        description: "Failed to book session. Please try again.",
+        description: error.message || "Failed to book session. Please try again.",
         variant: "destructive"
       });
     } finally {
