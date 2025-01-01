@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -131,13 +130,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {fetchedSessionTypes.map((sessionType) => (
-          <SessionTypeCard
-            key={sessionType.id}
-            sessionType={sessionType}
-            onDelete={handleDeleteSessionType}
-          />
-        ))}
         <Button
           variant="outline"
           className="h-[200px] border-dashed flex flex-col gap-2"
@@ -146,6 +138,13 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
           <Plus className="h-6 w-6" />
           Add Session Type
         </Button>
+        {fetchedSessionTypes.map((sessionType) => (
+          <SessionTypeCard
+            key={sessionType.id}
+            sessionType={sessionType}
+            onDelete={handleDeleteSessionType}
+          />
+        ))}
       </div>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
