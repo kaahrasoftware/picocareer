@@ -6,6 +6,7 @@ import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 import { SessionTypeEnum } from "@/types/session";
 
@@ -20,6 +21,22 @@ interface SessionTypeManagerProps {
 export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch session types
+  const { data: fetchedSessionTypes = [], isLoading } = useQuery({
+    queryKey: ['mentor-session-types', profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mentor_session_types')
+        .select('*')
+        .eq('profile_id', profileId);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profileId
+  });
 
   const handleAddSessionType = async (data: {
     type: SessionTypeEnum;
@@ -64,7 +81,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         description: "Session type added successfully",
       });
 
-      onUpdate();
+      queryClient.invalidateQueries({ queryKey: ['mentor-session-types'] });
       setShowForm(false);
     } catch (error) {
       console.error('Error adding session type:', error);
@@ -90,7 +107,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         description: "Session type deleted successfully",
       });
 
-      onUpdate();
+      queryClient.invalidateQueries({ queryKey: ['mentor-session-types'] });
     } catch (error) {
       console.error('Error deleting session type:', error);
       toast({
@@ -101,12 +118,20 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     }
   };
 
-  const existingTypes = sessionTypes.map(st => st.type);
+  const existingTypes = fetchedSessionTypes.map(st => st.type);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sessionTypes.map((sessionType) => (
+        {fetchedSessionTypes.map((sessionType) => (
           <SessionTypeCard
             key={sessionType.id}
             sessionType={sessionType}
