@@ -12,7 +12,10 @@ export interface Profile extends
   ProfileSocial,
   ProfileMentor,
   ProfileCareer {
+  academic_major_id?: string | null;
   academic_major?: string | null;
+  school_id?: string | null;
   school_name?: string | null;
+  company_id?: string | null;
   company_name?: string | null;
 }
