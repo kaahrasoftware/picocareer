@@ -1,38 +1,45 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/forms/FormField";
-import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
+import { mentorFormFields, mentorRegistrationSchema } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
-  schema: any;
   careers?: any[];
   companies?: any[];
   schools?: any[];
   majors?: any[];
 }
 
+type FormValues = z.infer<typeof mentorRegistrationSchema>;
+
 export function MentorRegistrationForm({
   onSubmit,
   isSubmitting,
-  schema,
   careers = [],
   companies = [],
   schools = [],
   majors = [],
 }: MentorRegistrationFormProps) {
-  const form = useForm({
-    resolver: zodResolver(schema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
       background_check_consent: false
     }
   });
+
+  const handleSubmit = async (data: FormValues) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
 
   // Group fields by category for better organization
   const personalFields = mentorFormFields.filter(field => 
@@ -85,7 +92,7 @@ export function MentorRegistrationForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
           <div className="grid gap-6 sm:grid-cols-2">
