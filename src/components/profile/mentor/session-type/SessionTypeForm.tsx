@@ -5,47 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { SESSION_TYPE_OPTIONS } from "@/types/session";
-import type { SessionTypeEnum } from "@/types/session";
-import type { Database } from "@/integrations/supabase/types";
-
-type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
-
-interface SessionTypeFormProps {
-  profileId: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  existingTypes: SessionType[];
-}
-
-interface FormData {
-  type: SessionTypeEnum;
-  duration: number;
-  description: string;
-  meeting_platform: ("Google Meet" | "WhatsApp" | "Telegram" | "Phone Call")[];
-  telegram_username?: string;
-  phone_number?: string;
-}
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
+import { SessionTypeFormData, SessionTypeFormProps } from "./types";
+import { SessionTypeSelect } from "./SessionTypeSelect";
+import { PlatformSelect } from "./PlatformSelect";
+import { PlatformFields } from "./PlatformFields";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const form = useForm<FormData>({
+  const form = useForm<SessionTypeFormData>({
     defaultValues: {
       meeting_platform: ["Google Meet"],
     }
@@ -55,7 +25,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     type => !existingTypes.some(existing => existing.type === type)
   );
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: SessionTypeFormData) => {
     try {
       setIsSubmitting(true);
       console.log('Submitting session type:', data);
@@ -66,7 +36,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           profile_id: profileId,
           type: data.type,
           duration: data.duration,
-          price: 0, // Default price set to 0
+          price: 0,
           description: data.description || null,
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
@@ -102,31 +72,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
-        <FormField
-          control={form.control}
-          name="type"
-          rules={{ required: "Session type is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Session Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select session type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availableTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <SessionTypeSelect form={form} availableTypes={availableTypes} />
 
         <FormField
           control={form.control}
@@ -161,77 +107,13 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="meeting_platform"
-          rules={{ required: "At least one platform is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Meeting Platform</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={(value) => field.onChange([value])}
-                  defaultValue={field.value?.[0]}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select platform" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Google Meet">Google Meet</SelectItem>
-                    <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                    <SelectItem value="Telegram">Telegram</SelectItem>
-                    <SelectItem value="Phone Call">Phone Call</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <PlatformSelect form={form} />
+        
+        <PlatformFields 
+          form={form}
+          showTelegramField={showTelegramField}
+          showPhoneField={showPhoneField}
         />
-
-        {showTelegramField && (
-          <FormField
-            control={form.control}
-            name="telegram_username"
-            rules={{ required: "Telegram username is required for Telegram sessions" }}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telegram Username</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="@username"
-                    onChange={(e) => {
-                      let value = e.target.value;
-                      if (!value.startsWith('@') && value) {
-                        value = '@' + value;
-                      }
-                      field.onChange(value);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        {showPhoneField && (
-          <FormField
-            control={form.control}
-            name="phone_number"
-            rules={{ required: "Phone number is required for phone call sessions" }}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="+1234567890" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
 
         <div className="flex justify-end gap-2">
           <Button
