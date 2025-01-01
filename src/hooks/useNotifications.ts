@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
 export function useNotifications(session: Session | null) {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useQuery({
     queryKey: ['notifications', session?.user?.id],
@@ -30,6 +32,18 @@ export function useNotifications(session: Session | null) {
             hint: error.hint,
             code: error.code
           });
+
+          // Handle auth errors specifically
+          if (error.message.includes('JWT') || error.message.includes('session')) {
+            toast({
+              title: "Session expired",
+              description: "Please sign in again",
+              variant: "destructive",
+            });
+            navigate("/auth");
+            return [];
+          }
+
           throw error;
         }
 

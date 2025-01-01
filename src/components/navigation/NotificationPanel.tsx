@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Bell, BellDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NotificationItem } from "./NotificationItem";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Notification {
   id: string;
@@ -30,6 +33,9 @@ interface NotificationPanelProps {
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Update local state when props change
   if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
@@ -43,13 +49,33 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   };
 
   const toggleReadStatus = async (notification: Notification) => {
-    // Update local state immediately for better UX
-    setLocalNotifications(prev => prev.map(n => 
-      n.id === notification.id ? { ...n, read: !n.read } : n
-    ));
-    
-    // Call the parent handler to update the database
-    onMarkAsRead(notification.id);
+    try {
+      // Update local state immediately for better UX
+      setLocalNotifications(prev => prev.map(n => 
+        n.id === notification.id ? { ...n, read: !n.read } : n
+      ));
+      
+      // Call the parent handler to update the database
+      await onMarkAsRead(notification.id);
+    } catch (error) {
+      console.error('Error toggling notification status:', error);
+      toast({
+        title: "Error updating notification",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+
+      // Revert local state if the update failed
+      setLocalNotifications(prev => prev.map(n => 
+        n.id === notification.id ? { ...n, read: notification.read } : n
+      ));
+
+      // If it's an auth error, redirect to login
+      if (error instanceof Error && error.message.includes('JWT')) {
+        queryClient.clear();
+        navigate("/auth");
+      }
+    }
   };
 
   return (
