@@ -26,15 +26,24 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
+        console.log('Fetching auth session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error('Session error:', error);
           throw error;
         }
+        
+        if (!session) {
+          console.log('No valid session found');
+          return null;
+        }
+        
+        console.log('Valid session found');
         return session;
       } catch (error: any) {
-        console.error('Error fetching session:', error);
-        return null;
+        console.error('Detailed session error:', error);
+        throw error;
       }
     },
     retry: false,
@@ -46,12 +55,19 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     queryKey: ['current-user'],
     queryFn: async () => {
       try {
+        console.log('Fetching current user data...');
         const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Error fetching user:', error);
+          throw error;
+        }
+        
+        console.log('Current user data fetched successfully');
         return user;
       } catch (error: any) {
-        console.error('Error fetching current user:', error);
-        return null;
+        console.error('Detailed user fetch error:', error);
+        throw error;
       }
     },
     retry: false,
@@ -62,34 +78,39 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
-      console.log('Fetching profile for user:', userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!profiles_position_fkey(title, id)
-        `)
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
+      try {
+        console.log('Fetching profile for user:', userId);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
+            career:careers!profiles_position_fkey(title, id)
+          `)
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching profile:', error);
+          throw error;
+        }
+
+        console.log('Profile data fetched successfully:', data);
+        
+        return {
+          ...data,
+          company_name: data.company?.name,
+          school_name: data.school?.name,
+          academic_major: data.academic_major?.title,
+          career_title: data.career?.title,
+          career_id: data.career?.id
+        };
+      } catch (error: any) {
+        console.error('Detailed profile fetch error:', error);
         throw error;
       }
-
-      console.log('Fetched profile data:', data);
-      
-      return {
-        ...data,
-        company_name: data.company?.name,
-        school_name: data.school?.name,
-        academic_major: data.academic_major?.title,
-        career_title: data.career?.title,
-        career_id: data.career?.id
-      };
     },
     enabled: !!userId && open && !!session,
     retry: 1,
@@ -99,11 +120,12 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   useEffect(() => {
     if (sessionError) {
       console.log('Session error detected, cleaning up...');
-      // Clear all auth-related data
-      localStorage.clear(); // Clear all local storage to be safe
-      queryClient.clear(); // Clear all queries
       
-      // Show error message and redirect
+      // Clear all auth-related data
+      localStorage.clear();
+      queryClient.clear();
+      
+      // Show error message
       toast({
         title: "Authentication Error",
         description: "Please sign in again to continue.",
@@ -118,6 +140,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   // Subscribe to real-time changes
   useEffect(() => {
     if (!open || !userId || !session) return;
+
+    console.log('Setting up real-time subscription for profile:', userId);
 
     const channel = supabase
       .channel('profile-changes')
@@ -137,6 +161,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       .subscribe();
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [userId, open, queryClient, session]);
