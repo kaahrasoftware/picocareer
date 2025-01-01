@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Clock, DollarSign, FileText, Trash2, Video } from "lucide-react";
+import { Clock, DollarSign, FileText, Trash2, Video, MessageSquare, Phone } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
@@ -39,16 +39,32 @@ export function SessionTypeCard({ sessionType, onDelete }: SessionTypeCardProps)
         </div>
       )}
       {sessionType.meeting_platform && (
-        <div className="flex items-start gap-1 text-sm text-muted-foreground">
-          <Video className="h-4 w-4 mt-1 flex-shrink-0" />
-          <div className="flex flex-wrap gap-1">
-            {sessionType.meeting_platform.map((platform, index) => (
-              <span key={platform}>
-                {platform}
-                {index < sessionType.meeting_platform.length - 1 ? ", " : ""}
-              </span>
-            ))}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start gap-1 text-sm text-muted-foreground">
+            <Video className="h-4 w-4 mt-1 flex-shrink-0" />
+            <div className="flex flex-wrap gap-1">
+              {sessionType.meeting_platform.map((platform, index) => (
+                <span key={platform}>
+                  {platform}
+                  {index < sessionType.meeting_platform.length - 1 ? ", " : ""}
+                </span>
+              ))}
+            </div>
           </div>
+          
+          {sessionType.telegram_username && (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <MessageSquare className="h-4 w-4 flex-shrink-0" />
+              <span>@{sessionType.telegram_username}</span>
+            </div>
+          )}
+          
+          {sessionType.phone_number && (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Phone className="h-4 w-4 flex-shrink-0" />
+              <span>{sessionType.phone_number}</span>
+            </div>
+          )}
         </div>
       )}
     </div>
