@@ -16,4 +16,10 @@ export interface Profile extends
   company_name?: string | null;
   school_name?: string | null;
   academic_major?: string | null;
+  languages?: string[] | null;
+  X_url?: string | null;
+  facebook_url?: string | null;
+  tiktok_url?: string | null;
+  youtube_url?: string | null;
+  instagram_url?: string | null;
 }
