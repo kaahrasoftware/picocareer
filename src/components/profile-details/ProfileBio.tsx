@@ -11,7 +11,7 @@ export function ProfileBio({ bio, profileId }: ProfileBioProps) {
       <div className="space-y-4">
         <h4 className="text-lg font-semibold">About</h4>
         <EditableField
-          label="Bio"
+          label=""
           value={bio}
           fieldName="bio"
           profileId={profileId}
