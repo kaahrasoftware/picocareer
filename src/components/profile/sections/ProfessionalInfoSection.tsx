@@ -11,7 +11,7 @@ interface ProfessionalInfoSectionProps {
 
 export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoSectionProps) {
   // Don't render anything for mentees
-  if (isMentee || !profile) return null;
+  if (isMentee) return null;
 
   // Add error boundary and logging for the careers query
   const { data: careers, error: careersError } = useQuery({
@@ -41,34 +41,23 @@ export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoS
   return (
     <div className="bg-muted rounded-lg p-4 space-y-4">
       <h4 className="font-semibold">Professional Experience</h4>
-      
       <EditableField
         label="Position"
-        value={profile.career?.title}
+        value={profile?.career?.title}
         fieldName="position"
-        profileId={profile.id}
+        profileId={profile?.id || ''}
       />
-      
       <EditableField
         label="Company"
-        value={profile.company_name}
-        fieldName="company_id"
-        profileId={profile.id}
+        value={profile?.company_name}
+        fieldName="company_name"
+        profileId={profile?.id || ''}
       />
-      
       <EditableField
         label="Years of Experience"
-        value={profile.years_of_experience?.toString()}
+        value={profile?.years_of_experience?.toString()}
         fieldName="years_of_experience"
-        profileId={profile.id}
-      />
-      
-      <EditableField
-        label="Total Booked Sessions"
-        value={profile.total_booked_sessions?.toString()}
-        fieldName="total_booked_sessions"
-        profileId={profile.id}
-        readOnly={true}
+        profileId={profile?.id || ''}
       />
     </div>
   );

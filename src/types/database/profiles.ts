@@ -12,9 +12,8 @@ export interface Profile extends
   ProfileSocial,
   ProfileMentor,
   ProfileCareer {
-  // Derived fields from joins
-  academic_major?: string | null;
-  school_name?: string | null;
+  // Include joined fields as required
   company_name?: string | null;
-  career_title?: string | null;
+  school_name?: string | null;
+  academic_major?: string | null;
 }

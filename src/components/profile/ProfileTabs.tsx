@@ -33,31 +33,31 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="profile">
-        <ProfileTab />
+      <TabsContent value="profile" className="space-y-6">
+        <ProfileTab profile={profile} />
       </TabsContent>
 
       {isAdmin && (
-        <TabsContent value="dashboard">
+        <TabsContent value="dashboard" className="space-y-6">
           <DashboardTab />
         </TabsContent>
       )}
 
-      <TabsContent value="calendar">
+      <TabsContent value="calendar" className="space-y-6">
         <CalendarTab />
       </TabsContent>
 
       {isMentor && profile && (
-        <TabsContent value="mentor">
+        <TabsContent value="mentor" className="space-y-6">
           <MentorTab profile={profile} />
         </TabsContent>
       )}
 
-      <TabsContent value="bookmarks">
+      <TabsContent value="bookmarks" className="space-y-6">
         <BookmarksTab />
       </TabsContent>
 
-      <TabsContent value="settings">
+      <TabsContent value="settings" className="space-y-6">
         <SettingsTab />
       </TabsContent>
     </Tabs>
