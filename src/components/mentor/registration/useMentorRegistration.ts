@@ -97,6 +97,7 @@ export function useMentorRegistration() {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
+    console.log('Submitting form data:', data);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -153,7 +154,12 @@ export function useMentorRegistration() {
           school_id: data.school_id,
           academic_major_id: data.academic_major_id,
           location: data.location,
-          user_type: 'mentor'
+          user_type: 'mentor',
+          X_url: data.X_url,
+          facebook_url: data.facebook_url,
+          instagram_url: data.instagram_url,
+          tiktok_url: data.tiktok_url,
+          youtube_url: data.youtube_url
         })
         .eq('id', user.id);
 
