@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import type { Database } from "@/integrations/supabase/types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -38,17 +39,19 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         </Button>
       </div>
 
-      {showForm && (
-        <SessionTypeForm
-          profileId={profileId}
-          onSuccess={() => {
-            setShowForm(false);
-            onUpdate();
-          }}
-          onCancel={() => setShowForm(false)}
-          existingTypes={fetchedSessionTypes}
-        />
-      )}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-lg">
+          <SessionTypeForm
+            profileId={profileId}
+            onSuccess={() => {
+              setShowForm(false);
+              onUpdate();
+            }}
+            onCancel={() => setShowForm(false)}
+            existingTypes={fetchedSessionTypes}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {fetchedSessionTypes.map((sessionType) => (
