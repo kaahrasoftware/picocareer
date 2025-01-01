@@ -27,12 +27,14 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
   const { data: fetchedSessionTypes = [], isLoading } = useQuery({
     queryKey: ['mentor-session-types', profileId],
     queryFn: async () => {
+      console.log('Fetching session types for profile:', profileId);
       const { data, error } = await supabase
         .from('mentor_session_types')
         .select('*')
         .eq('profile_id', profileId);
 
       if (error) throw error;
+      console.log('Fetched session types:', data);
       return data;
     },
     enabled: !!profileId
@@ -48,6 +50,8 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     phone_number?: string;
   }) => {
     try {
+      console.log('Attempting to add session type:', data);
+      
       // Check if this session type already exists for this mentor
       const { data: existingTypes, error: checkError } = await supabase
         .from('mentor_session_types')
@@ -60,7 +64,10 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         throw checkError;
       }
 
+      console.log('Existing types check result:', existingTypes);
+
       if (existingTypes && existingTypes.length > 0) {
+        console.log('Found existing session type:', existingTypes[0]);
         toast({
           title: "Session type exists",
           description: `You already have a "${data.type}" session type configured.`,
@@ -80,6 +87,8 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         phone_number: data.phone_number || null
       };
 
+      console.log('Attempting to insert session type with data:', sessionTypeData);
+
       const { data: insertedData, error: insertError } = await supabase
         .from('mentor_session_types')
         .insert(sessionTypeData)
@@ -98,6 +107,8 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         }
         throw insertError;
       }
+
+      console.log('Successfully inserted session type:', insertedData);
 
       toast({
         title: "Success",
