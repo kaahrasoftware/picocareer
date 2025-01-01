@@ -10,14 +10,12 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ form, availableTypes }: BasicInfoSectionProps) {
-  // Filter out types that are already in use
-  const availableSessionTypes = SESSION_TYPE_OPTIONS.filter(type => 
+  // Filter available types from SESSION_TYPE_OPTIONS
+  const sortedAvailableTypes = SESSION_TYPE_OPTIONS.filter(type => 
     !availableTypes.includes(type)
   );
 
-  console.log('Current available types:', availableTypes);
-  console.log('All session types:', SESSION_TYPE_OPTIONS);
-  console.log('Filtered available session types:', availableSessionTypes);
+  console.log('Available session types:', sortedAvailableTypes);
 
   return (
     <>
@@ -36,7 +34,7 @@ export function BasicInfoSection({ form, availableTypes }: BasicInfoSectionProps
               }}
             >
               <option value="">Select a session type</option>
-              {availableSessionTypes.map((type) => (
+              {sortedAvailableTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
