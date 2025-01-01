@@ -20,7 +20,7 @@ const platforms = [
 ] as const;
 
 export function PlatformSelect({ form }: PlatformSelectProps) {
-  const selectedPlatforms = form.watch("meeting_platform") ?? [];
+  const selectedPlatforms = form.watch("meeting_platform") || [];
 
   return (
     <FormField
@@ -62,12 +62,14 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                             if (currentValue.includes(platform)) {
                               form.setValue(
                                 "meeting_platform",
-                                currentValue.filter(x => x !== platform)
+                                currentValue.filter(x => x !== platform),
+                                { shouldValidate: true }
                               );
                             } else {
                               form.setValue(
                                 "meeting_platform",
-                                [...currentValue, platform]
+                                [...currentValue, platform],
+                                { shouldValidate: true }
                               );
                             }
                           }}
@@ -115,10 +117,10 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                   <X
                     className="h-3 w-3 cursor-pointer"
                     onClick={() => {
-                      const currentValue = field.value ?? [];
                       form.setValue(
                         "meeting_platform",
-                        currentValue.filter(p => p !== platform)
+                        selectedPlatforms.filter(p => p !== platform),
+                        { shouldValidate: true }
                       );
                     }}
                   />
