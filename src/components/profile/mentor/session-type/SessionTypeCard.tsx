@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Clock, DollarSign, FileText, Trash2, Video } from "lucide-react";
+import { Clock, DollarSign, FileText, Trash2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
@@ -36,19 +36,6 @@ export function SessionTypeCard({ sessionType, onDelete }: SessionTypeCardProps)
         <div className="flex items-start gap-1 text-sm text-muted-foreground">
           <FileText className="h-4 w-4 mt-1 flex-shrink-0" />
           <p className="line-clamp-2">{sessionType.description}</p>
-        </div>
-      )}
-      {sessionType.meeting_platform && (
-        <div className="flex items-start gap-1 text-sm text-muted-foreground">
-          <Video className="h-4 w-4 mt-1 flex-shrink-0" />
-          <div className="flex flex-wrap gap-1">
-            {sessionType.meeting_platform.map((platform, index) => (
-              <span key={platform}>
-                {platform}
-                {index < sessionType.meeting_platform.length - 1 ? ", " : ""}
-              </span>
-            ))}
-          </div>
         </div>
       )}
     </div>
