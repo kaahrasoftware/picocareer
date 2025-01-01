@@ -51,7 +51,11 @@ export default function MajorUpload() {
         throw new Error('Description is required');
       }
 
-      const formattedData = formatMajorData(data);
+      const formattedData = {
+        ...formatMajorData(data),
+        author_id: user.id
+      };
+      
       console.log('Formatted data:', formattedData);
 
       const { data: result, error } = await supabase

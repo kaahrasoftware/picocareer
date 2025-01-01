@@ -313,6 +313,7 @@ export type Database = {
       majors: {
         Row: {
           affiliated_programs: string[] | null
+          author_id: string | null
           career_opportunities: string[] | null
           category: string[] | null
           certifications_to_consider: string[] | null
@@ -345,6 +346,7 @@ export type Database = {
         }
         Insert: {
           affiliated_programs?: string[] | null
+          author_id?: string | null
           career_opportunities?: string[] | null
           category?: string[] | null
           certifications_to_consider?: string[] | null
@@ -377,6 +379,7 @@ export type Database = {
         }
         Update: {
           affiliated_programs?: string[] | null
+          author_id?: string | null
           career_opportunities?: string[] | null
           category?: string[] | null
           certifications_to_consider?: string[] | null
@@ -407,7 +410,15 @@ export type Database = {
           transferable_skills?: string[] | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "majors_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mentor_availability: {
         Row: {
