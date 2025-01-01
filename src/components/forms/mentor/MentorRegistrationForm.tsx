@@ -49,7 +49,16 @@ export function MentorRegistrationForm({
   );
 
   const socialFields = mentorFormFields.filter(field => 
-    ['linkedin_url', 'github_url', 'website_url'].includes(field.name)
+    [
+      'linkedin_url', 
+      'github_url', 
+      'website_url',
+      'X_url',
+      'facebook_url',
+      'instagram_url',
+      'tiktok_url',
+      'youtube_url'
+    ].includes(field.name)
   );
 
   const renderFieldGroup = (fields: typeof mentorFormFields, options: any[] = []) => {
@@ -104,7 +113,7 @@ export function MentorRegistrationForm({
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Social Links</h2>
-          <div className="space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2">
             {renderFieldGroup(socialFields)}
           </div>
         </Card>
