@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,7 +101,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
       className="ml-auto p-2 hover:bg-muted rounded-full transition-colors"
       aria-label={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
     >
-      <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
+      <Heart className={`h-5 w-5 ${isBookmarked ? 'fill-current text-[#ea384c]' : ''}`} />
     </button>
   );
 }
