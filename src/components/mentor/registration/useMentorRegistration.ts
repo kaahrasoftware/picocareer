@@ -97,7 +97,7 @@ export function useMentorRegistration() {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
-    console.log('Submitting form data:', data);
+    console.log('Raw form data:', data);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -112,60 +112,48 @@ export function useMentorRegistration() {
         return;
       }
 
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', user.id)
-        .single();
+      // Format the data according to the profiles table schema
+      const formattedData = {
+        first_name: data.first_name.trim(),
+        last_name: data.last_name.trim(),
+        email: data.email.trim(),
+        avatar_url: data.avatar_url,
+        bio: data.bio.trim(),
+        years_of_experience: Number(data.years_of_experience),
+        linkedin_url: data.linkedin_url.trim(),
+        github_url: data.github_url?.trim() || null,
+        website_url: data.website_url?.trim() || null,
+        skills: data.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
+        tools_used: data.tools_used.split(',').map((s: string) => s.trim()).filter(Boolean),
+        keywords: data.keywords.split(',').map((s: string) => s.trim()).filter(Boolean),
+        fields_of_interest: data.fields_of_interest.split(',').map((s: string) => s.trim()).filter(Boolean),
+        highest_degree: data.highest_degree,
+        position: data.position,
+        company_id: data.company_id,
+        school_id: data.school_id,
+        academic_major_id: data.academic_major_id,
+        location: data.location.trim(),
+        user_type: 'mentor',
+        X_url: data.X_url?.trim() || null,
+        facebook_url: data.facebook_url?.trim() || null,
+        instagram_url: data.instagram_url?.trim() || null,
+        tiktok_url: data.tiktok_url?.trim() || null,
+        youtube_url: data.youtube_url?.trim() || null
+      };
 
-      if (profileError) {
-        console.error('Error checking profile:', profileError);
-        return;
-      }
-
-      if (existingProfile?.user_type === 'mentor') {
-        toast({
-          title: "Application Pending",
-          description: "You already have a pending mentor application. Our team will review it shortly.",
-          variant: "default",
-        });
-        return;
-      }
+      console.log('Formatted data for submission:', formattedData);
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          avatar_url: data.avatar_url,
-          bio: data.bio,
-          years_of_experience: data.years_of_experience,
-          linkedin_url: data.linkedin_url,
-          github_url: data.github_url,
-          website_url: data.website_url,
-          skills: data.skills.split(',').map((s: string) => s.trim()),
-          tools_used: data.tools_used.split(',').map((s: string) => s.trim()),
-          keywords: data.keywords.split(',').map((s: string) => s.trim()),
-          fields_of_interest: data.fields_of_interest.split(',').map((s: string) => s.trim()),
-          highest_degree: data.highest_degree,
-          position: data.position,
-          company_id: data.company_id,
-          school_id: data.school_id,
-          academic_major_id: data.academic_major_id,
-          location: data.location,
-          user_type: 'mentor',
-          X_url: data.X_url,
-          facebook_url: data.facebook_url,
-          instagram_url: data.instagram_url,
-          tiktok_url: data.tiktok_url,
-          youtube_url: data.youtube_url
-        })
+        .update(formattedData)
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw updateError;
+      }
 
-      await sendAdminNotification(data);
+      await sendAdminNotification(formattedData);
 
       toast({
         title: "Application Received",
