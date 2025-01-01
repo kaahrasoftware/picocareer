@@ -12,8 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-
-type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
+import { MeetingPlatform } from "@/types/calendar";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -30,7 +29,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
-  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
+  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
@@ -66,7 +65,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       console.log('Session booked successfully:', sessionResult);
 
       // If Google Meet is selected, create the meeting link
-      if (meetingPlatform === 'google_meet') {
+      if (meetingPlatform === 'Google Meet') {
         try {
           console.log('Creating Google Meet link for session:', sessionResult.sessionId);
           

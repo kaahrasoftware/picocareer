@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
-type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
+import { MeetingPlatform } from "@/types/calendar";
 
 interface BookSessionParams {
   mentorId: string;

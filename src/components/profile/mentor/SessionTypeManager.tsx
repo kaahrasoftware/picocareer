@@ -7,9 +7,9 @@ import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { SessionTypeEnum } from "@/types/session";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
-type SessionTypeEnum = Database["public"]["Enums"]["session_type"];
 
 interface SessionTypeManagerProps {
   profileId: string;
@@ -28,7 +28,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     description: string;
   }) => {
     try {
-      // Check if this session type already exists for this mentor
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
         .select('id')
@@ -55,7 +54,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
           duration: parseInt(data.duration),
           price: parseFloat(data.price),
           description: data.description,
-          meeting_platform: ['google_meet']
+          meeting_platform: ['Google Meet']
         });
 
       if (error) throw error;
@@ -102,7 +101,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     }
   };
 
-  // Get array of session types that are already set
   const existingTypes = sessionTypes.map(st => st.type);
 
   return (
