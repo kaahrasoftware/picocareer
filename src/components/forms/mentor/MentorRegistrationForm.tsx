@@ -4,14 +4,13 @@ import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/forms/FormField";
-import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
+import { mentorFormFields, mentorRegistrationSchema } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
 import { useEffect } from "react";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
-  schema: any;
   careers?: any[];
   companies?: any[];
   schools?: any[];
@@ -20,12 +19,11 @@ interface MentorRegistrationFormProps {
 }
 
 // Define the form values type based on the schema
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof mentorRegistrationSchema>;
 
 export function MentorRegistrationForm({
   onSubmit,
   isSubmitting,
-  schema,
   careers = [],
   companies = [],
   schools = [],
@@ -33,7 +31,7 @@ export function MentorRegistrationForm({
   defaultValues
 }: MentorRegistrationFormProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
       background_check_consent: false
     }
