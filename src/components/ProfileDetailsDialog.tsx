@@ -21,7 +21,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isError: currentUserError } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
       try {
@@ -30,6 +30,10 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         if (error) {
           if (error.message.includes('session_not_found')) {
             console.log('Session expired, redirecting to auth page');
+            // Clear any stale data
+            queryClient.clear();
+            localStorage.removeItem('picocareer_auth_token');
+            
             toast({
               title: "Session expired",
               description: "Please sign in again to continue.",
@@ -47,7 +51,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         throw error;
       }
     },
-    retry: false
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
   const { data: session } = useQuery({
@@ -57,6 +62,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       if (error) throw error;
       return session;
     },
+    enabled: !currentUserError, // Only run if there's no error with current user
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -91,7 +97,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         career_id: data.career?.id
       };
     },
-    enabled: !!userId && open,
+    enabled: !!userId && open && !currentUserError,
   });
 
   // Subscribe to real-time changes
