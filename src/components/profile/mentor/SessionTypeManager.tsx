@@ -49,32 +49,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     phone_number?: string;
   }) => {
     try {
-      console.log('Adding session type:', data);
-      console.log('Current session types:', fetchedSessionTypes);
-
-      // Check if session type with same type exists (regardless of duration)
-      const { data: existingType, error: checkError } = await supabase
-        .from('mentor_session_types')
-        .select('id, type')
-        .eq('profile_id', profileId)
-        .eq('type', data.type)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error('Error checking existing session type:', checkError);
-        throw checkError;
-      }
-
-      if (existingType) {
-        console.log('Found existing session type:', existingType);
-        toast({
-          title: "Session type exists",
-          description: `You already have a ${data.type} session type configured.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Format the data according to the database schema
       const sessionTypeData = {
         profile_id: profileId,
@@ -87,14 +61,20 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         phone_number: data.phone_number || null
       };
 
-      console.log('Submitting session type data:', sessionTypeData);
-
       const { error } = await supabase
         .from('mentor_session_types')
         .insert(sessionTypeData);
 
       if (error) {
-        console.error('Error adding session type:', error);
+        // Check for unique constraint violation
+        if (error.code === '23505') {
+          toast({
+            title: "Session type exists",
+            description: `You already have a "${data.type}" session type configured.`,
+            variant: "destructive",
+          });
+          return;
+        }
         throw error;
       }
 
@@ -109,7 +89,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
       console.error('Error adding session type:', error);
       toast({
         title: "Error",
-        description: "Failed to add session type",
+        description: "Failed to add session type. Please try again.",
         variant: "destructive",
       });
     }
