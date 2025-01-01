@@ -15,4 +15,5 @@ export interface Profile extends
   academic_major?: string | null;
   school_name?: string | null;
   company_name?: string | null;
+  career_title?: string | null;
 }
