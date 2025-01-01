@@ -19,6 +19,9 @@ interface MentorRegistrationFormProps {
   defaultValues?: any;
 }
 
+// Define the form values type based on the schema
+type FormValues = z.infer<typeof schema>;
+
 export function MentorRegistrationForm({
   onSubmit,
   isSubmitting,
@@ -29,7 +32,7 @@ export function MentorRegistrationForm({
   majors = [],
   defaultValues
 }: MentorRegistrationFormProps) {
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       background_check_consent: false
@@ -39,8 +42,8 @@ export function MentorRegistrationForm({
   // Update form values when defaultValues change
   useEffect(() => {
     if (defaultValues) {
-      Object.keys(defaultValues).forEach(key => {
-        form.setValue(key, defaultValues[key]);
+      Object.keys(defaultValues).forEach((key: string) => {
+        form.setValue(key as keyof FormValues, defaultValues[key]);
       });
     }
   }, [defaultValues, form]);
