@@ -12,6 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { SESSION_TYPE_OPTIONS } from "@/types/session";
 import type { SessionTypeEnum } from "@/types/session";
 import type { Database } from "@/integrations/supabase/types";
@@ -29,12 +37,19 @@ interface FormData {
   type: SessionTypeEnum;
   duration: number;
   description: string;
+  meeting_platform: ("Google Meet" | "WhatsApp" | "Telegram" | "Phone Call")[];
+  telegram_username?: string;
+  phone_number?: string;
 }
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>();
+  const form = useForm<FormData>({
+    defaultValues: {
+      meeting_platform: ["Google Meet"],
+    }
+  });
 
   const availableTypes = SESSION_TYPE_OPTIONS.filter(
     type => !existingTypes.some(existing => existing.type === type)
@@ -51,8 +66,11 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           profile_id: profileId,
           type: data.type,
           duration: data.duration,
-          price: 0,
-          description: data.description || null
+          price: 0, // Default price set to 0
+          description: data.description || null,
+          meeting_platform: data.meeting_platform,
+          telegram_username: data.telegram_username || null,
+          phone_number: data.phone_number || null
         })
         .select()
         .single();
@@ -77,66 +95,158 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
+  const selectedPlatforms = form.watch("meeting_platform") || [];
+  const showTelegramField = selectedPlatforms.includes("Telegram");
+  const showPhoneField = selectedPlatforms.includes("Phone Call");
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 border rounded-lg">
-      <div className="space-y-4">
-        <div>
-          <Select
-            {...register("type", { required: "Session type is required" })}
-            onValueChange={(value) => register("type").onChange({ target: { value } })}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
+        <FormField
+          control={form.control}
+          name="type"
+          rules={{ required: "Session type is required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Session Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select session type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {availableTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="duration"
+          rules={{
+            required: "Duration is required",
+            min: { value: 15, message: "Minimum duration is 15 minutes" },
+            max: { value: 180, message: "Maximum duration is 180 minutes" }
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Duration (minutes)</FormLabel>
+              <FormControl>
+                <Input type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description (optional)</FormLabel>
+              <FormControl>
+                <Textarea {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="meeting_platform"
+          rules={{ required: "At least one platform is required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Meeting Platform</FormLabel>
+              <FormControl>
+                <Select
+                  onValueChange={(value) => field.onChange([value])}
+                  defaultValue={field.value?.[0]}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Google Meet">Google Meet</SelectItem>
+                    <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                    <SelectItem value="Telegram">Telegram</SelectItem>
+                    <SelectItem value="Phone Call">Phone Call</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {showTelegramField && (
+          <FormField
+            control={form.control}
+            name="telegram_username"
+            rules={{ required: "Telegram username is required for Telegram sessions" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telegram Username</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="@username"
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      if (!value.startsWith('@') && value) {
+                        value = '@' + value;
+                      }
+                      field.onChange(value);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {showPhoneField && (
+          <FormField
+            control={form.control}
+            name="phone_number"
+            rules={{ required: "Phone number is required for phone call sessions" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="+1234567890" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select session type" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.type && (
-            <p className="text-sm text-red-500 mt-1">{errors.type.message}</p>
-          )}
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Session Type"}
+          </Button>
         </div>
-
-        <div>
-          <Input
-            type="number"
-            placeholder="Duration (minutes)"
-            {...register("duration", {
-              required: "Duration is required",
-              min: { value: 15, message: "Minimum duration is 15 minutes" },
-              max: { value: 180, message: "Maximum duration is 180 minutes" }
-            })}
-          />
-          {errors.duration && (
-            <p className="text-sm text-red-500 mt-1">{errors.duration.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Textarea
-            placeholder="Description (optional)"
-            {...register("description")}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Session Type"}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }
