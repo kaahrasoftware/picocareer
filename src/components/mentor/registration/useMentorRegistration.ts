@@ -115,9 +115,8 @@ export function useMentorRegistration() {
         return;
       }
 
-      // Format the data according to the profiles table schema
       const formattedData = {
-        id: user.id, // Important: Include the user ID for upsert
+        id: user.id,
         first_name: data.first_name.trim(),
         last_name: data.last_name.trim(),
         email: data.email.trim(),
@@ -147,7 +146,8 @@ export function useMentorRegistration() {
           data.languages.split(',')
             .map((lang: string) => lang.trim())
             .filter(Boolean)
-          : null
+          : null,
+        onboarding_status: 'Pending' as const
       };
 
       console.log('Formatted data for submission:', formattedData);

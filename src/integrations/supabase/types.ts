@@ -714,6 +714,9 @@ export type Database = {
           last_name: string | null
           linkedin_url: string | null
           location: string | null
+          onboarding_status:
+            | Database["public"]["Enums"]["onboarding_status"]
+            | null
           position: string | null
           school_id: string | null
           skills: string[] | null
@@ -748,6 +751,9 @@ export type Database = {
           last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
+          onboarding_status?:
+            | Database["public"]["Enums"]["onboarding_status"]
+            | null
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
@@ -782,6 +788,9 @@ export type Database = {
           last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
+          onboarding_status?:
+            | Database["public"]["Enums"]["onboarding_status"]
+            | null
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
@@ -1502,6 +1511,12 @@ export type Database = {
         | "mentor_request"
         | "blog_posted"
         | "major_update"
+      onboarding_status:
+        | "Pending"
+        | "Under Review"
+        | "Consent Signed"
+        | "Approved"
+        | "Rejected"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
         | "First Touch"
