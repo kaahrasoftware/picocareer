@@ -11,6 +11,7 @@ export function useStatusUpdate(contentType: ContentType) {
     try {
       console.log(`Updating ${contentType} status:`, { itemId, newStatus });
       
+      // Update the database - note the table name is the same as contentType
       const { error } = await supabase
         .from(contentType)
         .update({ status: newStatus })
