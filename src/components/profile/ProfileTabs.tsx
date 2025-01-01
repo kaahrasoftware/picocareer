@@ -49,7 +49,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
 
       {isMentor && profile && (
         <TabsContent value="mentor">
-          <MentorTab profile={profile} />
+          <MentorTab profileId={profile.id} />
         </TabsContent>
       )}
 

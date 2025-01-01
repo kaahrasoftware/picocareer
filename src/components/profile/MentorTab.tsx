@@ -4,6 +4,7 @@ import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { MentorshipStats } from "./mentor/MentorshipStats";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MentorTabProps {
   profileId: string;
@@ -37,7 +38,15 @@ export function MentorTab({ profileId }: MentorTabProps) {
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsContent value="stats">
-        <MentorshipStats profileId={profileId} />
+        <MentorshipStats stats={{ 
+          total_sessions: 0,
+          completed_sessions: 0,
+          upcoming_sessions: 0,
+          cancelled_sessions: 0,
+          unique_mentees: 0,
+          total_hours: 0,
+          session_data: []
+        }} />
       </TabsContent>
 
       <TabsContent value="session-types">
@@ -48,7 +57,10 @@ export function MentorTab({ profileId }: MentorTabProps) {
       </TabsContent>
 
       <TabsContent value="availability">
-        <AvailabilityManager profileId={profileId} />
+        <AvailabilityManager 
+          profileId={profileId} 
+          onUpdate={refetchSessionTypes}
+        />
       </TabsContent>
     </Tabs>
   );
