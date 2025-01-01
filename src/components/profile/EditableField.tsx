@@ -65,6 +65,7 @@ export function EditableField({
       case 'position':
       case 'company_id':
       case 'school_id':
+      case 'academic_major_id':
         return (
           <SelectField
             fieldName={fieldName}
