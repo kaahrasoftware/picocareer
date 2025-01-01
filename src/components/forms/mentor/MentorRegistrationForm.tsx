@@ -4,47 +4,35 @@ import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/forms/FormField";
-import { mentorFormFields, mentorRegistrationSchema } from "@/components/forms/mentor/MentorFormFields";
+import { mentorFormFields } from "@/components/forms/mentor/MentorFormFields";
 import { Card } from "@/components/ui/card";
-import { useEffect } from "react";
+import { Separator } from "@/components/ui/separator";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: any) => Promise<void>;
   isSubmitting: boolean;
+  schema: any;
   careers?: any[];
   companies?: any[];
   schools?: any[];
   majors?: any[];
-  defaultValues?: any;
 }
-
-// Define the form values type based on the schema
-type FormValues = z.infer<typeof mentorRegistrationSchema>;
 
 export function MentorRegistrationForm({
   onSubmit,
   isSubmitting,
+  schema,
   careers = [],
   companies = [],
   schools = [],
   majors = [],
-  defaultValues
 }: MentorRegistrationFormProps) {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(mentorRegistrationSchema),
+  const form = useForm({
+    resolver: zodResolver(schema),
     defaultValues: {
       background_check_consent: false
     }
   });
-
-  // Update form values when defaultValues change
-  useEffect(() => {
-    if (defaultValues) {
-      Object.keys(defaultValues).forEach((key: string) => {
-        form.setValue(key as keyof FormValues, defaultValues[key]);
-      });
-    }
-  }, [defaultValues, form]);
 
   // Group fields by category for better organization
   const personalFields = mentorFormFields.filter(field => 

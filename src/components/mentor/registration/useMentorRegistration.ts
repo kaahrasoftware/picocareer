@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,67 +8,6 @@ export function useMentorRegistration() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [defaultValues, setDefaultValues] = useState<any>(null);
-
-  // Fetch user profile data
-  const { data: profile } = useQuery({
-    queryKey: ['profile'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          company:companies(name),
-          school:schools(name),
-          major:majors(title)
-        `)
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-
-      return data;
-    }
-  });
-
-  // Set default values when profile data is loaded
-  useEffect(() => {
-    if (profile) {
-      setDefaultValues({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        email: profile.email || '',
-        avatar_url: profile.avatar_url || '',
-        bio: profile.bio || '',
-        years_of_experience: profile.years_of_experience || 0,
-        linkedin_url: profile.linkedin_url || '',
-        github_url: profile.github_url || '',
-        website_url: profile.website_url || '',
-        skills: profile.skills?.join(', ') || '',
-        tools_used: profile.tools_used?.join(', ') || '',
-        keywords: profile.keywords?.join(', ') || '',
-        fields_of_interest: profile.fields_of_interest?.join(', ') || '',
-        highest_degree: profile.highest_degree || '',
-        position: profile.position || '',
-        company_id: profile.company_id || '',
-        school_id: profile.school_id || '',
-        academic_major_id: profile.academic_major_id || '',
-        location: profile.location || '',
-        X_url: profile.X_url || '',
-        facebook_url: profile.facebook_url || '',
-        instagram_url: profile.instagram_url || '',
-        tiktok_url: profile.tiktok_url || '',
-        youtube_url: profile.youtube_url || '',
-        background_check_consent: false
-      });
-    }
-  }, [profile]);
 
   const { data: careers } = useQuery({
     queryKey: ['careers'],
@@ -253,7 +192,6 @@ export function useMentorRegistration() {
     careers,
     companies,
     schools,
-    majors,
-    defaultValues
+    majors
   };
 }

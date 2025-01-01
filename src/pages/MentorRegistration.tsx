@@ -4,7 +4,7 @@ import { MentorRegistrationHeader } from "@/components/mentor/registration/Mento
 import { useMentorRegistration } from "@/components/mentor/registration/useMentorRegistration";
 
 export default function MentorRegistration() {
-  const { isSubmitting, onSubmit, careers, companies, schools, majors, defaultValues } = useMentorRegistration();
+  const { isSubmitting, onSubmit, careers, companies, schools, majors } = useMentorRegistration();
 
   return (
     <div className="container max-w-2xl py-10">
@@ -12,11 +12,11 @@ export default function MentorRegistration() {
       <MentorRegistrationForm
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        schema={mentorRegistrationSchema}
         careers={careers}
         companies={companies}
         schools={schools}
         majors={majors}
-        defaultValues={defaultValues}
       />
     </div>
   );
