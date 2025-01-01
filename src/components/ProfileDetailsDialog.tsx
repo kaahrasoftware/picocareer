@@ -21,12 +21,16 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // First check if we have a valid session
   const { data: session, isError: sessionError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        if (error) {
+          console.error('Session error:', error);
+          throw error;
+        }
         return session;
       } catch (error: any) {
         console.error('Error fetching session:', error);
@@ -37,6 +41,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
+  // Only fetch user data if we have a valid session
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
@@ -50,9 +55,10 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       }
     },
     retry: false,
-    enabled: !!session,
+    enabled: !!session, // Only run if we have a session
   });
 
+  // Only fetch profile if we have a session and the dialog is open
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
@@ -92,34 +98,26 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   // Handle authentication errors
   useEffect(() => {
     if (sessionError) {
-      console.log('Session error detected, handling cleanup...');
-      const handleAuthError = async () => {
-        // First clear local storage and query cache
-        localStorage.removeItem('picocareer_auth_token');
-        queryClient.clear();
-        
-        try {
-          // Attempt to sign out, but don't wait for it
-          supabase.auth.signOut().catch(error => {
-            console.log('Sign out error (expected if session invalid):', error);
-          });
-        } finally {
-          // Show toast and redirect regardless of sign out result
-          toast({
-            title: "Session expired",
-            description: "Please sign in again to continue.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-        }
-      };
-      handleAuthError();
+      console.log('Session error detected, cleaning up...');
+      // Clear all auth-related data
+      localStorage.clear(); // Clear all local storage to be safe
+      queryClient.clear(); // Clear all queries
+      
+      // Show error message and redirect
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in again to continue.",
+        variant: "destructive",
+      });
+      
+      // Navigate to auth page
+      navigate("/auth");
     }
   }, [sessionError, navigate, queryClient, toast]);
 
   // Subscribe to real-time changes
   useEffect(() => {
-    if (!open || !userId) return;
+    if (!open || !userId || !session) return;
 
     const channel = supabase
       .channel('profile-changes')
@@ -141,7 +139,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, open, queryClient]);
+  }, [userId, open, queryClient, session]);
 
   const handleBookSession = () => {
     if (!currentUser) {
