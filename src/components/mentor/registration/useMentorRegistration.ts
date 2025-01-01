@@ -142,12 +142,16 @@ export function useMentorRegistration() {
         instagram_url: data.instagram_url?.trim() || null,
         tiktok_url: data.tiktok_url?.trim() || null,
         youtube_url: data.youtube_url?.trim() || null,
-        languages: data.languages?.trim() || null
+        // Convert languages string to array and cast to the correct enum type
+        languages: data.languages ? 
+          data.languages.split(',')
+            .map((lang: string) => lang.trim())
+            .filter(Boolean) as Database["public"]["Enums"]["language"][]
+          : null
       };
 
       console.log('Formatted data for submission:', formattedData);
 
-      // Use upsert instead of update to handle both new and existing profiles
       const { error: upsertError } = await supabase
         .from('profiles')
         .upsert(formattedData, {
