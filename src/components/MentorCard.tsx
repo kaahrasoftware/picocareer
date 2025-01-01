@@ -51,10 +51,14 @@ export function MentorCard(props: MentorCardProps) {
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                {props.top_mentor && (
+                {props.top_mentor ? (
                   <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
                     <Award className="h-3 w-3" />
                     Top Mentor
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                    mentor
                   </Badge>
                 )}
               </div>
