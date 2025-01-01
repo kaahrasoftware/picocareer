@@ -53,15 +53,25 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {fetchedSessionTypes.map((sessionType) => (
-          <SessionTypeCard
-            key={sessionType.id}
-            sessionType={sessionType}
-            onDelete={handleDeleteSessionType}
-          />
-        ))}
-      </div>
+      {fetchedSessionTypes.length > 0 ? (
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Your Session Types</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {fetchedSessionTypes.map((sessionType) => (
+              <SessionTypeCard
+                key={sessionType.id}
+                sessionType={sessionType}
+                onDelete={handleDeleteSessionType}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>You haven't created any session types yet.</p>
+          <p>Click the button above to add your first session type.</p>
+        </div>
+      )}
     </div>
   );
 }
