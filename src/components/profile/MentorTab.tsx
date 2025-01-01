@@ -60,7 +60,6 @@ export function MentorTab({ profile }: MentorTabProps) {
       <TabsContent value="session-types">
         <SessionTypeManager 
           profileId={profileId} 
-          sessionTypes={[]}
           onUpdate={refetchSessionTypes}
         />
       </TabsContent>
