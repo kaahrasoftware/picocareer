@@ -10,12 +10,14 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ form, availableTypes }: BasicInfoSectionProps) {
-  // Get all session types that are not already used
+  // Filter out types that are already in use
   const availableSessionTypes = SESSION_TYPE_OPTIONS.filter(type => 
     !availableTypes.includes(type)
   );
 
-  console.log('Available session types:', availableSessionTypes);
+  console.log('Current available types:', availableTypes);
+  console.log('All session types:', SESSION_TYPE_OPTIONS);
+  console.log('Filtered available session types:', availableSessionTypes);
 
   return (
     <>
