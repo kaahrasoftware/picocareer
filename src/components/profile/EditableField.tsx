@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { SelectField } from './editable/fields/SelectField';
 import { DegreeField } from './editable/fields/DegreeField';
 import { SocialLinkField } from './editable/fields/SocialLinkField';
@@ -63,6 +62,7 @@ export function EditableField({
 
     switch (fieldName) {
       case 'position':
+      case 'company_id':
         return (
           <SelectField
             fieldName={fieldName}

@@ -11,16 +11,6 @@ interface SelectFieldProps {
   onCancel: () => void;
 }
 
-const degreeOptions = [
-  { id: "No Degree", title: "No Degree" },
-  { id: "High School", title: "High School" },
-  { id: "Associate", title: "Associate" },
-  { id: "Bachelor", title: "Bachelor" },
-  { id: "Master", title: "Master" },
-  { id: "MD", title: "MD" },
-  { id: "PhD", title: "PhD" }
-];
-
 export function SelectField({ 
   fieldName, 
   value, 
@@ -46,13 +36,10 @@ export function SelectField({
     }
   };
 
-  // Use degree options for highest_degree field
-  const finalOptions = fieldName === 'highest_degree' ? degreeOptions : options;
-
   return (
     <SelectWithCustomOption
       value={value}
-      options={finalOptions}
+      options={options}
       placeholder={getPlaceholder()}
       tableName={fieldName === 'company_id' ? 'companies' : 
                 fieldName === 'school_id' ? 'schools' :
