@@ -31,7 +31,31 @@ export function MentorRegistrationForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
-      background_check_consent: false
+      background_check_consent: false,
+      first_name: "",
+      last_name: "",
+      email: "",
+      avatar_url: "",
+      bio: "",
+      years_of_experience: 0,
+      position: "",
+      company_id: "",
+      school_id: "",
+      academic_major_id: "",
+      highest_degree: "",
+      location: "",
+      skills: "",
+      tools_used: "",
+      keywords: "",
+      fields_of_interest: "",
+      linkedin_url: "",
+      github_url: "",
+      website_url: "",
+      X_url: "",
+      facebook_url: "",
+      instagram_url: "",
+      tiktok_url: "",
+      youtube_url: ""
     }
   });
 
@@ -47,7 +71,31 @@ export function MentorRegistrationForm({
       
       // Reset form
       form.reset({
-        background_check_consent: false
+        background_check_consent: false,
+        first_name: "",
+        last_name: "",
+        email: "",
+        avatar_url: "",
+        bio: "",
+        years_of_experience: 0,
+        position: "",
+        company_id: "",
+        school_id: "",
+        academic_major_id: "",
+        highest_degree: "",
+        location: "",
+        skills: "",
+        tools_used: "",
+        keywords: "",
+        fields_of_interest: "",
+        linkedin_url: "",
+        github_url: "",
+        website_url: "",
+        X_url: "",
+        facebook_url: "",
+        instagram_url: "",
+        tiktok_url: "",
+        youtube_url: ""
       });
     } catch (error) {
       console.error('Error submitting form:', error);
