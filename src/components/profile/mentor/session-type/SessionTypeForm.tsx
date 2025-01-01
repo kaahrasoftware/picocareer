@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
 import type { MeetingPlatform } from "@/types/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react"; // Added missing import
 
 interface SessionTypeFormProps {
   onSubmit: (data: {
