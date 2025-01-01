@@ -110,7 +110,10 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                     className="h-3 w-3 cursor-pointer"
                     onClick={() => {
                       const currentValue = field.value ?? [];
-                      field.onChange(currentValue.filter(p => p !== platform));
+                      form.setValue(
+                        "meeting_platform",
+                        currentValue.filter(p => p !== platform)
+                      );
                     }}
                   />
                 </Badge>
