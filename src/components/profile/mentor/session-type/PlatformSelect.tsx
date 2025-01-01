@@ -20,7 +20,7 @@ const platforms = [
 ] as const;
 
 export function PlatformSelect({ form }: PlatformSelectProps) {
-  const selectedPlatforms = form.watch("meeting_platform") || [];
+  const selectedPlatforms = form.watch("meeting_platform") ?? [];
 
   return (
     <FormField
@@ -53,12 +53,12 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                   <CommandEmpty>No platform found.</CommandEmpty>
                   <CommandGroup>
                     {platforms.map((platform) => {
-                      const isSelected = field.value?.includes(platform) || false;
+                      const isSelected = (field.value ?? []).includes(platform);
                       return (
                         <CommandItem
                           key={platform}
                           onSelect={() => {
-                            const currentValue = field.value || [];
+                            const currentValue = field.value ?? [];
                             if (currentValue.includes(platform)) {
                               field.onChange(currentValue.filter(x => x !== platform));
                             } else {
@@ -109,7 +109,7 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                   <X
                     className="h-3 w-3 cursor-pointer"
                     onClick={() => {
-                      const currentValue = field.value || [];
+                      const currentValue = field.value ?? [];
                       field.onChange(currentValue.filter(p => p !== platform));
                     }}
                   />
