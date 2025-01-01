@@ -10,10 +10,12 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ form, availableTypes }: BasicInfoSectionProps) {
-  // Sort availableTypes to match the order in SESSION_TYPE_OPTIONS
+  // Filter available types from SESSION_TYPE_OPTIONS
   const sortedAvailableTypes = SESSION_TYPE_OPTIONS.filter(type => 
-    availableTypes.includes(type)
+    !availableTypes.includes(type)
   );
+
+  console.log('Available session types:', sortedAvailableTypes);
 
   return (
     <>
@@ -26,7 +28,12 @@ export function BasicInfoSection({ form, availableTypes }: BasicInfoSectionProps
             <select
               {...field}
               className="w-full p-2 border rounded-md"
+              onChange={(e) => {
+                console.log('Selected session type:', e.target.value);
+                field.onChange(e.target.value);
+              }}
             >
+              <option value="">Select a session type</option>
               {sortedAvailableTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
