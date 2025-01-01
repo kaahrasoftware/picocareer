@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 import { SessionTypeEnum } from "@/types/session";
+import type { MeetingPlatform } from "@/types/calendar";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -43,6 +44,9 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     duration: string;
     price: string;
     description: string;
+    meeting_platform: MeetingPlatform[];
+    telegram_username?: string;
+    phone_number?: string;
   }) => {
     try {
       const { data: existingType, error: checkError } = await supabase
@@ -63,16 +67,21 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         return;
       }
 
+      // Format the data according to the database schema
+      const sessionTypeData = {
+        profile_id: profileId,
+        type: data.type,
+        duration: parseInt(data.duration),
+        price: parseFloat(data.price),
+        description: data.description || null,
+        meeting_platform: data.meeting_platform,
+        telegram_username: data.telegram_username || null,
+        phone_number: data.phone_number || null
+      };
+
       const { error } = await supabase
         .from('mentor_session_types')
-        .insert({
-          profile_id: profileId,
-          type: data.type,
-          duration: parseInt(data.duration),
-          price: parseFloat(data.price),
-          description: data.description,
-          meeting_platform: ['Google Meet']
-        });
+        .insert(sessionTypeData);
 
       if (error) throw error;
 
