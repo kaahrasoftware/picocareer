@@ -13,7 +13,7 @@ export function PlatformSection({ selectedPlatforms, onPlatformToggle }: Platfor
     <div className="space-y-2">
       <Label>Meeting Platforms</Label>
       <div className="grid grid-cols-2 gap-4">
-        {["Google Meet", "Zoom", "Telegram", "WhatsApp", "Phone Call"].map((platform) => (
+        {["Google Meet", "Telegram", "WhatsApp", "Phone Call"].map((platform) => (
           <div key={platform} className="flex items-center space-x-2">
             <Checkbox
               id={platform}
