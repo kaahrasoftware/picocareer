@@ -17,20 +17,27 @@ export function MenuSidebar() {
   const { toast } = useToast();
   const { session, isError } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { data: notifications = [] } = useNotifications(session);
+  const { data: notifications = [], isError: notificationsError } = useNotifications(session);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications?.filter(n => !n.read)?.length || 0;
 
   const handleMarkAsRead = async (notificationId: string) => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.log('No session found, cannot mark notification as read');
+      return;
+    }
 
     try {
+      console.log('Marking notification as read:', notificationId);
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating notification:', error);
+        throw error;
+      }
       
       queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
     } catch (error) {
@@ -100,7 +107,7 @@ export function MenuSidebar() {
         <MainNavigation />
 
         <div className="flex items-center gap-4 ml-auto">
-          {session?.user && (
+          {session?.user && !notificationsError && (
             <NotificationPanel
               notifications={notifications}
               unreadCount={unreadCount}
