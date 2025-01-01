@@ -43,7 +43,7 @@ export function ContentUploadForm({ onSubmit, buttonText = "Upload Career" }: Co
       rare: false,
       popular: false,
       new_career: false,
-      status: 'Pending'
+      status: 'Approved' // Changed from 'Pending' to 'Approved'
     },
   });
 
@@ -74,7 +74,7 @@ export function ContentUploadForm({ onSubmit, buttonText = "Upload Career" }: Co
           rare: data.rare,
           popular: data.popular,
           new_career: data.new_career,
-          status: 'Pending' as const
+          status: 'Approved' as const // Changed from 'Pending' to 'Approved'
         };
 
         const { error } = await supabase
@@ -85,7 +85,7 @@ export function ContentUploadForm({ onSubmit, buttonText = "Upload Career" }: Co
 
         toast({
           title: "Success",
-          description: "Career uploaded successfully! It will be reviewed before being published.",
+          description: "Career uploaded successfully!", // Updated message since it no longer needs review
           variant: "default"
         });
 
