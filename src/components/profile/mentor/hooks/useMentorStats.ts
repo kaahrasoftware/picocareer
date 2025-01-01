@@ -27,7 +27,7 @@ export function useMentorStats(profileId: string | undefined) {
   });
 
   // Fetch session types
-  const { data: sessionTypesResponse, refetch: refetchSessionTypes } = useQuery({
+  const { data: sessionTypes, refetch: refetchSessionTypes } = useQuery({
     queryKey: ["session-types", profileId],
     queryFn: async () => {
       if (!profileId) return null;
@@ -57,7 +57,7 @@ export function useMentorStats(profileId: string | undefined) {
       
       // Calculate total hours based on session types
       const total_hours = sessions.reduce((acc, session) => {
-        const sessionType = sessionTypesResponse?.find(st => st.id === session.session_type_id);
+        const sessionType = sessionTypes?.find(st => st.id === session.session_type_id);
         return acc + (sessionType?.duration || 60) / 60;
       }, 0);
 
@@ -99,6 +99,7 @@ export function useMentorStats(profileId: string | undefined) {
 
   return {
     stats,
+    sessionTypes,
     refetchSessions,
     refetchSessionTypes
   };
