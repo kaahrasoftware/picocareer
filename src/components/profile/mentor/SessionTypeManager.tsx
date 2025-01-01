@@ -48,25 +48,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
     phone_number?: string;
   }) => {
     try {
-      // First check if this session type already exists for this mentor
-      const { data: existingType, error: checkError } = await supabase
-        .from('mentor_session_types')
-        .select('id')
-        .eq('profile_id', profileId)
-        .eq('type', data.type)
-        .maybeSingle();
-
-      if (checkError) throw checkError;
-
-      if (existingType) {
-        toast({
-          title: "Session type exists",
-          description: `You already have a "${data.type}" session type configured.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
       const sessionTypeData = {
         profile_id: profileId,
         type: data.type,
@@ -78,12 +59,22 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         phone_number: data.phone_number || null
       };
 
-      const { error: insertError } = await supabase
+      const { data: insertedData, error: insertError } = await supabase
         .from('mentor_session_types')
-        .insert(sessionTypeData);
+        .insert(sessionTypeData)
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Insert error:', insertError);
+        if (insertError.code === '23505') {
+          toast({
+            title: "Session type exists",
+            description: `You already have a "${data.type}" session type configured.`,
+            variant: "destructive",
+          });
+          return;
+        }
         throw insertError;
       }
 
