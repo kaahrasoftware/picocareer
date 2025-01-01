@@ -61,6 +61,10 @@ export function DashboardTab() {
       ).length || 0;
       const completedSessions = totalSessions - upcomingSessions;
 
+      // Calculate total notifications and unread count
+      const totalNotifications = notifications.data?.length || 0;
+      const unreadNotifications = notifications.data?.filter(n => !n.read).length || 0;
+
       return {
         blogs: {
           total: blogs.data?.length || 0,
@@ -98,9 +102,9 @@ export function DashboardTab() {
           rejected: schools.data?.filter(s => s.status === 'Rejected').length || 0
         },
         notifications: {
-          total: notifications.data?.length || 0,
-          unread: notifications.data?.filter(n => !n.read).length || 0,
-          read: notifications.data?.filter(n => n.read).length || 0
+          total: totalNotifications,
+          unread: unreadNotifications,
+          read: totalNotifications - unreadNotifications
         }
       };
     }
@@ -205,7 +209,7 @@ export function DashboardTab() {
         <StatsCard
           title="Notifications"
           value={contentStats?.notifications.total || 0}
-          subtitle={`${contentStats?.notifications.unread || 0} unread`}
+          subtitle={`${contentStats?.notifications.unread || 0} unread notifications`}
           icon={Bell}
         />
       </div>
