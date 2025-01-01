@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormField } from "./FormField";
 import { FormFieldProps } from "./FormField";
@@ -19,12 +18,12 @@ export function GenericUploadForm({
   isSubmitting = false 
 }: GenericUploadFormProps) {
   const { toast } = useToast();
-  const form = useForm({
-    defaultValues: fields.reduce((acc, field) => ({
-      ...acc,
-      [field.name]: field.defaultValue || (field.type === "array" ? [] : "")
-    }), {})
-  });
+  const defaultValues = fields.reduce((acc, field) => ({
+    ...acc,
+    [field.name]: field.defaultValue || ""
+  }), {});
+
+  const form = useForm({ defaultValues });
 
   const handleSubmit = async (data: any) => {
     try {
@@ -32,7 +31,7 @@ export function GenericUploadForm({
       await onSubmit(data);
       
       // Reset form after successful submission
-      form.reset();
+      form.reset(defaultValues);
       
       toast({
         title: "Success",
@@ -51,20 +50,22 @@ export function GenericUploadForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {fields.map((field, index) => (
+        {fields.map((field) => (
           <FormField
-            key={index}
+            key={field.name}
             control={form.control}
             {...field}
           />
         ))}
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : buttonText}
-        </Button>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : buttonText}
+          </button>
+        </div>
       </form>
     </Form>
   );
