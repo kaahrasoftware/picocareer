@@ -7,6 +7,10 @@ import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SocialSection } from "./sections/SocialSection";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabProps {
@@ -14,9 +18,16 @@ interface ProfileTabProps {
 }
 
 export function ProfileTab({ profile }: ProfileTabProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
+  
   if (!profile) return null;
 
   const isMentor = profile.user_type === 'mentor';
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
 
   const renderTags = (items: string[] | null, bgColor: string) => {
     if (!items || items.length === 0) return null;
@@ -36,6 +47,15 @@ export function ProfileTab({ profile }: ProfileTabProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end mb-4">
+        <Button 
+          onClick={handleEditToggle}
+          variant={isEditing ? "destructive" : "default"}
+        >
+          {isEditing ? "Cancel Editing" : "Edit Profile"}
+        </Button>
+      </div>
+
       <div className="bg-muted rounded-lg p-6 shadow-sm">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -45,6 +65,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
               fieldName="first_name"
               profileId={profile.id}
               placeholder="Add your first name"
+              isEditing={isEditing}
             />
             <EditableField
               label="Last Name"
@@ -52,6 +73,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
               fieldName="last_name"
               profileId={profile.id}
               placeholder="Add your last name"
+              isEditing={isEditing}
             />
           </div>
         </div>
@@ -60,6 +82,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
       <ProfileBio 
         bio={profile.bio} 
         profileId={profile.id}
+        isEditing={isEditing}
       />
 
       <div className="bg-muted rounded-lg p-6 shadow-sm">
@@ -70,6 +93,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             fieldName="location"
             profileId={profile.id}
             placeholder="Add your location"
+            isEditing={isEditing}
           />
           <EditableField
             label="Languages"
@@ -77,6 +101,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             fieldName="languages"
             profileId={profile.id}
             placeholder="Add languages (comma-separated)"
+            isEditing={isEditing}
           />
         </div>
       </div>
@@ -87,19 +112,63 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Skills</label>
-            {renderTags(profile.skills, "bg-[#F2FCE2]")}
+            {isEditing ? (
+              <EditableField
+                label=""
+                value={profile.skills?.join(", ")}
+                fieldName="skills"
+                profileId={profile.id}
+                placeholder="Add skills (comma-separated)"
+                isEditing={isEditing}
+              />
+            ) : (
+              renderTags(profile.skills, "bg-[#F2FCE2]")
+            )}
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Tools Used</label>
-            {renderTags(profile.tools_used, "bg-[#D3E4FD]")}
+            {isEditing ? (
+              <EditableField
+                label=""
+                value={profile.tools_used?.join(", ")}
+                fieldName="tools_used"
+                profileId={profile.id}
+                placeholder="Add tools (comma-separated)"
+                isEditing={isEditing}
+              />
+            ) : (
+              renderTags(profile.tools_used, "bg-[#D3E4FD]")
+            )}
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Keywords</label>
-            {renderTags(profile.keywords, "bg-[#FFDEE2]")}
+            {isEditing ? (
+              <EditableField
+                label=""
+                value={profile.keywords?.join(", ")}
+                fieldName="keywords"
+                profileId={profile.id}
+                placeholder="Add keywords (comma-separated)"
+                isEditing={isEditing}
+              />
+            ) : (
+              renderTags(profile.keywords, "bg-[#FFDEE2]")
+            )}
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Fields of Interest</label>
-            {renderTags(profile.fields_of_interest, "bg-[#E5DEFF]")}
+            {isEditing ? (
+              <EditableField
+                label=""
+                value={profile.fields_of_interest?.join(", ")}
+                fieldName="fields_of_interest"
+                profileId={profile.id}
+                placeholder="Add fields of interest (comma-separated)"
+                isEditing={isEditing}
+              />
+            ) : (
+              renderTags(profile.fields_of_interest, "bg-[#E5DEFF]")
+            )}
           </div>
         </div>
       </div>
@@ -111,6 +180,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             companyId={profile.company_id}
             yearsOfExperience={profile.years_of_experience}
             profileId={profile.id}
+            isEditing={isEditing}
           />
 
           <EducationSection 
@@ -118,6 +188,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             highestDegree={profile.highest_degree}
             schoolId={profile.school_id}
             profileId={profile.id}
+            isEditing={isEditing}
           />
 
           <SocialSection 
@@ -130,6 +201,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             youtubeUrl={profile.youtube_url}
             instagramUrl={profile.instagram_url}
             profileId={profile.id}
+            isEditing={isEditing}
           />
         </>
       )}

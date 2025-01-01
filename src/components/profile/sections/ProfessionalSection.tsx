@@ -1,18 +1,19 @@
 import { EditableField } from "@/components/profile/EditableField";
-import { Card } from "@/components/ui/card";
 
 interface ProfessionalSectionProps {
   position: string | null;
   companyId: string | null;
   yearsOfExperience: number | null;
   profileId: string;
+  isEditing: boolean;
 }
 
 export function ProfessionalSection({
   position,
   companyId,
   yearsOfExperience,
-  profileId
+  profileId,
+  isEditing
 }: ProfessionalSectionProps) {
   return (
     <div className="bg-muted rounded-lg p-6 shadow-sm">
@@ -24,6 +25,7 @@ export function ProfessionalSection({
           fieldName="position"
           profileId={profileId}
           placeholder="Add your position"
+          isEditing={isEditing}
         />
         <EditableField
           label="Company"
@@ -31,6 +33,7 @@ export function ProfessionalSection({
           fieldName="company_id"
           profileId={profileId}
           placeholder="Select your company"
+          isEditing={isEditing}
         />
         <EditableField
           label="Years of Experience"
@@ -38,6 +41,7 @@ export function ProfessionalSection({
           fieldName="years_of_experience"
           profileId={profileId}
           placeholder="Add your years of experience"
+          isEditing={isEditing}
         />
       </div>
     </div>

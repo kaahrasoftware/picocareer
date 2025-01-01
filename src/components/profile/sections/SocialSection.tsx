@@ -10,6 +10,7 @@ interface SocialSectionProps {
   youtubeUrl: string | null;
   instagramUrl: string | null;
   profileId: string;
+  isEditing: boolean;
 }
 
 export function SocialSection({
@@ -21,7 +22,8 @@ export function SocialSection({
   tiktokUrl,
   youtubeUrl,
   instagramUrl,
-  profileId
+  profileId,
+  isEditing
 }: SocialSectionProps) {
   return (
     <div className="bg-muted rounded-lg p-6 shadow-sm">
@@ -33,6 +35,7 @@ export function SocialSection({
           fieldName="linkedin_url"
           profileId={profileId}
           placeholder="Add your LinkedIn URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="GitHub"
@@ -40,6 +43,7 @@ export function SocialSection({
           fieldName="github_url"
           profileId={profileId}
           placeholder="Add your GitHub URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="Personal Website"
@@ -47,6 +51,7 @@ export function SocialSection({
           fieldName="website_url"
           profileId={profileId}
           placeholder="Add your website URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="X (Twitter)"
@@ -54,6 +59,7 @@ export function SocialSection({
           fieldName="X_url"
           profileId={profileId}
           placeholder="Add your X URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="Facebook"
@@ -61,6 +67,7 @@ export function SocialSection({
           fieldName="facebook_url"
           profileId={profileId}
           placeholder="Add your Facebook URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="TikTok"
@@ -68,6 +75,7 @@ export function SocialSection({
           fieldName="tiktok_url"
           profileId={profileId}
           placeholder="Add your TikTok URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="YouTube"
@@ -75,6 +83,7 @@ export function SocialSection({
           fieldName="youtube_url"
           profileId={profileId}
           placeholder="Add your YouTube URL"
+          isEditing={isEditing}
         />
         <EditableField
           label="Instagram"
@@ -82,6 +91,7 @@ export function SocialSection({
           fieldName="instagram_url"
           profileId={profileId}
           placeholder="Add your Instagram URL"
+          isEditing={isEditing}
         />
       </div>
     </div>
