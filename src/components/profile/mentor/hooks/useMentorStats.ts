@@ -94,17 +94,7 @@ export function useMentorStats(profileId: string | undefined) {
         session_data
       };
     }
-    
-    // Return default stats if no data is available
-    return {
-      total_sessions: 0,
-      completed_sessions: 0,
-      upcoming_sessions: 0,
-      cancelled_sessions: 0,
-      unique_mentees: 0,
-      total_hours: 0,
-      session_data: []
-    };
+    return null;
   })();
 
   return {
