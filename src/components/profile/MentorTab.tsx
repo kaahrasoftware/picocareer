@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { MentorshipStats } from "./mentor/MentorshipStats";
-import { MentorDetails } from "./mentor/MentorDetails";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -50,17 +49,12 @@ export function MentorTab({ profile }: MentorTabProps) {
     <Tabs defaultValue="stats" className="w-full">
       <TabsList>
         <TabsTrigger value="stats">Stats</TabsTrigger>
-        <TabsTrigger value="details">Details</TabsTrigger>
         <TabsTrigger value="session-types">Session Types</TabsTrigger>
         <TabsTrigger value="availability">Availability</TabsTrigger>
       </TabsList>
 
       <TabsContent value="stats">
         {stats && <MentorshipStats stats={stats} />}
-      </TabsContent>
-
-      <TabsContent value="details">
-        <MentorDetails profile={profile} />
       </TabsContent>
 
       <TabsContent value="session-types">
