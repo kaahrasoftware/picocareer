@@ -43,7 +43,8 @@ export default function Mentor() {
             academic_major:majors!profiles_academic_major_id_fkey(title),
             career:careers!profiles_position_fkey(title, id)
           `)
-          .eq('user_type', 'mentor');
+          .eq('user_type', 'mentor')
+          .eq('onboarding_status', 'Approved'); // Only fetch approved mentors
 
         if (searchQuery) {
           query = query.or(
