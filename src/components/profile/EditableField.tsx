@@ -91,17 +91,17 @@ export function EditableField({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{label}</span>
-        <EditButton onClick={() => setIsEditing(true)} />
-      </div>
+      {label && <span className="text-sm font-medium">{label}</span>}
       
       {isEditing ? (
         renderEditField()
       ) : (
-        <p className={`text-sm ${className || 'text-muted-foreground'}`}>
-          {value || placeholder || 'Not set'}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className={`text-sm ${className || 'text-muted-foreground'}`}>
+            {value || placeholder || 'Not set'}
+          </p>
+          <EditButton onClick={() => setIsEditing(true)} />
+        </div>
       )}
     </div>
   );
