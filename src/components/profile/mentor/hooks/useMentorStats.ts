@@ -15,7 +15,10 @@ export function useMentorStats(profileId: string | undefined) {
           scheduled_at,
           status,
           session_type_id,
-          mentee_id
+          mentee_id,
+          session_type:mentor_session_types(
+            duration
+          )
         `)
         .eq("mentor_id", profileId);
 
@@ -54,8 +57,7 @@ export function useMentorStats(profileId: string | undefined) {
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
       const total_hours = sessions.reduce((acc, session) => {
-        const sessionType = sessionTypesResponse.find(st => st.id === session.session_type_id);
-        return acc + (sessionType?.duration || 60) / 60;
+        return acc + (session.session_type?.duration || 60) / 60;
       }, 0);
 
       const last6Months = Array.from({ length: 6 }, (_, i) => {
