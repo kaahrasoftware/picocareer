@@ -1,7 +1,6 @@
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { ProfileBio } from "@/components/profile-details/ProfileBio";
-import { ProfileHeader } from "@/components/profile-details/ProfileHeader";
 import { ProfileLinks } from "@/components/profile-details/ProfileLinks";
 import { ProfileSkills } from "@/components/profile-details/ProfileSkills";
 import { ProfileEducation } from "@/components/profile-details/ProfileEducation";
@@ -23,9 +22,7 @@ export function ProfileTab() {
   const isMentee = profile.user_type === "mentee";
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <ProfileHeader profile={profile} session={session} />
-      
+    <div className="space-y-6 max-w-3xl mx-auto">      
       <PersonalInfoSection profile={profile} />
       
       <ProfileBio 
