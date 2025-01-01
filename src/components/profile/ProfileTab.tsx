@@ -59,6 +59,16 @@ export function ProfileTab({ profile }: ProfileTabProps) {
                 profileId={profile.id}
                 placeholder="Add your last name"
               />
+            </div>
+          </div>
+
+          <ProfileBio 
+            bio={profile.bio} 
+            profileId={profile.id}
+          />
+
+          <div className="bg-muted rounded-lg p-6 shadow-sm">
+            <div className="space-y-4">
               <EditableField
                 label="Location"
                 value={profile.location}
@@ -68,11 +78,6 @@ export function ProfileTab({ profile }: ProfileTabProps) {
               />
             </div>
           </div>
-
-          <ProfileBio 
-            bio={profile.bio} 
-            profileId={profile.id}
-          />
 
           <div className="bg-muted rounded-lg p-6 shadow-sm">
             <div className="space-y-4">
