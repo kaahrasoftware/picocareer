@@ -1,5 +1,5 @@
 import React from "react";
-import { FormField as FormFieldBase, FormItem } from "@/components/ui/form";
+import { FormField as FormFieldBase } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "./ImageUpload";
 import { RichTextEditor } from "./RichTextEditor";
@@ -8,6 +8,7 @@ import { BasicInputField } from "./fields/BasicInputField";
 import { CategoryField } from "./fields/CategoryField";
 import { SubcategoryField } from "./fields/SubcategoryField";
 import { FeatureField } from "./fields/FeatureField";
+import { DegreeField } from "./fields/DegreeField";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -112,6 +113,16 @@ export function FormField({
       name={name}
       render={({ field }) => {
         switch (type) {
+          case "degree":
+            return (
+              <DegreeField
+                field={field}
+                label={label}
+                description={description}
+                required={required}
+              />
+            );
+            
           case "category":
             return (
               <CategoryField
