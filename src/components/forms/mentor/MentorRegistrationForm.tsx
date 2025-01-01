@@ -70,7 +70,8 @@ export function MentorRegistrationForm({
       const formattedData = {
         ...data,
         years_of_experience: Number(data.years_of_experience),
-        languages: data.languages ? data.languages.split(',').map(lang => lang.trim()) : []
+        // Keep languages as a string since that's what our schema expects
+        languages: data.languages?.trim() || ""
       };
 
       await onSubmit(formattedData);

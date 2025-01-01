@@ -120,7 +120,7 @@ export const mentorFormFields: FormFieldProps[] = [
   {
     name: "languages",
     label: "Languages",
-    type: "array",
+    type: "text",
     placeholder: "Enter languages you speak (comma-separated)",
     description: "List all languages you're comfortable mentoring in"
   },
