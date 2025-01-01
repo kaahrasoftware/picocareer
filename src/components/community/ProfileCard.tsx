@@ -79,7 +79,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <div className="w-full mb-4">
               <h4 className="text-sm font-medium mb-2">Skills</h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.skills.map((skill) => (
+                {profile.skills.slice(0, 3).map((skill) => (
                   <Badge 
                     key={skill} 
                     variant="secondary" 
@@ -88,6 +88,14 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                     {skill}
                   </Badge>
                 ))}
+                {profile.skills.length > 3 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                  >
+                    +{profile.skills.length - 3} more
+                  </Badge>
+                )}
               </div>
             </div>
           )}
@@ -97,7 +105,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <div className="w-full mb-4">
               <h4 className="text-sm font-medium mb-2">Fields of Interest</h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.fields_of_interest.map((field) => (
+                {profile.fields_of_interest.slice(0, 3).map((field) => (
                   <Badge 
                     key={field} 
                     variant="secondary" 
@@ -106,6 +114,14 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                     {field}
                   </Badge>
                 ))}
+                {profile.fields_of_interest.length > 3 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs bg-[#E2D4F0] text-[#4B5563] hover:bg-[#D4C4E3] transition-colors border border-[#D4C4E3]"
+                  >
+                    +{profile.fields_of_interest.length - 3} more
+                  </Badge>
+                )}
               </div>
             </div>
           )}
@@ -115,7 +131,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <div className="w-full mb-4">
               <h4 className="text-sm font-medium mb-2">Keywords</h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.keywords.map((keyword) => (
+                {profile.keywords.slice(0, 3).map((keyword) => (
                   <Badge 
                     key={keyword} 
                     variant="secondary" 
@@ -124,11 +140,19 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                     {keyword}
                   </Badge>
                 ))}
+                {profile.keywords.length > 3 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                  >
+                    +{profile.keywords.length - 3} more
+                  </Badge>
+                )}
               </div>
             </div>
           )}
 
-          {/* Button Section - Now at the bottom */}
+          {/* Button Section */}
           <div className="mt-auto w-full">
             <Button 
               variant="outline" 
