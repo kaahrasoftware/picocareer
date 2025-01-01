@@ -1,7 +1,7 @@
 import { ContentStatus } from "../types";
 import { StatusSelect } from "./StatusSelect";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useState } from "react";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
@@ -60,6 +60,22 @@ export function ContentItem({ item, handleStatusChange, getStatusColor }: Conten
     }
   };
 
+  const handleApprove = async () => {
+    await handleStatusChange(item.id, "Approved");
+    toast({
+      title: "Success",
+      description: "Content has been approved",
+    });
+  };
+
+  const handleReject = async () => {
+    await handleStatusChange(item.id, "Rejected");
+    toast({
+      title: "Status Updated",
+      description: "Content has been rejected",
+    });
+  };
+
   return (
     <>
       <div 
@@ -101,6 +117,24 @@ export function ContentItem({ item, handleStatusChange, getStatusColor }: Conten
             buttonText="Update Major"
             isSubmitting={isSubmitting}
           />
+
+          <DialogFooter className="mt-6 flex justify-end gap-2">
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={item.status === "Rejected"}
+            >
+              Reject
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleApprove}
+              disabled={item.status === "Approved"}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Approve
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
