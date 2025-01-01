@@ -19,6 +19,16 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
   const [showForm, setShowForm] = useState(false);
   const { sessionTypes: fetchedSessionTypes, isLoading, handleDeleteSessionType } = useSessionTypeManager(profileId);
 
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    onUpdate(); // Call onUpdate to refresh the parent component
+  };
+
+  const handleDelete = async (id: string) => {
+    await handleDeleteSessionType(id);
+    onUpdate(); // Refresh after deletion as well
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -43,10 +53,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         <DialogContent className="max-w-lg">
           <SessionTypeForm
             profileId={profileId}
-            onSuccess={() => {
-              setShowForm(false);
-              onUpdate();
-            }}
+            onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
             existingTypes={fetchedSessionTypes}
           />
@@ -61,7 +68,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
               <SessionTypeCard
                 key={sessionType.id}
                 sessionType={sessionType}
-                onDelete={handleDeleteSessionType}
+                onDelete={handleDelete}
               />
             ))}
           </div>
