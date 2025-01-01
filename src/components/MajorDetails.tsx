@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Bookmark } from "lucide-react";
+import { Users, Heart } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { AboutSection } from "./major-details/AboutSection";
 import { AcademicRequirements } from "./major-details/AcademicRequirements";
@@ -141,9 +141,9 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
                 {formatProfileCount(major.profiles_count)} Mentors
               </Badge>
               <div className="w-[120px] flex justify-center">
-                <Bookmark 
+                <Heart 
                   className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
-                    isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
+                    isBookmarked ? 'fill-current text-[#ea384c]' : 'text-gray-400'
                   }`}
                   onClick={handleBookmarkToggle}
                 />
