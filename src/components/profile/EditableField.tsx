@@ -1,52 +1,56 @@
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { SelectField } from "./editable/fields/SelectField";
-import { DegreeField } from "./editable/fields/DegreeField";
-import { DetailField } from "./editable/fields/DetailField";
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { SelectField } from './editable/fields/SelectField';
+import { DegreeField } from './editable/fields/DegreeField';
+import { SocialLinkField } from './editable/fields/SocialLinkField';
+import { DetailField } from './editable/fields/DetailField';
 
 interface EditableFieldProps {
   label: string;
-  value: string | null;
+  value: string | undefined | null;
   fieldName: string;
   profileId: string;
   className?: string;
   placeholder?: string;
-  isEditing?: boolean;
 }
 
-export function EditableField({
-  label,
-  value,
-  fieldName,
+export function EditableField({ 
+  label, 
+  value, 
+  fieldName, 
   profileId,
   className,
-  placeholder,
-  isEditing = true
+  placeholder 
 }: EditableFieldProps) {
-  const [isLocalEditing, setIsLocalEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async (newValue: string) => {
     try {
+      console.log('Updating profile field:', { fieldName, newValue });
+      
       const { error } = await supabase
         .from('profiles')
         .update({ [fieldName]: newValue })
         .eq('id', profileId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
       
-      setIsLocalEditing(false);
+      setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     }
@@ -54,19 +58,15 @@ export function EditableField({
 
   const renderEditField = () => {
     if (!isEditing) return null;
-    if (!isLocalEditing) return null;
 
     switch (fieldName) {
       case 'position':
-      case 'academic_major_id':
-      case 'company_id':
-      case 'school_id':
         return (
           <SelectField
             fieldName={fieldName}
             value={value || ''}
             onSave={handleSave}
-            onCancel={() => setIsLocalEditing(false)}
+            onCancel={() => setIsEditing(false)}
           />
         );
       case 'highest_degree':
@@ -74,7 +74,7 @@ export function EditableField({
           <DegreeField
             value={value || ''}
             onSave={handleSave}
-            onCancel={() => setIsLocalEditing(false)}
+            onCancel={() => setIsEditing(false)}
           />
         );
       default:
@@ -88,17 +88,28 @@ export function EditableField({
     <div className="space-y-2">
       {label && <span className="text-sm font-medium">{label}</span>}
       
-      {renderEditField() || (
-        <DetailField
-          value={value}
+      {isSocialField ? (
+        <SocialLinkField
+          value={value || null}
           fieldName={fieldName}
-          placeholder={placeholder}
-          className={className}
           onSave={handleSave}
-          isEditing={isEditing && isLocalEditing}
-          onEditClick={() => isEditing && setIsLocalEditing(true)}
-          onCancelEdit={() => setIsLocalEditing(false)}
+          isEditing={isEditing}
+          onEditClick={() => setIsEditing(true)}
+          onCancelEdit={() => setIsEditing(false)}
         />
+      ) : (
+        renderEditField() || (
+          <DetailField
+            value={value || null}
+            fieldName={fieldName}
+            placeholder={placeholder}
+            className={className}
+            onSave={handleSave}
+            isEditing={isEditing}
+            onEditClick={() => setIsEditing(true)}
+            onCancelEdit={() => setIsEditing(false)}
+          />
+        )
       )}
     </div>
   );
