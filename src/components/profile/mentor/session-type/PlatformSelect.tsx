@@ -1,13 +1,12 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormReturn } from "react-hook-form";
-import { SessionTypeFormData } from "./types";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { UseFormReturn } from "react-hook-form";
+import { SessionTypeFormData } from "./types";
 
 interface PlatformSelectProps {
   form: UseFormReturn<SessionTypeFormData>;
@@ -27,6 +26,7 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
     <FormField
       control={form.control}
       name="meeting_platform"
+      defaultValue={[]}
       rules={{ required: "At least one platform is required" }}
       render={({ field }) => (
         <FormItem>
@@ -56,11 +56,11 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
                       <CommandItem
                         key={platform}
                         onSelect={() => {
-                          const newValue = field.value || [];
-                          if (newValue.includes(platform)) {
-                            field.onChange(newValue.filter(x => x !== platform));
+                          const currentValue = field.value || [];
+                          if (currentValue.includes(platform)) {
+                            field.onChange(currentValue.filter(x => x !== platform));
                           } else {
-                            field.onChange([...newValue, platform]);
+                            field.onChange([...currentValue, platform]);
                           }
                         }}
                       >
