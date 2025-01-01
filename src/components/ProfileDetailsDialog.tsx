@@ -28,8 +28,11 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
-          if (error.message.includes('session_not_found')) {
+          if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
             console.log('Session expired, redirecting to auth page');
+            await supabase.auth.signOut(); // Clear any stale session data
+            queryClient.clear(); // Clear query cache
+            
             toast({
               title: "Session expired",
               description: "Please sign in again to continue.",
@@ -47,16 +50,32 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         throw error;
       }
     },
-    retry: false
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
   const { data: session } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return session;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          if (error.message.includes('session_not_found') || error.message.includes('refresh_token_not_found')) {
+            await supabase.auth.signOut();
+            queryClient.clear();
+            navigate("/auth");
+            return null;
+          }
+          throw error;
+        }
+        return session;
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        return null;
+      }
     },
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
   const { data: profile, isLoading } = useQuery({
@@ -91,7 +110,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         career_id: data.career?.id
       };
     },
-    enabled: !!userId && open,
+    enabled: !!userId && open && !!session,
   });
 
   // Subscribe to real-time changes
@@ -110,7 +129,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         },
         (payload) => {
           console.log('Profile changed:', payload);
-          // Invalidate and refetch the profile query
           queryClient.invalidateQueries({ queryKey: ['profile', userId] });
         }
       )
