@@ -1555,6 +1555,7 @@ export type Database = {
         | "College Application Last Review"
         | "Application Essays Review"
         | "I need someone to practice my presentation with"
+        | "Code review"
       setting_type:
         | "timezone"
         | "notifications"
