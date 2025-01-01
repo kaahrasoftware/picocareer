@@ -64,41 +64,23 @@ export function MentorRegistrationForm({
 
   const handleSubmit = async (data: FormValues) => {
     try {
+      // Log form data before submission for debugging
       console.log('Form data before submission:', data);
-      await onSubmit(data);
+      
+      // Ensure years_of_experience is a number
+      const formattedData = {
+        ...data,
+        years_of_experience: Number(data.years_of_experience)
+      };
+
+      await onSubmit(formattedData);
       
       toast({
         title: "Application Received",
         description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
       });
       
-      form.reset({
-        background_check_consent: false,
-        first_name: "",
-        last_name: "",
-        email: "",
-        avatar_url: "",
-        bio: "",
-        years_of_experience: 0,
-        position: "",
-        company_id: "",
-        school_id: "",
-        academic_major_id: "",
-        highest_degree: "",
-        location: "",
-        skills: "",
-        tools_used: "",
-        keywords: "",
-        fields_of_interest: "",
-        linkedin_url: "",
-        github_url: "",
-        website_url: "",
-        X_url: "",
-        facebook_url: "",
-        instagram_url: "",
-        tiktok_url: "",
-        youtube_url: ""
-      });
+      form.reset();
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
