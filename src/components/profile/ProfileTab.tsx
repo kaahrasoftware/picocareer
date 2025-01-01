@@ -21,20 +21,22 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     <div className="space-y-6">
       <div className="bg-muted rounded-lg p-6 shadow-sm">
         <div className="space-y-4">
-          <EditableField
-            label="First Name"
-            value={profile.first_name}
-            fieldName="first_name"
-            profileId={profile.id}
-            placeholder="Add your first name"
-          />
-          <EditableField
-            label="Last Name"
-            value={profile.last_name}
-            fieldName="last_name"
-            profileId={profile.id}
-            placeholder="Add your last name"
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <EditableField
+              label="First Name"
+              value={profile.first_name}
+              fieldName="first_name"
+              profileId={profile.id}
+              placeholder="Add your first name"
+            />
+            <EditableField
+              label="Last Name"
+              value={profile.last_name}
+              fieldName="last_name"
+              profileId={profile.id}
+              placeholder="Add your last name"
+            />
+          </div>
         </div>
       </div>
 
