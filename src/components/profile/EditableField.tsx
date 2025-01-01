@@ -13,6 +13,7 @@ interface EditableFieldProps {
   profileId: string;
   className?: string;
   placeholder?: string;
+  isEditing?: boolean;
 }
 
 export function EditableField({ 
@@ -21,9 +22,10 @@ export function EditableField({
   fieldName, 
   profileId,
   className,
-  placeholder 
+  placeholder,
+  isEditing = true // Default to true for backward compatibility
 }: EditableFieldProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isLocalEditing, setIsLocalEditing] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async (newValue: string) => {
@@ -58,6 +60,7 @@ export function EditableField({
 
   const renderEditField = () => {
     if (!isEditing) return null;
+    if (!isLocalEditing) return null;
 
     switch (fieldName) {
       case 'position':
@@ -93,9 +96,9 @@ export function EditableField({
           value={value || null}
           fieldName={fieldName}
           onSave={handleSave}
-          isEditing={isEditing}
-          onEditClick={() => setIsEditing(true)}
-          onCancelEdit={() => setIsEditing(false)}
+          isEditing={isEditing && isLocalEditing}
+          onEditClick={() => isEditing && setIsLocalEditing(true)}
+          onCancelEdit={() => setIsLocalEditing(false)}
         />
       ) : (
         renderEditField() || (
@@ -105,9 +108,9 @@ export function EditableField({
             placeholder={placeholder}
             className={className}
             onSave={handleSave}
-            isEditing={isEditing}
-            onEditClick={() => setIsEditing(true)}
-            onCancelEdit={() => setIsEditing(false)}
+            isEditing={isEditing && isLocalEditing}
+            onEditClick={() => isEditing && setIsLocalEditing(true)}
+            onCancelEdit={() => setIsLocalEditing(false)}
           />
         )
       )}

@@ -3,9 +3,10 @@ import { EditableField } from "@/components/profile/EditableField";
 interface ProfileBioProps {
   bio: string | null;
   profileId: string;
+  isEditing?: boolean;
 }
 
-export function ProfileBio({ bio, profileId }: ProfileBioProps) {
+export function ProfileBio({ bio, profileId, isEditing = true }: ProfileBioProps) {
   return (
     <div className="bg-muted rounded-lg p-6 shadow-sm">
       <div className="space-y-4">
@@ -17,6 +18,7 @@ export function ProfileBio({ bio, profileId }: ProfileBioProps) {
           profileId={profileId}
           className="text-muted-foreground"
           placeholder="Tell us about yourself..."
+          isEditing={isEditing}
         />
       </div>
     </div>
