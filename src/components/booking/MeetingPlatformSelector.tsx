@@ -1,6 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
+import { MeetingPlatform } from "@/types/calendar";
 
 interface MeetingPlatformSelectorProps {
   value: MeetingPlatform;
@@ -27,9 +26,10 @@ export function MeetingPlatformSelector({
           <SelectValue placeholder="Select meeting platform" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="google_meet">Google Meet</SelectItem>
-          <SelectItem value="whatsapp">WhatsApp</SelectItem>
-          <SelectItem value="telegram">Telegram</SelectItem>
+          <SelectItem value="Google Meet">Google Meet</SelectItem>
+          <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+          <SelectItem value="Telegram">Telegram</SelectItem>
+          <SelectItem value="Phone Call">Phone Call</SelectItem>
         </SelectContent>
       </Select>
     </div>
