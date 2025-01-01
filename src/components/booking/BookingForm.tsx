@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
 import { TimeSlotSelector } from "./TimeSlotSelector";
@@ -40,7 +40,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   };
 
   // Call handleChange whenever any value changes
-  useState(() => {
+  useEffect(() => {
     handleChange();
   }, [date, selectedTime, sessionType, note, meetingPlatform]);
 
