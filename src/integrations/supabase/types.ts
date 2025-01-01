@@ -476,10 +476,8 @@ export type Database = {
           meeting_platform:
             | Database["public"]["Enums"]["meeting_platform"][]
             | null
-          phone_number: string | null
           price: number
           profile_id: string
-          telegram_username: string | null
           type: Database["public"]["Enums"]["session_type"]
           updated_at: string
         }
@@ -491,10 +489,8 @@ export type Database = {
           meeting_platform?:
             | Database["public"]["Enums"]["meeting_platform"][]
             | null
-          phone_number?: string | null
           price: number
           profile_id: string
-          telegram_username?: string | null
           type: Database["public"]["Enums"]["session_type"]
           updated_at?: string
         }
@@ -506,10 +502,8 @@ export type Database = {
           meeting_platform?:
             | Database["public"]["Enums"]["meeting_platform"][]
             | null
-          phone_number?: string | null
           price?: number
           profile_id?: string
-          telegram_username?: string | null
           type?: Database["public"]["Enums"]["session_type"]
           updated_at?: string
         }
