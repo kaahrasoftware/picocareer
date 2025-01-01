@@ -14,7 +14,7 @@ import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
 import Video from "@/pages/Video";
 
-export default function AppRoutes() {
+const AppRoutes = () => {
   return (
     <>
       <MenuSidebar />
@@ -37,4 +37,6 @@ export default function AppRoutes() {
       </main>
     </>
   );
-}
+};
+
+export default AppRoutes;
