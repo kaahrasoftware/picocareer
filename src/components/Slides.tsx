@@ -2,9 +2,9 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import { useRef } from "react";
 
 interface SlideContent {
   title: string;
@@ -34,12 +34,17 @@ const slides: SlideContent[] = [
 ];
 
 export const Slides = () => {
+  const plugin = useRef(
+    Autoplay({ delay: 7000, stopOnInteraction: true })
+  );
+
   return (
     <Carousel
       opts={{
         align: "start",
         loop: true,
       }}
+      plugins={[plugin.current]}
       className="w-full max-w-4xl mx-auto"
     >
       <CarouselContent>
@@ -52,8 +57,6 @@ export const Slides = () => {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious className="hidden md:flex" />
-      <CarouselNext className="hidden md:flex" />
     </Carousel>
   );
 };
