@@ -48,25 +48,31 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      // Get the hash fragment from the URL
+      const hash = window.location.hash;
+      // Parse the access_token from the hash
+      const accessToken = new URLSearchParams(hash.substring(1)).get('access_token');
+
+      if (!accessToken) {
+        throw new Error('No access token found in URL');
+      }
+
+      // Set the session with the access token
+      const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '',
+      });
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      // Now update the password
+      const { error: updateError } = await supabase.auth.updateUser({
         password: formData.password
       });
 
-      if (error) {
-        console.error('Password reset error:', error);
-        
-        if (error.message.includes("invalid jwt")) {
-          toast({
-            title: "Invalid or expired link",
-            description: "Please request a new password reset link.",
-            variant: "destructive",
-          });
-          setTimeout(() => navigate("/auth?tab=signin"), 2000);
-          return;
-        }
-
-        throw error;
-      }
+      if (updateError) throw updateError;
 
       toast({
         title: "Password updated successfully",
@@ -80,6 +86,17 @@ export default function ResetPassword() {
 
     } catch (error: any) {
       console.error('Password reset error:', error);
+      
+      if (error.message?.includes("invalid jwt") || error.message?.includes("JWT")) {
+        toast({
+          title: "Invalid or expired link",
+          description: "Please request a new password reset link.",
+          variant: "destructive",
+        });
+        setTimeout(() => navigate("/auth?tab=signin"), 2000);
+        return;
+      }
+
       toast({
         title: "Error",
         description: "Failed to update password. Please try again.",

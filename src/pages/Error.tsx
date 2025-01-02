@@ -15,7 +15,7 @@ export default function Error() {
   } else if (typeof error === 'string') {
     errorMessage = error;
   } else if (error && typeof error === 'object' && 'message' in error) {
-    errorMessage = String(error.message);
+    errorMessage = String((error as { message: unknown }).message);
   }
 
   return (
