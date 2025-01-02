@@ -19,8 +19,8 @@ export function MeetingPlatformSelector({
   }
 
   return (
-    <div>
-      <h4 className="font-semibold mb-2">Meeting Platform</h4>
+    <div className="space-y-2">
+      <h4 className="font-semibold text-base">Meeting Platform</h4>
       <Select 
         value={value} 
         onValueChange={(value: MeetingPlatform) => {
@@ -28,7 +28,7 @@ export function MeetingPlatformSelector({
           onGoogleAuthErrorClear?.();
         }}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full bg-white/5">
           <SelectValue placeholder="Select meeting platform" />
         </SelectTrigger>
         <SelectContent>

@@ -4,7 +4,6 @@ interface SessionType {
   id: string;
   type: string;
   duration: number;
-  price: number;
   description: string | null;
 }
 
@@ -15,16 +14,21 @@ interface SessionTypeSelectorProps {
 
 export function SessionTypeSelector({ sessionTypes, onSessionTypeSelect }: SessionTypeSelectorProps) {
   return (
-    <div>
-      <h4 className="font-semibold mb-2">Session Type</h4>
+    <div className="space-y-2">
+      <h4 className="font-semibold text-base">Session Type</h4>
       <Select onValueChange={onSessionTypeSelect}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full bg-white/5">
           <SelectValue placeholder="Select session type" />
         </SelectTrigger>
         <SelectContent>
           {sessionTypes.map((type) => (
             <SelectItem key={type.id} value={type.id}>
-              {type.type} ({type.duration} min)
+              <div className="flex flex-col">
+                <span>{type.type}</span>
+                <span className="text-sm text-muted-foreground">
+                  {type.duration} minutes
+                </span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>

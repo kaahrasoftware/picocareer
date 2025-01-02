@@ -31,7 +31,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
 
   // Reset meeting platform when session type changes
   useEffect(() => {
-    if (availablePlatforms.length > 0 && !availablePlatforms.includes(meetingPlatform)) {
+    if (availablePlatforms.length > 0) {
       setMeetingPlatform(availablePlatforms[0]);
     }
   }, [sessionType, availablePlatforms]);
@@ -50,7 +50,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Left column - Calendar */}
-      <div>
+      <div className="bg-white/5 rounded-lg p-4">
         <DateSelector
           date={date}
           onDateSelect={setDate}
@@ -59,42 +59,56 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
       </div>
 
       {/* Right column - Form elements */}
-      <div className="space-y-6">
-        <div className="bg-kahra-darker rounded-lg p-4">
-          <SessionTypeSelector
-            sessionTypes={sessionTypes}
-            onSessionTypeSelect={setSessionType}
-          />
-        </div>
+      <div className="space-y-4">
+        <div className="bg-white/5 rounded-lg p-4 transition-all duration-300">
+          <h3 className="text-lg font-semibold mb-4">Session Details</h3>
+          <div className="space-y-6">
+            <div className="bg-white/5 rounded-lg p-4">
+              <SessionTypeSelector
+                sessionTypes={sessionTypes}
+                onSessionTypeSelect={(type) => {
+                  setSessionType(type);
+                  setMeetingPlatform(availablePlatforms[0] || "Google Meet");
+                }}
+              />
+            </div>
 
-        {date && (
-          <div className="bg-kahra-darker rounded-lg p-4">
-            <TimeSlotSelector
-              date={date}
-              mentorId={mentorId}
-              selectedTime={selectedTime}
-              onTimeSelect={setSelectedTime}
-              selectedSessionType={selectedSessionTypeDetails}
-            />
+            {date && (
+              <div className="bg-white/5 rounded-lg p-4">
+                <TimeSlotSelector
+                  date={date}
+                  mentorId={mentorId}
+                  selectedTime={selectedTime}
+                  onTimeSelect={setSelectedTime}
+                  selectedSessionType={selectedSessionTypeDetails}
+                />
+              </div>
+            )}
+
+            {sessionType && availablePlatforms.length > 0 && (
+              <div 
+                className="bg-white/5 rounded-lg p-4 transform transition-all duration-300 ease-in-out"
+                style={{
+                  opacity: sessionType ? 1 : 0,
+                  transform: sessionType ? 'translateY(0)' : 'translateY(-10px)'
+                }}
+              >
+                <MeetingPlatformSelector
+                  value={meetingPlatform}
+                  onValueChange={setMeetingPlatform}
+                  onGoogleAuthErrorClear={() => {}}
+                  availablePlatforms={availablePlatforms}
+                />
+              </div>
+            )}
+
+            <div className="bg-white/5 rounded-lg p-4">
+              <SessionNote
+                note={note}
+                onNoteChange={setNote}
+              />
+            </div>
           </div>
-        )}
-
-        {sessionType && availablePlatforms.length > 0 && (
-          <div className="bg-kahra-darker rounded-lg p-4 transition-all duration-300">
-            <MeetingPlatformSelector
-              value={meetingPlatform}
-              onValueChange={setMeetingPlatform}
-              onGoogleAuthErrorClear={() => {}}
-              availablePlatforms={availablePlatforms}
-            />
-          </div>
-        )}
-
-        <div className="bg-kahra-darker rounded-lg p-4">
-          <SessionNote
-            note={note}
-            onNoteChange={setNote}
-          />
         </div>
       </div>
     </div>
