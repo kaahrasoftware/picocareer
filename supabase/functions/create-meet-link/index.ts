@@ -79,12 +79,8 @@ serve(async (req: Request) => {
         reminders: {
           useDefault: false,
           overrides: [
-            { method: 'email', minutes: 24 * 60 },
-            { method: 'popup', minutes: 24 * 60 },
-            { method: 'email', minutes: 30 },
-            { method: 'popup', minutes: 30 },
-            { method: 'email', minutes: 10 },
-            { method: 'popup', minutes: 10 }
+            { method: 'email', minutes: 60 }, // 1 hour before
+            { method: 'popup', minutes: 10 }  // 10 minutes before
           ]
         }
       };
