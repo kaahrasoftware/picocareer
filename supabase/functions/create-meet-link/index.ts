@@ -103,6 +103,21 @@ serve(async (req: Request) => {
         throw new Error('Failed to generate Meet link');
       }
 
+      // Update session with Meet link and calendar event ID
+      const { error: updateError } = await supabase
+        .from('mentor_sessions')
+        .update({
+          meeting_link: meetLink,
+          calendar_event_id: calendarEvent.id,
+          calendar_event_etag: calendarEvent.etag
+        })
+        .eq('id', sessionId);
+
+      if (updateError) {
+        console.error('Error updating session with meet link:', updateError);
+        throw new Error('Failed to update session with meet link');
+      }
+
       console.log('Successfully created Meet link:', meetLink);
 
       return new Response(
