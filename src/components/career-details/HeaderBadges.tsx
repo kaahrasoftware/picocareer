@@ -45,7 +45,7 @@ export function HeaderBadges({
           <div className="w-[120px] flex justify-center">
             <Heart 
               className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
-                isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
+                isBookmarked ? 'fill-current text-red-500' : 'text-gray-400'
               }`}
               onClick={onBookmarkToggle}
             />
