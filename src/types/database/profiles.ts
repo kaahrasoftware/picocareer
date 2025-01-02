@@ -6,14 +6,13 @@ import { ProfileMentor } from './profile-mentor';
 import { ProfileCareer } from './profile-career';
 
 export interface Profile extends 
-  Omit<ProfileBase, 'X_url' | 'instagram_url' | 'facebook_url' | 'youtube_url' | 'tiktok_url'>,
+  ProfileBase,
   ProfileProfessional,
   ProfileEducation,
   ProfileSocial,
   ProfileMentor,
   ProfileCareer {
-  first_name: string | null;
-  last_name: string | null;
+  // Include joined fields as required
   company_name?: string | null;
   school_name?: string | null;
   academic_major?: string | null;
