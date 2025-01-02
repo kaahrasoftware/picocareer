@@ -82,7 +82,7 @@ export function StatisticsSection() {
       color: "bg-orange-100 text-orange-600"
     },
     {
-      label: "Scholarships",
+      label: "Funding Sources",
       value: stats?.scholarships || 0,
       icon: Trophy,
       color: "bg-rose-100 text-rose-600"
