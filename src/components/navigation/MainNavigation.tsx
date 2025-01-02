@@ -32,7 +32,7 @@ export function MainNavigation() {
               isActive("/program") && "bg-primary/20 text-primary"
             )}
           >
-            Programs
+            Fields of Study
           </Link>
         </li>
         <li>
