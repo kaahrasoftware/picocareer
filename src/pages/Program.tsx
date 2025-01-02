@@ -91,7 +91,7 @@ export default function Program() {
             <div className="space-y-8">
               <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
                 <div className="transform transition-transform duration-200 py-2">
-                  <h1 className="text-xl font-bold">Academic Programs</h1>
+                  <h1 className="text-xl font-bold">Fields of Study</h1>
                 </div>
                 
                 <div className="transform transition-all duration-200 -mx-2">
