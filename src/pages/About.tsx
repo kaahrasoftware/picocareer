@@ -10,7 +10,7 @@ export default function About() {
     },
     {
       name: "Tav Denkey Jr.",
-      role: "Co-Founder & CTO",
+      role: "Mentor | Founder & CEO of MiaPay",
       imageUrl: "/lovable-uploads/d815cd5f-d140-4520-87a1-3d7a6c17df4d.png"
     }
   ];
