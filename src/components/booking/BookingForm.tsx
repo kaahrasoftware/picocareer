@@ -52,7 +52,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
       sessionType,
       note,
       meetingPlatform,
-      menteePhoneNumber: meetingPlatform === "WhatsApp" ? phoneNumber : undefined,
+      menteePhoneNumber: (meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") ? phoneNumber : undefined,
       menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
     });
   }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
@@ -98,7 +98,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
                   availablePlatforms={availablePlatforms}
                 />
 
-                {meetingPlatform === "WhatsApp" && (
+                {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
                   <div className="mt-4">
                     <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
                     <Input
