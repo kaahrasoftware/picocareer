@@ -27,7 +27,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
 
   const sessionTypes = useSessionTypes(mentorId, true);
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
-  const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || ["Google Meet"];
+  const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
 
   // Reset meeting platform when session type changes
   useEffect(() => {

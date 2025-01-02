@@ -14,6 +14,10 @@ export function MeetingPlatformSelector({
   onGoogleAuthErrorClear,
   availablePlatforms
 }: MeetingPlatformSelectorProps) {
+  if (availablePlatforms.length === 0) {
+    return null;
+  }
+
   return (
     <div>
       <h4 className="font-semibold mb-2">Meeting Platform</h4>
