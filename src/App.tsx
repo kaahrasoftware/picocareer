@@ -17,6 +17,7 @@ import Mentor from "@/pages/Mentor";
 import MentorRegistration from "@/pages/MentorRegistration";
 import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
+import ResetPassword from "@/pages/ResetPassword";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 
@@ -98,6 +99,11 @@ const router = createBrowserRouter([
   {
     path: "/program",
     element: <Layout><Program /></Layout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
     errorElement: <Error />,
   },
   {

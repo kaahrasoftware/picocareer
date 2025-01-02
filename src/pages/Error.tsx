@@ -1,14 +1,15 @@
-import { useRouteError, isRouteErrorResponse } from "react-router-dom";
+import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
 export default function Error() {
   const error = useRouteError();
-  
+  const navigate = useNavigate();
+
   let errorMessage = "An unexpected error occurred";
-  
+
   if (isRouteErrorResponse(error)) {
-    errorMessage = error.data?.message || error.statusText;
+    errorMessage = error.statusText || error.data?.message || "Page not found";
   } else if (error instanceof Error) {
     errorMessage = error.message;
   } else if (typeof error === 'string') {
@@ -16,26 +17,17 @@ export default function Error() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center space-y-6">
-        <div className="flex justify-center">
-          <AlertCircle className="h-16 w-16 text-red-500" />
-        </div>
-        
-        <h1 className="text-2xl font-bold tracking-tight">Oops! Something went wrong</h1>
-        
-        <p className="text-gray-600 max-w-md">
-          {errorMessage}
-        </p>
-
-        <div className="pt-4">
-          <Button
-            onClick={() => window.location.href = '/'}
-            className="bg-picocareer-primary hover:bg-picocareer-accent"
-          >
-            Go Back Home
-          </Button>
-        </div>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="text-destructive mb-4">
+        <AlertCircle className="w-12 h-12" />
+      </div>
+      <h1 className="text-2xl font-bold mb-2">Oops! Something went wrong</h1>
+      <p className="text-muted-foreground mb-6">{errorMessage}</p>
+      <div className="space-x-4">
+        <Button onClick={() => navigate(-1)}>Go Back</Button>
+        <Button variant="outline" onClick={() => navigate("/")}>
+          Go Home
+        </Button>
       </div>
     </div>
   );
