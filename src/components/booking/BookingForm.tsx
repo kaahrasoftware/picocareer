@@ -73,6 +73,18 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
               />
             </div>
 
+            {date && (
+              <div className="bg-white/5 rounded-lg p-4">
+                <TimeSlotSelector
+                  date={date}
+                  mentorId={mentorId}
+                  selectedTime={selectedTime}
+                  onTimeSelect={setSelectedTime}
+                  selectedSessionType={selectedSessionTypeDetails}
+                />
+              </div>
+            )}
+
             {sessionType && availablePlatforms.length > 0 && (
               <div 
                 className="bg-white/5 rounded-lg p-4 transform transition-all duration-300 ease-in-out"
@@ -86,18 +98,6 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
                   onValueChange={setMeetingPlatform}
                   onGoogleAuthErrorClear={() => {}}
                   availablePlatforms={availablePlatforms}
-                />
-              </div>
-            )}
-
-            {date && (
-              <div className="bg-white/5 rounded-lg p-4">
-                <TimeSlotSelector
-                  date={date}
-                  mentorId={mentorId}
-                  selectedTime={selectedTime}
-                  onTimeSelect={setSelectedTime}
-                  selectedSessionType={selectedSessionTypeDetails}
                 />
               </div>
             )}
