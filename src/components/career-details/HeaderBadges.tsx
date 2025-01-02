@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Users, DollarSign, Bookmark } from "lucide-react";
+import { Users, DollarSign, Heart } from "lucide-react";
 import { badgeStyles } from "./BadgeStyles";
 
 interface HeaderBadgesProps {
@@ -42,8 +42,8 @@ export function HeaderBadges({
           {salaryRange}
         </Badge>
         {onBookmarkToggle && (
-          <div className="w-[120px] flex justify-center"> {/* Match mentor badge width */}
-            <Bookmark 
+          <div className="w-[120px] flex justify-center">
+            <Heart 
               className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
                 isBookmarked ? 'fill-current text-primary' : 'text-gray-400'
               }`}
