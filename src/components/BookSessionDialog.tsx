@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -144,26 +145,41 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            Book a Session with {mentor.name}
-          </DialogTitle>
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
+              <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <DialogTitle className="text-2xl font-bold">
+                Book a Session with {mentor.name}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Fill in the details below to schedule your mentoring session
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BookingForm 
-            mentorId={mentor.id}
-            onFormChange={setFormData}
-          />
-        </div>
+        <div className="mt-6">
+          <div className="bg-muted/30 rounded-lg p-6">
+            <BookingForm 
+              mentorId={mentor.id}
+              onFormChange={setFormData}
+            />
+          </div>
 
-        <BookingConfirmation
-          isSubmitting={isSubmitting}
-          onCancel={() => onOpenChange(false)}
-          onConfirm={handleSubmit}
-          isValid={isValid}
-          googleAuthError={false}
-        />
+          <div className="mt-6">
+            <BookingConfirmation
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              onConfirm={handleSubmit}
+              isValid={isValid}
+              googleAuthError={false}
+            />
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
