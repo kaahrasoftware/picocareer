@@ -72,7 +72,7 @@ export function MenuSidebar() {
               className="h-10"
             />
             <img 
-              src="/lovable-uploads/d7e224ec-8f6a-4f9d-9bb6-b439f2efc73e.png" 
+              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
               alt="PicoCareer Title" 
               className="h-8"
             />
@@ -100,7 +100,7 @@ export function MenuSidebar() {
               className="h-10"
             />
             <img 
-              src="/lovable-uploads/d7e224ec-8f6a-4f9d-9bb6-b439f2efc73e.png" 
+              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
               alt="PicoCareer Title" 
               className="h-8"
             />
