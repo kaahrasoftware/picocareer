@@ -14,8 +14,8 @@ export default function TeamSection() {
       name: "Tav Denkey Jr.",
       role: "Mentor | Founder & CEO of MiaPay",
       imageUrl: "/lovable-uploads/2f2ac4ac-1001-45b8-a930-df7c2414eaeb.png",
-      linkedin: "https://www.linkedin.com/in/tavdenkeyjr",
-      twitter: "https://x.com/tavdenkeyjr"
+      linkedin: "https://www.linkedin.com/in/tavdenk",
+      twitter: "https://x.com/tavdenk"
     }
   ];
 
