@@ -9,6 +9,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { notifyAdmins } from "./booking/AdminNotification";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -106,6 +107,20 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       }
 
       console.log('Session booked successfully:', sessionResult);
+
+      // Notify admins about the new session booking
+      const { data: sessionType } = await supabase
+        .from('mentor_session_types')
+        .select('type')
+        .eq('id', formData.sessionType)
+        .single();
+
+      await notifyAdmins({
+        mentorName: mentor.name,
+        menteeName: profile?.full_name || 'Unknown User',
+        sessionType: sessionType?.type || 'Unknown Session Type',
+        scheduledAt: formData.date
+      });
 
       if (formData.meetingPlatform === 'Google Meet') {
         console.log('Creating Google Meet link for session:', sessionResult.sessionId);
