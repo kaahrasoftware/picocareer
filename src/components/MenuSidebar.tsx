@@ -67,14 +67,14 @@ export function MenuSidebar() {
         <div className="container h-full mx-auto flex items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
-              alt="PicoCareer Title" 
-              className="h-8"
-            />
-            <img 
               src="/lovable-uploads/d3442e5e-999f-4c0d-ad1c-83633b3c3f4e.png" 
               alt="PicoCareer Logo" 
               className="h-10"
+            />
+            <img 
+              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
+              alt="PicoCareer Title" 
+              className="h-8"
             />
           </Link>
           <Button 
@@ -95,14 +95,14 @@ export function MenuSidebar() {
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
-              alt="PicoCareer Title" 
-              className="h-8"
-            />
-            <img 
               src="/lovable-uploads/d3442e5e-999f-4c0d-ad1c-83633b3c3f4e.png" 
               alt="PicoCareer Logo" 
               className="h-10"
+            />
+            <img 
+              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
+              alt="PicoCareer Title" 
+              className="h-8"
             />
           </Link>
         </div>
