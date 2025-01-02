@@ -12,6 +12,8 @@ export default function Error() {
     errorMessage = error.statusText || error.data?.message || "Page not found";
   } else if (error instanceof Error) {
     errorMessage = error.message;
+  } else if (typeof error === 'string') {
+    errorMessage = error;
   }
 
   return (
