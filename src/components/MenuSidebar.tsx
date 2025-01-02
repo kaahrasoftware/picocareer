@@ -71,11 +71,6 @@ export function MenuSidebar() {
               alt="PicoCareer Logo" 
               className="h-10"
             />
-            <img 
-              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
-              alt="PicoCareer Title" 
-              className="h-8"
-            />
           </Link>
           <Button 
             variant="default" 
@@ -98,11 +93,6 @@ export function MenuSidebar() {
               src="/lovable-uploads/f2122040-63e7-4f46-8b7c-d7c748d45e28.png" 
               alt="PicoCareer Logo" 
               className="h-10"
-            />
-            <img 
-              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
-              alt="PicoCareer Title" 
-              className="h-8"
             />
           </Link>
         </div>
