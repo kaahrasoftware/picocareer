@@ -16,7 +16,7 @@ const slides: SlideContent[] = [
   {
     title: "CAREER EXPLORATION",
     description:
-      "Discover endless possibilities, unlock passions, and define your future through personalized guidance in our Career Exploration journey. Start today!",
+      "Discover your path, fuel your ambitions, and build the future you envision with our comprehensive career directory",
     gradient: "from-red-600/90 to-red-800/90",
   },
   {
