@@ -9,6 +9,7 @@ import Blog from "@/pages/Blog";
 import BlogUpload from "@/pages/BlogUpload";
 import Career from "@/pages/Career";
 import CareerUpload from "@/pages/CareerUpload";
+import EmailConfirmation from "@/pages/EmailConfirmation";
 import Error from "@/pages/Error";
 import Index from "@/pages/Index";
 import MajorUpload from "@/pages/MajorUpload";
@@ -21,161 +22,87 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 
 const queryClient = new QueryClient();
 
+// Layout component to wrap pages with MenuSidebar
+function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <MenuSidebar />
+      <main className="pt-16">
+        {children}
+      </main>
+    </>
+  );
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Index />
-        </main>
-      </>
-    ),
+    element: <Layout><Index /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/about",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <About />
-        </main>
-      </>
-    ),
+    element: <Layout><About /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/auth",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Auth />
-        </main>
-      </>
-    ),
+    element: <Layout><Auth /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/blog",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Blog />
-        </main>
-      </>
-    ),
+    element: <Layout><Blog /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/blog/upload",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <BlogUpload />
-        </main>
-      </>
-    ),
+    element: <Layout><BlogUpload /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/career",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Career />
-        </main>
-      </>
-    ),
+    element: <Layout><Career /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/career/upload",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <CareerUpload />
-        </main>
-      </>
-    ),
+    element: <Layout><CareerUpload /></Layout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/email-confirmation",
+    element: <EmailConfirmation />,
     errorElement: <Error />,
   },
   {
     path: "/major/upload",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <MajorUpload />
-        </main>
-      </>
-    ),
+    element: <Layout><MajorUpload /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/mentor",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Mentor />
-        </main>
-      </>
-    ),
+    element: <Layout><Mentor /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/mentor/register",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <MentorRegistration />
-        </main>
-      </>
-    ),
+    element: <Layout><MentorRegistration /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/profile",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Profile />
-        </main>
-      </>
-    ),
+    element: <Layout><Profile /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/program",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Program />
-        </main>
-      </>
-    ),
+    element: <Layout><Program /></Layout>,
     errorElement: <Error />,
   },
   {
     path: "/video",
-    element: (
-      <>
-        <MenuSidebar />
-        <main className="pt-16">
-          <Video />
-        </main>
-      </>
-    ),
+    element: <Layout><Video /></Layout>,
     errorElement: <Error />,
   },
   {
