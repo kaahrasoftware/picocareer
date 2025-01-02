@@ -5,12 +5,14 @@ interface MeetingPlatformSelectorProps {
   value: MeetingPlatform;
   onValueChange: (value: MeetingPlatform) => void;
   onGoogleAuthErrorClear?: () => void;
+  availablePlatforms?: MeetingPlatform[];
 }
 
 export function MeetingPlatformSelector({ 
   value, 
   onValueChange,
-  onGoogleAuthErrorClear 
+  onGoogleAuthErrorClear,
+  availablePlatforms = ["Google Meet"] // Default to Google Meet if no platforms provided
 }: MeetingPlatformSelectorProps) {
   return (
     <div>
@@ -26,10 +28,11 @@ export function MeetingPlatformSelector({
           <SelectValue placeholder="Select meeting platform" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Google Meet">Google Meet</SelectItem>
-          <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-          <SelectItem value="Telegram">Telegram</SelectItem>
-          <SelectItem value="Phone Call">Phone Call</SelectItem>
+          {availablePlatforms.map((platform) => (
+            <SelectItem key={platform} value={platform}>
+              {platform}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

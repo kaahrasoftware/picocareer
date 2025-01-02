@@ -27,6 +27,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
 
   const sessionTypes = useSessionTypes(mentorId, true);
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
+  const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || ["Google Meet"];
 
   // Update parent component whenever form values change
   const handleChange = () => {
@@ -38,6 +39,13 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
       meetingPlatform
     });
   };
+
+  // Reset meeting platform when session type changes
+  useEffect(() => {
+    if (availablePlatforms.length > 0 && !availablePlatforms.includes(meetingPlatform)) {
+      setMeetingPlatform(availablePlatforms[0]);
+    }
+  }, [sessionType, availablePlatforms]);
 
   // Call handleChange whenever any value changes
   useEffect(() => {
@@ -72,11 +80,14 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
           />
         )}
 
-        <MeetingPlatformSelector
-          value={meetingPlatform}
-          onValueChange={setMeetingPlatform}
-          onGoogleAuthErrorClear={() => {}}
-        />
+        {sessionType && (
+          <MeetingPlatformSelector
+            value={meetingPlatform}
+            onValueChange={setMeetingPlatform}
+            onGoogleAuthErrorClear={() => {}}
+            availablePlatforms={availablePlatforms}
+          />
+        )}
 
         <SessionNote
           note={note}
