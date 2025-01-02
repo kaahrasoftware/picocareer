@@ -6,6 +6,8 @@ import { SessionTypeSelector } from "./SessionTypeSelector";
 import { SessionNote } from "./SessionNote";
 import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface BookingFormProps {
   mentorId: string;
@@ -15,6 +17,8 @@ interface BookingFormProps {
     sessionType?: string;
     note: string;
     meetingPlatform: MeetingPlatform;
+    menteePhoneNumber?: string;
+    menteeTelegramUsername?: string;
   }) => void;
 }
 
@@ -24,6 +28,8 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   const [sessionType, setSessionType] = useState<string>();
   const [note, setNote] = useState("");
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
 
   const sessionTypes = useSessionTypes(mentorId, true);
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
@@ -33,6 +39,8 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   useEffect(() => {
     if (availablePlatforms.length > 0) {
       setMeetingPlatform(availablePlatforms[0]);
+      setPhoneNumber("");
+      setTelegramUsername("");
     }
   }, [sessionType, availablePlatforms]);
 
@@ -43,9 +51,11 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
       selectedTime,
       sessionType,
       note,
-      meetingPlatform
+      meetingPlatform,
+      menteePhoneNumber: meetingPlatform === "WhatsApp" ? phoneNumber : undefined,
+      menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
     });
-  }, [date, selectedTime, sessionType, note, meetingPlatform]);
+  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -87,6 +97,40 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
                   onGoogleAuthErrorClear={() => {}}
                   availablePlatforms={availablePlatforms}
                 />
+
+                {meetingPlatform === "WhatsApp" && (
+                  <div className="mt-4">
+                    <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="+1234567890"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+
+                {meetingPlatform === "Telegram" && (
+                  <div className="mt-4">
+                    <Label htmlFor="telegramUsername">Telegram Username</Label>
+                    <Input
+                      id="telegramUsername"
+                      type="text"
+                      placeholder="@username"
+                      value={telegramUsername}
+                      onChange={(e) => {
+                        let username = e.target.value;
+                        if (!username.startsWith('@') && username !== '') {
+                          username = '@' + username;
+                        }
+                        setTelegramUsername(username);
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
               </div>
             )}
 

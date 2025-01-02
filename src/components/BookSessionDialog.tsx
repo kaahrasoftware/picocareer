@@ -27,6 +27,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     sessionType?: string;
     note: string;
     meetingPlatform: MeetingPlatform;
+    menteePhoneNumber?: string;
+    menteeTelegramUsername?: string;
   }>({
     note: "",
     meetingPlatform: "Google Meet"
@@ -46,6 +48,24 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       });
       return;
     }
+
+    if (formData.meetingPlatform === "WhatsApp" && !formData.menteePhoneNumber) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide your phone number for WhatsApp sessions.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.meetingPlatform === "Telegram" && !formData.menteeTelegramUsername) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide your Telegram username.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
@@ -56,7 +76,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         date: formData.date,
         time: formData.selectedTime,
         sessionType: formData.sessionType,
-        platform: formData.meetingPlatform
+        platform: formData.meetingPlatform,
+        menteePhoneNumber: formData.menteePhoneNumber,
+        menteeTelegramUsername: formData.menteeTelegramUsername
       });
       
       const sessionResult = await bookSession({
@@ -66,6 +88,8 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         sessionTypeId: formData.sessionType,
         note: formData.note,
         meetingPlatform: formData.meetingPlatform,
+        menteePhoneNumber: formData.menteePhoneNumber,
+        menteeTelegramUsername: formData.menteeTelegramUsername,
       });
 
       if (!sessionResult.success) {

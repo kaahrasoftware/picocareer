@@ -537,6 +537,8 @@ export type Database = {
             | Database["public"]["Enums"]["meeting_platform"]
             | null
           mentee_id: string
+          mentee_phone_number: string | null
+          mentee_telegram_username: string | null
           mentor_id: string
           notes: string | null
           scheduled_at: string
@@ -557,6 +559,8 @@ export type Database = {
             | Database["public"]["Enums"]["meeting_platform"]
             | null
           mentee_id: string
+          mentee_phone_number?: string | null
+          mentee_telegram_username?: string | null
           mentor_id: string
           notes?: string | null
           scheduled_at: string
@@ -577,6 +581,8 @@ export type Database = {
             | Database["public"]["Enums"]["meeting_platform"]
             | null
           mentee_id?: string
+          mentee_phone_number?: string | null
+          mentee_telegram_username?: string | null
           mentor_id?: string
           notes?: string | null
           scheduled_at?: string

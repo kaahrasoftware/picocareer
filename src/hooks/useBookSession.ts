@@ -8,6 +8,8 @@ interface BookSessionParams {
   sessionTypeId: string;
   note: string;
   meetingPlatform: MeetingPlatform;
+  menteePhoneNumber?: string;
+  menteeTelegramUsername?: string;
 }
 
 interface BookSessionResult {
@@ -23,7 +25,9 @@ export function useBookSession() {
     selectedTime, 
     sessionTypeId, 
     note,
-    meetingPlatform 
+    meetingPlatform,
+    menteePhoneNumber,
+    menteeTelegramUsername
   }: BookSessionParams): Promise<BookSessionResult> => {
     if (!date || !selectedTime || !sessionTypeId || !mentorId) {
       return { success: false, error: "Missing required fields" };
@@ -43,6 +47,8 @@ export function useBookSession() {
           scheduled_at: scheduledAt.toISOString(),
           notes: note,
           meeting_platform: meetingPlatform,
+          mentee_phone_number: menteePhoneNumber,
+          mentee_telegram_username: menteeTelegramUsername,
         })
         .select()
         .single();
