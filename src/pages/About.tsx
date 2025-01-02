@@ -1,4 +1,4 @@
-import { Target, Flag, Users, GraduationCap, Briefcase, Users2 } from "lucide-react";
+import { Target, Flag, Users, GraduationCap, Briefcase, Users2, Linkedin, Twitter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function About() {
@@ -167,6 +167,28 @@ export default function About() {
               ))}
             </div>
           </section>
+        </div>
+      </div>
+
+      {/* Social Links */}
+      <div className="text-center pb-12">
+        <div className="flex justify-center gap-6">
+          <a
+            href="https://www.linkedin.com/company/picocareer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 hover:text-picocareer-primary transition-colors"
+          >
+            <Linkedin className="w-6 h-6" />
+          </a>
+          <a
+            href="https://x.com/picocareer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 hover:text-picocareer-primary transition-colors"
+          >
+            <Twitter className="w-6 h-6" />
+          </a>
         </div>
       </div>
     </div>
