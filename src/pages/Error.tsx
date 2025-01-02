@@ -1,6 +1,5 @@
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
 export default function Error() {
@@ -9,34 +8,35 @@ export default function Error() {
   let errorMessage = "An unexpected error occurred";
   
   if (isRouteErrorResponse(error)) {
-    errorMessage = error.statusText || error.data?.message || "Page not found";
+    errorMessage = error.data?.message || error.statusText;
   } else if (error instanceof Error) {
     errorMessage = error.message;
-  } else if (typeof error === "string") {
+  } else if (typeof error === 'string') {
     errorMessage = error;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center space-y-6">
         <div className="flex justify-center">
           <AlertCircle className="h-16 w-16 text-red-500" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Oops! Something went wrong
-        </h1>
-        <p className="text-muted-foreground">
+        
+        <h1 className="text-2xl font-bold tracking-tight">Oops! Something went wrong</h1>
+        
+        <p className="text-gray-600 max-w-md">
           {errorMessage}
         </p>
-        <div className="space-y-4">
-          <Button 
-            className="w-full" 
-            onClick={() => window.location.href = "/"}
+
+        <div className="pt-4">
+          <Button
+            onClick={() => window.location.href = '/'}
+            className="bg-picocareer-primary hover:bg-picocareer-accent"
           >
-            Return Home
+            Go Back Home
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
