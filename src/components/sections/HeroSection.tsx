@@ -4,15 +4,8 @@ import { Slides } from "@/components/Slides";
 export const HeroSection = () => {
   return (
     <>
-      {/* Header */}
-      <header className="flex justify-between items-center mb-12 relative">
-        <div className="w-full">
-          <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
-        </div>
-      </header>
-
       {/* Hero Section */}
-      <section className="text-center mb-16">
+      <section className="text-center mb-12">
         <h1 className="text-5xl font-bold mb-6 flex items-center justify-center">
           <span className="bg-gradient-to-r from-picocareer-secondary to-picocareer-primary bg-clip-text text-transparent pt-3">
             Welcome to
@@ -23,6 +16,16 @@ export const HeroSection = () => {
             className="h-20 ml-3"
           />
         </h1>
+      </section>
+
+      {/* Header */}
+      <header className="flex justify-between items-center mb-12 relative">
+        <div className="w-full">
+          <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
+        </div>
+      </header>
+
+      <section className="mb-16">
         <Slides />
       </section>
     </>
