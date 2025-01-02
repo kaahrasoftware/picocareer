@@ -6,12 +6,16 @@ export default function About() {
     {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
-      imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
+      imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png",
+      linkedin: "https://www.linkedin.com/in/rafik-tarbari",
+      twitter: "https://x.com/rafiktarbari"
     },
     {
       name: "Tav Denkey Jr.",
       role: "Mentor | Founder & CEO of MiaPay",
-      imageUrl: "/lovable-uploads/2f2ac4ac-1001-45b8-a930-df7c2414eaeb.png"
+      imageUrl: "/lovable-uploads/2f2ac4ac-1001-45b8-a930-df7c2414eaeb.png",
+      linkedin: "https://www.linkedin.com/in/tavdenkeyjr",
+      twitter: "https://x.com/tavdenkeyjr"
     }
   ];
 
@@ -49,7 +53,6 @@ export default function About() {
 
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="grid gap-12">
-          {/* Services Section */}
           <section className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-8">Our Services</h2>
             <div className="grid md:grid-cols-3 gap-8">
@@ -86,7 +89,6 @@ export default function About() {
               </CardContent>
             </Card>
 
-            {/* Vision Section */}
             <Card className="overflow-hidden">
               <div className="h-48 bg-gradient-to-br from-picocareer-secondary to-picocareer-dark opacity-90 flex items-center justify-center">
                 <Flag className="w-16 h-16 text-white" />
@@ -137,7 +139,6 @@ export default function About() {
             </Card>
           </section>
 
-          {/* Team Section */}
           <section className="pt-12">
             <div className="text-center mb-12">
               <div className="flex items-center justify-center gap-4 mb-4">
@@ -162,6 +163,28 @@ export default function About() {
                     </div>
                     <CardTitle className="text-xl">{member.name}</CardTitle>
                     <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
+                    <div className="flex justify-center gap-4 mt-4">
+                      {member.linkedin && (
+                        <a
+                          href={member.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-600 hover:text-picocareer-primary transition-colors"
+                        >
+                          <Linkedin className="w-5 h-5" />
+                        </a>
+                      )}
+                      {member.twitter && (
+                        <a
+                          href={member.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-600 hover:text-picocareer-primary transition-colors"
+                        >
+                          <Twitter className="w-5 h-5" />
+                        </a>
+                      )}
+                    </div>
                   </CardHeader>
                 </Card>
               ))}
@@ -170,7 +193,6 @@ export default function About() {
         </div>
       </div>
 
-      {/* Social Links */}
       <div className="text-center pb-12">
         <div className="flex justify-center gap-6">
           <a
