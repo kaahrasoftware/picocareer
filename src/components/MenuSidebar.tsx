@@ -65,7 +65,12 @@ export function MenuSidebar() {
     return (
       <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
         <div className="container h-full mx-auto flex items-center justify-between px-4">
-          <Link to="/">
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
+              alt="PicoCareer Title" 
+              className="h-8"
+            />
             <img 
               src="/lovable-uploads/d3442e5e-999f-4c0d-ad1c-83633b3c3f4e.png" 
               alt="PicoCareer Logo" 
@@ -87,8 +92,13 @@ export function MenuSidebar() {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
       <div className="container h-full mx-auto flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <Link to="/">
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/e578ccd5-49b7-4780-8adf-f191492791f4.png" 
+              alt="PicoCareer Title" 
+              className="h-8"
+            />
             <img 
               src="/lovable-uploads/d3442e5e-999f-4c0d-ad1c-83633b3c3f4e.png" 
               alt="PicoCareer Logo" 
