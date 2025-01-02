@@ -175,6 +175,11 @@ export function ProfileView({ profile }: ProfileViewProps) {
         linkedinUrl={profile.linkedin_url}
         githubUrl={profile.github_url}
         websiteUrl={profile.website_url}
+        xUrl={profile.X_url}
+        instagramUrl={profile.instagram_url}
+        facebookUrl={profile.facebook_url}
+        youtubeUrl={profile.youtube_url}
+        tiktokUrl={profile.tiktok_url}
         profileId={profile.id}
       />
     </div>
