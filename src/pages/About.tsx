@@ -9,20 +9,6 @@ export default function About() {
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
     },
     {
-      name: "Dr. Francis Kangure",
-      role: (
-        <span className="flex items-center justify-center gap-2">
-          National Director, Kenya
-          <img 
-            src="/lovable-uploads/b1e313c9-c9f3-4dbd-84b9-1ffc660e1103.png" 
-            alt="Kenyan Flag"
-            className="w-5 h-3 inline-block object-cover"
-          />
-        </span>
-      ),
-      imageUrl: "/placeholder.svg"
-    },
-    {
       name: "Tav Denkey Jr.",
       role: "Mentor and Advisor | Founder and CEO MiaPay",
       imageUrl: "/placeholder.svg"
