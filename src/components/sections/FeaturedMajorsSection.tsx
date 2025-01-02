@@ -30,7 +30,7 @@ export const FeaturedMajorsSection = () => {
     return (
       <section className="mb-16">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Featured Majors</h2>
+          <h2 className="text-2xl font-bold">Featured Fields of Study</h2>
         </div>
         <div className="flex items-center justify-center p-8">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -42,7 +42,7 @@ export const FeaturedMajorsSection = () => {
   return (
     <section className="mb-16">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Featured Majors</h2>
+        <h2 className="text-2xl font-bold">Featured Fields of Study</h2>
         <Link 
           to="/program"
           className="text-primary hover:text-primary/80 transition-colors"
