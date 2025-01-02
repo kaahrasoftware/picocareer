@@ -20,10 +20,10 @@ const slides: SlideContent[] = [
     gradient: "from-red-600/90 to-red-800/90",
   },
   {
-    title: "EXPERIENCED MENTORS",
+    title: "1 ON 1 MENTORSHIP",
     description:
-      "Unlock your potential with our seasoned mentors. Gain wisdom, guidance, and excel on your academic and career journey today!",
-    gradient: "from-purple-600/90 to-indigo-800/90",
+      "Unlock exclusive one-on-one sessions with expert mentors tailored to your individual queries, ensuring personalized guidance and invaluable insights",
+    gradient: "from-rose-500/90 to-rose-600/90",
   },
   {
     title: "MAJORS EXPLORATION",
@@ -47,7 +47,7 @@ export const Slides = () => {
           <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/1">
             <div className={`h-full p-8 rounded-lg bg-gradient-to-br ${slide.gradient} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}>
               <h2 className="text-2xl font-bold mb-4 text-white">{slide.title}</h2>
-              <p className="text-white/90">{slide.description}</p>
+              <p className="text-white/90 text-lg leading-relaxed">{slide.description}</p>
             </div>
           </CarouselItem>
         ))}
