@@ -52,7 +52,21 @@ export default function ResetPassword() {
         password: formData.password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Password reset error:', error);
+        
+        if (error.message.includes("Invalid user")) {
+          toast({
+            title: "Invalid or expired link",
+            description: "Please request a new password reset link.",
+            variant: "destructive",
+          });
+          setTimeout(() => navigate("/auth?tab=signin"), 2000);
+          return;
+        }
+
+        throw error;
+      }
 
       toast({
         title: "Password updated successfully",
@@ -66,17 +80,6 @@ export default function ResetPassword() {
 
     } catch (error: any) {
       console.error('Password reset error:', error);
-      
-      if (error.message?.includes("Invalid user")) {
-        toast({
-          title: "Invalid or expired link",
-          description: "Please request a new password reset link.",
-          variant: "destructive",
-        });
-        navigate("/auth?tab=signin");
-        return;
-      }
-
       toast({
         title: "Error",
         description: "Failed to update password. Please try again.",
