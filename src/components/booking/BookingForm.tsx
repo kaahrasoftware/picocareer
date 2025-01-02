@@ -29,17 +29,6 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
   const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || ["Google Meet"];
 
-  // Update parent component whenever form values change
-  const handleChange = () => {
-    onFormChange({
-      date,
-      selectedTime,
-      sessionType,
-      note,
-      meetingPlatform
-    });
-  };
-
   // Reset meeting platform when session type changes
   useEffect(() => {
     if (availablePlatforms.length > 0 && !availablePlatforms.includes(meetingPlatform)) {
@@ -47,9 +36,15 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
     }
   }, [sessionType, availablePlatforms]);
 
-  // Call handleChange whenever any value changes
+  // Update parent component whenever form values change
   useEffect(() => {
-    handleChange();
+    onFormChange({
+      date,
+      selectedTime,
+      sessionType,
+      note,
+      meetingPlatform
+    });
   }, [date, selectedTime, sessionType, note, meetingPlatform]);
 
   return (

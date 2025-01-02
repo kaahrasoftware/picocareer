@@ -5,14 +5,14 @@ interface MeetingPlatformSelectorProps {
   value: MeetingPlatform;
   onValueChange: (value: MeetingPlatform) => void;
   onGoogleAuthErrorClear?: () => void;
-  availablePlatforms?: MeetingPlatform[];
+  availablePlatforms: MeetingPlatform[];
 }
 
 export function MeetingPlatformSelector({ 
   value, 
   onValueChange,
   onGoogleAuthErrorClear,
-  availablePlatforms = ["Google Meet"] // Default to Google Meet if no platforms provided
+  availablePlatforms
 }: MeetingPlatformSelectorProps) {
   return (
     <div>
