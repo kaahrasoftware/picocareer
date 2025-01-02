@@ -6,6 +6,7 @@ import Blog from "@/pages/Blog";
 import BlogUpload from "@/pages/BlogUpload";
 import Career from "@/pages/Career";
 import CareerUpload from "@/pages/CareerUpload";
+import Error from "@/pages/Error";
 import Index from "@/pages/Index";
 import MajorUpload from "@/pages/MajorUpload";
 import Mentor from "@/pages/Mentor";
@@ -20,19 +21,20 @@ export default function AppRoutes() {
       <MenuSidebar />
       <main className="pt-16">
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/upload" element={<BlogUpload />} />
-          <Route path="/career" element={<Career />} />
-          <Route path="/career/upload" element={<CareerUpload />} />
-          <Route path="/major/upload" element={<MajorUpload />} />
-          <Route path="/mentor" element={<Mentor />} />
-          <Route path="/mentor/register" element={<MentorRegistration />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/program" element={<Program />} />
-          <Route path="/video" element={<Video />} />
+          <Route path="/" element={<Index />} errorElement={<Error />} />
+          <Route path="/about" element={<About />} errorElement={<Error />} />
+          <Route path="/auth" element={<Auth />} errorElement={<Error />} />
+          <Route path="/blog" element={<Blog />} errorElement={<Error />} />
+          <Route path="/blog/upload" element={<BlogUpload />} errorElement={<Error />} />
+          <Route path="/career" element={<Career />} errorElement={<Error />} />
+          <Route path="/career/upload" element={<CareerUpload />} errorElement={<Error />} />
+          <Route path="/major/upload" element={<MajorUpload />} errorElement={<Error />} />
+          <Route path="/mentor" element={<Mentor />} errorElement={<Error />} />
+          <Route path="/mentor/register" element={<MentorRegistration />} errorElement={<Error />} />
+          <Route path="/profile" element={<Profile />} errorElement={<Error />} />
+          <Route path="/program" element={<Program />} errorElement={<Error />} />
+          <Route path="/video" element={<Video />} errorElement={<Error />} />
+          <Route path="*" element={<Error />} />
         </Routes>
       </main>
     </>
