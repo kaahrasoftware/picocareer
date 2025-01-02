@@ -70,7 +70,7 @@ export function StatisticsSection() {
       color: "bg-blue-100 text-blue-600"
     },
     {
-      label: "Academic Programs",
+      label: "Fields of Study",
       value: stats?.majors || 0,
       icon: School,
       color: "bg-green-100 text-green-600"
