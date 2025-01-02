@@ -18,9 +18,9 @@ export const HeroSection = () => {
             Welcome to
           </span>
           <img 
-            src="/lovable-uploads/a3331866-b437-412e-b2c6-7f602cb959ca.png"
+            src="/lovable-uploads/65608658-2c3b-4eab-80f0-d9791cae7b50.png"
             alt="PicoCareer"
-            className="h-12 ml-3"
+            className="h-16 ml-3" // Increased height from h-12 to h-16
           />
         </h1>
         <Slides />
