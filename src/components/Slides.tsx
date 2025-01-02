@@ -16,13 +16,13 @@ const slides: SlideContent[] = [
   {
     title: "CAREER EXPLORATION",
     description:
-      "Discover your path, fuel your ambitions, and build the future you envision with our comprehensive career directory",
+      "Discover your path, fuel your ambitions, and build the future you envision with our comprehensive career directory.",
     gradient: "from-red-600/90 to-red-800/90",
   },
   {
     title: "1 ON 1 MENTORSHIP",
     description:
-      "Unlock exclusive one-on-one sessions with expert mentors tailored to your individual queries, ensuring personalized guidance and invaluable insights",
+      "Unlock exclusive one-on-one sessions with expert mentors tailored to your individual queries, ensuring personalized guidance and invaluable insights.",
     gradient: "from-picocareer-primary/90 to-picocareer-dark/90",
   },
   {
