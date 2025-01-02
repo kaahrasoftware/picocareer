@@ -43,6 +43,8 @@ export const Slides = () => {
       opts={{
         align: "start",
         loop: true,
+        dragFree: true, // Enable free-form dragging
+        skipSnaps: true, // Allow stopping between slides during drag
       }}
       plugins={[plugin.current]}
       className="w-full max-w-4xl mx-auto"
