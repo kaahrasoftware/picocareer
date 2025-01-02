@@ -23,7 +23,7 @@ const slides: SlideContent[] = [
     title: "1 ON 1 MENTORSHIP",
     description:
       "Unlock exclusive one-on-one sessions with expert mentors tailored to your individual queries, ensuring personalized guidance and invaluable insights",
-    gradient: "from-rose-500/90 to-rose-600/90",
+    gradient: "from-picocareer-primary/90 to-picocareer-dark/90",
   },
   {
     title: "MAJORS EXPLORATION",
