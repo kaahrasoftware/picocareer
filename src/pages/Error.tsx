@@ -14,8 +14,10 @@ export default function Error() {
     errorMessage = error.message;
   } else if (typeof error === 'string') {
     errorMessage = error;
-  } else if (error && typeof error === 'object' && 'message' in error) {
-    errorMessage = String((error as { message: unknown }).message);
+  } else if (error && typeof error === 'object') {
+    // Type assertion to handle unknown error object
+    const errorObj = error as { message?: unknown };
+    errorMessage = errorObj.message ? String(errorObj.message) : "Unknown error";
   }
 
   return (

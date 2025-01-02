@@ -48,26 +48,27 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      // Get the hash fragment from the URL
+      // Get the access token from the URL hash
       const hash = window.location.hash;
-      // Parse the access_token from the hash
-      const accessToken = new URLSearchParams(hash.substring(1)).get('access_token');
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
 
       if (!accessToken) {
         throw new Error('No access token found in URL');
       }
 
-      // Set the session with the access token
-      const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+      // First set the session using the tokens from the URL
+      const { error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
-        refresh_token: '',
+        refresh_token: refreshToken || '',
       });
 
       if (sessionError) {
         throw sessionError;
       }
 
-      // Now update the password
+      // Then update the user's password
       const { error: updateError } = await supabase.auth.updateUser({
         password: formData.password
       });
@@ -87,7 +88,9 @@ export default function ResetPassword() {
     } catch (error: any) {
       console.error('Password reset error:', error);
       
-      if (error.message?.includes("invalid jwt") || error.message?.includes("JWT")) {
+      if (error.message?.includes("invalid jwt") || 
+          error.message?.includes("JWT") || 
+          error.message?.includes("token")) {
         toast({
           title: "Invalid or expired link",
           description: "Please request a new password reset link.",
