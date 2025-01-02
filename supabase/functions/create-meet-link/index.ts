@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getAccessToken } from "./auth-utils.ts";
-import { createCalendarEvent, setupWebhook } from "./calendar-utils.ts";
+import { createCalendarEvent } from "./calendar-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -76,7 +76,6 @@ serve(async (req: Request) => {
         guestsCanModify: false,
         guestsCanInviteOthers: false,
         guestsCanSeeOtherGuests: true,
-        conferenceDataVersion: 1,
         reminders: {
           useDefault: false,
           overrides: [
@@ -105,23 +104,6 @@ serve(async (req: Request) => {
       }
 
       console.log('Successfully created Meet link:', meetLink);
-
-      // Set up webhook for this calendar event
-      await setupWebhook('primary');
-
-      // Update session with Meet link
-      const { error: updateError } = await supabase
-        .from('mentor_sessions')
-        .update({
-          meeting_link: meetLink,
-          calendar_event_id: calendarEvent.id,
-        })
-        .eq('id', sessionId);
-
-      if (updateError) {
-        console.error('Failed to update session with Meet link:', updateError);
-        throw new Error('Failed to update session with Meet link');
-      }
 
       return new Response(
         JSON.stringify({ 

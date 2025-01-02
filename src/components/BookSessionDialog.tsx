@@ -66,12 +66,20 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       });
       return;
     }
+
+    if (formData.meetingPlatform === "Phone Call" && !formData.menteePhoneNumber) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide your phone number for Phone Call sessions.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
-      console.log('Starting session booking process...');
-      console.log('Booking details:', {
+      console.log('Starting session booking process...', {
         mentorId: mentor.id,
         date: formData.date,
         time: formData.selectedTime,
@@ -93,6 +101,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       });
 
       if (!sessionResult.success) {
+        console.error('Session booking failed:', sessionResult.error);
         throw new Error(sessionResult.error || 'Failed to book session');
       }
 
@@ -101,23 +110,47 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       if (formData.meetingPlatform === 'Google Meet') {
         console.log('Creating Google Meet link for session:', sessionResult.sessionId);
         
-        const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
-          body: { 
-            sessionId: sessionResult.sessionId 
+        try {
+          const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
+            body: { 
+              sessionId: sessionResult.sessionId 
+            }
+          });
+
+          console.log('Meet link creation response:', { data: meetData, error: meetError });
+
+          if (meetError) {
+            console.error('Error creating meet link:', meetError);
+            throw new Error(`Failed to create Google Meet link: ${meetError.message}`);
           }
-        });
 
-        if (meetError) {
-          console.error('Error creating meet link:', meetError);
-          throw new Error(`Failed to create Google Meet link: ${meetError.message}`);
+          if (!meetData?.meetLink) {
+            console.error('No meet link returned:', meetData);
+            throw new Error('Failed to generate Google Meet link');
+          }
+
+          console.log('Meet link created successfully:', meetData.meetLink);
+
+          // Update session with meet link
+          const { error: updateError } = await supabase
+            .from('mentor_sessions')
+            .update({ meeting_link: meetData.meetLink })
+            .eq('id', sessionResult.sessionId);
+
+          if (updateError) {
+            console.error('Error updating session with meet link:', updateError);
+            throw new Error('Failed to update session with meet link');
+          }
+
+        } catch (meetLinkError: any) {
+          console.error('Detailed meet link error:', meetLinkError);
+          toast({
+            title: "Session Booked",
+            description: "Session booked successfully, but there was an issue creating the Google Meet link. The link will be sent to you via email.",
+            variant: "destructive"
+          });
+          // Continue with notifications despite meet link error
         }
-
-        if (!meetData?.meetLink) {
-          console.error('No meet link returned:', meetData);
-          throw new Error('Failed to generate Google Meet link');
-        }
-
-        console.log('Meet link created successfully:', meetData);
       }
 
       try {
