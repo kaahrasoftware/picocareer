@@ -24,7 +24,7 @@ export function SessionTypeSelector({ sessionTypes, onSessionTypeSelect }: Sessi
         <SelectContent>
           {sessionTypes.map((type) => (
             <SelectItem key={type.id} value={type.id}>
-              {type.type} ({type.duration} min) - ${type.price}
+              {type.type} ({type.duration} min)
             </SelectItem>
           ))}
         </SelectContent>
