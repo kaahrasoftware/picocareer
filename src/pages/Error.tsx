@@ -1,15 +1,11 @@
-import { useNavigate, useRouteError, isRouteErrorResponse } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { isRouteErrorResponse, useRouteError } from "react-router-dom";
 
 export default function Error() {
   const error = useRouteError();
-  const navigate = useNavigate();
+  let errorMessage = "An unexpected error occurred";
 
-  let errorMessage = "Something went wrong";
-  
   if (isRouteErrorResponse(error)) {
-    errorMessage = error.statusText || error.data?.message || "Page not found";
+    errorMessage = error.statusText || error.data?.message || "An unexpected error occurred";
   } else if (error instanceof Error) {
     errorMessage = error.message;
   } else if (typeof error === 'string') {
@@ -19,23 +15,10 @@ export default function Error() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-6 p-8">
-        <div className="flex justify-center">
-          <AlertCircle className="h-24 w-24 text-destructive" />
-        </div>
-        <h1 className="text-4xl font-bold">Oops!</h1>
-        <p className="text-xl text-muted-foreground">
-          {errorMessage}
-        </p>
-        <div className="space-x-4">
-          <Button onClick={() => navigate(-1)} variant="outline">
-            Go Back
-          </Button>
-          <Button onClick={() => navigate("/")}>
-            Go Home
-          </Button>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Oops!</h1>
+        <p className="text-lg text-gray-600">{errorMessage}</p>
       </div>
     </div>
   );
