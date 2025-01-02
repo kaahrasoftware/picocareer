@@ -8,7 +8,7 @@ export default function TeamSection() {
       role: "CEO & Founder",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png",
       linkedin: "https://www.linkedin.com/in/rafik-tarbari",
-      twitter: "https://x.com/rafiktarbari"
+      twitter: "https://x.com/rafik_tarbari"
     },
     {
       name: "Tav Denkey Jr.",
