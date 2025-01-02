@@ -18,7 +18,7 @@ export function RelatedMajorsSection({ careerMajorRelations }: RelatedMajorsSect
     <div>
       <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
         <ArrowRight className="h-5 w-5 text-primary" />
-        Related Majors
+        Related Fields of Study
       </h3>
       <div className="flex flex-wrap gap-2">
         {careerMajorRelations.map(({ major }) => (
