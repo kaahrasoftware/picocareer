@@ -31,44 +31,46 @@ export default function TeamSection() {
         </p>
       </div>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {teamMembers.map((member, index) => (
-          <Card key={index} className="transform transition-transform hover:scale-105">
-            <CardHeader className="text-center pb-4">
-              <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-picocareer-primary to-picocareer-accent p-1">
-                <img 
-                  src={member.imageUrl} 
-                  alt={member.name}
-                  className="w-full h-full rounded-full object-cover bg-white"
-                />
-              </div>
-              <CardTitle className="text-xl">{member.name}</CardTitle>
-              <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
-              <div className="flex justify-center gap-4 mt-4">
-                {member.linkedin && (
-                  <a
-                    href={member.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-picocareer-primary transition-colors"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                  </a>
-                )}
-                {member.twitter && (
-                  <a
-                    href={member.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-picocareer-primary transition-colors"
-                  >
-                    <Twitter className="w-5 h-5" />
-                  </a>
-                )}
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {teamMembers.map((member, index) => (
+            <Card key={index} className="transform transition-transform hover:scale-105">
+              <CardHeader className="text-center pb-4">
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-picocareer-primary to-picocareer-accent p-1">
+                  <img 
+                    src={member.imageUrl} 
+                    alt={member.name}
+                    className="w-full h-full rounded-full object-cover bg-white"
+                  />
+                </div>
+                <CardTitle className="text-xl">{member.name}</CardTitle>
+                <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
+                <div className="flex justify-center gap-4 mt-4">
+                  {member.linkedin && (
+                    <a
+                      href={member.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-picocareer-primary transition-colors"
+                    >
+                      <Linkedin className="w-5 h-5" />
+                    </a>
+                  )}
+                  {member.twitter && (
+                    <a
+                      href={member.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-picocareer-primary transition-colors"
+                    >
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                  )}
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
   );
