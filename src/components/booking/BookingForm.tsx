@@ -60,34 +60,42 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
 
       {/* Right column - Form elements */}
       <div className="space-y-6">
-        <SessionTypeSelector
-          sessionTypes={sessionTypes}
-          onSessionTypeSelect={setSessionType}
-        />
+        <div className="bg-kahra-darker rounded-lg p-4">
+          <SessionTypeSelector
+            sessionTypes={sessionTypes}
+            onSessionTypeSelect={setSessionType}
+          />
+        </div>
 
         {date && (
-          <TimeSlotSelector
-            date={date}
-            mentorId={mentorId}
-            selectedTime={selectedTime}
-            onTimeSelect={setSelectedTime}
-            selectedSessionType={selectedSessionTypeDetails}
-          />
+          <div className="bg-kahra-darker rounded-lg p-4">
+            <TimeSlotSelector
+              date={date}
+              mentorId={mentorId}
+              selectedTime={selectedTime}
+              onTimeSelect={setSelectedTime}
+              selectedSessionType={selectedSessionTypeDetails}
+            />
+          </div>
         )}
 
-        {sessionType && (
-          <MeetingPlatformSelector
-            value={meetingPlatform}
-            onValueChange={setMeetingPlatform}
-            onGoogleAuthErrorClear={() => {}}
-            availablePlatforms={availablePlatforms}
-          />
+        {sessionType && availablePlatforms.length > 0 && (
+          <div className="bg-kahra-darker rounded-lg p-4 transition-all duration-300">
+            <MeetingPlatformSelector
+              value={meetingPlatform}
+              onValueChange={setMeetingPlatform}
+              onGoogleAuthErrorClear={() => {}}
+              availablePlatforms={availablePlatforms}
+            />
+          </div>
         )}
 
-        <SessionNote
-          note={note}
-          onNoteChange={setNote}
-        />
+        <div className="bg-kahra-darker rounded-lg p-4">
+          <SessionNote
+            note={note}
+            onNoteChange={setNote}
+          />
+        </div>
       </div>
     </div>
   );
