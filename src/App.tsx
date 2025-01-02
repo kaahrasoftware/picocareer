@@ -4,6 +4,7 @@ import Auth from "@/pages/Auth";
 import Error from "@/pages/Error";
 import EmailConfirmation from "@/pages/EmailConfirmation";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { MenuSidebar } from "@/components/MenuSidebar";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,9 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <RouterProvider router={router} />
+    <div className="flex flex-col min-h-screen">
+      <MenuSidebar />
+      <RouterProvider router={router} />
+    </div>
   );
 }
