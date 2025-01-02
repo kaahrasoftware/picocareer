@@ -42,7 +42,7 @@ export const Slides = () => {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">Explore Our Core Services</h2>
-        <p className="text-muted-foreground">Discover the key features that make PicoCareer your ultimate career development companion.</p>
+        <p className="text-muted-foreground">Discover the key features that make PicoCareer your ultimate professional development companion.</p>
       </div>
       <Carousel
         opts={{
