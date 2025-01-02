@@ -91,6 +91,10 @@ export function StatisticsSection() {
 
   return (
     <section className="py-12">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-2">Platform Impact & Resources</h2>
+        <p className="text-muted-foreground">Discover the growing ecosystem of opportunities and support available to you</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {items.map((item) => (
           <Card key={item.label} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
