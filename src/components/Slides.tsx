@@ -39,26 +39,32 @@ export const Slides = () => {
   );
 
   return (
-    <Carousel
-      opts={{
-        align: "start",
-        loop: true,
-        dragFree: true, // Enable free-form dragging
-        skipSnaps: true, // Allow stopping between slides during drag
-      }}
-      plugins={[plugin.current]}
-      className="w-full max-w-4xl mx-auto"
-    >
-      <CarouselContent>
-        {slides.map((slide, index) => (
-          <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/1">
-            <div className={`h-full p-8 rounded-lg bg-gradient-to-br ${slide.gradient} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}>
-              <h2 className="text-2xl font-bold mb-4 text-white text-center">{slide.title}</h2>
-              <p className="text-white/90 text-lg leading-relaxed">{slide.description}</p>
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-    </Carousel>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold mb-2">Explore Our Core Services</h2>
+        <p className="text-gray-600 dark:text-gray-400">Discover the key features that make PicoCareer your ultimate career development companion.</p>
+      </div>
+      <Carousel
+        opts={{
+          align: "start",
+          loop: true,
+          dragFree: true,
+          skipSnaps: true,
+        }}
+        plugins={[plugin.current]}
+        className="w-full max-w-4xl mx-auto"
+      >
+        <CarouselContent>
+          {slides.map((slide, index) => (
+            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/1">
+              <div className={`h-full p-8 rounded-lg bg-gradient-to-br ${slide.gradient} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}>
+                <h2 className="text-2xl font-bold mb-4 text-white text-center">{slide.title}</h2>
+                <p className="text-white/90 text-lg leading-relaxed">{slide.description}</p>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+    </div>
   );
 };
