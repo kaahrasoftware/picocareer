@@ -7,11 +7,6 @@ export default function About() {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
-    },
-    {
-      name: "Tav",
-      role: "Co-Founder",
-      imageUrl: "/lovable-uploads/d815cd5f-d140-4520-87a1-3d7a6c17df4d.png"
     }
   ];
 
@@ -49,6 +44,7 @@ export default function About() {
 
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="grid gap-12">
+          {/* Services Section */}
           <section className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-8">Our Services</h2>
             <div className="grid md:grid-cols-3 gap-8">

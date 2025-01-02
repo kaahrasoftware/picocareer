@@ -21,80 +21,161 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 
 const queryClient = new QueryClient();
 
-// Create a layout component to avoid repetition
-const Layout = ({ children }: { children: React.ReactNode }) => (
-  <>
-    <MenuSidebar />
-    <main className="pt-16">
-      {children}
-    </main>
-  </>
-);
-
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout><Index /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Index />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/about",
-    element: <Layout><About /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <About />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/auth",
-    element: <Layout><Auth /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Auth />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/blog",
-    element: <Layout><Blog /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Blog />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/blog/upload",
-    element: <Layout><BlogUpload /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <BlogUpload />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/career",
-    element: <Layout><Career /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Career />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/career/upload",
-    element: <Layout><CareerUpload /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <CareerUpload />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/major/upload",
-    element: <Layout><MajorUpload /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <MajorUpload />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/mentor",
-    element: <Layout><Mentor /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Mentor />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/mentor/register",
-    element: <Layout><MentorRegistration /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <MentorRegistration />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/profile",
-    element: <Layout><Profile /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Profile />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/program",
-    element: <Layout><Program /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Program />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
     path: "/video",
-    element: <Layout><Video /></Layout>,
+    element: (
+      <>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Video />
+        </main>
+      </>
+    ),
     errorElement: <Error />,
   },
   {
