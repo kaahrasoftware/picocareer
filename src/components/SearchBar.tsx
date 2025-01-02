@@ -114,7 +114,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   }, []);
 
   return (
-    <div className="relative w-full search-container mb-12">
+    <div className="relative w-full search-container mb-24">
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
         <SearchInput
           value={searchQuery}
