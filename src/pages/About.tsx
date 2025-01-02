@@ -1,42 +1,10 @@
-import { Target, Flag, Users, GraduationCap, Briefcase, Users2, Linkedin, Twitter } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Target, Flag, Users, GraduationCap, Briefcase, Users2 } from "lucide-react";
+import ServicesSection from "@/components/about/ServicesSection";
+import MissionVisionSection from "@/components/about/MissionVisionSection";
+import ValuesSection from "@/components/about/ValuesSection";
+import TeamSection from "@/components/about/TeamSection";
 
 export default function About() {
-  const teamMembers = [
-    {
-      name: "Rafik Tarbari",
-      role: "CEO & Founder",
-      imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png",
-      linkedin: "https://www.linkedin.com/in/rafik-tarbari",
-      twitter: "https://x.com/rafiktarbari"
-    },
-    {
-      name: "Tav Denkey Jr.",
-      role: "Mentor | Founder & CEO of MiaPay",
-      imageUrl: "/lovable-uploads/2f2ac4ac-1001-45b8-a930-df7c2414eaeb.png",
-      linkedin: "https://www.linkedin.com/in/tavdenkeyjr",
-      twitter: "https://x.com/tavdenkeyjr"
-    }
-  ];
-
-  const services = [
-    {
-      icon: GraduationCap,
-      title: "Career Exploration",
-      description: "Discover diverse career paths and opportunities through our comprehensive database of professions, complete with detailed insights and requirements."
-    },
-    {
-      icon: Users2,
-      title: "1-on-1 Mentorship",
-      description: "Connect with experienced professionals for personalized guidance, career advice, and industry insights through our mentorship program."
-    },
-    {
-      icon: Briefcase,
-      title: "Academic Guidance",
-      description: "Navigate your educational journey with expert advice on majors, courses, and academic pathways aligned with your career goals."
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <div className="relative h-[300px] overflow-hidden">
@@ -53,164 +21,10 @@ export default function About() {
 
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="grid gap-12">
-          <section className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-8">Our Services</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {services.map((service, index) => (
-                <Card key={index} className="group hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-8 pb-6 px-6 text-center">
-                    <div className="mb-6 flex justify-center">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-picocareer-primary to-picocareer-accent flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <service.icon className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
-                    <p className="text-muted-foreground">{service.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-picocareer-primary to-picocareer-accent opacity-90 flex items-center justify-center">
-                <Target className="w-16 h-16 text-white" />
-              </div>
-              <CardHeader className="flex flex-row items-center gap-4">
-                <CardTitle>Our Mission</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg text-muted-foreground">
-                  To empower students and young professionals by providing comprehensive career guidance,
-                  mentorship opportunities, and educational resources that bridge the gap between academic
-                  learning and professional success.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-picocareer-secondary to-picocareer-dark opacity-90 flex items-center justify-center">
-                <Flag className="w-16 h-16 text-white" />
-              </div>
-              <CardHeader className="flex flex-row items-center gap-4">
-                <CardTitle>Our Vision</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg text-muted-foreground">
-                  To become the world's leading platform for career development and professional growth,
-                  where every individual can discover their potential and chart their path to success
-                  through personalized guidance and expert mentorship.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <section className="pt-12">
-            <Card className="bg-gradient-to-br from-picocareer-dark to-picocareer-darker text-white">
-              <CardContent className="p-8">
-                <div className="text-center max-w-3xl mx-auto">
-                  <h2 className="text-3xl font-bold mb-6">Our Values</h2>
-                  <div className="grid md:grid-cols-3 gap-8">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                        <Target className="w-8 h-8" />
-                      </div>
-                      <h3 className="font-semibold mb-2">Excellence</h3>
-                      <p className="text-white/80">Striving for the highest quality in everything we do</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                        <Users className="w-8 h-8" />
-                      </div>
-                      <h3 className="font-semibold mb-2">Community</h3>
-                      <p className="text-white/80">Building strong relationships and fostering collaboration</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                        <Flag className="w-8 h-8" />
-                      </div>
-                      <h3 className="font-semibold mb-2">Innovation</h3>
-                      <p className="text-white/80">Continuously improving and adapting to change</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          <section className="pt-12">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <Users className="w-8 h-8 text-picocareer-primary" />
-                <h2 className="text-3xl font-bold">Our Team</h2>
-              </div>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Meet the passionate individuals dedicated to transforming career development and mentorship
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {teamMembers.map((member, index) => (
-                <Card key={index} className="transform transition-transform hover:scale-105">
-                  <CardHeader className="text-center pb-4">
-                    <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-picocareer-primary to-picocareer-accent p-1">
-                      <img 
-                        src={member.imageUrl} 
-                        alt={member.name}
-                        className="w-full h-full rounded-full object-cover bg-white"
-                      />
-                    </div>
-                    <CardTitle className="text-xl">{member.name}</CardTitle>
-                    <p className="text-sm text-picocareer-primary font-medium">{member.role}</p>
-                    <div className="flex justify-center gap-4 mt-4">
-                      {member.linkedin && (
-                        <a
-                          href={member.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-600 hover:text-picocareer-primary transition-colors"
-                        >
-                          <Linkedin className="w-5 h-5" />
-                        </a>
-                      )}
-                      {member.twitter && (
-                        <a
-                          href={member.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-600 hover:text-picocareer-primary transition-colors"
-                        >
-                          <Twitter className="w-5 h-5" />
-                        </a>
-                      )}
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
-
-      <div className="text-center pb-12">
-        <div className="flex justify-center gap-6">
-          <a
-            href="https://www.linkedin.com/company/picocareer"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-picocareer-primary transition-colors"
-          >
-            <Linkedin className="w-6 h-6" />
-          </a>
-          <a
-            href="https://x.com/picocareer"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-picocareer-primary transition-colors"
-          >
-            <Twitter className="w-6 h-6" />
-          </a>
+          <ServicesSection />
+          <MissionVisionSection />
+          <ValuesSection />
+          <TeamSection />
         </div>
       </div>
     </div>
