@@ -45,38 +45,44 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   }, [date, selectedTime, sessionType, note, meetingPlatform]);
 
   return (
-    <div className="space-y-6">
-      <DateSelector
-        date={date}
-        onDateSelect={setDate}
-        mentorId={mentorId}
-      />
-
-      <SessionTypeSelector
-        sessionTypes={sessionTypes}
-        onSessionTypeSelect={setSessionType}
-      />
-
-      {date && (
-        <TimeSlotSelector
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Left column - Calendar */}
+      <div>
+        <DateSelector
           date={date}
+          onDateSelect={setDate}
           mentorId={mentorId}
-          selectedTime={selectedTime}
-          onTimeSelect={setSelectedTime}
-          selectedSessionType={selectedSessionTypeDetails}
         />
-      )}
+      </div>
 
-      <MeetingPlatformSelector
-        value={meetingPlatform}
-        onValueChange={setMeetingPlatform}
-        onGoogleAuthErrorClear={() => {}}
-      />
+      {/* Right column - Form elements */}
+      <div className="space-y-6">
+        <SessionTypeSelector
+          sessionTypes={sessionTypes}
+          onSessionTypeSelect={setSessionType}
+        />
 
-      <SessionNote
-        note={note}
-        onNoteChange={setNote}
-      />
+        {date && (
+          <TimeSlotSelector
+            date={date}
+            mentorId={mentorId}
+            selectedTime={selectedTime}
+            onTimeSelect={setSelectedTime}
+            selectedSessionType={selectedSessionTypeDetails}
+          />
+        )}
+
+        <MeetingPlatformSelector
+          value={meetingPlatform}
+          onValueChange={setMeetingPlatform}
+          onGoogleAuthErrorClear={() => {}}
+        />
+
+        <SessionNote
+          note={note}
+          onNoteChange={setNote}
+        />
+      </div>
     </div>
   );
 }
