@@ -15,7 +15,6 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ profile }: ProfileViewProps) {
-  // Fetch career details if position is set
   const { data: careerDetails } = useQuery({
     queryKey: ['career', profile.position],
     queryFn: async () => {
@@ -100,7 +99,6 @@ export function ProfileView({ profile }: ProfileViewProps) {
         </div>
       )}
 
-      {/* Skills and Tools Section */}
       {profile.user_type === 'mentor' && (
         <div className="bg-muted rounded-lg p-4 space-y-4">
           <BadgeSection
@@ -133,7 +131,6 @@ export function ProfileView({ profile }: ProfileViewProps) {
         </div>
       )}
 
-      {/* Education */}
       <div className="bg-muted rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
           <GraduationCap className="h-4 w-4" />
@@ -175,6 +172,11 @@ export function ProfileView({ profile }: ProfileViewProps) {
         linkedinUrl={profile.linkedin_url}
         githubUrl={profile.github_url}
         websiteUrl={profile.website_url}
+        xUrl={profile.X_url}
+        instagramUrl={profile.instagram_url}
+        facebookUrl={profile.facebook_url}
+        youtubeUrl={profile.youtube_url}
+        tiktokUrl={profile.tiktok_url}
         profileId={profile.id}
       />
     </div>
