@@ -7,6 +7,11 @@ export default function About() {
       name: "Rafik Tarbari",
       role: "CEO & Founder",
       imageUrl: "/lovable-uploads/c4ff4218-d3ed-4e2e-a686-827b3c349576.png"
+    },
+    {
+      name: "Tav Denkey Jr.",
+      role: "Co-Founder & CTO",
+      imageUrl: "/lovable-uploads/d815cd5f-d140-4520-87a1-3d7a6c17df4d.png"
     }
   ];
 
@@ -65,7 +70,6 @@ export default function About() {
           </section>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Mission Section */}
             <Card className="overflow-hidden">
               <div className="h-48 bg-gradient-to-br from-picocareer-primary to-picocareer-accent opacity-90 flex items-center justify-center">
                 <Target className="w-16 h-16 text-white" />
