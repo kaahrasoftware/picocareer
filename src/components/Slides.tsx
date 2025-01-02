@@ -46,7 +46,7 @@ export const Slides = () => {
         {slides.map((slide, index) => (
           <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/1">
             <div className={`h-full p-8 rounded-lg bg-gradient-to-br ${slide.gradient} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}>
-              <h2 className="text-2xl font-bold mb-4 text-white">{slide.title}</h2>
+              <h2 className="text-2xl font-bold mb-4 text-white text-center">{slide.title}</h2>
               <p className="text-white/90 text-lg leading-relaxed">{slide.description}</p>
             </div>
           </CarouselItem>
