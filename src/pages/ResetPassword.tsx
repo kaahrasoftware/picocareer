@@ -64,9 +64,7 @@ export default function ResetPassword() {
         refresh_token: refreshToken || '',
       });
 
-      if (sessionError) {
-        throw sessionError;
-      }
+      if (sessionError) throw sessionError;
 
       // Then update the user's password
       const { error: updateError } = await supabase.auth.updateUser({
