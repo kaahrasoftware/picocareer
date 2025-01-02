@@ -55,7 +55,7 @@ export default function ResetPassword() {
       if (error) {
         console.error('Password reset error:', error);
         
-        if (error.message.includes("Invalid user")) {
+        if (error.message.includes("invalid jwt")) {
           toast({
             title: "Invalid or expired link",
             description: "Please request a new password reset link.",
