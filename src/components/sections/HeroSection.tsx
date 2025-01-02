@@ -19,13 +19,13 @@ export const HeroSection = () => {
       </section>
 
       {/* Header */}
-      <header className="flex justify-between items-center mb-12 relative">
+      <header className="flex justify-between items-center mb-16 relative">
         <div className="w-full">
           <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
         </div>
       </header>
 
-      <section className="mb-16">
+      <section className="mb-24">
         <Slides />
       </section>
     </>
