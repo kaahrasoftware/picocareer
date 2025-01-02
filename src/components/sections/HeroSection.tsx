@@ -20,7 +20,7 @@ export const HeroSection = () => {
           <img 
             src="/lovable-uploads/65608658-2c3b-4eab-80f0-d9791cae7b50.png"
             alt="PicoCareer"
-            className="h-20 ml-3" // Increased height from h-16 to h-20
+            className="h-18 ml-3" // Decreased height from h-20 to h-18
           />
         </h1>
         <Slides />
