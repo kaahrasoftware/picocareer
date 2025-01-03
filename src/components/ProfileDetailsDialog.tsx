@@ -6,7 +6,7 @@ import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useProfileSession } from "@/hooks/useProfileSession";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -19,47 +19,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  // First check if we have a valid session
-  const { data: session, isError: sessionError } = useQuery({
-    queryKey: ['auth-session'],
-    queryFn: async () => {
-      try {
-        console.log('Fetching auth session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          throw error;
-        }
-        
-        if (!session) {
-          console.log('No valid session found');
-          return null;
-        }
-        
-        console.log('Valid session found');
-        return session;
-      } catch (error: any) {
-        console.error('Detailed session error:', error);
-        // Check for refresh token errors
-        if (error.message?.includes('refresh_token_not_found') || 
-            error.message?.includes('Invalid Refresh Token')) {
-          localStorage.removeItem('sb-' + supabase.projectId + '-auth-token');
-          toast({
-            title: "Session Expired",
-            description: "Please sign in again to continue.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-        }
-        throw error;
-      }
-    },
-    retry: false,
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-  });
+  const { session, sessionError, queryClient } = useProfileSession();
 
   // Only fetch user data if we have a valid session
   const { data: currentUser } = useQuery({
@@ -133,7 +93,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       console.log('Session error detected, cleaning up...');
       
       // Clear all auth-related data
-      localStorage.removeItem('sb-' + supabase.projectId + '-auth-token');
+      const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+      localStorage.removeItem(key);
       queryClient.clear();
       
       // Show error message
