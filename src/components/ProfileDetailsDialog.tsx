@@ -43,6 +43,17 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         return session;
       } catch (error: any) {
         console.error('Detailed session error:', error);
+        // Check for refresh token errors
+        if (error.message?.includes('refresh_token_not_found') || 
+            error.message?.includes('Invalid Refresh Token')) {
+          localStorage.removeItem('sb-' + supabase.projectId + '-auth-token');
+          toast({
+            title: "Session Expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
         throw error;
       }
     },
@@ -122,7 +133,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       console.log('Session error detected, cleaning up...');
       
       // Clear all auth-related data
-      localStorage.clear();
+      localStorage.removeItem('sb-' + supabase.projectId + '-auth-token');
       queryClient.clear();
       
       // Show error message
