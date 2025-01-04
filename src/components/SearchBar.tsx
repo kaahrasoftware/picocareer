@@ -62,10 +62,10 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%,` +
-            `skills.cs.{${value}},` +
-            `tools_used.cs.{${value}},` +
-            `keywords.cs.{${value}},` +
-            `fields_of_interest.cs.{${value}}`
+            `skills.cs.{${value.toLowerCase()}},` +
+            `tools_used.cs.{${value.toLowerCase()}},` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `fields_of_interest.cs.{${value.toLowerCase()}}`
           )
           .limit(5),
 
@@ -77,9 +77,9 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `keywords.cs.{${value}},` +
-            `required_skills.cs.{${value}},` +
-            `required_tools.cs.{${value}}`
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `required_skills.cs.{${value.toLowerCase()}},` +
+            `required_tools.cs.{${value.toLowerCase()}}`
           )
           .limit(5),
 
@@ -90,10 +90,10 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `learning_objectives.cs.{${value}},` +
-            `common_courses.cs.{${value}},` +
-            `skill_match.cs.{${value}},` +
-            `tools_knowledge.cs.{${value}}`
+            `learning_objectives.cs.{${value.toLowerCase()}},` +
+            `common_courses.cs.{${value.toLowerCase()}},` +
+            `skill_match.cs.{${value.toLowerCase()}},` +
+            `tools_knowledge.cs.{${value.toLowerCase()}}`
           )
           .limit(5)
       ]);
