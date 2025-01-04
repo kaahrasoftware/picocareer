@@ -3,6 +3,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Award, Briefcase, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { useState } from "react";
+import { useProfileSession } from "@/hooks/useProfileSession";
 
 interface SearchResult {
   id: string;
@@ -21,18 +26,34 @@ interface MentorSearchResultsProps {
 
 export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { session } = useProfileSession();
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
 
   const handleResultClick = (result: SearchResult) => {
-    switch (result.type) {
-      case 'mentor':
-        navigate(`/mentor/${result.id}`);
-        break;
-      case 'career':
-        navigate(`/career/${result.id}`);
-        break;
-      case 'major':
-        navigate(`/program/${result.id}`);
-        break;
+    if (result.type === 'mentor') {
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to view mentor profiles",
+          variant: "default",
+          action: (
+            <Button 
+              onClick={() => navigate("/auth")}
+              variant="default" 
+              className="bg-green-500 text-white hover:bg-green-600"
+            >
+              Sign In
+            </Button>
+          ),
+        });
+        return;
+      }
+      setSelectedMentorId(result.id);
+    } else if (result.type === 'career') {
+      navigate(`/career/${result.id}`);
+    } else if (result.type === 'major') {
+      navigate(`/program/${result.id}`);
     }
   };
 
@@ -135,6 +156,14 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
             ))}
           </div>
         </div>
+      )}
+
+      {selectedMentorId && (
+        <ProfileDetailsDialog
+          userId={selectedMentorId}
+          open={!!selectedMentorId}
+          onOpenChange={(open) => !open && setSelectedMentorId(null)}
+        />
       )}
     </div>
   );
