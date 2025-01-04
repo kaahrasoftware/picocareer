@@ -3,6 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 
 interface SearchResult {
   id: string;
@@ -25,11 +27,12 @@ interface MentorSearchResultsProps {
 
 export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
 
   const handleResultClick = (result: SearchResult) => {
     switch (result.type) {
       case 'mentor':
-        navigate(`/mentor/${result.id}`);
+        setSelectedMentorId(result.id);
         break;
       case 'career':
         navigate(`/career/${result.id}`);
@@ -155,6 +158,15 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Profile Details Dialog */}
+      {selectedMentorId && (
+        <ProfileDetailsDialog
+          userId={selectedMentorId}
+          open={!!selectedMentorId}
+          onOpenChange={(open) => !open && setSelectedMentorId(null)}
+        />
       )}
     </div>
   );
