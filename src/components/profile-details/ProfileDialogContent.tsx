@@ -5,6 +5,7 @@ import { ProfileHeader } from "./ProfileHeader";
 import { ProfileEditForm } from "./ProfileEditForm";
 import { ProfileView } from "./ProfileView";
 import type { Session } from "@supabase/supabase-js";
+import { PointerDownOutsideEvent } from "@radix-ui/react-dialog";
 
 interface ProfileDialogContentProps {
   profile: any;
@@ -14,6 +15,7 @@ interface ProfileDialogContentProps {
   isOwnProfile: boolean;
   isMentor: boolean;
   handleBookSession: () => void;
+  onPointerDownOutside?: (e: PointerDownOutsideEvent) => void;
 }
 
 export function ProfileDialogContent({
@@ -24,9 +26,13 @@ export function ProfileDialogContent({
   isOwnProfile,
   isMentor,
   handleBookSession,
+  onPointerDownOutside,
 }: ProfileDialogContentProps) {
   return (
-    <DialogContent className="max-w-2xl h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+    <DialogContent 
+      className="max-w-2xl h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95"
+      onPointerDownOutside={onPointerDownOutside}
+    >
       <DialogHeader className="p-6 pb-0">
         <div className="relative pb-12">
           <ProfileHeader profile={profile} session={session} />
