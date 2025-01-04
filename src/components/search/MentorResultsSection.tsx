@@ -43,14 +43,12 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{mentor.title}</h4>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    {mentor.position && (
-                      <>
-                        <Building2 className="h-3 w-3" />
-                        <span className="truncate">{mentor.position}</span>
-                      </>
-                    )}
-                  </div>
+                  {mentor.position && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Building2 className="h-3 w-3" />
+                      <span className="truncate">{mentor.position}</span>
+                    </div>
+                  )}
                   {mentor.location && (
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
