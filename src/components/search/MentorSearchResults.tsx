@@ -62,7 +62,7 @@ export function MentorSearchResults({ results }: MentorSearchResultsProps) {
         >
           <ProfileAvatar
             avatarUrl={mentor.avatar_url}
-            fallback={mentor.full_name[0]}
+            fallback={mentor.full_name ? mentor.full_name[0] : "?"}
             size="lg"
             editable={false}
           />
