@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
+import { supabase } from "@/integrations/supabase/client";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { searchMentors, searchCareers, searchMajors } from "@/utils/searchUtils";
+import { useNavigate } from "react-router-dom";
 
 interface SearchBarProps {
   className?: string;
@@ -20,6 +21,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const { trackSearch } = useSearchAnalytics();
   const { session } = useAuthSession();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSearch = async (value: string) => {
     if (value.length < 3) {
@@ -32,9 +34,68 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
 
     try {
       const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
-        searchMentors(value),
-        searchCareers(value),
-        searchMajors(value)
+        // Search mentors
+        supabase
+          .from('profiles')
+          .select(`
+            id,
+            first_name,
+            last_name,
+            avatar_url,
+            position,
+            location,
+            bio,
+            skills,
+            tools_used,
+            keywords,
+            fields_of_interest,
+            highest_degree,
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
+            career:careers!profiles_position_fkey(title)
+          `)
+          .eq('user_type', 'mentor')
+          .or(
+            `first_name.ilike.%${value}%,` +
+            `last_name.ilike.%${value}%,` +
+            `full_name.ilike.%${value}%,` +
+            `bio.ilike.%${value}%,` +
+            `location.ilike.%${value}%,` +
+            `skills.cs.{${value.toLowerCase()}},` +
+            `tools_used.cs.{${value.toLowerCase()}},` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `fields_of_interest.cs.{${value.toLowerCase()}}`
+          )
+          .limit(5),
+
+        // Search careers
+        supabase
+          .from('careers')
+          .select('*')
+          .eq('complete_career', true)
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `required_skills.cs.{${value.toLowerCase()}},` +
+            `required_tools.cs.{${value.toLowerCase()}}`
+          )
+          .limit(5),
+
+        // Search majors
+        supabase
+          .from('majors')
+          .select('*')
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `learning_objectives.cs.{${value.toLowerCase()}},` +
+            `common_courses.cs.{${value.toLowerCase()}},` +
+            `skill_match.cs.{${value.toLowerCase()}},` +
+            `tools_knowledge.cs.{${value.toLowerCase()}}`
+          )
+          .limit(5)
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;
@@ -46,11 +107,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           ...mentor,
           type: 'mentor',
           title: `${mentor.first_name} ${mentor.last_name}`,
-          description: mentor.bio || mentor.position,
-          company_name: mentor.company?.name,
-          school_name: mentor.school?.name,
-          academic_major_title: mentor.academic_major?.title,
-          career_title: mentor.career?.title
+          description: mentor.bio || mentor.position
         })),
         ...(careersResponse.data || []).map(career => ({
           ...career,

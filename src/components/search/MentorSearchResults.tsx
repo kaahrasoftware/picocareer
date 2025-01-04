@@ -36,14 +36,11 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
     }
   };
 
-  // Group results by type
   const groupedResults = {
     mentors: results.filter(r => r.type === 'mentor'),
     careers: results.filter(r => r.type === 'career'),
     majors: results.filter(r => r.type === 'major')
   };
-
-  console.log('Grouped results:', groupedResults); // Debug log
 
   return (
     <div className="space-y-6">
