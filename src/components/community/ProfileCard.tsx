@@ -6,6 +6,9 @@ import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { useState } from "react";
 import type { Profile } from "@/types/database/profiles";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileCardProps {
   profile: Profile & {
@@ -18,11 +21,36 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile }: ProfileCardProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const { session } = useAuthSession();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const displayTitle = profile.career_title || profile.academic_major || "No position/major set";
   const displaySubtitle = profile.career_title 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
+
+  const handleViewProfile = () => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Join our community to connect with amazing mentors and unlock your career potential!",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
+        action: (
+          <Button
+            onClick={() => navigate("/auth")}
+            className="bg-green-500 text-white hover:bg-green-600"
+            size="sm"
+          >
+            Login
+          </Button>
+        ),
+      });
+      return;
+    }
+    setShowDetails(true);
+  };
 
   return (
     <>
@@ -157,7 +185,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <Button 
               variant="outline" 
               className="w-full bg-background hover:bg-muted/50 transition-colors"
-              onClick={() => setShowDetails(true)}
+              onClick={handleViewProfile}
             >
               View Profile
             </Button>
