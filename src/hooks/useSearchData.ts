@@ -22,7 +22,15 @@ export function useSearchData(searchTerm: string) {
             career_opportunities,
             common_courses
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .or(
+            `title.ilike.%${searchTerm}%,` + 
+            `description.ilike.%${searchTerm}%,` +
+            `array(select lower(unnest(learning_objectives))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(common_courses))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(skill_match))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(tools_knowledge))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(career_opportunities))) @> array[lower('${searchTerm}')]`
+          )
           .limit(5),
 
         // Search careers
@@ -34,7 +42,16 @@ export function useSearchData(searchTerm: string) {
             description,
             salary_range
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .or(
+            `title.ilike.%${searchTerm}%,` +
+            `description.ilike.%${searchTerm}%,` +
+            `array(select lower(unnest(academic_majors))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(required_skills))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(required_tools))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(keywords))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(transferable_skills))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(careers_to_consider_switching_to))) @> array[lower('${searchTerm}')]`
+          )
           .limit(5),
 
         // Search mentor profiles with expanded fields
@@ -66,10 +83,10 @@ export function useSearchData(searchTerm: string) {
             `position.ilike.%${searchTerm}%,` +
             `bio.ilike.%${searchTerm}%,` +
             `location.ilike.%${searchTerm}%,` +
-            `skills.cs.{${searchTerm}},` +
-            `tools_used.cs.{${searchTerm}},` +
-            `keywords.cs.{${searchTerm}},` +
-            `fields_of_interest.cs.{${searchTerm}}`
+            `array(select lower(unnest(skills))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(tools_used))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(keywords))) @> array[lower('${searchTerm}')],` +
+            `array(select lower(unnest(fields_of_interest))) @> array[lower('${searchTerm}')]`
           )
       ]);
 
