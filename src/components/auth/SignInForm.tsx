@@ -49,7 +49,7 @@ export function SignInForm() {
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <ResetPasswordButton />
+              <ResetPasswordButton email={formData.email} />
             </div>
             <Input
               id="password"
