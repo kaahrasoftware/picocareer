@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
+import { Award, Building2, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
