@@ -33,48 +33,98 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     console.log('Fetching results for query:', value);
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          avatar_url,
-          position,
-          location,
-          bio,
-          skills,
-          tools_used,
-          keywords,
-          fields_of_interest,
-          highest_degree,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!profiles_position_fkey(title)
-        `)
-        .eq('user_type', 'mentor')
-        .or(
-          `first_name.ilike.%${value}%,` +
-          `last_name.ilike.%${value}%,` +
-          `full_name.ilike.%${value}%,` +
-          `bio.ilike.%${value}%,` +
-          `location.ilike.%${value}%,` +
-          `skills.cs.{${value}},` +
-          `tools_used.cs.{${value}},` +
-          `keywords.cs.{${value}},` +
-          `fields_of_interest.cs.{${value}}`
-        )
-        .limit(5);
+      const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
+        // Search mentors
+        supabase
+          .from('profiles')
+          .select(`
+            id,
+            first_name,
+            last_name,
+            avatar_url,
+            position,
+            location,
+            bio,
+            skills,
+            tools_used,
+            keywords,
+            fields_of_interest,
+            highest_degree,
+            company:companies(name),
+            school:schools(name),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
+            career:careers!profiles_position_fkey(title)
+          `)
+          .eq('user_type', 'mentor')
+          .or(
+            `first_name.ilike.%${value}%,` +
+            `last_name.ilike.%${value}%,` +
+            `full_name.ilike.%${value}%,` +
+            `bio.ilike.%${value}%,` +
+            `location.ilike.%${value}%,` +
+            `skills.cs.{${value}},` +
+            `tools_used.cs.{${value}},` +
+            `keywords.cs.{${value}},` +
+            `fields_of_interest.cs.{${value}}`
+          )
+          .limit(5),
 
-      if (error) throw error;
+        // Search careers
+        supabase
+          .from('careers')
+          .select('*')
+          .eq('complete_career', true)
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `keywords.cs.{${value}},` +
+            `required_skills.cs.{${value}},` +
+            `required_tools.cs.{${value}}`
+          )
+          .limit(5),
 
-      console.log('Search results:', data);
-      setSearchResults(data || []);
+        // Search majors
+        supabase
+          .from('majors')
+          .select('*')
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `learning_objectives.cs.{${value}},` +
+            `common_courses.cs.{${value}},` +
+            `skill_match.cs.{${value}},` +
+            `tools_knowledge.cs.{${value}}`
+          )
+          .limit(5)
+      ]);
+
+      if (mentorsResponse.error) throw mentorsResponse.error;
+      if (careersResponse.error) throw careersResponse.error;
+      if (majorsResponse.error) throw majorsResponse.error;
+
+      const combinedResults = [
+        ...(mentorsResponse.data || []).map(mentor => ({
+          ...mentor,
+          type: 'mentor',
+          title: `${mentor.first_name} ${mentor.last_name}`,
+          description: mentor.bio || mentor.position
+        })),
+        ...(careersResponse.data || []).map(career => ({
+          ...career,
+          type: 'career'
+        })),
+        ...(majorsResponse.data || []).map(major => ({
+          ...major,
+          type: 'major'
+        }))
+      ];
+
+      console.log('Search results:', combinedResults);
+      setSearchResults(combinedResults);
       
       // Only track search if user is authenticated
       if (session?.user?.id) {
-        await trackSearch(value, data?.length || 0);
+        await trackSearch(value, combinedResults.length);
       }
     } catch (error) {
       console.error('Error in search:', error);
@@ -121,7 +171,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           onChange={handleSearchChange}
           onFocus={() => setIsFocused(true)}
           className={className}
-          placeholder={placeholder}
+          placeholder={placeholder || "Search mentors, careers, or majors..."}
         />
       </div>
       
