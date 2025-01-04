@@ -7,6 +7,8 @@ import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface SearchBarProps {
   className?: string;
@@ -147,13 +149,14 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   };
 
   const handleClickOutside = (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const isSearchContainer = target.closest('.search-container');
-    const isSearchResults = target.closest('.search-results');
-    
-    if (!isSearchContainer && !isSearchResults) {
-      setIsFocused(false);
-    }
+    // Do nothing when clicking outside - we want the search results to stay open
+    return;
+  };
+
+  const handleCloseSearch = () => {
+    setIsFocused(false);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   useEffect(() => {
@@ -176,22 +179,34 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       </div>
       
       {isFocused && (
-        <div className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden p-4">
-          {isLoading ? (
-            <div className="text-center py-4 text-muted-foreground">
-              Searching...
+        <div className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 hover:bg-accent/80"
+              onClick={handleCloseSearch}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <div className="p-4">
+              {isLoading ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  Searching...
+                </div>
+              ) : searchQuery.length < 3 ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  Type at least 3 characters to search...
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  No results found
+                </div>
+              ) : (
+                <MentorSearchResults results={searchResults} />
+              )}
             </div>
-          ) : searchQuery.length < 3 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              Type at least 3 characters to search...
-            </div>
-          ) : searchResults.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              No results found
-            </div>
-          ) : (
-            <MentorSearchResults results={searchResults} />
-          )}
+          </div>
         </div>
       )}
     </div>
