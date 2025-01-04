@@ -11,6 +11,7 @@ import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useProfileSession } from "@/hooks/useProfileSession";
+import { useNavigate } from "react-router-dom";
 
 interface MentorCardProps {
   id: string;
@@ -35,6 +36,7 @@ export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const { session } = useProfileSession();
+  const navigate = useNavigate();
 
   // Get the first 3 skills and calculate remaining count
   const displaySkills = props.skills?.slice(0, 3) || [];
@@ -45,7 +47,18 @@ export function MentorCard(props: MentorCardProps) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to view mentor profiles",
-        variant: "destructive",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/auth")}
+            className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+          >
+            Login
+          </Button>
+        ),
       });
       return;
     }
