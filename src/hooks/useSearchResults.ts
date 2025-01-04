@@ -35,7 +35,6 @@ export const useSearchResults = () => {
             tools_used,
             keywords,
             fields_of_interest,
-            highest_degree,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
