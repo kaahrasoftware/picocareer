@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
-import { supabase } from "@/integrations/supabase/client";
+import { useSearchQuery } from "@/hooks/useSearchQuery";
 import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const { session } = useAuthSession();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { searchMentors, searchCareers, searchMajors } = useSearchQuery();
 
   const handleSearch = async (value: string) => {
     if (value.length < 3) {
@@ -34,73 +35,9 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
 
     try {
       const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
-        // Search mentors with expanded fields
-        supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            avatar_url,
-            position,
-            location,
-            bio,
-            skills,
-            tools_used,
-            keywords,
-            fields_of_interest,
-            highest_degree,
-            company:companies(name),
-            school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title)
-          `)
-          .eq('user_type', 'mentor')
-          .or(
-            `first_name.ilike.%${value}%,` +
-            `last_name.ilike.%${value}%,` +
-            `full_name.ilike.%${value}%,` +
-            `bio.ilike.%${value}%,` +
-            `location.ilike.%${value}%,` +
-            `highest_degree.ilike.%${value}%,` +
-            `companies.name.ilike.%${value}%,` +
-            `schools.name.ilike.%${value}%,` +
-            `majors.title.ilike.%${value}%,` +
-            `careers.title.ilike.%${value}%`
-          )
-          .or(`skills.cs.{${value.toLowerCase()}}`)
-          .or(`tools_used.cs.{${value.toLowerCase()}}`)
-          .or(`keywords.cs.{${value.toLowerCase()}}`)
-          .or(`fields_of_interest.cs.{${value.toLowerCase()}}`)
-          .limit(5),
-
-        // Search careers
-        supabase
-          .from('careers')
-          .select('*')
-          .eq('complete_career', true)
-          .or(
-            `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%`
-          )
-          .or(`keywords.cs.{${value.toLowerCase()}}`)
-          .or(`required_skills.cs.{${value.toLowerCase()}}`)
-          .or(`required_tools.cs.{${value.toLowerCase()}}`)
-          .limit(5),
-
-        // Search majors
-        supabase
-          .from('majors')
-          .select('*')
-          .or(
-            `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%`
-          )
-          .or(`learning_objectives.cs.{${value.toLowerCase()}}`)
-          .or(`common_courses.cs.{${value.toLowerCase()}}`)
-          .or(`skill_match.cs.{${value.toLowerCase()}}`)
-          .or(`tools_knowledge.cs.{${value.toLowerCase()}}`)
-          .limit(5)
+        searchMentors(value),
+        searchCareers(value),
+        searchMajors(value)
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;
@@ -127,7 +64,6 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       console.log('Search results:', combinedResults);
       setSearchResults(combinedResults);
       
-      // Only track search if user is authenticated
       if (session?.user?.id) {
         await trackSearch(value, combinedResults.length);
       }
@@ -143,7 +79,6 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     }
   };
 
-  // Use debounce for search
   const debouncedSearch = useDebounce(handleSearch, 300);
 
   const handleSearchChange = (value: string) => {
