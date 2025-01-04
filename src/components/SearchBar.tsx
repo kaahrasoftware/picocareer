@@ -56,11 +56,17 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%,careers.title.ilike.%${value}%`)
-          .or(`skills.cs.{${value}}`)
-          .or(`tools_used.cs.{${value}}`)
-          .or(`keywords.cs.{${value}}`)
-          .or(`fields_of_interest.cs.{${value}}`)
+          .or(
+            `first_name.ilike.%${value}%,` +
+            `last_name.ilike.%${value}%,` +
+            `full_name.ilike.%${value}%,` +
+            `bio.ilike.%${value}%,` +
+            `location.ilike.%${value}%,` +
+            `skills.cs.{${value.toLowerCase()}},` +
+            `tools_used.cs.{${value.toLowerCase()}},` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `fields_of_interest.cs.{${value.toLowerCase()}}`
+          )
           .limit(5),
 
         // Search careers
@@ -68,21 +74,27 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .from('careers')
           .select('*')
           .eq('complete_career', true)
-          .or(`title.ilike.%${value}%,description.ilike.%${value}%`)
-          .or(`keywords.cs.{${value}}`)
-          .or(`required_skills.cs.{${value}}`)
-          .or(`required_tools.cs.{${value}}`)
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `required_skills.cs.{${value.toLowerCase()}},` +
+            `required_tools.cs.{${value.toLowerCase()}}`
+          )
           .limit(5),
 
         // Search majors
         supabase
           .from('majors')
           .select('*')
-          .or(`title.ilike.%${value}%,description.ilike.%${value}%`)
-          .or(`learning_objectives.cs.{${value}}`)
-          .or(`common_courses.cs.{${value}}`)
-          .or(`skill_match.cs.{${value}}`)
-          .or(`tools_knowledge.cs.{${value}}`)
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `learning_objectives.cs.{${value.toLowerCase()}},` +
+            `common_courses.cs.{${value.toLowerCase()}},` +
+            `skill_match.cs.{${value.toLowerCase()}},` +
+            `tools_knowledge.cs.{${value.toLowerCase()}}`
+          )
           .limit(5)
       ]);
 
