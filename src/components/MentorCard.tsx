@@ -46,7 +46,7 @@ export function MentorCard(props: MentorCardProps) {
     if (!session) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to view mentor profiles",
+        description: "Join our community to connect with amazing mentors and unlock your career potential!",
         variant: "default",
         className: "bg-green-50 border-green-200",
         action: (
