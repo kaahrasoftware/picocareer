@@ -37,11 +37,11 @@ export const searchMentors = async (value: string) => {
     .or(`tools_used.cs.{${searchValue}}`)
     .or(`keywords.cs.{${searchValue}}`)
     .or(`fields_of_interest.cs.{${searchValue}}`)
-    // Join related tables and search in their text fields
-    .or(`company.name.ilike.%${searchValue}%`)
-    .or(`school.name.ilike.%${searchValue}%`)
-    .or(`academic_major.title.ilike.%${searchValue}%`)
-    .or(`career.title.ilike.%${searchValue}%`)
+    // Join related tables and search in their text fields using proper aliases
+    .or(`companies.name.ilike.%${searchValue}%`)
+    .or(`schools.name.ilike.%${searchValue}%`)
+    .or(`majors.title.ilike.%${searchValue}%`)
+    .or(`careers.title.ilike.%${searchValue}%`)
     .limit(5);
 };
 
