@@ -62,10 +62,10 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%,` +
-            `skills.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `tools_used.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `keywords.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `fields_of_interest.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%`
+            `skills.cs.{${value.toLowerCase()}},` +
+            `tools_used.cs.{${value.toLowerCase()}},` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `fields_of_interest.cs.{${value.toLowerCase()}}`
           )
           .limit(5),
 
@@ -77,9 +77,9 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `keywords.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `required_skills.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `required_tools.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%`
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `required_skills.cs.{${value.toLowerCase()}},` +
+            `required_tools.cs.{${value.toLowerCase()}}`
           )
           .limit(5),
 
@@ -90,10 +90,10 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `learning_objectives.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `common_courses.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `skill_match.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%,` +
-            `tools_knowledge.cs.{${value.toLowerCase()}}.ilike.%${value.toLowerCase()}%`
+            `learning_objectives.cs.{${value.toLowerCase()}},` +
+            `common_courses.cs.{${value.toLowerCase()}},` +
+            `skill_match.cs.{${value.toLowerCase()}},` +
+            `tools_knowledge.cs.{${value.toLowerCase()}}`
           )
           .limit(5)
       ]);
