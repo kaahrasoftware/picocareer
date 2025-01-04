@@ -29,7 +29,10 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = (result: SearchResult, event: React.MouseEvent) => {
+    // Stop event propagation to prevent it from bubbling up
+    event.stopPropagation();
+    
     switch (result.type) {
       case 'mentor':
         setSelectedMentorId(result.id);
@@ -60,7 +63,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
-                onClick={() => handleResultClick(result)}
+                onClick={(e) => handleResultClick(result, e)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-12 w-12 border-2 border-picocareer-primary/20">
