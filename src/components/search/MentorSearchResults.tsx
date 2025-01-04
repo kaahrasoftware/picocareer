@@ -30,7 +30,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const MENTORS_PER_PAGE = 8;
+  const MENTORS_PER_PAGE = 4;
 
   const handleResultClick = (result: SearchResult) => {
     switch (result.type) {
