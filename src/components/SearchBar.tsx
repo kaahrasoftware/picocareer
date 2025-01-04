@@ -2,131 +2,20 @@ import { useState, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
-import { supabase } from "@/integrations/supabase/client";
-import { useSearchAnalytics } from "@/hooks/useSearchAnalytics";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useSearchData } from "@/hooks/useSearchData";
 
 interface SearchBarProps {
   className?: string;
   placeholder?: string;
 }
 
-export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
+export const SearchBar = ({ 
+  className = "", 
+  placeholder = "Search mentors, careers, or majors..." 
+}: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { trackSearch } = useSearchAnalytics();
-  const { session } = useAuthSession();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  const handleSearch = async (value: string) => {
-    if (value.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsLoading(true);
-    console.log('Fetching results for query:', value);
-
-    try {
-      const searchValue = value.toLowerCase();
-
-      const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
-        // Search mentors
-        supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            avatar_url,
-            position,
-            location,
-            bio,
-            skills,
-            tools_used,
-            keywords,
-            fields_of_interest,
-            highest_degree,
-            company:companies(name),
-            school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title)
-          `)
-          .eq('user_type', 'mentor')
-          .or(`first_name.ilike.%${searchValue}%,last_name.ilike.%${searchValue}%,full_name.ilike.%${searchValue}%,bio.ilike.%${searchValue}%,location.ilike.%${searchValue}%`)
-          .contains('skills', [searchValue])
-          .contains('tools_used', [searchValue])
-          .contains('keywords', [searchValue])
-          .contains('fields_of_interest', [searchValue])
-          .limit(5),
-
-        // Search careers
-        supabase
-          .from('careers')
-          .select('*')
-          .eq('complete_career', true)
-          .or(`title.ilike.%${searchValue}%,description.ilike.%${searchValue}%`)
-          .contains('keywords', [searchValue])
-          .contains('required_skills', [searchValue])
-          .contains('required_tools', [searchValue])
-          .limit(5),
-
-        // Search majors
-        supabase
-          .from('majors')
-          .select('*')
-          .or(`title.ilike.%${searchValue}%,description.ilike.%${searchValue}%`)
-          .contains('learning_objectives', [searchValue])
-          .contains('common_courses', [searchValue])
-          .contains('skill_match', [searchValue])
-          .contains('tools_knowledge', [searchValue])
-          .limit(5)
-      ]);
-
-      if (mentorsResponse.error) throw mentorsResponse.error;
-      if (careersResponse.error) throw careersResponse.error;
-      if (majorsResponse.error) throw majorsResponse.error;
-
-      const combinedResults = [
-        ...(mentorsResponse.data || []).map(mentor => ({
-          ...mentor,
-          type: 'mentor',
-          title: `${mentor.first_name} ${mentor.last_name}`,
-          description: mentor.bio || mentor.position
-        })),
-        ...(careersResponse.data || []).map(career => ({
-          ...career,
-          type: 'career'
-        })),
-        ...(majorsResponse.data || []).map(major => ({
-          ...major,
-          type: 'major'
-        }))
-      ];
-
-      console.log('Search results:', combinedResults);
-      setSearchResults(combinedResults);
-      
-      // Only track search if user is authenticated
-      if (session?.user?.id) {
-        await trackSearch(value, combinedResults.length);
-      }
-    } catch (error) {
-      console.error('Error in search:', error);
-      toast({
-        title: "Search Error",
-        description: "Failed to fetch search results. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { searchResults, isLoading, handleSearch } = useSearchData();
 
   // Use debounce for search
   const debouncedSearch = useDebounce(handleSearch, 300);
@@ -161,7 +50,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           onChange={handleSearchChange}
           onFocus={() => setIsFocused(true)}
           className={className}
-          placeholder={placeholder || "Search mentors, careers, or majors..."}
+          placeholder={placeholder}
         />
       </div>
       
