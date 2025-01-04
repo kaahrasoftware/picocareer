@@ -9,6 +9,9 @@ import { MajorSalary } from "./major/MajorSalary";
 import { MajorSkillsList } from "./major/MajorSkillsList";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useProfileSession } from "@/hooks/useProfileSession";
 
 interface MentorCardProps {
   id: string;
@@ -31,10 +34,26 @@ interface MentorCardProps {
 
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { session } = useProfileSession();
 
   // Get the first 3 skills and calculate remaining count
   const displaySkills = props.skills?.slice(0, 3) || [];
   const remainingCount = props.skills ? props.skills.length - 3 : 0;
+
+  const handleViewProfile = () => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to view mentor profiles",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    setDialogOpen(true);
+  };
 
   return (
     <>
@@ -120,7 +139,7 @@ export function MentorCard(props: MentorCardProps) {
             <Button 
               variant="outline" 
               className="w-full bg-background hover:bg-muted/50 transition-colors"
-              onClick={() => setDialogOpen(true)}
+              onClick={handleViewProfile}
             >
               View Profile
             </Button>
