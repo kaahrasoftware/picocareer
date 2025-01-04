@@ -48,10 +48,10 @@ export const useSearchResults = () => {
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%`
           )
-          .or(`skills.cs.{${value.toLowerCase()}}`)
-          .or(`tools_used.cs.{${value.toLowerCase()}}`)
-          .or(`keywords.cs.{${value.toLowerCase()}}`)
-          .or(`fields_of_interest.cs.{${value.toLowerCase()}}`),
+          .or(`skills.cs.{${value}}`)
+          .or(`tools_used.cs.{${value}}`)
+          .or(`keywords.cs.{${value}}`)
+          .or(`fields_of_interest.cs.{${value}}`),
 
         // Search careers
         supabase
@@ -68,12 +68,12 @@ export const useSearchResults = () => {
             `industry.ilike.%${value}%,` +
             `job_outlook.ilike.%${value}%`
           )
-          .or(`careers_to_consider_switching_to.cs.{${value.toLowerCase()}}`)
-          .or(`transferable_skills.cs.{${value.toLowerCase()}}`)
-          .or(`keywords.cs.{${value.toLowerCase()}}`)
-          .or(`required_tools.cs.{${value.toLowerCase()}}`)
-          .or(`required_skills.cs.{${value.toLowerCase()}}`)
-          .or(`academic_majors.cs.{${value.toLowerCase()}}`),
+          .or(`careers_to_consider_switching_to.cs.{${value}}`)
+          .or(`transferable_skills.cs.{${value}}`)
+          .or(`keywords.cs.{${value}}`)
+          .or(`required_tools.cs.{${value}}`)
+          .or(`required_skills.cs.{${value}}`)
+          .or(`academic_majors.cs.{${value}}`),
 
         // Search majors
         supabase
@@ -83,16 +83,22 @@ export const useSearchResults = () => {
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%`
           )
-          .or(`learning_objectives.cs.{${value.toLowerCase()}}`)
-          .or(`common_courses.cs.{${value.toLowerCase()}}`)
-          .or(`skill_match.cs.{${value.toLowerCase()}}`)
-          .or(`tools_knowledge.cs.{${value.toLowerCase()}}`)
-          .or(`career_opportunities.cs.{${value.toLowerCase()}}`)
+          .or(`learning_objectives.cs.{${value}}`)
+          .or(`common_courses.cs.{${value}}`)
+          .or(`skill_match.cs.{${value}}`)
+          .or(`tools_knowledge.cs.{${value}}`)
+          .or(`career_opportunities.cs.{${value}}`)
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;
       if (careersResponse.error) throw careersResponse.error;
       if (majorsResponse.error) throw majorsResponse.error;
+
+      console.log('Search responses:', {
+        mentors: mentorsResponse.data,
+        careers: careersResponse.data,
+        majors: majorsResponse.data
+      });
 
       const combinedResults = [
         ...(mentorsResponse.data || []).map(mentor => ({
@@ -111,7 +117,7 @@ export const useSearchResults = () => {
         }))
       ];
 
-      console.log('Search results:', combinedResults);
+      console.log('Combined search results:', combinedResults);
       setSearchResults(combinedResults);
       
       // Only track search if user is authenticated
