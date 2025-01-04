@@ -23,7 +23,7 @@ export const useSearchQuery = () => {
         career:careers!profiles_position_fkey(title)
       `)
       .eq('user_type', 'mentor')
-      .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%,highest_degree.ilike.%${value}%`)
+      .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%`)
       .or(`skills.cs.{${value.toLowerCase()}},tools_used.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},fields_of_interest.cs.{${value.toLowerCase()}}`)
       .limit(5);
   };
