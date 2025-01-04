@@ -2,29 +2,30 @@ import type { Career } from "./database/careers";
 import type { Major } from "./database/majors";
 import type { Profile } from "./database/profiles";
 
-export interface BaseSearchResult {
+interface BaseSearchResult {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   type: "career" | "major" | "mentor";
 }
 
 export interface CareerSearchResult extends BaseSearchResult {
   type: "career";
-  salary_range?: string;
+  salary_range: string | null;
 }
 
 export interface MajorSearchResult extends BaseSearchResult {
   type: "major";
-  degree_levels?: string[];
-  career_opportunities?: string[];
+  degree_levels: string[] | null;
+  career_opportunities: string[] | null;
+  common_courses: string[] | null;
 }
 
 export interface MentorSearchResult extends BaseSearchResult {
   type: "mentor";
-  avatar_url?: string;
-  position?: string;
-  top_mentor?: boolean;
+  avatar_url: string | null;
+  position: string | null;
+  top_mentor: boolean | null;
 }
 
 export type SearchResult = CareerSearchResult | MajorSearchResult | MentorSearchResult;
