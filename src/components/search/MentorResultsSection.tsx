@@ -5,7 +5,7 @@ import type { SearchResult } from "@/types/search";
 import { isMentorResult } from "@/types/search";
 import { useState } from "react";
 import { BlogPagination } from "@/components/blog/BlogPagination";
-import { Award } from "lucide-react";
+import { Award, Building2, MapPin } from "lucide-react";
 
 interface MentorResultsSectionProps {
   mentors: SearchResult[];

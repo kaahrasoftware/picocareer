@@ -11,12 +11,7 @@ interface CareerResultsSectionProps {
 export const CareerResultsSection = ({ careers, onSelectCareer }: CareerResultsSectionProps) => {
   const validCareers = careers.filter(isCareerResult);
 
-  if (!validCareers.length) return (
-    <div className="px-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
-      <p className="text-sm text-muted-foreground">No matching careers found</p>
-    </div>
-  );
+  if (!validCareers.length) return null;
 
   const shouldUseGrid = validCareers.length > 4;
 

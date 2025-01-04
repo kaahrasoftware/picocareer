@@ -13,12 +13,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
   const [selectedMajor, setSelectedMajor] = useState<SearchResult | null>(null);
   const validMajors = majors.filter(isMajorResult);
 
-  if (!validMajors.length) return (
-    <div className="px-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
-      <p className="text-sm text-muted-foreground">No matching majors found</p>
-    </div>
-  );
+  if (!validMajors.length) return null;
 
   const shouldUseGrid = validMajors.length > 4;
 
