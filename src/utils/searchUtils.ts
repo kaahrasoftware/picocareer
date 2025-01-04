@@ -32,11 +32,16 @@ export const searchMentors = async (value: string) => {
       `bio.ilike.%${searchValue}%,` +
       `location.ilike.%${searchValue}%`
     )
+    // Search in array fields using containment
     .or(`skills.cs.{${searchValue}}`)
     .or(`tools_used.cs.{${searchValue}}`)
     .or(`keywords.cs.{${searchValue}}`)
     .or(`fields_of_interest.cs.{${searchValue}}`)
-    .or(`languages.cs.{${searchValue}}`)
+    // Join related tables and search in their text fields
+    .or(`company.name.ilike.%${searchValue}%`)
+    .or(`school.name.ilike.%${searchValue}%`)
+    .or(`academic_major.title.ilike.%${searchValue}%`)
+    .or(`career.title.ilike.%${searchValue}%`)
     .limit(5);
 };
 
