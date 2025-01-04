@@ -54,7 +54,14 @@ export const SearchResultsContainer = ({
                 <MentorSearchResults results={mentorResults} />
               )}
               {careerResults.length > 0 && (
-                <CareerResultsSection careers={careerResults} />
+                <CareerResultsSection 
+                  careers={careerResults} 
+                  onSelectCareer={(id) => {
+                    // Handle career selection
+                    console.log('Selected career:', id);
+                    // You might want to open a dialog or navigate to a career details page
+                  }}
+                />
               )}
               {majorResults.length > 0 && (
                 <MajorResultsSection majors={majorResults} />
