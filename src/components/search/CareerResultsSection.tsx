@@ -5,9 +5,10 @@ import type { CareerSearchResult } from "@/types/search";
 
 interface CareerResultsSectionProps {
   careers: CareerSearchResult[];
+  onSelectCareer: (id: string) => void;
 }
 
-export const CareerResultsSection = ({ careers }: CareerResultsSectionProps) => {
+export const CareerResultsSection = ({ careers, onSelectCareer }: CareerResultsSectionProps) => {
   return (
     <div className="px-4">
       <h3 className="text-lg font-semibold mb-3 text-foreground">
@@ -18,6 +19,7 @@ export const CareerResultsSection = ({ careers }: CareerResultsSectionProps) => 
           <Card 
             key={career.id}
             className="flex-shrink-0 flex flex-col p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+            onClick={() => onSelectCareer(career.id)}
           >
             <div className="flex items-center gap-2 mb-2">
               <Briefcase className="h-4 w-4" />
