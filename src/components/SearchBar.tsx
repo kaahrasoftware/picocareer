@@ -34,7 +34,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
 
     try {
       const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
-        // Search mentors
+        // Search mentors with expanded fields
         supabase
           .from('profiles')
           .select(`
@@ -50,6 +50,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             keywords,
             fields_of_interest,
             highest_degree,
+            languages,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
@@ -65,7 +66,12 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             `skills.cs.{${value.toLowerCase()}},` +
             `tools_used.cs.{${value.toLowerCase()}},` +
             `keywords.cs.{${value.toLowerCase()}},` +
-            `fields_of_interest.cs.{${value.toLowerCase()}}`
+            `fields_of_interest.cs.{${value.toLowerCase()}},` +
+            `languages.cs.{${value.toLowerCase()}},` +
+            `companies.name.ilike.%${value}%,` +
+            `schools.name.ilike.%${value}%,` +
+            `majors.title.ilike.%${value}%,` +
+            `careers.title.ilike.%${value}%`
           )
           .limit(5),
 
@@ -107,7 +113,11 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           ...mentor,
           type: 'mentor',
           title: `${mentor.first_name} ${mentor.last_name}`,
-          description: mentor.bio || mentor.position
+          description: mentor.bio || mentor.position,
+          company_name: mentor.company?.name,
+          school_name: mentor.school?.name,
+          academic_major_title: mentor.academic_major?.title,
+          career_title: mentor.career?.title
         })),
         ...(careersResponse.data || []).map(career => ({
           ...career,
