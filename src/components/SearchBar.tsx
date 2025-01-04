@@ -71,7 +71,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           )
           .limit(5),
 
-        // Search careers
+        // Search careers with expanded fields
         supabase
           .from('careers')
           .select('*')
@@ -79,9 +79,18 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
+            `important_note.ilike.%${value}%,` +
+            `stress_levels.ilike.%${value}%,` +
+            `careers_to_consider_switching_to.cs.{${value.toLowerCase()}},` +
+            `transferable_skills.cs.{${value.toLowerCase()}},` +
             `keywords.cs.{${value.toLowerCase()}},` +
+            `growth_potential.ilike.%${value}%,` +
+            `work_environment.ilike.%${value}%,` +
+            `industry.ilike.%${value}%,` +
+            `job_outlook.ilike.%${value}%,` +
+            `required_tools.cs.{${value.toLowerCase()}},` +
             `required_skills.cs.{${value.toLowerCase()}},` +
-            `required_tools.cs.{${value.toLowerCase()}}`
+            `academic_majors.cs.{${value.toLowerCase()}}`
           )
           .limit(5),
 
