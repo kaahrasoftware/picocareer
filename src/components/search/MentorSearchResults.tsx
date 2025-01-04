@@ -15,6 +15,7 @@ interface SearchResult {
   degree_levels?: string[];
   company?: { name: string } | null;
   position?: string;
+  career?: { title: string } | null;
 }
 
 interface MentorSearchResultsProps {
@@ -64,8 +65,8 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-picocareer-dark truncate">{result.title}</p>
-                    {result.position && (
-                      <p className="text-sm text-muted-foreground truncate">{result.position}</p>
+                    {result.career?.title && (
+                      <p className="text-sm text-muted-foreground truncate">{result.career.title}</p>
                     )}
                   </div>
                   {result.top_mentor && (
