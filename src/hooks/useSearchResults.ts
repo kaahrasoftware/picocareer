@@ -41,8 +41,9 @@ export const useSearchResults = () => {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%,company.name.ilike.%${value}%,school.name.ilike.%${value}%,career.title.ilike.%${value}%`)
-          .or(`skills.cs.{${value.toLowerCase()}}::text[],tools_used.cs.{${value.toLowerCase()}}::text[],keywords.cs.{${value.toLowerCase()}}::text[],fields_of_interest.cs.{${value.toLowerCase()}}::text[]`),
+          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%`)
+          .or(`skills.cs.{${value.toLowerCase()}},tools_used.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},fields_of_interest.cs.{${value.toLowerCase()}}`)
+          .or(`company.name.ilike.%${value}%,school.name.ilike.%${value}%,career.title.ilike.%${value}%`),
 
         // Search careers
         supabase
@@ -50,14 +51,14 @@ export const useSearchResults = () => {
           .select('*')
           .eq('complete_career', true)
           .or(`title.ilike.%${value}%,description.ilike.%${value}%,important_note.ilike.%${value}%,stress_levels.ilike.%${value}%,growth_potential.ilike.%${value}%,work_environment.ilike.%${value}%,industry.ilike.%${value}%,job_outlook.ilike.%${value}%`)
-          .or(`careers_to_consider_switching_to.cs.{${value.toLowerCase()}}::text[],transferable_skills.cs.{${value.toLowerCase()}}::text[],keywords.cs.{${value.toLowerCase()}}::text[],required_tools.cs.{${value.toLowerCase()}}::text[],required_skills.cs.{${value.toLowerCase()}}::text[],academic_majors.cs.{${value.toLowerCase()}}::text[]`),
+          .or(`careers_to_consider_switching_to.cs.{${value.toLowerCase()}},transferable_skills.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},required_tools.cs.{${value.toLowerCase()}},required_skills.cs.{${value.toLowerCase()}},academic_majors.cs.{${value.toLowerCase()}}`),
 
         // Search majors
         supabase
           .from('majors')
           .select('*')
           .or(`title.ilike.%${value}%,description.ilike.%${value}%`)
-          .or(`learning_objectives.cs.{${value.toLowerCase()}}::text[],common_courses.cs.{${value.toLowerCase()}}::text[],skill_match.cs.{${value.toLowerCase()}}::text[],tools_knowledge.cs.{${value.toLowerCase()}}::text[]`)
+          .or(`learning_objectives.cs.{${value.toLowerCase()}},common_courses.cs.{${value.toLowerCase()}},skill_match.cs.{${value.toLowerCase()}},tools_knowledge.cs.{${value.toLowerCase()}}`)
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;
