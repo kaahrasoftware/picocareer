@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, Briefcase, GraduationCap } from "lucide-react";
+import { Award, Building2, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SearchResult {
@@ -13,6 +13,8 @@ interface SearchResult {
   top_mentor?: boolean;
   salary_range?: string;
   degree_levels?: string[];
+  company?: { name: string } | null;
+  position?: string;
 }
 
 interface MentorSearchResultsProps {
@@ -43,38 +45,42 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Mentors Section */}
       {groupedResults.mentors.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-3">Mentors</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Mentors</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {groupedResults.mentors.map((result) => (
               <Card
                 key={result.id}
-                className="flex items-center p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
                 onClick={() => handleResultClick(result)}
               >
-                <Avatar className="h-10 w-10 mr-3">
-                  <AvatarImage src={result.avatar_url} alt={result.title} />
-                  <AvatarFallback>{result.title[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium truncate">{result.title}</p>
-                    {result.top_mentor && (
-                      <Badge className="bg-primary/80">
-                        <Award className="h-3 w-3 mr-1" />
-                        Top Mentor
-                      </Badge>
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="h-12 w-12 border-2 border-picocareer-primary/20">
+                    <AvatarImage src={result.avatar_url} alt={result.title} />
+                    <AvatarFallback>{result.title?.[0] || "?"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-picocareer-dark truncate">{result.title}</p>
+                    {result.position && (
+                      <p className="text-sm text-muted-foreground truncate">{result.position}</p>
                     )}
                   </div>
-                  {result.description && (
-                    <p className="text-sm text-muted-foreground truncate">
-                      {result.description}
-                    </p>
+                  {result.top_mentor && (
+                    <Badge className="bg-picocareer-primary/90 hover:bg-picocareer-primary">
+                      <Award className="h-3 w-3 mr-1" />
+                      Top
+                    </Badge>
                   )}
                 </div>
+                {result.company?.name && (
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-auto">
+                    <Building2 className="h-4 w-4" />
+                    <span className="truncate">{result.company.name}</span>
+                  </div>
+                )}
               </Card>
             ))}
           </div>
@@ -84,25 +90,27 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
       {/* Careers Section */}
       {groupedResults.careers.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-3">Careers</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Careers</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {groupedResults.careers.map((result) => (
               <Card
                 key={result.id}
-                className="flex items-center p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
                 onClick={() => handleResultClick(result)}
               >
-                <div className="mr-3">
-                  <Briefcase className="h-10 w-10 text-muted-foreground" />
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded-full bg-picocareer-primary/10">
+                    <Building2 className="h-6 w-6 text-picocareer-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-picocareer-dark truncate">{result.title}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{result.title}</p>
-                  {result.salary_range && (
-                    <Badge variant="secondary">
-                      {result.salary_range}
-                    </Badge>
-                  )}
-                </div>
+                {result.salary_range && (
+                  <Badge variant="secondary" className="w-fit mt-auto">
+                    {result.salary_range}
+                  </Badge>
+                )}
               </Card>
             ))}
           </div>
@@ -112,25 +120,27 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
       {/* Majors Section */}
       {groupedResults.majors.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-3">Fields of Study</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Fields of Study</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {groupedResults.majors.map((result) => (
               <Card
                 key={result.id}
-                className="flex items-center p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
                 onClick={() => handleResultClick(result)}
               >
-                <div className="mr-3">
-                  <GraduationCap className="h-10 w-10 text-muted-foreground" />
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded-full bg-picocareer-primary/10">
+                    <GraduationCap className="h-6 w-6 text-picocareer-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-picocareer-dark truncate">{result.title}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{result.title}</p>
-                  {result.degree_levels && result.degree_levels.length > 0 && (
-                    <Badge variant="secondary">
-                      {result.degree_levels.join(', ')}
-                    </Badge>
-                  )}
-                </div>
+                {result.degree_levels && result.degree_levels.length > 0 && (
+                  <Badge variant="secondary" className="w-fit mt-auto">
+                    {result.degree_levels.join(', ')}
+                  </Badge>
+                )}
               </Card>
             ))}
           </div>
