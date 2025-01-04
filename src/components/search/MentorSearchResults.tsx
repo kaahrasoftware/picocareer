@@ -112,7 +112,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
-                onClick={() => handleResultClick(result)}
+                onClick={(e) => handleResultClick(result, e)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 rounded-full bg-picocareer-primary/10">
@@ -142,7 +142,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
-                onClick={() => handleResultClick(result)}
+                onClick={(e) => handleResultClick(result, e)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 rounded-full bg-picocareer-primary/10">
