@@ -49,7 +49,6 @@ export const useSearchResults = () => {
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%,` +
-            `position.ilike.%${value}%,` +
             `highest_degree.ilike.%${value}%,` +
             `skills.cs.{${value.toLowerCase()}},` +
             `tools_used.cs.{${value.toLowerCase()}},` +
@@ -61,7 +60,6 @@ export const useSearchResults = () => {
         supabase
           .from('careers')
           .select('*')
-          .eq('complete_career', true)
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
