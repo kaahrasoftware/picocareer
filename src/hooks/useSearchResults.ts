@@ -53,8 +53,7 @@ export const useSearchResults = () => {
             `tools_used.cs.{${value.toLowerCase()}},` +
             `keywords.cs.{${value.toLowerCase()}},` +
             `fields_of_interest.cs.{${value.toLowerCase()}}`
-          )
-          .limit(5),
+          ),
 
         // Search careers with expanded fields
         supabase
@@ -76,8 +75,7 @@ export const useSearchResults = () => {
             `required_tools.cs.{${value.toLowerCase()}},` +
             `required_skills.cs.{${value.toLowerCase()}},` +
             `academic_majors.cs.{${value.toLowerCase()}}`
-          )
-          .limit(5),
+          ),
 
         // Search majors
         supabase
@@ -91,7 +89,6 @@ export const useSearchResults = () => {
             `skill_match.cs.{${value.toLowerCase()}},` +
             `tools_knowledge.cs.{${value.toLowerCase()}}`
           )
-          .limit(5)
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;
