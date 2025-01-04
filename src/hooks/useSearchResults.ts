@@ -50,7 +50,10 @@ export const useSearchResults = () => {
             `skills.cs.{${value.toLowerCase()}}::text[],` +
             `tools_used.cs.{${value.toLowerCase()}}::text[],` +
             `keywords.cs.{${value.toLowerCase()}}::text[],` +
-            `fields_of_interest.cs.{${value.toLowerCase()}}::text[]`
+            `fields_of_interest.cs.{${value.toLowerCase()}}::text[],` +
+            `companies.name.ilike.%${value}%,` +
+            `schools.name.ilike.%${value}%,` +
+            `careers.title.ilike.%${value}%`
           ),
 
         // Search careers
