@@ -184,7 +184,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-2 hover:bg-accent/80"
+              className="absolute right-2 top-2 hover:bg-red-100 text-red-600 hover:text-red-700"
               onClick={handleCloseSearch}
             >
               <X className="h-4 w-4" />
