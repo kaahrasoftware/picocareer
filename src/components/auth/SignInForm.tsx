@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function SignInForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -29,7 +31,7 @@ export function SignInForm() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.toLowerCase(),
         password: formData.password,
       });
@@ -72,12 +74,18 @@ export function SignInForm() {
         return;
       }
 
+      // Invalidate all queries to force a refresh of data
+      await queryClient.invalidateQueries();
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
       
-      navigate("/");
+      // Add a small delay to ensure the auth state is updated
+      setTimeout(() => {
+        navigate("/");
+      }, 100);
     } catch (error: any) {
       console.error('Sign in error:', error);
       
