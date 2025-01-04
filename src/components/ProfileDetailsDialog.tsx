@@ -164,9 +164,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         open={open} 
         onOpenChange={onOpenChange}
         modal={true}
-        onPointerDownOutside={(e) => {
-          e.preventDefault();
-        }}
       >
         <ProfileDialogContent
           profile={profile}
@@ -176,6 +173,9 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           isOwnProfile={isOwnProfile}
           isMentor={isMentor}
           handleBookSession={handleBookSession}
+          onPointerDownOutside={(e) => {
+            e.preventDefault();
+          }}
         />
       </Dialog>
 
