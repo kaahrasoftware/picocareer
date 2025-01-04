@@ -41,9 +41,17 @@ export const useSearchResults = () => {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%`)
+          .or(
+            `first_name.ilike.%${value}%,` +
+            `last_name.ilike.%${value}%,` +
+            `full_name.ilike.%${value}%,` +
+            `bio.ilike.%${value}%,` +
+            `location.ilike.%${value}%`
+          )
           .or(`skills.cs.{${value.toLowerCase()}},tools_used.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},fields_of_interest.cs.{${value.toLowerCase()}}`)
-          .or(`company.name.ilike.%${value}%,school.name.ilike.%${value}%,career.title.ilike.%${value}%`),
+          .or(`companies.name.ilike.%${value}%`)
+          .or(`schools.name.ilike.%${value}%`)
+          .or(`careers.title.ilike.%${value}%`),
 
         // Search careers
         supabase
