@@ -33,6 +33,8 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     console.log('Fetching results for query:', value);
 
     try {
+      const searchValue = value.toLowerCase();
+
       const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
         // Search mentors
         supabase
@@ -56,17 +58,11 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .or(
-            `lower(first_name).like.%${value.toLowerCase()}%,` +
-            `lower(last_name).like.%${value.toLowerCase()}%,` +
-            `lower(full_name).like.%${value.toLowerCase()}%,` +
-            `lower(bio).like.%${value.toLowerCase()}%,` +
-            `lower(location).like.%${value.toLowerCase()}%,` +
-            `skills.cs.{${value.toLowerCase()}},` +
-            `tools_used.cs.{${value.toLowerCase()}},` +
-            `keywords.cs.{${value.toLowerCase()}},` +
-            `fields_of_interest.cs.{${value.toLowerCase()}}`
-          )
+          .or(`first_name.ilike.%${searchValue}%,last_name.ilike.%${searchValue}%,full_name.ilike.%${searchValue}%,bio.ilike.%${searchValue}%,location.ilike.%${searchValue}%`)
+          .contains('skills', [searchValue])
+          .contains('tools_used', [searchValue])
+          .contains('keywords', [searchValue])
+          .contains('fields_of_interest', [searchValue])
           .limit(5),
 
         // Search careers
@@ -74,27 +70,21 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .from('careers')
           .select('*')
           .eq('complete_career', true)
-          .or(
-            `lower(title).like.%${value.toLowerCase()}%,` +
-            `lower(description).like.%${value.toLowerCase()}%,` +
-            `keywords.cs.{${value.toLowerCase()}},` +
-            `required_skills.cs.{${value.toLowerCase()}},` +
-            `required_tools.cs.{${value.toLowerCase()}}`
-          )
+          .or(`title.ilike.%${searchValue}%,description.ilike.%${searchValue}%`)
+          .contains('keywords', [searchValue])
+          .contains('required_skills', [searchValue])
+          .contains('required_tools', [searchValue])
           .limit(5),
 
         // Search majors
         supabase
           .from('majors')
           .select('*')
-          .or(
-            `lower(title).like.%${value.toLowerCase()}%,` +
-            `lower(description).like.%${value.toLowerCase()}%,` +
-            `learning_objectives.cs.{${value.toLowerCase()}},` +
-            `common_courses.cs.{${value.toLowerCase()}},` +
-            `skill_match.cs.{${value.toLowerCase()}},` +
-            `tools_knowledge.cs.{${value.toLowerCase()}}`
-          )
+          .or(`title.ilike.%${searchValue}%,description.ilike.%${searchValue}%`)
+          .contains('learning_objectives', [searchValue])
+          .contains('common_courses', [searchValue])
+          .contains('skill_match', [searchValue])
+          .contains('tools_knowledge', [searchValue])
           .limit(5)
       ]);
 
