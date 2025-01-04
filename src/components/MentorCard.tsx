@@ -2,9 +2,13 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, Building2 } from "lucide-react";
+import { Award, Building2, MapPin } from "lucide-react";
+import { MajorDetails } from "./MajorDetails";
+import { MajorHeader } from "./major/MajorHeader";
+import { MajorSalary } from "./major/MajorSalary";
+import { MajorSkillsList } from "./major/MajorSkillsList";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useProfileSession } from "@/hooks/useProfileSession";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +27,9 @@ interface MentorCardProps {
   top_mentor?: boolean;
   position?: string;
   career_title?: string;
+  location?: string;
+  bio?: string;
+  skills?: string[];
 }
 
 export function MentorCard(props: MentorCardProps) {
@@ -30,6 +37,10 @@ export function MentorCard(props: MentorCardProps) {
   const { toast } = useToast();
   const { session } = useProfileSession();
   const navigate = useNavigate();
+
+  // Get the first 3 skills and calculate remaining count
+  const displaySkills = props.skills?.slice(0, 3) || [];
+  const remainingCount = props.skills ? props.skills.length - 3 : 0;
 
   const handleViewProfile = () => {
     if (!session) {
@@ -56,44 +67,93 @@ export function MentorCard(props: MentorCardProps) {
 
   return (
     <>
-      <Card className="group relative overflow-hidden p-6 h-full flex flex-col hover:shadow-md transition-all duration-300">
-        <div className="relative flex flex-col items-center text-center h-full">
-          {/* Profile Picture and Badge Section */}
-          <div className="relative mb-4">
-            <Avatar className="w-20 h-20">
-              <AvatarImage src={props.imageUrl} alt={props.name} />
-              <AvatarFallback>{props.name[0]}</AvatarFallback>
-            </Avatar>
-            {props.top_mentor && (
-              <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
-                <Award className="h-3 w-3" />
-                Top Mentor
-              </Badge>
-            )}
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative flex flex-col h-full">
+          {/* Header Section with Avatar and Basic Info */}
+          <div className="flex items-start gap-4 mb-4">
+            <ProfileAvatar
+              avatarUrl={props.imageUrl}
+              fallback={props.name[0]}
+              size="md"
+              editable={false}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                {props.top_mentor ? (
+                  <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
+                    <Award className="h-3 w-3" />
+                    Top Mentor
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                    mentor
+                  </Badge>
+                )}
+              </div>
+              <h3 className="font-semibold truncate mb-2 text-left">{props.name}</h3>
+              <p className="text-sm font-medium mb-1 truncate text-foreground/90 text-left">
+                {props.career_title || props.title || "No position set"}
+              </p>
+              <div className="flex flex-col gap-1">
+                {props.company && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
+                    <Building2 className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{props.company}</span>
+                  </div>
+                )}
+                {props.location && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{props.location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Name and Position Section */}
-          <div className="flex-1 min-w-0 mb-4">
-            <h3 className="font-semibold text-lg mb-2">{props.name}</h3>
-            <p className="text-sm font-medium text-foreground/90">
-              {props.career_title || props.title || "No position set"}
-            </p>
-            {props.company && (
-              <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mt-1">
-                <Building2 className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">{props.company}</span>
+          {/* Bio Section */}
+          {props.bio && (
+            <div className="w-full mb-4">
+              <p className="text-sm text-muted-foreground line-clamp-2 text-left">{props.bio}</p>
+            </div>
+          )}
+
+          {/* Skills Section */}
+          {props.skills?.length > 0 && (
+            <div className="w-full mb-4">
+              <div className="flex flex-wrap gap-1.5">
+                {displaySkills.map((skill) => (
+                  <Badge 
+                    key={skill} 
+                    variant="secondary" 
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+                {remainingCount > 0 && (
+                  <Badge 
+                    variant="secondary"
+                    className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+                  >
+                    +{remainingCount} more
+                  </Badge>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Button Section */}
-          <Button 
-            variant="outline" 
-            className="w-full bg-background hover:bg-muted/50 transition-colors"
-            onClick={handleViewProfile}
-          >
-            View Profile
-          </Button>
+          <div className="mt-auto w-full">
+            <Button 
+              variant="outline" 
+              className="w-full bg-background hover:bg-muted/50 transition-colors"
+              onClick={handleViewProfile}
+            >
+              View Profile
+            </Button>
+          </div>
         </div>
       </Card>
 
