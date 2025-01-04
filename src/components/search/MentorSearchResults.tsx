@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, Building2, GraduationCap } from "lucide-react";
+import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SearchResult {
@@ -16,6 +16,7 @@ interface SearchResult {
   company?: { name: string } | null;
   position?: string;
   career?: { title: string } | null;
+  location?: string;
 }
 
 interface MentorSearchResultsProps {
@@ -76,12 +77,20 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
                     </Badge>
                   )}
                 </div>
-                {result.company?.name && (
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-auto">
-                    <Building2 className="h-4 w-4" />
-                    <span className="truncate">{result.company.name}</span>
-                  </div>
-                )}
+                <div className="flex flex-col gap-2 mt-auto">
+                  {result.company?.name && (
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span className="truncate">{result.company.name}</span>
+                    </div>
+                  )}
+                  {result.location && (
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span className="truncate">{result.location}</span>
+                    </div>
+                  )}
+                </div>
               </Card>
             ))}
           </div>
