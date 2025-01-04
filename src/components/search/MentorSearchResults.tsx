@@ -48,7 +48,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
       {groupedResults.mentors.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Mentors</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             {groupedResults.mentors.map((result) => (
               <Card
                 key={result.id}
@@ -85,7 +85,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
       {groupedResults.careers.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Careers</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             {groupedResults.careers.map((result) => (
               <Card
                 key={result.id}
@@ -113,7 +113,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
       {groupedResults.majors.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Fields of Study</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             {groupedResults.majors.map((result) => (
               <Card
                 key={result.id}
