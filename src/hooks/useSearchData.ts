@@ -47,7 +47,6 @@ export function useSearchData(searchTerm: string) {
             full_name,
             avatar_url,
             position,
-            highest_degree,
             skills,
             tools_used,
             keywords,
@@ -104,7 +103,6 @@ export function useSearchData(searchTerm: string) {
         title: mentor.full_name || `${mentor.first_name} ${mentor.last_name}`.trim(),
         description: [
           mentor.position,
-          mentor.highest_degree,
           mentor.location,
           mentor.company?.name,
           mentor.school?.name,
