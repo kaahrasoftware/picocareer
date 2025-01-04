@@ -110,6 +110,7 @@ export function useSearchData(searchTerm: string) {
         ].filter(Boolean).join(' • '),
         avatar_url: mentor.avatar_url,
         position: mentor.position,
+        location: mentor.location,
         top_mentor: mentor.top_mentor
       }));
 
