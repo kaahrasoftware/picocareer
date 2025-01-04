@@ -24,11 +24,7 @@ export const useSearchQuery = () => {
       `)
       .eq('user_type', 'mentor')
       .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%,highest_degree.ilike.%${value}%`)
-      .or(`companies.name.ilike.%${value}%,schools.name.ilike.%${value}%,majors.title.ilike.%${value}%,careers.title.ilike.%${value}%`)
-      .or(`skills.cs.{${value.toLowerCase()}}`)
-      .or(`tools_used.cs.{${value.toLowerCase()}}`)
-      .or(`keywords.cs.{${value.toLowerCase()}}`)
-      .or(`fields_of_interest.cs.{${value.toLowerCase()}}`)
+      .or(`skills.cs.{${value.toLowerCase()}},tools_used.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},fields_of_interest.cs.{${value.toLowerCase()}}`)
       .limit(5);
   };
 
