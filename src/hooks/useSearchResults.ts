@@ -46,12 +46,12 @@ export const useSearchResults = () => {
             `last_name.ilike.%${value}%,` +
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
-            `location.ilike.%${value}%,` +
-            `array(select lower(unnest(skills))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(tools_used))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(keywords))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(fields_of_interest))) @> array[lower('${value}')]`
-          ),
+            `location.ilike.%${value}%`
+          )
+          .or(`skills.cs.{${value.toLowerCase()}}`)
+          .or(`tools_used.cs.{${value.toLowerCase()}}`)
+          .or(`keywords.cs.{${value.toLowerCase()}}`)
+          .or(`fields_of_interest.cs.{${value.toLowerCase()}}`),
 
         // Search careers
         supabase
@@ -66,14 +66,14 @@ export const useSearchResults = () => {
             `growth_potential.ilike.%${value}%,` +
             `work_environment.ilike.%${value}%,` +
             `industry.ilike.%${value}%,` +
-            `job_outlook.ilike.%${value}%,` +
-            `array(select lower(unnest(careers_to_consider_switching_to))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(transferable_skills))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(keywords))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(required_tools))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(required_skills))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(academic_majors))) @> array[lower('${value}')]`
-          ),
+            `job_outlook.ilike.%${value}%`
+          )
+          .or(`careers_to_consider_switching_to.cs.{${value.toLowerCase()}}`)
+          .or(`transferable_skills.cs.{${value.toLowerCase()}}`)
+          .or(`keywords.cs.{${value.toLowerCase()}}`)
+          .or(`required_tools.cs.{${value.toLowerCase()}}`)
+          .or(`required_skills.cs.{${value.toLowerCase()}}`)
+          .or(`academic_majors.cs.{${value.toLowerCase()}}`),
 
         // Search majors
         supabase
@@ -81,13 +81,13 @@ export const useSearchResults = () => {
           .select('*')
           .or(
             `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%,` +
-            `array(select lower(unnest(learning_objectives))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(common_courses))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(skill_match))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(tools_knowledge))) @> array[lower('${value}')],` +
-            `array(select lower(unnest(career_opportunities))) @> array[lower('${value}')]`
+            `description.ilike.%${value}%`
           )
+          .or(`learning_objectives.cs.{${value.toLowerCase()}}`)
+          .or(`common_courses.cs.{${value.toLowerCase()}}`)
+          .or(`skill_match.cs.{${value.toLowerCase()}}`)
+          .or(`tools_knowledge.cs.{${value.toLowerCase()}}`)
+          .or(`career_opportunities.cs.{${value.toLowerCase()}}`)
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;
