@@ -1,15 +1,11 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MentorSearchResults } from "./MentorSearchResults";
-import { CareerResultsSection } from "./CareerResultsSection";
-import { MajorResultsSection } from "./MajorResultsSection";
-import type { SearchResult } from "@/types/search";
-import { isMentorResult, isCareerResult, isMajorResult } from "@/types/search";
 
 interface SearchResultsContainerProps {
   searchQuery: string;
   isLoading: boolean;
-  searchResults: SearchResult[];
+  searchResults: any[];
   onClose: () => void;
 }
 
@@ -19,11 +15,6 @@ export const SearchResultsContainer = ({
   searchResults,
   onClose
 }: SearchResultsContainerProps) => {
-  // Filter results by type
-  const mentorResults = searchResults.filter(isMentorResult);
-  const careerResults = searchResults.filter(isCareerResult);
-  const majorResults = searchResults.filter(isMajorResult);
-
   return (
     <div className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
       <div className="relative">
@@ -49,24 +40,7 @@ export const SearchResultsContainer = ({
               No results found
             </div>
           ) : (
-            <div className="space-y-8">
-              {mentorResults.length > 0 && (
-                <MentorSearchResults results={mentorResults} />
-              )}
-              {careerResults.length > 0 && (
-                <CareerResultsSection 
-                  careers={careerResults} 
-                  onSelectCareer={(id) => {
-                    // Handle career selection
-                    console.log('Selected career:', id);
-                    // You might want to open a dialog or navigate to a career details page
-                  }}
-                />
-              )}
-              {majorResults.length > 0 && (
-                <MajorResultsSection majors={majorResults} />
-              )}
-            </div>
+            <MentorSearchResults results={searchResults} />
           )}
         </div>
       </div>
