@@ -47,10 +47,10 @@ export const useSearchResults = () => {
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%,` +
-            `skills.cs.{${value.toLowerCase()}},` +
-            `tools_used.cs.{${value.toLowerCase()}},` +
-            `keywords.cs.{${value.toLowerCase()}},` +
-            `fields_of_interest.cs.{${value.toLowerCase()}}`
+            `skills.cs.{${value.toLowerCase()}}::text[],` +
+            `tools_used.cs.{${value.toLowerCase()}}::text[],` +
+            `keywords.cs.{${value.toLowerCase()}}::text[],` +
+            `fields_of_interest.cs.{${value.toLowerCase()}}::text[]`
           ),
 
         // Search careers
@@ -63,16 +63,16 @@ export const useSearchResults = () => {
             `description.ilike.%${value}%,` +
             `important_note.ilike.%${value}%,` +
             `stress_levels.ilike.%${value}%,` +
-            `careers_to_consider_switching_to.cs.{${value.toLowerCase()}},` +
-            `transferable_skills.cs.{${value.toLowerCase()}},` +
-            `keywords.cs.{${value.toLowerCase()}},` +
+            `careers_to_consider_switching_to.cs.{${value.toLowerCase()}}::text[],` +
+            `transferable_skills.cs.{${value.toLowerCase()}}::text[],` +
+            `keywords.cs.{${value.toLowerCase()}}::text[],` +
             `growth_potential.ilike.%${value}%,` +
             `work_environment.ilike.%${value}%,` +
             `industry.ilike.%${value}%,` +
             `job_outlook.ilike.%${value}%,` +
-            `required_tools.cs.{${value.toLowerCase()}},` +
-            `required_skills.cs.{${value.toLowerCase()}},` +
-            `academic_majors.cs.{${value.toLowerCase()}}`
+            `required_tools.cs.{${value.toLowerCase()}}::text[],` +
+            `required_skills.cs.{${value.toLowerCase()}}::text[],` +
+            `academic_majors.cs.{${value.toLowerCase()}}::text[]`
           ),
 
         // Search majors
@@ -82,10 +82,10 @@ export const useSearchResults = () => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `learning_objectives.cs.{${value.toLowerCase()}},` +
-            `common_courses.cs.{${value.toLowerCase()}},` +
-            `skill_match.cs.{${value.toLowerCase()}},` +
-            `tools_knowledge.cs.{${value.toLowerCase()}}`
+            `learning_objectives.cs.{${value.toLowerCase()}}::text[],` +
+            `common_courses.cs.{${value.toLowerCase()}}::text[],` +
+            `skill_match.cs.{${value.toLowerCase()}}::text[],` +
+            `tools_knowledge.cs.{${value.toLowerCase()}}::text[]`
           )
       ]);
 
