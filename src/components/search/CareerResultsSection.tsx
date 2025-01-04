@@ -1,53 +1,38 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { SearchResult } from "@/types/search";
-import { isCareerResult } from "@/types/search";
+import { Briefcase } from "lucide-react";
+import type { CareerSearchResult } from "@/types/search";
 
 interface CareerResultsSectionProps {
-  careers: SearchResult[];
-  onSelectCareer: (id: string) => void;
+  careers: CareerSearchResult[];
 }
 
-export const CareerResultsSection = ({ careers, onSelectCareer }: CareerResultsSectionProps) => {
-  const validCareers = careers.filter(isCareerResult);
-
-  if (!validCareers.length) return (
-    <div className="px-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
-      <p className="text-sm text-muted-foreground">No matching careers found</p>
-    </div>
-  );
-
-  const shouldUseGrid = validCareers.length > 4;
-
+export const CareerResultsSection = ({ careers }: CareerResultsSectionProps) => {
   return (
-    <div className="px-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Careers</h3>
-      <div className="w-full">
-        <div className={`${shouldUseGrid 
-          ? 'grid grid-cols-3 gap-4 place-items-center' 
-          : 'flex gap-4 justify-center'}`}
-        >
-          {validCareers.map((career) => (
-            <Card 
-              key={career.id}
-              className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => onSelectCareer(career.id)}
-            >
-              <div className="flex-1 min-w-0 mb-3">
-                <h4 className="font-medium text-sm mb-1">{career.title}</h4>
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {career.description}
-                </p>
-              </div>
-              {career.salary_range && (
-                <Badge variant="secondary" className="self-start">
-                  {career.salary_range}
-                </Badge>
-              )}
-            </Card>
-          ))}
-        </div>
+    <div className="px-4">
+      <h3 className="text-lg font-semibold mb-3 text-foreground">
+        Careers ({careers.length} results)
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {careers.map((career) => (
+          <Card 
+            key={career.id}
+            className="flex-shrink-0 flex flex-col p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Briefcase className="h-4 w-4" />
+              <h4 className="font-medium text-sm">{career.title}</h4>
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+              {career.description}
+            </p>
+            {career.salary_range && (
+              <Badge variant="secondary" className="self-start">
+                {career.salary_range}
+              </Badge>
+            )}
+          </Card>
+        ))}
       </div>
     </div>
   );

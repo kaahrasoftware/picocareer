@@ -1,11 +1,15 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MentorSearchResults } from "./MentorSearchResults";
+import { CareerResultsSection } from "./CareerResultsSection";
+import { MajorResultsSection } from "./MajorResultsSection";
+import type { SearchResult } from "@/types/search";
+import { isMentorResult, isCareerResult, isMajorResult } from "@/types/search";
 
 interface SearchResultsContainerProps {
   searchQuery: string;
   isLoading: boolean;
-  searchResults: any[];
+  searchResults: SearchResult[];
   onClose: () => void;
 }
 
@@ -15,6 +19,11 @@ export const SearchResultsContainer = ({
   searchResults,
   onClose
 }: SearchResultsContainerProps) => {
+  // Filter results by type
+  const mentorResults = searchResults.filter(isMentorResult);
+  const careerResults = searchResults.filter(isCareerResult);
+  const majorResults = searchResults.filter(isMajorResult);
+
   return (
     <div className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
       <div className="relative">
@@ -40,7 +49,17 @@ export const SearchResultsContainer = ({
               No results found
             </div>
           ) : (
-            <MentorSearchResults results={searchResults} />
+            <div className="space-y-8">
+              {mentorResults.length > 0 && (
+                <MentorSearchResults results={mentorResults} />
+              )}
+              {careerResults.length > 0 && (
+                <CareerResultsSection careers={careerResults} />
+              )}
+              {majorResults.length > 0 && (
+                <MajorResultsSection majors={majorResults} />
+              )}
+            </div>
           )}
         </div>
       </div>
