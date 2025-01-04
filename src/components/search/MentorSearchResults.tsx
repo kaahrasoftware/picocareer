@@ -5,6 +5,7 @@ import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { BlogPagination } from "@/components/blog/BlogPagination";
 
 interface SearchResult {
   id: string;
@@ -28,6 +29,8 @@ interface MentorSearchResultsProps {
 export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const MENTORS_PER_PAGE = 8;
 
   const handleResultClick = (result: SearchResult) => {
     switch (result.type) {
@@ -49,14 +52,22 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
     majors: results.filter(r => r.type === 'major')
   };
 
+  // Calculate pagination
+  const startIndex = (currentPage - 1) * MENTORS_PER_PAGE;
+  const endIndex = startIndex + MENTORS_PER_PAGE;
+  const paginatedMentors = groupedResults.mentors.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(groupedResults.mentors.length / MENTORS_PER_PAGE);
+
   return (
     <div className="space-y-8">
       {/* Mentors Section */}
       {groupedResults.mentors.length > 0 && (
         <div>
-          <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Mentors</h3>
+          <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">
+            Mentors ({groupedResults.mentors.length} results)
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {groupedResults.mentors.map((result) => (
+            {paginatedMentors.map((result) => (
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
@@ -97,6 +108,16 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               </Card>
             ))}
           </div>
+
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <BlogPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </div>
       )}
 
