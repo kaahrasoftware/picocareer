@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, Building2 } from "lucide-react";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useProfileSession } from "@/hooks/useProfileSession";
 import { useNavigate } from "react-router-dom";
@@ -60,13 +60,10 @@ export function MentorCard(props: MentorCardProps) {
         <div className="relative flex flex-col items-center text-center h-full">
           {/* Profile Picture and Badge Section */}
           <div className="relative mb-4">
-            <ProfileAvatar
-              avatarUrl={props.imageUrl}
-              fallback={props.name[0]}
-              size="lg"
-              editable={false}
-              className="w-20 h-20"
-            />
+            <Avatar className="w-20 h-20">
+              <AvatarImage src={props.imageUrl} alt={props.name} />
+              <AvatarFallback>{props.name[0]}</AvatarFallback>
+            </Avatar>
             {props.top_mentor && (
               <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
                 <Award className="h-3 w-3" />
