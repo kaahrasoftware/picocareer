@@ -29,10 +29,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
 
-  const handleResultClick = (result: SearchResult, event: React.MouseEvent) => {
-    // Stop event propagation to prevent it from bubbling up
-    event.stopPropagation();
-    
+  const handleResultClick = (result: SearchResult) => {
     switch (result.type) {
       case 'mentor':
         setSelectedMentorId(result.id);
@@ -52,14 +49,8 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
     majors: results.filter(r => r.type === 'major')
   };
 
-  const handleDialogChange = (open: boolean) => {
-    if (!open) {
-      setSelectedMentorId(null);
-    }
-  };
-
   return (
-    <div className="space-y-8" onClick={(e) => e.stopPropagation()}>
+    <div className="space-y-8">
       {/* Mentors Section */}
       {groupedResults.mentors.length > 0 && (
         <div>
@@ -69,7 +60,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
-                onClick={(e) => handleResultClick(result, e)}
+                onClick={() => handleResultClick(result)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-12 w-12 border-2 border-picocareer-primary/20">
@@ -118,7 +109,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
-                onClick={(e) => handleResultClick(result, e)}
+                onClick={() => handleResultClick(result)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 rounded-full bg-picocareer-primary/10">
@@ -148,7 +139,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
-                onClick={(e) => handleResultClick(result, e)}
+                onClick={() => handleResultClick(result)}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 rounded-full bg-picocareer-primary/10">
@@ -174,7 +165,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
         <ProfileDetailsDialog
           userId={selectedMentorId}
           open={!!selectedMentorId}
-          onOpenChange={handleDialogChange}
+          onOpenChange={(open) => !open && setSelectedMentorId(null)}
         />
       )}
     </div>

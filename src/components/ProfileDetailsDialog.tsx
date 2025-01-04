@@ -7,7 +7,6 @@ import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useProfileSession } from "@/hooks/useProfileSession";
-import { PointerDownOutsideEvent } from "@radix-ui/react-dialog";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -159,17 +158,9 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const isOwnProfile = currentUser?.id === userId;
   const isMentor = profile.user_type === 'mentor';
 
-  const handlePointerDownOutside = (e: PointerDownOutsideEvent) => {
-    e.preventDefault();
-  };
-
   return (
     <>
-      <Dialog 
-        open={open} 
-        onOpenChange={onOpenChange}
-        modal={true}
-      >
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <ProfileDialogContent
           profile={profile}
           session={session}
@@ -178,7 +169,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           isOwnProfile={isOwnProfile}
           isMentor={isMentor}
           handleBookSession={handleBookSession}
-          onPointerDownOutside={handlePointerDownOutside}
         />
       </Dialog>
 
