@@ -22,7 +22,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
       <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
       <div className="w-full">
         <div className={`${shouldUseGrid 
-          ? 'grid grid-cols-3 gap-4 place-items-center' 
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 place-items-center' 
           : 'flex gap-4 justify-center'}`}
         >
           {validMajors.map((major) => (
