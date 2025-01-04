@@ -52,8 +52,14 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
     majors: results.filter(r => r.type === 'major')
   };
 
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setSelectedMentorId(null);
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" onClick={(e) => e.stopPropagation()}>
       {/* Mentors Section */}
       {groupedResults.mentors.length > 0 && (
         <div>
@@ -168,7 +174,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
         <ProfileDetailsDialog
           userId={selectedMentorId}
           open={!!selectedMentorId}
-          onOpenChange={(open) => !open && setSelectedMentorId(null)}
+          onOpenChange={handleDialogChange}
         />
       )}
     </div>
