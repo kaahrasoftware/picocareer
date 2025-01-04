@@ -56,7 +56,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%,career.title.ilike.%${value}%`)
+          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%,careers.title.ilike.%${value}%`)
           .or(`skills.cs.{${value}}`)
           .or(`tools_used.cs.{${value}}`)
           .or(`keywords.cs.{${value}}`)
