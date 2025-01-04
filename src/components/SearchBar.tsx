@@ -57,11 +57,11 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           `)
           .eq('user_type', 'mentor')
           .or(
-            `first_name.ilike.%${value}%,` +
-            `last_name.ilike.%${value}%,` +
-            `full_name.ilike.%${value}%,` +
-            `bio.ilike.%${value}%,` +
-            `location.ilike.%${value}%,` +
+            `lower(first_name).like.%${value.toLowerCase()}%,` +
+            `lower(last_name).like.%${value.toLowerCase()}%,` +
+            `lower(full_name).like.%${value.toLowerCase()}%,` +
+            `lower(bio).like.%${value.toLowerCase()}%,` +
+            `lower(location).like.%${value.toLowerCase()}%,` +
             `skills.cs.{${value.toLowerCase()}},` +
             `tools_used.cs.{${value.toLowerCase()}},` +
             `keywords.cs.{${value.toLowerCase()}},` +
@@ -75,8 +75,8 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .select('*')
           .eq('complete_career', true)
           .or(
-            `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%,` +
+            `lower(title).like.%${value.toLowerCase()}%,` +
+            `lower(description).like.%${value.toLowerCase()}%,` +
             `keywords.cs.{${value.toLowerCase()}},` +
             `required_skills.cs.{${value.toLowerCase()}},` +
             `required_tools.cs.{${value.toLowerCase()}}`
@@ -88,8 +88,8 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           .from('majors')
           .select('*')
           .or(
-            `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%,` +
+            `lower(title).like.%${value.toLowerCase()}%,` +
+            `lower(description).like.%${value.toLowerCase()}%,` +
             `learning_objectives.cs.{${value.toLowerCase()}},` +
             `common_courses.cs.{${value.toLowerCase()}},` +
             `skill_match.cs.{${value.toLowerCase()}},` +
