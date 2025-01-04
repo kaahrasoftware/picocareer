@@ -160,7 +160,14 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog 
+        open={open} 
+        onOpenChange={onOpenChange}
+        modal={true}
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+      >
         <ProfileDialogContent
           profile={profile}
           session={session}
