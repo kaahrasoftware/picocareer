@@ -10,7 +10,6 @@ import { MajorSkillsList } from "./major/MajorSkillsList";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { useProfileSession } from "@/hooks/useProfileSession";
 
 interface MentorCardProps {
@@ -35,7 +34,6 @@ interface MentorCardProps {
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { session } = useProfileSession();
 
   // Get the first 3 skills and calculate remaining count
@@ -49,7 +47,6 @@ export function MentorCard(props: MentorCardProps) {
         description: "Please sign in to view mentor profiles",
         variant: "destructive",
       });
-      navigate("/auth");
       return;
     }
     setDialogOpen(true);
