@@ -52,7 +52,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       case 'career':
         return (
           <>
-            <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
+            <div className="w-full h-48 mb-4 overflow-hidden rounded-lg bg-muted/20">
               {result.image_url ? (
                 <img 
                   src={result.image_url} 
@@ -62,6 +62,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                     const target = e.target as HTMLImageElement;
                     target.src = '/placeholder.svg';
                   }}
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-full bg-muted/20 rounded-lg flex items-center justify-center">
