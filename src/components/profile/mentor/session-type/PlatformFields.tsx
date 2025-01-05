@@ -1,10 +1,12 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
+import { Control } from "react-hook-form";
 import { SessionTypeFormData } from "./types";
 
 interface PlatformFieldsProps {
-  form: UseFormReturn<SessionTypeFormData>;
+  form: {
+    control: Control<SessionTypeFormData>;
+  };
   showTelegramField: boolean;
   showPhoneField: boolean;
   showWhatsAppField: boolean;

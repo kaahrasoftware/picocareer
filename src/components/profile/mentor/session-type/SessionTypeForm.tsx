@@ -20,7 +20,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
   const selectedPlatforms = form.watch("meeting_platform") || [];
   const showTelegramField = selectedPlatforms.includes("Telegram");
-  const showPhoneField = selectedPlatforms.includes("Phone Call") || selectedPlatforms.includes("WhatsApp");
+  const showPhoneField = selectedPlatforms.includes("Phone Call");
+  const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
 
   const onSubmit = async (data: SessionTypeFormData) => {
     try {
@@ -68,7 +69,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         throw error;
       }
 
-      // Immediately invalidate and refetch the query
       queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
@@ -92,44 +92,61 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <SessionTypeSelect
-            control={form.control}
-            existingTypes={existingTypes?.map(t => t.type) || []}
-          />
-        </div>
+        <SessionTypeSelect
+          form={form}
+          availableTypes={existingTypes?.map(t => t.type) || []}
+        />
 
-        <div>
-          <Input
-            type="number"
-            placeholder="Duration (minutes)"
-            {...form.register("duration", { required: true })}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="duration"
+          rules={{ required: "Duration is required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Duration (minutes)</FormLabel>
+              <FormControl>
+                <Input type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div>
-          <Input
-            type="number"
-            placeholder="Price"
-            {...form.register("price")}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Price</FormLabel>
+              <FormControl>
+                <Input type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div>
-          <Textarea
-            placeholder="Description (optional)"
-            {...form.register("description")}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description (optional)</FormLabel>
+              <FormControl>
+                <Textarea {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div>
-          <PlatformSelect control={form.control} />
-        </div>
+        <PlatformSelect form={form} />
 
         <PlatformFields
+          form={form}
           showTelegramField={showTelegramField}
           showPhoneField={showPhoneField}
-          register={form.register}
+          showWhatsAppField={showWhatsAppField}
         />
 
         <div className="flex justify-end gap-2">

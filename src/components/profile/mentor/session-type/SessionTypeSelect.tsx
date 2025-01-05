@@ -1,11 +1,13 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormReturn } from "react-hook-form";
+import { Control } from "react-hook-form";
 import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
 import { SessionTypeFormData } from "./types";
 
 interface SessionTypeSelectProps {
-  form: UseFormReturn<SessionTypeFormData>;
+  form: {
+    control: Control<SessionTypeFormData>;
+  };
   availableTypes: SessionTypeEnum[];
 }
 
