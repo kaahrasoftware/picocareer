@@ -29,7 +29,7 @@ export function AcademicRequirements({
 
       {common_courses && common_courses.length > 0 && (
         <div className="space-y-2">
-          <h5 className="text-sm font-medium">Required Courses</h5>
+          <h5 className="text-sm font-medium">Common Courses</h5>
           <div className="flex flex-wrap gap-2">
             {common_courses.map((course, index) => (
               <Badge 
