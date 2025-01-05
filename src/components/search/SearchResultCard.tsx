@@ -3,6 +3,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap } from "lucide-react";
 import { SearchResult } from "@/types/search";
+import { useState } from "react";
+import { MajorDetails } from "@/components/MajorDetails";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -10,6 +13,9 @@ interface SearchResultCardProps {
 }
 
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
+  const [selectedMajor, setSelectedMajor] = useState<any | null>(null);
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+
   const renderContent = () => {
     switch (result.type) {
       case 'mentor':
@@ -101,12 +107,40 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
     }
   };
 
+  const handleClick = () => {
+    if (result.type === 'major') {
+      setSelectedMajor(result);
+    } else if (result.type === 'career') {
+      setSelectedCareerId(result.id);
+    } else {
+      onClick(result);
+    }
+  };
+
   return (
-    <Card
-      className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white h-full"
-      onClick={() => onClick(result)}
-    >
-      {renderContent()}
-    </Card>
+    <>
+      <Card
+        className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white h-full"
+        onClick={handleClick}
+      >
+        {renderContent()}
+      </Card>
+
+      {selectedMajor && (
+        <MajorDetails
+          major={selectedMajor}
+          open={!!selectedMajor}
+          onOpenChange={(open) => !open && setSelectedMajor(null)}
+        />
+      )}
+
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={!!selectedCareerId}
+          onOpenChange={(open) => !open && setSelectedCareerId(null)}
+        />
+      )}
+    </>
   );
 };
