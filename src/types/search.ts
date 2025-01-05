@@ -18,6 +18,8 @@ export interface MentorSearchResult extends BaseSearchResult {
 export interface CareerSearchResult extends BaseSearchResult {
   type: 'career';
   salary_range?: string;
+  image_url?: string;
+  academic_majors?: string[];
 }
 
 export interface MajorSearchResult extends BaseSearchResult {
