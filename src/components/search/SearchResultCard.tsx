@@ -93,9 +93,25 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               </div>
             </div>
             {result.common_courses && result.common_courses.length > 0 && (
-              <Badge variant="secondary" className="w-fit mt-auto bg-[#FEF7CD] text-[#1A1F2C]">
-                {result.common_courses.join(', ')}
-              </Badge>
+              <div className="flex flex-wrap gap-2">
+                {result.common_courses.slice(0, 3).map((course, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="secondary"
+                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                  >
+                    {course}
+                  </Badge>
+                ))}
+                {result.common_courses.length > 3 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                  >
+                    +{result.common_courses.length - 3}
+                  </Badge>
+                )}
+              </div>
             )}
           </>
         );
