@@ -12,7 +12,9 @@ interface MentorSearchResultsProps {
 export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [mentorsPage, setMentorsPage] = useState(1);
+  const [careersPage, setCareersPage] = useState(1);
+  const [majorsPage, setMajorsPage] = useState(1);
   const itemsPerPage = 4;
 
   const handleResultClick = (result: SearchResult) => {
@@ -29,28 +31,28 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
     }
   };
 
+  const getPaginatedResults = (items: SearchResult[], currentPage: number) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return items.slice(startIndex, endIndex);
+  };
+
   const groupedResults = {
     mentors: results.filter(r => r.type === 'mentor'),
     careers: results.filter(r => r.type === 'career'),
     majors: results.filter(r => r.type === 'major')
   };
 
-  const getPaginatedResults = (items: SearchResult[]) => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return items.slice(startIndex, endIndex);
-  };
-
-  const totalPages = Math.ceil(results.length / itemsPerPage);
-
-  const renderResultSection = (title: string, items: SearchResult[]) => {
+  const renderResultSection = (title: string, items: SearchResult[], currentPage: number, onPageChange: (page: number) => void) => {
     if (items.length === 0) return null;
+
+    const totalPages = Math.ceil(items.length / itemsPerPage);
 
     return (
       <div>
         <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">{title}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {getPaginatedResults(items).map((result) => (
+          {getPaginatedResults(items, currentPage).map((result) => (
             <SearchResultCard
               key={result.id}
               result={result}
@@ -60,8 +62,8 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
         </div>
         <SearchPagination
           currentPage={currentPage}
-          totalPages={Math.ceil(items.length / itemsPerPage)}
-          onPageChange={setCurrentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
         />
       </div>
     );
@@ -69,9 +71,9 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
 
   return (
     <div className="space-y-8">
-      {renderResultSection("Mentors", groupedResults.mentors)}
-      {renderResultSection("Careers", groupedResults.careers)}
-      {renderResultSection("Fields of Study", groupedResults.majors)}
+      {renderResultSection("Mentors", groupedResults.mentors, mentorsPage, setMentorsPage)}
+      {renderResultSection("Careers", groupedResults.careers, careersPage, setCareersPage)}
+      {renderResultSection("Fields of Study", groupedResults.majors, majorsPage, setMajorsPage)}
 
       {selectedMentorId && (
         <ProfileDetailsDialog
