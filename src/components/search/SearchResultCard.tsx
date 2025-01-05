@@ -28,18 +28,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               </div>
             </div>
             <div className="flex flex-col gap-2 mt-auto">
-              {result.company?.name && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Building2 className="h-4 w-4" />
-                  <span className="truncate">{result.company.name}</span>
-                </div>
-              )}
-              {result.location && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate">{result.location}</span>
-                </div>
-              )}
               {result.keywords && result.keywords.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {result.keywords.slice(0, 3).map((keyword, index) => (
