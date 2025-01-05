@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,36 +16,7 @@ export default function MajorUpload() {
   const { data: profile } = useUserProfile(session);
   const [formKey, setFormKey] = useState(0);
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to upload major information",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      if (!profile) {
-        return; // Wait for profile to load
-      }
-
-      const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
-      if (!allowedTypes.includes(profile.user_type)) {
-        toast({
-          title: "Access Denied",
-          description: "You don't have permission to upload majors",
-          variant: "destructive",
-        });
-        navigate("/");
-      }
-    };
-
-    checkAccess();
-  }, [session, profile, navigate, toast]);
-
+  // Move form submission logic into a handler function
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
@@ -120,10 +91,41 @@ export default function MajorUpload() {
     }
   };
 
+  // Check authentication and authorization
+  React.useEffect(() => {
+    if (!session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to upload major information",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (profile) {
+      const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
+      if (!allowedTypes.includes(profile.user_type)) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to upload majors",
+          variant: "destructive",
+        });
+        navigate("/");
+      }
+    }
+  }, [session, profile, navigate, toast]);
+
+  // Render loading state while checking authentication
   if (!session || !profile) {
-    return null; // Don't render anything while checking authentication
+    return (
+      <div className="container mx-auto px-4 py-8 flex justify-center items-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
   }
 
+  // Main render
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <div className="bg-white rounded-lg shadow-md p-6">
