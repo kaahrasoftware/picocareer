@@ -55,7 +55,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
           major={{
             id: selectedMajor.id,
             title: selectedMajor.title,
-            description: selectedMajor.description,
+            description: selectedMajor.description || '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             featured: false,
