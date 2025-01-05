@@ -29,7 +29,9 @@ export const useSearchMentors = () => {
           highest_degree,
           top_mentor,
           company:companies(name),
-          school:schools(name)
+          school:schools(name),
+          academic_major:majors(title),
+          career:careers!position(title)
         `)
         .eq('user_type', 'mentor')
         .or(
@@ -37,8 +39,12 @@ export const useSearchMentors = () => {
           `last_name.ilike.%${query}%,` +
           `bio.ilike.%${query}%,` +
           `location.ilike.%${query}%,` +
-          `keywords.cs.{${query.toLowerCase()}}`
+          `companies.name.ilike.%${query}%,` +
+          `schools.name.ilike.%${query}%,` +
+          `majors.title.ilike.%${query}%,` +
+          `careers.title.ilike.%${query}%`
         )
+        .filter('keywords', 'cs', `{${query.toLowerCase()}}`)
         .limit(5);
 
       if (error) throw error;
