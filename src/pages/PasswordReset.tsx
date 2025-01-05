@@ -7,34 +7,36 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PasswordReset() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the recovery token
-    const token = searchParams.get("token");
+    // Check if we have the necessary parameters from the reset link
     const type = searchParams.get("type");
-    
-    if (!token || type !== 'recovery') {
+    const accessToken = searchParams.get("access_token");
+
+    if (type !== "recovery" || !accessToken) {
       toast({
         title: "Invalid Reset Link",
         description: "This password reset link is invalid or has expired.",
         variant: "destructive",
       });
-      navigate("/auth?tab=signin");
+      setTimeout(() => {
+        navigate("/auth?tab=signin");
+      }, 2000);
     }
   }, [searchParams, navigate, toast]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Passwords do not match",
+        title: "Passwords Don't Match",
         description: "Please ensure both passwords match.",
         variant: "destructive",
       });
@@ -43,7 +45,7 @@ export default function PasswordReset() {
 
     if (newPassword.length < 6) {
       toast({
-        title: "Password too short",
+        title: "Password Too Short",
         description: "Password must be at least 6 characters long.",
         variant: "destructive",
       });
@@ -57,22 +59,10 @@ export default function PasswordReset() {
         password: newPassword
       });
 
-      if (error) {
-        console.error('Password reset error:', error);
-        if (error.message.includes('Auth session missing')) {
-          toast({
-            title: "Link Expired",
-            description: "This password reset link has expired. Please request a new one.",
-            variant: "destructive",
-          });
-          navigate("/auth?tab=signin");
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
-        title: "Password Reset Successful",
+        title: "Password Updated",
         description: "Your password has been successfully reset. Please sign in with your new password.",
       });
 
@@ -83,8 +73,8 @@ export default function PasswordReset() {
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast({
-        title: "Error Resetting Password",
-        description: error.message || "An error occurred while resetting your password.",
+        title: "Error",
+        description: error.message || "Failed to reset password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -93,7 +83,7 @@ export default function PasswordReset() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Reset Password</h1>
@@ -102,14 +92,13 @@ export default function PasswordReset() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handlePasswordReset} className="space-y-4">
           <div className="space-y-2">
             <Input
               type="password"
               placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              required
               disabled={loading}
             />
           </div>
@@ -119,7 +108,6 @@ export default function PasswordReset() {
               placeholder="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              required
               disabled={loading}
             />
           </div>

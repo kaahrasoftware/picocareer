@@ -21,7 +21,7 @@ export function ResetPasswordButton({ email }: ResetPasswordButtonProps) {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
-        redirectTo: `${window.location.origin}/password-reset`,
+        redirectTo: `${window.location.origin}/password-reset?type=recovery`,
       });
 
       if (error) throw error;
