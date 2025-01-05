@@ -6,6 +6,7 @@ import { isMentorResult } from "@/types/search";
 import { useState } from "react";
 import { BlogPagination } from "@/components/blog/BlogPagination";
 import { Award } from "lucide-react";
+import { LoadMoreButton } from "@/components/community/LoadMoreButton";
 
 interface MentorResultsSectionProps {
   mentors: SearchResult[];
@@ -13,15 +14,17 @@ interface MentorResultsSectionProps {
 }
 
 export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsSectionProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const MENTORS_PER_PAGE = 6;
+  const [displayCount, setDisplayCount] = useState(6);
   const validMentors = mentors.filter(isMentorResult);
   
   if (!validMentors.length) return null;
 
-  const totalPages = Math.ceil(validMentors.length / MENTORS_PER_PAGE);
-  const startIndex = (currentPage - 1) * MENTORS_PER_PAGE;
-  const paginatedMentors = validMentors.slice(startIndex, startIndex + MENTORS_PER_PAGE);
+  const displayedMentors = validMentors.slice(0, displayCount);
+  const hasMore = displayCount < validMentors.length;
+
+  const handleLoadMore = () => {
+    setDisplayCount(prev => Math.min(prev + 6, validMentors.length));
+  };
 
   return (
     <div className="px-4">
@@ -30,7 +33,7 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
       </h3>
       <div className="w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 place-items-center">
-          {paginatedMentors.map((mentor) => (
+          {displayedMentors.map((mentor) => (
             <Card 
               key={mentor.id}
               className="flex-shrink-0 flex flex-col p-4 w-full max-w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
@@ -64,12 +67,12 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
           ))}
         </div>
         
-        {totalPages > 1 && (
-          <div className="mt-4">
-            <BlogPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+        {hasMore && (
+          <div className="flex justify-center mt-6">
+            <LoadMoreButton 
+              hasMore={hasMore}
+              isLoading={false}
+              onClick={handleLoadMore}
             />
           </div>
         )}

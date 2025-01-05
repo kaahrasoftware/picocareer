@@ -47,7 +47,7 @@ export const useSearchMentors = () => {
           `fields_of_interest.cs.{${query.toLowerCase()}},` +
           `languages.cs.{${query.toLowerCase()}}`
         )
-        .limit(5);
+        .limit(20);
 
       if (error) throw error;
 
