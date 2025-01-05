@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,19 +6,14 @@ import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { majorFormFields } from "@/components/forms/major/MajorFormFields";
 import { formatMajorData } from "@/utils/majorFormatting";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 export default function MajorUpload() {
-  // Declare all hooks at the top level
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Handle form submission
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
@@ -60,26 +55,11 @@ export default function MajorUpload() {
         throw error;
       }
 
-      // Create notification for admin review
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          profile_id: session.user.id,
-          title: 'Major Submitted for Review',
-          message: `Your major "${data.title}" has been submitted and is pending review.`,
-          type: 'major_update'
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-      }
-
       toast({
         title: "Major submitted successfully",
         description: "Your major information has been submitted and will be reviewed by our team. You will be notified once it's approved.",
       });
 
-      // Reset the form by forcing a re-render of GenericUploadForm with a new key
       setFormKey(prev => prev + 1);
     } catch (error: any) {
       console.error('Error uploading major:', error);
@@ -93,47 +73,14 @@ export default function MajorUpload() {
     }
   };
 
-  // Check authentication and authorization
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to upload major information",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      if (profile) {
-        const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
-        if (!allowedTypes.includes(profile.user_type)) {
-          toast({
-            title: "Access Denied",
-            description: "You don't have permission to upload majors",
-            variant: "destructive",
-          });
-          navigate("/");
-        } else {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    checkAuth();
-  }, [session, profile, navigate, toast]);
-
-  // Render loading state
-  if (isLoading || !session || !profile) {
+  if (!session) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center">
-        <div className="animate-pulse">Loading...</div>
+        <div>Please sign in to upload major information</div>
       </div>
     );
   }
 
-  // Main render
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <div className="bg-white rounded-lg shadow-md p-6">

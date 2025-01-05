@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { CareerFormValues } from "@/lib/validations/blog";
 
 export default function CareerUpload() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
   const handleSubmit = async (data: CareerFormValues) => {
     try {
@@ -69,40 +66,10 @@ export default function CareerUpload() {
     }
   };
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to upload career information",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      if (profile) {
-        const allowedTypes = ['admin', 'mentor', 'editor'];
-        if (!allowedTypes.includes(profile.user_type)) {
-          toast({
-            title: "Access Denied",
-            description: "You don't have permission to upload careers",
-            variant: "destructive",
-          });
-          navigate("/");
-        } else {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    checkAuth();
-  }, [session, profile, navigate, toast]);
-
-  if (isLoading || !session || !profile) {
+  if (!session) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center">
-        <div className="animate-pulse">Loading...</div>
+        <div>Please sign in to upload career information</div>
       </div>
     );
   }
