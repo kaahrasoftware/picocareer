@@ -22,9 +22,14 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
-                {result.career?.title && (
-                  <p className="text-sm text-[#8E9196] truncate">{result.career.title}</p>
-                )}
+                <div className="space-y-1">
+                  {result.position && (
+                    <p className="text-sm text-[#8E9196] truncate">{result.position}</p>
+                  )}
+                  {result.career?.title && (
+                    <p className="text-sm text-[#8E9196] truncate">{result.career.title}</p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex flex-col gap-2 mt-auto">
