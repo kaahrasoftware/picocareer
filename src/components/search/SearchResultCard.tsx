@@ -52,21 +52,22 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       case 'career':
         return (
           <>
-            <div className="aspect-w-16 aspect-h-9 mb-4">
+            <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
               {result.image_url ? (
                 <img 
                   src={result.image_url} 
                   alt={result.title}
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-48 bg-muted/20 rounded-lg flex items-center justify-center">
+                <div className="w-full h-full bg-muted/20 rounded-lg flex items-center justify-center">
                   <Building2 className="h-12 w-12 text-muted-foreground/40" />
                 </div>
               )}
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">{result.title}</h3>
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{result.description}</p>
               {result.academic_majors && result.academic_majors.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {result.academic_majors.slice(0, 3).map((major, index) => (
