@@ -725,7 +725,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           keywords: string[] | null
-          languages: Database["public"]["Enums"]["language"][] | null
+          languages: string[] | null
           last_name: string | null
           linkedin_url: string | null
           location: string | null
@@ -762,7 +762,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           keywords?: string[] | null
-          languages?: Database["public"]["Enums"]["language"][] | null
+          languages?: string[] | null
           last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
@@ -799,7 +799,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           keywords?: string[] | null
-          languages?: Database["public"]["Enums"]["language"][] | null
+          languages?: string[] | null
           last_name?: string | null
           linkedin_url?: string | null
           location?: string | null
