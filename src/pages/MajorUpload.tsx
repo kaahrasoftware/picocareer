@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,13 +9,14 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 export default function MajorUpload() {
+  // Declare all hooks at the top level
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Handle form submission
   const handleSubmit = async (data: any) => {
@@ -93,34 +94,38 @@ export default function MajorUpload() {
   };
 
   // Check authentication and authorization
-  React.useEffect(() => {
-    if (!session) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to upload major information",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    if (profile) {
-      const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
-      if (!allowedTypes.includes(profile.user_type)) {
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!session) {
         toast({
-          title: "Access Denied",
-          description: "You don't have permission to upload majors",
+          title: "Authentication required",
+          description: "Please sign in to upload major information",
           variant: "destructive",
         });
-        navigate("/");
-      } else {
-        setIsAuthorized(true);
+        navigate("/auth");
+        return;
       }
-    }
+
+      if (profile) {
+        const allowedTypes = ['admin', 'mentor', 'mentee', 'editor'];
+        if (!allowedTypes.includes(profile.user_type)) {
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to upload majors",
+            variant: "destructive",
+          });
+          navigate("/");
+        } else {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    checkAuth();
   }, [session, profile, navigate, toast]);
 
-  // Loading state
-  if (!session || !profile || !isAuthorized) {
+  // Render loading state
+  if (isLoading || !session || !profile) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center">
         <div className="animate-pulse">Loading...</div>
