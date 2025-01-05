@@ -28,7 +28,7 @@ export function Footer() {
       <div className="max-w-[1400px] mx-auto">
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
-            <h4 className="text-sm font-medium mb-2">Company</h4>
+            <h4 className="text-sm font-medium mb-2">PicoCareer</h4>
             <ul className="space-y-2">
               {companyLinks.map((link, index) => (
                 <li key={index}>
