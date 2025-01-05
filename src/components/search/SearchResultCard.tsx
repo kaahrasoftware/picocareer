@@ -57,7 +57,11 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 <img 
                   src={result.image_url} 
                   alt={result.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
                 />
               ) : (
                 <div className="w-full h-full bg-muted/20 rounded-lg flex items-center justify-center">
