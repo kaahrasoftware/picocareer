@@ -46,27 +46,47 @@ export const useSearchResults = () => {
             `last_name.ilike.%${value}%,` +
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
-            `location.ilike.%${value}%`
-          )
-          .or(`skills.cs.{${value.toLowerCase()}},tools_used.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},fields_of_interest.cs.{${value.toLowerCase()}}`)
-          .or(`companies.name.ilike.%${value}%`)
-          .or(`schools.name.ilike.%${value}%`)
-          .or(`careers.title.ilike.%${value}%`),
+            `location.ilike.%${value}%,` +
+            `skills.cs.{${value.toLowerCase()}},` +
+            `tools_used.cs.{${value.toLowerCase()}},` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `fields_of_interest.cs.{${value.toLowerCase()}}`
+          ),
 
         // Search careers
         supabase
           .from('careers')
           .select('*')
           .eq('complete_career', true)
-          .or(`title.ilike.%${value}%,description.ilike.%${value}%,important_note.ilike.%${value}%,stress_levels.ilike.%${value}%,growth_potential.ilike.%${value}%,work_environment.ilike.%${value}%,industry.ilike.%${value}%,job_outlook.ilike.%${value}%`)
-          .or(`careers_to_consider_switching_to.cs.{${value.toLowerCase()}},transferable_skills.cs.{${value.toLowerCase()}},keywords.cs.{${value.toLowerCase()}},required_tools.cs.{${value.toLowerCase()}},required_skills.cs.{${value.toLowerCase()}},academic_majors.cs.{${value.toLowerCase()}}`),
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `important_note.ilike.%${value}%,` +
+            `stress_levels.ilike.%${value}%,` +
+            `careers_to_consider_switching_to.cs.{${value.toLowerCase()}},` +
+            `transferable_skills.cs.{${value.toLowerCase()}},` +
+            `keywords.cs.{${value.toLowerCase()}},` +
+            `growth_potential.ilike.%${value}%,` +
+            `work_environment.ilike.%${value}%,` +
+            `industry.ilike.%${value}%,` +
+            `job_outlook.ilike.%${value}%,` +
+            `required_tools.cs.{${value.toLowerCase()}},` +
+            `required_skills.cs.{${value.toLowerCase()}},` +
+            `academic_majors.cs.{${value.toLowerCase()}}`
+          ),
 
         // Search majors
         supabase
           .from('majors')
           .select('*')
-          .or(`title.ilike.%${value}%,description.ilike.%${value}%`)
-          .or(`learning_objectives.cs.{${value.toLowerCase()}},common_courses.cs.{${value.toLowerCase()}},skill_match.cs.{${value.toLowerCase()}},tools_knowledge.cs.{${value.toLowerCase()}}`)
+          .or(
+            `title.ilike.%${value}%,` +
+            `description.ilike.%${value}%,` +
+            `learning_objectives.cs.{${value.toLowerCase()}},` +
+            `common_courses.cs.{${value.toLowerCase()}},` +
+            `skill_match.cs.{${value.toLowerCase()}},` +
+            `tools_knowledge.cs.{${value.toLowerCase()}}`
+          )
       ]);
 
       if (mentorsResponse.error) throw mentorsResponse.error;

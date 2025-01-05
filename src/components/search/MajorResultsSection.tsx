@@ -4,7 +4,6 @@ import type { SearchResult } from "@/types/search";
 import { useState } from "react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { isMajorResult } from "@/types/search";
-import { GraduationCap } from "lucide-react";
 
 interface MajorResultsSectionProps {
   majors: SearchResult[];
@@ -14,43 +13,38 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
   const [selectedMajor, setSelectedMajor] = useState<SearchResult | null>(null);
   const validMajors = majors.filter(isMajorResult);
 
-  if (!validMajors.length) return null;
+  if (!validMajors.length) return (
+    <div className="px-4 mt-6">
+      <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
+      <p className="text-sm text-muted-foreground">No matching majors found</p>
+    </div>
+  );
+
+  const shouldUseGrid = validMajors.length > 4;
 
   return (
-    <div className="px-4 mt-8">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">
-        Majors ({validMajors.length} results)
-      </h3>
+    <div className="px-4 mt-6">
+      <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
       <div className="w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={`${shouldUseGrid 
+          ? 'grid grid-cols-3 gap-4 place-items-center' 
+          : 'flex gap-4 justify-center'}`}
+        >
           {validMajors.map((major) => (
             <Card 
               key={major.id}
-              className="group relative overflow-hidden flex flex-col p-6 hover:shadow-lg transition-all duration-200 cursor-pointer bg-card hover:bg-accent/5"
+              className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => setSelectedMajor(major)}
             >
-              <div className="flex items-start gap-3 mb-3">
-                <div className="p-2 rounded-md bg-primary/10">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-base truncate">{major.title}</h4>
-                </div>
+              <div className="flex-1 min-w-0 mb-3">
+                <h4 className="font-medium text-sm mb-1">{major.title}</h4>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {major.description}
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                {major.description}
-              </p>
-              <div className="mt-auto flex flex-wrap gap-2">
-                {major.degree_levels?.map((level) => (
-                  <Badge 
-                    key={level}
-                    variant="secondary" 
-                    className="bg-secondary/10 text-secondary hover:bg-secondary/20"
-                  >
-                    {level}
-                  </Badge>
-                ))}
-              </div>
+              <Badge variant="secondary" className="self-start">
+                {major.degree_levels?.join(", ") || 'Major'}
+              </Badge>
             </Card>
           ))}
         </div>
