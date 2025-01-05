@@ -37,13 +37,13 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                     <Badge 
                       key={index}
                       variant="secondary"
-                      className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]"
+                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
                     >
                       {keyword}
                     </Badge>
                   ))}
                   {result.keywords.length > 3 && (
-                    <Badge variant="secondary" className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]">
+                    <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
                       +{result.keywords.length - 3}
                     </Badge>
                   )}
@@ -65,13 +65,13 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                       <Badge 
                         key={index} 
                         variant="secondary"
-                        className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]"
+                        className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
                       >
                         {major}
                       </Badge>
                     ))}
                     {result.academic_majors.length > 3 && (
-                      <Badge variant="secondary" className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]">
+                      <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
                         +{result.academic_majors.length - 3}
                       </Badge>
                     )}
