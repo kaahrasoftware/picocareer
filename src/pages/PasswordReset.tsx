@@ -10,20 +10,27 @@ export default function PasswordReset() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isValidLink, setIsValidLink] = useState(true);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the necessary parameters
-    if (!searchParams.get("type") || !searchParams.get("access_token")) {
-      toast({
-        title: "Invalid Reset Link",
-        description: "This password reset link is invalid or has expired.",
-        variant: "destructive",
-      });
-      navigate("/auth?tab=signin");
-    }
+    const checkParams = () => {
+      if (!searchParams.get("type") || !searchParams.get("access_token")) {
+        setIsValidLink(false);
+        toast({
+          title: "Invalid Reset Link",
+          description: "This password reset link is invalid or has expired.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          navigate("/auth?tab=signin");
+        }, 2000);
+      }
+    };
+
+    checkParams();
   }, [searchParams, navigate, toast]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -73,6 +80,21 @@ export default function PasswordReset() {
       setLoading(false);
     }
   };
+
+  if (!isValidLink) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">Invalid Reset Link</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Redirecting you to the sign in page...
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
