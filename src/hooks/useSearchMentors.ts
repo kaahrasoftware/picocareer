@@ -37,7 +37,7 @@ export const useSearchMentors = () => {
           `last_name.ilike.%${query}%,` +
           `bio.ilike.%${query}%,` +
           `location.ilike.%${query}%,` +
-          `keywords.contains.{${query.toLowerCase()}}`
+          `keywords.cs.{${query.toLowerCase()}}`
         )
         .limit(5);
 
