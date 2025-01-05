@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
+import { Building2, MapPin } from "lucide-react";
 import { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
@@ -26,12 +26,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                   <p className="text-sm text-muted-foreground truncate">{result.position}</p>
                 )}
               </div>
-              {result.top_mentor && (
-                <Badge className="bg-picocareer-primary/90 hover:bg-picocareer-primary">
-                  <Award className="h-3 w-3 mr-1" />
-                  Top
-                </Badge>
-              )}
             </div>
             <div className="flex flex-col gap-2 mt-auto">
               {result.company?.name && (
