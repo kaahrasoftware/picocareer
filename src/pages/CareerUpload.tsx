@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContentUploadForm } from "@/components/forms/ContentUploadForm";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { CareerFormValues } from "@/lib/validations/blog";
 
 export default function CareerUpload() {
-  // Declare all hooks at the top level
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
@@ -16,8 +16,7 @@ export default function CareerUpload() {
   const [formKey, setFormKey] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Handle form submission
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CareerFormValues) => {
     try {
       setIsSubmitting(true);
 
@@ -27,28 +26,28 @@ export default function CareerUpload() {
         image_url: data.image_url,
         salary_range: data.salary_range,
         featured: data.featured,
-        academic_majors: data.academic_majors?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
-        required_skills: data.required_skills?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
-        required_tools: data.required_tools?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
+        academic_majors: data.academic_majors?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        required_skills: data.required_skills?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        required_tools: data.required_tools?.split(',').map(item => item.trim()).filter(Boolean) || [],
         job_outlook: data.job_outlook,
         industry: data.industry,
         work_environment: data.work_environment,
         growth_potential: data.growth_potential,
-        keywords: data.keywords?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
-        transferable_skills: data.transferable_skills?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
-        careers_to_consider_switching_to: data.careers_to_consider_switching_to?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
-        required_education: data.required_education?.split(',').map((item: string) => item.trim()).filter(Boolean) || [],
+        keywords: data.keywords?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        transferable_skills: data.transferable_skills?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        careers_to_consider_switching_to: data.careers_to_consider_switching_to?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        required_education: data.required_education?.split(',').map(item => item.trim()).filter(Boolean) || [],
         stress_levels: data.stress_levels,
         rare: data.rare,
         popular: data.popular,
         new_career: data.new_career,
-        status: 'Approved',
+        status: 'Approved' as const,
         author_id: session?.user?.id
       };
 
       const { error } = await supabase
         .from('careers')
-        .insert([formattedData]);
+        .insert(formattedData);
 
       if (error) throw error;
 
@@ -57,7 +56,6 @@ export default function CareerUpload() {
         description: "Career uploaded successfully!",
       });
 
-      // Reset form
       setFormKey(prev => prev + 1);
     } catch (error: any) {
       console.error('Error submitting content:', error);
@@ -71,7 +69,6 @@ export default function CareerUpload() {
     }
   };
 
-  // Check authentication and authorization
   useEffect(() => {
     const checkAuth = async () => {
       if (!session) {
@@ -102,7 +99,6 @@ export default function CareerUpload() {
     checkAuth();
   }, [session, profile, navigate, toast]);
 
-  // Render loading state
   if (isLoading || !session || !profile) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center">
