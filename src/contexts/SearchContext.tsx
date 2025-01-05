@@ -19,6 +19,7 @@ export const SearchProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     handleSearch: async (value: string) => {
       const results = await handleSearch(value);
+      setSearchResults(results);
       return results;
     },
     setSearchResults
