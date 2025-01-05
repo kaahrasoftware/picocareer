@@ -28,7 +28,12 @@ export const useSearchMajors = () => {
         `)
         .or(
           `title.ilike.%${query}%,` +
-          `description.ilike.%${query}%`
+          `description.ilike.%${query}%,` +
+          `common_courses.cs.{${query}},` +
+          `interdisciplinary_connections.cs.{${query}},` +
+          `job_prospects.ilike.%${query}%,` +
+          `certifications_to_consider.cs.{${query}},` +
+          `affiliated_programs.cs.{${query}}`
         )
         .limit(20);
 
