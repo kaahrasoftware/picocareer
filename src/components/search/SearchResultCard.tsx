@@ -42,7 +42,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                     </Badge>
                   ))}
                   {result.keywords.length > 3 && (
-                    <Badge variant="secondary" className="bg-[#8E9196]/20">
+                    <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
                       +{result.keywords.length - 3}
                     </Badge>
                   )}
@@ -70,7 +70,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                       </Badge>
                     ))}
                     {result.academic_majors.length > 3 && (
-                      <Badge variant="secondary" className="bg-[#8E9196]/20">
+                      <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
                         +{result.academic_majors.length - 3}
                       </Badge>
                     )}
