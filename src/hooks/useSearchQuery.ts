@@ -22,7 +22,7 @@ export const useSearchQuery = () => {
 
     try {
       const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
-        // Search mentors - using citext arrays
+        // Search mentors
         supabase
           .from('profiles')
           .select(`
@@ -45,45 +45,22 @@ export const useSearchQuery = () => {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .or(
-            `first_name.ilike.%${value}%,` +
-            `last_name.ilike.%${value}%,` +
-            `full_name.ilike.%${value}%,` +
-            `bio.ilike.%${value}%,` +
-            `location.ilike.%${value}%,` +
-            `skills.contains.{${value}},` +
-            `tools_used.contains.{${value}},` +
-            `keywords.contains.{${value}},` +
-            `fields_of_interest.contains.{${value}}`
-          )
+          .or(`first_name.ilike.%${value}%,last_name.ilike.%${value}%,full_name.ilike.%${value}%,bio.ilike.%${value}%,location.ilike.%${value}%`)
           .limit(5),
 
-        // Search careers - using citext arrays
+        // Search careers
         supabase
           .from('careers')
           .select('*')
           .eq('complete_career', true)
-          .or(
-            `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%,` +
-            `keywords.contains.{${value}},` +
-            `required_skills.contains.{${value}},` +
-            `required_tools.contains.{${value}}`
-          )
+          .or(`title.ilike.%${value}%,description.ilike.%${value}%`)
           .limit(5),
 
-        // Search majors - using citext arrays
+        // Search majors
         supabase
           .from('majors')
           .select('*')
-          .or(
-            `title.ilike.%${value}%,` +
-            `description.ilike.%${value}%,` +
-            `learning_objectives.contains.{${value}},` +
-            `common_courses.contains.{${value}},` +
-            `skill_match.contains.{${value}},` +
-            `tools_knowledge.contains.{${value}}`
-          )
+          .or(`title.ilike.%${value}%,description.ilike.%${value}%`)
           .limit(5)
       ]);
 

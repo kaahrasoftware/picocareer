@@ -23,7 +23,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     setSearchQuery(value);
     const results = await handleSearch(value);
     
-    if (session?.user?.id && results.length > 0) {
+    if (session?.user?.id && results && results.length > 0) {
       await trackSearch(value, results.length);
     }
   };

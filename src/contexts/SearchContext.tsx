@@ -17,11 +17,7 @@ export const SearchProvider = ({ children }: { children: ReactNode }) => {
   const value: SearchContextType = {
     searchResults,
     isLoading,
-    handleSearch: async (value: string) => {
-      const results = await handleSearch(value);
-      setSearchResults(results);
-      return results;
-    },
+    handleSearch,
     setSearchResults
   };
 
