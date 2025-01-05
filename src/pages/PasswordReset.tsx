@@ -20,7 +20,7 @@ export default function PasswordReset() {
     if (type !== 'recovery') {
       toast({
         title: "Invalid Reset Link",
-        description: "This password reset link is invalid or has expired.",
+        description: "This password reset link is invalid or has expired. Please request a new one.",
         variant: "destructive",
       });
       navigate("/auth?tab=signin");
@@ -56,8 +56,7 @@ export default function PasswordReset() {
       });
 
       if (error) {
-        console.error('Password reset error:', error);
-        if (error.message.includes('Auth session missing')) {
+        if (error.message.includes('Auth session missing') || error.message.includes('JWT expired')) {
           toast({
             title: "Link Expired",
             description: "This password reset link has expired. Please request a new one.",
@@ -82,9 +81,10 @@ export default function PasswordReset() {
       console.error('Password reset error:', error);
       toast({
         title: "Error Resetting Password",
-        description: error.message || "An error occurred while resetting your password.",
+        description: "The password reset link has expired or is invalid. Please request a new one.",
         variant: "destructive",
       });
+      navigate("/auth?tab=signin");
     } finally {
       setLoading(false);
     }
