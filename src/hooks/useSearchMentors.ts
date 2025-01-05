@@ -26,18 +26,15 @@ export const useSearchMentors = () => {
           location,
           bio,
           keywords,
-          skills,
-          tools_used,
           highest_degree,
           top_mentor,
           company:companies(name),
           school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title)
+          academic_major:majors!profiles_academic_major_id_fkey(title),
+          career:careers!position(title)
         `)
         .eq('user_type', 'mentor')
         .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,bio.ilike.%${query}%,location.ilike.%${query}%`)
-        .or(`skills.cs.{${query.toLowerCase()}}`)
-        .or(`tools_used.cs.{${query.toLowerCase()}}`)
         .or(`keywords.cs.{${query.toLowerCase()}}`)
         .limit(5);
 
