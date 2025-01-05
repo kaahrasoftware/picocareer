@@ -63,7 +63,7 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
           <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
           <p className="text-2xl font-bold">{stats.total_sessions}</p>
           <p className="text-xs text-muted-foreground">
-            {stats.total_hours} hours total
+            {stats.total_hours.toFixed(2)} hours total
           </p>
         </div>
       </Card>
