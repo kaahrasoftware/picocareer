@@ -13,10 +13,35 @@ import {
 
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: careers = [], isLoading } = useFeaturedCareers();
+  const { data: careers = [], isLoading, error } = useFeaturedCareers();
 
+  // Return loading state first
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Careers</h2>
+        </div>
+        <div className="flex items-center justify-center p-8">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </section>
+    );
+  }
+
+  // Return error state if there's an error
+  if (error) {
+    console.error('Error fetching featured careers:', error);
+    return (
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Careers</h2>
+        </div>
+        <div className="text-center text-red-500 p-8">
+          Failed to load featured careers. Please try again later.
+        </div>
+      </section>
+    );
   }
 
   return (
