@@ -19,18 +19,20 @@ import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
+import { Footer } from "@/components/Footer";
 
 const queryClient = new QueryClient();
 
-// Layout component to wrap pages with MenuSidebar
+// Layout component to wrap pages with MenuSidebar and Footer
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <MenuSidebar />
-      <main className="pt-16">
+      <main className="pt-16 flex-grow">
         {children}
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }
 
