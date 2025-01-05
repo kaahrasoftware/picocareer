@@ -2,8 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { SearchResult } from "@/types/search";
 
-export type { SearchResult };
-
 export function useSearchData(searchTerm: string) {
   return useQuery({
     queryKey: ["search", searchTerm],
@@ -14,7 +12,7 @@ export function useSearchData(searchTerm: string) {
 
       // Start with simpler queries to test basic functionality
       const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
-        // Search majors - simplified query
+        // Search majors
         supabase
           .from("majors")
           .select(`
@@ -22,12 +20,13 @@ export function useSearchData(searchTerm: string) {
             title,
             description,
             degree_levels,
-            career_opportunities
+            career_opportunities,
+            common_courses
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+          .ilike('title', `%${searchTerm}%`)
           .limit(5),
 
-        // Search careers - simplified query
+        // Search careers
         supabase
           .from("careers")
           .select(`
@@ -36,11 +35,10 @@ export function useSearchData(searchTerm: string) {
             description,
             salary_range
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-          .eq('complete_career', true)
+          .ilike('title', `%${searchTerm}%`)
           .limit(5),
 
-        // Search mentor profiles - simplified query
+        // Search mentor profiles
         supabase
           .from("profiles")
           .select(`
@@ -50,18 +48,20 @@ export function useSearchData(searchTerm: string) {
             avatar_url,
             position,
             location,
-            company:companies(name),
-            career:careers!profiles_position_fkey(title)
+            top_mentor,
+            company:companies(name)
           `)
           .eq('user_type', 'mentor')
-          .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
+          .ilike('full_name', `%${searchTerm}%`)
           .limit(5)
       ]);
 
       // Log detailed responses
-      console.log('Majors Response:', majorsResponse);
-      console.log('Careers Response:', careersResponse);
-      console.log('Mentors Response:', mentorsResponse);
+      console.log('Raw query responses:', {
+        majors: majorsResponse,
+        careers: careersResponse,
+        mentors: mentorsResponse
+      });
 
       // Handle any errors
       if (majorsResponse.error) {
@@ -84,7 +84,8 @@ export function useSearchData(searchTerm: string) {
         title: major.title,
         description: major.description,
         degree_levels: major.degree_levels,
-        career_opportunities: major.career_opportunities
+        career_opportunities: major.career_opportunities,
+        common_courses: major.common_courses
       }));
 
       const careerResults: SearchResult[] = (careersResponse.data || []).map(career => ({
@@ -99,11 +100,12 @@ export function useSearchData(searchTerm: string) {
         id: mentor.id,
         type: "mentor" as const,
         title: `${mentor.first_name} ${mentor.last_name}`.trim(),
-        description: mentor.career?.title || mentor.position,
+        description: mentor.position || 'Mentor',
         avatar_url: mentor.avatar_url,
         position: mentor.position,
         location: mentor.location,
-        company: mentor.company
+        company: mentor.company?.name,
+        top_mentor: mentor.top_mentor
       }));
 
       const combinedResults = [...majorResults, ...careerResults, ...mentorResults];
@@ -111,6 +113,6 @@ export function useSearchData(searchTerm: string) {
 
       return combinedResults;
     },
-    enabled: searchTerm.length > 2, // Only search when there are at least 3 characters
+    enabled: searchTerm.length > 2,
   });
 }
