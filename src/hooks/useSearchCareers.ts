@@ -13,6 +13,8 @@ export function useSearchCareers() {
         return [];
       }
 
+      console.log("Searching careers with query:", searchQuery);
+
       const { data: careers, error } = await supabase
         .from("careers")
         .select(`
@@ -35,6 +37,7 @@ export function useSearchCareers() {
         return [];
       }
 
+      console.log("Career search results:", careers);
       return careers;
     } catch (error) {
       console.error("Error in searchCareers:", error);

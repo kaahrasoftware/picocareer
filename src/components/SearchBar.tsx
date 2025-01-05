@@ -22,12 +22,28 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const { searchCareers, isLoading: isCareersLoading } = useSearchCareers();
 
   const handleSearch = async (value: string) => {
+    if (value.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    console.log("Searching with query:", value);
+    
     const [mentorResults, majorResults, careerResults] = await Promise.all([
       searchMentors(value),
       searchMajors(value),
       searchCareers(value)
     ]);
-    setSearchResults([...mentorResults, ...majorResults, ...careerResults]);
+
+    console.log("Career search results:", careerResults);
+    
+    const formattedResults = [
+      ...mentorResults.map(result => ({ ...result, type: 'mentor' })),
+      ...majorResults.map(result => ({ ...result, type: 'major' })),
+      ...careerResults.map(result => ({ ...result, type: 'career' }))
+    ];
+
+    setSearchResults(formattedResults);
   };
 
   // Use debounce for search
@@ -91,4 +107,4 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       )}
     </div>
   );
-}
+};
