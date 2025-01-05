@@ -38,6 +38,7 @@ export const useSearchQuery = () => {
             keywords,
             fields_of_interest,
             highest_degree,
+            top_mentor,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
@@ -50,10 +51,10 @@ export const useSearchQuery = () => {
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%,` +
-            `skills.contains.{${value}},` + // Using citext[] containment
-            `tools_used.contains.{${value}},` + // Using citext[] containment
-            `keywords.contains.{${value}},` + // Using citext[] containment
-            `fields_of_interest.contains.{${value}}` // Using citext[] containment
+            `skills.contains.{${value}},` +
+            `tools_used.contains.{${value}},` +
+            `keywords.contains.{${value}},` +
+            `fields_of_interest.contains.{${value}}`
           )
           .limit(5),
 
@@ -65,9 +66,9 @@ export const useSearchQuery = () => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `keywords.contains.{${value}},` + // Using citext[] containment
-            `required_skills.contains.{${value}},` + // Using citext[] containment
-            `required_tools.contains.{${value}}` // Using citext[] containment
+            `keywords.contains.{${value}},` +
+            `required_skills.contains.{${value}},` +
+            `required_tools.contains.{${value}}`
           )
           .limit(5),
 
@@ -78,10 +79,10 @@ export const useSearchQuery = () => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `learning_objectives.contains.{${value}},` + // Using citext[] containment
-            `common_courses.contains.{${value}},` + // Using citext[] containment
-            `skill_match.contains.{${value}},` + // Using citext[] containment
-            `tools_knowledge.contains.{${value}}` // Using citext[] containment
+            `learning_objectives.contains.{${value}},` +
+            `common_courses.contains.{${value}},` +
+            `skill_match.contains.{${value}},` +
+            `tools_knowledge.contains.{${value}}`
           )
           .limit(5)
       ]);
@@ -90,20 +91,31 @@ export const useSearchQuery = () => {
       if (careersResponse.error) throw careersResponse.error;
       if (majorsResponse.error) throw majorsResponse.error;
 
-      const combinedResults = [
+      const combinedResults: SearchResult[] = [
         ...(mentorsResponse.data || []).map(mentor => ({
-          ...mentor,
+          id: mentor.id,
           type: 'mentor' as const,
           title: `${mentor.first_name} ${mentor.last_name}`,
-          description: mentor.bio || mentor.position
+          description: mentor.bio || mentor.position,
+          avatar_url: mentor.avatar_url,
+          position: mentor.position,
+          top_mentor: mentor.top_mentor || false
         })),
         ...(careersResponse.data || []).map(career => ({
-          ...career,
-          type: 'career' as const
+          id: career.id,
+          type: 'career' as const,
+          title: career.title,
+          description: career.description,
+          salary_range: career.salary_range
         })),
         ...(majorsResponse.data || []).map(major => ({
-          ...major,
-          type: 'major' as const
+          id: major.id,
+          type: 'major' as const,
+          title: major.title,
+          description: major.description,
+          degree_levels: major.degree_levels,
+          career_opportunities: major.career_opportunities,
+          common_courses: major.common_courses
         }))
       ];
 
