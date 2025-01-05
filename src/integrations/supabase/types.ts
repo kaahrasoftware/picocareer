@@ -1534,7 +1534,7 @@ export type Database = {
         | "Rejected"
       school_type: "High School" | "Community College" | "University" | "Other"
       session_type:
-        | "First Touch"
+        | "Know About my Career"
         | "Resume/CV Review"
         | "Campus France"
         | "Undergrad Application"
@@ -1560,6 +1560,9 @@ export type Database = {
         | "College Application Last Review"
         | "Application Essays Review"
         | "I need someone to practice my presentation with"
+        | "Study Tips"
+        | "Volunteer Opportunities"
+        | "Know About my Academic Major"
       setting_type:
         | "timezone"
         | "notifications"

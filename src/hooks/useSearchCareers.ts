@@ -19,27 +19,10 @@ export function useSearchCareers() {
           id,
           title,
           description,
-          academic_majors,
-          required_skills,
           salary_range,
-          image_url,
-          industry,
-          work_environment,
-          required_tools,
-          job_outlook,
-          growth_potential,
-          keywords,
-          transferable_skills,
-          careers_to_consider_switching_to,
-          required_education,
-          stress_levels,
-          rare,
-          popular,
-          new_career,
-          profiles_count,
-          important_note,
-          featured
+          complete_career
         `)
+        .eq('complete_career', true)
         .or(
           `title.ilike.%${searchQuery}%,` +
           `description.ilike.%${searchQuery}%,` +
