@@ -7,4 +7,5 @@ export interface CareerBase {
   created_at: string;
   updated_at: string;
   featured: boolean | null;
+  complete_career: boolean | null;
 }

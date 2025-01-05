@@ -32,7 +32,10 @@ export function useSearchCareers() {
           new_career,
           profiles_count,
           important_note,
-          complete_career
+          complete_career,
+          created_at,
+          updated_at,
+          featured
         `)
         .or(
           `title.ilike.%${query}%,` +
