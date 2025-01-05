@@ -90,8 +90,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  // Convert string[] to SessionTypeEnum[]
-  const availableSessionTypes = existingTypes.map(type => type as SessionTypeEnum);
+  // Convert the type property from existingTypes to SessionTypeEnum[]
+  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
 
   return (
     <Form {...form}>
