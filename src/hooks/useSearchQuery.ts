@@ -13,7 +13,7 @@ export const useSearchQuery = () => {
   const handleSearch = async (value: string) => {
     if (value.length < 3) {
       setSearchResults([]);
-      return;
+      return [];
     }
 
     setIsLoading(true);
@@ -21,7 +21,7 @@ export const useSearchQuery = () => {
 
     try {
       const [mentorsResponse, careersResponse, majorsResponse] = await Promise.all([
-        // Search mentors - now using case-insensitive arrays
+        // Search mentors - using citext arrays
         supabase
           .from('profiles')
           .select(`
@@ -49,14 +49,14 @@ export const useSearchQuery = () => {
             `full_name.ilike.%${value}%,` +
             `bio.ilike.%${value}%,` +
             `location.ilike.%${value}%,` +
-            `skills.cs.{${value}},` + // Using case-sensitive containment with citext[]
-            `tools_used.cs.{${value}},` +
-            `keywords.cs.{${value}},` +
-            `fields_of_interest.cs.{${value}}`
+            `skills.contains.{${value}},` + // Using citext[] containment
+            `tools_used.contains.{${value}},` + // Using citext[] containment
+            `keywords.contains.{${value}},` + // Using citext[] containment
+            `fields_of_interest.contains.{${value}}` // Using citext[] containment
           )
           .limit(5),
 
-        // Search careers - using case-insensitive arrays
+        // Search careers - using citext arrays
         supabase
           .from('careers')
           .select('*')
@@ -64,23 +64,23 @@ export const useSearchQuery = () => {
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `keywords.cs.{${value}},` +
-            `required_skills.cs.{${value}},` +
-            `required_tools.cs.{${value}}`
+            `keywords.contains.{${value}},` + // Using citext[] containment
+            `required_skills.contains.{${value}},` + // Using citext[] containment
+            `required_tools.contains.{${value}}` // Using citext[] containment
           )
           .limit(5),
 
-        // Search majors - using case-insensitive arrays
+        // Search majors - using citext arrays
         supabase
           .from('majors')
           .select('*')
           .or(
             `title.ilike.%${value}%,` +
             `description.ilike.%${value}%,` +
-            `learning_objectives.cs.{${value}},` +
-            `common_courses.cs.{${value}},` +
-            `skill_match.cs.{${value}},` +
-            `tools_knowledge.cs.{${value}}`
+            `learning_objectives.contains.{${value}},` + // Using citext[] containment
+            `common_courses.contains.{${value}},` + // Using citext[] containment
+            `skill_match.contains.{${value}},` + // Using citext[] containment
+            `tools_knowledge.contains.{${value}}` // Using citext[] containment
           )
           .limit(5)
       ]);
