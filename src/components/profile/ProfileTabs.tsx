@@ -23,17 +23,9 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
   // Set initial tab value based on URL parameter
   const defaultTab = tabFromUrl || 'profile';
 
-  // Update tab when URL parameter changes
-  useEffect(() => {
-    if (tabFromUrl) {
-      onTabChange(tabFromUrl);
-    }
-  }, [tabFromUrl, onTabChange]);
-
   return (
     <Tabs 
       defaultValue={defaultTab}
-      value={tabFromUrl || defaultTab}
       className="col-span-5"
       onValueChange={onTabChange}
     >
