@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, Building2, GraduationCap, MapPin, DollarSign } from "lucide-react";
+import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
 import { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
@@ -22,8 +22,8 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-picocareer-dark truncate">{result.title}</p>
-                {result.career?.title && (
-                  <p className="text-sm text-muted-foreground truncate">{result.career.title}</p>
+                {result.position && (
+                  <p className="text-sm text-muted-foreground truncate">{result.position}</p>
                 )}
               </div>
               {result.top_mentor && (
@@ -44,6 +44,24 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   <span className="truncate">{result.location}</span>
+                </div>
+              )}
+              {result.keywords && result.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {result.keywords.slice(0, 3).map((keyword, index) => (
+                    <Badge 
+                      key={index}
+                      variant="secondary"
+                      className="bg-picocareer-primary/10 text-picocareer-primary hover:bg-picocareer-primary/20"
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
+                  {result.keywords.length > 3 && (
+                    <Badge variant="secondary" className="bg-muted">
+                      +{result.keywords.length - 3}
+                    </Badge>
+                  )}
                 </div>
               )}
             </div>
