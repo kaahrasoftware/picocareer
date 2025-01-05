@@ -134,6 +134,7 @@ export type Database = {
       careers: {
         Row: {
           academic_majors: string[] | null
+          author_id: string | null
           careers_to_consider_switching_to: string[] | null
           complete_career: boolean | null
           created_at: string
@@ -163,6 +164,7 @@ export type Database = {
         }
         Insert: {
           academic_majors?: string[] | null
+          author_id?: string | null
           careers_to_consider_switching_to?: string[] | null
           complete_career?: boolean | null
           created_at?: string
@@ -192,6 +194,7 @@ export type Database = {
         }
         Update: {
           academic_majors?: string[] | null
+          author_id?: string | null
           careers_to_consider_switching_to?: string[] | null
           complete_career?: boolean | null
           created_at?: string
@@ -219,7 +222,15 @@ export type Database = {
           updated_at?: string
           work_environment?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "careers_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       companies: {
         Row: {
