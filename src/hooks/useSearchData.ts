@@ -15,7 +15,7 @@ export function useSearchData(searchTerm: string) {
         // Search majors - basic title search
         supabase
           .from("majors")
-          .select('id, title, description')
+          .select('id, title, description, degree_levels, career_opportunities, common_courses')
           .ilike('title', `%${searchTerm}%`),
 
         // Search careers - basic title search
@@ -34,6 +34,7 @@ export function useSearchData(searchTerm: string) {
             avatar_url,
             position,
             location,
+            top_mentor,
             company:companies(name)
           `)
           .eq('user_type', 'mentor')
@@ -66,7 +67,10 @@ export function useSearchData(searchTerm: string) {
         id: major.id,
         type: "major" as const,
         title: major.title,
-        description: major.description
+        description: major.description,
+        degree_levels: major.degree_levels,
+        career_opportunities: major.career_opportunities,
+        common_courses: major.common_courses
       }));
 
       const careerResults: SearchResult[] = (careersResponse.data || []).map(career => ({
@@ -83,8 +87,10 @@ export function useSearchData(searchTerm: string) {
         title: `${mentor.first_name} ${mentor.last_name}`.trim(),
         description: mentor.position || 'Mentor',
         avatar_url: mentor.avatar_url,
+        position: mentor.position,
         location: mentor.location,
-        company: mentor.company?.name
+        company: mentor.company?.name,
+        top_mentor: mentor.top_mentor
       }));
 
       const combinedResults = [...majorResults, ...careerResults, ...mentorResults];
