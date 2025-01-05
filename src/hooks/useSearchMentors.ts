@@ -37,8 +37,8 @@ export const useSearchMentors = () => {
         .or(`first_name.ilike.%${query}%,` +
             `last_name.ilike.%${query}%,` +
             `bio.ilike.%${query}%,` +
-            `location.ilike.%${query}%`)
-        .filter('keywords', 'cs', `{${lowerQuery}}`)
+            `location.ilike.%${query}%,` +
+            `keywords.ilike.%${lowerQuery}%`)
         .limit(5);
 
       if (error) throw error;
