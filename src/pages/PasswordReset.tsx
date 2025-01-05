@@ -15,9 +15,11 @@ export default function PasswordReset() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const code = searchParams.get("code");
+    // Check if we have the recovery token
+    const token = searchParams.get("token");
+    const type = searchParams.get("type");
     
-    if (!code) {
+    if (!token || type !== 'recovery') {
       toast({
         title: "Invalid Reset Link",
         description: "This password reset link is invalid or has expired.",
@@ -55,7 +57,19 @@ export default function PasswordReset() {
         password: newPassword
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Password reset error:', error);
+        if (error.message.includes('Auth session missing')) {
+          toast({
+            title: "Link Expired",
+            description: "This password reset link has expired. Please request a new one.",
+            variant: "destructive",
+          });
+          navigate("/auth?tab=signin");
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Password Reset Successful",
