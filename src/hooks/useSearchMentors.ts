@@ -34,17 +34,8 @@ export const useSearchMentors = () => {
           career:careers!position(title)
         `)
         .eq('user_type', 'mentor')
-        .or(
-          `first_name.ilike.%${query}%,` +
-          `last_name.ilike.%${query}%,` +
-          `bio.ilike.%${query}%,` +
-          `location.ilike.%${query}%,` +
-          `keywords.cs.{${query.toLowerCase()}}`
-        )
-        .or(`companies.name.ilike.%${query}%`)
-        .or(`schools.name.ilike.%${query}%`)
-        .or(`majors.title.ilike.%${query}%`)
-        .or(`careers.title.ilike.%${query}%`)
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,bio.ilike.%${query}%,location.ilike.%${query}%`)
+        .or(`keywords.cs.{${query.toLowerCase()}}`)
         .limit(5);
 
       if (error) throw error;
