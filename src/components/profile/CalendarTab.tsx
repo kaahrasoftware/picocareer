@@ -1,28 +1,55 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { CalendarEvent } from "@/types/calendar";
-import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
 import { CalendarHeader } from "./calendar/CalendarHeader";
-import { CalendarContent } from "./calendar/CalendarContent";
-import type { Profile } from "@/types/database/profiles";
+import { SessionDetailsDialog } from "./calendar/SessionDetailsDialog";
+import { EventsSidebar } from "./calendar/EventsSidebar";
+import { CalendarContainer } from "./calendar/CalendarContainer";
 
-interface CalendarTabProps {
-  profile: Profile;
-}
-
-export function CalendarTab({ profile }: CalendarTabProps) {
+export function CalendarTab() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedSession, setSelectedSession] = useState<CalendarEvent | null>(null);
   const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Get initial session and listen for auth changes
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ['auth-session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session');
+      return session;
+    },
+    retry: false
+  });
+
+  // Then, get the user's profile type only if we have a session
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) throw new Error('No authenticated user');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
 
   // Get mentor availability
   const { data: availability = [], isLoading: isAvailabilityLoading } = useQuery({
-    queryKey: ['mentor_availability', profile.id, selectedDate],
+    queryKey: ['mentor_availability', session?.user?.id, selectedDate],
     queryFn: async () => {
-      if (!profile.id || !selectedDate) return [];
+      if (!session?.user?.id || !selectedDate) return [];
 
       const startOfDay = new Date(selectedDate);
       startOfDay.setHours(0, 0, 0, 0);
@@ -33,15 +60,18 @@ export function CalendarTab({ profile }: CalendarTabProps) {
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('*')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', session.user.id)
         .eq('is_available', true)
         .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
 
       if (error) throw error;
       return data;
     },
-    enabled: !!profile.id && !!selectedDate && profile.user_type === 'mentor',
+    enabled: !!session?.user?.id && !!selectedDate && profile?.user_type === 'mentor',
   });
+
+  // Get calendar events using our custom hook
+  const { data: events = [], isLoading: isEventsLoading } = useSessionEvents();
 
   const handleEventDelete = (deletedEvent: CalendarEvent) => {
     // Update the events list by filtering out the deleted event
@@ -122,28 +152,51 @@ export function CalendarTab({ profile }: CalendarTabProps) {
     }
   };
 
-  const isMentor = profile.user_type === 'mentor';
+  const isMentor = profile?.user_type === 'mentor';
+  const isLoading = isSessionLoading || isProfileLoading || isEventsLoading || isAvailabilityLoading;
 
-  if (isAvailabilityLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-muted-foreground">Please sign in to view your calendar.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <CalendarHeader profile={profile} />
-      
-      <CalendarContent
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        availability={availability}
-        onEventClick={setSelectedSession}
-        onEventDelete={handleEventDelete}
-        isMentor={isMentor}
-      />
+      <CalendarHeader isMentor={isMentor} />
+
+      <div className="flex gap-4">
+        <div className="w-fit">
+          <CalendarContainer
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            availability={availability}
+          />
+        </div>
+
+        {selectedDate && (
+          <div className="w-fit">
+            <EventsSidebar
+              date={selectedDate}
+              events={events}
+              availability={availability}
+              isMentor={isMentor}
+              onEventClick={setSelectedSession}
+              onEventDelete={handleEventDelete}
+            />
+          </div>
+        )}
+      </div>
 
       <SessionDetailsDialog
         session={selectedSession}
