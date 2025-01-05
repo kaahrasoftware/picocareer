@@ -26,6 +26,7 @@ export const useSearchMentors = () => {
           location,
           bio,
           keywords,
+          skills,
           highest_degree,
           top_mentor,
           company:companies(name),
@@ -37,7 +38,8 @@ export const useSearchMentors = () => {
           `last_name.ilike.%${query}%,` +
           `bio.ilike.%${query}%,` +
           `location.ilike.%${query}%,` +
-          `keywords.cs.{${query.toLowerCase()}}`
+          `keywords.cs.{${query.toLowerCase()}},` +
+          `skills.cs.{${query.toLowerCase()}}`
         )
         .limit(5);
 
