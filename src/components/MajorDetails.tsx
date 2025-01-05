@@ -158,18 +158,18 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         
         <ScrollArea className="h-[calc(85vh-120px)] px-6">
           <div className="space-y-6 pb-6">
-            <AcademicRequirements 
-              gpa_expectations={major.gpa_expectations}
-              common_courses={major.common_courses}
-              degree_levels={major.degree_levels}
-              affiliated_programs={major.affiliated_programs}
-            />
-
             <AboutSection 
               description={major.description}
               learning_objectives={major.learning_objectives}
               interdisciplinary_connections={major.interdisciplinary_connections}
               majorId={major.id}
+            />
+
+            <AcademicRequirements 
+              gpa_expectations={major.gpa_expectations}
+              common_courses={major.common_courses}
+              degree_levels={major.degree_levels}
+              affiliated_programs={major.affiliated_programs}
             />
 
             <CareerProspects 
