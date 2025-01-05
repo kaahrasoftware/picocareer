@@ -13,14 +13,18 @@ export function useSearchCareers() {
           id,
           title,
           description,
-          academic_majors,
-          required_skills,
           salary_range,
           image_url,
-          industry,
-          work_environment,
+          created_at,
+          updated_at,
+          featured,
+          complete_career,
+          academic_majors,
+          required_skills,
           required_tools,
           job_outlook,
+          industry,
+          work_environment,
           growth_potential,
           keywords,
           transferable_skills,
@@ -31,11 +35,7 @@ export function useSearchCareers() {
           popular,
           new_career,
           profiles_count,
-          important_note,
-          complete_career,
-          created_at,
-          updated_at,
-          featured
+          important_note
         `)
         .or(
           `title.ilike.%${query}%,` +
@@ -51,7 +51,7 @@ export function useSearchCareers() {
         throw error;
       }
 
-      return data || [];
+      return data as Career[];
     } catch (error) {
       console.error("Error in searchCareers:", error);
       return [];
