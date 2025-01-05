@@ -17,12 +17,11 @@ export function useSessionTypeManager(profileId: string) {
       const { data, error } = await supabase
         .from('mentor_session_types')
         .select('*')
-        .eq('profile_id', profileId)
-        .maybeSingle();
+        .eq('profile_id', profileId);
 
       if (error) throw error;
       console.log('Fetched session types:', data);
-      return data ? [data] : [];
+      return data;
     },
     enabled: !!profileId
   });
