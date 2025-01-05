@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
-import { SessionTypeFormData, SessionTypeFormProps } from "./types";
+import { Input } from "@/components/ui/input";
+import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
@@ -21,32 +20,31 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
   const selectedPlatforms = form.watch("meeting_platform") || [];
   const showTelegramField = selectedPlatforms.includes("Telegram");
-  const showPhoneField = selectedPlatforms.includes("Phone Call");
-  const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
-
-  const availableTypes = SESSION_TYPE_OPTIONS.filter(
-    type => !existingTypes.some(existing => existing.type === type)
-  );
+  const showPhoneField = selectedPlatforms.includes("Phone Call") || selectedPlatforms.includes("WhatsApp");
 
   const onSubmit = async (data: SessionTypeFormData) => {
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
 
-      const { data: existingType } = await supabase
+      const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
         .select('id, type')
         .eq('profile_id', profileId)
         .eq('type', data.type)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing type:', checkError);
+        throw checkError;
+      }
 
       console.log('Existing type check result:', existingType);
 
       if (existingType) {
-        console.log('Found existing session type:', existingType);
         toast({
           title: "Error",
-          description: `You already have a "${data.type}" session type created.`,
+          description: "You already have this session type",
           variant: "destructive",
         });
         return;
@@ -57,17 +55,13 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         .insert({
           profile_id: profileId,
           type: data.type,
-          duration: parseInt(data.duration.toString()),
-          price: 0,
+          duration: Number(data.duration),
+          price: data.price || 0,
           description: data.description || null,
           meeting_platform: data.meeting_platform,
-          telegram_username: data.telegram_username?.startsWith('@') 
-            ? data.telegram_username 
-            : data.telegram_username ? `@${data.telegram_username}` : null,
-          phone_number: data.phone_number || null
-        })
-        .select()
-        .single();
+          telegram_username: data.telegram_username || null,
+          phone_number: data.phone_number || null,
+        });
 
       if (error) {
         console.error('Error creating session type:', error);
@@ -84,10 +78,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
       onSuccess();
     } catch (error) {
-      console.error('Error creating session type:', error);
+      console.error('Form submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to create session type. Please try again.",
+        description: "Failed to create session type",
         variant: "destructive",
       });
     } finally {
@@ -97,49 +91,45 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
-        <SessionTypeSelect form={form} availableTypes={availableTypes} />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <SessionTypeSelect
+            control={form.control}
+            existingTypes={existingTypes?.map(t => t.type) || []}
+          />
+        </div>
 
-        <FormField
-          control={form.control}
-          name="duration"
-          rules={{
-            required: "Duration is required",
-            min: { value: 15, message: "Minimum duration is 15 minutes" },
-            max: { value: 180, message: "Maximum duration is 180 minutes" }
-          }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duration (minutes)</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div>
+          <Input
+            type="number"
+            placeholder="Duration (minutes)"
+            {...form.register("duration", { required: true })}
+          />
+        </div>
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description (optional)</FormLabel>
-              <FormControl>
-                <Textarea {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div>
+          <Input
+            type="number"
+            placeholder="Price"
+            {...form.register("price")}
+          />
+        </div>
 
-        <PlatformSelect form={form} />
-        
-        <PlatformFields 
-          form={form}
+        <div>
+          <Textarea
+            placeholder="Description (optional)"
+            {...form.register("description")}
+          />
+        </div>
+
+        <div>
+          <PlatformSelect control={form.control} />
+        </div>
+
+        <PlatformFields
           showTelegramField={showTelegramField}
           showPhoneField={showPhoneField}
-          showWhatsAppField={showWhatsAppField}
+          register={form.register}
         />
 
         <div className="flex justify-end gap-2">
@@ -152,7 +142,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Session Type"}
+            {isSubmitting ? "Creating..." : "Create"}
           </Button>
         </div>
       </form>
