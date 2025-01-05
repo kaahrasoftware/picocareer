@@ -30,6 +30,9 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
   const { toast } = useToast();
   const { session } = useAuthSession();
 
+  // Log the major data to verify we're receiving common_courses
+  console.log("Major data:", major);
+
   const { data: majorWithCareers } = useQuery({
     queryKey: ['major-careers', major.id],
     queryFn: async () => {
@@ -45,6 +48,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         .single();
 
       if (error) throw error;
+      console.log("Fetched major data:", data); // Add this log to verify the data
       return data as Major;
     },
     enabled: open && !!major.id,
@@ -154,33 +158,18 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         
         <ScrollArea className="h-[calc(85vh-120px)] px-6">
           <div className="space-y-6 pb-6">
-            {major.degree_levels && major.degree_levels.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-lg font-semibold">Degree Levels</h4>
-                <div className="flex flex-wrap gap-2">
-                  {major.degree_levels.map((level, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="outline"
-                      className="bg-[#F2FCE2] text-[#4B5563]"
-                    >
-                      {level}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+            <AcademicRequirements 
+              gpa_expectations={major.gpa_expectations}
+              common_courses={major.common_courses}
+              degree_levels={major.degree_levels}
+              affiliated_programs={major.affiliated_programs}
+            />
 
             <AboutSection 
               description={major.description}
               learning_objectives={major.learning_objectives}
               interdisciplinary_connections={major.interdisciplinary_connections}
               majorId={major.id}
-            />
-
-            <AcademicRequirements 
-              gpa_expectations={major.gpa_expectations}
-              affiliated_programs={major.affiliated_programs}
             />
 
             <CareerProspects 
