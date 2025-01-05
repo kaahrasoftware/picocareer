@@ -17,27 +17,32 @@ export function MentorTab({ profile }: MentorTabProps) {
   const profileId = profile?.id;
   const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
 
-  // Check timezone setting
   useEffect(() => {
     const checkTimezone = async () => {
       if (!profileId) return;
 
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', profileId)
-        .eq('setting_type', 'timezone')
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('setting_value')
+          .eq('profile_id', profileId)
+          .eq('setting_type', 'timezone')
+          .maybeSingle();
 
-      if (error) {
+        if (error) {
+          console.error('Error checking timezone:', error);
+          return;
+        }
+
+        if (!data?.setting_value) {
+          toast({
+            title: "Timezone not set",
+            description: "Please set your timezone in settings to ensure accurate scheduling.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
         console.error('Error checking timezone:', error);
-      } else if (!data?.setting_value) {
-        // Only show toast if no timezone data exists
-        toast({
-          title: "Timezone not set",
-          description: "Please set your timezone in settings to ensure accurate scheduling.",
-          variant: "destructive",
-        });
       }
     };
 
