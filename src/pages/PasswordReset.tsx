@@ -7,12 +7,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PasswordReset() {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const code = searchParams.get("code");
@@ -23,18 +23,16 @@ export default function PasswordReset() {
         description: "This password reset link is invalid or has expired.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        navigate("/auth?tab=signin");
-      }, 2000);
+      navigate("/auth?tab=signin");
     }
   }, [searchParams, navigate, toast]);
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Passwords Don't Match",
+        title: "Passwords do not match",
         description: "Please ensure both passwords match.",
         variant: "destructive",
       });
@@ -43,7 +41,7 @@ export default function PasswordReset() {
 
     if (newPassword.length < 6) {
       toast({
-        title: "Password Too Short",
+        title: "Password too short",
         description: "Password must be at least 6 characters long.",
         variant: "destructive",
       });
@@ -53,12 +51,30 @@ export default function PasswordReset() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      // Get the code from URL parameters
+      const code = searchParams.get("code");
+      
+      if (!code) {
+        throw new Error("Reset code is missing");
+      }
 
-      if (error) throw error;
+      // First verify the recovery code
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token: code,
+        type: 'recovery'
+      });
+
+      if (verifyError) throw verifyError;
+
+      // Then update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) throw updateError;
 
       toast({
-        title: "Password Updated",
+        title: "Password Reset Successful",
         description: "Your password has been successfully reset. Please sign in with your new password.",
       });
 
@@ -68,8 +84,8 @@ export default function PasswordReset() {
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to reset password. Please try again.",
+        title: "Error Resetting Password",
+        description: error.message || "An error occurred while resetting your password.",
         variant: "destructive",
       });
     } finally {
@@ -78,7 +94,7 @@ export default function PasswordReset() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Reset Password</h1>
@@ -87,14 +103,14 @@ export default function PasswordReset() {
           </p>
         </div>
 
-        <form onSubmit={handlePasswordReset} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Input
               type="password"
               placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              disabled={loading}
+              required
             />
           </div>
           <div className="space-y-2">
@@ -103,7 +119,7 @@ export default function PasswordReset() {
               placeholder="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={loading}
+              required
             />
           </div>
           <Button
