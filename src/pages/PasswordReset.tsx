@@ -15,11 +15,9 @@ export default function PasswordReset() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the necessary parameters from the reset link
-    const type = searchParams.get("type");
-    const accessToken = searchParams.get("access_token");
-
-    if (type !== "recovery" || !accessToken) {
+    const code = searchParams.get("code");
+    
+    if (!code) {
       toast({
         title: "Invalid Reset Link",
         description: "This password reset link is invalid or has expired.",
@@ -55,9 +53,7 @@ export default function PasswordReset() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (error) throw error;
 
@@ -66,7 +62,6 @@ export default function PasswordReset() {
         description: "Your password has been successfully reset. Please sign in with your new password.",
       });
 
-      // Redirect to sign in page after successful password reset
       setTimeout(() => {
         navigate("/auth?tab=signin");
       }, 2000);
