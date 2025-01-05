@@ -23,6 +23,11 @@ export const useSearchMajors = () => {
           description,
           learning_objectives,
           degree_levels,
+          common_courses,
+          interdisciplinary_connections,
+          job_prospects,
+          certifications_to_consider,
+          affiliated_programs,
           potential_salary,
           profiles_count
         `)
