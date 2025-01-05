@@ -28,8 +28,7 @@ export const useSearchMajors = () => {
         `)
         .or(
           `title.ilike.%${query}%,` +
-          `description.ilike.%${query}%,` +
-          `learning_objectives.cs.{${query.toLowerCase()}}`
+          `description.ilike.%${query}%`
         )
         .limit(20);
 
