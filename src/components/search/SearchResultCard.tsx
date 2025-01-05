@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
+import { Award, Building2, GraduationCap, MapPin, DollarSign } from "lucide-react";
 import { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
@@ -55,24 +55,32 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             <div className="flex-1">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">{result.title}</h3>
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{result.description}</p>
-              {result.academic_majors && result.academic_majors.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {result.academic_majors.slice(0, 3).map((major, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="secondary"
-                      className="bg-picocareer-primary/10 text-picocareer-primary hover:bg-picocareer-primary/20"
-                    >
-                      {major}
-                    </Badge>
-                  ))}
-                  {result.academic_majors.length > 3 && (
-                    <Badge variant="secondary" className="bg-muted">
-                      +{result.academic_majors.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
+              <div className="space-y-3">
+                {result.salary_range && (
+                  <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                    <DollarSign className="h-3 w-3" />
+                    {result.salary_range}
+                  </Badge>
+                )}
+                {result.academic_majors && result.academic_majors.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {result.academic_majors.slice(0, 3).map((major, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary"
+                        className="bg-picocareer-primary/10 text-picocareer-primary hover:bg-picocareer-primary/20"
+                      >
+                        {major}
+                      </Badge>
+                    ))}
+                    {result.academic_majors.length > 3 && (
+                      <Badge variant="secondary" className="bg-muted">
+                        +{result.academic_majors.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         );
