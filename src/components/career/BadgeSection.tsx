@@ -1,43 +1,26 @@
 import { Badge } from "@/components/ui/badge";
-import { ReactNode } from "react";
 
 interface BadgeSectionProps {
   title: string;
-  items?: string[];
-  badgeClassName: string;
-  icon?: ReactNode;
+  items: string[];
+  badgeClassName?: string;
 }
 
-export function BadgeSection({ title, items, badgeClassName, icon }: BadgeSectionProps) {
+export function BadgeSection({ title, items, badgeClassName }: BadgeSectionProps) {
   if (!items || items.length === 0) return null;
 
-  const visibleItems = items.slice(0, 3);
-  const remainingCount = items.length - 3;
-
   return (
-    <div className="mb-4">
-      <h4 className="text-sm font-medium mb-2 text-left flex items-center gap-2">
-        {icon}
-        {title}
-      </h4>
-      <div className="flex flex-wrap gap-1.5">
-        {visibleItems.map((item) => (
+    <div className="space-y-2 mb-4">
+      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item, index) => (
           <Badge 
-            key={item}
-            variant="outline"
+            key={`${item}-${index}`}
             className={badgeClassName}
           >
             {item}
           </Badge>
         ))}
-        {remainingCount > 0 && (
-          <Badge 
-            variant="outline"
-            className={badgeClassName}
-          >
-            +{remainingCount} more
-          </Badge>
-        )}
       </div>
     </div>
   );
