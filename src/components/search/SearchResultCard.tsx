@@ -21,10 +21,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         return (
           <>
             <div className="flex items-center gap-3 mb-3">
-              <Avatar className="h-12 w-12 border-2 border-[#FEF7CD]">
-                <AvatarImage src={result.avatar_url} alt={result.title} />
-                <AvatarFallback>{result.title?.[0] || "?"}</AvatarFallback>
-              </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
                 <div className="space-y-1">
