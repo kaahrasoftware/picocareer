@@ -2,13 +2,10 @@ export interface CareerJob {
   job_outlook: string | null;
   industry: string | null;
   work_environment: string | null;
-  growth_potential: string | null;
-  careers_to_consider_switching_to: string[] | null;
-  required_education: string[] | null;
-  stress_levels: string | null;
-  rare: boolean | null;
-  popular: boolean | null;
-  new_career: boolean | null;
-  profiles_count: number | null;
-  important_note: string | null;
+  average_salary: number | null;
+  job_prospects: string | null;
+  potential_salary: number | null;
+  professional_associations: string[] | null;
+  global_applicability: string | null;
+  tuition_and_fees: number | null;
 }
