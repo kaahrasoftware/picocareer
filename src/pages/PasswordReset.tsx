@@ -51,9 +51,15 @@ export default function PasswordReset() {
     setLoading(true);
 
     try {
-      // Update the password using the recovery code from the URL
+      const code = searchParams.get("code");
+      
+      // Update the password using the recovery code
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
+      }, {
+        headers: {
+          Authorization: `Bearer ${code}`
+        }
       });
 
       if (error) throw error;
