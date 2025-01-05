@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/profile/ProfileTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
@@ -15,10 +17,15 @@ interface ProfileTabsProps {
 
 export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps) {
   const isAdmin = profile?.user_type === 'admin';
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+
+  // Set initial tab value based on URL parameter
+  const defaultTab = tabFromUrl || 'profile';
 
   return (
     <Tabs 
-      defaultValue="profile" 
+      defaultValue={defaultTab}
       className="col-span-5"
       onValueChange={onTabChange}
     >

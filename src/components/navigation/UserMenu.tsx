@@ -50,7 +50,7 @@ export function UserMenu() {
         <DropdownMenuItem onClick={() => navigate("/profile")}>
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/profile/settings")}>
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=settings")}>
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
