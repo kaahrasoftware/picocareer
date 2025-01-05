@@ -5,6 +5,7 @@ import { Award, Building2, GraduationCap, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { Button } from "@/components/ui/button";
 
 interface SearchResult {
   id: string;
@@ -28,6 +29,8 @@ interface MentorSearchResultsProps {
 export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
   const navigate = useNavigate();
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   const handleResultClick = (result: SearchResult) => {
     switch (result.type) {
@@ -49,6 +52,18 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
     majors: results.filter(r => r.type === 'major')
   };
 
+  const getPaginatedResults = (items: SearchResult[]) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return items.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(results.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div className="space-y-8">
       {/* Mentors Section */}
@@ -56,7 +71,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
         <div>
           <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Mentors</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {groupedResults.mentors.map((result) => (
+            {getPaginatedResults(groupedResults.mentors).map((result) => (
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
@@ -97,6 +112,35 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
               </Card>
             ))}
           </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                <Button
+                  key={pageNumber}
+                  variant={pageNumber === currentPage ? "default" : "outline"}
+                  onClick={() => handlePageChange(pageNumber)}
+                >
+                  {pageNumber}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -105,7 +149,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
         <div>
           <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Careers</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {groupedResults.careers.map((result) => (
+            {getPaginatedResults(groupedResults.careers).map((result) => (
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
@@ -135,7 +179,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
         <div>
           <h3 className="text-xl font-semibold mb-4 text-picocareer-dark">Fields of Study</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {groupedResults.majors.map((result) => (
+            {getPaginatedResults(groupedResults.majors).map((result) => (
               <Card
                 key={result.id}
                 className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
