@@ -29,12 +29,14 @@ export const useSearchResults = () => {
             first_name,
             last_name,
             avatar_url,
+            position,
             location,
             bio,
             skills,
             tools_used,
             keywords,
             fields_of_interest,
+            highest_degree,
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
@@ -53,7 +55,7 @@ export const useSearchResults = () => {
             `fields_of_interest.cs.{${value.toLowerCase()}}`
           ),
 
-        // Search careers
+        // Search careers with expanded fields
         supabase
           .from('careers')
           .select('*')
@@ -98,7 +100,7 @@ export const useSearchResults = () => {
           ...mentor,
           type: 'mentor',
           title: `${mentor.first_name} ${mentor.last_name}`,
-          description: mentor.bio || mentor.career?.title
+          description: mentor.bio || mentor.position
         })),
         ...(careersResponse.data || []).map(career => ({
           ...career,
