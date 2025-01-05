@@ -17,6 +17,7 @@ import Index from "@/pages/Index";
 import MajorUpload from "@/pages/MajorUpload";
 import Mentor from "@/pages/Mentor";
 import MentorRegistration from "@/pages/MentorRegistration";
+import PasswordReset from "@/pages/PasswordReset";
 import Privacy from "@/pages/Privacy";
 import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
@@ -147,6 +148,11 @@ const router = createBrowserRouter([
   {
     path: "/video",
     element: <MainLayout><Video /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/password-reset",
+    element: <PasswordReset />,
     errorElement: <Error />,
   },
   {
