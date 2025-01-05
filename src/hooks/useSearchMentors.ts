@@ -29,13 +29,16 @@ export const useSearchMentors = () => {
           highest_degree,
           top_mentor,
           company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!position(title)
+          school:schools(name)
         `)
         .eq('user_type', 'mentor')
-        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,bio.ilike.%${query}%,location.ilike.%${query}%`)
-        .or(`keywords.cs.{${query.toLowerCase()}}`)
+        .or(
+          `first_name.ilike.%${query}%,` +
+          `last_name.ilike.%${query}%,` +
+          `bio.ilike.%${query}%,` +
+          `location.ilike.%${query}%,` +
+          `keywords.cs.{${query.toLowerCase()}}`
+        )
         .limit(5);
 
       if (error) throw error;
