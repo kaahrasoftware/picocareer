@@ -1,11 +1,12 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useSearchQuery } from '@/hooks/useSearchQuery';
+import { SearchResult } from '@/types/search';
 
 interface SearchContextType {
-  searchResults: any[];
+  searchResults: SearchResult[];
   isLoading: boolean;
-  handleSearch: (value: string) => void;
-  setSearchResults: (results: any[]) => void;
+  handleSearch: (value: string) => Promise<SearchResult[]>;
+  setSearchResults: (results: SearchResult[]) => void;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);

@@ -23,8 +23,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     setSearchQuery(value);
     const results = await handleSearch(value);
     
-    // Only track search if user is authenticated and results exist
-    if (session?.user?.id && results && results.length > 0) {
+    if (session?.user?.id && results.length > 0) {
       await trackSearch(value, results.length);
     }
   };
