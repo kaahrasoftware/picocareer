@@ -21,7 +21,7 @@ export function ResetPasswordButton({ email }: ResetPasswordButtonProps) {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
-        redirectTo: `${window.location.origin}/password-reset`,
+        redirectTo: `${window.location.origin}/password-reset?type=recovery`,
       });
 
       if (error) throw error;
@@ -33,7 +33,6 @@ export function ResetPasswordButton({ email }: ResetPasswordButtonProps) {
     } catch (error: any) {
       console.error('Password reset error:', error);
       
-      // Handle specific error cases
       if (error.message?.includes("Email rate limit exceeded")) {
         toast({
           title: "Too Many Attempts",

@@ -15,11 +15,9 @@ export default function PasswordReset() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if we have the recovery token
-    const token = searchParams.get("token");
     const type = searchParams.get("type");
     
-    if (!token || type !== 'recovery') {
+    if (type !== 'recovery') {
       toast({
         title: "Invalid Reset Link",
         description: "This password reset link is invalid or has expired.",
