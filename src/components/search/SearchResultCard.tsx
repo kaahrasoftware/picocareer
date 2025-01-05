@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, GraduationCap, MapPin } from "lucide-react";
 import { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
