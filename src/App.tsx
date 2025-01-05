@@ -24,7 +24,7 @@ import { Footer } from "@/components/Footer";
 const queryClient = new QueryClient();
 
 // Layout component to wrap pages with MenuSidebar and Footer
-function Layout({ children }: { children: React.ReactNode }) {
+function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <MenuSidebar />
@@ -36,40 +36,52 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Simple layout without footer for auth pages
+function AuthLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <MenuSidebar />
+      <main className="pt-16 flex-grow">
+        {children}
+      </main>
+    </div>
+  );
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout><Index /></Layout>,
+    element: <MainLayout><Index /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/about",
-    element: <Layout><About /></Layout>,
+    element: <MainLayout><About /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/auth",
-    element: <Layout><Auth /></Layout>,
+    element: <AuthLayout><Auth /></AuthLayout>,
     errorElement: <Error />,
   },
   {
     path: "/blog",
-    element: <Layout><Blog /></Layout>,
+    element: <MainLayout><Blog /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/blog/upload",
-    element: <Layout><BlogUpload /></Layout>,
+    element: <MainLayout><BlogUpload /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/career",
-    element: <Layout><Career /></Layout>,
+    element: <MainLayout><Career /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/career/upload",
-    element: <Layout><CareerUpload /></Layout>,
+    element: <MainLayout><CareerUpload /></MainLayout>,
     errorElement: <Error />,
   },
   {
@@ -79,32 +91,32 @@ const router = createBrowserRouter([
   },
   {
     path: "/major/upload",
-    element: <Layout><MajorUpload /></Layout>,
+    element: <MainLayout><MajorUpload /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/mentor",
-    element: <Layout><Mentor /></Layout>,
+    element: <MainLayout><Mentor /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/mentor/register",
-    element: <Layout><MentorRegistration /></Layout>,
+    element: <MainLayout><MentorRegistration /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/profile",
-    element: <Layout><Profile /></Layout>,
+    element: <MainLayout><Profile /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/program",
-    element: <Layout><Program /></Layout>,
+    element: <MainLayout><Program /></MainLayout>,
     errorElement: <Error />,
   },
   {
     path: "/video",
-    element: <Layout><Video /></Layout>,
+    element: <MainLayout><Video /></MainLayout>,
     errorElement: <Error />,
   },
   {
