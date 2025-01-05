@@ -15,8 +15,9 @@ export default function MajorUpload() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const [formKey, setFormKey] = useState(0);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  // Move form submission logic into a handler function
+  // Handle form submission
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
@@ -112,12 +113,14 @@ export default function MajorUpload() {
           variant: "destructive",
         });
         navigate("/");
+      } else {
+        setIsAuthorized(true);
       }
     }
   }, [session, profile, navigate, toast]);
 
-  // Render loading state while checking authentication
-  if (!session || !profile) {
+  // Loading state
+  if (!session || !profile || !isAuthorized) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center">
         <div className="animate-pulse">Loading...</div>
