@@ -4,14 +4,16 @@ export function Footer() {
   const navigate = useNavigate();
 
   const companyLinks = [
-    { label: "About Us", href: "#" },
-    { label: "Contact Us", href: "#" },
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
+    { label: "About Us", href: "/about", onClick: () => navigate("/about") },
+    { label: "Contact Us", href: "/contact", onClick: () => navigate("/contact") },
+    { label: "Privacy Policy", href: "/privacy", onClick: () => navigate("/privacy") },
+    { label: "Terms of Service", href: "/terms", onClick: () => navigate("/terms") },
   ];
 
   const otherLinks = [
     { label: "Blog", href: "/blog", onClick: () => navigate("/blog") },
+    { label: "Schools", href: "/school", onClick: () => navigate("/school") },
+    { label: "Funding", href: "/funding", onClick: () => navigate("/funding") },
     { label: "How PicoCareer works", href: "#" },
   ];
 
@@ -32,7 +34,11 @@ export function Footer() {
             <ul className="space-y-2">
               {companyLinks.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a
+                    href={link.href}
+                    onClick={link.onClick}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     {link.label}
                   </a>
                 </li>

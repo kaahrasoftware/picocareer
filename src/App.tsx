@@ -9,14 +9,19 @@ import Blog from "@/pages/Blog";
 import BlogUpload from "@/pages/BlogUpload";
 import Career from "@/pages/Career";
 import CareerUpload from "@/pages/CareerUpload";
+import Contact from "@/pages/Contact";
 import EmailConfirmation from "@/pages/EmailConfirmation";
 import Error from "@/pages/Error";
+import Funding from "@/pages/Funding";
 import Index from "@/pages/Index";
 import MajorUpload from "@/pages/MajorUpload";
 import Mentor from "@/pages/Mentor";
 import MentorRegistration from "@/pages/MentorRegistration";
+import Privacy from "@/pages/Privacy";
 import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
+import School from "@/pages/School";
+import Terms from "@/pages/Terms";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
@@ -85,8 +90,18 @@ const router = createBrowserRouter([
     errorElement: <Error />,
   },
   {
+    path: "/contact",
+    element: <MainLayout><Contact /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
     path: "/email-confirmation",
     element: <EmailConfirmation />,
+    errorElement: <Error />,
+  },
+  {
+    path: "/funding",
+    element: <MainLayout><Funding /></MainLayout>,
     errorElement: <Error />,
   },
   {
@@ -105,6 +120,11 @@ const router = createBrowserRouter([
     errorElement: <Error />,
   },
   {
+    path: "/privacy",
+    element: <MainLayout><Privacy /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
     path: "/profile",
     element: <MainLayout><Profile /></MainLayout>,
     errorElement: <Error />,
@@ -112,6 +132,16 @@ const router = createBrowserRouter([
   {
     path: "/program",
     element: <MainLayout><Program /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/school",
+    element: <MainLayout><School /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/terms",
+    element: <MainLayout><Terms /></MainLayout>,
     errorElement: <Error />,
   },
   {
