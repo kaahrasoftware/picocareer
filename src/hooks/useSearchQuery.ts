@@ -3,14 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "./useDebounce";
 import { useSearchAnalytics } from "./useSearchAnalytics";
 import { useToast } from "./use-toast";
+import { SearchResult } from "@/types/search";
 
 export const useSearchQuery = () => {
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { trackSearch } = useSearchAnalytics();
   const { toast } = useToast();
 
-  const handleSearch = async (value: string) => {
+  const handleSearch = async (value: string): Promise<SearchResult[]> => {
     if (value.length < 3) {
       setSearchResults([]);
       return [];
@@ -92,17 +93,17 @@ export const useSearchQuery = () => {
       const combinedResults = [
         ...(mentorsResponse.data || []).map(mentor => ({
           ...mentor,
-          type: 'mentor',
+          type: 'mentor' as const,
           title: `${mentor.first_name} ${mentor.last_name}`,
           description: mentor.bio || mentor.position
         })),
         ...(careersResponse.data || []).map(career => ({
           ...career,
-          type: 'career'
+          type: 'career' as const
         })),
         ...(majorsResponse.data || []).map(major => ({
           ...major,
-          type: 'major'
+          type: 'major' as const
         }))
       ];
 

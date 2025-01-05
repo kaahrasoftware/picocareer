@@ -1,4 +1,3 @@
-import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SearchProvider } from "@/contexts/SearchContext";
@@ -10,14 +9,12 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <SearchProvider>
-            <Layout />
-            <Toaster />
-          </SearchProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <SearchProvider>
+          <Layout />
+          <Toaster />
+        </SearchProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
