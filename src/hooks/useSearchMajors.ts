@@ -28,6 +28,17 @@ export const useSearchMajors = () => {
           job_prospects,
           certifications_to_consider,
           affiliated_programs,
+          transferable_skills,
+          tools_knowledge,
+          passion_for_subject,
+          skill_match,
+          professional_associations,
+          global_applicability,
+          majors_to_consider_switching_to,
+          career_opportunities,
+          intensity,
+          stress_level,
+          category,
           potential_salary,
           profiles_count
         `)
@@ -38,7 +49,18 @@ export const useSearchMajors = () => {
           `interdisciplinary_connections.cs.{${query}},` +
           `job_prospects.ilike.%${query}%,` +
           `certifications_to_consider.cs.{${query}},` +
-          `affiliated_programs.cs.{${query}}`
+          `affiliated_programs.cs.{${query}},` +
+          `transferable_skills.cs.{${query}},` +
+          `tools_knowledge.cs.{${query}},` +
+          `passion_for_subject.ilike.%${query}%,` +
+          `skill_match.cs.{${query}},` +
+          `professional_associations.cs.{${query}},` +
+          `global_applicability.ilike.%${query}%,` +
+          `majors_to_consider_switching_to.cs.{${query}},` +
+          `career_opportunities.cs.{${query}},` +
+          `intensity.ilike.%${query}%,` +
+          `stress_level.ilike.%${query}%,` +
+          `category.cs.{${query}}`
         )
         .limit(20);
 
