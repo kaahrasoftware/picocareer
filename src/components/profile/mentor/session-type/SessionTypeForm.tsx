@@ -11,10 +11,12 @@ import { SessionTypeFormData, SessionTypeFormProps } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const form = useForm<SessionTypeFormData>();
 
   const selectedPlatforms = form.watch("meeting_platform") || [];
@@ -31,7 +33,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
 
-      // Check if session type already exists for this mentor
       const { data: existingType } = await supabase
         .from('mentor_session_types')
         .select('id, type')
@@ -72,6 +73,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         console.error('Error creating session type:', error);
         throw error;
       }
+
+      // Immediately invalidate and refetch the query
+      queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
         title: "Success",

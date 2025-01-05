@@ -17,7 +17,8 @@ export function useSessionTypeManager(profileId: string) {
       const { data, error } = await supabase
         .from('mentor_session_types')
         .select('*')
-        .eq('profile_id', profileId);
+        .eq('profile_id', profileId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       console.log('Fetched session types:', data);
@@ -40,7 +41,8 @@ export function useSessionTypeManager(profileId: string) {
         description: "Session type deleted successfully",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['mentor-session-types'] });
+      // Immediately invalidate the query to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
     } catch (error) {
       console.error('Error deleting session type:', error);
       toast({

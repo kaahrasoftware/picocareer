@@ -2,12 +2,10 @@ import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { useSessionTypeManager } from "./hooks/useSessionTypeManager";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import type { Database } from "@/integrations/supabase/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -20,45 +18,15 @@ interface SessionTypeManagerProps {
 export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const { sessionTypes: fetchedSessionTypes, isLoading, handleDeleteSessionType } = useSessionTypeManager(profileId);
-  const queryClient = useQueryClient();
-
-  // Subscribe to real-time changes
-  useEffect(() => {
-    console.log('Setting up real-time subscription for session types:', profileId);
-    
-    const channel = supabase
-      .channel('session-types-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'mentor_session_types',
-          filter: `profile_id=eq.${profileId}`
-        },
-        (payload) => {
-          console.log('Session type changed:', payload);
-          // Invalidate and refetch session types
-          queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
-          onUpdate(); // Call onUpdate to refresh the parent component
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up real-time subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [profileId, queryClient, onUpdate]);
 
   const handleFormSuccess = () => {
     setShowForm(false);
-    onUpdate(); // Call onUpdate to refresh the parent component
+    onUpdate();
   };
 
   const handleDelete = async (id: string) => {
     await handleDeleteSessionType(id);
-    onUpdate(); // Refresh after deletion as well
+    onUpdate();
   };
 
   if (isLoading) {
