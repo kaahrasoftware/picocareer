@@ -74,12 +74,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">{result.title}</h3>
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{result.description}</p>
               <div className="space-y-3">
-                {result.salary_range && (
-                  <Badge variant="secondary" className="flex items-center gap-1 w-fit">
-                    <DollarSign className="h-3 w-3" />
-                    {result.salary_range}
-                  </Badge>
-                )}
                 {result.academic_majors && result.academic_majors.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {result.academic_majors.slice(0, 3).map((major, index) => (

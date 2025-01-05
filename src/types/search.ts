@@ -13,6 +13,7 @@ export interface MentorSearchResult extends BaseSearchResult {
   career?: { title: string } | null;
   location?: string;
   company?: { name: string } | null;
+  keywords?: string[];
 }
 
 export interface CareerSearchResult extends BaseSearchResult {
