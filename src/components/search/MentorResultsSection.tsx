@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/types/search";
 import { isMentorResult } from "@/types/search";
 import { useState } from "react";
-import { BlogPagination } from "@/components/blog/BlogPagination";
 import { Award } from "lucide-react";
 import { LoadMoreButton } from "@/components/community/LoadMoreButton";
 
@@ -14,7 +13,7 @@ interface MentorResultsSectionProps {
 }
 
 export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsSectionProps) => {
-  const [displayCount, setDisplayCount] = useState(6);
+  const [displayCount, setDisplayCount] = useState(4);
   const validMentors = mentors.filter(isMentorResult);
   
   if (!validMentors.length) return null;
@@ -23,7 +22,7 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
   const hasMore = displayCount < validMentors.length;
 
   const handleLoadMore = () => {
-    setDisplayCount(prev => Math.min(prev + 6, validMentors.length));
+    setDisplayCount(prev => Math.min(prev + 4, validMentors.length));
   };
 
   return (
@@ -32,7 +31,7 @@ export const MentorResultsSection = ({ mentors, onSelectMentor }: MentorResultsS
         Mentors ({validMentors.length} results)
       </h3>
       <div className="w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 place-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 place-items-center">
           {displayedMentors.map((mentor) => (
             <Card 
               key={mentor.id}
