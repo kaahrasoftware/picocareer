@@ -4,7 +4,7 @@ import { BadgeSection } from "@/components/career/BadgeSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileLinks } from "./ProfileLinks";
-import { Briefcase, GraduationCap, MapPin, User2, Wrench, Tags, BookOpen, Lightbulb } from "lucide-react";
+import { Briefcase, GraduationCap, MapPin, User2, Wrench, Tags, BookOpen, Lightbulb, Globe } from "lucide-react";
 
 interface ProfileViewProps {
   profile: Profile & {
@@ -93,6 +93,21 @@ export function ProfileView({ profile }: ProfileViewProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Location</p>
                 <p>{profile.location}</p>
+              </div>
+            )}
+            {profile.languages && profile.languages.length > 0 && (
+              <div>
+                <p className="text-sm text-muted-foreground">Languages</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {profile.languages.map((language, index) => (
+                    <Badge 
+                      key={`${language}-${index}`}
+                      className="bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#C8E6C9] transition-colors border border-[#A5D6A7]"
+                    >
+                      {language}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
           </div>
