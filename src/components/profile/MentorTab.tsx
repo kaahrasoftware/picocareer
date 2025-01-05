@@ -31,8 +31,8 @@ export function MentorTab({ profile }: MentorTabProps) {
 
       if (error) {
         console.error('Error checking timezone:', error);
-      } else if (!data || !data.setting_value || data.setting_value.trim() === '') {
-        // Only show toast if timezone is actually missing or empty
+      } else if (!data?.setting_value) {
+        // Only show toast if no timezone data exists
         toast({
           title: "Timezone not set",
           description: "Please set your timezone in settings to ensure accurate scheduling.",
