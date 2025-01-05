@@ -18,9 +18,9 @@ export function MentorTab({ profile }: MentorTabProps) {
   const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
 
   useEffect(() => {
-    const checkTimezone = async () => {
-      if (!profileId) return;
+    if (!profileId) return;
 
+    const checkTimezone = async () => {
       try {
         const { data, error } = await supabase
           .from('user_settings')
@@ -49,7 +49,9 @@ export function MentorTab({ profile }: MentorTabProps) {
     checkTimezone();
   }, [profileId, toast]);
 
-  if (!profileId) return null;
+  if (!profileId) {
+    return null;
+  }
 
   return (
     <Tabs defaultValue="stats" className="w-full">
