@@ -69,7 +69,8 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
             type: session.type,
             duration: session.duration,
             price: session.price,
-            description: session.description
+            description: session.description,
+            meeting_platform: ["Google Meet"]
           }))
         );
 
@@ -169,7 +170,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
           type="button"
           variant="outline"
           onClick={() => setSessionTypes([...sessionTypes, {
-            type: "First Touch",
+            type: "Know About my Career",
             duration: 30,
             price: 0,
             description: null
