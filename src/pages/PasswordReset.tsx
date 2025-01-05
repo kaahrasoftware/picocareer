@@ -51,7 +51,7 @@ export default function PasswordReset() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error, data } = await supabase.auth.updateUser({
         password: newPassword
       });
 
@@ -66,6 +66,19 @@ export default function PasswordReset() {
           return;
         }
         throw error;
+      }
+
+      // Send confirmation email
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-password-reset-confirmation', {
+          body: { to: data.user.email }
+        });
+
+        if (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+        }
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
       }
 
       toast({
