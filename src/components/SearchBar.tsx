@@ -3,6 +3,7 @@ import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchMentors } from "@/hooks/useSearchMentors";
+import { useSearchMajors } from "@/hooks/useSearchMajors";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -15,11 +16,15 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const { searchMentors, isLoading } = useSearchMentors();
+  const { searchMentors, isLoading: isMentorsLoading } = useSearchMentors();
+  const { searchMajors, isLoading: isMajorsLoading } = useSearchMajors();
 
   const handleSearch = async (value: string) => {
-    const results = await searchMentors(value);
-    setSearchResults(results);
+    const [mentorResults, majorResults] = await Promise.all([
+      searchMentors(value),
+      searchMajors(value)
+    ]);
+    setSearchResults([...mentorResults, ...majorResults]);
   };
 
   // Use debounce for search
@@ -36,6 +41,8 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     setSearchResults([]);
   };
 
+  const isLoading = isMentorsLoading || isMajorsLoading;
+
   return (
     <div className="relative w-full search-container mb-24">
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
@@ -44,7 +51,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
           onChange={handleSearchChange}
           onFocus={() => setIsFocused(true)}
           className={className}
-          placeholder={placeholder || "Search mentors by name, location, or expertise..."}
+          placeholder={placeholder || "Search mentors and majors..."}
         />
       </div>
       
