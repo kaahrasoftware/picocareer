@@ -3,6 +3,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap } from "lucide-react";
 import { SearchResult } from "@/types/search";
+import { useState } from "react";
+import { CareerDetailsDialog } from "../CareerDetailsDialog";
+import { MajorDetails } from "../MajorDetails";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -10,6 +13,19 @@ interface SearchResultCardProps {
 }
 
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
+  const [showCareerDetails, setShowCareerDetails] = useState(false);
+  const [showMajorDetails, setShowMajorDetails] = useState(false);
+
+  const handleClick = () => {
+    if (result.type === 'mentor') {
+      onClick(result);
+    } else if (result.type === 'career') {
+      setShowCareerDetails(true);
+    } else if (result.type === 'major') {
+      setShowMajorDetails(true);
+    }
+  };
+
   const renderContent = () => {
     switch (result.type) {
       case 'mentor':
@@ -32,7 +48,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             <div className="flex flex-col gap-2 mt-auto">
               {result.keywords && result.keywords.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {result.keywords.slice(0, 3).map((keyword, index) => (
+                  {result.keywords.map((keyword, index) => (
                     <Badge 
                       key={index}
                       variant="secondary"
@@ -41,11 +57,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                       {keyword}
                     </Badge>
                   ))}
-                  {result.keywords.length > 3 && (
-                    <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
-                      +{result.keywords.length - 3}
-                    </Badge>
-                  )}
                 </div>
               )}
             </div>
@@ -60,7 +71,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               <div className="space-y-3">
                 {result.academic_majors && result.academic_majors.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {result.academic_majors.slice(0, 3).map((major, index) => (
+                    {result.academic_majors.map((major, index) => (
                       <Badge 
                         key={index} 
                         variant="secondary"
@@ -69,11 +80,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                         {major}
                       </Badge>
                     ))}
-                    {result.academic_majors.length > 3 && (
-                      <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
-                        +{result.academic_majors.length - 3}
-                      </Badge>
-                    )}
                   </div>
                 )}
               </div>
@@ -102,11 +108,39 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
   };
 
   return (
-    <Card
-      className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white h-full"
-      onClick={() => onClick(result)}
-    >
-      {renderContent()}
-    </Card>
+    <>
+      <Card
+        className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white h-full"
+        onClick={handleClick}
+      >
+        {renderContent()}
+      </Card>
+
+      {result.type === 'career' && (
+        <CareerDetailsDialog
+          careerId={result.id}
+          open={showCareerDetails}
+          onOpenChange={setShowCareerDetails}
+        />
+      )}
+
+      {result.type === 'major' && (
+        <MajorDetails
+          major={{
+            id: result.id,
+            title: result.title,
+            description: result.description || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            featured: false,
+            degree_levels: result.degree_levels || [],
+            common_courses: result.common_courses || [],
+            career_opportunities: result.career_opportunities || [],
+          }}
+          open={showMajorDetails}
+          onOpenChange={setShowMajorDetails}
+        />
+      )}
+    </>
   );
 };
