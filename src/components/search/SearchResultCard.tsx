@@ -37,13 +37,13 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                     <Badge 
                       key={index}
                       variant="secondary"
-                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                      className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]"
                     >
                       {keyword}
                     </Badge>
                   ))}
                   {result.keywords.length > 3 && (
-                    <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
+                    <Badge variant="secondary" className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]">
                       +{result.keywords.length - 3}
                     </Badge>
                   )}
@@ -65,13 +65,13 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                       <Badge 
                         key={index} 
                         variant="secondary"
-                        className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                        className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]"
                       >
                         {major}
                       </Badge>
                     ))}
                     {result.academic_majors.length > 3 && (
-                      <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
+                      <Badge variant="secondary" className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]">
                         +{result.academic_majors.length - 3}
                       </Badge>
                     )}
@@ -85,7 +85,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         return (
           <>
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-full bg-[#FEF7CD]">
+              <div className="p-2 rounded-full bg-[#F2FCE2]">
                 <GraduationCap className="h-6 w-6 text-[#1A1F2C]" />
               </div>
               <div className="flex-1 min-w-0">
@@ -98,7 +98,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                   <Badge 
                     key={index} 
                     variant="secondary"
-                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                    className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]"
                   >
                     {course}
                   </Badge>
@@ -106,7 +106,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 {result.common_courses.length > 3 && (
                   <Badge 
                     variant="secondary" 
-                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                    className="bg-[#F2FCE2] text-[#1A1F2C] hover:bg-[#E5F6D3]"
                   >
                     +{result.common_courses.length - 3}
                   </Badge>
