@@ -43,7 +43,7 @@ export function useSearchCareers() {
           `academic_majors.cs.{${query}},` +
           `required_skills.cs.{${query}}`
         )
-        .eq('status', 'Approved')
+        .eq('complete_career', true)
         .limit(20);
 
       if (error) {
