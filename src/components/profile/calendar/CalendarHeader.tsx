@@ -1,30 +1,23 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import type { Profile } from "@/types/database/profiles";
 
 interface CalendarHeaderProps {
-  isMentor: boolean;
+  profile: Profile;
 }
 
-export function CalendarHeader({ isMentor }: CalendarHeaderProps) {
+export function CalendarHeader({ profile }: CalendarHeaderProps) {
   return (
-    <>
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Calendar</h2>
+    <div className="flex items-center gap-4 mb-6">
+      <ProfileAvatar 
+        avatarUrl={profile.avatar_url}
+        fallback={profile.full_name?.[0] || 'U'}
+        size="lg"
+      />
+      <div>
+        <h2 className="text-2xl font-bold">{profile.full_name}</h2>
+        <p className="text-muted-foreground">{profile.email}</p>
       </div>
-
-      <div className="flex gap-2 mb-4">
-        <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-          Sessions
-        </Badge>
-        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-          Webinars
-        </Badge>
-        {isMentor && (
-          <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-            Available
-          </Badge>
-        )}
-      </div>
-    </>
+    </div>
   );
 }
