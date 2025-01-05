@@ -52,19 +52,40 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       case 'career':
         return (
           <>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-full bg-picocareer-primary/10">
-                <Building2 className="h-6 w-6 text-picocareer-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-picocareer-dark truncate">{result.title}</p>
-              </div>
+            <div className="aspect-w-16 aspect-h-9 mb-4">
+              {result.image_url ? (
+                <img 
+                  src={result.image_url} 
+                  alt={result.title}
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+              ) : (
+                <div className="w-full h-48 bg-muted/20 rounded-lg flex items-center justify-center">
+                  <Building2 className="h-12 w-12 text-muted-foreground/40" />
+                </div>
+              )}
             </div>
-            {result.salary_range && (
-              <Badge variant="secondary" className="w-fit mt-auto">
-                {result.salary_range}
-              </Badge>
-            )}
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg mb-2 line-clamp-2">{result.title}</h3>
+              {result.academic_majors && result.academic_majors.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {result.academic_majors.slice(0, 3).map((major, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary"
+                      className="bg-picocareer-primary/10 text-picocareer-primary hover:bg-picocareer-primary/20"
+                    >
+                      {major}
+                    </Badge>
+                  ))}
+                  {result.academic_majors.length > 3 && (
+                    <Badge variant="secondary" className="bg-muted">
+                      +{result.academic_majors.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
           </>
         );
       case 'major':
@@ -90,7 +111,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
 
   return (
     <Card
-      className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white"
+      className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white h-full"
       onClick={() => onClick(result)}
     >
       {renderContent()}
