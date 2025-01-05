@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap } from "lucide-react";
 import { SearchResult } from "@/types/search";
@@ -97,9 +96,9 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
               </div>
             </div>
-            {result.degree_levels && result.degree_levels.length > 0 && (
+            {result.common_courses && result.common_courses.length > 0 && (
               <Badge variant="secondary" className="w-fit mt-auto bg-[#FEF7CD] text-[#1A1F2C]">
-                {result.degree_levels.join(', ')}
+                {result.common_courses.join(', ')}
               </Badge>
             )}
           </>
