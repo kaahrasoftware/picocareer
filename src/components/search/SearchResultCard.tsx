@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap } from "lucide-react";
 import { SearchResult } from "@/types/search";
@@ -136,6 +135,25 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             degree_levels: result.degree_levels || [],
             common_courses: result.common_courses || [],
             career_opportunities: result.career_opportunities || [],
+            learning_objectives: [],
+            interdisciplinary_connections: [],
+            job_prospects: null,
+            certifications_to_consider: [],
+            affiliated_programs: [],
+            gpa_expectations: null,
+            transferable_skills: [],
+            tools_knowledge: [],
+            potential_salary: null,
+            passion_for_subject: null,
+            skill_match: [],
+            professional_associations: [],
+            global_applicability: null,
+            common_difficulties: [],
+            majors_to_consider_switching_to: [],
+            intensity: null,
+            stress_level: null,
+            dropout_rates: null,
+            profiles_count: null,
           }}
           open={showMajorDetails}
           onOpenChange={setShowMajorDetails}
