@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Building2, GraduationCap, MapPin } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
@@ -22,8 +22,8 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
-                {result.position && (
-                  <p className="text-sm text-[#8E9196] truncate">{result.position}</p>
+                {result.career?.title && (
+                  <p className="text-sm text-[#8E9196] truncate">{result.career.title}</p>
                 )}
               </div>
             </div>
