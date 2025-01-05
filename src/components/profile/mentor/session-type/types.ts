@@ -1,10 +1,10 @@
-import { SessionTypeEnum } from "@/types/session";
+import { SessionTypeEnum, MeetingPlatform } from "@/types/session";
 
 export interface SessionTypeFormData {
   type: SessionTypeEnum;
   duration: number;
   description: string;
-  meeting_platform: ("Google Meet" | "WhatsApp" | "Telegram" | "Phone Call")[];
+  meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
 }

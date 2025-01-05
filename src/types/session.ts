@@ -29,6 +29,8 @@ export type SessionTypeEnum =
   | "Volunteer Opportunities"
   | "Know About my Academic Major";
 
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Know About my Career",
   "Resume/CV Review",

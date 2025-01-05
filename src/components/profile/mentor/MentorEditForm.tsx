@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/types/database/profiles";
-import { SessionTypeEnum, SESSION_TYPE_OPTIONS } from "@/types/session";
+import { SessionTypeEnum, MeetingPlatform } from "@/types/session";
 
 interface SessionTypeData {
   id?: string;
@@ -21,6 +21,7 @@ interface SessionTypeData {
   duration: number;
   price: number;
   description: string | null;
+  meeting_platform?: MeetingPlatform[];
 }
 
 interface SpecializationData {
@@ -70,7 +71,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
             duration: session.duration,
             price: session.price,
             description: session.description,
-            meeting_platform: ["Google Meet"]
+            meeting_platform: ["Google Meet"] as MeetingPlatform[]
           }))
         );
 
@@ -173,7 +174,8 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
             type: "Know About my Career",
             duration: 30,
             price: 0,
-            description: null
+            description: null,
+            meeting_platform: ["Google Meet"]
           }])}
         >
           Add Session Type
