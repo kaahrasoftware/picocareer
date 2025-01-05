@@ -30,7 +30,7 @@ export const useSearchMentors = () => {
           top_mentor,
           company:companies(name),
           school:schools(name),
-          academic_major:majors(title),
+          academic_major:majors!profiles_academic_major_id_fkey(title),
           career:careers!position(title)
         `)
         .eq('user_type', 'mentor')
