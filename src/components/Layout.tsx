@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { SearchProvider } from "@/contexts/SearchContext";
 import { MenuSidebar } from "./MenuSidebar";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
@@ -19,26 +20,28 @@ import Video from "@/pages/Video";
 export const Layout = () => {
   return (
     <Router>
-      <MenuSidebar />
-      <main className="pt-16">
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/upload" element={<BlogUpload />} />
-          <Route path="/career" element={<Career />} />
-          <Route path="/career/upload" element={<CareerUpload />} />
-          <Route path="/email-confirmation" element={<EmailConfirmation />} />
-          <Route path="/major/upload" element={<MajorUpload />} />
-          <Route path="/mentor" element={<Mentor />} />
-          <Route path="/mentor/register" element={<MentorRegistration />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/program" element={<Program />} />
-          <Route path="/video" element={<Video />} />
-          <Route path="*" element={<Error />} />
-        </Routes>
-      </main>
+      <SearchProvider>
+        <MenuSidebar />
+        <main className="pt-16">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/upload" element={<BlogUpload />} />
+            <Route path="/career" element={<Career />} />
+            <Route path="/career/upload" element={<CareerUpload />} />
+            <Route path="/email-confirmation" element={<EmailConfirmation />} />
+            <Route path="/major/upload" element={<MajorUpload />} />
+            <Route path="/mentor" element={<Mentor />} />
+            <Route path="/mentor/register" element={<MentorRegistration />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/program" element={<Program />} />
+            <Route path="/video" element={<Video />} />
+            <Route path="*" element={<Error />} />
+          </Routes>
+        </main>
+      </SearchProvider>
     </Router>
   );
 };
