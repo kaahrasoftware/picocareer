@@ -42,9 +42,9 @@ export const useSearchMentors = () => {
           `companies.name.ilike.%${query}%,` +
           `schools.name.ilike.%${query}%,` +
           `majors.title.ilike.%${query}%,` +
-          `careers.title.ilike.%${query}%`
+          `careers.title.ilike.%${query}%,` +
+          `keywords.cs.{${query.toLowerCase()}}`
         )
-        .filter('keywords', 'cs', `{${query.toLowerCase()}}`)
         .limit(5);
 
       if (error) throw error;
