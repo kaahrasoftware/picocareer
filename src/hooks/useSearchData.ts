@@ -10,35 +10,21 @@ export function useSearchData(searchTerm: string) {
 
       console.log('Starting search with term:', searchTerm);
 
-      // Start with simpler queries to test basic functionality
+      // Start with very basic queries to test functionality
       const [majorsResponse, careersResponse, mentorsResponse] = await Promise.all([
-        // Search majors
+        // Search majors - basic title search
         supabase
           .from("majors")
-          .select(`
-            id,
-            title,
-            description,
-            degree_levels,
-            career_opportunities,
-            common_courses
-          `)
-          .ilike('title', `%${searchTerm}%`)
-          .limit(5),
+          .select('id, title, description')
+          .ilike('title', `%${searchTerm}%`),
 
-        // Search careers
+        // Search careers - basic title search
         supabase
           .from("careers")
-          .select(`
-            id,
-            title,
-            description,
-            salary_range
-          `)
-          .ilike('title', `%${searchTerm}%`)
-          .limit(5),
+          .select('id, title, description, salary_range')
+          .ilike('title', `%${searchTerm}%`),
 
-        // Search mentor profiles
+        // Search mentor profiles - basic name search
         supabase
           .from("profiles")
           .select(`
@@ -48,16 +34,14 @@ export function useSearchData(searchTerm: string) {
             avatar_url,
             position,
             location,
-            top_mentor,
             company:companies(name)
           `)
           .eq('user_type', 'mentor')
           .ilike('full_name', `%${searchTerm}%`)
-          .limit(5)
       ]);
 
-      // Log detailed responses
-      console.log('Raw query responses:', {
+      // Log raw responses for debugging
+      console.log('Raw responses:', {
         majors: majorsResponse,
         careers: careersResponse,
         mentors: mentorsResponse
@@ -77,15 +61,12 @@ export function useSearchData(searchTerm: string) {
         throw mentorsResponse.error;
       }
 
-      // Transform and combine results
+      // Transform results
       const majorResults: SearchResult[] = (majorsResponse.data || []).map(major => ({
         id: major.id,
         type: "major" as const,
         title: major.title,
-        description: major.description,
-        degree_levels: major.degree_levels,
-        career_opportunities: major.career_opportunities,
-        common_courses: major.common_courses
+        description: major.description
       }));
 
       const careerResults: SearchResult[] = (careersResponse.data || []).map(career => ({
@@ -102,10 +83,8 @@ export function useSearchData(searchTerm: string) {
         title: `${mentor.first_name} ${mentor.last_name}`.trim(),
         description: mentor.position || 'Mentor',
         avatar_url: mentor.avatar_url,
-        position: mentor.position,
         location: mentor.location,
-        company: mentor.company?.name,
-        top_mentor: mentor.top_mentor
+        company: mentor.company?.name
       }));
 
       const combinedResults = [...majorResults, ...careerResults, ...mentorResults];
