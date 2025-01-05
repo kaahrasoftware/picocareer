@@ -52,24 +52,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       case 'career':
         return (
           <>
-            <div className="w-full h-48 mb-4 overflow-hidden rounded-lg bg-muted/20">
-              {result.image_url ? (
-                <img 
-                  src={result.image_url} 
-                  alt={result.title}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder.svg';
-                  }}
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-muted/20 rounded-lg flex items-center justify-center">
-                  <Building2 className="h-12 w-12 text-muted-foreground/40" />
-                </div>
-              )}
-            </div>
             <div className="flex-1">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">{result.title}</h3>
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{result.description}</p>
