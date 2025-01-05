@@ -1,71 +1,70 @@
-import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileTab } from "@/components/profile/ProfileTab";
-import { DashboardTab } from "@/components/profile/DashboardTab";
-import { CalendarTab } from "@/components/profile/CalendarTab";
-import { MentorTab } from "@/components/profile/MentorTab";
-import { BookmarksTab } from "@/components/profile/BookmarksTab";
-import { SettingsTab } from "@/components/profile/SettingsTab";
+import { ProfileTab } from "./ProfileTab";
+import { CalendarTab } from "./CalendarTab";
+import { MentorTab } from "./MentorTab";
+import { DashboardTab } from "./DashboardTab";
+import { BookmarksTab } from "./BookmarksTab";
+import { SettingsTab } from "./SettingsTab";
+import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabsProps {
   profile: Profile | null;
-  isMentor: boolean;
-  onTabChange: (value: string) => void;
+  session: Session | null;
 }
 
-export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps) {
-  const isAdmin = profile?.user_type === 'admin';
+export function ProfileTabs({ profile, session }: ProfileTabsProps) {
   const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "profile");
 
-  // Set initial tab value based on URL parameter
-  const defaultTab = tabFromUrl || 'profile';
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  if (!profile) return null;
 
   return (
-    <Tabs 
-      defaultValue={defaultTab}
-      className="col-span-5"
-      onValueChange={onTabChange}
-    >
-      <TabsList className="grid w-full" style={{ 
-        gridTemplateColumns: `repeat(${isAdmin ? 6 : 5}, minmax(0, 1fr))`
-      }}>
+    <Tabs value={activeTab} className="space-y-4" onValueChange={setActiveTab}>
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="profile">Profile</TabsTrigger>
-        {isAdmin && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
         <TabsTrigger value="calendar">Calendar</TabsTrigger>
-        {isMentor && <TabsTrigger value="mentor">Mentor</TabsTrigger>}
+        {profile.user_type === 'mentor' && (
+          <TabsTrigger value="mentor">Mentor</TabsTrigger>
+        )}
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="profile">
-        <ProfileTab profile={profile} />
+      <TabsContent value="profile" className="space-y-4">
+        <ProfileTab profile={profile} session={session} />
       </TabsContent>
 
-      {isAdmin && (
-        <TabsContent value="dashboard">
-          <DashboardTab />
-        </TabsContent>
-      )}
-
-      <TabsContent value="calendar">
-        <CalendarTab />
+      <TabsContent value="calendar" className="space-y-4">
+        <CalendarTab profile={profile} />
       </TabsContent>
 
-      {isMentor && profile && (
-        <TabsContent value="mentor">
+      {profile.user_type === 'mentor' && (
+        <TabsContent value="mentor" className="space-y-4">
           <MentorTab profile={profile} />
         </TabsContent>
       )}
 
-      <TabsContent value="bookmarks">
-        <BookmarksTab />
+      <TabsContent value="dashboard" className="space-y-4">
+        <DashboardTab profile={profile} />
       </TabsContent>
 
-      <TabsContent value="settings">
-        <SettingsTab />
+      <TabsContent value="bookmarks" className="space-y-4">
+        <BookmarksTab profile={profile} />
+      </TabsContent>
+
+      <TabsContent value="settings" className="space-y-4">
+        <SettingsTab profile={profile} />
       </TabsContent>
     </Tabs>
   );
