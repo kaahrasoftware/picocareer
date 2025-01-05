@@ -57,7 +57,7 @@ export function useSearchData(searchTerm: string) {
             top_mentor,
             company:companies(name),
             school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title)
+            career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
           .or(
@@ -107,12 +107,13 @@ export function useSearchData(searchTerm: string) {
           mentor.highest_degree,
           mentor.location,
           mentor.company?.name,
-          mentor.school?.name,
-          mentor.academic_major?.title
+          mentor.school?.name
         ].filter(Boolean).join(' • '),
         avatar_url: mentor.avatar_url,
         position: mentor.position,
-        top_mentor: mentor.top_mentor
+        career: mentor.career ? { title: mentor.career.title } : null,
+        top_mentor: mentor.top_mentor,
+        keywords: mentor.keywords
       }));
 
       // Combine all results
