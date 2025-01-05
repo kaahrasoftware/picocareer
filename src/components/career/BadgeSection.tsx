@@ -6,9 +6,16 @@ interface BadgeSectionProps {
   items: string[];
   badgeClassName?: string;
   icon?: ReactNode;
+  remainingCount?: number;
 }
 
-export function BadgeSection({ title, items, badgeClassName, icon }: BadgeSectionProps) {
+export function BadgeSection({ 
+  title, 
+  items, 
+  badgeClassName, 
+  icon,
+  remainingCount = 0
+}: BadgeSectionProps) {
   if (!items || items.length === 0) return null;
 
   return (
@@ -26,6 +33,13 @@ export function BadgeSection({ title, items, badgeClassName, icon }: BadgeSectio
             {item}
           </Badge>
         ))}
+        {remainingCount > 0 && (
+          <Badge 
+            className="bg-muted text-muted-foreground hover:bg-muted/80"
+          >
+            +{remainingCount} more
+          </Badge>
+        )}
       </div>
     </div>
   );

@@ -36,6 +36,19 @@ export function CareerCard({
 
   const handleOpenDialog = () => setDialogOpen(true);
 
+  const limitTags = (tags: string[] | undefined, limit: number = 3) => {
+    if (!tags || tags.length === 0) return { displayed: [], remaining: 0 };
+    return {
+      displayed: tags.slice(0, limit),
+      remaining: Math.max(0, tags.length - limit)
+    };
+  };
+
+  const educationTags = limitTags(required_education);
+  const majorTags = limitTags(academic_majors);
+  const skillTags = limitTags(required_skills);
+  const toolTags = limitTags(required_tools);
+
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -55,34 +68,38 @@ export function CareerCard({
             {description}
           </p>
 
-          {required_education && required_education.length > 0 && (
+          {educationTags.displayed.length > 0 && (
             <BadgeSection
               title="Required Education"
-              items={required_education}
+              items={educationTags.displayed}
+              remainingCount={educationTags.remaining}
               badgeClassName="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
             />
           )}
 
-          {academic_majors && academic_majors.length > 0 && (
+          {majorTags.displayed.length > 0 && (
             <BadgeSection
               title="Related Majors"
-              items={academic_majors}
+              items={majorTags.displayed}
+              remainingCount={majorTags.remaining}
               badgeClassName="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]"
             />
           )}
 
-          {required_skills && required_skills.length > 0 && (
+          {skillTags.displayed.length > 0 && (
             <BadgeSection
               title="Required Skills"
-              items={required_skills}
+              items={skillTags.displayed}
+              remainingCount={skillTags.remaining}
               badgeClassName="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
             />
           )}
 
-          {required_tools && required_tools.length > 0 && (
+          {toolTags.displayed.length > 0 && (
             <BadgeSection
               title="Required Tools"
-              items={required_tools}
+              items={toolTags.displayed}
+              remainingCount={toolTags.remaining}
               badgeClassName="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
             />
           )}
