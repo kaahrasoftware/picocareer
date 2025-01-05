@@ -12,10 +12,20 @@ interface SearchContextType {
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 export const SearchProvider = ({ children }: { children: ReactNode }) => {
-  const searchQuery = useSearchQuery();
+  const { searchResults, isLoading, handleSearch, setSearchResults } = useSearchQuery();
+
+  const value: SearchContextType = {
+    searchResults,
+    isLoading,
+    handleSearch: async (value: string) => {
+      const results = await handleSearch(value);
+      return results;
+    },
+    setSearchResults
+  };
 
   return (
-    <SearchContext.Provider value={searchQuery}>
+    <SearchContext.Provider value={value}>
       {children}
     </SearchContext.Provider>
   );
