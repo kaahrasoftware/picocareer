@@ -15,8 +15,6 @@ export const useSearchMentors = () => {
     console.log('Searching mentors with query:', query);
 
     try {
-      const lowerQuery = query.toLowerCase();
-      
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -34,11 +32,13 @@ export const useSearchMentors = () => {
           school:schools(name)
         `)
         .eq('user_type', 'mentor')
-        .or(`first_name.ilike.%${query}%,` +
-            `last_name.ilike.%${query}%,` +
-            `bio.ilike.%${query}%,` +
-            `location.ilike.%${query}%`)
-        .filter('keywords', 'cs', `{${lowerQuery}}`)
+        .or(
+          `first_name.ilike.%${query}%,` +
+          `last_name.ilike.%${query}%,` +
+          `bio.ilike.%${query}%,` +
+          `location.ilike.%${query}%,` +
+          `keywords.cs.{${query.toLowerCase()}}`
+        )
         .limit(5);
 
       if (error) throw error;
