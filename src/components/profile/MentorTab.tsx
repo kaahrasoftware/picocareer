@@ -41,7 +41,7 @@ export function MentorTab({ profile }: MentorTabProps) {
           return;
         }
 
-        // Show toast only if no timezone setting exists (count === 0)
+        // Only show toast if count is explicitly 0
         if (count === 0) {
           console.log('No timezone setting found, showing toast');
           toast({
