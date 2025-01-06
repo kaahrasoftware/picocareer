@@ -27,7 +27,7 @@ export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectPro
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {availableTypes.map((type) => (
+              {SESSION_TYPE_OPTIONS.filter(type => !availableTypes.includes(type)).map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
                 </SelectItem>
