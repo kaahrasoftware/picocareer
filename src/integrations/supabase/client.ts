@@ -8,7 +8,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Important: Set this to false to prevent auto sign-in
+    detectSessionInUrl: true,
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'picocareer_auth_token',
     flowType: 'pkce',
@@ -60,12 +60,12 @@ if (typeof window !== 'undefined') {
     }
 
     // Handle email confirmation
-    const params = new URLSearchParams(window.location.search);
-    const isEmailConfirmation = params.get('type') === 'email_confirmation';
-    
-    if (event === 'SIGNED_IN' && isEmailConfirmation) {
-      console.log('Email confirmed, redirecting to confirmation page');
-      window.location.href = '/auth/confirm';
+    if (event === 'SIGNED_IN') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/auth/confirm') {
+        console.log('Email confirmed, redirecting to confirmation page');
+        window.location.href = '/auth/confirm';
+      }
     }
   });
 
