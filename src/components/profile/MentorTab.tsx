@@ -4,7 +4,7 @@ import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMentorStats } from "./mentor/hooks/useMentorStats";
 import type { Profile } from "@/types/database/profiles";
 
@@ -16,12 +16,14 @@ export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
   const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
+  const [currentTab, setCurrentTab] = useState("stats");
 
   useEffect(() => {
-    if (!profileId) return;
+    if (!profileId || currentTab !== "availability") return;
 
     const checkTimezone = async () => {
       try {
+        console.log('Checking timezone for profile:', profileId);
         const { data, error } = await supabase
           .from('user_settings')
           .select('setting_value')
@@ -48,14 +50,14 @@ export function MentorTab({ profile }: MentorTabProps) {
     };
 
     checkTimezone();
-  }, [profileId, toast]);
+  }, [profileId, toast, currentTab]);
 
   if (!profileId) {
     return null;
   }
 
   return (
-    <Tabs defaultValue="stats" className="w-full">
+    <Tabs defaultValue="stats" className="w-full" onValueChange={setCurrentTab}>
       <TabsList>
         <TabsTrigger value="stats">Stats</TabsTrigger>
         <TabsTrigger value="session-types">Session Types</TabsTrigger>
