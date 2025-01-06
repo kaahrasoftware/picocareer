@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+        }
+        .logo {
+            width: 120px;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #0EA5E9;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <img src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/images/Round%20Logo%20SVG.svg" alt="PicoCareer Logo" class="logo">
+        
+        <h2 style="color: #002366; text-align: center; margin-bottom: 30px;">Welcome to PicoCareer!</h2>
+        
+        <p>Thank you for signing up with PicoCareer. We're excited to have you join our community!</p>
+        
+        <p>To get started, please confirm your email address by clicking the button below:</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ .ConfirmationURL }}" class="button">Confirm Email Address</a>
+        </div>
+        
+        <p style="font-size: 0.875rem; color: #6b7280;">This confirmation link will expire in 24 hours. If you can't click the button above, copy and paste this link into your browser:</p>
+        
+        <p style="font-size: 0.875rem; word-break: break-all;">
+            <a href="{{ .ConfirmationURL }}" style="color: #0EA5E9;">{{ .ConfirmationURL }}</a>
+        </p>
+        
+        <div class="footer">
+            <p>If you didn't create an account with PicoCareer, please ignore this email.</p>
+            <p style="margin-bottom: 0;">Best regards,<br>The PicoCareer Team</p>
+        </div>
+    </div>
+</body>
+</html>
