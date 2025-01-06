@@ -27,25 +27,48 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   }, [selectedDate, profileId]);
 
   const fetchAvailability = async () => {
-    const startOfDay = new Date(selectedDate!);
+    if (!selectedDate) return;
+    
+    const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
     
-    const endOfDay = new Date(selectedDate!);
+    const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const { data, error } = await supabase
+    // First, get one-time slots for the selected date
+    const { data: oneTimeSlots, error: oneTimeError } = await supabase
       .from('mentor_availability')
       .select('*')
       .eq('profile_id', profileId)
+      .eq('recurring', false)
       .gte('start_date_time', startOfDay.toISOString())
       .lte('start_date_time', endOfDay.toISOString());
 
-    if (error) {
-      console.error('Error fetching availability:', error);
+    if (oneTimeError) {
+      console.error('Error fetching one-time availability:', oneTimeError);
       return;
     }
 
-    setExistingSlots(data || []);
+    // Then, get recurring slots for this day of the week
+    const { data: recurringSlots, error: recurringError } = await supabase
+      .from('mentor_availability')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('recurring', true)
+      .eq('day_of_week', selectedDate.getDay());
+
+    if (recurringError) {
+      console.error('Error fetching recurring availability:', recurringError);
+      return;
+    }
+
+    // Combine both types of slots
+    const allSlots = [
+      ...(oneTimeSlots || []),
+      ...(recurringSlots || [])
+    ];
+
+    setExistingSlots(allSlots);
   };
 
   const fetchAllAvailability = async () => {
