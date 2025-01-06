@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { TimeSlotForm } from "./availability/TimeSlotForm";
-import { UnavailableTimeForm } from "./availability/UnavailableTimeForm";
-import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
+import { TimeSlotForm } from "../calendar/availability/TimeSlotForm";
+import { UnavailableTimeForm } from "../calendar/availability/UnavailableTimeForm";
+import { ExistingTimeSlots } from "../calendar/availability/ExistingTimeSlots";
+import { format } from "date-fns";
+import { Availability } from "@/types/calendar";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -16,10 +18,12 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("available");
+  const [availability, setAvailability] = useState<Availability[]>([]);
 
   useEffect(() => {
     if (!selectedDate) return;
     fetchAvailability();
+    fetchAllAvailability();
   }, [selectedDate, profileId]);
 
   const fetchAvailability = async () => {
@@ -44,6 +48,21 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     setExistingSlots(data || []);
   };
 
+  const fetchAllAvailability = async () => {
+    const { data, error } = await supabase
+      .from('mentor_availability')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('is_available', true);
+
+    if (error) {
+      console.error('Error fetching all availability:', error);
+      return;
+    }
+
+    setAvailability(data || []);
+  };
+
   const handleDeleteSlot = async (slotId: string) => {
     try {
       const { error } = await supabase
@@ -58,6 +77,17 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     } catch (error) {
       console.error('Error deleting slot:', error);
     }
+  };
+
+  // Function to determine if a date has availability set
+  const hasAvailability = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return availability.some(slot => {
+      if (slot.recurring) {
+        return slot.day_of_week === date.getDay();
+      }
+      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
+    });
   };
 
   return (
@@ -79,6 +109,15 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                 today.setHours(0, 0, 0, 0);
                 return date < today;
               }}
+              modifiers={{
+                hasAvailability: (date) => hasAvailability(date)
+              }}
+              modifiersStyles={{
+                hasAvailability: {
+                  border: '2px solid #22c55e',
+                  borderRadius: '4px'
+                }
+              }}
             />
           </div>
           
@@ -95,8 +134,10 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                     profileId={profileId}
                     onSuccess={() => {
                       fetchAvailability();
+                      fetchAllAvailability();
                       onUpdate();
                     }}
+                    onShowUnavailable={() => setActiveTab("unavailable")}
                   />
                 </TabsContent>
                 <TabsContent value="unavailable">
@@ -105,6 +146,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                     profileId={profileId}
                     onSuccess={() => {
                       fetchAvailability();
+                      fetchAllAvailability();
                       onUpdate();
                     }}
                   />
