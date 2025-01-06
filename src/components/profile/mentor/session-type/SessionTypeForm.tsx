@@ -2,17 +2,15 @@ import { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SessionTypeEnum } from "@/types/session";
 import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
-import { SessionTypeEnum } from "@/types/session";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +65,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         .from('mentor_session_types')
         .insert({
           profile_id: profileId,
-          type: data.type,
+          type: data.type as SessionTypeEnum,
           duration: Number(data.duration),
           price: 0,
           description: data.description || null,
