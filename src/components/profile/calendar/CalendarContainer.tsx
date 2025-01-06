@@ -23,40 +23,6 @@ export function CalendarContainer({
     return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
   };
 
-  // Function to determine if a date has availability set
-  const getDateStatus = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    let hasAvailable = false;
-    let hasUnavailable = false;
-    let hasSessions = hasSessionsOnDate(date);
-
-    availability?.forEach(slot => {
-      if (slot.recurring) {
-        if (slot.day_of_week === date.getDay()) {
-          if (slot.is_available) {
-            hasAvailable = true;
-          } else {
-            hasUnavailable = true;
-          }
-        }
-      } else {
-        if (format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
-          if (slot.is_available) {
-            hasAvailable = true;
-          } else {
-            hasUnavailable = true;
-          }
-        }
-      }
-    });
-
-    if (hasSessions) return 'sessions';
-    if (hasAvailable && hasUnavailable) return 'mixed';
-    if (hasAvailable) return 'available';
-    if (hasUnavailable) return 'unavailable';
-    return null;
-  };
-
   return (
     <div className="w-fit">
       <Calendar
@@ -66,24 +32,9 @@ export function CalendarContainer({
         defaultMonth={selectedDate}
         className="rounded-md border bg-kahra-darker"
         modifiers={{
-          available: (date) => getDateStatus(date) === 'available',
-          unavailable: (date) => getDateStatus(date) === 'unavailable',
-          mixed: (date) => getDateStatus(date) === 'mixed',
-          sessions: (date) => getDateStatus(date) === 'sessions'
+          sessions: hasSessionsOnDate
         }}
         modifiersStyles={{
-          available: {
-            border: '2px solid #22c55e',
-            borderRadius: '4px'
-          },
-          unavailable: {
-            border: '2px solid #ef4444',
-            borderRadius: '4px'
-          },
-          mixed: {
-            border: '2px solid #f59e0b',
-            borderRadius: '4px'
-          },
           sessions: {
             border: '2px solid #3b82f6',
             borderRadius: '4px'
