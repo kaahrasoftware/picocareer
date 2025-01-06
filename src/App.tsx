@@ -96,7 +96,8 @@ const router = createBrowserRouter([
     errorElement: <Error />,
   },
   {
-    path: "/email-confirmation",
+    // Update the email confirmation route to match Supabase's redirect
+    path: "/auth/confirm",
     element: <EmailConfirmation />,
     errorElement: <Error />,
   },
