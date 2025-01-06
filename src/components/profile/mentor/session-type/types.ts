@@ -18,16 +18,22 @@ export interface SessionTypeFormProps {
 }
 
 export interface SessionTypeSelectProps {
-  control: Control<SessionTypeFormData>;
+  form: {
+    control: Control<SessionTypeFormData>;
+  };
   availableTypes: SessionTypeEnum[];
 }
 
 export interface PlatformSelectProps {
-  control: Control<SessionTypeFormData>;
+  form: {
+    control: Control<SessionTypeFormData>;
+  };
 }
 
 export interface PlatformFieldsProps {
-  control: Control<SessionTypeFormData>;
+  form: {
+    control: Control<SessionTypeFormData>;
+  };
   showTelegramField: boolean;
   showPhoneField: boolean;
   showWhatsAppField: boolean;

@@ -66,7 +66,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              control={form.control}
+              form={{ control: form.control }}
               availableTypes={existingTypes}
             />
 
@@ -99,10 +99,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={form} />
+            <PlatformSelect form={{ control: form.control }} />
 
             <PlatformFields
-              control={form.control}
+              form={{ control: form.control }}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}

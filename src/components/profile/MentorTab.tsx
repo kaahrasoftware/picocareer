@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { useMentorStats } from "./mentor/hooks/useMentorStats";
 import type { Profile } from "@/types/database/profiles";
+import type { SessionTypeEnum } from "@/types/session";
 
 interface MentorTabProps {
   profile: Profile;
@@ -22,7 +23,6 @@ export function MentorTab({ profile }: MentorTabProps) {
 
     const checkTimezone = async () => {
       try {
-        // Check if a timezone setting exists for this user
         const { count, error } = await supabase
           .from('user_settings')
           .select('*', { count: 'exact', head: true })
@@ -34,7 +34,6 @@ export function MentorTab({ profile }: MentorTabProps) {
           return;
         }
 
-        // Show toast only if no timezone setting exists (count === 0)
         if (count === 0) {
           toast({
             title: "Timezone not set",
@@ -54,6 +53,9 @@ export function MentorTab({ profile }: MentorTabProps) {
     return null;
   }
 
+  // Extract just the session types from the full session type objects
+  const sessionTypeValues: SessionTypeEnum[] = sessionTypes?.map(st => st.type) || [];
+
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsList>
@@ -69,7 +71,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       <TabsContent value="session-types">
         <SessionTypeManager 
           profileId={profileId} 
-          sessionTypes={sessionTypes || []}
+          sessionTypes={sessionTypeValues}
           onUpdate={refetchSessionTypes}
         />
       </TabsContent>
