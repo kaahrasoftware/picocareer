@@ -78,7 +78,7 @@ if (typeof window !== 'undefined') {
         toast({
           title: "Email Verified",
           description: "Your email has been verified successfully. Welcome!",
-          variant: "success",
+          variant: "default",
           className: "bg-green-100 border-green-200 text-green-900",
         });
         localStorage.setItem('email_confirmed', 'true');
