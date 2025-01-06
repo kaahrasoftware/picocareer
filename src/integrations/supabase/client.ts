@@ -67,11 +67,8 @@ if (typeof window !== 'undefined') {
       
       // Check if this is a confirmation sign-in
       if (params.get('type') === 'email_confirmation') {
-        toast({
-          title: "Email Verified",
-          description: "Your email has been verified successfully. Welcome!",
-          variant: "default",
-        });
+        // Redirect to confirmation page
+        window.location.href = '/auth/confirm';
       }
     }
   });

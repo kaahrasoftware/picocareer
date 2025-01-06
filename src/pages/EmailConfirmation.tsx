@@ -14,6 +14,7 @@ export default function EmailConfirmation() {
     toast({
       title: "Email verified successfully!",
       description: "You can now sign in to your account.",
+      variant: "default",
     });
   }, [toast]);
 
