@@ -18,7 +18,16 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const form = useForm<SessionTypeFormData>();
+  
+  const form = useForm<SessionTypeFormData>({
+    defaultValues: {
+      type: "Know About my Career" as SessionTypeEnum,
+      duration: 30,
+      price: 0,
+      description: "",
+      meeting_platform: [],
+    }
+  });
 
   const selectedPlatforms = form.watch("meeting_platform") || [];
   const showTelegramField = selectedPlatforms.includes("Telegram");
@@ -59,7 +68,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           profile_id: profileId,
           type: data.type,
           duration: Number(data.duration),
-          price: 0, // Set price to 0 by default
+          price: 0,
           description: data.description || null,
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
@@ -100,7 +109,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={form}
+              form={{ control: form.control }}
               availableTypes={availableSessionTypes}
             />
 
@@ -133,10 +142,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={form} />
+            <PlatformSelect form={{ control: form.control }} />
 
             <PlatformFields
-              form={form}
+              form={{ control: form.control }}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}
