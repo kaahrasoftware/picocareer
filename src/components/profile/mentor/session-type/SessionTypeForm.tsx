@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -11,11 +11,12 @@ import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
-import { MeetingPlatform } from "@/types/session";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const form = useForm<SessionTypeFormData>();
 
   const selectedPlatforms = form.watch("meeting_platform") || [];
@@ -26,6 +27,30 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const onSubmit = async (data: SessionTypeFormData) => {
     try {
       setIsSubmitting(true);
+      console.log('Attempting to add session type:', data);
+
+      const { data: existingType, error: checkError } = await supabase
+        .from('mentor_session_types')
+        .select('id, type')
+        .eq('profile_id', profileId)
+        .eq('type', data.type)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing type:', checkError);
+        throw checkError;
+      }
+
+      console.log('Existing type check result:', existingType);
+
+      if (existingType) {
+        toast({
+          title: "Error",
+          description: "You already have this session type",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('mentor_session_types')
@@ -35,12 +60,17 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           duration: Number(data.duration),
           price: 0,
           description: data.description || null,
-          meeting_platform: data.meeting_platform as MeetingPlatform[],
+          meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
           phone_number: data.phone_number || null,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating session type:', error);
+        throw error;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
         title: "Success",
@@ -61,12 +91,12 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   };
 
   return (
-    <FormProvider {...form}>
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={{ control: form.control }}
+              control={form.control}
               availableTypes={existingTypes}
             />
 
@@ -99,10 +129,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={{ control: form.control }} />
+            <PlatformSelect control={form.control} />
 
             <PlatformFields
-              form={{ control: form.control }}
+              control={form.control}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}
@@ -124,6 +154,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           </Button>
         </div>
       </form>
-    </FormProvider>
+    </Form>
   );
 }

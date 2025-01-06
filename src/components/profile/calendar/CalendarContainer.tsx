@@ -2,7 +2,6 @@ import React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
-import { cn } from "@/lib/utils";
 
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
@@ -50,10 +49,7 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         selected={selectedDate}
         onSelect={setSelectedDate}
         defaultMonth={selectedDate}
-        className={cn(
-          "rounded-md border",
-          "bg-background"
-        )}
+        className="rounded-md border bg-kahra-darker"
         modifiers={{
           available: (date) => getDateStatus(date) === 'available',
           unavailable: (date) => getDateStatus(date) === 'unavailable',

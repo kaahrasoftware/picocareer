@@ -18,10 +18,11 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<MeetingPlatform[]>([]);
   const methods = useFormContext<SessionTypeFormData>();
 
+  // Watch for changes in the meeting_platform field
   useEffect(() => {
     const subscription = methods.watch((value) => {
       if (value.meeting_platform) {
-        setSelectedPlatforms(value.meeting_platform as MeetingPlatform[]);
+        setSelectedPlatforms(value.meeting_platform);
       }
     });
 

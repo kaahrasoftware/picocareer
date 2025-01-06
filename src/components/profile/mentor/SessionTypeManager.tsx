@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
+import type { Database } from "@/integrations/supabase/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import type { SessionTypeEnum } from "@/types/session";
+
+type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
 interface SessionTypeManagerProps {
   profileId: string;
-  sessionTypes: SessionTypeEnum[];
+  sessionTypes: SessionType[];
   onUpdate: () => void;
 }
 
@@ -53,7 +55,7 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
             profileId={profileId}
             onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
-            existingTypes={sessionTypes}
+            existingTypes={fetchedSessionTypes}
           />
         </DialogContent>
       </Dialog>
