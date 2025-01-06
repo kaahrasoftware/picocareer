@@ -49,7 +49,7 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         selected={selectedDate}
         onSelect={setSelectedDate}
         defaultMonth={selectedDate}
-        className="rounded-md border"
+        className="rounded-md border bg-kahra-darker"
         modifiers={{
           available: (date) => getDateStatus(date) === 'available',
           unavailable: (date) => getDateStatus(date) === 'unavailable',
@@ -57,22 +57,16 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         }}
         modifiersStyles={{
           available: {
-            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-            border: '2px solid rgb(34, 197, 94)',
-            borderRadius: '4px',
-            color: 'rgb(34, 197, 94)'
+            border: '2px solid #22c55e',
+            borderRadius: '4px'
           },
           unavailable: {
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '2px solid rgb(239, 68, 68)',
-            borderRadius: '4px',
-            color: 'rgb(239, 68, 68)'
+            border: '2px solid #ef4444',
+            borderRadius: '4px'
           },
           mixed: {
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            border: '2px solid rgb(245, 158, 11)',
-            borderRadius: '4px',
-            color: 'rgb(245, 158, 11)'
+            border: '2px solid #f59e0b',
+            borderRadius: '4px'
           }
         }}
       />
