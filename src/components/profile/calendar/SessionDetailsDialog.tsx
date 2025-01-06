@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +22,10 @@ interface SessionDetailsDialogProps {
 export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogProps) {
   const [attendance, setAttendance] = useState(session?.session_details?.attendance_confirmed || false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
-  const { data: userSettings } = useUserSettings();
-  const userTimezone = userSettings?.find(s => s.setting_type === 'timezone')?.setting_value || 'UTC';
+  const { settings } = useUserSettings();
+  const userTimezone = settings?.find(s => s.setting_type === 'timezone')?.setting_value || 'UTC';
 
   const canCancel = session?.session_details && 
     new Date(session.session_details.scheduled_at) > new Date(Date.now() + 60 * 60 * 1000);
@@ -127,6 +127,8 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
             attendance={attendance}
             setAttendance={setAttendance}
             isCancelling={isCancelling}
+            cancellationNote={cancellationNote}
+            onCancellationNoteChange={setCancellationNote}
             onCancel={handleCancel}
             onClose={onClose}
           />
@@ -136,7 +138,11 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
       {session.session_details?.id && (
         <SessionFeedbackDialog
           sessionId={session.session_details.id}
+          isOpen={!!session.session_details.id}
           onClose={onClose}
+          feedbackType="mentor_feedback"
+          fromProfileId={session.session_details.mentor.id}
+          toProfileId={session.session_details.mentee.id}
         />
       )}
     </>
