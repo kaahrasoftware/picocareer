@@ -1,11 +1,11 @@
 import { Control } from "react-hook-form";
-import { SessionTypeEnum } from "@/types/session";
+import { SessionTypeEnum, MeetingPlatform } from "@/types/session";
 
 export interface SessionTypeFormData {
   type: SessionTypeEnum;
   duration: number;
   description?: string;
-  meeting_platform: string[];
+  meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
 }
