@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Mail, Phone } from "lucide-react";
+import { Mail, Phone, Facebook, Instagram, Linkedin, Youtube, Twitter } from "lucide-react";
 
 export function Footer() {
   const navigate = useNavigate();
@@ -19,11 +19,38 @@ export function Footer() {
   ];
 
   const socialLinks = [
-    { icon: "tiktok", href: "#" },
-    { icon: "youtube", href: "#" },
-    { icon: "linkedin", href: "#" },
-    { icon: "instagram", href: "#" },
-    { icon: "facebook", href: "#" },
+    { 
+      icon: <Instagram className="w-5 h-5" />, 
+      href: "https://instagram.com/picocareer",
+      label: "Instagram"
+    },
+    { 
+      icon: <Facebook className="w-5 h-5" />, 
+      href: "https://facebook.com/picocareer",
+      label: "Facebook"
+    },
+    { 
+      icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.88 2.89 2.89 0 0 1-2.88-2.88 2.89 2.89 0 0 1 2.88-2.88c.28 0 .54.04.79.12v-3.46a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3 16a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.33c.98.69 2.15 1.1 3.41 1.1v-3.44a4.85 4.85 0 0 1-1.5.7Z"/>
+      </svg>, 
+      href: "https://tiktok.com/@picocareer",
+      label: "TikTok"
+    },
+    { 
+      icon: <Linkedin className="w-5 h-5" />, 
+      href: "https://linkedin.com/company/picocareer",
+      label: "LinkedIn"
+    },
+    { 
+      icon: <Twitter className="w-5 h-5" />, 
+      href: "https://twitter.com/picocareer",
+      label: "X (Twitter)"
+    },
+    { 
+      icon: <Youtube className="w-5 h-5" />, 
+      href: "https://youtube.com/@picocareer",
+      label: "YouTube"
+    }
   ];
 
   return (
@@ -125,9 +152,12 @@ export function Footer() {
                 <a
                   key={index}
                   href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={link.label}
                 >
-                  <i className={`fab fa-${link.icon} w-5 h-5`}></i>
+                  {link.icon}
                 </a>
               ))}
             </div>
