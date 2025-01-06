@@ -34,9 +34,9 @@ export function Footer() {
           <div className="mb-6 md:mb-0">
             <div className="flex items-center mb-4">
               <img 
-                src="/lovable-uploads/66bd455b-7720-4cd7-b24f-558b54e317bc.png"
+                src="/lovable-uploads/f377cf58-000f-463d-85f9-60c29b02d89d.png"
                 alt="PicoCareer"
-                className="h-8 mr-2"
+                className="h-12 w-12 object-contain"
               />
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
