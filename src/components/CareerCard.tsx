@@ -34,7 +34,11 @@ export function CareerCard({
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleOpenDialog = () => setDialogOpen(true);
+  const handleOpenDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDialogOpen(true);
+  };
 
   const limitTags = (tags: string[] | undefined, limit: number = 3) => {
     if (!tags || tags.length === 0) return { displayed: [], remaining: 0 };
@@ -119,11 +123,13 @@ export function CareerCard({
         </div>
       </Card>
       
-      <CareerDetailsDialog 
-        careerId={id}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
+      {dialogOpen && (
+        <CareerDetailsDialog 
+          careerId={id}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+        />
+      )}
     </>
   );
 }
