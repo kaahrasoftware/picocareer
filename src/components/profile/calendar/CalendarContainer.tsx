@@ -2,19 +2,33 @@ import React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
+import type { CalendarEvent } from "@/types/calendar";
 
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
   setSelectedDate: (date: Date | undefined) => void;
   availability: Availability[];
+  events?: CalendarEvent[];
 }
 
-export function CalendarContainer({ selectedDate, setSelectedDate, availability }: CalendarContainerProps) {
+export function CalendarContainer({ 
+  selectedDate, 
+  setSelectedDate, 
+  availability,
+  events = [] 
+}: CalendarContainerProps) {
+  // Function to determine if a date has sessions
+  const hasSessionsOnDate = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
+  };
+
   // Function to determine if a date has availability set
   const getDateStatus = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     let hasAvailable = false;
     let hasUnavailable = false;
+    let hasSessions = hasSessionsOnDate(date);
 
     availability?.forEach(slot => {
       if (slot.recurring) {
@@ -36,6 +50,7 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
       }
     });
 
+    if (hasSessions) return 'sessions';
     if (hasAvailable && hasUnavailable) return 'mixed';
     if (hasAvailable) return 'available';
     if (hasUnavailable) return 'unavailable';
@@ -53,7 +68,8 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         modifiers={{
           available: (date) => getDateStatus(date) === 'available',
           unavailable: (date) => getDateStatus(date) === 'unavailable',
-          mixed: (date) => getDateStatus(date) === 'mixed'
+          mixed: (date) => getDateStatus(date) === 'mixed',
+          sessions: (date) => getDateStatus(date) === 'sessions'
         }}
         modifiersStyles={{
           available: {
@@ -66,6 +82,10 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
           },
           mixed: {
             border: '2px solid #f59e0b',
+            borderRadius: '4px'
+          },
+          sessions: {
+            border: '2px solid #3b82f6',
             borderRadius: '4px'
           }
         }}

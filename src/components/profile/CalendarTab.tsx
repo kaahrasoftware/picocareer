@@ -22,6 +22,7 @@ export function CalendarTab({ profile }: CalendarTabProps) {
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           availability={[]}
+          events={events}
         />
         <EventsSidebar
           date={selectedDate}
