@@ -8,6 +8,8 @@ import { ExistingTimeSlots } from "../calendar/availability/ExistingTimeSlots";
 import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
 import { CalendarContainer } from "../calendar/CalendarContainer";
+import { useToast } from "@/hooks/use-toast";
+import type { Profile } from "@/types/database/profiles";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -19,6 +21,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("available");
   const [availability, setAvailability] = useState<Availability[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!selectedDate) return;
