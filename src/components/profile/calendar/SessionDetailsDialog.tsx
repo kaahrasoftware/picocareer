@@ -1,7 +1,5 @@
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { BlogWithAuthor } from "@/types/blog/types";
-import { BlogPostContent } from "./BlogPostContent";
-import { RelatedPosts } from "./RelatedPosts";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import type { CalendarEvent } from "@/types/calendar";
@@ -21,6 +19,7 @@ export function SessionDetailsDialog({
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
   const [attendance, setAttendance] = useState(false);
+  const [cancellationNote, setCancellationNote] = useState("");
   const { getSetting } = useUserSettings(authSession?.user?.id || '');
   const userTimezone = getSetting('timezone');
 
@@ -51,6 +50,8 @@ export function SessionDetailsDialog({
             attendance={attendance}
             setAttendance={setAttendance}
             isCancelling={false}
+            cancellationNote={cancellationNote}
+            onCancellationNoteChange={setCancellationNote}
             onCancel={onCancel}
             onClose={onClose}
           />

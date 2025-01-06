@@ -21,7 +21,6 @@ export function CalendarContainer({
   events = [] 
 }: CalendarContainerProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [cancellationNote, setCancellationNote] = useState('');
 
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
@@ -41,7 +40,6 @@ export function CalendarContainer({
 
   const handleCloseDialog = () => {
     setSelectedEvent(null);
-    setCancellationNote('');
   };
 
   const handleCancelSession = async () => {
@@ -120,8 +118,6 @@ export function CalendarContainer({
         session={selectedEvent}
         onClose={handleCloseDialog}
         onCancel={handleCancelSession}
-        cancellationNote={cancellationNote}
-        onCancellationNoteChange={setCancellationNote}
       />
     </div>
   );
