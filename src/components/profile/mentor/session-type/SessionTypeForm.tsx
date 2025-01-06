@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionTypeEnum } from "@/types/session";
-import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import type { SessionTypeFormProps } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
@@ -18,7 +18,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const methods = useForm<SessionTypeFormData>({
+
+  const methods = useForm({
     defaultValues: {
       type: undefined as unknown as SessionTypeEnum,
       duration: 0,
@@ -35,7 +36,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const showPhoneField = selectedPlatforms.includes("Phone Call");
   const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
 
-  const onSubmit = async (data: SessionTypeFormData) => {
+  const onSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
@@ -67,7 +68,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         .from('mentor_session_types')
         .insert({
           profile_id: profileId,
-          type: data.type as SessionTypeEnum,
+          type: data.type,
           duration: Number(data.duration),
           price: 0,
           description: data.description || null,
@@ -101,8 +102,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -110,7 +109,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           <div className="space-y-4">
             <SessionTypeSelect
               form={{ control: methods.control }}
-              availableTypes={availableSessionTypes}
+              availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
             />
 
             <FormField
