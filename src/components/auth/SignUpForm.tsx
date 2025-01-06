@@ -78,6 +78,7 @@ export function SignUpForm() {
             first_name: formData.firstName,
             last_name: formData.lastName,
           },
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       });
 
@@ -94,12 +95,18 @@ export function SignUpForm() {
         throw signUpError;
       }
 
+      // Show a more detailed confirmation message
       toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
+        title: "Verification email sent",
+        description: "Please check your email to confirm your account. The confirmation link will expire in 24 hours.",
       });
       
-      navigate("/");
+      // Navigate to a dedicated confirmation page
+      navigate("/auth/confirm-email", { 
+        state: { 
+          email: formData.email 
+        }
+      });
     } catch (error: any) {
       console.error('Sign up error:', error);
       
