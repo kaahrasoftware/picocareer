@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotForm } from "../calendar/availability/TimeSlotForm";
@@ -8,6 +7,7 @@ import { UnavailableTimeForm } from "../calendar/availability/UnavailableTimeFor
 import { ExistingTimeSlots } from "../calendar/availability/ExistingTimeSlots";
 import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
+import { CalendarContainer } from "../calendar/CalendarContainer";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -75,8 +75,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     const { data, error } = await supabase
       .from('mentor_availability')
       .select('*')
-      .eq('profile_id', profileId)
-      .eq('is_available', true);
+      .eq('profile_id', profileId);
 
     if (error) {
       console.error('Error fetching all availability:', error);
@@ -102,17 +101,6 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     }
   };
 
-  // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return availability.some(slot => {
-      if (slot.recurring) {
-        return slot.day_of_week === date.getDay();
-      }
-      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
-    });
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -122,25 +110,10 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <h4 className="font-medium mb-2">Select Date</h4>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border"
-              disabled={(date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return date < today;
-              }}
-              modifiers={{
-                hasAvailability: (date) => hasAvailability(date)
-              }}
-              modifiersStyles={{
-                hasAvailability: {
-                  border: '2px solid #22c55e',
-                  borderRadius: '4px'
-                }
-              }}
+            <CalendarContainer
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              availability={availability}
             />
           </div>
           

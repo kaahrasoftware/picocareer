@@ -11,14 +11,35 @@ interface CalendarContainerProps {
 
 export function CalendarContainer({ selectedDate, setSelectedDate, availability }: CalendarContainerProps) {
   // Function to determine if a date has availability set
-  const hasAvailability = (date: Date) => {
+  const getDateStatus = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return availability?.some(slot => {
+    let hasAvailable = false;
+    let hasUnavailable = false;
+
+    availability?.forEach(slot => {
       if (slot.recurring) {
-        return slot.day_of_week === date.getDay();
+        if (slot.day_of_week === date.getDay()) {
+          if (slot.is_available) {
+            hasAvailable = true;
+          } else {
+            hasUnavailable = true;
+          }
+        }
+      } else {
+        if (format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
+          if (slot.is_available) {
+            hasAvailable = true;
+          } else {
+            hasUnavailable = true;
+          }
+        }
       }
-      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr && slot.is_available;
     });
+
+    if (hasAvailable && hasUnavailable) return 'mixed';
+    if (hasAvailable) return 'available';
+    if (hasUnavailable) return 'unavailable';
+    return null;
   };
 
   return (
@@ -27,14 +48,24 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         mode="single"
         selected={selectedDate}
         onSelect={setSelectedDate}
-        defaultMonth={selectedDate} // Add this line to maintain the selected month
+        defaultMonth={selectedDate}
         className="rounded-md border bg-kahra-darker"
         modifiers={{
-          hasAvailability: (date) => hasAvailability(date)
+          available: (date) => getDateStatus(date) === 'available',
+          unavailable: (date) => getDateStatus(date) === 'unavailable',
+          mixed: (date) => getDateStatus(date) === 'mixed'
         }}
         modifiersStyles={{
-          hasAvailability: {
+          available: {
             border: '2px solid #22c55e',
+            borderRadius: '4px'
+          },
+          unavailable: {
+            border: '2px solid #ef4444',
+            borderRadius: '4px'
+          },
+          mixed: {
+            border: '2px solid #f59e0b',
             borderRadius: '4px'
           }
         }}
