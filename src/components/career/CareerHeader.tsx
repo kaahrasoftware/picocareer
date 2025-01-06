@@ -1,8 +1,10 @@
+import { Building2, Briefcase, Users } from "lucide-react";
+
 interface CareerHeaderProps {
   title: string;
-  industry?: string;
-  salary_range?: string;
-  image_url?: string;
+  industry?: string | null;
+  salary_range?: string | null;
+  image_url?: string | null;
   profiles_count?: number;
   onImageClick: (e: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => void;
 }
@@ -16,10 +18,10 @@ export function CareerHeader({
   onImageClick,
 }: CareerHeaderProps) {
   return (
-    <div className="flex flex-col gap-2 mb-4">
-      {image_url && (
+    <div className="space-y-3">
+      {image_url ? (
         <div 
-          className="relative w-full aspect-video mb-2 cursor-pointer overflow-hidden rounded-lg"
+          className="relative aspect-video w-full rounded-lg overflow-hidden cursor-pointer group"
           onClick={onImageClick}
         >
           <img
@@ -28,28 +30,41 @@ export function CareerHeader({
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
+      ) : (
+        <div 
+          className="relative aspect-video w-full rounded-lg bg-muted flex items-center justify-center cursor-pointer group overflow-hidden"
+          onClick={onImageClick}
+        >
+          <Briefcase className="h-12 w-12 text-muted-foreground/50" />
+        </div>
       )}
       
-      <div className="space-y-1">
-        <h3 className="font-semibold text-lg leading-none">
+      <div className="space-y-1.5">
+        <h3 className="font-semibold text-lg leading-tight">
           {title}
         </h3>
         
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
           {industry && (
-            <span>{industry}</span>
-          )}
-          {industry && salary_range && (
-            <span>•</span>
+            <div className="flex items-center gap-1">
+              <Building2 className="h-3.5 w-3.5" />
+              <span>{industry}</span>
+            </div>
           )}
           {salary_range && (
-            <span>{salary_range}</span>
-          )}
-          {(industry || salary_range) && profiles_count > 0 && (
-            <span>•</span>
+            <>
+              {industry && <span>•</span>}
+              <span>{salary_range}</span>
+            </>
           )}
           {profiles_count > 0 && (
-            <span>{profiles_count} profiles</span>
+            <>
+              {(industry || salary_range) && <span>•</span>}
+              <div className="flex items-center gap-1">
+                <Users className="h-3.5 w-3.5" />
+                <span>{profiles_count} profiles</span>
+              </div>
+            </>
           )}
         </div>
       </div>
