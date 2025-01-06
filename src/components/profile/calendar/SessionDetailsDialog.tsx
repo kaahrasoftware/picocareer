@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
@@ -62,25 +61,18 @@ export function SessionDetailsDialog({
             <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
             {session.session_details.status === 'scheduled' && (
-              <>
-                <Textarea
-                  placeholder="Reason for cancellation..."
-                  value={cancellationNote}
-                  onChange={(e) => onCancellationNoteChange(e.target.value)}
-                />
-                <SessionActions
-                  session={session}
-                  canCancel={canCancel}
-                  canMarkAttendance={canMarkAttendance}
-                  attendance={attendance}
-                  setAttendance={setAttendance}
-                  isCancelling={false}
-                  cancellationNote={cancellationNote}
-                  onCancellationNoteChange={onCancellationNoteChange}
-                  onCancel={onCancel}
-                  onClose={onClose}
-                />
-              </>
+              <SessionActions
+                session={session}
+                canCancel={canCancel}
+                canMarkAttendance={canMarkAttendance}
+                attendance={attendance}
+                setAttendance={setAttendance}
+                isCancelling={false}
+                cancellationNote={cancellationNote}
+                onCancellationNoteChange={onCancellationNoteChange}
+                onCancel={onCancel}
+                onClose={onClose}
+              />
             )}
 
             {session.session_details.status === 'completed' && (
