@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SessionDetailsDialog } from "./SessionDetailsDialog";
 
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
@@ -19,6 +20,9 @@ export function CalendarContainer({
   availability,
   events = [] 
 }: CalendarContainerProps) {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [cancellationNote, setCancellationNote] = useState('');
+
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -30,6 +34,21 @@ export function CalendarContainer({
     if (!selectedDate) return false;
     return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
+
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedEvent(null);
+    setCancellationNote('');
+  };
+
+  const handleCancelSession = async () => {
+    // This would be implemented based on your session cancellation logic
+    // For now, just close the dialog
+    handleCloseDialog();
+  };
 
   return (
     <div className="space-y-6">
@@ -66,8 +85,9 @@ export function CalendarContainer({
                     ${event.status === 'cancelled' ? 'border-red-500/20 bg-red-500/10' : 
                       event.event_type === 'session' ? 'border-blue-500/20 bg-blue-500/10' : 
                       'border-gray-500/20 bg-gray-500/10'}
-                    hover:shadow-md transition-all
+                    hover:shadow-md transition-all cursor-pointer
                   `}
+                  onClick={() => handleEventClick(event)}
                 >
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
@@ -95,6 +115,14 @@ export function CalendarContainer({
           </ScrollArea>
         </div>
       )}
+
+      <SessionDetailsDialog
+        session={selectedEvent}
+        onClose={handleCloseDialog}
+        onCancel={handleCancelSession}
+        cancellationNote={cancellationNote}
+        onCancellationNoteChange={setCancellationNote}
+      />
     </div>
   );
 }
