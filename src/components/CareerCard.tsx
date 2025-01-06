@@ -43,8 +43,11 @@ export function CareerCard({
 
   return (
     <>
-      <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer">
-        <div className="p-4 space-y-4" onClick={handleOpenDialog}>
+      <Card 
+        className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-[1.02]" 
+        onClick={handleOpenDialog}
+      >
+        <div className="p-4 space-y-4">
           <CareerHeader
             title={title}
             industry={industry}
