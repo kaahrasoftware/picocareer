@@ -23,6 +23,11 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
   // Set initial tab value based on URL parameter
   const defaultTab = tabFromUrl || 'profile';
 
+  // Ensure profile data is available before rendering tabs
+  if (!profile) {
+    return null;
+  }
+
   return (
     <Tabs 
       defaultValue={defaultTab}
@@ -51,7 +56,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
       )}
 
       <TabsContent value="calendar">
-        <CalendarTab />
+        <CalendarTab profile={profile} />
       </TabsContent>
 
       {isMentor && profile && (
