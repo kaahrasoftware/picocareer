@@ -31,9 +31,15 @@ export function CalendarContainer({
   // Function to determine availability status for a date
   const getAvailabilityStatus = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const dayAvailabilities = availability.filter(slot => 
-      format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr
-    );
+    const dayOfWeek = date.getDay();
+
+    // Get both one-time and recurring slots for this date
+    const dayAvailabilities = availability.filter(slot => {
+      if (slot.recurring && slot.day_of_week === dayOfWeek) {
+        return true;
+      }
+      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
+    });
 
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
     const hasUnavailable = dayAvailabilities.some(slot => !slot.is_available);
