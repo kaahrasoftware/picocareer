@@ -35,6 +35,7 @@ if (typeof window !== 'undefined') {
       // Clear all auth-related storage
       localStorage.removeItem('picocareer_auth_token');
       localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('email_confirmed');
       
       // Clear any cached data
       if ('caches' in window) {
@@ -60,7 +61,7 @@ if (typeof window !== 'undefined') {
       }
     }
 
-    // Handle email confirmation
+    // Handle email confirmation and sign in
     if (event === 'SIGNED_IN') {
       const currentPath = window.location.pathname;
       const params = new URLSearchParams(window.location.search);
@@ -69,6 +70,17 @@ if (typeof window !== 'undefined') {
       if (params.get('type') === 'email_confirmation') {
         // Redirect to confirmation page
         window.location.href = '/auth/confirm';
+      }
+
+      // Show welcome toast only once after email confirmation
+      const emailConfirmed = localStorage.getItem('email_confirmed');
+      if (!emailConfirmed && session?.user?.email_confirmed_at) {
+        toast({
+          title: "Email Verified",
+          description: "Your email has been verified successfully. Welcome!",
+          variant: "default",
+        });
+        localStorage.setItem('email_confirmed', 'true');
       }
     }
   });
