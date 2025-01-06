@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotForm } from "./availability/TimeSlotForm";
 import { UnavailableTimeForm } from "./availability/UnavailableTimeForm";
 import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { format } from "date-fns";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -19,11 +19,58 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   const [activeTab, setActiveTab] = useState("available");
   const { getSetting } = useUserSettings(profileId);
   const userTimezone = getSetting('timezone');
+  const [availableDates, setAvailableDates] = useState<Date[]>([]);
 
   useEffect(() => {
     if (!selectedDate) return;
     fetchAvailability();
   }, [selectedDate, profileId]);
+
+  useEffect(() => {
+    fetchAllAvailability();
+  }, [profileId]);
+
+  const fetchAllAvailability = async () => {
+    const { data, error } = await supabase
+      .from('mentor_availability')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('is_available', true);
+
+    if (error) {
+      console.error('Error fetching availability:', error);
+      return;
+    }
+
+    const dates = new Set<string>();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Add next 90 days for recurring slots
+    const recurringSlots = data.filter(slot => slot.recurring);
+    for (let i = 0; i < 90; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() + i);
+      
+      recurringSlots.forEach(slot => {
+        if (slot.day_of_week === date.getDay()) {
+          dates.add(format(date, 'yyyy-MM-dd'));
+        }
+      });
+    }
+
+    // Add specific dates
+    data
+      .filter(slot => !slot.recurring && slot.start_date_time)
+      .forEach(slot => {
+        const date = new Date(slot.start_date_time);
+        if (date >= today) {
+          dates.add(format(date, 'yyyy-MM-dd'));
+        }
+      });
+
+    setAvailableDates(Array.from(dates).map(dateStr => new Date(dateStr)));
+  };
 
   const fetchAvailability = async () => {
     const startOfDay = new Date(selectedDate!);
@@ -57,6 +104,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       if (error) throw error;
 
       setExistingSlots(existingSlots.filter(slot => slot.id !== slotId));
+      fetchAllAvailability(); // Refresh available dates
       onUpdate();
     } catch (error) {
       console.error('Error deleting slot:', error);
@@ -82,6 +130,15 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                 today.setHours(0, 0, 0, 0);
                 return date < today;
               }}
+              modifiers={{
+                available: availableDates
+              }}
+              modifiersStyles={{
+                available: {
+                  border: '2px solid #22c55e',
+                  borderRadius: '4px'
+                }
+              }}
             />
           </div>
           
@@ -98,6 +155,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                     profileId={profileId}
                     onSuccess={() => {
                       fetchAvailability();
+                      fetchAllAvailability();
                       onUpdate();
                     }}
                   />
@@ -108,6 +166,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                     profileId={profileId}
                     onSuccess={() => {
                       fetchAvailability();
+                      fetchAllAvailability();
                       onUpdate();
                     }}
                   />
