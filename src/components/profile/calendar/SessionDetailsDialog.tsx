@@ -1,102 +1,145 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
-import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
+import { SessionInfo } from "./dialog/SessionInfo";
+import { SessionFeedbackDialog } from "@/components/profile/feedback/SessionFeedbackDialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { CalendarEvent } from "@/types/calendar";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
   onClose: () => void;
-  onCancel: () => Promise<void>;
-  cancellationNote: string;
-  onCancellationNoteChange: (note: string) => void;
 }
 
-export function SessionDetailsDialog({
-  session,
-  onClose,
-  onCancel,
-  cancellationNote,
-  onCancellationNoteChange,
-}: SessionDetailsDialogProps) {
-  const { session: authSession } = useAuthSession();
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [attendance, setAttendance] = useState(false);
-  const { getSetting } = useUserSettings(authSession?.user?.id || '');
-  const userTimezone = getSetting('timezone');
+export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogProps) {
+  const [attendance, setAttendance] = useState(session?.session_details?.attendance_confirmed || false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellationNote, setCancellationNote] = useState("");
+  const { toast } = useToast();
 
-  if (!session?.session_details) return null;
-
-  const isMentor = authSession?.user?.id === session.session_details.mentor.id;
-  const feedbackType = isMentor ? 'mentor_feedback' : 'mentee_feedback';
-  
-  // Calculate if session can be cancelled (more than 1 hour before start)
-  const canCancel = session.session_details.status === 'scheduled' && 
+  const canCancel = session?.session_details && 
     new Date(session.session_details.scheduled_at) > new Date(Date.now() + 60 * 60 * 1000);
+  
+  const canMarkAttendance = session?.status === 'completed';
 
-  // Can mark attendance if session is scheduled and within 15 minutes of start time
-  const sessionTime = new Date(session.session_details.scheduled_at);
-  const canMarkAttendance = session.session_details.status === 'scheduled' && 
-    Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
+  const handleCancel = async () => {
+    if (!session?.session_details) return;
+
+    try {
+      setIsCancelling(true);
+
+      // Update the session status in the database
+      const { error: sessionError } = await supabase
+        .from('mentor_sessions')
+        .update({ 
+          status: 'cancelled',
+          notes: cancellationNote 
+        })
+        .eq('id', session.session_details.id);
+
+      if (sessionError) throw sessionError;
+
+      // Create notifications for both mentor and mentee
+      const notifications = [
+        {
+          profile_id: session.session_details.mentor.id,
+          title: 'Session Cancelled',
+          message: `Session with ${session.session_details.mentee.full_name} has been cancelled. Note: ${cancellationNote}`,
+          type: 'session_cancelled'
+        },
+        {
+          profile_id: session.session_details.mentee.id,
+          title: 'Session Cancelled',
+          message: `Session with ${session.session_details.mentor.full_name} has been cancelled. Note: ${cancellationNote}`,
+          type: 'session_cancelled'
+        }
+      ];
+
+      // Insert notifications
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (notificationError) throw notificationError;
+
+      // Send cancellation emails
+      const { error: emailError } = await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: session.session_details.id,
+          type: 'cancellation'
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending cancellation emails:', emailError);
+      }
+
+      toast({
+        title: "Session cancelled",
+        description: "The session has been cancelled and notifications have been sent.",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel the session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCancelling(false);
+      setCancellationNote("");
+    }
+  };
+
+  if (!session) return null;
 
   return (
     <>
-      <Dialog open={!!session} onOpenChange={onClose}>
+      <Dialog open={!!session} onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-[425px] max-h-[80vh]">
           <DialogHeader>
+            <AspectRatio ratio={16 / 9} className="bg-muted mb-2">
+              <img
+                src="/lovable-uploads/2f911e17-c410-44bf-bd05-1243e9536612.png"
+                alt="PicoCareer Logo"
+                className="mx-auto h-12 object-contain"
+              />
+            </AspectRatio>
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="h-full max-h-[calc(80vh-120px)] pr-4">
-            <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
+          <SessionInfo session={session} />
 
-            {session.session_details.status === 'scheduled' && (
-              <SessionActions
-                session={session}
-                canCancel={canCancel}
-                canMarkAttendance={canMarkAttendance}
-                attendance={attendance}
-                setAttendance={setAttendance}
-                isCancelling={false}
-                cancellationNote={cancellationNote}
-                onCancellationNoteChange={onCancellationNoteChange}
-                onCancel={onCancel}
-                onClose={onClose}
-              />
-            )}
-
-            {session.session_details.status === 'completed' && (
-              <Button 
-                onClick={() => setShowFeedback(true)}
-                className="mt-4"
-              >
-                Provide Feedback
-              </Button>
-            )}
-          </ScrollArea>
+          <SessionActions
+            session={session}
+            canCancel={canCancel}
+            canMarkAttendance={canMarkAttendance}
+            attendance={attendance}
+            setAttendance={setAttendance}
+            isCancelling={isCancelling}
+            cancellationNote={cancellationNote}
+            onCancellationNoteChange={setCancellationNote}
+            onCancel={handleCancel}
+            onClose={onClose}
+          />
         </DialogContent>
       </Dialog>
 
-      {showFeedback && (
-        <SessionFeedbackDialog
-          isOpen={showFeedback}
-          onClose={() => setShowFeedback(false)}
-          sessionId={session.session_details.id}
-          feedbackType={feedbackType}
-          fromProfileId={authSession?.user?.id || ''}
-          toProfileId={isMentor ? session.session_details.mentee.id : session.session_details.mentor.id}
-        />
-      )}
+      <SessionFeedbackDialog
+        sessionId={session.session_details?.id}
+        open={session.status === 'completed' && !session.session_details?.attendance_confirmed}
+        onClose={onClose}
+      />
     </>
   );
 }
