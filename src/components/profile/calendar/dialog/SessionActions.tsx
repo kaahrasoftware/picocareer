@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, ExternalLink } from "lucide-react";
 import { CalendarEvent } from "@/types/calendar";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,8 @@ interface SessionActionsProps {
   attendance: boolean;
   setAttendance: (value: boolean) => void;
   isCancelling: boolean;
+  cancellationNote: string;
+  onCancellationNoteChange: (note: string) => void;
   onCancel: () => Promise<void>;
   onClose: () => void;
 }
@@ -25,6 +28,8 @@ export function SessionActions({
   attendance,
   setAttendance,
   isCancelling,
+  cancellationNote,
+  onCancellationNoteChange,
   onCancel,
   onClose,
 }: SessionActionsProps) {
@@ -102,14 +107,25 @@ export function SessionActions({
       )}
 
       {canCancel && (
-        <Button
-          variant="destructive"
-          onClick={onCancel}
-          disabled={isCancelling}
-          className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
-        >
-          {isCancelling ? "Cancelling..." : "Cancel Session"}
-        </Button>
+        <>
+          <div className="flex justify-center">
+            <Textarea
+              placeholder="Please provide a reason for cancellation..."
+              value={cancellationNote}
+              onChange={(e) => onCancellationNoteChange(e.target.value)}
+              className="h-24 resize-none bg-muted w-3/4"
+            />
+          </div>
+          
+          <Button
+            variant="destructive"
+            onClick={onCancel}
+            disabled={!cancellationNote.trim() || isCancelling}
+            className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
+          >
+            {isCancelling ? "Cancelling..." : "Cancel Session"}
+          </Button>
+        </>
       )}
 
       {!canCancel && (
