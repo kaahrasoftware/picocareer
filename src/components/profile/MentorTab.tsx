@@ -22,20 +22,20 @@ export function MentorTab({ profile }: MentorTabProps) {
 
     const checkTimezone = async () => {
       try {
-        const { data, error } = await supabase
+        // Check if a timezone setting exists for this user
+        const { count, error } = await supabase
           .from('user_settings')
-          .select('setting_value')
+          .select('*', { count: 'exact', head: true })
           .eq('profile_id', profileId)
-          .eq('setting_type', 'timezone')
-          .maybeSingle();
+          .eq('setting_type', 'timezone');
 
         if (error) {
           console.error('Error checking timezone:', error);
           return;
         }
 
-        // Only show toast if there's no timezone set or if it's an empty string
-        if (!data || !data.setting_value) {
+        // Show toast only if no timezone setting exists (count === 0)
+        if (count === 0) {
           toast({
             title: "Timezone not set",
             description: "Please set your timezone in settings to ensure accurate scheduling.",
