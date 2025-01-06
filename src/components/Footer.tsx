@@ -27,12 +27,13 @@ export function Footer() {
   ];
 
   return (
-    <footer className="mt-20 border-t border-border pt-6">
-      <div className="max-w-[1400px] mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-          {/* Company Logo and Contact Info */}
-          <div className="mb-6 md:mb-0">
-            <div className="flex items-center mb-4 space-x-4">
+    <footer className="mt-20 border-t border-border bg-white">
+      <div className="max-w-[1400px] mx-auto px-4 py-12">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {/* Company Info Section */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/d6b217eb-2cec-4933-b8ee-09a438e5d28d.png"
                 alt="PicoCareer Logo"
@@ -44,83 +45,97 @@ export function Footer() {
                 className="h-8"
               />
             </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center">
+            <div className="space-y-3">
+              <a href="mailto:info@picocareer.com" 
+                className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="w-4 h-4 mr-2" />
-                <a href="mailto:info@picocareer.com" className="hover:text-foreground transition-colors">
-                  info@picocareer.com
-                </a>
-              </div>
-              <div className="flex items-center">
+                info@picocareer.com
+              </a>
+              <a href="tel:+22897476446" 
+                className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Phone className="w-4 h-4 mr-2" />
-                <a href="tel:+22897476446" className="hover:text-foreground transition-colors">
-                  +228 97 47 64 46
-                </a>
+                +228 97 47 64 46
+              </a>
+            </div>
+          </div>
+
+          {/* Company Links Section */}
+          <div>
+            <h4 className="font-semibold text-base mb-4">Company</h4>
+            <ul className="space-y-3">
+              {companyLinks.map((link, index) => (
+                <li key={index}>
+                  <a
+                    href={link.href}
+                    onClick={link.onClick}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Other Links Section */}
+          <div>
+            <h4 className="font-semibold text-base mb-4">Resources</h4>
+            <ul className="space-y-3">
+              {otherLinks.map((link, index) => (
+                <li key={index}>
+                  <a 
+                    href={link.href} 
+                    onClick={link.onClick}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Newsletter Section */}
+          <div>
+            <h4 className="font-semibold text-base mb-4">Stay Updated</h4>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Subscribe to our newsletter for the latest updates and opportunities.
+              </p>
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-2 bg-muted rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90 transition-colors">
+                  Subscribe
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Links Sections */}
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h4 className="text-sm font-medium mb-2">Company</h4>
-              <ul className="space-y-2">
-                {companyLinks.map((link, index) => (
-                  <li key={index}>
-                    <a
-                      href={link.href}
-                      onClick={link.onClick}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-2">Other Links</h4>
-              <ul className="space-y-2">
-                {otherLinks.map((link, index) => (
-                  <li key={index}>
-                    <a 
-                      href={link.href} 
-                      onClick={link.onClick}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
         </div>
 
-        {/* Social Links */}
-        <div className="flex gap-4 mb-6">
-          {socialLinks.map((link, index) => (
-            <a
-              key={index}
-              href={link.href}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <i className={`fab fa-${link.icon} w-5 h-5`}></i>
-            </a>
-          ))}
-        </div>
-
-        {/* Newsletter Subscription */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 bg-muted rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90 transition-colors">
-              Subscribe
-            </button>
+        {/* Footer Bottom */}
+        <div className="pt-8 border-t border-border">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Social Links */}
+            <div className="flex gap-6">
+              {socialLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.href}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <i className={`fab fa-${link.icon} w-5 h-5`}></i>
+                </a>
+              ))}
+            </div>
+            
+            {/* Copyright */}
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} PicoCareer. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
