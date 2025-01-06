@@ -1,71 +1,181 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Root from "@/pages/Root";
-import Error from "@/pages/Error";
-import Home from "@/pages/Home";
-import Auth from "@/pages/Auth";
-import EmailConfirmation from "@/pages/EmailConfirmation";
-import EmailConfirmationPending from "@/pages/EmailConfirmationPending";
-import MentorRegistration from "@/pages/MentorRegistration";
-import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import About from "@/pages/About";
+import Auth from "@/pages/Auth";
+import Blog from "@/pages/Blog";
+import BlogUpload from "@/pages/BlogUpload";
+import Career from "@/pages/Career";
+import CareerUpload from "@/pages/CareerUpload";
+import Contact from "@/pages/Contact";
+import EmailConfirmation from "@/pages/EmailConfirmation";
+import Error from "@/pages/Error";
+import Funding from "@/pages/Funding";
+import Index from "@/pages/Index";
+import MajorUpload from "@/pages/MajorUpload";
+import Mentor from "@/pages/Mentor";
+import MentorRegistration from "@/pages/MentorRegistration";
+import PasswordReset from "@/pages/PasswordReset";
+import Privacy from "@/pages/Privacy";
+import Profile from "@/pages/Profile";
+import Program from "@/pages/Program";
+import School from "@/pages/School";
+import Terms from "@/pages/Terms";
+import Video from "@/pages/Video";
+import { MenuSidebar } from "@/components/MenuSidebar";
+import { Footer } from "@/components/Footer";
 
-// Lazy load DevTools to avoid bundling in production
-const ReactQueryDevtools = lazy(() =>
-  import("@tanstack/react-query-devtools").then((d) => ({
-    default: d.ReactQueryDevtools,
-  }))
-);
+const queryClient = new QueryClient();
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
-    },
-  },
-});
+// Layout component to wrap pages with MenuSidebar and Footer
+function MainLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <MenuSidebar />
+      <main className="pt-16 flex-grow">
+        {children}
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// Simple layout without footer for auth pages
+function AuthLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <MenuSidebar />
+      <main className="pt-16 flex-grow">
+        {children}
+      </main>
+    </div>
+  );
+}
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <MainLayout><Index /></MainLayout>,
     errorElement: <Error />,
-    children: [
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: "/auth",
-        element: <Auth />,
-      },
-      {
-        path: "/auth/confirm-email",
-        element: <EmailConfirmationPending />,
-      },
-      {
-        path: "/auth/confirm",
-        element: <EmailConfirmation />,
-      },
-      {
-        path: "/mentor/register",
-        element: <MentorRegistration />,
-      },
-    ],
+  },
+  {
+    path: "/about",
+    element: <MainLayout><About /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/auth",
+    element: <AuthLayout><Auth /></AuthLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/blog",
+    element: <MainLayout><Blog /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/blog/upload",
+    element: <MainLayout><BlogUpload /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/career",
+    element: <MainLayout><Career /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/career/upload",
+    element: <MainLayout><CareerUpload /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/contact",
+    element: <MainLayout><Contact /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/email-confirmation",
+    element: <EmailConfirmation />,
+    errorElement: <Error />,
+  },
+  {
+    path: "/funding",
+    element: <MainLayout><Funding /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/major/upload",
+    element: <MainLayout><MajorUpload /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/mentor",
+    element: <MainLayout><Mentor /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/mentor/register",
+    element: <MainLayout><MentorRegistration /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/privacy",
+    element: <MainLayout><Privacy /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/profile",
+    element: <MainLayout><Profile /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/program",
+    element: <MainLayout><Program /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/school",
+    element: <MainLayout><School /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/terms",
+    element: <MainLayout><Terms /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/video",
+    element: <MainLayout><Video /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/password-reset",
+    element: <PasswordReset />,
+    errorElement: <Error />,
+  },
+  {
+    path: "*",
+    element: <Error />,
   },
 ]);
 
-export default function App() {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
-      {process.env.NODE_ENV === 'development' && (
-        <Suspense fallback={null}>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </Suspense>
-      )}
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <RouterProvider router={router} />
+        <Toaster />
+        <Sonner />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
+
+export default App;
