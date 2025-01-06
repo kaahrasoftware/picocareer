@@ -34,7 +34,7 @@ export function Footer() {
           <div className="mb-6 md:mb-0">
             <div className="flex items-center mb-4">
               <img 
-                src="/lovable-uploads/65608658-2c3b-4eab-80f0-d9791cae7b50.png"
+                src="/lovable-uploads/66bd455b-7720-4cd7-b24f-558b54e317bc.png"
                 alt="PicoCareer"
                 className="h-8 mr-2"
               />
