@@ -39,7 +39,7 @@ export function Footer() {
                 className="h-12 w-12 object-contain"
               />
               <img 
-                src="/lovable-uploads/66bd455b-7720-4cd7-b24f-558b54e317bc.png"
+                src="/lovable-uploads/511c4e72-dc46-4b0a-aab7-e2e16a2d5ac2.png"
                 alt="PicoCareer"
                 className="h-8"
               />
