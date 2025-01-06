@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
@@ -19,16 +18,12 @@ interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
   onClose: () => void;
   onCancel: () => Promise<void>;
-  cancellationNote: string;
-  onCancellationNoteChange: (note: string) => void;
 }
 
 export function SessionDetailsDialog({
   session,
   onClose,
   onCancel,
-  cancellationNote,
-  onCancellationNoteChange,
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
@@ -62,25 +57,16 @@ export function SessionDetailsDialog({
             <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
             {session.session_details.status === 'scheduled' && (
-              <>
-                <Textarea
-                  placeholder="Reason for cancellation..."
-                  value={cancellationNote}
-                  onChange={(e) => onCancellationNoteChange(e.target.value)}
-                />
-                <SessionActions
-                  session={session}
-                  canCancel={canCancel}
-                  canMarkAttendance={canMarkAttendance}
-                  attendance={attendance}
-                  setAttendance={setAttendance}
-                  isCancelling={false}
-                  cancellationNote={cancellationNote}
-                  onCancellationNoteChange={onCancellationNoteChange}
-                  onCancel={onCancel}
-                  onClose={onClose}
-                />
-              </>
+              <SessionActions
+                session={session}
+                canCancel={canCancel}
+                canMarkAttendance={canMarkAttendance}
+                attendance={attendance}
+                setAttendance={setAttendance}
+                isCancelling={false}
+                onCancel={onCancel}
+                onClose={onClose}
+              />
             )}
 
             {session.session_details.status === 'completed' && (
