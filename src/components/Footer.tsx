@@ -53,10 +53,11 @@ export function Footer() {
     }
   ];
 
+  // ... keep existing code
+
   return (
     <footer className="mt-20 border-t border-border bg-white">
       <div className="max-w-[1400px] mx-auto px-4 py-12">
-        {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Company Info Section */}
           <div className="space-y-6">
@@ -162,10 +163,11 @@ export function Footer() {
               ))}
             </div>
             
-            {/* Copyright */}
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} PicoCareer. All rights reserved.
-            </p>
+            {/* Copyright and Product Info */}
+            <div className="text-sm text-muted-foreground text-center md:text-right">
+              <p>© {new Date().getFullYear()} PicoCareer. All rights reserved.</p>
+              <p className="mt-1">A product of <strong>Kaahra</strong></p>
+            </div>
           </div>
         </div>
       </div>
