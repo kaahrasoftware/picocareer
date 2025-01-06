@@ -6,24 +6,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
   onClose: () => void;
   onCancel: () => Promise<void>;
+  cancellationNote: string;
+  onCancellationNoteChange: (note: string) => void;
 }
 
 export function SessionDetailsDialog({
   session,
   onClose,
   onCancel,
+  cancellationNote,
+  onCancellationNoteChange,
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
@@ -48,15 +52,20 @@ export function SessionDetailsDialog({
   return (
     <>
       <Dialog open={!!session} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px] max-h-[80vh]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="h-full max-h-[calc(80vh-120px)] pr-4">
-            <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
+          <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
-            {session.session_details.status === 'scheduled' && (
+          {session.session_details.status === 'scheduled' && (
+            <>
+              <Textarea
+                placeholder="Reason for cancellation..."
+                value={cancellationNote}
+                onChange={(e) => onCancellationNoteChange(e.target.value)}
+              />
               <SessionActions
                 session={session}
                 canCancel={canCancel}
@@ -64,20 +73,22 @@ export function SessionDetailsDialog({
                 attendance={attendance}
                 setAttendance={setAttendance}
                 isCancelling={false}
+                cancellationNote={cancellationNote}
+                onCancellationNoteChange={onCancellationNoteChange}
                 onCancel={onCancel}
                 onClose={onClose}
               />
-            )}
+            </>
+          )}
 
-            {session.session_details.status === 'completed' && (
-              <Button 
-                onClick={() => setShowFeedback(true)}
-                className="mt-4"
-              >
-                Provide Feedback
-              </Button>
-            )}
-          </ScrollArea>
+          {session.session_details.status === 'completed' && (
+            <Button 
+              onClick={() => setShowFeedback(true)}
+              className="mt-4"
+            >
+              Provide Feedback
+            </Button>
+          )}
         </DialogContent>
       </Dialog>
 
