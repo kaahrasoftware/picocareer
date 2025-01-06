@@ -16,7 +16,6 @@ interface CalendarViewProps {
 export function CalendarView({ isMentor }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedSession, setSelectedSession] = useState<CalendarEvent | null>(null);
-  const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
   const { data: events = [], refetch: refetchEvents } = useSessionEvents();
 
@@ -28,8 +27,7 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
       const { error } = await supabase
         .from('mentor_sessions')
         .update({ 
-          status: 'cancelled',
-          notes: cancellationNote 
+          status: 'cancelled'
         })
         .eq('id', selectedSession.session_details.id);
 
@@ -40,13 +38,13 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
         {
           profile_id: selectedSession.session_details.mentor.id,
           title: 'Session Cancelled',
-          message: `Session with ${selectedSession.session_details.mentee.full_name} has been cancelled. Note: ${cancellationNote}`,
+          message: `Session with ${selectedSession.session_details.mentee.full_name} has been cancelled.`,
           type: 'session_cancelled' as const
         },
         {
           profile_id: selectedSession.session_details.mentee.id,
           title: 'Session Cancelled',
-          message: `Session with ${selectedSession.session_details.mentor.full_name} has been cancelled. Note: ${cancellationNote}`,
+          message: `Session with ${selectedSession.session_details.mentor.full_name} has been cancelled.`,
           type: 'session_cancelled' as const
         }
       ];
@@ -77,7 +75,6 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
 
       // Close the dialog and reset state
       setSelectedSession(null);
-      setCancellationNote("");
       
       // Refresh events
       refetchEvents();
@@ -129,11 +126,8 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
         session={selectedSession}
         onClose={() => {
           setSelectedSession(null);
-          setCancellationNote("");
         }}
         onCancel={handleCancelSession}
-        cancellationNote={cancellationNote}
-        onCancellationNoteChange={setCancellationNote}
       />
     </div>
   );
