@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotForm } from "./availability/TimeSlotForm";
 import { UnavailableTimeForm } from "./availability/UnavailableTimeForm";
 import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -16,6 +17,8 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("available");
+  const { getSetting } = useUserSettings(profileId);
+  const userTimezone = getSetting('timezone');
 
   useEffect(() => {
     if (!selectedDate) return;
