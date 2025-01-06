@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Availability } from "@/types/calendar";
 import { Profile } from "@/types/database/profiles";
 import { EventsSidebar } from "./EventsSidebar";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { EventList } from "./EventList";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CalendarContainerProps {
   profile: Profile;
@@ -16,13 +17,28 @@ export function CalendarContainer({ profile }: CalendarContainerProps) {
   const { data: events = [] } = useSessionEvents();
   const isMentor = profile?.user_type === 'mentor';
 
+  // Fetch availability data
+  const { data: availabilityData } = useQuery({
+    queryKey: ['mentor-availability', profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', profile?.id);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!profile?.id,
+  });
+
   // Function to determine if a date has availability set
   const getDateStatus = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     let hasAvailable = false;
     let hasUnavailable = false;
 
-    profile?.mentor_availability?.forEach(slot => {
+    availabilityData?.forEach(slot => {
       if (slot.recurring) {
         if (slot.day_of_week === date.getDay()) {
           if (slot.is_available) {
@@ -63,16 +79,22 @@ export function CalendarContainer({ profile }: CalendarContainerProps) {
           }}
           modifiersStyles={{
             available: {
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
               border: '2px solid #22c55e',
-              borderRadius: '4px'
+              borderRadius: '4px',
+              color: '#22c55e'
             },
             unavailable: {
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
               border: '2px solid #ef4444',
-              borderRadius: '4px'
+              borderRadius: '4px',
+              color: '#ef4444'
             },
             mixed: {
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
               border: '2px solid #f59e0b',
-              borderRadius: '4px'
+              borderRadius: '4px',
+              color: '#f59e0b'
             }
           }}
         />
