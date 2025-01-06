@@ -13,6 +13,7 @@ import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
@@ -52,43 +53,45 @@ export function SessionDetailsDialog({
   return (
     <>
       <Dialog open={!!session} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
+          <ScrollArea className="h-full max-h-[calc(80vh-120px)] pr-4">
+            <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
-          {session.session_details.status === 'scheduled' && (
-            <>
-              <Textarea
-                placeholder="Reason for cancellation..."
-                value={cancellationNote}
-                onChange={(e) => onCancellationNoteChange(e.target.value)}
-              />
-              <SessionActions
-                session={session}
-                canCancel={canCancel}
-                canMarkAttendance={canMarkAttendance}
-                attendance={attendance}
-                setAttendance={setAttendance}
-                isCancelling={false}
-                cancellationNote={cancellationNote}
-                onCancellationNoteChange={onCancellationNoteChange}
-                onCancel={onCancel}
-                onClose={onClose}
-              />
-            </>
-          )}
+            {session.session_details.status === 'scheduled' && (
+              <>
+                <Textarea
+                  placeholder="Reason for cancellation..."
+                  value={cancellationNote}
+                  onChange={(e) => onCancellationNoteChange(e.target.value)}
+                />
+                <SessionActions
+                  session={session}
+                  canCancel={canCancel}
+                  canMarkAttendance={canMarkAttendance}
+                  attendance={attendance}
+                  setAttendance={setAttendance}
+                  isCancelling={false}
+                  cancellationNote={cancellationNote}
+                  onCancellationNoteChange={onCancellationNoteChange}
+                  onCancel={onCancel}
+                  onClose={onClose}
+                />
+              </>
+            )}
 
-          {session.session_details.status === 'completed' && (
-            <Button 
-              onClick={() => setShowFeedback(true)}
-              className="mt-4"
-            >
-              Provide Feedback
-            </Button>
-          )}
+            {session.session_details.status === 'completed' && (
+              <Button 
+                onClick={() => setShowFeedback(true)}
+                className="mt-4"
+              >
+                Provide Feedback
+              </Button>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
