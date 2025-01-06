@@ -115,22 +115,13 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
         onRecurringChange={setIsRecurring}
       />
 
-      <div className="flex gap-2">
-        <Button 
-          onClick={handleSaveAvailability}
-          disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
-          className="flex-1"
-        >
-          {isSubmitting ? "Saving..." : "Save Availability"}
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={onShowUnavailable}
-          className="flex-1"
-        >
-          Mark as Unavailable
-        </Button>
-      </div>
+      <Button 
+        onClick={handleSaveAvailability}
+        disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
+        className="w-full"
+      >
+        {isSubmitting ? "Saving..." : "Save Availability"}
+      </Button>
     </div>
   );
 }
