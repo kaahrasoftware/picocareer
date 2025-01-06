@@ -5,12 +5,12 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "0.0.0.0", // Listen on all network interfaces
+    host: "0.0.0.0",
     port: 8080,
-    strictPort: true, // Don't try other ports if 8080 is taken
+    strictPort: true,
     hmr: {
-      clientPort: 8080, // Use same port as server
-      protocol: 'ws' // Use regular WebSocket instead of WSS
+      clientPort: 8080,
+      protocol: 'ws'
     }
   },
   plugins: [
@@ -22,5 +22,8 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    sourcemap: true,
   },
 }));
