@@ -49,7 +49,7 @@ export function CalendarContainer({ selectedDate, setSelectedDate, availability 
         selected={selectedDate}
         onSelect={setSelectedDate}
         defaultMonth={selectedDate}
-        className="rounded-md border bg-kahra-darker"
+        className="rounded-md border"
         modifiers={{
           available: (date) => getDateStatus(date) === 'available',
           unavailable: (date) => getDateStatus(date) === 'unavailable',
