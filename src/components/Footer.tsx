@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Mail, Phone } from "lucide-react";
 
 export function Footer() {
   const navigate = useNavigate();
@@ -27,42 +28,74 @@ export function Footer() {
 
   return (
     <footer className="mt-20 border-t border-border pt-6">
-      <div className="max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <h4 className="text-sm font-medium mb-2">PicoCareer</h4>
-            <ul className="space-y-2">
-              {companyLinks.map((link, index) => (
-                <li key={index}>
-                  <a
-                    href={link.href}
-                    onClick={link.onClick}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+      <div className="max-w-[1400px] mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
+          {/* Company Logo and Contact Info */}
+          <div className="mb-6 md:mb-0">
+            <div className="flex items-center mb-4">
+              <img 
+                src="/lovable-uploads/65608658-2c3b-4eab-80f0-d9791cae7b50.png"
+                alt="PicoCareer"
+                className="h-8 mr-2"
+              />
+              <h3 className="text-xl font-semibold bg-gradient-to-r from-picocareer-secondary to-picocareer-primary bg-clip-text text-transparent">
+                PicoCareer
+              </h3>
+            </div>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center">
+                <Mail className="w-4 h-4 mr-2" />
+                <a href="mailto:info@picocareer.com" className="hover:text-foreground transition-colors">
+                  info@picocareer.com
+                </a>
+              </div>
+              <div className="flex items-center">
+                <Phone className="w-4 h-4 mr-2" />
+                <a href="tel:+22897476446" className="hover:text-foreground transition-colors">
+                  +228 97 47 64 46
+                </a>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-medium mb-2">Other Links</h4>
-            <ul className="space-y-2">
-              {otherLinks.map((link, index) => (
-                <li key={index}>
-                  <a 
-                    href={link.href} 
-                    onClick={link.onClick}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+
+          {/* Links Sections */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Company</h4>
+              <ul className="space-y-2">
+                {companyLinks.map((link, index) => (
+                  <li key={index}>
+                    <a
+                      href={link.href}
+                      onClick={link.onClick}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-2">Other Links</h4>
+              <ul className="space-y-2">
+                {otherLinks.map((link, index) => (
+                  <li key={index}>
+                    <a 
+                      href={link.href} 
+                      onClick={link.onClick}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
+        {/* Social Links */}
         <div className="flex gap-4 mb-6">
           {socialLinks.map((link, index) => (
             <a
@@ -75,6 +108,7 @@ export function Footer() {
           ))}
         </div>
 
+        {/* Newsletter Subscription */}
         <div className="mb-6">
           <div className="relative max-w-md">
             <input
