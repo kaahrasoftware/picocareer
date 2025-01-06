@@ -12,6 +12,7 @@ import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
+import { SessionTypeEnum } from "@/types/session";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +59,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           profile_id: profileId,
           type: data.type,
           duration: Number(data.duration),
-          price: 0,
+          price: 0, // Set price to 0 by default
           description: data.description || null,
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
@@ -90,14 +91,17 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
+  // Convert the type property from existingTypes to SessionTypeEnum[]
+  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              control={form.control}
-              availableTypes={existingTypes}
+              form={form}
+              availableTypes={availableSessionTypes}
             />
 
             <FormField
@@ -129,10 +133,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect control={form.control} />
+            <PlatformSelect form={form} />
 
             <PlatformFields
-              control={form.control}
+              form={form}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}
