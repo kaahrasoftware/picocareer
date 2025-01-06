@@ -18,16 +18,12 @@ interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
   onClose: () => void;
   onCancel: () => Promise<void>;
-  cancellationNote: string;
-  onCancellationNoteChange: (note: string) => void;
 }
 
 export function SessionDetailsDialog({
   session,
   onClose,
   onCancel,
-  cancellationNote,
-  onCancellationNoteChange,
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
   const [showFeedback, setShowFeedback] = useState(false);
@@ -68,8 +64,6 @@ export function SessionDetailsDialog({
                 attendance={attendance}
                 setAttendance={setAttendance}
                 isCancelling={false}
-                cancellationNote={cancellationNote}
-                onCancellationNoteChange={onCancellationNoteChange}
                 onCancel={onCancel}
                 onClose={onClose}
               />
