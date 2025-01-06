@@ -34,7 +34,7 @@ export function CareerCard({
 }: CareerCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleOpenDialog = (e: React.MouseEvent) => {
+  const handleOpenDialog = (e: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setDialogOpen(true);
