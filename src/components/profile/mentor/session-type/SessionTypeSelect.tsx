@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
+import { Control } from "react-hook-form";
 
 const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
   "Know About my Career": "Get insights about specific career paths, day-to-day responsibilities, challenges, and growth opportunities from experienced professionals.",
@@ -48,13 +49,14 @@ interface SessionTypeSelectProps {
 }
 
 export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectProps) {
-  const [selectedType, setSelectedType] = useState<SessionTypeEnum | null>(null);
   const [showDialog, setShowDialog] = useState(false);
+  const [selectedType, setSelectedType] = useState<SessionTypeEnum | null>(null);
 
   const handleTypeSelect = (value: string) => {
     const type = value as SessionTypeEnum;
     setSelectedType(type);
     setShowDialog(true);
+    form.control._formValues.type = type;
   };
 
   return (
