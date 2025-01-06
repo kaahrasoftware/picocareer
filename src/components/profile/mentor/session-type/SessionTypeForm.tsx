@@ -58,7 +58,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           profile_id: profileId,
           type: data.type,
           duration: Number(data.duration),
-          price: data.price || 0,
+          price: 0, // Set price to 0 by default
           description: data.description || null,
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
@@ -108,20 +108,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Duration (minutes)</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price</FormLabel>
               <FormControl>
                 <Input type="number" {...field} />
               </FormControl>
