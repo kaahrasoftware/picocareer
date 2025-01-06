@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,55 +8,61 @@ import { Button } from "@/components/ui/button";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
-import type { CalendarEvent } from "@/types/calendar";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import Image from "@/components/ui/image";
+import type { Session } from "@/types/session";
+import { useState } from "react";
 
 interface SessionDetailsDialogProps {
-  session: CalendarEvent | null;
+  session: Session | null;
+  open: boolean;
   onClose: () => void;
-  onCancel: () => Promise<void>;
-  cancellationNote: string;
-  onCancellationNoteChange: (note: string) => void;
+  userTimezone?: string;
 }
 
 export function SessionDetailsDialog({
   session,
+  open,
   onClose,
-  onCancel,
-  cancellationNote,
-  onCancellationNoteChange,
+  userTimezone,
 }: SessionDetailsDialogProps) {
-  const { session: authSession } = useAuthSession();
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [attendance, setAttendance] = useState(false);
-  const { getSetting } = useUserSettings(authSession?.user?.id || '');
-  const userTimezone = getSetting('timezone');
+  if (!session) return null;
 
-  if (!session?.session_details) return null;
-
-  const isMentor = authSession?.user?.id === session.session_details.mentor.id;
-  const feedbackType = isMentor ? 'mentor_feedback' : 'mentee_feedback';
-  
-  // Calculate if session can be cancelled (more than 1 hour before start)
   const canCancel = session.session_details.status === 'scheduled' && 
     new Date(session.session_details.scheduled_at) > new Date(Date.now() + 60 * 60 * 1000);
-
-  // Can mark attendance if session is scheduled and within 15 minutes of start time
-  const sessionTime = new Date(session.session_details.scheduled_at);
+  
   const canMarkAttendance = session.session_details.status === 'scheduled' && 
-    Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
+    new Date(session.session_details.scheduled_at) < new Date();
+
+  const [attendance, setAttendance] = useState<boolean>(
+    session.session_details.attendance_confirmed || false
+  );
+  const [cancellationNote, onCancellationNoteChange] = useState<string>('');
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+
+  const handleCancel = async () => {
+    // Handle cancellation logic here
+  };
 
   return (
     <>
-      <Dialog open={!!session} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px] max-h-[80vh]">
-          <DialogHeader>
+      <Dialog open={open} onOpenChange={() => onClose()}>
+        <DialogContent className="max-h-[90vh] flex flex-col">
+          <DialogHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <AspectRatio ratio={3/1} className="w-32">
+                <Image
+                  src="/lovable-uploads/90701554-04cf-42e3-9cfd-cce94a7af17a.png"
+                  alt="PicoCareer Logo"
+                  className="object-contain"
+                />
+              </AspectRatio>
+            </div>
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="h-full max-h-[calc(80vh-120px)] pr-4">
+          <ScrollArea className="flex-1 pr-4">
             <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
             {session.session_details.status === 'scheduled' && (
@@ -70,33 +75,30 @@ export function SessionDetailsDialog({
                 isCancelling={false}
                 cancellationNote={cancellationNote}
                 onCancellationNoteChange={onCancellationNoteChange}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 onClose={onClose}
               />
             )}
 
             {session.session_details.status === 'completed' && (
-              <Button 
-                onClick={() => setShowFeedback(true)}
-                className="mt-4"
-              >
-                Provide Feedback
-              </Button>
+              <div className="mt-4 space-y-4">
+                <Button 
+                  onClick={() => setShowFeedbackDialog(true)}
+                  className="w-full"
+                >
+                  Provide Feedback
+                </Button>
+              </div>
             )}
           </ScrollArea>
         </DialogContent>
       </Dialog>
 
-      {showFeedback && (
-        <SessionFeedbackDialog
-          isOpen={showFeedback}
-          onClose={() => setShowFeedback(false)}
-          sessionId={session.session_details.id}
-          feedbackType={feedbackType}
-          fromProfileId={authSession?.user?.id || ''}
-          toProfileId={isMentor ? session.session_details.mentee.id : session.session_details.mentor.id}
-        />
-      )}
+      <SessionFeedbackDialog
+        session={session}
+        open={showFeedbackDialog}
+        onClose={() => setShowFeedbackDialog(false)}
+      />
     </>
   );
 }
