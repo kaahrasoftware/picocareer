@@ -111,10 +111,9 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
           <div>
             <h4 className="font-medium mb-2">Select Date</h4>
             <CalendarContainer
-              profile={{
-                id: profileId,
-                user_type: 'mentor'
-              }}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              availability={availability}
             />
           </div>
           
