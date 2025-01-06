@@ -1,13 +1,9 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { Control } from "react-hook-form";
 import { useState } from "react";
 import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
 
-// Session type descriptions
 const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
   "Know About my Career": "Get insights about specific career paths, day-to-day responsibilities, challenges, and growth opportunities from experienced professionals.",
   "Resume/CV Review": "Receive detailed feedback on your resume/CV structure, content, and formatting to make it stand out to employers.",
@@ -98,19 +94,16 @@ export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectPro
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="pr-8">{selectedType}</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4"
-              onClick={() => setShowDialog(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <DialogTitle>{selectedType}</DialogTitle>
           </DialogHeader>
-          <DialogDescription className="text-sm text-muted-foreground pt-2">
-            {selectedType && SESSION_TYPE_DESCRIPTIONS[selectedType]}
-          </DialogDescription>
+          <div className="space-y-4">
+            <DialogDescription className="text-sm text-muted-foreground pt-2 select-text">
+              {selectedType && SESSION_TYPE_DESCRIPTIONS[selectedType]}
+            </DialogDescription>
+            <p className="text-xs text-muted-foreground italic">
+              Tip: You can select and copy this description to use in your session details.
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
     </>
