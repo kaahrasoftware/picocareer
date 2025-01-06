@@ -58,6 +58,15 @@ if (typeof window !== 'undefined') {
         window.location.href = '/auth';
       }
     }
+
+    // Handle email confirmation
+    if (event === 'SIGNED_IN') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/auth/confirm') {
+        console.log('Email confirmed, redirecting to confirmation page');
+        window.location.href = '/auth/confirm';
+      }
+    }
   });
 
   // Add error event listener for failed requests
