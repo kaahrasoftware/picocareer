@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
+import { toast } from "@/hooks/use-toast";
 
 const SUPABASE_URL = "https://wurdmlkfkzuivvwxjmxk.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cmRtbGtma3p1aXZ2d3hqbXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4NTE4MzgsImV4cCI6MjA0OTQyNzgzOH0.x4jgZjedKprq19f2A7QpMrWRHfan3f24Th6sfoy-2eg";
@@ -62,9 +63,15 @@ if (typeof window !== 'undefined') {
     // Handle email confirmation
     if (event === 'SIGNED_IN') {
       const currentPath = window.location.pathname;
-      if (currentPath === '/auth/confirm') {
-        console.log('Email confirmed, redirecting to confirmation page');
-        window.location.href = '/auth/confirm';
+      const params = new URLSearchParams(window.location.search);
+      
+      // Check if this is a confirmation sign-in
+      if (params.get('type') === 'email_confirmation') {
+        toast({
+          title: "Email Verified",
+          description: "Your email has been verified successfully. Welcome!",
+          variant: "default",
+        });
       }
     }
   });
