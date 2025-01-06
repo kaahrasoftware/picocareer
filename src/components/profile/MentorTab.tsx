@@ -4,7 +4,7 @@ import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useMentorStats } from "./mentor/hooks/useMentorStats";
 import type { Profile } from "@/types/database/profiles";
 
@@ -16,10 +16,9 @@ export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
   const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
-  const [currentTab, setCurrentTab] = useState("stats");
 
   useEffect(() => {
-    if (!profileId || currentTab !== "availability") return;
+    if (!profileId) return;
 
     const checkTimezone = async () => {
       try {
@@ -50,14 +49,14 @@ export function MentorTab({ profile }: MentorTabProps) {
     };
 
     checkTimezone();
-  }, [profileId, toast, currentTab]);
+  }, [profileId, toast]);
 
   if (!profileId) {
     return null;
   }
 
   return (
-    <Tabs defaultValue="stats" className="w-full" onValueChange={setCurrentTab}>
+    <Tabs defaultValue="stats" className="w-full">
       <TabsList>
         <TabsTrigger value="stats">Stats</TabsTrigger>
         <TabsTrigger value="session-types">Session Types</TabsTrigger>
