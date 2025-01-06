@@ -4,7 +4,7 @@ import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useEffect } from "react";
 import { useMentorStats } from "./mentor/hooks/useMentorStats";
 import type { Profile } from "@/types/database/profiles";
 
@@ -16,14 +16,46 @@ export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
   const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
-  const [currentTab, setCurrentTab] = useState("stats");
+
+  useEffect(() => {
+    if (!profileId) return;
+
+    const checkTimezone = async () => {
+      try {
+        // Check if a timezone setting exists for this user
+        const { count, error } = await supabase
+          .from('user_settings')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', profileId)
+          .eq('setting_type', 'timezone');
+
+        if (error) {
+          console.error('Error checking timezone:', error);
+          return;
+        }
+
+        // Show toast only if no timezone setting exists (count === 0)
+        if (count === 0) {
+          toast({
+            title: "Timezone not set",
+            description: "Please set your timezone in settings to ensure accurate scheduling.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error checking timezone:', error);
+      }
+    };
+
+    checkTimezone();
+  }, [profileId, toast]);
 
   if (!profileId) {
     return null;
   }
 
   return (
-    <Tabs defaultValue="stats" className="w-full" onValueChange={setCurrentTab}>
+    <Tabs defaultValue="stats" className="w-full">
       <TabsList>
         <TabsTrigger value="stats">Stats</TabsTrigger>
         <TabsTrigger value="session-types">Session Types</TabsTrigger>
