@@ -1,9 +1,11 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { Control } from "react-hook-form";
+import { useState } from "react";
 import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
-import { SessionTypeFormData } from "./types";
 
 // Session type descriptions
 const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
@@ -38,6 +40,10 @@ const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
   "Know About my Academic Major": "Get detailed insights about specific academic majors, coursework, and career prospects."
 };
 
+interface SessionTypeFormData {
+  type: SessionTypeEnum;
+}
+
 interface SessionTypeSelectProps {
   form: {
     control: Control<SessionTypeFormData>;
@@ -46,40 +52,67 @@ interface SessionTypeSelectProps {
 }
 
 export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectProps) {
+  const [selectedType, setSelectedType] = useState<SessionTypeEnum | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+
+  const handleTypeSelect = (value: string) => {
+    const type = value as SessionTypeEnum;
+    setSelectedType(type);
+    setShowDialog(true);
+  };
+
   return (
-    <FormField
-      control={form.control}
-      name="type"
-      rules={{ required: "Session type is required" }}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Session Type</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Select session type" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <TooltipProvider>
+    <>
+      <FormField
+        control={form.control}
+        name="type"
+        rules={{ required: "Session type is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Session Type</FormLabel>
+            <Select 
+              onValueChange={(value) => {
+                field.onChange(value);
+                handleTypeSelect(value);
+              }} 
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select session type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
                 {SESSION_TYPE_OPTIONS.filter(type => !availableTypes.includes(type)).map((type) => (
-                  <Tooltip key={type}>
-                    <TooltipTrigger asChild>
-                      <SelectItem value={type}>
-                        {type}
-                      </SelectItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[300px] p-4">
-                      <p>{SESSION_TYPE_DESCRIPTIONS[type]}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
                 ))}
-              </TooltipProvider>
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="pr-8">{selectedType}</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4"
+              onClick={() => setShowDialog(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogHeader>
+          <DialogDescription className="text-sm text-muted-foreground pt-2">
+            {selectedType && SESSION_TYPE_DESCRIPTIONS[selectedType]}
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
