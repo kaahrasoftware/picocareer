@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CareerDetailsDialog } from "./CareerDetailsDialog";
 import { CareerHeader } from "./career/CareerHeader";
-import { Briefcase, Graduation, Wrench, BookOpen } from "lucide-react";
+import { Briefcase, GraduationCap, Wrench, BookOpen } from "lucide-react";
 
 interface CareerCardProps {
   id: string;
@@ -64,7 +64,7 @@ export function CareerCard({
             {required_education && required_education.length > 0 && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Graduation className="h-3.5 w-3.5" />
+                  <GraduationCap className="h-3.5 w-3.5" />
                   <span>Required Education</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
