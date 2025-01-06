@@ -6,6 +6,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
@@ -95,51 +96,55 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <SessionTypeSelect
-          form={form}
-          availableTypes={availableSessionTypes}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-4">
+            <SessionTypeSelect
+              form={form}
+              availableTypes={availableSessionTypes}
+            />
 
-        <FormField
-          control={form.control}
-          name="duration"
-          rules={{ required: "Duration is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duration (minutes)</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="duration"
+              rules={{ required: "Duration is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration (minutes)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description (optional)</FormLabel>
-              <FormControl>
-                <Textarea {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <PlatformSelect form={form} />
+            <PlatformSelect form={form} />
 
-        <PlatformFields
-          form={form}
-          showTelegramField={showTelegramField}
-          showPhoneField={showPhoneField}
-          showWhatsAppField={showWhatsAppField}
-        />
+            <PlatformFields
+              form={form}
+              showTelegramField={showTelegramField}
+              showPhoneField={showPhoneField}
+              showWhatsAppField={showWhatsAppField}
+            />
+          </div>
+        </ScrollArea>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 mt-4">
           <Button
             type="button"
             variant="outline"
