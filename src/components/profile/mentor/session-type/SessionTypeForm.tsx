@@ -20,8 +20,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const queryClient = useQueryClient();
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: undefined,
-      duration: undefined,
+      type: undefined as unknown as SessionTypeEnum,
+      duration: 0,
       price: 0,
       description: "",
       meeting_platform: [],
