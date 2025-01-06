@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { CalendarEvent } from "@/types/calendar";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
@@ -22,8 +23,9 @@ interface SessionDetailsDialogProps {
 export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogProps) {
   const [attendance, setAttendance] = useState(session?.session_details?.attendance_confirmed || false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [cancellationNote, setCancellationNote] = useState("");
   const { toast } = useToast();
+  const { data: userSettings } = useUserSettings();
+  const userTimezone = userSettings?.find(s => s.setting_type === 'timezone')?.setting_value || 'UTC';
 
   const canCancel = session?.session_details && 
     new Date(session.session_details.scheduled_at) > new Date(Date.now() + 60 * 60 * 1000);
@@ -40,8 +42,7 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
       const { error: sessionError } = await supabase
         .from('mentor_sessions')
         .update({ 
-          status: 'cancelled',
-          notes: cancellationNote 
+          status: 'cancelled'
         })
         .eq('id', session.session_details.id);
 
@@ -52,14 +53,14 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
         {
           profile_id: session.session_details.mentor.id,
           title: 'Session Cancelled',
-          message: `Session with ${session.session_details.mentee.full_name} has been cancelled. Note: ${cancellationNote}`,
-          type: 'session_cancelled'
+          message: `Session with ${session.session_details.mentee.full_name} has been cancelled.`,
+          type: 'session_cancelled' as const
         },
         {
           profile_id: session.session_details.mentee.id,
           title: 'Session Cancelled',
-          message: `Session with ${session.session_details.mentor.full_name} has been cancelled. Note: ${cancellationNote}`,
-          type: 'session_cancelled'
+          message: `Session with ${session.session_details.mentor.full_name} has been cancelled.`,
+          type: 'session_cancelled' as const
         }
       ];
 
@@ -97,7 +98,6 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
       });
     } finally {
       setIsCancelling(false);
-      setCancellationNote("");
     }
   };
 
@@ -118,7 +118,7 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
             <DialogTitle>Session Details</DialogTitle>
           </DialogHeader>
 
-          <SessionInfo session={session} />
+          <SessionInfo session={session} userTimezone={userTimezone} />
 
           <SessionActions
             session={session}
@@ -127,19 +127,18 @@ export function SessionDetailsDialog({ session, onClose }: SessionDetailsDialogP
             attendance={attendance}
             setAttendance={setAttendance}
             isCancelling={isCancelling}
-            cancellationNote={cancellationNote}
-            onCancellationNoteChange={setCancellationNote}
             onCancel={handleCancel}
             onClose={onClose}
           />
         </DialogContent>
       </Dialog>
 
-      <SessionFeedbackDialog
-        sessionId={session.session_details?.id}
-        open={session.status === 'completed' && !session.session_details?.attendance_confirmed}
-        onClose={onClose}
-      />
+      {session.session_details?.id && (
+        <SessionFeedbackDialog
+          sessionId={session.session_details.id}
+          onClose={onClose}
+        />
+      )}
     </>
   );
 }
