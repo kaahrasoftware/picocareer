@@ -1,6 +1,6 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFormContext } from "react-hook-form";
+import { Control, useFormContext } from "react-hook-form";
 import { SessionTypeFormData } from "./types";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
@@ -16,24 +16,24 @@ interface PlatformSelectProps {
 
 export function PlatformSelect({ form }: PlatformSelectProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<MeetingPlatform[]>([]);
-  const { setValue, watch } = useFormContext<SessionTypeFormData>();
+  const methods = useFormContext<SessionTypeFormData>();
 
   // Watch for changes in the meeting_platform field
   useEffect(() => {
-    const subscription = watch((value) => {
+    const subscription = methods.watch((value) => {
       if (value.meeting_platform) {
         setSelectedPlatforms(value.meeting_platform);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [methods.watch]);
 
   const handlePlatformSelect = (value: MeetingPlatform) => {
     if (!selectedPlatforms.includes(value)) {
       const newPlatforms = [...selectedPlatforms, value];
       setSelectedPlatforms(newPlatforms);
-      setValue('meeting_platform', newPlatforms, { 
+      methods.setValue('meeting_platform', newPlatforms, { 
         shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true 
@@ -44,7 +44,7 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
   const removePlatform = (platform: MeetingPlatform) => {
     const newPlatforms = selectedPlatforms.filter(p => p !== platform);
     setSelectedPlatforms(newPlatforms);
-    setValue('meeting_platform', newPlatforms, {
+    methods.setValue('meeting_platform', newPlatforms, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
