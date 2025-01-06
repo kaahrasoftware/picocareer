@@ -121,7 +121,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
                 <FormItem>
                   <FormLabel>Duration (minutes)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
