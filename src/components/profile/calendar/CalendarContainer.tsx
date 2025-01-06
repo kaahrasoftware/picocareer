@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CalendarContainerProps {
@@ -80,10 +79,9 @@ export function CalendarContainer({
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
+                      <span className="text-sm text-muted-foreground">
                         {format(new Date(event.start_time), 'h:mm a')}
-                      </div>
+                      </span>
                     </div>
                     {event.status === 'cancelled' && (
                       <span className="text-sm text-red-500 mt-2 block">
