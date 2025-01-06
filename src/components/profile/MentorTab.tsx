@@ -15,14 +15,13 @@ interface MentorTabProps {
 export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
-  const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
+  const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId || '');
 
   useEffect(() => {
-    if (!profileId) return;
-
     const checkTimezone = async () => {
+      if (!profileId) return;
+
       try {
-        // Check if a timezone setting exists for this user
         const { count, error } = await supabase
           .from('user_settings')
           .select('*', { count: 'exact', head: true })
@@ -34,7 +33,6 @@ export function MentorTab({ profile }: MentorTabProps) {
           return;
         }
 
-        // Show toast only if no timezone setting exists (count === 0)
         if (count === 0) {
           toast({
             title: "Timezone not set",
@@ -50,8 +48,13 @@ export function MentorTab({ profile }: MentorTabProps) {
     checkTimezone();
   }, [profileId, toast]);
 
+  // Render empty state if no profile
   if (!profileId) {
-    return null;
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        No profile information available
+      </div>
+    );
   }
 
   return (
