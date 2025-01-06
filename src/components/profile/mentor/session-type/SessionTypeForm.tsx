@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionTypeEnum } from "@/types/session";
-import type { SessionTypeFormProps } from "./types";
+import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
@@ -19,7 +19,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const methods = useForm({
+  const methods = useForm<SessionTypeFormData>({
     defaultValues: {
       type: undefined as unknown as SessionTypeEnum,
       duration: 0,
@@ -36,7 +36,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const showPhoneField = selectedPlatforms.includes("Phone Call");
   const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: SessionTypeFormData) => {
+    if (!profileId) return;
+
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
@@ -102,6 +104,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
+  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -109,7 +113,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           <div className="space-y-4">
             <SessionTypeSelect
               form={{ control: methods.control }}
-              availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
+              availableTypes={availableSessionTypes}
             />
 
             <FormField
