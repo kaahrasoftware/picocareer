@@ -38,9 +38,6 @@ export function Footer() {
                 alt="PicoCareer"
                 className="h-8 mr-2"
               />
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-picocareer-secondary to-picocareer-primary bg-clip-text text-transparent">
-                PicoCareer
-              </h3>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center">
