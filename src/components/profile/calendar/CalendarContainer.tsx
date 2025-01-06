@@ -28,6 +28,22 @@ export function CalendarContainer({
     return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
   };
 
+  // Function to determine availability status for a date
+  const getAvailabilityStatus = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayAvailabilities = availability.filter(slot => 
+      format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr
+    );
+
+    const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
+    const hasUnavailable = dayAvailabilities.some(slot => !slot.is_available);
+
+    if (hasAvailable && hasUnavailable) return 'mixed';
+    if (hasAvailable) return 'available';
+    if (hasUnavailable) return 'unavailable';
+    return null;
+  };
+
   // Filter events for selected date
   const selectedDateEvents = events.filter(event => {
     if (!selectedDate) return false;
@@ -43,8 +59,6 @@ export function CalendarContainer({
   };
 
   const handleCancelSession = async () => {
-    // This would be implemented based on your session cancellation logic
-    // For now, just close the dialog
     handleCloseDialog();
   };
 
@@ -58,12 +72,27 @@ export function CalendarContainer({
           defaultMonth={selectedDate}
           className="rounded-md border bg-kahra-darker"
           modifiers={{
-            sessions: hasSessionsOnDate
+            sessions: hasSessionsOnDate,
+            available: (date) => getAvailabilityStatus(date) === 'available',
+            unavailable: (date) => getAvailabilityStatus(date) === 'unavailable',
+            mixed: (date) => getAvailabilityStatus(date) === 'mixed'
           }}
           modifiersStyles={{
             sessions: {
               border: '2px solid #3b82f6',
               borderRadius: '4px'
+            },
+            available: {
+              backgroundColor: 'rgba(34, 197, 94, 0.2)', // green-500 with opacity
+              color: '#166534' // green-800
+            },
+            unavailable: {
+              backgroundColor: 'rgba(239, 68, 68, 0.2)', // red-500 with opacity
+              color: '#991b1b' // red-800
+            },
+            mixed: {
+              backgroundColor: 'rgba(234, 179, 8, 0.2)', // yellow-500 with opacity
+              color: '#854d0e' // yellow-800
             }
           }}
         />
