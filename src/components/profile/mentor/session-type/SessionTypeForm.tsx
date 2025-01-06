@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -18,9 +18,19 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const form = useForm<SessionTypeFormData>();
+  const methods = useForm<SessionTypeFormData>({
+    defaultValues: {
+      type: undefined,
+      duration: undefined,
+      price: 0,
+      description: "",
+      meeting_platform: [],
+      telegram_username: "",
+      phone_number: ""
+    }
+  });
 
-  const selectedPlatforms = form.watch("meeting_platform") || [];
+  const selectedPlatforms = methods.watch("meeting_platform") || [];
   const showTelegramField = selectedPlatforms.includes("Telegram");
   const showPhoneField = selectedPlatforms.includes("Phone Call");
   const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
@@ -59,7 +69,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           profile_id: profileId,
           type: data.type,
           duration: Number(data.duration),
-          price: 0, // Set price to 0 by default
+          price: 0,
           description: data.description || null,
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
@@ -91,21 +101,20 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  // Convert the type property from existingTypes to SessionTypeEnum[]
   const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)}>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={form}
+              form={{ control: methods.control }}
               availableTypes={availableSessionTypes}
             />
 
             <FormField
-              control={form.control}
+              control={methods.control}
               name="duration"
               rules={{ required: "Duration is required" }}
               render={({ field }) => (
@@ -120,7 +129,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
             />
 
             <FormField
-              control={form.control}
+              control={methods.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
@@ -133,10 +142,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={form} />
+            <PlatformSelect form={{ control: methods.control }} />
 
             <PlatformFields
-              form={form}
+              form={{ control: methods.control }}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}
@@ -158,6 +167,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           </Button>
         </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
