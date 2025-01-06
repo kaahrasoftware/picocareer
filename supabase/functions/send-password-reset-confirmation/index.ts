@@ -29,9 +29,14 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "PicoCareer <no-reply@picocareer.com>",
+        from: "PicoCareer <noreply@picocareer.com>",
+        reply_to: "info@picocareer.com",
         to: [to],
         subject: "Password Reset Successful - PicoCareer",
+        headers: {
+          "List-Unsubscribe": "<mailto:unsubscribe@picocareer.com>",
+          "Feedback-ID": "password-reset:picocareer",
+        },
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
             <div style="text-align: center; margin-bottom: 20px;">
