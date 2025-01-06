@@ -35,6 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
             <div style="text-align: center; margin-bottom: 20px;">
+              <img src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/images/65608658-2c3b-4eab-80f0-d9791cae7b50.png" alt="PicoCareer Logo" style="height: 40px; margin-bottom: 10px;">
               <h1 style="color: #1f2937; margin-bottom: 10px;">Password Reset Successful</h1>
               <div style="width: 100%; height: 2px; background-color: #e5e7eb; margin: 20px 0;"></div>
             </div>
@@ -65,6 +66,14 @@ const handler = async (req: Request): Promise<Response> => {
                 Best regards,<br>
                 The PicoCareer Team
               </p>
+              <div style="margin-top: 12px; color: #9ca3af; font-size: 12px;">
+                <p style="margin: 4px 0;">
+                  <a href="mailto:info@picocareer.com" style="color: #6b7280; text-decoration: none;">info@picocareer.com</a>
+                </p>
+                <p style="margin: 4px 0;">
+                  <a href="tel:+22897476446" style="color: #6b7280; text-decoration: none;">+228 97 47 64 46</a>
+                </p>
+              </div>
               <p style="color: #9ca3af; font-size: 12px; margin-top: 12px;">
                 This is an automated message, please do not reply to this email.
               </p>
