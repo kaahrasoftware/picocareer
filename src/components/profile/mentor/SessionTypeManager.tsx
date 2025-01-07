@@ -6,6 +6,7 @@ import { useState } from "react";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import type { Database } from "@/integrations/supabase/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -18,6 +19,24 @@ interface SessionTypeManagerProps {
 export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const { sessionTypes: fetchedSessionTypes, isLoading, handleDeleteSessionType } = useSessionTypeManager(profileId);
+
+  const handleFormSubmit = async (data: any) => {
+    try {
+      const { error } = await supabase
+        .from('mentor_session_types')
+        .insert([
+          {
+            ...data,
+            profile_id: profileId
+          }
+        ]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error creating session type:', error);
+      throw error;
+    }
+  };
 
   const handleFormSuccess = () => {
     setShowForm(false);
@@ -52,9 +71,10 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-lg">
           <SessionTypeForm
-            profileId={profileId}
+            onSubmit={handleFormSubmit}
             onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
+            profileId={profileId}
             existingTypes={fetchedSessionTypes}
           />
         </DialogContent>

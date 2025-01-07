@@ -6,25 +6,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
-import { SessionTypeFormData } from "./types";
 import { useToast } from "@/hooks/use-toast";
+import type { SessionTypeFormData, SessionTypeFormProps } from "./types";
 
-interface SessionTypeFormProps {
-  onSubmit: (data: SessionTypeFormData) => Promise<void>;
-  defaultValues?: Partial<SessionTypeFormData>;
-}
-
-export function SessionTypeForm({ onSubmit, defaultValues }: SessionTypeFormProps) {
+export function SessionTypeForm({ onSubmit, onSuccess, onCancel, profileId, existingTypes = [] }: SessionTypeFormProps) {
   const { toast } = useToast();
   const form = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: defaultValues?.type,
-      duration: defaultValues?.duration || 30,
-      price: defaultValues?.price || 0,
-      description: defaultValues?.description || "",
-      meeting_platform: defaultValues?.meeting_platform || ["Google Meet"],
-      telegram_username: defaultValues?.telegram_username,
-      phone_number: defaultValues?.phone_number,
+      type: undefined,
+      duration: 30,
+      price: 0,
+      description: "",
+      meeting_platform: ["Google Meet"],
+      telegram_username: "",
+      phone_number: "",
     },
   });
 
@@ -38,6 +33,7 @@ export function SessionTypeForm({ onSubmit, defaultValues }: SessionTypeFormProp
   const onFormSubmit = async (data: SessionTypeFormData) => {
     try {
       await onSubmit(data);
+      onSuccess();
     } catch (error) {
       console.error("Error submitting session type:", error);
       toast({
@@ -86,9 +82,14 @@ export function SessionTypeForm({ onSubmit, defaultValues }: SessionTypeFormProp
           />
         </div>
 
-        <Button type="submit" className="w-full">
-          Save Session Type
-        </Button>
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            Save Session Type
+          </Button>
+        </div>
       </form>
     </Form>
   );
