@@ -22,14 +22,19 @@ const SchoolUpload = () => {
         .from('schools')
         .insert({
           name: data.name,
-          location: data.location || null,
+          location: data.location,
           type: data.type || null,
           website: data.website || null,
           acceptance_rate: data.acceptance_rate || null,
           status: 'Pending'
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error(`A school with the name "${data.name}" already exists`);
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error submitting school:', error);
       throw error;
