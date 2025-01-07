@@ -1,12 +1,44 @@
 import { BlogWithAuthor } from "@/types/blog/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { Facebook, Linkedin, Share2, WhatsApp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface BlogPostContentProps {
   blog: BlogWithAuthor;
 }
 
 export function BlogPostContent({ blog }: BlogPostContentProps) {
+  const shareUrl = window.location.href;
+  const title = encodeURIComponent(blog.title);
+  const summary = encodeURIComponent(blog.summary);
+
+  const shareLinks = {
+    whatsapp: `https://wa.me/?text=${title}%20${shareUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}&title=${title}&summary=${summary}`,
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: blog.title,
+        text: blog.summary,
+        url: shareUrl,
+      });
+      toast.success("Successfully shared!");
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") {
+        toast.error("Failed to share");
+      }
+    }
+  };
+
+  const openShareWindow = (url: string) => {
+    window.open(url, '_blank', 'width=600,height=400');
+  };
+
   return (
     <div className="space-y-6">
       <div className="relative h-64 w-full flex items-center justify-center overflow-hidden">
@@ -55,6 +87,42 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
             {format(new Date(blog.created_at), 'MMMM d, yyyy')}
           </span>
         </div>
+      </div>
+
+      {/* Share buttons */}
+      <div className="flex items-center gap-2 justify-center">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => openShareWindow(shareLinks.whatsapp)}
+          className="hover:text-green-500"
+        >
+          <WhatsApp className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => openShareWindow(shareLinks.facebook)}
+          className="hover:text-blue-600"
+        >
+          <Facebook className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => openShareWindow(shareLinks.linkedin)}
+          className="hover:text-blue-700"
+        >
+          <Linkedin className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleShare}
+          className="hover:text-primary"
+        >
+          <Share2 className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="prose prose-sm dark:prose-invert max-w-none">
