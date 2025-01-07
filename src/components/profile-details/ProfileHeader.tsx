@@ -62,6 +62,7 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
         fallback={profile.full_name?.[0] || 'U'}
         size="lg"
         editable={true}
+        userId={profile.id}
         onAvatarUpdate={handleAvatarUpdate}
       />
 

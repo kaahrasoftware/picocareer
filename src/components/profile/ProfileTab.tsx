@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
 interface ProfileTabProps {
   profile: Profile | null;
@@ -57,6 +58,21 @@ export function ProfileTab({ profile }: ProfileTabProps) {
       </div>
 
       <div className="bg-muted rounded-lg p-6 shadow-sm">
+        <div className="flex items-center gap-4 mb-6">
+          <ProfileAvatar
+            avatarUrl={profile.avatar_url}
+            fallback={profile.full_name?.[0] || 'U'}
+            size="lg"
+            editable={true}
+            userId={profile.id}
+            onAvatarUpdate={(url) => {
+              toast({
+                title: "Success",
+                description: "Profile picture updated successfully",
+              });
+            }}
+          />
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <EditableField
