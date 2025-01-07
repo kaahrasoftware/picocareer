@@ -7,7 +7,7 @@ type SchoolFormData = {
   name: string;
   location: Database["public"]["Enums"]["states"] | null;
   type: Database["public"]["Enums"]["school_type"] | null;
-  website: string;
+  website: string | null;
   acceptance_rate: number | null;
 };
 
