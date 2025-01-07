@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@/types/database/profiles";
-import { SessionTypeEnum, MeetingPlatform, SESSION_TYPE_OPTIONS } from "@/types/session";
+import { SessionTypeEnum, MeetingPlatform, SESSION_TYPES } from "@/types/session";
 
 interface SessionTypeData {
   id?: string;
@@ -109,7 +109,6 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Session Types */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Session Types</h3>
         {sessionTypes.map((session, index) => (
@@ -126,7 +125,7 @@ export function MentorEditForm({ profile, mentorData, setIsEditing }: MentorEdit
                 <SelectValue placeholder="Select session type" />
               </SelectTrigger>
               <SelectContent>
-                {SESSION_TYPE_OPTIONS.map((type) => (
+                {SESSION_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>
