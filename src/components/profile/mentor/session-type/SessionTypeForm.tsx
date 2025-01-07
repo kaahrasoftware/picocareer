@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionTypeEnum } from "@/types/session";
+import { SessionTypeEnum, SESSION_TYPES } from "@/types/session";
 import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
@@ -102,7 +102,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  const availableTypes = Object.values(SessionTypeEnum).filter(
+  const availableTypes = SESSION_TYPES.filter(
     type => !existingTypes.some(existingType => existingType.type === type)
   );
 
@@ -112,7 +112,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={{ control: methods.control }}
+              control={methods.control}
               availableTypes={availableTypes}
             />
 
@@ -145,10 +145,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={{ control: methods.control }} />
+            <PlatformSelect control={methods.control} />
 
             <PlatformFields
-              form={{ control: methods.control }}
+              control={methods.control}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}
