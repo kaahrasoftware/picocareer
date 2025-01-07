@@ -15,7 +15,7 @@ export function ProfileInfo({
   location, 
   academicMajor 
 }: ProfileInfoProps) {
-  // Helper function to render info item
+  // Helper function to render info item with icon
   const renderInfoItem = (icon: React.ReactNode, text: string | null) => {
     if (!text) return null;
     return (
@@ -27,12 +27,32 @@ export function ProfileInfo({
   };
 
   return (
-    <div className="flex flex-col gap-1 mt-2">
-      {renderInfoItem(<Building2 className="h-4 w-4 flex-shrink-0" />, careerTitle)}
-      {renderInfoItem(<Building2 className="h-4 w-4 flex-shrink-0" />, companyName)}
-      {renderInfoItem(<GraduationCap className="h-4 w-4 flex-shrink-0" />, schoolName)}
-      {renderInfoItem(<GraduationCap className="h-4 w-4 flex-shrink-0" />, academicMajor)}
-      {renderInfoItem(<MapPin className="h-4 w-4 flex-shrink-0" />, location)}
+    <div className="flex flex-col gap-1.5">
+      {/* Career Information */}
+      {renderInfoItem(
+        <Building2 className="h-4 w-4 flex-shrink-0" />, 
+        careerTitle
+      )}
+      {renderInfoItem(
+        <Building2 className="h-4 w-4 flex-shrink-0" />, 
+        companyName
+      )}
+      
+      {/* Academic Information */}
+      {renderInfoItem(
+        <GraduationCap className="h-4 w-4 flex-shrink-0" />, 
+        schoolName
+      )}
+      {renderInfoItem(
+        <GraduationCap className="h-4 w-4 flex-shrink-0" />, 
+        academicMajor
+      )}
+      
+      {/* Location Information */}
+      {renderInfoItem(
+        <MapPin className="h-4 w-4 flex-shrink-0" />, 
+        location
+      )}
     </div>
   );
 }
