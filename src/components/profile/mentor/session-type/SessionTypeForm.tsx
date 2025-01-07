@@ -1,15 +1,16 @@
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { FormField } from "@/components/forms/FormField";
-import { SessionTypeFormData } from "./types";
+import { SessionTypeFormData, SessionTypeFormProps } from "./types";
+import { Button } from "@/components/ui/button";
 
-interface SessionTypeFormProps {
-  onSubmit: (data: SessionTypeFormData) => Promise<void>;
-  defaultValues?: Partial<SessionTypeFormData>;
-  isSubmitting?: boolean;
-}
-
-export function SessionTypeForm({ onSubmit, defaultValues, isSubmitting }: SessionTypeFormProps) {
+export function SessionTypeForm({ 
+  onSubmit, 
+  onCancel, 
+  onSuccess, 
+  defaultValues, 
+  isSubmitting 
+}: SessionTypeFormProps) {
   const form = useForm<SessionTypeFormData>({
     defaultValues: defaultValues || {
       type: undefined,
@@ -22,9 +23,20 @@ export function SessionTypeForm({ onSubmit, defaultValues, isSubmitting }: Sessi
     }
   });
 
+  const handleSubmit = async (data: SessionTypeFormData) => {
+    try {
+      await onSubmit(data);
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           name="type"
           control={form.control}
@@ -107,14 +119,20 @@ export function SessionTypeForm({ onSubmit, defaultValues, isSubmitting }: Sessi
           label="Phone Number"
           type="text"
         />
-        <div className="flex justify-end">
-          <button
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button
             type="submit"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Submitting..." : "Submit"}
-          </button>
+          </Button>
         </div>
       </form>
     </Form>

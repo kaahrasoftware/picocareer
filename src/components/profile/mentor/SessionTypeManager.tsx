@@ -7,6 +7,7 @@ import { SessionTypeForm } from "./session-type/SessionTypeForm";
 import type { Database } from "@/integrations/supabase/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import type { SessionTypeFormData } from "./session-type/types";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
@@ -18,9 +19,11 @@ interface SessionTypeManagerProps {
 
 export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
   const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { sessionTypes: fetchedSessionTypes, isLoading, handleDeleteSessionType } = useSessionTypeManager(profileId);
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: SessionTypeFormData) => {
+    setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('mentor_session_types')
@@ -32,15 +35,14 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         ]);
 
       if (error) throw error;
+      onUpdate();
+      setShowForm(false);
     } catch (error) {
       console.error('Error creating session type:', error);
       throw error;
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleFormSuccess = () => {
-    setShowForm(false);
-    onUpdate();
   };
 
   const handleDelete = async (id: string) => {
@@ -72,10 +74,10 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
         <DialogContent className="max-w-lg">
           <SessionTypeForm
             onSubmit={handleFormSubmit}
-            onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
             profileId={profileId}
             existingTypes={fetchedSessionTypes}
+            isSubmitting={isSubmitting}
           />
         </DialogContent>
       </Dialog>
