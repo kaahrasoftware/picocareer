@@ -1,5 +1,5 @@
-import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import React, { useState } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,15 @@ interface ProfileAvatarProps {
   fallback: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
-  userId: string; // Add userId prop to check permissions
+  userId: string;
   onAvatarUpdate?: (url: string) => void;
 }
+
+const sizeClasses = {
+  sm: "h-8 w-8",
+  md: "h-12 w-12",
+  lg: "h-16 w-16"
+};
 
 export function ProfileAvatar({ 
   avatarUrl, 
@@ -21,54 +27,31 @@ export function ProfileAvatar({
   userId,
   onAvatarUpdate 
 }: ProfileAvatarProps) {
-  const [uploading, setUploading] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Fetch current user data to check permissions
+  // Get current user's ID on component mount
   React.useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (!error && user) {
-        // Get user profile to check if admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', user.id)
-          .single();
-        
-        setCurrentUser({
-          ...user,
-          isAdmin: profile?.user_type === 'admin'
-        });
-      }
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
     };
-    fetchUser();
+    getCurrentUser();
   }, []);
 
-  const canEdit = React.useMemo(() => {
-    if (!currentUser) return false;
-    return currentUser.id === userId || currentUser.isAdmin;
-  }, [currentUser, userId]);
+  const canEdit = currentUserId === userId;
 
-  const sizeClasses = {
-    sm: "h-10 w-10",
-    md: "h-16 w-16",
-    lg: "h-24 w-24"
-  };
-
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!onAvatarUpdate || !canEdit) return;
-      setUploading(true);
-      
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('You must select an image to upload.');
       }
 
+      setUploading(true);
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}.${fileExt}`;
+      const filePath = `${userId}-${Math.random()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -82,13 +65,24 @@ export function ProfileAvatar({
         .from('avatars')
         .getPublicUrl(filePath);
 
-      onAvatarUpdate(publicUrl);
-      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      if (onAvatarUpdate) {
+        onAvatarUpdate(publicUrl);
+      }
+
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -101,40 +95,28 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      {/* Blue gradient border container with increased padding */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-dark via-picocareer-primary to-blue-500 p-[4px] -m-1">
-        <div className="h-full w-full bg-background rounded-full flex items-center justify-center">
-          <Avatar className={`${sizeClasses[size]} ring-2 ring-background shadow-lg`}>
-            <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
-            <AvatarFallback>{fallback}</AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-      
-      {/* Spacer to maintain layout */}
-      <Avatar className={`${sizeClasses[size]} opacity-0`}>
+      <Avatar className={sizeClasses[size]}>
+        <AvatarImage src={avatarUrl || undefined} alt="Profile picture" />
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>
       
       {editable && canEdit && (
-        <>
-          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleUpload}
-              disabled={uploading}
-            />
-            <Upload className="w-6 h-6 text-white" />
-          </label>
-          
-          {uploading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-        </>
+        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={uploadAvatar}
+            disabled={uploading}
+          />
+          <Upload className="w-6 h-6 text-white" />
+        </label>
+      )}
+      
+      {uploading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
       )}
     </div>
   );

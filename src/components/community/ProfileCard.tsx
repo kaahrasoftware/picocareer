@@ -1,8 +1,10 @@
 import { Card, CardHeader } from "@/components/ui/card";
-import { Profile } from "@/types/database/profile-base";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import type { Profile } from "@/types/database/profiles";
 
 export function ProfileCard({ profile }: { profile: Profile }) {
+  if (!profile) return null;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-4">
