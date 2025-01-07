@@ -41,7 +41,6 @@ export function UserMenu() {
             fallback={profile?.full_name?.[0] || "U"}
             size="sm"
             editable={false}
-            userId={profile?.id || ''}
           />
         </button>
       </DropdownMenuTrigger>

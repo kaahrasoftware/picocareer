@@ -12,12 +12,7 @@ export interface Profile extends
   ProfileSocial,
   ProfileMentor,
   ProfileCareer {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  email: string;
-  created_at: string;
-  updated_at: string;
+  // Include joined fields as required
   company_name?: string | null;
   school_name?: string | null;
   academic_major?: string | null;
