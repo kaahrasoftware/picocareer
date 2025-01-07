@@ -1,7 +1,7 @@
 import { BlogWithAuthor } from "@/types/blog/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { Facebook, Linkedin, Share2, WhatsApp } from "lucide-react";
+import { Facebook, Linkedin, Share2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -97,7 +97,7 @@ export function BlogPostContent({ blog }: BlogPostContentProps) {
           onClick={() => openShareWindow(shareLinks.whatsapp)}
           className="hover:text-green-500"
         >
-          <WhatsApp className="h-4 w-4" />
+          <MessageCircle className="h-4 w-4" />
         </Button>
         <Button
           variant="outline"
