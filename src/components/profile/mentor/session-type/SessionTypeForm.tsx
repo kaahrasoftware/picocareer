@@ -9,7 +9,7 @@ import { PlatformFields } from "./PlatformFields";
 import { useToast } from "@/hooks/use-toast";
 import type { SessionTypeFormData, SessionTypeFormProps } from "./types";
 
-export function SessionTypeForm({ onSubmit, onSuccess, onCancel, profileId, existingTypes = [] }: SessionTypeFormProps) {
+export function SessionTypeForm({ onSubmit, onSuccess, onCancel }: SessionTypeFormProps) {
   const { toast } = useToast();
   const form = useForm<SessionTypeFormData>({
     defaultValues: {

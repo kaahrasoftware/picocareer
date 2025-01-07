@@ -2,12 +2,13 @@ import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { FormFieldProps } from "@/components/forms/FormField";
 
 const SchoolUpload = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const fields = [
+  const fields: (FormFieldProps & { defaultValue?: any })[] = [
     {
       name: "name",
       label: "School Name",
