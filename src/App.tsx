@@ -22,6 +22,7 @@ import Privacy from "@/pages/Privacy";
 import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
 import School from "@/pages/School";
+import SchoolUpload from "@/pages/SchoolUpload";
 import Terms from "@/pages/Terms";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
@@ -139,6 +140,11 @@ const router = createBrowserRouter([
   {
     path: "/school",
     element: <MainLayout><School /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/school/upload",
+    element: <MainLayout><SchoolUpload /></MainLayout>,
     errorElement: <Error />,
   },
   {
