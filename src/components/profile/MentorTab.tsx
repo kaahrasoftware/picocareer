@@ -14,8 +14,8 @@ interface MentorTabProps {
 
 export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
-  const profileId = profile?.id;
-  const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId || '');
+  const profileId = profile?.id || '';
+  const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
 
   useEffect(() => {
     const checkTimezone = async () => {
@@ -48,8 +48,7 @@ export function MentorTab({ profile }: MentorTabProps) {
     checkTimezone();
   }, [profileId, toast]);
 
-  // Render empty state if no profile
-  if (!profileId) {
+  if (!profile) {
     return (
       <div className="p-4 text-center text-muted-foreground">
         No profile information available

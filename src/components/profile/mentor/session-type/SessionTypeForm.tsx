@@ -37,8 +37,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
 
   const onSubmit = async (data: SessionTypeFormData) => {
-    if (!profileId) return;
-
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
@@ -104,7 +102,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
+  const availableTypes = Object.values(SessionTypeEnum).filter(
+    type => !existingTypes.some(existingType => existingType.type === type)
+  );
 
   return (
     <FormProvider {...methods}>
@@ -113,7 +113,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           <div className="space-y-4">
             <SessionTypeSelect
               form={{ control: methods.control }}
-              availableTypes={availableSessionTypes}
+              availableTypes={availableTypes}
             />
 
             <FormField
