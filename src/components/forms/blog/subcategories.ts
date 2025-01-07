@@ -1,13 +1,19 @@
 import { Database } from "@/integrations/supabase/types";
 
+type Categories = Database["public"]["Enums"]["categories"];
 type Subcategories = Database["public"]["Enums"]["subcategories"];
 
-export const subcategories: Record<string, Subcategories[]> = {
+export const subcategories: Record<Categories, Subcategories[]> = {
   "Technology": [
     "Essential Tech Skills for the Workplace",
     "Leveraging AI in Career Planning",
     "Artificial Intelligence",
     "Machine Learning",
+    "Best Apps for Productivity",
+    "Using Technology for Collaboration"
+  ],
+  "Digital Tools": [
+    "Essential Tech Skills for the Workplace",
     "Best Apps for Productivity",
     "Using Technology for Collaboration"
   ],
@@ -143,5 +149,33 @@ export const subcategories: Record<string, Subcategories[]> = {
     "Exploring Creative Hobbies",
     "How Extracurriculars Boost Applications",
     "Starting Your Own Club or Organization"
+  ],
+  "Community Service": [
+    "Finding Volunteer Opportunities",
+    "Benefits of Community Involvement",
+    "Organizing Campus Charity Events",
+    "Making a Difference Locally and Globally",
+    "Highlighting Volunteer Work in Applications"
+  ],
+  "Arts Careers": [
+    "Exploring Creative Career Paths",
+    "Monetizing Artistic Talents",
+    "Building a Professional Portfolio",
+    "Exploring Creative Career Paths",
+    "Pursuing Higher Education in the Arts"
+  ],
+  "STEM Careers": [
+    "Exploring Careers in Technology",
+    "Women in STEM",
+    "Research Opportunities in STEM Fields",
+    "Industry-Specific Career Insights",
+    "Technical Skill Mastery"
+  ],
+  "Wellbeing": [
+    "Managing Stress and Anxiety",
+    "Self-Care Strategies for Students",
+    "Sports and Physical Wellbeing",
+    "Balancing Academic and Personal Life",
+    "Seeking Support When Needed"
   ]
 };
