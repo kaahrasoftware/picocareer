@@ -1,8 +1,7 @@
-import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { useState } from "react";
 
 type SchoolFormData = {
   name: string;
@@ -50,6 +49,7 @@ const SchoolUpload = () => {
       type: "text" as const,
       placeholder: "Enter school name",
       required: true,
+      description: "Enter the full name of the school"
     },
     {
       name: "location",
@@ -108,7 +108,8 @@ const SchoolUpload = () => {
         { id: "Wisconsin - WI", title: "Wisconsin - WI" },
         { id: "Wyoming - WY", title: "Wyoming - WY" }
       ],
-      required: false,
+      required: true,
+      description: "Select the state where the school is located"
     },
     {
       name: "type",
@@ -121,29 +122,36 @@ const SchoolUpload = () => {
         { id: "University", title: "University" },
         { id: "Other", title: "Other" }
       ],
-      required: false,
+      required: true,
+      description: "Select the type of educational institution"
     },
     {
       name: "website",
       label: "Website",
       type: "text" as const,
-      placeholder: "Enter school website URL",
-      required: false,
+      placeholder: "https://www.school.edu",
+      description: "Enter the school's official website URL"
     },
     {
       name: "acceptance_rate",
       label: "Acceptance Rate",
       type: "number" as const,
-      placeholder: "Enter acceptance rate (0-100)",
-      required: false,
-      description: "Enter a number between 0 and 100"
+      placeholder: "Enter a number between 0 and 100",
+      description: "Enter the school's acceptance rate as a percentage (0-100)",
+      min: 0,
+      max: 100
     }
   ];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Submit a New School</h1>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold mb-2">Submit a New School</h1>
+          <p className="text-gray-600">
+            Please provide accurate information about the educational institution you'd like to add to our database.
+          </p>
+        </div>
         <GenericUploadForm
           fields={formFields}
           onSubmit={handleSubmit}
