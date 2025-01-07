@@ -1543,7 +1543,7 @@ export type Database = {
         | "Consent Signed"
         | "Approved"
         | "Rejected"
-      school_type: "High School" | "Community College" | "University" | "Other"
+      school_type: "High School" | "College" | "University" | "Other"
       session_type:
         | "Know About my Career"
         | "Resume/CV Review"
@@ -1632,6 +1632,7 @@ export type Database = {
         | "West Virginia - WV"
         | "Wisconsin - WI"
         | "Wyoming - WY"
+        | "Washington DC - DC"
       status: "Approved" | "Pending" | "Rejected"
       subcategories:
         | "Industry-Specific Career Insights"
