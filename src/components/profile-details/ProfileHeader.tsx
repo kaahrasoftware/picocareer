@@ -29,7 +29,7 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
       <ProfileAvatar 
         avatarUrl={profile.avatar_url}
         fallback={profile.full_name?.[0] || 'U'}
-        size="lg"
+        size="md"
         editable={false}
       />
 
