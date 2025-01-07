@@ -56,6 +56,8 @@ const SchoolUpload = () => {
       label: "Location",
       type: "select" as const,
       placeholder: "Select state",
+      required: true,
+      description: "Select the state where the school is located",
       options: [
         { id: "Alabama - AL", title: "Alabama - AL" },
         { id: "Alaska - AK", title: "Alaska - AK" },
@@ -107,23 +109,21 @@ const SchoolUpload = () => {
         { id: "West Virginia - WV", title: "West Virginia - WV" },
         { id: "Wisconsin - WI", title: "Wisconsin - WI" },
         { id: "Wyoming - WY", title: "Wyoming - WY" }
-      ],
-      required: true,
-      description: "Select the state where the school is located"
+      ]
     },
     {
       name: "type",
       label: "School Type",
       type: "select" as const,
       placeholder: "Select school type",
+      required: true,
+      description: "Select the type of educational institution",
       options: [
         { id: "High School", title: "High School" },
         { id: "Community College", title: "Community College" },
         { id: "University", title: "University" },
         { id: "Other", title: "Other" }
-      ],
-      required: true,
-      description: "Select the type of educational institution"
+      ]
     },
     {
       name: "website",
@@ -137,9 +137,7 @@ const SchoolUpload = () => {
       label: "Acceptance Rate",
       type: "number" as const,
       placeholder: "Enter a number between 0 and 100",
-      description: "Enter the school's acceptance rate as a percentage (0-100)",
-      min: 0,
-      max: 100
+      description: "Enter the school's acceptance rate as a percentage (0-100)"
     }
   ];
 
