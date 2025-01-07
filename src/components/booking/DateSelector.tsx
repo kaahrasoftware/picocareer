@@ -73,7 +73,7 @@ export function DateSelector({ date, onDateSelect, mentorId }: DateSelectorProps
         disabled={(date) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          return date < today || !isDateAvailable(date);
+          return date < today || isDateUnavailable(date);
         }}
         modifiers={{
           available: availableDates,

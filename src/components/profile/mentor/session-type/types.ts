@@ -1,4 +1,4 @@
-import { SessionTypeEnum, MeetingPlatform } from "@/types/session";
+import { MeetingPlatform, SessionTypeEnum } from "@/types/calendar";
 import { Control } from "react-hook-form";
 
 export interface SessionTypeFormData {
@@ -11,30 +11,13 @@ export interface SessionTypeFormData {
   phone_number?: string;
 }
 
-export interface SessionTypeFormProps {
-  profileId: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  existingTypes: {
-    id: string;
-    type: string;
-    duration: number;
-    description: string | null;
-  }[];
-}
-
-export interface FormProps {
+export interface PlatformSelectProps {
   control: Control<SessionTypeFormData>;
 }
 
-export interface PlatformFieldsProps extends FormProps {
+export interface PlatformFieldsProps {
+  control: Control<SessionTypeFormData>;
   showTelegramField: boolean;
   showPhoneField: boolean;
   showWhatsAppField: boolean;
-}
-
-export interface PlatformSelectProps extends FormProps {}
-
-export interface SessionTypeSelectProps extends FormProps {
-  availableTypes: SessionTypeEnum[];
 }
