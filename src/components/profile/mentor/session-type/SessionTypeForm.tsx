@@ -9,7 +9,7 @@ import { PlatformFields } from "./PlatformFields";
 import { useToast } from "@/hooks/use-toast";
 import type { SessionTypeFormData, SessionTypeFormProps } from "./types";
 
-export function SessionTypeForm({ onSubmit, onSuccess, onCancel, profileId, existingTypes = [] }: SessionTypeFormProps) {
+export function SessionTypeForm({ onSubmit, onSuccess, onCancel }: SessionTypeFormProps) {
   const { toast } = useToast();
   const form = useForm<SessionTypeFormData>({
     defaultValues: {
@@ -47,7 +47,7 @@ export function SessionTypeForm({ onSubmit, onSuccess, onCancel, profileId, exis
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        <SessionTypeSelect control={control} availableTypes={existingTypes.map(type => type.type)} />
+        <SessionTypeSelect control={control} />
         <PlatformSelect control={control} />
         <PlatformFields
           control={control}
