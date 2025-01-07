@@ -2,107 +2,105 @@ import { useState } from "react";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { FormFieldProps } from "@/components/forms/FormField";
 
 const SchoolUpload = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const formFields = [
+  const formFields: (FormFieldProps & { defaultValue?: any })[] = [
     {
       name: "name",
       label: "School Name",
       type: "text",
       placeholder: "Enter school name",
-      required: true,
-      fieldType: "basic-input"
+      required: true
     },
     {
       name: "location",
       label: "Location",
       type: "select",
       placeholder: "Select state",
+      required: true,
       options: [
-        { value: "Alabama - AL", label: "Alabama - AL" },
-        { value: "Alaska - AK", label: "Alaska - AK" },
-        { value: "Arizona - AZ", label: "Arizona - AZ" },
-        { value: "Arkansas - AR", label: "Arkansas - AR" },
-        { value: "California - CA", label: "California - CA" },
-        { value: "Colorado - CO", label: "Colorado - CO" },
-        { value: "Connecticut - CT", label: "Connecticut - CT" },
-        { value: "Delaware - DE", label: "Delaware - DE" },
-        { value: "Florida - FL", label: "Florida - FL" },
-        { value: "Georgia - GA", label: "Georgia - GA" },
-        { value: "Hawaii - HI", label: "Hawaii - HI" },
-        { value: "Idaho - ID", label: "Idaho - ID" },
-        { value: "Illinois - IL", label: "Illinois - IL" },
-        { value: "Indiana - IN", label: "Indiana - IN" },
-        { value: "Iowa - IA", label: "Iowa - IA" },
-        { value: "Kansas - KS", label: "Kansas - KS" },
-        { value: "Kentucky - KY", label: "Kentucky - KY" },
-        { value: "Louisiana - LA", label: "Louisiana - LA" },
-        { value: "Maine - ME", label: "Maine - ME" },
-        { value: "Maryland - MD", label: "Maryland - MD" },
-        { value: "Massachusetts - MA", label: "Massachusetts - MA" },
-        { value: "Michigan - MI", label: "Michigan - MI" },
-        { value: "Minnesota - MN", label: "Minnesota - MN" },
-        { value: "Mississippi - MS", label: "Mississippi - MS" },
-        { value: "Missouri - MO", label: "Missouri - MO" },
-        { value: "Montana - MT", label: "Montana - MT" },
-        { value: "Nebraska - NE", label: "Nebraska - NE" },
-        { value: "Nevada - NV", label: "Nevada - NV" },
-        { value: "New Hampshire - NH", label: "New Hampshire - NH" },
-        { value: "New Jersey - NJ", label: "New Jersey - NJ" },
-        { value: "New Mexico - NM", label: "New Mexico - NM" },
-        { value: "New York - NY", label: "New York - NY" },
-        { value: "North Carolina - NC", label: "North Carolina - NC" },
-        { value: "North Dakota - ND", label: "North Dakota - ND" },
-        { value: "Ohio - OH", label: "Ohio - OH" },
-        { value: "Oklahoma - OK", label: "Oklahoma - OK" },
-        { value: "Oregon - OR", label: "Oregon - OR" },
-        { value: "Pennsylvania - PA", label: "Pennsylvania - PA" },
-        { value: "Rhode Island - RI", label: "Rhode Island - RI" },
-        { value: "South Carolina - SC", label: "South Carolina - SC" },
-        { value: "South Dakota - SD", label: "South Dakota - SD" },
-        { value: "Tennessee - TN", label: "Tennessee - TN" },
-        { value: "Texas - TX", label: "Texas - TX" },
-        { value: "Utah - UT", label: "Utah - UT" },
-        { value: "Vermont - VT", label: "Vermont - VT" },
-        { value: "Virginia - VA", label: "Virginia - VA" },
-        { value: "Washington - WA", label: "Washington - WA" },
-        { value: "West Virginia - WV", label: "West Virginia - WV" },
-        { value: "Wisconsin - WI", label: "Wisconsin - WI" },
-        { value: "Wyoming - WY", label: "Wyoming - WY" }
-      ],
-      fieldType: "select"
+        { id: "Alabama - AL", name: "Alabama - AL" },
+        { id: "Alaska - AK", name: "Alaska - AK" },
+        { id: "Arizona - AZ", name: "Arizona - AZ" },
+        { id: "Arkansas - AR", name: "Arkansas - AR" },
+        { id: "California - CA", name: "California - CA" },
+        { id: "Colorado - CO", name: "Colorado - CO" },
+        { id: "Connecticut - CT", name: "Connecticut - CT" },
+        { id: "Delaware - DE", name: "Delaware - DE" },
+        { id: "Florida - FL", name: "Florida - FL" },
+        { id: "Georgia - GA", name: "Georgia - GA" },
+        { id: "Hawaii - HI", name: "Hawaii - HI" },
+        { id: "Idaho - ID", name: "Idaho - ID" },
+        { id: "Illinois - IL", name: "Illinois - IL" },
+        { id: "Indiana - IN", name: "Indiana - IN" },
+        { id: "Iowa - IA", name: "Iowa - IA" },
+        { id: "Kansas - KS", name: "Kansas - KS" },
+        { id: "Kentucky - KY", name: "Kentucky - KY" },
+        { id: "Louisiana - LA", name: "Louisiana - LA" },
+        { id: "Maine - ME", name: "Maine - ME" },
+        { id: "Maryland - MD", name: "Maryland - MD" },
+        { id: "Massachusetts - MA", name: "Massachusetts - MA" },
+        { id: "Michigan - MI", name: "Michigan - MI" },
+        { id: "Minnesota - MN", name: "Minnesota - MN" },
+        { id: "Mississippi - MS", name: "Mississippi - MS" },
+        { id: "Missouri - MO", name: "Missouri - MO" },
+        { id: "Montana - MT", name: "Montana - MT" },
+        { id: "Nebraska - NE", name: "Nebraska - NE" },
+        { id: "Nevada - NV", name: "Nevada - NV" },
+        { id: "New Hampshire - NH", name: "New Hampshire - NH" },
+        { id: "New Jersey - NJ", name: "New Jersey - NJ" },
+        { id: "New Mexico - NM", name: "New Mexico - NM" },
+        { id: "New York - NY", name: "New York - NY" },
+        { id: "North Carolina - NC", name: "North Carolina - NC" },
+        { id: "North Dakota - ND", name: "North Dakota - ND" },
+        { id: "Ohio - OH", name: "Ohio - OH" },
+        { id: "Oklahoma - OK", name: "Oklahoma - OK" },
+        { id: "Oregon - OR", name: "Oregon - OR" },
+        { id: "Pennsylvania - PA", name: "Pennsylvania - PA" },
+        { id: "Rhode Island - RI", name: "Rhode Island - RI" },
+        { id: "South Carolina - SC", name: "South Carolina - SC" },
+        { id: "South Dakota - SD", name: "South Dakota - SD" },
+        { id: "Tennessee - TN", name: "Tennessee - TN" },
+        { id: "Texas - TX", name: "Texas - TX" },
+        { id: "Utah - UT", name: "Utah - UT" },
+        { id: "Vermont - VT", name: "Vermont - VT" },
+        { id: "Virginia - VA", name: "Virginia - VA" },
+        { id: "Washington - WA", name: "Washington - WA" },
+        { id: "West Virginia - WV", name: "West Virginia - WV" },
+        { id: "Wisconsin - WI", name: "Wisconsin - WI" },
+        { id: "Wyoming - WY", name: "Wyoming - WY" }
+      ]
     },
     {
       name: "type",
       label: "School Type",
       type: "select",
       placeholder: "Select school type",
+      required: true,
       options: [
-        { value: "High School", label: "High School" },
-        { value: "Community College", label: "Community College" },
-        { value: "University", label: "University" },
-        { value: "Other", label: "Other" }
-      ],
-      fieldType: "select"
+        { id: "High School", name: "High School" },
+        { id: "Community College", name: "Community College" },
+        { id: "University", name: "University" },
+        { id: "Other", name: "Other" }
+      ]
     },
     {
       name: "website",
       label: "Website",
       type: "text",
       placeholder: "Enter school website URL",
-      description: "Optional: Include the full URL (e.g., https://www.school.edu)",
-      fieldType: "basic-input"
+      description: "Optional: Include the full URL (e.g., https://www.school.edu)"
     },
     {
       name: "acceptance_rate",
       label: "Acceptance Rate",
       type: "number",
       placeholder: "Enter acceptance rate (0-100)",
-      description: "Optional: Enter a number between 0 and 100",
-      fieldType: "basic-input"
+      description: "Optional: Enter a number between 0 and 100"
     }
   ];
 
