@@ -22,7 +22,7 @@ const SchoolUpload = () => {
         .from('schools')
         .insert({
           name: data.name,
-          location: data.location || null, // Ensure null is sent when no value is selected
+          location: data.location || null,
           type: data.type || null,
           website: data.website || null,
           acceptance_rate: data.acceptance_rate || null,
