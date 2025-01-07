@@ -1,20 +1,14 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Control, useFormContext } from "react-hook-form";
-import { SessionTypeFormData } from "./types";
+import { useFormContext } from "react-hook-form";
+import { SessionTypeFormData, PlatformSelectProps } from "./types";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/session";
 
-interface PlatformSelectProps {
-  form: {
-    control: Control<SessionTypeFormData>;
-  };
-}
-
-export function PlatformSelect({ form }: PlatformSelectProps) {
+export function PlatformSelect({ control }: PlatformSelectProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<MeetingPlatform[]>([]);
   const methods = useFormContext<SessionTypeFormData>();
 
@@ -53,7 +47,7 @@ export function PlatformSelect({ form }: PlatformSelectProps) {
 
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="meeting_platform"
       rules={{ required: "At least one platform is required" }}
       render={({ field }) => (
