@@ -1,94 +1,120 @@
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { SessionTypeSelect } from "./SessionTypeSelect";
-import { PlatformSelect } from "./PlatformSelect";
-import { PlatformFields } from "./PlatformFields";
-import { useToast } from "@/hooks/use-toast";
-import type { SessionTypeFormData, SessionTypeFormProps } from "./types";
+import { FormField } from "@/components/forms/FormField";
+import { SessionTypeFormData } from "./types";
 
-export function SessionTypeForm({ onSubmit, onSuccess, onCancel }: SessionTypeFormProps) {
-  const { toast } = useToast();
+interface SessionTypeFormProps {
+  onSubmit: (data: SessionTypeFormData) => Promise<void>;
+  defaultValues?: Partial<SessionTypeFormData>;
+  isSubmitting?: boolean;
+}
+
+export function SessionTypeForm({ onSubmit, defaultValues, isSubmitting }: SessionTypeFormProps) {
   const form = useForm<SessionTypeFormData>({
-    defaultValues: {
+    defaultValues: defaultValues || {
       type: undefined,
       duration: 30,
       price: 0,
       description: "",
       meeting_platform: ["Google Meet"],
       telegram_username: "",
-      phone_number: "",
-    },
-  });
-
-  const { control, handleSubmit, watch } = form;
-  const selectedPlatforms = watch("meeting_platform");
-
-  const showTelegramField = selectedPlatforms.includes("Telegram");
-  const showPhoneField = selectedPlatforms.includes("Phone Call");
-  const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
-
-  const onFormSubmit = async (data: SessionTypeFormData) => {
-    try {
-      await onSubmit(data);
-      onSuccess();
-    } catch (error) {
-      console.error("Error submitting session type:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save session type. Please try again.",
-        variant: "destructive",
-      });
+      phone_number: ""
     }
-  };
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        <SessionTypeSelect control={control} />
-        <PlatformSelect control={control} />
-        <PlatformFields
-          control={control}
-          showTelegramField={showTelegramField}
-          showPhoneField={showPhoneField}
-          showWhatsAppField={showWhatsAppField}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          name="type"
+          control={form.control}
+          label="Session Type"
+          type="select"
+          options={[
+            { id: "First Touch", title: "First Touch" },
+            { id: "Know About your Career", title: "Know About your Career" },
+            { id: "Resume/CV Review", title: "Resume/CV Review" },
+            { id: "Campus France", title: "Campus France" },
+            { id: "Undergrad Application", title: "Undergrad Application" },
+            { id: "Grad Application", title: "Grad Application" },
+            { id: "TOEFL Exam Prep Advice", title: "TOEFL Exam Prep Advice" },
+            { id: "IELTS Exam Prep Advice", title: "IELTS Exam Prep Advice" },
+            { id: "Duolingo Exam Prep Advice", title: "Duolingo Exam Prep Advice" },
+            { id: "SAT Exam Prep Advise", title: "SAT Exam Prep Advise" },
+            { id: "ACT Exam Prep Advice", title: "ACT Exam Prep Advice" },
+            { id: "GRE Exam Prep Advice", title: "GRE Exam Prep Advice" },
+            { id: "GMAT Exam Prep Advice", title: "GMAT Exam Prep Advice" },
+            { id: "MCAT Exam Prep Advice", title: "MCAT Exam Prep Advice" },
+            { id: "LSAT Exam Prep Advice", title: "LSAT Exam Prep Advice" },
+            { id: "DAT Exam Prep Advice", title: "DAT Exam Prep Advice" },
+            { id: "Advice for PhD Students", title: "Advice for PhD Students" },
+            { id: "How to Find Grants/Fellowships", title: "How to Find Grants/Fellowships" },
+            { id: "Grant Writing Guidance", title: "Grant Writing Guidance" },
+            { id: "Interview Prep", title: "Interview Prep" },
+            { id: "How to Succeed as a College Student", title: "How to Succeed as a College Student" },
+            { id: "Investment Strategies", title: "Investment Strategies" },
+            { id: "Study Abroad Programs", title: "Study Abroad Programs" },
+            { id: "Tips for F-1 Students", title: "Tips for F-1 Students" },
+            { id: "College Application Last Review", title: "College Application Last Review" },
+            { id: "Application Essays Review", title: "Application Essays Review" },
+            { id: "I need someone to practice my presentation with", title: "I need someone to practice my presentation with" }
+          ]}
+          required
         />
-        
-        <div className="bg-white/5 rounded-lg p-4">
-          <label htmlFor="duration">Duration (minutes)</label>
-          <Input
-            id="duration"
-            type="number"
-            {...form.register("duration", { required: true })}
-          />
-        </div>
-
-        <div className="bg-white/5 rounded-lg p-4">
-          <label htmlFor="price">Price</label>
-          <Input
-            id="price"
-            type="number"
-            {...form.register("price", { required: true })}
-          />
-        </div>
-
-        <div className="bg-white/5 rounded-lg p-4">
-          <label htmlFor="description">Description</label>
-          <Textarea
-            id="description"
-            {...form.register("description")}
-          />
-        </div>
-
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            Save Session Type
-          </Button>
+        <FormField
+          name="duration"
+          control={form.control}
+          label="Duration (minutes)"
+          type="number"
+          required
+        />
+        <FormField
+          name="price"
+          control={form.control}
+          label="Price"
+          type="number"
+          required
+        />
+        <FormField
+          name="description"
+          control={form.control}
+          label="Description"
+          type="textarea"
+          required
+        />
+        <FormField
+          name="meeting_platform"
+          control={form.control}
+          label="Meeting Platform"
+          type="select"
+          options={[
+            { id: "Google Meet", title: "Google Meet" },
+            { id: "WhatsApp", title: "WhatsApp" },
+            { id: "Telegram", title: "Telegram" },
+            { id: "Phone Call", title: "Phone Call" }
+          ]}
+          required
+        />
+        <FormField
+          name="telegram_username"
+          control={form.control}
+          label="Telegram Username"
+          type="text"
+        />
+        <FormField
+          name="phone_number"
+          control={form.control}
+          label="Phone Number"
+          type="text"
+        />
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </form>
     </Form>

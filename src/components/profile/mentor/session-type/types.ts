@@ -1,32 +1,11 @@
-import { MeetingPlatform } from "@/types/calendar";
-import { Control } from "react-hook-form";
-import { SessionTypeEnum } from "@/types/session";
+import { Database } from "@/integrations/supabase/types";
 
 export interface SessionTypeFormData {
-  type: SessionTypeEnum;
+  type: Database["public"]["Enums"]["session_type"];
   duration: number;
   price: number;
   description: string;
-  meeting_platform: MeetingPlatform[];
+  meeting_platform: Database["public"]["Enums"]["meeting_platform"][];
   telegram_username?: string;
   phone_number?: string;
-}
-
-export interface SessionTypeFormProps {
-  onSubmit: (data: SessionTypeFormData) => Promise<void>;
-  onSuccess: () => void;
-  onCancel: () => void;
-  profileId: string;
-  existingTypes?: SessionTypeFormData[];
-}
-
-export interface PlatformSelectProps {
-  control: Control<SessionTypeFormData>;
-}
-
-export interface PlatformFieldsProps {
-  control: Control<SessionTypeFormData>;
-  showTelegramField: boolean;
-  showPhoneField: boolean;
-  showWhatsAppField: boolean;
 }
