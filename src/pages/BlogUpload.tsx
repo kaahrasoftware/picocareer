@@ -16,21 +16,11 @@ export default function BlogUpload() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      console.log('Submitting form data:', data);
-      
-      // Convert single category to array
-      const categories = data.categories ? [data.categories] : [];
-      
-      // Convert subcategories to array if present
-      const subcategories = data.subcategories ? [data.subcategories] : [];
-
       const { error } = await supabase
         .from('blogs')
         .insert([
           {
             ...data,
-            categories,
-            subcategories,
             author_id: session?.user?.id,
             status: 'Pending'
           }

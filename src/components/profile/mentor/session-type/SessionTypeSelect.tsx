@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { SESSION_TYPES, SessionTypeEnum } from "@/types/session";
+import { useState } from "react";
+import { SESSION_TYPE_OPTIONS, SessionTypeEnum } from "@/types/session";
 import { Control } from "react-hook-form";
 
 const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
@@ -42,11 +42,13 @@ interface SessionTypeFormData {
 }
 
 interface SessionTypeSelectProps {
-  control: Control<SessionTypeFormData>;
+  form: {
+    control: Control<SessionTypeFormData>;
+  };
   availableTypes: SessionTypeEnum[];
 }
 
-export function SessionTypeSelect({ control, availableTypes }: SessionTypeSelectProps) {
+export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [selectedType, setSelectedType] = useState<SessionTypeEnum | null>(null);
 
@@ -54,12 +56,13 @@ export function SessionTypeSelect({ control, availableTypes }: SessionTypeSelect
     const type = value as SessionTypeEnum;
     setSelectedType(type);
     setShowDialog(true);
+    form.control._formValues.type = type;
   };
 
   return (
     <>
       <FormField
-        control={control}
+        control={form.control}
         name="type"
         rules={{ required: "Session type is required" }}
         render={({ field }) => (
@@ -78,7 +81,7 @@ export function SessionTypeSelect({ control, availableTypes }: SessionTypeSelect
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {SESSION_TYPES.filter(type => !availableTypes.includes(type)).map((type) => (
+                {SESSION_TYPE_OPTIONS.filter(type => !availableTypes.includes(type)).map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>

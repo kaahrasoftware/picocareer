@@ -1,140 +1,172 @@
-import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import { FormField } from "@/components/forms/FormField";
-import { SessionTypeFormData, SessionTypeFormProps } from "./types";
+import { useState } from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SessionTypeEnum } from "@/types/session";
+import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import { SessionTypeSelect } from "./SessionTypeSelect";
+import { PlatformSelect } from "./PlatformSelect";
+import { PlatformFields } from "./PlatformFields";
+import { useQueryClient } from "@tanstack/react-query";
 
-export function SessionTypeForm({ 
-  onSubmit, 
-  onCancel, 
-  onSuccess, 
-  defaultValues, 
-  isSubmitting 
-}: SessionTypeFormProps) {
-  const form = useForm<SessionTypeFormData>({
-    defaultValues: defaultValues || {
-      type: undefined,
-      duration: 30,
+export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const methods = useForm<SessionTypeFormData>({
+    defaultValues: {
+      type: undefined as unknown as SessionTypeEnum,
+      duration: 0,
       price: 0,
       description: "",
-      meeting_platform: ["Google Meet"],
+      meeting_platform: [],
       telegram_username: "",
       phone_number: ""
     }
   });
 
-  const handleSubmit = async (data: SessionTypeFormData) => {
+  const selectedPlatforms = methods.watch("meeting_platform") || [];
+  const showTelegramField = selectedPlatforms.includes("Telegram");
+  const showPhoneField = selectedPlatforms.includes("Phone Call");
+  const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
+
+  const onSubmit = async (data: SessionTypeFormData) => {
     try {
-      await onSubmit(data);
-      if (onSuccess) {
-        onSuccess();
+      setIsSubmitting(true);
+      console.log('Attempting to add session type:', data);
+
+      const { data: existingType, error: checkError } = await supabase
+        .from('mentor_session_types')
+        .select('id, type')
+        .eq('profile_id', profileId)
+        .eq('type', data.type)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing type:', checkError);
+        throw checkError;
       }
+
+      console.log('Existing type check result:', existingType);
+
+      if (existingType) {
+        toast({
+          title: "Error",
+          description: "You already have this session type",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('mentor_session_types')
+        .insert({
+          profile_id: profileId,
+          type: data.type as SessionTypeEnum,
+          duration: Number(data.duration),
+          price: 0,
+          description: data.description || null,
+          meeting_platform: data.meeting_platform,
+          telegram_username: data.telegram_username || null,
+          phone_number: data.phone_number || null,
+        });
+
+      if (error) {
+        console.error('Error creating session type:', error);
+        throw error;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
+
+      toast({
+        title: "Success",
+        description: "Session type created successfully",
+      });
+
+      onSuccess();
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create session type",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          name="type"
-          control={form.control}
-          label="Session Type"
-          type="select"
-          options={[
-            { id: "First Touch", title: "First Touch" },
-            { id: "Know About your Career", title: "Know About your Career" },
-            { id: "Resume/CV Review", title: "Resume/CV Review" },
-            { id: "Campus France", title: "Campus France" },
-            { id: "Undergrad Application", title: "Undergrad Application" },
-            { id: "Grad Application", title: "Grad Application" },
-            { id: "TOEFL Exam Prep Advice", title: "TOEFL Exam Prep Advice" },
-            { id: "IELTS Exam Prep Advice", title: "IELTS Exam Prep Advice" },
-            { id: "Duolingo Exam Prep Advice", title: "Duolingo Exam Prep Advice" },
-            { id: "SAT Exam Prep Advise", title: "SAT Exam Prep Advise" },
-            { id: "ACT Exam Prep Advice", title: "ACT Exam Prep Advice" },
-            { id: "GRE Exam Prep Advice", title: "GRE Exam Prep Advice" },
-            { id: "GMAT Exam Prep Advice", title: "GMAT Exam Prep Advice" },
-            { id: "MCAT Exam Prep Advice", title: "MCAT Exam Prep Advice" },
-            { id: "LSAT Exam Prep Advice", title: "LSAT Exam Prep Advice" },
-            { id: "DAT Exam Prep Advice", title: "DAT Exam Prep Advice" },
-            { id: "Advice for PhD Students", title: "Advice for PhD Students" },
-            { id: "How to Find Grants/Fellowships", title: "How to Find Grants/Fellowships" },
-            { id: "Grant Writing Guidance", title: "Grant Writing Guidance" },
-            { id: "Interview Prep", title: "Interview Prep" },
-            { id: "How to Succeed as a College Student", title: "How to Succeed as a College Student" },
-            { id: "Investment Strategies", title: "Investment Strategies" },
-            { id: "Study Abroad Programs", title: "Study Abroad Programs" },
-            { id: "Tips for F-1 Students", title: "Tips for F-1 Students" },
-            { id: "College Application Last Review", title: "College Application Last Review" },
-            { id: "Application Essays Review", title: "Application Essays Review" },
-            { id: "I need someone to practice my presentation with", title: "I need someone to practice my presentation with" }
-          ]}
-          required
-        />
-        <FormField
-          name="duration"
-          control={form.control}
-          label="Duration (minutes)"
-          type="number"
-          required
-        />
-        <FormField
-          name="price"
-          control={form.control}
-          label="Price"
-          type="number"
-          required
-        />
-        <FormField
-          name="description"
-          control={form.control}
-          label="Description"
-          type="textarea"
-          required
-        />
-        <FormField
-          name="meeting_platform"
-          control={form.control}
-          label="Meeting Platform"
-          type="select"
-          options={[
-            { id: "Google Meet", title: "Google Meet" },
-            { id: "WhatsApp", title: "WhatsApp" },
-            { id: "Telegram", title: "Telegram" },
-            { id: "Phone Call", title: "Phone Call" }
-          ]}
-          required
-        />
-        <FormField
-          name="telegram_username"
-          control={form.control}
-          label="Telegram Username"
-          type="text"
-        />
-        <FormField
-          name="phone_number"
-          control={form.control}
-          label="Phone Number"
-          type="text"
-        />
-        <div className="flex justify-end gap-4">
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)}>
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-4">
+            <SessionTypeSelect
+              form={{ control: methods.control }}
+              availableTypes={availableSessionTypes}
+            />
+
+            <FormField
+              control={methods.control}
+              name="duration"
+              rules={{ required: "Duration is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration (minutes)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={methods.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <PlatformSelect form={{ control: methods.control }} />
+
+            <PlatformFields
+              form={{ control: methods.control }}
+              showTelegramField={showTelegramField}
+              showPhoneField={showPhoneField}
+              showWhatsAppField={showWhatsAppField}
+            />
+          </div>
+        </ScrollArea>
+
+        <div className="flex justify-end gap-2 mt-4">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "Submit"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create"}
           </Button>
         </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

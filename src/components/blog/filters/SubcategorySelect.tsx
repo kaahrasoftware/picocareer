@@ -16,7 +16,6 @@ export function SubcategorySelect({
   setSelectedSubcategory 
 }: SubcategorySelectProps) {
   const isDisabled = selectedCategory === "_all";
-  const availableSubcategories = selectedCategory !== "_all" ? subcategories[selectedCategory] || [] : [];
   
   return (
     <Select 
@@ -29,7 +28,7 @@ export function SubcategorySelect({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="_all">All Subcategories</SelectItem>
-        {availableSubcategories.map((subcategory) => (
+        {selectedCategory !== "_all" && subcategories[selectedCategory]?.map((subcategory) => (
           <SelectItem key={subcategory} value={subcategory}>
             {subcategory}
           </SelectItem>
