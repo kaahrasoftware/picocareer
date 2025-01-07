@@ -42,7 +42,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       }
     },
     retry: false,
-    enabled: !!session, // Only run if we have a session
+    enabled: !!session,
   });
 
   // Only fetch profile if we have a session and the dialog is open
@@ -151,12 +151,14 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     setBookingOpen(true);
   };
 
+  // Move the loading check after all hooks
+  const isOwnProfile = currentUser?.id === userId;
+  const isMentor = profile?.user_type === 'mentor';
+
+  // Return null only after all hooks have been called
   if (isLoading || !profile) {
     return null;
   }
-
-  const isOwnProfile = currentUser?.id === userId;
-  const isMentor = profile.user_type === 'mentor';
 
   return (
     <>
