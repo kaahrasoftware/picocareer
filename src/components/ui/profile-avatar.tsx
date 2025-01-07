@@ -9,6 +9,7 @@ interface ProfileAvatarProps {
   fallback: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
+  userId: string; // Add userId prop to check permissions
   onAvatarUpdate?: (url: string) => void;
 }
 
@@ -17,10 +18,38 @@ export function ProfileAvatar({
   fallback, 
   size = "md", 
   editable = false,
+  userId,
   onAvatarUpdate 
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
   const { toast } = useToast();
+
+  // Fetch current user data to check permissions
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (!error && user) {
+        // Get user profile to check if admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+        
+        setCurrentUser({
+          ...user,
+          isAdmin: profile?.user_type === 'admin'
+        });
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const canEdit = React.useMemo(() => {
+    if (!currentUser) return false;
+    return currentUser.id === userId || currentUser.isAdmin;
+  }, [currentUser, userId]);
 
   const sizeClasses = {
     sm: "h-10 w-10",
@@ -30,7 +59,7 @@ export function ProfileAvatar({
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!onAvatarUpdate) return;
+      if (!onAvatarUpdate || !canEdit) return;
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
@@ -39,7 +68,7 @@ export function ProfileAvatar({
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${userId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -87,7 +116,7 @@ export function ProfileAvatar({
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>
       
-      {editable && (
+      {editable && canEdit && (
         <>
           <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
             <input
