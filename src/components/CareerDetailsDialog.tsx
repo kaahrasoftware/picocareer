@@ -2,21 +2,15 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { AboutSection } from "./career-details/AboutSection";
-import { SkillsAndTools } from "./career-details/SkillsAndTools";
-import { AdditionalInfo } from "./career-details/AdditionalInfo";
-import { CareerMentorList } from "./career-details/CareerMentorList";
-import { AcademicMajorsSection } from "./career-details/AcademicMajorsSection";
-import { KeywordsSection } from "./career-details/KeywordsSection";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { toast } from "sonner";
 import { DialogHeaderSection } from "./career-details/DialogHeaderSection";
+import { DialogContent as CareerDialogContent } from "./career-details/DialogContent";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -53,7 +47,6 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
         .single();
 
       if (error) throw error;
-      
       return data as CareerWithMajors;
     },
     enabled: open && !!careerId,
@@ -154,7 +147,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+      <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[95vh] md:max-h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-0 md:p-6">
         <DialogHeaderSection
           title={career.title}
           profilesCount={career.profiles_count || 0}
@@ -162,55 +155,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
           isBookmarked={isBookmarked}
           onBookmarkToggle={handleBookmarkToggle}
         />
-        
-        <ScrollArea className="h-[calc(85vh-120px)]">
-          <div className="space-y-6 p-4">
-            {career.image_url && (
-              <div className="flex justify-center">
-                <img 
-                  src={career.image_url} 
-                  alt={career.title} 
-                  className="max-h-[300px] w-auto object-contain rounded-lg"
-                />
-              </div>
-            )}
-
-            <AboutSection
-              description={career.description}
-              learning_objectives={[]}
-              industry={career.industry}
-              work_environment={career.work_environment}
-              growth_potential={career.growth_potential}
-              job_outlook={career.job_outlook}
-              important_note={career.important_note}
-            />
-
-            <AcademicMajorsSection academicMajors={career.academic_majors} />
-            <KeywordsSection keywords={career.keywords} />
-
-            <CareerMentorList careerId={career.id} />
-
-            <SkillsAndTools
-              required_skills={career.required_skills}
-              required_tools={career.required_tools}
-              tools_knowledge={[]}
-              skill_match={[]}
-              transferable_skills={career.transferable_skills}
-              required_education={career.required_education}
-            />
-
-            <AdditionalInfo
-              professional_associations={[]}
-              common_difficulties={[]}
-              certifications_to_consider={[]}
-              affiliated_programs={[]}
-              majors_to_consider_switching_to={career.careers_to_consider_switching_to}
-              job_prospects={null}
-              passion_for_subject={null}
-              global_applicability={null}
-            />
-          </div>
-        </ScrollArea>
+        <CareerDialogContent career={career} />
       </DialogContent>
     </Dialog>
   );
