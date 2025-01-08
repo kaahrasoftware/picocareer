@@ -119,14 +119,14 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
             </Badge>
           </SheetTitle>
         </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+        <div className="mt-4">
           {localNotifications.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">
               No notifications yet
             </p>
           ) : (
             <Tabs defaultValue="mentorship" className="w-full">
-              <TabsList className="w-full grid grid-cols-2">
+              <TabsList className="w-full grid grid-cols-2 mb-4">
                 <TabsTrigger value="mentorship" className="relative flex items-center gap-2">
                   Mentorship
                   {mentorshipUnreadCount > 0 && (
@@ -151,42 +151,44 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="mentorship" className="mt-4 space-y-4">
-                {categorizedNotifications.mentorship?.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    isExpanded={expandedIds.includes(notification.id)}
-                    onToggleExpand={() => toggleExpand(notification.id)}
-                    onToggleRead={toggleReadStatus}
-                  />
-                ))}
-                {(!categorizedNotifications.mentorship || categorizedNotifications.mentorship.length === 0) && (
-                  <p className="text-center text-muted-foreground py-4">
-                    No mentorship notifications
-                  </p>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="general" className="mt-4 space-y-4">
-                {categorizedNotifications.general?.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    isExpanded={expandedIds.includes(notification.id)}
-                    onToggleExpand={() => toggleExpand(notification.id)}
-                    onToggleRead={toggleReadStatus}
-                  />
-                ))}
-                {(!categorizedNotifications.general || categorizedNotifications.general.length === 0) && (
-                  <p className="text-center text-muted-foreground py-4">
-                    No general notifications
-                  </p>
-                )}
-              </TabsContent>
+              <ScrollArea className="h-[calc(100vh-12rem)]">
+                <TabsContent value="mentorship" className="mt-0 space-y-4">
+                  {categorizedNotifications.mentorship?.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      isExpanded={expandedIds.includes(notification.id)}
+                      onToggleExpand={() => toggleExpand(notification.id)}
+                      onToggleRead={toggleReadStatus}
+                    />
+                  ))}
+                  {(!categorizedNotifications.mentorship || categorizedNotifications.mentorship.length === 0) && (
+                    <p className="text-center text-muted-foreground py-4">
+                      No mentorship notifications
+                    </p>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="general" className="mt-0 space-y-4">
+                  {categorizedNotifications.general?.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      isExpanded={expandedIds.includes(notification.id)}
+                      onToggleExpand={() => toggleExpand(notification.id)}
+                      onToggleRead={toggleReadStatus}
+                    />
+                  ))}
+                  {(!categorizedNotifications.general || categorizedNotifications.general.length === 0) && (
+                    <p className="text-center text-muted-foreground py-4">
+                      No general notifications
+                    </p>
+                  )}
+                </TabsContent>
+              </ScrollArea>
             </Tabs>
           )}
-        </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   );
