@@ -102,32 +102,6 @@ export function MenuSidebar() {
     );
   }
 
-  const navigationContent = (
-    <>
-      <MainNavigation />
-      <div className="flex items-center gap-4">
-        {session?.user && (
-          <NotificationPanel
-            notifications={notifications}
-            unreadCount={unreadCount}
-            onMarkAsRead={handleMarkAsRead}
-          />
-        )}
-        {session?.user ? (
-          <UserMenu />
-        ) : (
-          <Button 
-            variant="default" 
-            onClick={() => navigate("/auth")}
-            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-          >
-            Sign in
-          </Button>
-        )}
-      </div>
-    </>
-  );
-
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
       <div className="container h-full mx-auto flex items-center justify-between px-4">
@@ -174,7 +148,27 @@ export function MenuSidebar() {
             </Sheet>
           </div>
         ) : (
-          navigationContent
+          <div className="flex items-center gap-4">
+            <MainNavigation />
+            {session?.user && (
+              <NotificationPanel
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAsRead={handleMarkAsRead}
+              />
+            )}
+            {session?.user ? (
+              <UserMenu />
+            ) : (
+              <Button 
+                variant="default" 
+                onClick={() => navigate("/auth")}
+                className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+              >
+                Sign in
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </header>
