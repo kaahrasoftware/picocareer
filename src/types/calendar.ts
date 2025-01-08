@@ -1,4 +1,6 @@
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+import type { MeetingPlatform, NotificationType } from "./database/enums";
+
+export type { MeetingPlatform };
 
 export interface SessionType {
   type: string;
@@ -47,3 +49,16 @@ export interface Availability {
   created_at?: string;
   updated_at?: string;
 }
+
+export type NotificationCategory = "mentorship" | "general";
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  const mentorshipTypes = [
+    "session_booked",
+    "session_cancelled",
+    "session_reminder",
+    "session_feedback"
+  ];
+
+  return mentorshipTypes.includes(type) ? "mentorship" : "general";
+};
