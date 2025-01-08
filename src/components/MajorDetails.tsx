@@ -11,7 +11,7 @@ import { SkillsAndTools } from "./major-details/SkillsAndTools";
 import { AdditionalInfo } from "./major-details/AdditionalInfo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MajorDialogHeader } from "./major-details/DialogHeader";
+import { DialogHeader } from "./major-details/DialogHeader";
 
 interface MajorDetailsProps {
   major: Major;
@@ -45,7 +45,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] md:max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-        <MajorDialogHeader
+        <DialogHeader
           title={major.title}
           potentialSalary={major.potential_salary}
           profilesCount={major.profiles_count}
