@@ -8,38 +8,50 @@ interface ProfileInfoProps {
   academicMajor?: string | null;
 }
 
-export function ProfileInfo({ careerTitle, companyName, schoolName, location, academicMajor }: ProfileInfoProps) {
+export function ProfileInfo({ 
+  careerTitle, 
+  companyName, 
+  schoolName, 
+  location, 
+  academicMajor 
+}: ProfileInfoProps) {
+  // Helper function to render info item with icon
+  const renderInfoItem = (icon: React.ReactNode, text: string | null) => {
+    if (!text) return null;
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground">
+        {icon}
+        <span className="truncate">{text}</span>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-1 mt-2 max-w-[calc(100%-120px)]">
-      {careerTitle && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Building2 className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{careerTitle}</span>
-        </div>
+    <div className="flex flex-col gap-1.5">
+      {/* Career Information */}
+      {renderInfoItem(
+        <Building2 className="h-4 w-4 flex-shrink-0" />, 
+        careerTitle
       )}
-      {companyName && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Building2 className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{companyName}</span>
-        </div>
+      {renderInfoItem(
+        <Building2 className="h-4 w-4 flex-shrink-0" />, 
+        companyName
       )}
-      {schoolName && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <GraduationCap className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{schoolName}</span>
-        </div>
+      
+      {/* Academic Information */}
+      {renderInfoItem(
+        <GraduationCap className="h-4 w-4 flex-shrink-0" />, 
+        schoolName
       )}
-      {academicMajor && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <GraduationCap className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{academicMajor}</span>
-        </div>
+      {renderInfoItem(
+        <GraduationCap className="h-4 w-4 flex-shrink-0" />, 
+        academicMajor
       )}
-      {location && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <MapPin className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{location}</span>
-        </div>
+      
+      {/* Location Information */}
+      {renderInfoItem(
+        <MapPin className="h-4 w-4 flex-shrink-0" />, 
+        location
       )}
     </div>
   );

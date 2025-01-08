@@ -886,11 +886,10 @@ export type Database = {
       schools: {
         Row: {
           acceptance_rate: number | null
-          country: Database["public"]["Enums"]["country"] | null
           created_at: string
           id: string
+          location: Database["public"]["Enums"]["states"] | null
           name: string
-          state: Database["public"]["Enums"]["states"] | null
           status: Database["public"]["Enums"]["status"] | null
           type: Database["public"]["Enums"]["school_type"] | null
           updated_at: string
@@ -898,11 +897,10 @@ export type Database = {
         }
         Insert: {
           acceptance_rate?: number | null
-          country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           id?: string
+          location?: Database["public"]["Enums"]["states"] | null
           name: string
-          state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
           type?: Database["public"]["Enums"]["school_type"] | null
           updated_at?: string
@@ -910,11 +908,10 @@ export type Database = {
         }
         Update: {
           acceptance_rate?: number | null
-          country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           id?: string
+          location?: Database["public"]["Enums"]["states"] | null
           name?: string
-          state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
           type?: Database["public"]["Enums"]["school_type"] | null
           updated_at?: string
@@ -1832,9 +1829,6 @@ export type Database = {
         | "Wisconsin - WI"
         | "Wyoming - WY"
         | "Washington DC - DC"
-        | "Guam - GU"
-        | "U.S. Virgin Islands - VI"
-        | "Puerto Rico - PR"
       status: "Approved" | "Pending" | "Rejected"
       subcategories:
         | "Industry-Specific Career Insights"

@@ -3,6 +3,7 @@ import { DialogTitle } from "@/components/ui/dialog";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { ProfileStats } from "./ProfileStats";
 import { SkillsList } from "./SkillsList";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface Profile {
   id: string;
@@ -21,6 +22,8 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
+  const { session } = useAuthSession();
+
   if (!profile) {
     return (
       <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
@@ -49,7 +52,11 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <ProfileAvatar 
           avatarUrl={profile.avatar_url}
           userId={profile.id}
-          onAvatarUpdate={(url) => profile.avatar_url = url}
+          onAvatarUpdate={(url) => {
+            if (profile) {
+              profile.avatar_url = url;
+            }
+          }}
         />
         <div className="flex flex-col gap-1">
           <div>
