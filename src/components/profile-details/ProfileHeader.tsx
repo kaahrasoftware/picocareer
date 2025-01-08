@@ -49,7 +49,7 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
   const badge = getBadgeContent();
 
   return (
-    <div className="flex items-start gap-6 ml-2 sm:ml-6">
+    <div className="flex items-start gap-6 sm:ml-6">
       {/* Avatar Section */}
       <div className="flex-shrink-0">
         <ProfileAvatar 
