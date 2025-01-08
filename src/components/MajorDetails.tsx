@@ -1,12 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Heart } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { AboutSection } from "./major-details/AboutSection";
 import { AcademicRequirements } from "./major-details/AcademicRequirements";
@@ -18,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { MajorDialogHeader } from "./major-details/MajorDialogHeader";
 
 interface MajorDetailsProps {
   major: Major;
@@ -29,9 +23,6 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
-
-  // Log the major data to verify we're receiving common_courses
-  console.log("Major data:", major);
 
   const { data: majorWithCareers } = useQuery({
     queryKey: ['major-careers', major.id],
@@ -126,74 +117,57 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
     return (count / 1000000).toFixed(1) + "M";
   };
 
+  if (!major) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-        <DialogHeader className="p-6 pb-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex flex-col gap-2">
-              <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
-              {major.potential_salary && (
-                <Badge variant="outline" className="bg-[#FFDEE2] text-[#4B5563] self-start">
-                  {major.potential_salary}
-                </Badge>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {formatProfileCount(major.profiles_count)} Mentors
-              </Badge>
-              <div className="w-[120px] flex justify-center">
-                <Heart 
-                  className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
-                    isBookmarked ? 'fill-current text-[#ea384c]' : 'text-gray-400'
-                  }`}
-                  onClick={handleBookmarkToggle}
-                />
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+        <MajorDialogHeader 
+          major={major}
+          isBookmarked={isBookmarked}
+          onBookmarkToggle={handleBookmarkToggle}
+        />
         
-        <ScrollArea className="h-[calc(85vh-120px)] px-6">
-          <div className="space-y-6 pb-6">
-            <AboutSection 
-              description={major.description}
-              learning_objectives={major.learning_objectives}
-              interdisciplinary_connections={major.interdisciplinary_connections}
-              majorId={major.id}
-            />
+        <ScrollArea className="h-[calc(90vh-100px)]">
+          <div className="space-y-3 md:space-y-6 p-4 md:p-6">
+            <div className="grid gap-3 md:gap-6">
+              <AboutSection 
+                description={major.description}
+                learning_objectives={major.learning_objectives}
+                interdisciplinary_connections={major.interdisciplinary_connections}
+                majorId={major.id}
+              />
 
-            <AcademicRequirements 
-              gpa_expectations={major.gpa_expectations}
-              common_courses={major.common_courses}
-              degree_levels={major.degree_levels}
-              affiliated_programs={major.affiliated_programs}
-            />
+              <AcademicRequirements 
+                gpa_expectations={major.gpa_expectations}
+                common_courses={major.common_courses}
+                degree_levels={major.degree_levels}
+                affiliated_programs={major.affiliated_programs}
+              />
 
-            <CareerProspects 
-              job_prospects={major.job_prospects}
-              career_opportunities={major.career_opportunities}
-              professional_associations={major.professional_associations}
-              global_applicability={major.global_applicability}
-              related_careers={majorWithCareers?.career_major_relations}
-            />
+              <CareerProspects 
+                job_prospects={major.job_prospects}
+                career_opportunities={major.career_opportunities}
+                professional_associations={major.professional_associations}
+                global_applicability={major.global_applicability}
+                related_careers={majorWithCareers?.career_major_relations}
+              />
 
-            <SkillsAndTools 
-              skill_match={major.skill_match}
-              transferable_skills={major.transferable_skills}
-            />
+              <SkillsAndTools 
+                skill_match={major.skill_match}
+                transferable_skills={major.transferable_skills}
+              />
 
-            <AdditionalInfo 
-              intensity={major.intensity}
-              passion_for_subject={major.passion_for_subject}
-              stress_level={major.stress_level}
-              dropout_rates={major.dropout_rates}
-              common_difficulties={major.common_difficulties}
-              majors_to_consider_switching_to={major.majors_to_consider_switching_to}
-              certifications_to_consider={major.certifications_to_consider}
-            />
+              <AdditionalInfo 
+                intensity={major.intensity}
+                passion_for_subject={major.passion_for_subject}
+                stress_level={major.stress_level}
+                dropout_rates={major.dropout_rates}
+                common_difficulties={major.common_difficulties}
+                majors_to_consider_switching_to={major.majors_to_consider_switching_to}
+                certifications_to_consider={major.certifications_to_consider}
+              />
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
