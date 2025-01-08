@@ -76,29 +76,13 @@ export function MenuSidebar() {
               className="h-10"
             />
           </Link>
-          <div className="flex-1 flex items-center justify-center">
-            <Button 
-              variant="default" 
-              onClick={() => navigate("/auth")}
-              className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-            >
-              Sign in
-            </Button>
-          </div>
-          {isMobile && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-4">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col gap-6 pt-6">
-                  <MainNavigation />
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+          <Button 
+            variant="default" 
+            onClick={() => navigate("/auth")}
+            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+          >
+            Sign in
+          </Button>
         </div>
       </header>
     );
