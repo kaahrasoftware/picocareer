@@ -17,9 +17,9 @@ export function DialogHeaderSection({
   onBookmarkToggle,
 }: DialogHeaderSectionProps) {
   return (
-    <DialogHeader className="p-4 pb-0">
-      <div className="flex justify-between items-center">
-        <DialogTitle className="text-2xl font-bold text-foreground">
+    <DialogHeader className="p-3 pb-0 md:p-4 md:pb-0">
+      <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:justify-between md:items-center">
+        <DialogTitle className="text-xl md:text-2xl font-bold text-foreground">
           {title}
         </DialogTitle>
         <HeaderBadges 
