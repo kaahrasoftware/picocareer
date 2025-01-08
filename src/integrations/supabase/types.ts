@@ -1832,6 +1832,9 @@ export type Database = {
         | "Wisconsin - WI"
         | "Wyoming - WY"
         | "Washington DC - DC"
+        | "Guam - GU"
+        | "U.S. Virgin Islands - VI"
+        | "Puerto Rico - PR"
       status: "Approved" | "Pending" | "Rejected"
       subcategories:
         | "Industry-Specific Career Insights"
