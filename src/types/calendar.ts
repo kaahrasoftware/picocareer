@@ -19,10 +19,7 @@ export interface MentorSession {
   mentor: SessionParticipant;
   mentee: SessionParticipant;
   session_type: SessionType;
-  meeting_link?: string | null;
-  meeting_platform?: MeetingPlatform;
-  attendance_confirmed?: boolean;
-  availability_slot_id?: string | null;
+  meeting_link?: string;
 }
 
 export interface CalendarEvent {
@@ -38,12 +35,18 @@ export interface CalendarEvent {
   session_details?: MentorSession;
 }
 
-export interface Availability {
-  id: string;
-  profile_id: string;
-  start_date_time: string;
-  end_date_time: string;
-  is_available: boolean;
-  recurring?: boolean;
-  day_of_week?: number;
-}
+export type NotificationType = 
+  | "session_booked" 
+  | "session_cancelled" 
+  | "session_reminder" 
+  | "profile_update" 
+  | "mentor_request" 
+  | "blog_posted" 
+  | "major_update";
+
+export type NotificationCategory = "mentorship" | "general";
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
+  return mentorshipTypes.includes(type) ? "mentorship" : "general";
+};

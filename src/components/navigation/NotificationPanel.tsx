@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { getNotificationCategory, type NotificationCategory } from "@/types/calendar";
 
 interface Notification {
   id: string;
@@ -21,6 +22,7 @@ interface Notification {
   message: string;
   created_at: string;
   read: boolean;
+  type: string;
   action_url?: string;
 }
 
@@ -50,12 +52,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   const toggleReadStatus = async (notification: Notification) => {
     try {
-      // Update local state immediately for better UX
       setLocalNotifications(prev => prev.map(n => 
         n.id === notification.id ? { ...n, read: !n.read } : n
       ));
-      
-      // Call the parent handler to update the database
       await onMarkAsRead(notification.id);
     } catch (error) {
       console.error('Error toggling notification status:', error);
@@ -65,18 +64,25 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
         variant: "destructive",
       });
 
-      // Revert local state if the update failed
       setLocalNotifications(prev => prev.map(n => 
         n.id === notification.id ? { ...n, read: notification.read } : n
       ));
 
-      // If it's an auth error, redirect to login
       if (error instanceof Error && error.message.includes('JWT')) {
         queryClient.clear();
         navigate("/auth");
       }
     }
   };
+
+  const categorizedNotifications = localNotifications.reduce((acc, notification) => {
+    const category = getNotificationCategory(notification.type as any);
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(notification);
+    return acc;
+  }, {} as Record<NotificationCategory, Notification[]>);
 
   return (
     <Sheet>
@@ -115,16 +121,40 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
               No notifications yet
             </p>
           ) : (
-            <div className="space-y-4">
-              {localNotifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  isExpanded={expandedIds.includes(notification.id)}
-                  onToggleExpand={() => toggleExpand(notification.id)}
-                  onToggleRead={toggleReadStatus}
-                />
-              ))}
+            <div className="space-y-6">
+              {categorizedNotifications.mentorship && categorizedNotifications.mentorship.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm mb-2 px-2">Mentorship</h3>
+                  <div className="space-y-4">
+                    {categorizedNotifications.mentorship.map((notification) => (
+                      <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        isExpanded={expandedIds.includes(notification.id)}
+                        onToggleExpand={() => toggleExpand(notification.id)}
+                        onToggleRead={toggleReadStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNotifications.general && categorizedNotifications.general.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm mb-2 px-2">General</h3>
+                  <div className="space-y-4">
+                    {categorizedNotifications.general.map((notification) => (
+                      <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        isExpanded={expandedIds.includes(notification.id)}
+                        onToggleExpand={() => toggleExpand(notification.id)}
+                        onToggleRead={toggleReadStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>
