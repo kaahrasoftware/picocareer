@@ -37,72 +37,72 @@ export function ProfileView({ profile }: ProfileViewProps) {
   });
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-3xl mx-auto px-3 sm:px-0">
       {/* Personal Information */}
-      <div className="bg-muted rounded-lg p-4 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4">
+        <div className="flex items-center gap-2 mb-1 sm:mb-2">
           <User2 className="h-4 w-4" />
-          <h4 className="font-semibold">Personal Information</h4>
+          <h4 className="font-semibold text-sm sm:text-base">Personal Information</h4>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">First Name</p>
-            <p>{profile.first_name || "Not set"}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">First Name</p>
+            <p className="text-sm sm:text-base">{profile.first_name || "Not set"}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Last Name</p>
-            <p>{profile.last_name || "Not set"}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Last Name</p>
+            <p className="text-sm sm:text-base">{profile.last_name || "Not set"}</p>
           </div>
         </div>
       </div>
 
       {/* Bio Section */}
-      <div className="bg-muted rounded-lg p-4">
+      <div className="bg-muted rounded-lg p-3 sm:p-4">
         <div className="flex items-center gap-2 mb-2">
           <User2 className="h-4 w-4" />
-          <h4 className="font-semibold">About</h4>
+          <h4 className="font-semibold text-sm sm:text-base">About</h4>
         </div>
-        <p className="text-muted-foreground">{profile.bio || "No bio provided"}</p>
+        <p className="text-sm sm:text-base text-muted-foreground">{profile.bio || "No bio provided"}</p>
       </div>
 
       {/* Professional Info */}
       {profile.user_type === 'mentor' && (
-        <div className="bg-muted rounded-lg p-4 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2 mb-1 sm:mb-2">
             <Briefcase className="h-4 w-4" />
-            <h4 className="font-semibold">Professional Information</h4>
+            <h4 className="font-semibold text-sm sm:text-base">Professional Information</h4>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 sm:space-y-3">
             <div>
-              <p className="text-sm text-muted-foreground">Position</p>
-              <p>{careerDetails?.title || "None"}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Position</p>
+              <p className="text-sm sm:text-base">{careerDetails?.title || "None"}</p>
             </div>
             {profile.company_name && (
               <div>
-                <p className="text-sm text-muted-foreground">Company</p>
-                <p>{profile.company_name}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Company</p>
+                <p className="text-sm sm:text-base">{profile.company_name}</p>
               </div>
             )}
             {profile.years_of_experience !== undefined && (
               <div>
-                <p className="text-sm text-muted-foreground">Years of Experience</p>
-                <p>{profile.years_of_experience}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Years of Experience</p>
+                <p className="text-sm sm:text-base">{profile.years_of_experience}</p>
               </div>
             )}
             {profile.location && (
               <div>
-                <p className="text-sm text-muted-foreground">Location</p>
-                <p>{profile.location}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Location</p>
+                <p className="text-sm sm:text-base">{profile.location}</p>
               </div>
             )}
             {profile.languages && profile.languages.length > 0 && (
               <div>
-                <p className="text-sm text-muted-foreground">Languages</p>
-                <div className="flex flex-wrap gap-2 mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">Languages</p>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1">
                   {profile.languages.map((language, index) => (
                     <Badge 
                       key={`${language}-${index}`}
-                      className="bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#C8E6C9] transition-colors border border-[#A5D6A7]"
+                      className="text-xs sm:text-sm bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#C8E6C9] transition-colors border border-[#A5D6A7]"
                     >
                       {language}
                     </Badge>
@@ -115,47 +115,47 @@ export function ProfileView({ profile }: ProfileViewProps) {
       )}
 
       {profile.user_type === 'mentor' && (
-        <div className="bg-muted rounded-lg p-4 space-y-4">
+        <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4">
           <BadgeSection
             title="Skills"
             icon={<Wrench className="h-4 w-4" />}
             items={profile.skills}
-            badgeClassName="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
+            badgeClassName="text-xs sm:text-sm bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
           />
 
           <BadgeSection
             title="Tools"
             icon={<Wrench className="h-4 w-4" />}
             items={profile.tools_used}
-            badgeClassName="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+            badgeClassName="text-xs sm:text-sm bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
           />
 
           <BadgeSection
             title="Keywords"
             icon={<Tags className="h-4 w-4" />}
             items={profile.keywords}
-            badgeClassName="bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
+            badgeClassName="text-xs sm:text-sm bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
           />
 
           <BadgeSection
             title="Fields of Interest"
             icon={<Lightbulb className="h-4 w-4" />}
             items={profile.fields_of_interest}
-            badgeClassName="bg-[#E2D4F0] text-[#4B5563] hover:bg-[#D4C4E3] transition-colors border border-[#D4C4E3]"
+            badgeClassName="text-xs sm:text-sm bg-[#E2D4F0] text-[#4B5563] hover:bg-[#D4C4E3] transition-colors border border-[#D4C4E3]"
           />
         </div>
       )}
 
-      <div className="bg-muted rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-muted rounded-lg p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <GraduationCap className="h-4 w-4" />
-          <h4 className="font-semibold">Education</h4>
+          <h4 className="font-semibold text-sm sm:text-base">Education</h4>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 sm:space-y-3">
           {profile.academic_major && (
             <div>
-              <p className="text-sm text-muted-foreground">Major</p>
-              <p className="flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">Major</p>
+              <p className="flex items-center gap-2 text-sm sm:text-base">
                 <BookOpen className="h-4 w-4" />
                 {profile.academic_major}
               </p>
@@ -163,8 +163,8 @@ export function ProfileView({ profile }: ProfileViewProps) {
           )}
           {profile.highest_degree && (
             <div>
-              <p className="text-sm text-muted-foreground">Degree</p>
-              <p className="flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">Degree</p>
+              <p className="flex items-center gap-2 text-sm sm:text-base">
                 <GraduationCap className="h-4 w-4" />
                 {profile.highest_degree}
               </p>
@@ -172,8 +172,8 @@ export function ProfileView({ profile }: ProfileViewProps) {
           )}
           {profile.school_name && (
             <div>
-              <p className="text-sm text-muted-foreground">School</p>
-              <p className="flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">School</p>
+              <p className="flex items-center gap-2 text-sm sm:text-base">
                 <GraduationCap className="h-4 w-4" />
                 {profile.school_name}
               </p>
