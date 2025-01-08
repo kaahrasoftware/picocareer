@@ -1,8 +1,5 @@
-import { FormField } from "@/components/forms/FormField";
-import { Card } from "@/components/ui/card";
-import { Control } from "react-hook-form";
-import { FormFields } from "../types/form-types";
 import { UseFormRegister } from "react-hook-form";
+import type { FormFields } from "../types/form-types";
 
 export interface PersonalSectionProps {
   register: UseFormRegister<FormFields>;
@@ -12,57 +9,66 @@ export interface PersonalSectionProps {
 
 export function PersonalInfoSection({ register, handleFieldChange, schoolId }: PersonalSectionProps) {
   return (
-    <Card className="p-6">
-      <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <FormField
-          control={register}
-          name="first_name"
-          render={({ field }) => (
-            <div>
-              <label className="text-sm font-medium">First Name</label>
-              <input
-                {...field}
-                onChange={(e) => handleFieldChange("first_name", e.target.value)}
-                className="mt-1"
-                placeholder="Your first name"
-              />
-            </div>
-          )}
-        />
-        <FormField
-          control={register}
-          name="last_name"
-          render={({ field }) => (
-            <div>
-              <label className="text-sm font-medium">Last Name</label>
-              <input
-                {...field}
-                onChange={(e) => handleFieldChange("last_name", e.target.value)}
-                className="mt-1"
-                placeholder="Your last name"
-              />
-            </div>
-          )}
-        />
-        <FormField
-          control={register}
-          name="school_id"
-          render={({ field }) => (
-            <div>
-              <label className="text-sm font-medium">School</label>
-              <select
-                {...field}
-                onChange={(e) => handleFieldChange("school_id", e.target.value)}
-                className="mt-1"
-              >
-                <option value="">Select your school</option>
-                {/* Add options dynamically based on available schools */}
-              </select>
-            </div>
-          )}
+    <div className="space-y-4">
+      <div>
+        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+          First Name
+        </label>
+        <input
+          id="firstName"
+          {...register("firstName")}
+          onChange={(e) => handleFieldChange("firstName", e.target.value)}
+          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
       </div>
-    </Card>
+      <div>
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+          Last Name
+        </label>
+        <input
+          id="lastName"
+          {...register("lastName")}
+          onChange={(e) => handleFieldChange("lastName", e.target.value)}
+          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        />
+      </div>
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          {...register("email")}
+          onChange={(e) => handleFieldChange("email", e.target.value)}
+          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        />
+      </div>
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+          Phone
+        </label>
+        <input
+          id="phone"
+          {...register("phone")}
+          onChange={(e) => handleFieldChange("phone", e.target.value)}
+          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        />
+      </div>
+      <div>
+        <label htmlFor="school" className="block text-sm font-medium text-gray-700">
+          School
+        </label>
+        <select
+          id="school"
+          {...register("schoolId")}
+          onChange={(e) => handleFieldChange("schoolId", e.target.value)}
+          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        >
+          <option value={schoolId}>{schoolId}</option>
+          {/* Add other school options here */}
+        </select>
+      </div>
+    </div>
   );
 }

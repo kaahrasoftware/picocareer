@@ -7,22 +7,20 @@ export interface SessionType {
   duration: number;
 }
 
-export interface SessionParticipant {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-}
-
 export interface MentorSession {
   id: string;
   scheduled_at: string;
   status: string;
-  notes: string | null;
-  mentor: SessionParticipant;
-  mentee: SessionParticipant;
-  session_type: SessionType;
-  meeting_link?: string;
+  notes?: string;
   meeting_platform?: MeetingPlatform;
+  meeting_link?: string;
+  session_type: SessionType;
+  mentor: {
+    full_name: string;
+  };
+  mentee: {
+    full_name: string;
+  };
 }
 
 export interface CalendarEvent {
@@ -31,19 +29,19 @@ export interface CalendarEvent {
   description: string;
   start_time: string;
   end_time: string;
-  event_type: 'session';
-  status?: string;
+  event_type: "session";
+  status: string;
+  session_details?: MentorSession;
   created_at: string;
   updated_at: string;
-  session_details?: MentorSession;
 }
 
 export interface Availability {
   id: string;
   profile_id: string;
+  is_available: boolean;
   start_time: string;
   end_time: string;
-  is_available: boolean;
   recurring?: boolean;
   day_of_week?: number;
   created_at?: string;

@@ -6,7 +6,9 @@ export type NotificationType =
   | "major_update"
   | "career_update"
   | "blog_update"
-  | "profile_update";
+  | "profile_update"
+  | "mentor_request"
+  | "blog_posted";
 
 export type Categories = "Technology" | "Business" | "Science" | "Arts" | "Engineering";
 
@@ -57,6 +59,10 @@ export type SettingType =
   | "privacy";
 
 export type UserType = "admin" | "mentor" | "mentee" | "editor";
+
+export type Status = "Pending" | "Approved" | "Rejected";
+
+export type SchoolType = "University" | "College" | "Technical School" | "High School";
 
 export type Country = 
   | "United States"
