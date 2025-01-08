@@ -20,6 +20,7 @@ export interface MentorSession {
   mentee: SessionParticipant;
   session_type: SessionType;
   meeting_link?: string;
+  meeting_platform?: MeetingPlatform;
 }
 
 export interface CalendarEvent {
@@ -33,6 +34,16 @@ export interface CalendarEvent {
   created_at: string;
   updated_at: string;
   session_details?: MentorSession;
+}
+
+export interface Availability {
+  id: string;
+  profile_id: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  recurring?: boolean;
+  day_of_week?: number;
 }
 
 export type NotificationType = 
