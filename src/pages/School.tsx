@@ -2,16 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface School {
-  id: string;
-  name: string;
-  location: string | null;
-  type: 'High School' | 'Community College' | 'University' | 'Other' | null;
-  website: string | null;
-  acceptance_rate: number | null;
-  country: string;
-}
+import type { School } from "@/types/database/schools";
 
 export default function School() {
   const { data: schools, isLoading } = useQuery({
@@ -23,7 +14,12 @@ export default function School() {
         .order('name');
       
       if (error) throw error;
-      return data as School[];
+      
+      // Transform the data to include location based on state and country
+      return (data as any[]).map(school => ({
+        ...school,
+        location: `${school.state}, ${school.country}`
+      })) as School[];
     }
   });
 

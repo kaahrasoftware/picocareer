@@ -7,5 +7,7 @@ export interface School {
   status: string;
   acceptance_rate: number;
   country: string;
-  location: string; // Added this required field
+  location: string;
+  created_at?: string;
+  updated_at?: string;
 }
