@@ -33,7 +33,7 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         color: "text-green-500",
         bgColor: "bg-green-50",
         borderColor: "border-green-200",
-        icon: <CheckCircle className="w-5 h-5 text-green-500" />
+        icon: <CheckCircle className="w-4 h-4 text-green-500" />
       };
     } else if (score <= 15) {
       return {
@@ -41,7 +41,7 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         color: "text-yellow-500",
         bgColor: "bg-yellow-50",
         borderColor: "border-yellow-200",
-        icon: <AlertCircle className="w-5 h-5 text-yellow-500" />
+        icon: <AlertCircle className="w-4 h-4 text-yellow-500" />
       };
     } else {
       return {
@@ -49,7 +49,7 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
         color: "text-red-500",
         bgColor: "bg-red-50",
         borderColor: "border-red-200",
-        icon: <XCircle className="w-5 h-5 text-red-500" />
+        icon: <XCircle className="w-4 h-4 text-red-500" />
       };
     }
   };
@@ -57,57 +57,57 @@ export function MentorshipStats({ stats }: MentorshipStatsProps) {
   const cancellationStatus = getCancellationStatus(cancellationScore);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="p-4">
-        <div className="space-y-2">
+    <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="p-3 sm:p-4">
+        <div className="space-y-1.5">
           <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
-          <p className="text-2xl font-bold">{stats.total_sessions}</p>
+          <p className="text-xl sm:text-2xl font-bold">{stats.total_sessions}</p>
           <p className="text-xs text-muted-foreground">
             {stats.total_hours.toFixed(2)} hours total
           </p>
         </div>
       </Card>
 
-      <Card className="p-4">
-        <div className="space-y-2">
+      <Card className="p-3 sm:p-4">
+        <div className="space-y-1.5">
           <p className="text-sm font-medium text-muted-foreground">Completed</p>
-          <p className="text-2xl font-bold">{stats.completed_sessions}</p>
+          <p className="text-xl sm:text-2xl font-bold">{stats.completed_sessions}</p>
         </div>
       </Card>
 
-      <Card className="p-4">
-        <div className="space-y-2">
+      <Card className="p-3 sm:p-4">
+        <div className="space-y-1.5">
           <p className="text-sm font-medium text-muted-foreground">Cancelled</p>
-          <p className="text-2xl font-bold">{stats.cancelled_sessions}</p>
+          <p className="text-xl sm:text-2xl font-bold">{stats.cancelled_sessions}</p>
         </div>
       </Card>
 
-      <Card className={`p-4 ${cancellationStatus.bgColor} ${cancellationStatus.borderColor} border-2`}>
-        <div className="space-y-2">
+      <Card className={`p-3 sm:p-4 ${cancellationStatus.bgColor} ${cancellationStatus.borderColor} border-2`}>
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-muted-foreground">Cancellation Score</p>
             {cancellationStatus.icon}
           </div>
-          <p className={`text-2xl font-bold ${cancellationStatus.color}`}>
+          <p className={`text-xl sm:text-2xl font-bold ${cancellationStatus.color}`}>
             {cancellationScore.toFixed(1)}%
           </p>
-          <p className={`text-sm font-medium ${cancellationStatus.color}`}>
+          <p className={`text-xs sm:text-sm font-medium ${cancellationStatus.color}`}>
             {cancellationStatus.label}
           </p>
         </div>
       </Card>
 
-      <Card className="p-4">
-        <div className="space-y-2">
+      <Card className="p-3 sm:p-4">
+        <div className="space-y-1.5">
           <p className="text-sm font-medium text-muted-foreground">Unique Mentees</p>
-          <p className="text-2xl font-bold">{stats.unique_mentees}</p>
+          <p className="text-xl sm:text-2xl font-bold">{stats.unique_mentees}</p>
         </div>
       </Card>
 
-      <Card className="col-span-full p-4">
+      <Card className="col-span-2 lg:col-span-4 p-3 sm:p-4">
         <div className="space-y-2">
-          <h3 className="font-medium">Session Activity</h3>
-          <div className="h-[300px]">
+          <h3 className="font-medium text-sm sm:text-base">Session Activity</h3>
+          <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.session_data}>
                 <CartesianGrid strokeDasharray="3 3" />
