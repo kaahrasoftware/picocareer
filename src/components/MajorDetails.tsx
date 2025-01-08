@@ -39,7 +39,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         .single();
 
       if (error) throw error;
-      console.log("Fetched major data:", data); // Add this log to verify the data
+      console.log("Fetched major data:", data);
       return data as Major;
     },
     enabled: open && !!major.id,
@@ -110,15 +110,6 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
 
   if (!major) return null;
 
-  const formatProfileCount = (count: number | undefined) => {
-    if (!count) return "0";
-    if (count < 1000) return count.toString();
-    if (count < 1000000) return (count / 1000).toFixed(1) + "K";
-    return (count / 1000000).toFixed(1) + "M";
-  };
-
-  if (!major) return null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
@@ -129,8 +120,8 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         />
         
         <ScrollArea className="h-[calc(90vh-100px)]">
-          <div className="space-y-3 md:space-y-6 p-4 md:p-6">
-            <div className="grid gap-3 md:gap-6">
+          <div className="p-2 md:p-4 space-y-3 md:space-y-6">
+            <div className="grid gap-2 md:gap-4">
               <AboutSection 
                 description={major.description}
                 learning_objectives={major.learning_objectives}
