@@ -26,16 +26,16 @@ export function ProfileDialogContent({
   handleBookSession,
 }: ProfileDialogContentProps) {
   return (
-    <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[90vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-4 sm:p-6">
+    <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[85vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6">
       <DialogHeader className="pb-0">
-        <div className="relative pb-8 sm:pb-12">
+        <div className="relative pb-6 sm:pb-8">
           <ProfileHeader profile={profile} session={session} />
           {isMentor && (
             isOwnProfile ? (
               <Button 
                 size="sm"
                 onClick={() => setIsEditing(!isEditing)}
-                className="absolute right-0 top-12 sm:top-16"
+                className="absolute right-0 top-10 sm:top-12"
               >
                 {isEditing ? "Cancel Editing" : "Edit Profile"}
               </Button>
@@ -43,7 +43,7 @@ export function ProfileDialogContent({
               <Button 
                 size="sm"
                 onClick={handleBookSession}
-                className="absolute left-1/2 -translate-x-1/2 bottom-0 h-8 sm:h-9 px-3 sm:px-4 text-sm w-[90%] sm:w-auto"
+                className="absolute left-1/2 -translate-x-1/2 bottom-0 h-7 sm:h-8 px-2 sm:px-3 text-sm w-[85%] sm:w-auto"
               >
                 Book a Session
               </Button>
@@ -52,7 +52,7 @@ export function ProfileDialogContent({
         </div>
       </DialogHeader>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 px-1 sm:px-2">
         {isEditing ? (
           <ProfileEditForm 
             profile={profile} 
