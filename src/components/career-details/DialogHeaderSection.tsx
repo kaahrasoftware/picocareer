@@ -19,7 +19,7 @@ export function DialogHeaderSection({
   return (
     <DialogHeader className="p-4 pb-0">
       <div className="flex justify-between items-center">
-        <DialogTitle className="text-2xl font-bold text-foreground">
+        <DialogTitle className="text-xl md:text-2xl font-bold text-foreground">
           {title}
         </DialogTitle>
         <HeaderBadges 
