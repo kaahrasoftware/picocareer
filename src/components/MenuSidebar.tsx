@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useNotifications } from "@/hooks/useNotifications";
+import { Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
@@ -18,6 +21,7 @@ export function MenuSidebar() {
   const { session, isError } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { data: notifications = [] } = useNotifications(session);
+  const isMobile = useIsMobile();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -84,6 +88,32 @@ export function MenuSidebar() {
     );
   }
 
+  const navigationContent = (
+    <>
+      <MainNavigation />
+      <div className="flex items-center gap-4">
+        {session?.user && (
+          <NotificationPanel
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={handleMarkAsRead}
+          />
+        )}
+        {session?.user ? (
+          <UserMenu />
+        ) : (
+          <Button 
+            variant="default" 
+            onClick={() => navigate("/auth")}
+            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+          >
+            Sign in
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
       <div className="container h-full mx-auto flex items-center justify-between px-4">
@@ -97,29 +127,22 @@ export function MenuSidebar() {
           </Link>
         </div>
 
-        <MainNavigation />
-
-        <div className="flex items-center gap-4 ml-auto">
-          {session?.user && (
-            <NotificationPanel
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onMarkAsRead={handleMarkAsRead}
-            />
-          )}
-
-          {session?.user ? (
-            <UserMenu />
-          ) : (
-            <Button 
-              variant="default" 
-              onClick={() => navigate("/auth")}
-              className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-            >
-              Sign in
-            </Button>
-          )}
-        </div>
+        {isMobile ? (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <div className="flex flex-col gap-6 pt-6">
+                {navigationContent}
+              </div>
+            </SheetContent>
+          </Sheet>
+        ) : (
+          navigationContent
+        )}
       </div>
     </header>
   );
