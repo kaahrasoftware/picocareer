@@ -29,7 +29,7 @@ export function NotificationItem({
 
   return (
     <div
-      className={`p-4 rounded-lg border transition-colors ${
+      className={`p-4 rounded-lg border transition-colors max-w-[90%] mx-auto ${
         notification.read 
           ? 'bg-zinc-900 border-zinc-800' 
           : 'bg-zinc-900/90 border-zinc-700'
