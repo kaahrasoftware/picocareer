@@ -23,19 +23,19 @@ interface DialogContentProps {
 export function DialogContent({ career }: DialogContentProps) {
   return (
     <ScrollArea className="h-[calc(85vh-120px)]">
-      <div className="space-y-4 p-3 md:space-y-6 md:p-4">
+      <div className="space-y-3 p-2 md:space-y-6 md:p-4">
         {career.image_url && (
           <div className="flex justify-center">
             <img 
               src={career.image_url} 
               alt={career.title} 
-              className="max-h-[200px] w-auto object-contain rounded-lg md:max-h-[300px]"
+              className="max-h-[150px] w-auto object-contain rounded-lg md:max-h-[300px]"
             />
           </div>
         )}
 
-        <div className="grid gap-4 md:gap-6">
-          <div className="rounded-lg bg-card p-3 shadow-sm md:p-4">
+        <div className="grid gap-3 md:gap-6">
+          <div className="rounded-lg bg-card p-2 shadow-sm md:p-4">
             <AboutSection
               description={career.description}
               learning_objectives={[]}
@@ -47,19 +47,19 @@ export function DialogContent({ career }: DialogContentProps) {
             />
           </div>
 
-          <div className="rounded-lg bg-card p-3 shadow-sm md:p-4">
+          <div className="rounded-lg bg-card p-2 shadow-sm md:p-4">
             <AcademicMajorsSection academicMajors={career.academic_majors} />
           </div>
 
-          <div className="rounded-lg bg-card p-3 shadow-sm md:p-4">
+          <div className="rounded-lg bg-card p-2 shadow-sm md:p-4">
             <KeywordsSection keywords={career.keywords} />
           </div>
 
-          <div className="rounded-lg bg-card p-3 shadow-sm md:p-4">
+          <div className="rounded-lg bg-card p-2 shadow-sm md:p-4">
             <CareerMentorList careerId={career.id} />
           </div>
 
-          <div className="rounded-lg bg-card p-3 shadow-sm md:p-4">
+          <div className="rounded-lg bg-card p-2 shadow-sm md:p-4">
             <SkillsAndTools
               required_skills={career.required_skills}
               required_tools={career.required_tools}
@@ -70,7 +70,7 @@ export function DialogContent({ career }: DialogContentProps) {
             />
           </div>
 
-          <div className="rounded-lg bg-card p-3 shadow-sm md:p-4">
+          <div className="rounded-lg bg-card p-2 shadow-sm md:p-4">
             <AdditionalInfo
               professional_associations={[]}
               common_difficulties={[]}
