@@ -136,19 +136,29 @@ export function MenuSidebar() {
                 onMarkAsRead={handleMarkAsRead}
               />
             )}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col gap-6 pt-6">
-                  <MainNavigation />
-                  {session?.user && <UserMenu />}
-                </div>
-              </SheetContent>
-            </Sheet>
+            {session?.user ? (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col gap-6 pt-6">
+                    <MainNavigation />
+                    <UserMenu />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Button 
+                variant="default" 
+                onClick={() => navigate("/auth")}
+                className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+              >
+                Sign in
+              </Button>
+            )}
           </div>
         ) : (
           navigationContent
