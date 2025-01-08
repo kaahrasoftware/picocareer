@@ -1,134 +1,44 @@
-import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Bell, BellDot } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { NotificationItem } from "./NotificationItem";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationItem from "./NotificationItem";
+import { Mail, Phone } from "lucide-react";
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  read: boolean;
-  action_url?: string;
-}
-
-interface NotificationPanelProps {
-  notifications: Notification[];
-  unreadCount: number;
-  onMarkAsRead: (id: string) => void;
-}
-
-export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
-  const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  // Update local state when props change
-  if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
-    setLocalNotifications(notifications);
-  }
-
-  const toggleExpand = (id: string) => {
-    setExpandedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const toggleReadStatus = async (notification: Notification) => {
-    try {
-      // Update local state immediately for better UX
-      setLocalNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, read: !n.read } : n
-      ));
-      
-      // Call the parent handler to update the database
-      await onMarkAsRead(notification.id);
-    } catch (error) {
-      console.error('Error toggling notification status:', error);
-      toast({
-        title: "Error updating notification",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-
-      // Revert local state if the update failed
-      setLocalNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, read: notification.read } : n
-      ));
-
-      // If it's an auth error, redirect to login
-      if (error instanceof Error && error.message.includes('JWT')) {
-        queryClient.clear();
-        navigate("/auth");
-      }
-    }
-  };
+export default function NotificationPanel() {
+  const { notifications } = useNotifications();
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          {unreadCount > 0 ? (
-            <>
-              <BellDot className="h-5 w-5" />
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {unreadCount}
-              </Badge>
-            </>
+    <div className="flex flex-col h-[85vh] sm:h-[600px]">
+      <ScrollArea className="flex-grow">
+        <div className="space-y-4 p-4">
+          {notifications.length === 0 ? (
+            <p className="text-center text-muted-foreground">No notifications</p>
           ) : (
-            <Bell className="h-5 w-5" />
+            notifications.map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} />
+            ))
           )}
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-[400px]">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            Notifications
-            <Badge 
-              variant="destructive" 
-              className="ml-2"
-            >
-              {localNotifications.filter(n => !n.read).length}
-            </Badge>
-          </SheetTitle>
-        </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
-          {localNotifications.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              No notifications yet
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {localNotifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  isExpanded={expandedIds.includes(notification.id)}
-                  onToggleExpand={() => toggleExpand(notification.id)}
-                  onToggleRead={toggleReadStatus}
-                />
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+        </div>
+      </ScrollArea>
+      
+      {/* Footer content - only visible on mobile */}
+      <div className="sm:hidden border-t border-border mt-auto p-4 space-y-3">
+        <div className="space-y-3">
+          <a href="mailto:info@picocareer.com" 
+            className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Mail className="w-4 h-4 mr-2" />
+            info@picocareer.com
+          </a>
+          <a href="tel:+22897476446" 
+            className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Phone className="w-4 h-4 mr-2" />
+            +228 97 47 64 46
+          </a>
+        </div>
+        <div className="text-sm text-muted-foreground text-center">
+          <p>© {new Date().getFullYear()} PicoCareer</p>
+          <p className="mt-1">A product of <strong>Kaahra</strong></p>
+        </div>
+      </div>
+    </div>
   );
 }
