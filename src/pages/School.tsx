@@ -18,7 +18,7 @@ export default function School() {
       // Transform the data to include location based on state and country
       return (data as any[]).map(school => ({
         ...school,
-        location: `${school.state}, ${school.country}`
+        location: school.state ? `${school.state}, ${school.country}` : school.country
       })) as School[];
     }
   });

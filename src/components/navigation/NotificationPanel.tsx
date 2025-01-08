@@ -1,10 +1,12 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
-import NotificationItem from "./NotificationItem";
+import { NotificationItem } from "./NotificationItem";
 import { Mail, Phone } from "lucide-react";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
-export default function NotificationPanel() {
-  const { notifications } = useNotifications();
+export function NotificationPanel() {
+  const { session } = useAuthSession();
+  const { data: notifications = [] } = useNotifications(session);
 
   return (
     <div className="flex flex-col h-[85vh] sm:h-[600px]">
