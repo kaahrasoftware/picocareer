@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { NotificationItem } from "./NotificationItem";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bell, BellDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { NotificationItem } from "./NotificationItem";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";

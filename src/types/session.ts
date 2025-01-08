@@ -7,7 +7,7 @@ export type SessionTypeEnum =
   | "TOEFL Exam Prep Advice"
   | "IELTS Exam Prep Advice"
   | "Duolingo Exam Prep Advice"
-  | "SAT Exam Prep Advise"
+  | "SAT Exam Prep Advice"
   | "ACT Exam Prep Advice"
   | "GRE Exam Prep Advice"
   | "GMAT Exam Prep Advice"
@@ -29,8 +29,6 @@ export type SessionTypeEnum =
   | "Volunteer Opportunities"
   | "Know About my Academic Major";
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
-
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Know About my Career",
   "Resume/CV Review",
@@ -40,7 +38,7 @@ export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "TOEFL Exam Prep Advice",
   "IELTS Exam Prep Advice",
   "Duolingo Exam Prep Advice",
-  "SAT Exam Prep Advise",
+  "SAT Exam Prep Advice",
   "ACT Exam Prep Advice",
   "GRE Exam Prep Advice",
   "GMAT Exam Prep Advice",
@@ -62,3 +60,20 @@ export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Volunteer Opportunities",
   "Know About my Academic Major"
 ];
+
+export interface SessionTypeFormData {
+  type: SessionTypeEnum;
+  duration: number;
+  price: number;
+  description: string;
+  meeting_platform: MeetingPlatform[];
+  telegram_username?: string;
+  phone_number?: string;
+}
+
+export interface SessionTypeFormProps {
+  profileId: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+  existingTypes: SessionTypeFormData[];
+}

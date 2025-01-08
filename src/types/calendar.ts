@@ -1,19 +1,20 @@
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
 export interface SessionType {
   type: string;
   duration: number;
 }
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
-
 export interface SessionParticipant {
   id: string;
   full_name: string;
+  avatar_url?: string;
 }
 
 export interface MentorSession {
   id: string;
   scheduled_at: string;
-  status?: string;
+  status: string;
   notes: string | null;
   mentor: SessionParticipant;
   mentee: SessionParticipant;
@@ -32,7 +33,8 @@ export interface CalendarEvent {
   end_time: string;
   event_type: 'session';
   status?: string;
-  notes?: string | null;
+  created_at: string;
+  updated_at: string;
   session_details?: MentorSession;
 }
 
