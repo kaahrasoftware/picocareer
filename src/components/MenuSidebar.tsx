@@ -150,13 +150,15 @@ export function MenuSidebar() {
                 onMarkAsRead={handleMarkAsRead}
               />
             )}
-            <Button 
-              variant="default" 
-              onClick={() => navigate("/auth")}
-              className="bg-picocareer-primary hover:bg-picocareer-primary/90"
-            >
-              Sign in
-            </Button>
+            {!session?.user && (
+              <Button 
+                variant="default" 
+                onClick={() => navigate("/auth")}
+                className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+              >
+                Sign in
+              </Button>
+            )}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
