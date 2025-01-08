@@ -1,4 +1,4 @@
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogHeader as BaseDialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Users, Heart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -6,14 +6,14 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface DialogHeaderProps {
+interface MajorDialogHeaderProps {
   title: string;
   potentialSalary?: string | null;
   profilesCount?: number;
   majorId: string;
 }
 
-export function DialogHeader({ title, potentialSalary, profilesCount, majorId }: DialogHeaderProps) {
+export function MajorDialogHeader({ title, potentialSalary, profilesCount, majorId }: MajorDialogHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
@@ -68,7 +68,7 @@ export function DialogHeader({ title, potentialSalary, profilesCount, majorId }:
   };
 
   return (
-    <DialogHeader className="p-4 pb-0 md:p-6 md:pb-0">
+    <BaseDialogHeader className="p-4 pb-0 md:p-6 md:pb-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2">
           <DialogTitle className="text-lg md:text-2xl font-bold">
@@ -95,6 +95,6 @@ export function DialogHeader({ title, potentialSalary, profilesCount, majorId }:
           </div>
         </div>
       </div>
-    </DialogHeader>
+    </BaseDialogHeader>
   );
 }
