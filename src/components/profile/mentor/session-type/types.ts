@@ -1,8 +1,8 @@
-import type { MeetingPlatform, SessionType } from "@/types/database/enums";
+import { SessionTypeEnum, MeetingPlatform } from "@/types/session";
 import { Control } from "react-hook-form";
 
 export interface SessionTypeFormData {
-  type: SessionType;
+  type: SessionTypeEnum;
   duration: number;
   price: number;
   description: string;
@@ -17,7 +17,7 @@ export interface SessionTypeFormProps {
   onCancel: () => void;
   existingTypes: {
     id: string;
-    type: SessionType;
+    type: string;
     duration: number;
     description: string | null;
   }[];
@@ -40,5 +40,5 @@ export interface PlatformSelectProps {
 
 export interface SessionTypeSelectProps {
   form: FormProps;
-  availableTypes: SessionType[];
+  availableTypes: SessionTypeEnum[];
 }

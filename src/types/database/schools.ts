@@ -1,14 +1,9 @@
-import type { Country, SchoolType, Status } from "./enums";
-
 export interface School {
   id: string;
   name: string;
-  location: string;
-  country: Country;
-  type: SchoolType;
-  website?: string;
-  acceptance_rate?: number;
+  location: string | null;
+  type: 'High School' | 'Community College' | 'University' | 'Other' | null;
+  website: string | null;
   created_at: string;
   updated_at: string;
-  status?: Status;
 }

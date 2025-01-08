@@ -1,18 +1,31 @@
-export type NotificationType = 
-  | "session_booked"
-  | "session_cancelled"
-  | "session_reminder"
-  | "session_feedback"
-  | "major_update"
-  | "career_update"
-  | "blog_update"
-  | "profile_update"
-  | "mentor_request"
-  | "blog_posted";
+export type Categories =
+  | "Technology"
+  | "Digital Tools"
+  | "Extracurricular Activities"
+  | "Success Stories"
+  | "Volunteerism"
+  | "Community Service"
+  | "Entrepreneurship"
+  | "Financial Literacy"
+  | "Arts Careers"
+  | "STEM Education"
+  | "STEM Careers"
+  | "Humanities Careers"
+  | "Diversity and Inclusion"
+  | "Educational Resources"
+  | "Leadership Development"
+  | "Mental Health"
+  | "Wellbeing"
+  | "High School to University Transition"
+  | "Study Abroad Preparation"
+  | "Personal Branding"
+  | "Internship and Job Search"
+  | "Networking Strategies"
+  | "Skill Development"
+  | "University Admissions"
+  | "Career Guidance";
 
-export type Categories = "Technology" | "Business" | "Science" | "Arts" | "Engineering";
-
-export type Degree = 
+export type Degree =
   | "No Degree"
   | "High School"
   | "Associate"
@@ -23,22 +36,68 @@ export type Degree =
 
 export type FeedbackType = "mentor_feedback" | "mentee_feedback";
 
-export type InteractionType = 
+export type InteractionType =
+  | "page_view"
   | "click"
-  | "view"
-  | "scroll"
   | "search"
   | "bookmark"
-  | "share";
+  | "content_view";
 
-export type Language = "English" | "French" | "Spanish" | "German" | "Chinese" | "Japanese";
+export type Language =
+  | "English"
+  | "Spanish"
+  | "French"
+  | "Chinese"
+  | "Hindi"
+  | "Arabic"
+  | "Bengali"
+  | "Portuguese"
+  | "Russian"
+  | "German"
+  | "Japanese"
+  | "Nigerian Pidgin"
+  | "Turkish"
+  | "Hausa"
+  | "Swahili"
+  | "Vietnamese"
+  | "Korean"
+  | "Italian"
+  | "Thai"
+  | "Marathi"
+  | "Yoruba"
+  | "Polish"
+  | "Malayalam"
+  | "Ukrainian"
+  | "Zulu"
+  | "Igbo"
+  | "Afrikaans"
+  | "Ewe"
+  | "Twi"
+  | "Anufo";
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+export type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
 
-export type OnboardingStatus = "Pending" | "Completed" | "In Progress";
+export type NotificationType =
+  | "session_booked"
+  | "session_cancelled"
+  | "session_reminder"
+  | "profile_update"
+  | "mentor_request"
+  | "blog_posted"
+  | "major_update";
 
-export type SessionType = 
-  | "Know About my Career"
+export type OnboardingStatus = 
+  | "Pending"
+  | "Under Review"
+  | "Consent Signed"
+  | "Approved"
+  | "Rejected";
+
+export type SchoolType = "High School" | "Community College" | "University" | "Other";
+
+export type SessionType =
+  | "First Touch"
+  | "Know About your Career"
   | "Resume/CV Review"
   | "Campus France"
   | "Undergrad Application"
@@ -46,33 +105,33 @@ export type SessionType =
   | "TOEFL Exam Prep Advice"
   | "IELTS Exam Prep Advice"
   | "Duolingo Exam Prep Advice"
+  | "SAT Exam Prep Advise"
+  | "ACT Exam Prep Advice"
   | "GRE Exam Prep Advice"
   | "GMAT Exam Prep Advice"
-  | "SAT Exam Prep Advice"
-  | "LSAT Exam Prep Advice";
+  | "MCAT Exam Prep Advice"
+  | "LSAT Exam Prep Advice"
+  | "DAT Exam Prep Advice"
+  | "Advice for PhD Students"
+  | "How to Find Grants/Fellowships"
+  | "Grant Writing Guidance"
+  | "Interview Prep"
+  | "How to Succeed as a College Student"
+  | "Investment Strategies"
+  | "Study Abroad Programs"
+  | "Tips for F-1 Students"
+  | "College Application Last Review"
+  | "Application Essays Review"
+  | "I need someone to practice my presentation with";
 
-export type SettingType = 
-  | "theme"
-  | "language"
+export type SettingType =
   | "timezone"
   | "notifications"
-  | "privacy";
+  | "language"
+  | "theme"
+  | "notification_preferences"
+  | "language_preference";
 
-export type UserType = "admin" | "mentor" | "mentee" | "editor";
+export type Status = "Approved" | "Pending" | "Rejected";
 
-export type Status = "Pending" | "Approved" | "Rejected";
-
-export type SchoolType = "University" | "College" | "Technical School" | "High School";
-
-export type Country = 
-  | "United States"
-  | "Canada"
-  | "United Kingdom"
-  | "Australia"
-  | "France"
-  | "Germany"
-  | "Japan"
-  | "China"
-  | "India"
-  | "Brazil"
-  | "Other";
+export type UserType = "mentor" | "mentee" | "admin" | "editor";
