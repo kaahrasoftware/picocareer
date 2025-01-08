@@ -1,5 +1,4 @@
-import { SessionTypeEnum } from "@/types/session";
-import { MeetingPlatform } from "@/types/calendar";
+import { MeetingPlatform, SessionTypeEnum } from "@/types/session";
 
 export interface SessionTypeFormData {
   type: SessionTypeEnum;
@@ -15,12 +14,5 @@ export interface SessionTypeFormProps {
   profileId: string;
   onSuccess: () => void;
   onCancel: () => void;
-  existingTypes: {
-    id: string;
-    type: SessionTypeEnum;
-    duration: number;
-    price: number;
-    description: string | null;
-    meeting_platform: MeetingPlatform[];
-  }[];
+  existingTypes: SessionTypeFormData[];
 }

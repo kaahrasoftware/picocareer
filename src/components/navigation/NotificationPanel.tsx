@@ -3,10 +3,21 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationItem } from "./NotificationItem";
 import { Mail, Phone } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useState } from "react";
 
 export function NotificationPanel() {
   const { session } = useAuthSession();
   const { data: notifications = [] } = useNotifications(session);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleToggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleToggleRead = async (notification: any) => {
+    // Implement the logic to mark the notification as read
+    // This could involve an API call to update the notification status
+  };
 
   return (
     <div className="flex flex-col h-[85vh] sm:h-[600px]">
@@ -16,7 +27,13 @@ export function NotificationPanel() {
             <p className="text-center text-muted-foreground">No notifications</p>
           ) : (
             notifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
+              <NotificationItem 
+                key={notification.id} 
+                notification={notification}
+                isExpanded={expandedId === notification.id}
+                onToggleExpand={() => handleToggleExpand(notification.id)}
+                onToggleRead={handleToggleRead}
+              />
             ))
           )}
         </div>

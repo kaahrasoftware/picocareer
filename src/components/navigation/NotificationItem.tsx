@@ -3,20 +3,18 @@ import { NotificationHeader } from "./notification-details/NotificationHeader";
 import { NotificationContent } from "./notification-details/NotificationContent";
 import { NotificationActions } from "./notification-details/NotificationActions";
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  read: boolean;
-  action_url?: string;
-}
-
-interface NotificationItemProps {
-  notification: Notification;
+export interface NotificationItemProps {
+  notification: {
+    id: string;
+    title: string;
+    message: string;
+    created_at: string;
+    read: boolean;
+    action_url?: string;
+  };
   isExpanded: boolean;
   onToggleExpand: () => void;
-  onToggleRead: (notification: Notification) => void;
+  onToggleRead: (notification: any) => void;
 }
 
 export function NotificationItem({ 

@@ -29,6 +29,39 @@ export enum SessionTypeEnum {
   ACADEMIC_PLANNING = "Academic Planning"
 }
 
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
+export const SESSION_TYPE_OPTIONS: Record<SessionTypeEnum, string> = {
+  [SessionTypeEnum.CAREER_ADVICE]: "Get advice about your career path",
+  [SessionTypeEnum.RESUME_REVIEW]: "Get feedback on your resume/CV",
+  [SessionTypeEnum.CAMPUS_FRANCE]: "Guidance for Campus France applications",
+  [SessionTypeEnum.UNDERGRAD_APPLICATION]: "Help with undergraduate applications",
+  [SessionTypeEnum.GRAD_APPLICATION]: "Help with graduate school applications",
+  [SessionTypeEnum.TOEFL_PREP]: "TOEFL exam preparation guidance",
+  [SessionTypeEnum.IELTS_PREP]: "IELTS exam preparation guidance",
+  [SessionTypeEnum.DUOLINGO_PREP]: "Duolingo exam preparation guidance",
+  [SessionTypeEnum.ACADEMIC_MAJOR]: "Learn about academic majors",
+  [SessionTypeEnum.MOCK_INTERVIEW]: "Practice interview skills",
+  [SessionTypeEnum.INTERNSHIP_ADVICE]: "Get internship search advice",
+  [SessionTypeEnum.JOB_SEARCH]: "Job search strategy guidance",
+  [SessionTypeEnum.NETWORKING]: "Professional networking tips",
+  [SessionTypeEnum.PERSONAL_BRANDING]: "Personal branding guidance",
+  [SessionTypeEnum.ENTREPRENEURSHIP]: "Entrepreneurship guidance",
+  [SessionTypeEnum.LEADERSHIP]: "Leadership development advice",
+  [SessionTypeEnum.WORK_LIFE_BALANCE]: "Work-life balance guidance",
+  [SessionTypeEnum.CAREER_TRANSITION]: "Career transition guidance",
+  [SessionTypeEnum.SALARY_NEGOTIATION]: "Salary negotiation tips",
+  [SessionTypeEnum.PROFESSIONAL_DEVELOPMENT]: "Professional development advice",
+  [SessionTypeEnum.INDUSTRY_INSIGHTS]: "Industry insights and trends",
+  [SessionTypeEnum.SKILL_DEVELOPMENT]: "Skill development guidance",
+  [SessionTypeEnum.PORTFOLIO_REVIEW]: "Portfolio review and feedback",
+  [SessionTypeEnum.STARTUP_ADVICE]: "Startup advice and guidance",
+  [SessionTypeEnum.GRAD_SCHOOL_PREP]: "Graduate school preparation",
+  [SessionTypeEnum.RESEARCH_GUIDANCE]: "Research methodology guidance",
+  [SessionTypeEnum.THESIS_ADVICE]: "Thesis/Dissertation advice",
+  [SessionTypeEnum.ACADEMIC_PLANNING]: "Academic planning guidance"
+};
+
 export interface SessionType {
   id: string;
   profile_id: string;
@@ -36,7 +69,7 @@ export interface SessionType {
   duration: number;
   price: number;
   description?: string;
-  meeting_platform: ("Google Meet" | "WhatsApp" | "Telegram" | "Phone Call")[];
+  meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
   created_at?: string;
