@@ -127,23 +127,23 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
           ) : (
             <Tabs defaultValue="mentorship" className="w-full">
               <TabsList className="w-full grid grid-cols-2">
-                <TabsTrigger value="mentorship" className="relative">
+                <TabsTrigger value="mentorship" className="relative flex items-center gap-2">
                   Mentorship
                   {mentorshipUnreadCount > 0 && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      className="h-5 w-5 flex items-center justify-center p-0 text-xs"
                     >
                       {mentorshipUnreadCount}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="general" className="relative">
+                <TabsTrigger value="general" className="relative flex items-center gap-2">
                   General
                   {generalUnreadCount > 0 && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      className="h-5 w-5 flex items-center justify-center p-0 text-xs"
                     >
                       {generalUnreadCount}
                     </Badge>
