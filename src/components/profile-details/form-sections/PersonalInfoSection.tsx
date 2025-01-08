@@ -1,37 +1,68 @@
-import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/forms/FormField";
+import { Card } from "@/components/ui/card";
+import { Control } from "react-hook-form";
+import { FormFields } from "../types/form-types";
+import { UseFormRegister } from "react-hook-form";
 
-interface PersonalInfoSectionProps {
-  firstName: string;
-  lastName: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+export interface PersonalSectionProps {
+  register: UseFormRegister<FormFields>;
+  handleFieldChange: (fieldName: keyof FormFields, value: any) => void;
+  schoolId: string;
 }
 
-export function PersonalInfoSection({ firstName, lastName, handleInputChange }: PersonalInfoSectionProps) {
+export function PersonalInfoSection({ register, handleFieldChange, schoolId }: PersonalSectionProps) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Personal Information</h3>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium">First Name</label>
-          <Input
-            name="first_name"
-            value={firstName}
-            onChange={handleInputChange}
-            className="mt-1"
-            placeholder="Your first name"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Last Name</label>
-          <Input
-            name="last_name"
-            value={lastName}
-            onChange={handleInputChange}
-            className="mt-1"
-            placeholder="Your last name"
-          />
-        </div>
+    <Card className="p-6">
+      <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <FormField
+          control={register}
+          name="first_name"
+          render={({ field }) => (
+            <div>
+              <label className="text-sm font-medium">First Name</label>
+              <input
+                {...field}
+                onChange={(e) => handleFieldChange("first_name", e.target.value)}
+                className="mt-1"
+                placeholder="Your first name"
+              />
+            </div>
+          )}
+        />
+        <FormField
+          control={register}
+          name="last_name"
+          render={({ field }) => (
+            <div>
+              <label className="text-sm font-medium">Last Name</label>
+              <input
+                {...field}
+                onChange={(e) => handleFieldChange("last_name", e.target.value)}
+                className="mt-1"
+                placeholder="Your last name"
+              />
+            </div>
+          )}
+        />
+        <FormField
+          control={register}
+          name="school_id"
+          render={({ field }) => (
+            <div>
+              <label className="text-sm font-medium">School</label>
+              <select
+                {...field}
+                onChange={(e) => handleFieldChange("school_id", e.target.value)}
+                className="mt-1"
+              >
+                <option value="">Select your school</option>
+                {/* Add options dynamically based on available schools */}
+              </select>
+            </div>
+          )}
+        />
       </div>
-    </div>
+    </Card>
   );
 }
