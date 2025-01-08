@@ -108,34 +108,36 @@ export function EventsSidebar({
         </div>
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="relative grid grid-cols-[80px_1fr] gap-4 min-w-[500px]">
-            <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
+          <div className="overflow-x-auto">
+            <div className="relative grid grid-cols-[80px_1fr] gap-4 min-w-[350px] md:min-w-[500px]">
+              <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
 
-            <div className="relative border-l border-border min-h-[2496px]">
-              <TimeGridLines cellHeight={CELL_HEIGHT} />
+              <div className="relative border-l border-border min-h-[2496px]">
+                <TimeGridLines cellHeight={CELL_HEIGHT} />
 
-              {isMentor && availability.map((slot, index) => (
-                <AvailabilitySlot
-                  key={`${slot.start_date_time}-${index}`}
-                  slot={slot}
-                  date={date}
-                  timezone={timezone}
-                  index={index}
-                  cellHeight={CELL_HEIGHT}
-                />
-              ))}
+                {isMentor && availability.map((slot, index) => (
+                  <AvailabilitySlot
+                    key={`${slot.start_date_time}-${index}`}
+                    slot={slot}
+                    date={date}
+                    timezone={timezone}
+                    index={index}
+                    cellHeight={CELL_HEIGHT}
+                  />
+                ))}
 
-              {activeEvents.map((event) => (
-                <EventSlot
-                  key={event.id}
-                  event={event}
-                  timezone={timezone}
-                  onClick={onEventClick}
-                  onDelete={onEventDelete}
-                  cellHeight={CELL_HEIGHT}
-                  position={eventPositions.get(event.id)}
-                />
-              ))}
+                {activeEvents.map((event) => (
+                  <EventSlot
+                    key={event.id}
+                    event={event}
+                    timezone={timezone}
+                    onClick={onEventClick}
+                    onDelete={onEventDelete}
+                    cellHeight={CELL_HEIGHT}
+                    position={eventPositions.get(event.id)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </ScrollArea>
