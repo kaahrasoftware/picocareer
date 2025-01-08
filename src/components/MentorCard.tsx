@@ -3,11 +3,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, Building2, MapPin } from "lucide-react";
+import { MajorDetails } from "./MajorDetails";
+import { MajorHeader } from "./major/MajorHeader";
+import { MajorSalary } from "./major/MajorSalary";
+import { MajorSkillsList } from "./major/MajorSkillsList";
+import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useProfileSession } from "@/hooks/useProfileSession";
 import { useNavigate } from "react-router-dom";
-import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 
 interface MentorCardProps {
   id: string;
@@ -69,8 +73,8 @@ export function MentorCard(props: MentorCardProps) {
           {/* Header Section with Avatar and Basic Info */}
           <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
-              avatarUrl={props.imageUrl || ""}
-              fallback={props.name ? props.name[0] : "?"}
+              avatarUrl={props.imageUrl}
+              fallback={props.name[0]}
               size="md"
               editable={false}
             />

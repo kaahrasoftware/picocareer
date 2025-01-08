@@ -62,7 +62,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
       {/* Left column - Calendar */}
       <div className="bg-white/5 rounded-lg p-4">
         <DateSelector
-          selectedDate={date}
+          date={date}
           onDateSelect={setDate}
           mentorId={mentorId}
         />
