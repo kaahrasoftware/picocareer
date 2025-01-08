@@ -63,20 +63,22 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
       {/* Profile Information Section */}
       <div className="flex-1 min-w-0">
         {/* Name and Badges Row */}
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <h2 className="text-2xl font-bold truncate">
-            {profile.full_name}
-          </h2>
-          
-          {/* Render Badge if applicable */}
-          {badge && (
-            <Badge 
-              variant="secondary" 
-              className={badge.className}
-            >
-              {badge.content}
-            </Badge>
-          )}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 flex-wrap flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold truncate">
+              {profile.full_name}
+            </h2>
+            
+            {/* Render Badge if applicable */}
+            {badge && (
+              <Badge 
+                variant="secondary" 
+                className={badge.className}
+              >
+                {badge.content}
+              </Badge>
+            )}
+          </div>
           
           {/* Bookmark Button */}
           <BookmarkButton 
