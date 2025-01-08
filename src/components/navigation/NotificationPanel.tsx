@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getNotificationCategory, type NotificationCategory } from "@/types/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Notification {
   id: string;
@@ -84,6 +85,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     return acc;
   }, {} as Record<NotificationCategory, Notification[]>);
 
+  const mentorshipUnreadCount = categorizedNotifications.mentorship?.filter(n => !n.read).length || 0;
+  const generalUnreadCount = categorizedNotifications.general?.filter(n => !n.read).length || 0;
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -121,41 +125,66 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
               No notifications yet
             </p>
           ) : (
-            <div className="space-y-6">
-              {categorizedNotifications.mentorship && categorizedNotifications.mentorship.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-sm mb-2 px-2">Mentorship</h3>
-                  <div className="space-y-4">
-                    {categorizedNotifications.mentorship.map((notification) => (
-                      <NotificationItem
-                        key={notification.id}
-                        notification={notification}
-                        isExpanded={expandedIds.includes(notification.id)}
-                        onToggleExpand={() => toggleExpand(notification.id)}
-                        onToggleRead={toggleReadStatus}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+            <Tabs defaultValue="mentorship" className="w-full">
+              <TabsList className="w-full grid grid-cols-2">
+                <TabsTrigger value="mentorship" className="relative">
+                  Mentorship
+                  {mentorshipUnreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {mentorshipUnreadCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="general" className="relative">
+                  General
+                  {generalUnreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {generalUnreadCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
               
-              {categorizedNotifications.general && categorizedNotifications.general.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-sm mb-2 px-2">General</h3>
-                  <div className="space-y-4">
-                    {categorizedNotifications.general.map((notification) => (
-                      <NotificationItem
-                        key={notification.id}
-                        notification={notification}
-                        isExpanded={expandedIds.includes(notification.id)}
-                        onToggleExpand={() => toggleExpand(notification.id)}
-                        onToggleRead={toggleReadStatus}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+              <TabsContent value="mentorship" className="mt-4 space-y-4">
+                {categorizedNotifications.mentorship?.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    isExpanded={expandedIds.includes(notification.id)}
+                    onToggleExpand={() => toggleExpand(notification.id)}
+                    onToggleRead={toggleReadStatus}
+                  />
+                ))}
+                {(!categorizedNotifications.mentorship || categorizedNotifications.mentorship.length === 0) && (
+                  <p className="text-center text-muted-foreground py-4">
+                    No mentorship notifications
+                  </p>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="general" className="mt-4 space-y-4">
+                {categorizedNotifications.general?.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    isExpanded={expandedIds.includes(notification.id)}
+                    onToggleExpand={() => toggleExpand(notification.id)}
+                    onToggleRead={toggleReadStatus}
+                  />
+                ))}
+                {(!categorizedNotifications.general || categorizedNotifications.general.length === 0) && (
+                  <p className="text-center text-muted-foreground py-4">
+                    No general notifications
+                  </p>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </ScrollArea>
       </SheetContent>
