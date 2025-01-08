@@ -1,12 +1,8 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Heart } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { AboutSection } from "./major-details/AboutSection";
 import { AcademicRequirements } from "./major-details/AcademicRequirements";
@@ -15,9 +11,7 @@ import { SkillsAndTools } from "./major-details/SkillsAndTools";
 import { AdditionalInfo } from "./major-details/AdditionalInfo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { DialogHeader } from "./major-details/DialogHeader";
 
 interface MajorDetailsProps {
   major: Major;
@@ -26,13 +20,6 @@ interface MajorDetailsProps {
 }
 
 export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const { toast } = useToast();
-  const { session } = useAuthSession();
-
-  // Log the major data to verify we're receiving common_courses
-  console.log("Major data:", major);
-
   const { data: majorWithCareers } = useQuery({
     queryKey: ['major-careers', major.id],
     queryFn: async () => {
@@ -48,116 +35,25 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         .single();
 
       if (error) throw error;
-      console.log("Fetched major data:", data); // Add this log to verify the data
       return data as Major;
     },
     enabled: open && !!major.id,
   });
 
-  // Check if the major is bookmarked
-  useQuery({
-    queryKey: ['major-bookmark', major.id, session?.user.id],
-    queryFn: async () => {
-      if (!session?.user.id) return null;
-      
-      const { data, error } = await supabase
-        .from('user_bookmarks')
-        .select('*')
-        .eq('profile_id', session.user.id)
-        .eq('content_type', 'major')
-        .eq('content_id', major.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      setIsBookmarked(!!data);
-      return data;
-    },
-    enabled: open && !!major.id && !!session?.user.id,
-  });
-
-  const handleBookmarkToggle = async () => {
-    if (!session?.user.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to bookmark majors",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      if (isBookmarked) {
-        await supabase
-          .from('user_bookmarks')
-          .delete()
-          .eq('profile_id', session.user.id)
-          .eq('content_type', 'major')
-          .eq('content_id', major.id);
-      } else {
-        await supabase
-          .from('user_bookmarks')
-          .insert({
-            profile_id: session.user.id,
-            content_type: 'major',
-            content_id: major.id,
-          });
-      }
-      
-      setIsBookmarked(!isBookmarked);
-      toast({
-        title: isBookmarked ? "Major unbookmarked" : "Major bookmarked",
-        description: isBookmarked ? "Major removed from your bookmarks" : "Major added to your bookmarks",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update bookmark",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (!major) return null;
-
-  const formatProfileCount = (count: number | undefined) => {
-    if (!count) return "0";
-    if (count < 1000) return count.toString();
-    if (count < 1000000) return (count / 1000).toFixed(1) + "K";
-    return (count / 1000000).toFixed(1) + "M";
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
-        <DialogHeader className="p-6 pb-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex flex-col gap-2">
-              <DialogTitle className="text-2xl font-bold">{major.title}</DialogTitle>
-              {major.potential_salary && (
-                <Badge variant="outline" className="bg-[#FFDEE2] text-[#4B5563] self-start">
-                  {major.potential_salary}
-                </Badge>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {formatProfileCount(major.profiles_count)} Mentors
-              </Badge>
-              <div className="w-[120px] flex justify-center">
-                <Heart 
-                  className={`h-5 w-5 cursor-pointer hover:scale-110 transition-transform ${
-                    isBookmarked ? 'fill-current text-[#ea384c]' : 'text-gray-400'
-                  }`}
-                  onClick={handleBookmarkToggle}
-                />
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] md:max-h-[85vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+        <DialogHeader
+          title={major.title}
+          potentialSalary={major.potential_salary}
+          profilesCount={major.profiles_count}
+          majorId={major.id}
+        />
         
-        <ScrollArea className="h-[calc(85vh-120px)] px-6">
-          <div className="space-y-6 pb-6">
+        <ScrollArea className="h-[calc(90vh-120px)] md:h-[calc(85vh-120px)] px-4 md:px-6">
+          <div className="space-y-4 md:space-y-6 pb-4 md:pb-6">
             <AboutSection 
               description={major.description}
               learning_objectives={major.learning_objectives}
