@@ -88,10 +88,36 @@ export function MenuSidebar() {
     );
   }
 
+  const navigationContent = (
+    <>
+      <MainNavigation />
+      <div className="flex items-center gap-4">
+        {session?.user && (
+          <NotificationPanel
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={handleMarkAsRead}
+          />
+        )}
+        {session?.user ? (
+          <UserMenu />
+        ) : (
+          <Button 
+            variant="default" 
+            onClick={() => navigate("/auth")}
+            className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+          >
+            Sign in
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background border-b border-border z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+      <div className="container h-full mx-auto flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <img 
               src="/lovable-uploads/f2122040-63e7-4f46-8b7c-d7c748d45e28.png" 
@@ -99,7 +125,9 @@ export function MenuSidebar() {
               className="h-10"
             />
           </Link>
+        </div>
 
+        {isMobile ? (
           <div className="flex items-center gap-4">
             {session?.user && (
               <NotificationPanel
@@ -109,7 +137,19 @@ export function MenuSidebar() {
               />
             )}
             {session?.user ? (
-              <UserMenu />
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col gap-6 pt-6">
+                    <MainNavigation />
+                    <UserMenu />
+                  </div>
+                </SheetContent>
+              </Sheet>
             ) : (
               <Button 
                 variant="default" 
@@ -120,12 +160,9 @@ export function MenuSidebar() {
               </Button>
             )}
           </div>
-        </div>
-        
-        {/* Navigation menu - always visible */}
-        <div className="py-2 overflow-x-auto">
-          <MainNavigation />
-        </div>
+        ) : (
+          navigationContent
+        )}
       </div>
     </header>
   );
