@@ -70,13 +70,13 @@ export function CalendarContainer({
 
   return (
     <div className="space-y-6">
-      <div className="w-fit">
+      <div className="w-full sm:w-fit mx-auto">
         <Calendar
           mode="single"
           selected={selectedDate}
           onSelect={setSelectedDate}
           defaultMonth={selectedDate}
-          className="rounded-md border bg-kahra-darker"
+          className="rounded-md border bg-kahra-darker mx-auto"
           modifiers={{
             sessions: hasSessionsOnDate,
             available: (date) => getAvailabilityStatus(date) === 'available',
@@ -89,16 +89,16 @@ export function CalendarContainer({
               borderRadius: '4px'
             },
             available: {
-              backgroundColor: 'rgba(34, 197, 94, 0.2)', // green-500 with opacity
-              color: '#166534' // green-800
+              backgroundColor: 'rgba(34, 197, 94, 0.2)',
+              color: '#166534'
             },
             unavailable: {
-              backgroundColor: 'rgba(239, 68, 68, 0.2)', // red-500 with opacity
-              color: '#991b1b' // red-800
+              backgroundColor: 'rgba(239, 68, 68, 0.2)',
+              color: '#991b1b'
             },
             mixed: {
-              backgroundColor: 'rgba(234, 179, 8, 0.2)', // yellow-500 with opacity
-              color: '#854d0e' // yellow-800
+              backgroundColor: 'rgba(234, 179, 8, 0.2)',
+              color: '#854d0e'
             }
           }}
         />
@@ -106,11 +106,11 @@ export function CalendarContainer({
 
       {selectedDate && selectedDateEvents.length > 0 && (
         <div className="space-y-4">
-          <h3 className="font-medium text-lg">
+          <h3 className="font-medium text-lg text-center sm:text-left">
             Events for {format(selectedDate, 'MMMM d, yyyy')}
           </h3>
-          <ScrollArea className="h-[300px] pr-4">
-            <div className="space-y-3">
+          <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
+            <div className="space-y-3 px-2">
               {selectedDateEvents.map((event) => (
                 <Card 
                   key={event.id}
@@ -132,7 +132,7 @@ export function CalendarContainer({
                           </p>
                         )}
                       </div>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
                         {format(new Date(event.start_time), 'h:mm a')}
                       </span>
                     </div>
@@ -151,7 +151,7 @@ export function CalendarContainer({
 
       <SessionDetailsDialog
         session={selectedEvent}
-        onClose={handleCloseDialog}
+        onClose={() => setSelectedEvent(null)}
         onCancel={handleCancelSession}
       />
     </div>

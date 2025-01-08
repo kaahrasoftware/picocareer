@@ -96,25 +96,24 @@ export function EventsSidebar({
   const eventPositions = getEventPositions(activeEvents);
 
   return (
-    <div className="w-[600px] bg-background border border-border rounded-lg p-4">
+    <div className="w-full lg:w-[600px] bg-background border border-border rounded-lg p-4">
       <div className="space-y-4">
         <div>
-          <h3 className="font-medium text-lg">
+          <h3 className="font-medium text-lg text-center lg:text-left">
             {formatInTimeZone(date, timezone, 'MMMM d, yyyy')}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground text-center lg:text-left">
             Timezone: {timezone}
           </p>
         </div>
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="relative grid grid-cols-[80px_1fr] gap-4">
+          <div className="relative grid grid-cols-[80px_1fr] gap-4 min-w-[500px]">
             <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
 
             <div className="relative border-l border-border min-h-[2496px]">
               <TimeGridLines cellHeight={CELL_HEIGHT} />
 
-              {/* Render availability slots first (lower z-index) */}
               {isMentor && availability.map((slot, index) => (
                 <AvailabilitySlot
                   key={`${slot.start_date_time}-${index}`}
@@ -126,7 +125,6 @@ export function EventsSidebar({
                 />
               ))}
 
-              {/* Render events last (higher z-index) */}
               {activeEvents.map((event) => (
                 <EventSlot
                   key={event.id}

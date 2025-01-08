@@ -17,19 +17,23 @@ export function CalendarTab({ profile }: CalendarTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <CalendarContainer
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          availability={[]}
-          events={events}
-        />
-        <EventsSidebar
-          date={selectedDate}
-          events={events}
-          isMentor={isMentor}
-          onEventDelete={() => refetch()}
-        />
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="w-full lg:w-auto">
+          <CalendarContainer
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            availability={[]}
+            events={events}
+          />
+        </div>
+        <div className="w-full lg:w-auto">
+          <EventsSidebar
+            date={selectedDate}
+            events={events}
+            isMentor={isMentor}
+            onEventDelete={() => refetch()}
+          />
+        </div>
       </div>
     </div>
   );
