@@ -217,9 +217,9 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-full sm:max-w-4xl h-[90vh] overflow-y-auto p-0 sm:p-6">
-        <div className="px-3 sm:px-0">
+        <div className="px-0 sm:px-0">
           <DialogHeader className="space-y-2 sm:space-y-4 pt-3 sm:pt-0">
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 px-3 sm:px-0">
               <Avatar className="h-8 w-8 sm:h-12 sm:w-12">
                 <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
                 <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
@@ -243,7 +243,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               />
             </div>
 
-            <div className="pb-3 sm:pb-0">
+            <div className="px-3 sm:px-0 pb-3 sm:pb-0">
               <BookingConfirmation
                 isSubmitting={isSubmitting}
                 onCancel={() => onOpenChange(false)}
