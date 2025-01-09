@@ -1,80 +1,103 @@
-export type NotificationType = 
-  | "session_booked"
-  | "session_cancelled"
-  | "session_reminder"
-  | "mentor_request"
-  | "system_update"
-  | "profile_update"
-  | "major_update";
+export type Categories =
+  | "Technology"
+  | "Digital Tools"
+  | "Extracurricular Activities"
+  | "Success Stories"
+  | "Volunteerism"
+  | "Community Service"
+  | "Entrepreneurship"
+  | "Financial Literacy"
+  | "Arts Careers"
+  | "STEM Education"
+  | "STEM Careers"
+  | "Humanities Careers"
+  | "Diversity and Inclusion"
+  | "Educational Resources"
+  | "Leadership Development"
+  | "Mental Health"
+  | "Wellbeing"
+  | "High School to University Transition"
+  | "Study Abroad Preparation"
+  | "Personal Branding"
+  | "Internship and Job Search"
+  | "Networking Strategies"
+  | "Skill Development"
+  | "University Admissions"
+  | "Career Guidance";
 
-export type NotificationCategory = 
-  | "all" 
-  | "system" 
-  | "unread" 
-  | "session" 
-  | "mentorship" 
-  | "general";
-
-export type Degree = 
+export type Degree =
   | "No Degree"
   | "High School"
   | "Associate"
   | "Bachelor"
   | "Master"
-  | "Doctorate"
-  | "MD";
+  | "MD"
+  | "PhD";
 
-export type MeetingPlatform = 
-  | "Google Meet"
-  | "WhatsApp"
-  | "Telegram"
-  | "Phone Call";
-
-export type SettingType = 
-  | "theme"
-  | "language"
-  | "timezone"
-  | "notification_preferences";
-
-export type Categories =
-  | "Career Guidance"
-  | "Academic Advice"
-  | "Test Preparation"
-  | "Study Abroad"
-  | "Professional Development";
-
-export type FeedbackType =
-  | "mentor_feedback"
-  | "mentee_feedback";
+export type FeedbackType = "mentor_feedback" | "mentee_feedback";
 
 export type InteractionType =
+  | "page_view"
   | "click"
-  | "view"
-  | "scroll"
-  | "search";
+  | "search"
+  | "bookmark"
+  | "content_view";
 
 export type Language =
   | "English"
   | "Spanish"
   | "French"
-  | "German"
   | "Chinese"
+  | "Hindi"
+  | "Arabic"
+  | "Bengali"
+  | "Portuguese"
+  | "Russian"
+  | "German"
   | "Japanese"
-  | "Arabic";
+  | "Nigerian Pidgin"
+  | "Turkish"
+  | "Hausa"
+  | "Swahili"
+  | "Vietnamese"
+  | "Korean"
+  | "Italian"
+  | "Thai"
+  | "Marathi"
+  | "Yoruba"
+  | "Polish"
+  | "Malayalam"
+  | "Ukrainian"
+  | "Zulu"
+  | "Igbo"
+  | "Afrikaans"
+  | "Ewe"
+  | "Twi"
+  | "Anufo";
 
-export type OnboardingStatus =
+export type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
+
+export type NotificationType =
+  | "session_booked"
+  | "session_cancelled"
+  | "session_reminder"
+  | "profile_update"
+  | "mentor_request"
+  | "blog_posted"
+  | "major_update";
+
+export type OnboardingStatus = 
   | "Pending"
-  | "Completed"
-  | "In Progress";
+  | "Under Review"
+  | "Consent Signed"
+  | "Approved"
+  | "Rejected";
 
-export type SchoolType =
-  | "University"
-  | "College"
-  | "Technical School"
-  | "High School";
+export type SchoolType = "High School" | "Community College" | "University" | "Other";
 
 export type SessionType =
-  | "Know About my Career"
+  | "First Touch"
+  | "Know About your Career"
   | "Resume/CV Review"
   | "Campus France"
   | "Undergrad Application"
@@ -99,18 +122,16 @@ export type SessionType =
   | "Tips for F-1 Students"
   | "College Application Last Review"
   | "Application Essays Review"
-  | "I need someone to practice my presentation with"
-  | "Study Tips"
-  | "Volunteer Opportunities"
-  | "Know About my Academic Major";
+  | "I need someone to practice my presentation with";
 
-export type Status =
-  | "Pending"
-  | "Approved"
-  | "Rejected";
+export type SettingType =
+  | "timezone"
+  | "notifications"
+  | "language"
+  | "theme"
+  | "notification_preferences"
+  | "language_preference";
 
-export type UserType =
-  | "mentee"
-  | "mentor"
-  | "admin"
-  | "editor";
+export type Status = "Approved" | "Pending" | "Rejected";
+
+export type UserType = "mentor" | "mentee" | "admin" | "editor";

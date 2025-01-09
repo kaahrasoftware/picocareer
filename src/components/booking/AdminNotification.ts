@@ -1,23 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { NotificationType, NotificationCategory } from "@/types/database/enums";
+import { NotificationType } from "@/types/database/enums";
 
-interface SessionDetails {
+export async function notifyAdmins(sessionDetails: {
   mentorName: string;
   menteeName: string;
   sessionType: string;
   scheduledAt: Date;
-}
-
-export async function notifyAdmins(sessionDetails: SessionDetails) {
+}) {
   try {
     // Fetch all admin profiles
-    const { data: adminProfiles, error: adminError } = await supabase
+    const { data: adminProfiles } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_type', 'admin');
 
-    if (adminError) throw adminError;
-    
     if (!adminProfiles?.length) {
       console.log('No admin profiles found to notify');
       return;
@@ -29,7 +25,6 @@ export async function notifyAdmins(sessionDetails: SessionDetails) {
       title: 'New Session Booked',
       message: `${sessionDetails.menteeName} has booked a ${sessionDetails.sessionType} session with ${sessionDetails.mentorName} scheduled for ${sessionDetails.scheduledAt.toLocaleString()}.`,
       type: 'session_booked' as NotificationType,
-      category: 'session' as NotificationCategory,
       action_url: '/admin/sessions'
     }));
 

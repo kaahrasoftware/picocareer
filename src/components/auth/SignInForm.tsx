@@ -32,7 +32,6 @@ export function SignInForm() {
       await signIn(formData.email, formData.password);
     } catch (err) {
       if (err instanceof AuthError) {
-        // Handle specific auth error cases
         switch (err.message) {
           case "Invalid login credentials":
             setError("Invalid email or password. Please check your credentials.");
@@ -40,16 +39,10 @@ export function SignInForm() {
           case "Email not confirmed":
             setError("Please verify your email address before signing in.");
             break;
-          case "Invalid email or password":
-            setError("The email or password you entered is incorrect.");
-            break;
           default:
-            // Log unexpected errors for debugging
-            console.error("Authentication error:", err);
-            setError(err.message || "An error occurred during sign in. Please try again.");
+            setError(err.message);
         }
       } else {
-        console.error("Unexpected error:", err);
         setError("An unexpected error occurred. Please try again.");
       }
     }

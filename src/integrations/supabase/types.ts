@@ -678,7 +678,6 @@ export type Database = {
       notifications: {
         Row: {
           action_url: string | null
-          category: Database["public"]["Enums"]["notification_category"]
           created_at: string
           id: string
           message: string
@@ -690,7 +689,6 @@ export type Database = {
         }
         Insert: {
           action_url?: string | null
-          category?: Database["public"]["Enums"]["notification_category"]
           created_at?: string
           id?: string
           message: string
@@ -702,7 +700,6 @@ export type Database = {
         }
         Update: {
           action_url?: string | null
-          category?: Database["public"]["Enums"]["notification_category"]
           created_at?: string
           id?: string
           message?: string
@@ -892,7 +889,6 @@ export type Database = {
           country: Database["public"]["Enums"]["country"] | null
           created_at: string
           id: string
-          location: string | null
           name: string
           state: Database["public"]["Enums"]["states"] | null
           status: Database["public"]["Enums"]["status"] | null
@@ -905,7 +901,6 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           id?: string
-          location?: string | null
           name: string
           state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
@@ -918,7 +913,6 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           id?: string
-          location?: string | null
           name?: string
           state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
@@ -1693,8 +1687,8 @@ export type Database = {
         | "Associate"
         | "Bachelor"
         | "Master"
-        | "PhD"
         | "MD"
+        | "PhD"
       feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
         | "page_view"
@@ -1734,21 +1728,13 @@ export type Database = {
         | "Twi"
         | "Anufo"
       meeting_platform: "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call"
-      notification_category:
-        | "all"
-        | "unread"
-        | "session"
-        | "system"
-        | "mentorship"
-        | "general"
-        | "major_update"
       notification_type:
         | "session_booked"
         | "session_cancelled"
         | "session_reminder"
-        | "mentor_request"
-        | "system_update"
         | "profile_update"
+        | "mentor_request"
+        | "blog_posted"
         | "major_update"
       onboarding_status:
         | "Pending"
@@ -1766,7 +1752,7 @@ export type Database = {
         | "TOEFL Exam Prep Advice"
         | "IELTS Exam Prep Advice"
         | "Duolingo Exam Prep Advice"
-        | "SAT Exam Prep Advice"
+        | "SAT Exam Prep Advise"
         | "ACT Exam Prep Advice"
         | "GRE Exam Prep Advice"
         | "GMAT Exam Prep Advice"

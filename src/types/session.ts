@@ -1,4 +1,4 @@
-export type SessionType = 
+export type SessionTypeEnum = 
   | "Know About my Career"
   | "Resume/CV Review"
   | "Campus France"
@@ -7,7 +7,7 @@ export type SessionType =
   | "TOEFL Exam Prep Advice"
   | "IELTS Exam Prep Advice"
   | "Duolingo Exam Prep Advice"
-  | "SAT Exam Prep Advise"
+  | "SAT Exam Prep Advice"
   | "ACT Exam Prep Advice"
   | "GRE Exam Prep Advice"
   | "GMAT Exam Prep Advice"
@@ -29,9 +29,7 @@ export type SessionType =
   | "Volunteer Opportunities"
   | "Know About my Academic Major";
 
-export type SessionTypeEnum = SessionType;
-
-export const SESSION_TYPE_OPTIONS: SessionType[] = [
+export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Know About my Career",
   "Resume/CV Review",
   "Campus France",
@@ -40,7 +38,7 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "TOEFL Exam Prep Advice",
   "IELTS Exam Prep Advice",
   "Duolingo Exam Prep Advice",
-  "SAT Exam Prep Advise",
+  "SAT Exam Prep Advice",
   "ACT Exam Prep Advice",
   "GRE Exam Prep Advice",
   "GMAT Exam Prep Advice",
@@ -63,10 +61,8 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "Know About my Academic Major"
 ];
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
-
 export interface SessionTypeFormData {
-  type: SessionType;
+  type: SessionTypeEnum;
   duration: number;
   price: number;
   description: string;
@@ -74,3 +70,12 @@ export interface SessionTypeFormData {
   telegram_username?: string;
   phone_number?: string;
 }
+
+export interface SessionTypeFormProps {
+  profileId: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+  existingTypes: SessionTypeFormData[];
+}
+
+export type { MeetingPlatform } from './calendar';
