@@ -678,6 +678,7 @@ export type Database = {
       notifications: {
         Row: {
           action_url: string | null
+          category: Database["public"]["Enums"]["notification_category"]
           created_at: string
           id: string
           message: string
@@ -689,6 +690,7 @@ export type Database = {
         }
         Insert: {
           action_url?: string | null
+          category?: Database["public"]["Enums"]["notification_category"]
           created_at?: string
           id?: string
           message: string
@@ -700,6 +702,7 @@ export type Database = {
         }
         Update: {
           action_url?: string | null
+          category?: Database["public"]["Enums"]["notification_category"]
           created_at?: string
           id?: string
           message?: string
@@ -1728,6 +1731,13 @@ export type Database = {
         | "Twi"
         | "Anufo"
       meeting_platform: "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call"
+      notification_category:
+        | "all"
+        | "unread"
+        | "session"
+        | "system"
+        | "mentorship"
+        | "general"
       notification_type:
         | "session_booked"
         | "session_cancelled"

@@ -1,137 +1,80 @@
-export type Categories =
-  | "Technology"
-  | "Digital Tools"
-  | "Extracurricular Activities"
-  | "Success Stories"
-  | "Volunteerism"
-  | "Community Service"
-  | "Entrepreneurship"
-  | "Financial Literacy"
-  | "Arts Careers"
-  | "STEM Education"
-  | "STEM Careers"
-  | "Humanities Careers"
-  | "Diversity and Inclusion"
-  | "Educational Resources"
-  | "Leadership Development"
-  | "Mental Health"
-  | "Wellbeing"
-  | "High School to University Transition"
-  | "Study Abroad Preparation"
-  | "Personal Branding"
-  | "Internship and Job Search"
-  | "Networking Strategies"
-  | "Skill Development"
-  | "University Admissions"
-  | "Career Guidance";
+export type NotificationType = 
+  | "session_booked"
+  | "session_cancelled"
+  | "session_reminder"
+  | "mentor_request"
+  | "system_update"
+  | "profile_update";
 
-export type Degree =
+export type NotificationCategory = 
+  | "all" 
+  | "unread" 
+  | "session" 
+  | "system" 
+  | "mentorship" 
+  | "general";
+
+export type Categories = 
+  | "career"
+  | "education"
+  | "technology"
+  | "health"
+  | "finance"
+  | "lifestyle";
+
+export type Degree = 
   | "No Degree"
   | "High School"
   | "Associate"
   | "Bachelor"
   | "Master"
-  | "MD"
-  | "PhD";
+  | "Doctorate";
 
-export type FeedbackType = "mentor_feedback" | "mentee_feedback";
+export type FeedbackType = 
+  | "positive"
+  | "negative"
+  | "neutral";
 
-export type InteractionType =
-  | "page_view"
-  | "click"
-  | "search"
-  | "bookmark"
-  | "content_view";
+export type InteractionType = 
+  | "message"
+  | "call"
+  | "video";
 
-export type Language =
+export type Language = 
   | "English"
   | "Spanish"
   | "French"
-  | "Chinese"
-  | "Hindi"
-  | "Arabic"
-  | "Bengali"
-  | "Portuguese"
-  | "Russian"
   | "German"
-  | "Japanese"
-  | "Nigerian Pidgin"
-  | "Turkish"
-  | "Hausa"
-  | "Swahili"
-  | "Vietnamese"
-  | "Korean"
-  | "Italian"
-  | "Thai"
-  | "Marathi"
-  | "Yoruba"
-  | "Polish"
-  | "Malayalam"
-  | "Ukrainian"
-  | "Zulu"
-  | "Igbo"
-  | "Afrikaans"
-  | "Ewe"
-  | "Twi"
-  | "Anufo";
+  | "Chinese"
+  | "Japanese";
 
-export type MeetingPlatform = "google_meet" | "whatsapp" | "telegram";
-
-export type NotificationType =
-  | "session_booked"
-  | "session_cancelled"
-  | "session_reminder"
-  | "profile_update"
-  | "mentor_request"
-  | "blog_posted"
-  | "major_update";
+export type MeetingPlatform = 
+  | "Zoom"
+  | "Google Meet"
+  | "Microsoft Teams"
+  | "Skype";
 
 export type OnboardingStatus = 
-  | "Pending"
-  | "Under Review"
-  | "Consent Signed"
-  | "Approved"
-  | "Rejected";
+  | "not_started"
+  | "in_progress"
+  | "completed";
 
-export type SchoolType = "High School" | "Community College" | "University" | "Other";
+export type SessionType = 
+  | "one_on_one"
+  | "group";
 
-export type SessionType =
-  | "First Touch"
-  | "Know About your Career"
-  | "Resume/CV Review"
-  | "Campus France"
-  | "Undergrad Application"
-  | "Grad Application"
-  | "TOEFL Exam Prep Advice"
-  | "IELTS Exam Prep Advice"
-  | "Duolingo Exam Prep Advice"
-  | "SAT Exam Prep Advise"
-  | "ACT Exam Prep Advice"
-  | "GRE Exam Prep Advice"
-  | "GMAT Exam Prep Advice"
-  | "MCAT Exam Prep Advice"
-  | "LSAT Exam Prep Advice"
-  | "DAT Exam Prep Advice"
-  | "Advice for PhD Students"
-  | "How to Find Grants/Fellowships"
-  | "Grant Writing Guidance"
-  | "Interview Prep"
-  | "How to Succeed as a College Student"
-  | "Investment Strategies"
-  | "Study Abroad Programs"
-  | "Tips for F-1 Students"
-  | "College Application Last Review"
-  | "Application Essays Review"
-  | "I need someone to practice my presentation with";
+export type SettingType = 
+  | "notification"
+  | "privacy"
+  | "account";
 
-export type SettingType =
-  | "timezone"
-  | "notifications"
-  | "language"
-  | "theme"
-  | "notification_preferences"
-  | "language_preference";
+export type Status = 
+  | "active"
+  | "inactive"
+  | "pending"
+  | "completed";
 
-export type Status = "Approved" | "Pending" | "Rejected";
-
-export type UserType = "mentor" | "mentee" | "admin" | "editor";
+export type UserType = 
+  | "mentor"
+  | "mentee"
+  | "admin";
