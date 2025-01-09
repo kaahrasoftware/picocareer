@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import type { CalendarEvent, MentorSession } from "@/types/calendar";
+import type { CalendarEvent } from "@/types/calendar";
 
 export function useSessionEvents() {
   const { session } = useAuthSession();
@@ -16,13 +16,29 @@ export function useSessionEvents() {
         throw new Error("No user session found");
       }
 
+      // First check if user has timezone set
+      const { data: userSettings, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('setting_value')
+        .eq('profile_id', currentUserId)
+        .eq('setting_type', 'timezone')
+        .single();
+
+      if (settingsError) {
+        console.error('Error fetching user timezone:', settingsError);
+      } else if (!userSettings?.setting_value) {
+        toast({
+          title: "Timezone not set",
+          description: "Please set your timezone in settings to ensure accurate scheduling.",
+          variant: "destructive",
+        });
+      }
+
+      // Fetch mentor sessions with proper column specification
       const { data: sessions, error } = await supabase
         .from("mentor_sessions")
         .select(`
           id,
-          mentor_id,
-          mentee_id,
-          session_type_id,
           scheduled_at,
           status,
           meeting_link,
@@ -53,6 +69,7 @@ export function useSessionEvents() {
         throw error;
       }
 
+      // Transform sessions into calendar events
       const events: CalendarEvent[] = sessions.map((session) => ({
         id: session.id,
         title: `Session with ${
@@ -68,9 +85,16 @@ export function useSessionEvents() {
         ).toISOString(),
         event_type: 'session',
         status: session.status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        session_details: session as unknown as MentorSession,
+        session_details: {
+          id: session.id,
+          scheduled_at: session.scheduled_at,
+          status: session.status,
+          notes: session.notes,
+          meeting_link: session.meeting_link,
+          mentor: session.mentor,
+          mentee: session.mentee,
+          session_type: session.session_type,
+        },
       }));
 
       return events;

@@ -1,58 +1,82 @@
+import { SessionTypeCard } from "./session-type/SessionTypeCard";
+import { useSessionTypeManager } from "./hooks/useSessionTypeManager";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { SessionTypeForm } from "./session-type/SessionTypeForm";
-import { useForm } from "react-hook-form";
-import { SessionTypeFormData } from "./session-type/types";
+import type { Database } from "@/integrations/supabase/types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
 
 interface SessionTypeManagerProps {
   profileId: string;
-  sessionTypes: SessionTypeFormData[];
+  sessionTypes: SessionType[];
   onUpdate: () => void;
 }
 
-export function SessionTypeManager({ profileId, sessionTypes, onUpdate }: SessionTypeManagerProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const { control } = useForm<SessionTypeFormData>({
-    defaultValues: {
-      type: "Know About my Career",
-      duration: 30,
-      price: 0,
-      description: "",
-      meeting_platform: ["Google Meet"]
-    }
-  });
+export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: SessionTypeManagerProps) {
+  const [showForm, setShowForm] = useState(false);
+  const { sessionTypes: fetchedSessionTypes, isLoading, handleDeleteSessionType } = useSessionTypeManager(profileId);
 
-  const handleSuccess = () => {
-    setIsEditing(false);
+  const handleFormSuccess = () => {
+    setShowForm(false);
     onUpdate();
   };
 
+  const handleDelete = async (id: string) => {
+    await handleDeleteSessionType(id);
+    onUpdate();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {isEditing ? (
-        <SessionTypeForm
-          control={control}
-          profileId={profileId}
-          onSuccess={handleSuccess}
-          onCancel={() => setIsEditing(false)}
-          existingTypes={sessionTypes}
-        />
+      <div className="flex justify-end">
+        <Button 
+          onClick={() => setShowForm(true)} 
+          className="flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Session Type
+        </Button>
+      </div>
+
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-lg">
+          <SessionTypeForm
+            profileId={profileId}
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowForm(false)}
+            existingTypes={fetchedSessionTypes}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {fetchedSessionTypes.length > 0 ? (
+        <div className="space-y-3">
+          <h3 className="text-lg font-medium">Your Session Types</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {fetchedSessionTypes.map((sessionType) => (
+              <SessionTypeCard
+                key={sessionType.id}
+                sessionType={sessionType}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </div>
       ) : (
-        <div>
-          {sessionTypes.map((session, index) => (
-            <div key={index} className="p-4 border rounded-lg">
-              <h4 className="font-semibold">{session.type}</h4>
-              <p>Duration: {session.duration} minutes</p>
-              <p>Price: ${session.price}</p>
-              <p>Description: {session.description}</p>
-              <p>Meeting Platform: {session.meeting_platform.join(", ")}</p>
-            </div>
-          ))}
-          <button
-            className="btn btn-primary"
-            onClick={() => setIsEditing(true)}
-          >
-            Add Session Type
-          </button>
+        <div className="text-center py-8 text-muted-foreground">
+          <p>You haven't created any session types yet.</p>
+          <p>Click the button above to add your first session type.</p>
         </div>
       )}
     </div>

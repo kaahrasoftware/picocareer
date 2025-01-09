@@ -1,78 +1,145 @@
+import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Availability } from "@/types/calendar";
-import { format } from "date-fns";
+import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 
 interface DateSelectorProps {
   mentorId: string;
   selectedDate: Date | undefined;
   onDateSelect: (date: Date | undefined) => void;
-  title?: string;
 }
 
-export function DateSelector({ 
-  mentorId,
-  selectedDate,
-  onDateSelect,
-  title = "Date"
-}: DateSelectorProps) {
-  const { data: availabilityData } = useQuery({
+interface MentorAvailability {
+  availabilities: {
+    recurring: boolean;
+    day_of_week: number;
+    start_date_time: string;
+    is_available: boolean;
+  }[];
+}
+
+export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelectorProps) {
+  const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
+  
+  // Fetch mentor availability data
+  const { data: mentorAvailability } = useQuery<MentorAvailability>({
     queryKey: ['mentor-availability', mentorId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('*')
-        .eq('profile_id', mentorId)
-        .eq('is_available', true);
+        .eq('profile_id', mentorId);
 
-      if (error) throw error;
-      return data as Availability[];
-    }
+      if (error) {
+        console.error('Error fetching mentor availability:', error);
+        throw error;
+      }
+
+      return { availabilities: data || [] };
+    },
   });
 
+  // Helper function to check if a specific date is available
   const isDateAvailable = (date: Date) => {
-    if (!availabilityData) return false;
+    if (!mentorAvailability?.availabilities) return false;
 
     const dayOfWeek = date.getDay();
-    const dateString = format(date, "yyyy-MM-dd");
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
 
-    return availabilityData.some(slot => {
-      // Check recurring availability
-      if (slot.recurring && slot.day_of_week === dayOfWeek) {
-        return true;
-      }
+    // Check recurring availability
+    const hasRecurringSlot = mentorAvailability.availabilities.some(availability => 
+      availability.recurring === true && 
+      availability.day_of_week === dayOfWeek &&
+      availability.is_available === true
+    );
 
-      // Check specific date availability
-      if (!slot.recurring && slot.start_date_time) {
-        const slotDate = format(new Date(slot.start_date_time), "yyyy-MM-dd");
-        return slotDate === dateString;
-      }
-
-      return false;
+    // Check specific date availability
+    const hasSpecificSlot = mentorAvailability.availabilities.some(availability => {
+      const availabilityStart = new Date(availability.start_date_time);
+      return availabilityStart >= startOfDay && 
+             availabilityStart <= endOfDay && 
+             availability.is_available === true;
     });
+
+    return hasRecurringSlot || hasSpecificSlot;
   };
 
-  const getAvailableDates = () => {
-    if (!availabilityData) return [];
-    
-    return availabilityData
-      .filter(slot => slot.start_date_time)
-      .map(slot => new Date(slot.start_date_time!));
+  // Helper function to check if a specific date is marked as unavailable
+  const isDateUnavailable = (date: Date) => {
+    if (!mentorAvailability?.availabilities) return false;
+
+    const dayOfWeek = date.getDay();
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Check recurring unavailability
+    const hasRecurringUnavailable = mentorAvailability.availabilities.some(availability => 
+      availability.recurring === true && 
+      availability.day_of_week === dayOfWeek &&
+      availability.is_available === false
+    );
+
+    // Check specific date unavailability
+    const hasSpecificUnavailable = mentorAvailability.availabilities.some(availability => {
+      const availabilityStart = new Date(availability.start_date_time);
+      return availabilityStart >= startOfDay && 
+             availabilityStart <= endOfDay && 
+             availability.is_available === false;
+    });
+
+    return hasRecurringUnavailable || hasSpecificUnavailable;
+  };
+
+  // Calculate available dates for the empty state message
+  const availableDates = mentorAvailability?.availabilities.filter(a => a.is_available) || [];
+
+  // Calendar styles
+  const calendarModifiers = {
+    available: (date: Date) => isDateAvailable(date),
+    unavailable: (date: Date) => isDateUnavailable(date)
+  };
+
+  const calendarModifiersStyles = {
+    available: {
+      border: '2px solid #22c55e',
+      borderRadius: '4px'
+    },
+    unavailable: {
+      border: '2px solid #ef4444',
+      borderRadius: '4px',
+      backgroundColor: 'rgba(239, 68, 68, 0.1)'
+    }
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <Calendar
         mode="single"
         selected={selectedDate}
         onSelect={onDateSelect}
-        disabled={(date) => !isDateAvailable(date)}
-        modifiers={{
-          available: getAvailableDates()
+        className="rounded-md border"
+        disabled={(date) => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return date < today || (!isDateAvailable(date) && !isDateUnavailable(date));
         }}
+        modifiers={calendarModifiers}
+        modifiersStyles={calendarModifiersStyles}
       />
+
+      <div className="mt-4 space-y-2 text-sm text-gray-400">
+        <p>Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone}</p>
+        <p>Days highlighted in green are available for booking</p>
+        <p>Days highlighted in red are marked as unavailable</p>
+        {availableDates.length === 0 && (
+          <p className="text-yellow-500">No available dates found for this mentor</p>
+        )}
+      </div>
     </div>
   );
 }

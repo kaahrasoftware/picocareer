@@ -1,3 +1,5 @@
+import { Json } from "./auth";
+
 export interface SessionType {
   id: string;
   type: string;
@@ -6,27 +8,107 @@ export interface SessionType {
   description: string | null;
 }
 
-export interface MentorAvailability {
-  id: string;
-  profile_id: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  created_at: string;
-  updated_at: string;
-  recurring: boolean;
-  day_of_week: number | null;
-}
-
 export interface MentorsTables {
   mentor_availability: {
-    Row: MentorAvailability;
-    Insert: Omit<MentorAvailability, 'id' | 'created_at' | 'updated_at'>;
-    Update: Partial<Omit<MentorAvailability, 'id'>>;
+    Row: {
+      id: string
+      profile_id: string
+      start_time: string
+      end_time: string
+      timezone: string
+      is_available: boolean | null
+      created_at: string
+      updated_at: string
+      date_available: string
+    }
+    Insert: {
+      id?: string
+      profile_id: string
+      start_time: string
+      end_time: string
+      timezone: string
+      is_available?: boolean | null
+      created_at?: string
+      updated_at?: string
+      date_available: string
+    }
+    Update: {
+      id?: string
+      profile_id?: string
+      start_time?: string
+      end_time?: string
+      timezone?: string
+      is_available?: boolean | null
+      created_at?: string
+      updated_at?: string
+      date_available?: string
+    }
   }
   mentor_session_types: {
-    Row: SessionType;
-    Insert: Omit<SessionType, 'id'>;
-    Update: Partial<Omit<SessionType, 'id'>>;
+    Row: {
+      id: string
+      profile_id: string
+      type: string
+      duration: number
+      price: number
+      description: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      profile_id: string
+      type: string
+      duration: number
+      price: number
+      description?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      profile_id?: string
+      type?: string
+      duration?: number
+      price?: number
+      description?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+  }
+  mentor_sessions: {
+    Row: {
+      id: string
+      mentor_id: string
+      mentee_id: string
+      session_type_id: string
+      scheduled_at: string
+      status: string
+      notes: string | null
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      mentor_id: string
+      mentee_id: string
+      session_type_id: string
+      scheduled_at: string
+      status?: string
+      notes?: string | null
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      id?: string
+      mentor_id?: string
+      mentee_id?: string
+      session_type_id?: string
+      scheduled_at?: string
+      status?: string
+      notes?: string | null
+      created_at?: string
+      updated_at?: string
+    }
   }
 }

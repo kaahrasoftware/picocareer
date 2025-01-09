@@ -1,54 +1,37 @@
-import { UseFormRegister } from "react-hook-form";
-import { FormFields } from "../types/form-types";
-import { Profile } from "@/types/database/profiles";
+import { User2 } from "lucide-react";
+import type { Profile } from "@/types/database/profiles";
 
-export interface PersonalSectionProps {
+interface PersonalSectionProps {
   profile: Profile;
-  register?: UseFormRegister<FormFields>;
-  handleFieldChange?: (fieldName: keyof FormFields, value: any) => void;
-  schoolId?: string;
 }
 
-export function PersonalSection({ profile, register, handleFieldChange, schoolId }: PersonalSectionProps) {
+export function PersonalSection({ profile }: PersonalSectionProps) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Personal Information</h3>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium">First Name</label>
-          <input
-            type="text"
-            {...register?.("first_name")}
-            className="mt-1"
-            placeholder="Your first name"
-            defaultValue={profile.first_name || ""}
-            onChange={(e) => handleFieldChange?.("first_name", e.target.value)}
-          />
+    <>
+      <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4 w-full">
+        <div className="flex items-center gap-2 mb-1 sm:mb-2">
+          <User2 className="h-4 w-4" />
+          <h4 className="font-semibold text-sm sm:text-base">Personal Information</h4>
         </div>
-        <div>
-          <label className="text-sm font-medium">Last Name</label>
-          <input
-            type="text"
-            {...register?.("last_name")}
-            className="mt-1"
-            placeholder="Your last name"
-            defaultValue={profile.last_name || ""}
-            onChange={(e) => handleFieldChange?.("last_name", e.target.value)}
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <p className="text-xs sm:text-sm text-muted-foreground">First Name</p>
+            <p className="text-sm sm:text-base">{profile.first_name || "Not set"}</p>
+          </div>
+          <div>
+            <p className="text-xs sm:text-sm text-muted-foreground">Last Name</p>
+            <p className="text-sm sm:text-base">{profile.last_name || "Not set"}</p>
+          </div>
         </div>
       </div>
-      <div>
-        <label className="text-sm font-medium">School</label>
-        <select
-          {...register?.("school_id")}
-          className="mt-1"
-          defaultValue={schoolId || ""}
-          onChange={(e) => handleFieldChange?.("school_id", e.target.value)}
-        >
-          <option value="" disabled>Select your school</option>
-          {/* Add options dynamically based on available schools */}
-        </select>
+
+      <div className="bg-muted rounded-lg p-3 sm:p-4 w-full">
+        <div className="flex items-center gap-2 mb-2">
+          <User2 className="h-4 w-4" />
+          <h4 className="font-semibold text-sm sm:text-base">About</h4>
+        </div>
+        <p className="text-sm sm:text-base text-muted-foreground">{profile.bio || "No bio provided"}</p>
       </div>
-    </div>
+    </>
   );
 }
