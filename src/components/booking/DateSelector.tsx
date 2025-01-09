@@ -122,7 +122,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         mode="single"
         selected={selectedDate}
         onSelect={onDateSelect}
-        className="rounded-md border w-[calc(100vw-2rem)] max-w-[400px] mx-auto sm:w-full sm:max-w-none [&_.rdp-cell]:w-[40px] sm:[&_.rdp-cell]:w-auto [&_.rdp-head_th]:w-[40px] sm:[&_.rdp-head_th]:w-auto [&_.rdp-day]:w-[40px] sm:[&_.rdp-day]:w-auto"
+        className="rounded-md border w-full max-w-[300px] mx-auto sm:max-w-none"
         disabled={(date) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
