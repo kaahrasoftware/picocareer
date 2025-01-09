@@ -16,25 +16,6 @@ export function useSessionEvents() {
         throw new Error("No user session found");
       }
 
-      // First check if user has timezone set
-      const { data: userSettings, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', currentUserId)
-        .eq('setting_type', 'timezone')
-        .single();
-
-      if (settingsError) {
-        console.error('Error fetching user timezone:', settingsError);
-      } else if (!userSettings?.setting_value) {
-        toast({
-          title: "Timezone not set",
-          description: "Please set your timezone in settings to ensure accurate scheduling.",
-          variant: "destructive",
-        });
-      }
-
-      // Fetch mentor sessions with proper column specification
       const { data: sessions, error } = await supabase
         .from("mentor_sessions")
         .select(`
@@ -69,7 +50,6 @@ export function useSessionEvents() {
         throw error;
       }
 
-      // Transform sessions into calendar events
       const events: CalendarEvent[] = sessions.map((session) => ({
         id: session.id,
         title: `Session with ${
@@ -85,6 +65,8 @@ export function useSessionEvents() {
         ).toISOString(),
         event_type: 'session',
         status: session.status,
+        created_at: new Date().toISOString(), // Add missing properties
+        updated_at: new Date().toISOString(),
         session_details: {
           id: session.id,
           scheduled_at: session.scheduled_at,

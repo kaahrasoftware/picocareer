@@ -1,3 +1,5 @@
+import type { MeetingPlatform } from './calendar';
+
 export type SessionTypeEnum = 
   | "Know About my Career"
   | "Resume/CV Review"
@@ -75,7 +77,30 @@ export interface SessionTypeFormProps {
   profileId: string;
   onSuccess: () => void;
   onCancel: () => void;
-  existingTypes: SessionTypeFormData[];
+  existingTypes: {
+    id: string;
+    type: string;
+    duration: number;
+    description: string | null;
+  }[];
 }
 
-export type { MeetingPlatform } from './calendar';
+export interface FormProps {
+  control: Control<SessionTypeFormData>;
+}
+
+export interface PlatformFieldsProps {
+  form: FormProps;
+  showTelegramField: boolean;
+  showPhoneField: boolean;
+  showWhatsAppField: boolean;
+}
+
+export interface PlatformSelectProps {
+  form: FormProps;
+}
+
+export interface SessionTypeSelectProps {
+  form: FormProps;
+  availableTypes: SessionTypeEnum[];
+}
