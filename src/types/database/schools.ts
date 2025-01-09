@@ -1,9 +1,12 @@
 export interface School {
   id: string;
   name: string;
-  location: string | null;
-  type: 'High School' | 'Community College' | 'University' | 'Other' | null;
-  website: string | null;
+  state?: string;
+  type?: string;
+  website?: string;
   created_at: string;
   updated_at: string;
+  status?: string;
+  acceptance_rate?: number;
+  country?: string;
 }

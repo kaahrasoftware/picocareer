@@ -77,3 +77,5 @@ export interface SessionTypeFormProps {
   onCancel: () => void;
   existingTypes: SessionTypeFormData[];
 }
+
+export type { MeetingPlatform } from './calendar';
