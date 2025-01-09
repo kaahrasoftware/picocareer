@@ -40,14 +40,12 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "College Application Last Review",
   "Application Essays Review",
   "I need someone to practice my presentation with",
-  "Study Tips",
-  "Volunteer Opportunities",
   "Know About my Academic Major"
-] as const;
+];
 
 export const MEETING_PLATFORMS: MeetingPlatform[] = [
-  "Google Meet",
-  "WhatsApp",
-  "Telegram",
+  "google_meet",
+  "whatsapp",
+  "telegram",
   "Phone Call"
-] as const;
+];

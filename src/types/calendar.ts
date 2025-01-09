@@ -2,7 +2,6 @@ import { Database } from "@/types/database/database.types";
 import { NotificationType } from "./notification";
 
 export type Availability = Database["public"]["Tables"]["mentor_availability"]["Row"];
-
 export type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row"] & {
   session_details?: {
     id: string;

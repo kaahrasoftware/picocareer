@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformFields } from "./PlatformFields";
-import type { SessionTypeFormData, SessionTypeEnum, MeetingPlatform } from "@/types/session";
+import type { SessionTypeFormData, SessionType, MeetingPlatform } from "@/types/session";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SessionTypeFormProps {
@@ -15,11 +15,11 @@ interface SessionTypeFormProps {
 export function SessionTypeForm({ onSuccess, onCancel, profileId }: SessionTypeFormProps) {
   const form = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: "Know About my Career",
+      type: "Know About your Career",
       duration: 30,
       price: 0,
       description: "",
-      meeting_platform: ["Google Meet"],
+      meeting_platform: ["google_meet"],
     },
   });
 
