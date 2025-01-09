@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { NotificationType } from "@/types/database/enums";
+import { NotificationType, NotificationCategory } from "@/types/notification";
 
 export async function notifyAdmins(sessionDetails: {
   mentorName: string;
@@ -8,7 +8,6 @@ export async function notifyAdmins(sessionDetails: {
   scheduledAt: Date;
 }) {
   try {
-    // Fetch all admin profiles
     const { data: adminProfiles } = await supabase
       .from('profiles')
       .select('id')
@@ -19,14 +18,13 @@ export async function notifyAdmins(sessionDetails: {
       return;
     }
 
-    // Create notifications for each admin
     const notifications = adminProfiles.map(admin => ({
       profile_id: admin.id,
       title: 'New Session Booked',
       message: `${sessionDetails.menteeName} has booked a ${sessionDetails.sessionType} session with ${sessionDetails.mentorName} scheduled for ${sessionDetails.scheduledAt.toLocaleString()}.`,
       type: 'session_booked' as NotificationType,
       action_url: '/admin/sessions',
-      category: 'mentorship' as const
+      category: 'mentorship' as NotificationCategory
     }));
 
     const { error: notificationError } = await supabase

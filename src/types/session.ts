@@ -13,7 +13,6 @@ export interface SessionTypeFormData {
   phone_number?: string;
 }
 
-// These must exactly match the database enum values
 export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "Know About your Career",
   "Resume/CV Review",

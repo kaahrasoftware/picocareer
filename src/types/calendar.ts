@@ -1,28 +1,9 @@
 import { Database } from "@/types/database/database.types";
-import { NotificationCategory } from "./notification";
+import { NotificationType } from "./notification";
 
-export type Availability = {
-  id: string;
-  profile_id: string;
-  is_available: boolean;
-  created_at: string;
-  updated_at: string;
-  recurring: boolean;
-  day_of_week: number | null;
-  start_time: string | null;
-  end_time: string | null;
-};
+export type Availability = Database["public"]["Tables"]["mentor_availability"]["Row"];
 
-export type CalendarEvent = {
-  id: string;
-  title: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  event_type: string;
-  created_at: string;
-  updated_at: string;
-  status?: string;
+export type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row"] & {
   session_details?: {
     id: string;
     scheduled_at: string;
@@ -47,18 +28,20 @@ export type CalendarEvent = {
   };
 };
 
-export const getNotificationCategory = (type: string): NotificationCategory => {
+export type NotificationCategory = Database["public"]["Enums"]["notification_category"];
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
-    case 'session_booked':
-    case 'session_cancelled':
-    case 'session_reminder':
-      return 'mentorship';
-    case 'major_update':
-      return 'major_update';
-    case 'profile_update':
-    case 'mentor_request':
-      return 'general';
+    case "session_booked":
+    case "session_cancelled":
+    case "session_reminder":
+      return "mentorship";
+    case "major_update":
+      return "major_update";
+    case "profile_update":
+    case "mentor_request":
+      return "general";
     default:
-      return 'system';
+      return "system";
   }
 };
