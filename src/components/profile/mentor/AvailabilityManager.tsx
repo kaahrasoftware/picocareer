@@ -4,17 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface AvailabilityManagerProps {
-  selectedDate: Date;
+  selectedDate?: Date;
   setSelectedDate: (date: Date) => void;
   availability: Availability[];
 }
 
-export function AvailabilityManager({ selectedDate, setSelectedDate, availability }: AvailabilityManagerProps) {
+export function AvailabilityManager({ 
+  selectedDate = new Date(), // Provide default value
+  setSelectedDate, 
+  availability 
+}: AvailabilityManagerProps) {
   const { toast } = useToast();
   const [availableSlots, setAvailableSlots] = useState<Availability[]>(availability);
 
   useEffect(() => {
     const fetchAvailability = async () => {
+      if (!selectedDate) return; // Guard against undefined
+
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('*')
@@ -37,13 +43,18 @@ export function AvailabilityManager({ selectedDate, setSelectedDate, availabilit
     fetchAvailability();
   }, [selectedDate, toast]);
 
+  // Guard against undefined in the render
+  if (!selectedDate) {
+    return <div>Loading availability...</div>;
+  }
+
   return (
     <div>
       <h2 className="text-lg font-semibold">Available Slots for {selectedDate.toDateString()}</h2>
       <ul>
         {availableSlots.map(slot => (
           <li key={slot.id}>
-            {slot.start_time} - {slot.end_time}
+            {slot.start_date_time} - {slot.end_date_time}
           </li>
         ))}
       </ul>
