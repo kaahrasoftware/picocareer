@@ -1,3 +1,5 @@
+export type Status = "Pending" | "Approved" | "Rejected";
+
 export type NotificationType = 
   | "session_booked"
   | "session_cancelled"
@@ -14,14 +16,6 @@ export type NotificationCategory =
   | "mentorship" 
   | "general";
 
-export type Categories = 
-  | "career"
-  | "education"
-  | "technology"
-  | "health"
-  | "finance"
-  | "lifestyle";
-
 export type Degree = 
   | "No Degree"
   | "High School"
@@ -30,51 +24,15 @@ export type Degree =
   | "Master"
   | "Doctorate";
 
-export type FeedbackType = 
-  | "positive"
-  | "negative"
-  | "neutral";
-
-export type InteractionType = 
-  | "message"
-  | "call"
-  | "video";
-
-export type Language = 
-  | "English"
-  | "Spanish"
-  | "French"
-  | "German"
-  | "Chinese"
-  | "Japanese";
-
-export type MeetingPlatform = 
-  | "Zoom"
-  | "Google Meet"
-  | "Microsoft Teams"
-  | "Skype";
-
-export type OnboardingStatus = 
-  | "not_started"
-  | "in_progress"
-  | "completed";
-
-export type SessionType = 
-  | "one_on_one"
-  | "group";
-
-export type SettingType = 
-  | "notification"
-  | "privacy"
-  | "account";
-
-export type Status = 
-  | "active"
-  | "inactive"
-  | "pending"
-  | "completed";
-
 export type UserType = 
   | "mentor"
   | "mentee"
   | "admin";
+
+export type SchoolType = 
+  | "High School"
+  | "Community College"
+  | "University"
+  | "Other";
+
+export { Status, NotificationType, NotificationCategory, Degree, UserType, SchoolType };
