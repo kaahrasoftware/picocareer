@@ -1,5 +1,6 @@
-import type { MeetingPlatform, SessionType } from "@/types/calendar";
-import type { Control } from "react-hook-form";
+import { Control } from "react-hook-form";
+import { MeetingPlatform } from "@/types/database/enums";
+import { SessionType } from "@/types/session";
 
 export interface SessionTypeFormData {
   type: SessionType;
@@ -12,11 +13,9 @@ export interface SessionTypeFormData {
 }
 
 export interface SessionTypeFormProps {
+  control: Control<SessionTypeFormData>;
   profileId: string;
   onSuccess: () => void;
   onCancel: () => void;
   existingTypes: SessionTypeFormData[];
-  onSubmit?: (data: SessionTypeFormData) => void;
-  defaultValues?: Partial<SessionTypeFormData>;
-  control: Control<SessionTypeFormData>;
 }

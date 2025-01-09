@@ -1,5 +1,5 @@
-import type { MentorSession } from "./database/session";
 import type { NotificationType, NotificationCategory, MeetingPlatform } from "./database/enums";
+import type { SessionType } from "./database/session";
 
 export interface Availability {
   id: string;
@@ -11,6 +11,36 @@ export interface Availability {
   end_date_time: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface SessionParticipant {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+}
+
+export interface SessionTypeDetails {
+  type: SessionType;
+  duration: number;
+}
+
+export interface MentorSession {
+  id: string;
+  mentor_id: string;
+  mentee_id: string;
+  session_type_id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor?: SessionParticipant;
+  mentee?: SessionParticipant;
+  session_type?: SessionTypeDetails;
+  meeting_link?: string | null;
+  meeting_platform?: MeetingPlatform;
+  attendance_confirmed?: boolean;
+  availability_slot_id?: string | null;
+  mentee_telegram_username?: string | null;
+  mentee_phone_number?: string | null;
 }
 
 export interface CalendarEvent {
@@ -26,38 +56,7 @@ export interface CalendarEvent {
   session_details: MentorSession;
 }
 
-export type SessionType =
-  | "Know About my Career"
-  | "Resume/CV Review"
-  | "Campus France"
-  | "Undergrad Application"
-  | "Grad Application"
-  | "TOEFL Exam Prep Advice"
-  | "IELTS Exam Prep Advice"
-  | "Duolingo Exam Prep Advice"
-  | "SAT Exam Prep Advise"
-  | "ACT Exam Prep Advice"
-  | "GRE Exam Prep Advice"
-  | "GMAT Exam Prep Advice"
-  | "MCAT Exam Prep Advice"
-  | "LSAT Exam Prep Advice"
-  | "DAT Exam Prep Advice"
-  | "Advice for PhD Students"
-  | "How to Find Grants/Fellowships"
-  | "Grant Writing Guidance"
-  | "Interview Prep"
-  | "How to Succeed as a College Student"
-  | "Investment Strategies"
-  | "Study Abroad Programs"
-  | "Tips for F-1 Students"
-  | "College Application Last Review"
-  | "Application Essays Review"
-  | "I need someone to practice my presentation with"
-  | "Study Tips"
-  | "Volunteer Opportunities"
-  | "Know About my Academic Major";
-
-export function getNotificationCategory(type: NotificationType): NotificationCategory {
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
     case "session_booked":
     case "session_cancelled":
@@ -73,6 +72,6 @@ export function getNotificationCategory(type: NotificationType): NotificationCat
     default:
       return "general";
   }
-}
+};
 
-export type { MentorSession, NotificationType, NotificationCategory, MeetingPlatform };
+export type { MeetingPlatform, NotificationType, NotificationCategory };
