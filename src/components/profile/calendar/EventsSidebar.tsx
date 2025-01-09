@@ -1,12 +1,29 @@
 import { CalendarEvent, Availability } from "@/types/calendar";
+import { format } from "date-fns";
 
 export interface EventsSidebarProps {
   events: CalendarEvent[];
   availability: Availability[];
-  formatEventTime: (slot: Availability) => string;
+  formatEventTime?: (slot: Availability) => string;
+  date?: Date;
+  isMentor?: boolean;
+  onEventDelete?: () => void;
 }
 
-export function EventsSidebar({ events, availability, formatEventTime }: EventsSidebarProps) {
+export function EventsSidebar({ 
+  events, 
+  availability, 
+  formatEventTime,
+  date,
+  isMentor,
+  onEventDelete 
+}: EventsSidebarProps) {
+  const defaultFormatTime = (slot: Availability) => {
+    return format(new Date(slot.start_date_time), "h:mm a");
+  };
+
+  const formatTime = formatEventTime || defaultFormatTime;
+
   return (
     <div className="sidebar">
       <h2 className="text-lg font-semibold">Events</h2>
@@ -16,15 +33,7 @@ export function EventsSidebar({ events, availability, formatEventTime }: EventsS
             <h3 className="event-title">{event.title}</h3>
             {event.session_details && (
               <p className="event-time">
-                {formatEventTime({
-                  ...event.session_details,
-                  start_date_time: event.session_details.scheduled_at,
-                  end_date_time: new Date(new Date(event.session_details.scheduled_at).getTime() + 
-                    (event.session_details.session_type.duration * 60 * 1000)).toISOString(),
-                  is_available: true,
-                  recurring: false,
-                  id: event.id
-                })}
+                {format(new Date(event.start_date_time), "h:mm a")}
               </p>
             )}
           </li>
@@ -34,7 +43,7 @@ export function EventsSidebar({ events, availability, formatEventTime }: EventsS
       <ul>
         {availability.map(slot => (
           <li key={slot.id} className="availability-item">
-            <p className="availability-time">{formatEventTime(slot)}</p>
+            <p className="availability-time">{formatTime(slot)}</p>
           </li>
         ))}
       </ul>

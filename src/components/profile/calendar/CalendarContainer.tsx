@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { CalendarView } from "./CalendarView";
 import { EventsSidebar } from "./EventsSidebar";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
-import type { Availability } from "@/types/calendar";
+import { CalendarEvent, Availability } from "@/types/calendar";
 
 export function CalendarContainer() {
   const { data: events = [], data: availabilitySlots = [] } = useSessionEvents();

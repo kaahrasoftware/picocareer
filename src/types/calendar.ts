@@ -15,8 +15,8 @@ export interface CalendarEvent {
   id: string;
   title: string;
   description?: string;
-  start_time: string;
-  end_time: string;
+  start_date_time: string;
+  end_date_time: string;
   event_type: string;
   status?: string;
   session_details?: {

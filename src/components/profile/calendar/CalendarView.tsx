@@ -13,9 +13,9 @@ export interface CalendarViewProps {
 export function CalendarView({ selectedDate, setSelectedDate, events, availability }: CalendarViewProps) {
   const getDateContent = (date: Date) => {
     const formattedDate = format(date, 'yyyy-MM-dd');
-    const hasEvent = events.some(event => event.start_time.startsWith(formattedDate));
+    const hasEvent = events.some(event => event.start_date_time.startsWith(formattedDate));
     const hasAvailability = availability.some(slot => 
-      slot.start_time && slot.start_time.startsWith(formattedDate)
+      slot.start_date_time && slot.start_date_time.startsWith(formattedDate)
     );
 
     if (hasEvent && hasAvailability) {

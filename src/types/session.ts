@@ -1,5 +1,3 @@
-import { Database } from "@/types/database/database.types";
-
 export type SessionType = 
   | "Know About my Career"
   | "Resume/CV Review"
@@ -26,7 +24,7 @@ export type SessionType =
   | "College Application Last Review"
   | "Application Essays Review"
   | "I need someone to practice my presentation with"
-  | "Know About my Career";
+  | "Know About my Academic Major";
 
 export type MeetingPlatform = 
   | "Google Meet"
@@ -70,7 +68,7 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "College Application Last Review",
   "Application Essays Review",
   "I need someone to practice my presentation with",
-  "Know About my Career"
+  "Know About my Academic Major"
 ];
 
 export const MEETING_PLATFORMS: MeetingPlatform[] = [
