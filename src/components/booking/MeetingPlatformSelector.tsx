@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MeetingPlatform } from "@/types/calendar";
+import { MeetingPlatform } from "@/types/session";
 
 interface MeetingPlatformSelectorProps {
   value: MeetingPlatform;
