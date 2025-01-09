@@ -1,38 +1,65 @@
-export type Status = "Pending" | "Approved" | "Rejected";
+export type Status = 'Pending' | 'Approved' | 'Rejected';
 
 export type NotificationType = 
-  | "session_booked"
-  | "session_cancelled"
-  | "session_reminder"
-  | "mentor_request"
-  | "system_update"
-  | "profile_update";
+  | 'session_reminder'
+  | 'profile_update'
+  | 'system_update'
+  | 'major_update'
+  | 'career_update';
 
-export type NotificationCategory = 
-  | "all" 
-  | "unread" 
-  | "session" 
-  | "system" 
-  | "mentorship" 
-  | "general";
+export type NotificationCategory = 'general' | 'session' | 'profile' | 'system';
 
 export type Degree = 
-  | "No Degree"
-  | "High School"
-  | "Associate"
-  | "Bachelor"
-  | "Master"
-  | "Doctorate";
+  | 'No Degree'
+  | 'High School'
+  | 'Associate'
+  | 'Bachelor'
+  | 'Master'
+  | 'Doctorate'
+  | 'MD';
 
-export type UserType = 
-  | "mentor"
-  | "mentee"
-  | "admin";
+export type UserType = 'mentee' | 'mentor' | 'admin' | 'editor';
 
-export type SchoolType = 
-  | "High School"
-  | "Community College"
-  | "University"
-  | "Other";
+export type SchoolType = 'University' | 'College' | 'Technical School';
 
-export { Status, NotificationType, NotificationCategory, Degree, UserType, SchoolType };
+export type Categories = 
+  | 'Academic'
+  | 'Career'
+  | 'Professional'
+  | 'Personal Development';
+
+export type FeedbackType = 'mentor_feedback' | 'mentee_feedback';
+
+export type InteractionType = 'click' | 'view' | 'scroll' | 'search';
+
+export type Language = 
+  | 'English'
+  | 'French'
+  | 'Spanish'
+  | 'German'
+  | 'Chinese'
+  | 'Japanese'
+  | 'Arabic';
+
+export type MeetingPlatform = 
+  | 'Google Meet'
+  | 'Zoom'
+  | 'Microsoft Teams'
+  | 'Skype'
+  | 'Phone'
+  | 'In Person';
+
+export type OnboardingStatus = 'Pending' | 'In Progress' | 'Completed';
+
+export type SessionType = 
+  | 'One on One'
+  | 'Group Session'
+  | 'Workshop'
+  | 'Quick Chat';
+
+export type SettingType = 
+  | 'theme'
+  | 'language'
+  | 'notifications'
+  | 'timezone'
+  | 'privacy';

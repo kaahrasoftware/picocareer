@@ -438,34 +438,34 @@ export type Database = {
         Row: {
           created_at: string
           day_of_week: number | null
-          end_time: string | null
+          end_date_time: string | null
           id: string
           is_available: boolean | null
           profile_id: string
           recurring: boolean | null
-          start_time: string | null
+          start_date_time: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           day_of_week?: number | null
-          end_time?: string | null
+          end_date_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id: string
           recurring?: boolean | null
-          start_time?: string | null
+          start_date_time?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           day_of_week?: number | null
-          end_time?: string | null
+          end_date_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id?: string
           recurring?: boolean | null
-          start_time?: string | null
+          start_date_time?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1694,6 +1694,7 @@ export type Database = {
         | "Bachelor"
         | "Master"
         | "Doctorate"
+        | "MD"
       feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
         | "page_view"
