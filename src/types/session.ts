@@ -1,11 +1,10 @@
 import { Database } from "@/types/database/database.types";
 
-export type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
-export type SessionTypeEnum = Database["public"]["Enums"]["session_type"];
+export type SessionType = Database["public"]["Enums"]["session_type"];
 export type MeetingPlatform = Database["public"]["Enums"]["meeting_platform"];
 
 export interface SessionTypeFormData {
-  type: SessionTypeEnum;
+  type: SessionType;
   duration: number;
   price: number;
   description: string;
@@ -14,7 +13,8 @@ export interface SessionTypeFormData {
   phone_number?: string;
 }
 
-export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
+// These must exactly match the database enum values
+export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "Know About your Career",
   "Resume/CV Review",
   "Campus France",
@@ -42,4 +42,11 @@ export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Application Essays Review",
   "I need someone to practice my presentation with",
   "Know About my Academic Major"
-];
+] as const;
+
+export const MEETING_PLATFORMS: MeetingPlatform[] = [
+  "google_meet",
+  "whatsapp",
+  "telegram",
+  "phone_call"
+] as const;

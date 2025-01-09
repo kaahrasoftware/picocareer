@@ -1,6 +1,18 @@
 import { Database } from "@/types/database/database.types";
+import { NotificationCategory } from "./notification";
 
-export type Availability = Database["public"]["Tables"]["mentor_availability"]["Row"];
+export type Availability = {
+  id: string;
+  profile_id: string;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
+  recurring: boolean;
+  day_of_week: number | null;
+  start_date_time: string | null;
+  end_date_time: string | null;
+};
+
 export type CalendarEvent = {
   id: string;
   title: string;
