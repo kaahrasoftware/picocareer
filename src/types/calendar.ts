@@ -1,3 +1,5 @@
+import { Database } from "@/integrations/supabase/types";
+
 export interface MentorAvailability {
   id: string;
   profile_id: string;
@@ -30,8 +32,8 @@ export interface MentorSession {
   scheduled_at: string;
   status: string;
   notes: string | null;
+  meeting_platform: Database["public"]["Enums"]["meeting_platform"];
   meeting_link: string | null;
-  meeting_platform: MeetingPlatform;
   mentor: {
     id: string;
     full_name: string;
@@ -43,40 +45,24 @@ export interface MentorSession {
     avatar_url: string;
   };
   session_type: {
-    type: SessionType;
+    type: Database["public"]["Enums"]["session_type"];
     duration: number;
   };
 }
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+export type NotificationCategory = "all" | "system" | "unread" | "session" | "mentorship" | "general";
 
-export type SessionType =
-  | "Know About my Career"
-  | "Resume/CV Review"
-  | "Campus France"
-  | "Undergrad Application"
-  | "Grad Application"
-  | "TOEFL Exam Prep Advice"
-  | "IELTS Exam Prep Advice"
-  | "Duolingo Exam Prep Advice"
-  | "SAT Exam Prep Advise"
-  | "ACT Exam Prep Advice"
-  | "GRE Exam Prep Advice"
-  | "GMAT Exam Prep Advice"
-  | "MCAT Exam Prep Advice"
-  | "LSAT Exam Prep Advice"
-  | "DAT Exam Prep Advice"
-  | "Advice for PhD Students"
-  | "How to Find Grants/Fellowships"
-  | "Grant Writing Guidance"
-  | "Interview Prep"
-  | "How to Succeed as a College Student"
-  | "Investment Strategies"
-  | "Study Abroad Programs"
-  | "Tips for F-1 Students"
-  | "College Application Last Review"
-  | "Application Essays Review"
-  | "I need someone to practice my presentation with"
-  | "Study Tips"
-  | "Volunteer Opportunities"
-  | "Know About my Academic Major";
+export const getNotificationCategory = (type: string): NotificationCategory => {
+  switch (type) {
+    case "session_booked":
+    case "session_cancelled":
+    case "session_reminder":
+      return "session";
+    case "mentor_request":
+      return "mentorship";
+    case "system_update":
+      return "system";
+    default:
+      return "general";
+  }
+};

@@ -25,7 +25,8 @@ export async function notifyAdmins(sessionDetails: {
       title: 'New Session Booked',
       message: `${sessionDetails.menteeName} has booked a ${sessionDetails.sessionType} session with ${sessionDetails.mentorName} scheduled for ${sessionDetails.scheduledAt.toLocaleString()}.`,
       type: 'session_booked' as NotificationType,
-      action_url: '/admin/sessions'
+      action_url: '/admin/sessions',
+      category: 'session' as const
     }));
 
     const { error: notificationError } = await supabase
