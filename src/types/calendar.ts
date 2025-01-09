@@ -1,14 +1,14 @@
 import { Database } from "@/integrations/supabase/types";
-import { MeetingPlatform } from "./database/enums";
+import { NotificationType, NotificationCategory, MeetingPlatform } from "./database/enums";
 
 export interface MentorAvailability {
   id: string;
   profile_id: string;
   is_available: boolean;
+  start_date_time: string;
+  end_date_time: string;
   recurring: boolean;
   day_of_week: number | null;
-  start_date_time: string | null;
-  end_date_time: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,15 +46,12 @@ export interface MentorSession {
     avatar_url: string;
   };
   session_type: {
-    type: Database["public"]["Enums"]["session_type"];
+    type: string;
     duration: number;
   };
 }
 
-export type { MeetingPlatform };
-export type NotificationCategory = "all" | "system" | "unread" | "session" | "mentorship" | "general";
-
-export const getNotificationCategory = (type: string): NotificationCategory => {
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
     case "session_booked":
     case "session_cancelled":
@@ -68,3 +65,5 @@ export const getNotificationCategory = (type: string): NotificationCategory => {
       return "general";
   }
 };
+
+export type { NotificationType, NotificationCategory, MeetingPlatform };
