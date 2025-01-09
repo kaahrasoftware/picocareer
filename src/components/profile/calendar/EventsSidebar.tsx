@@ -14,7 +14,19 @@ export function EventsSidebar({ events, availability, formatEventTime }: EventsS
         {events.map(event => (
           <li key={event.id} className="event-item">
             <h3 className="event-title">{event.title}</h3>
-            <p className="event-time">{formatEventTime(event.session_details?.scheduled_at)}</p>
+            {event.session_details && (
+              <p className="event-time">
+                {formatEventTime({
+                  ...event.session_details,
+                  start_date_time: event.session_details.scheduled_at,
+                  end_date_time: new Date(new Date(event.session_details.scheduled_at).getTime() + 
+                    (event.session_details.session_type.duration * 60 * 1000)).toISOString(),
+                  is_available: true,
+                  recurring: false,
+                  id: event.id
+                })}
+              </p>
+            )}
           </li>
         ))}
       </ul>

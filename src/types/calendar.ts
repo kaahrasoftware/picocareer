@@ -18,7 +18,9 @@ export interface CalendarEvent {
   start_time: string;
   end_time: string;
   event_type: string;
+  status?: string;
   session_details?: {
+    id: string;
     scheduled_at: string;
     status: string;
     mentor: {
@@ -54,8 +56,7 @@ export const getNotificationCategory = (type: NotificationType): NotificationCat
     case 'session_cancelled':
     case 'session_reminder':
       return 'session';
-    case 'major_approved':
-    case 'major_rejected':
+    case 'major_update':
       return 'major_update';
     default:
       return 'general';
