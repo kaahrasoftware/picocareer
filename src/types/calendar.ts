@@ -47,3 +47,19 @@ export interface Availability {
   created_at: string;
   updated_at: string;
 }
+
+export type NotificationType = 
+  | "session_booked" 
+  | "session_cancelled" 
+  | "session_reminder" 
+  | "profile_update" 
+  | "mentor_request" 
+  | "blog_posted" 
+  | "major_update";
+
+export type NotificationCategory = "mentorship" | "general";
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
+  return mentorshipTypes.includes(type) ? "mentorship" : "general";
+};
