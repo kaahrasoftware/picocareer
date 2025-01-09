@@ -10,7 +10,6 @@ interface SessionDetails {
 
 export async function notifyAdmins(sessionDetails: SessionDetails) {
   try {
-    // Fetch all admin profiles
     const { data: adminProfiles, error: adminError } = await supabase
       .from('profiles')
       .select('id')
@@ -23,13 +22,12 @@ export async function notifyAdmins(sessionDetails: SessionDetails) {
       return;
     }
 
-    // Create notifications for each admin
     const notifications = adminProfiles.map(admin => ({
       profile_id: admin.id,
       title: 'New Session Booked',
       message: `${sessionDetails.menteeName} has booked a ${sessionDetails.sessionType} session with ${sessionDetails.mentorName} scheduled for ${sessionDetails.scheduledAt.toLocaleString()}.`,
-      type: 'session_booked' as NotificationType,
-      category: 'session' as NotificationCategory,
+      type: 'session_booked' as const,
+      category: 'session' as const,
       action_url: '/admin/sessions'
     }));
 
