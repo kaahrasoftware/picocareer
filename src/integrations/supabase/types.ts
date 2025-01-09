@@ -1693,7 +1693,7 @@ export type Database = {
         | "Associate"
         | "Bachelor"
         | "Master"
-        | "Doctorate"
+        | "PhD"
         | "MD"
       feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
