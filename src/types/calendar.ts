@@ -1,4 +1,5 @@
 import { Database } from "@/integrations/supabase/types";
+import { MeetingPlatform } from "./database/enums";
 
 export interface MentorAvailability {
   id: string;
@@ -32,7 +33,7 @@ export interface MentorSession {
   scheduled_at: string;
   status: string;
   notes: string | null;
-  meeting_platform: Database["public"]["Enums"]["meeting_platform"];
+  meeting_platform: MeetingPlatform;
   meeting_link: string | null;
   mentor: {
     id: string;
@@ -50,6 +51,7 @@ export interface MentorSession {
   };
 }
 
+export type { MeetingPlatform };
 export type NotificationCategory = "all" | "system" | "unread" | "session" | "mentorship" | "general";
 
 export const getNotificationCategory = (type: string): NotificationCategory => {
