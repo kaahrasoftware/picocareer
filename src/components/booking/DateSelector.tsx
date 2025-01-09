@@ -122,7 +122,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         mode="single"
         selected={selectedDate}
         onSelect={onDateSelect}
-        className="rounded-md border"
+        className="rounded-md border w-full max-w-[300px] mx-auto sm:max-w-none"
         disabled={(date) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -132,7 +132,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         modifiersStyles={calendarModifiersStyles}
       />
 
-      <div className="mt-4 space-y-2 text-sm text-gray-400">
+      <div className="mt-4 space-y-2 text-xs sm:text-sm text-gray-400">
         <p>Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone}</p>
         <p>Days highlighted in green are available for booking</p>
         <p>Days highlighted in red are marked as unavailable</p>
