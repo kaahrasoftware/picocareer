@@ -1,13 +1,16 @@
 export type Status = 'Pending' | 'Approved' | 'Rejected';
 
 export type NotificationType = 
+  | 'session_booked'
+  | 'session_cancelled'
   | 'session_reminder'
-  | 'profile_update'
+  | 'mentor_request'
   | 'system_update'
+  | 'profile_update'
   | 'major_update'
   | 'career_update';
 
-export type NotificationCategory = 'general' | 'session' | 'profile' | 'system';
+export type NotificationCategory = 'general' | 'session' | 'mentorship' | 'system';
 
 export type Degree = 
   | 'No Degree'
@@ -16,7 +19,8 @@ export type Degree =
   | 'Bachelor'
   | 'Master'
   | 'Doctorate'
-  | 'MD';
+  | 'MD'
+  | 'PhD';
 
 export type UserType = 'mentee' | 'mentor' | 'admin' | 'editor';
 
@@ -56,10 +60,3 @@ export type SessionType =
   | 'Group Session'
   | 'Workshop'
   | 'Quick Chat';
-
-export type SettingType = 
-  | 'theme'
-  | 'language'
-  | 'notifications'
-  | 'timezone'
-  | 'privacy';

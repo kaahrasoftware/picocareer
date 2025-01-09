@@ -1,18 +1,14 @@
-import { type MeetingPlatform, type SessionType } from './database/enums';
-
-export interface TimeSlot {
+export interface MentorAvailability {
   id: string;
   profile_id: string;
-  recurring: boolean;
-  day_of_week: number;
-  start_date_time: string;
-  end_date_time: string;
   is_available: boolean;
+  recurring: boolean;
+  day_of_week: number | null;
+  start_date_time: string | null;
+  end_date_time: string | null;
   created_at: string;
   updated_at: string;
 }
-
-export interface Availability extends TimeSlot {}
 
 export interface CalendarEvent {
   id: string;
@@ -20,7 +16,7 @@ export interface CalendarEvent {
   description: string;
   start_time: string;
   end_time: string;
-  event_type: 'session' | 'holiday' | 'webinar';
+  event_type: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -33,8 +29,9 @@ export interface MentorSession {
   mentee_id: string;
   scheduled_at: string;
   status: string;
-  notes: string;
-  meeting_link: string;
+  notes: string | null;
+  meeting_link: string | null;
+  meeting_platform: MeetingPlatform;
   mentor: {
     id: string;
     full_name: string;
@@ -46,31 +43,40 @@ export interface MentorSession {
     avatar_url: string;
   };
   session_type: {
-    id: string;
     type: SessionType;
     duration: number;
-    price: number;
-    meeting_platform: MeetingPlatform[];
   };
 }
 
-export interface NotificationCategory {
-  id: string;
-  name: string;
-  description: string;
-}
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
 
-export const getNotificationCategory = (type: string): string => {
-  switch (type) {
-    case 'session_reminder':
-      return 'Session';
-    case 'profile_update':
-      return 'Profile';
-    case 'system_update':
-      return 'System';
-    default:
-      return 'General';
-  }
-};
-
-export type { MeetingPlatform };
+export type SessionType =
+  | "Know About my Career"
+  | "Resume/CV Review"
+  | "Campus France"
+  | "Undergrad Application"
+  | "Grad Application"
+  | "TOEFL Exam Prep Advice"
+  | "IELTS Exam Prep Advice"
+  | "Duolingo Exam Prep Advice"
+  | "SAT Exam Prep Advise"
+  | "ACT Exam Prep Advice"
+  | "GRE Exam Prep Advice"
+  | "GMAT Exam Prep Advice"
+  | "MCAT Exam Prep Advice"
+  | "LSAT Exam Prep Advice"
+  | "DAT Exam Prep Advice"
+  | "Advice for PhD Students"
+  | "How to Find Grants/Fellowships"
+  | "Grant Writing Guidance"
+  | "Interview Prep"
+  | "How to Succeed as a College Student"
+  | "Investment Strategies"
+  | "Study Abroad Programs"
+  | "Tips for F-1 Students"
+  | "College Application Last Review"
+  | "Application Essays Review"
+  | "I need someone to practice my presentation with"
+  | "Study Tips"
+  | "Volunteer Opportunities"
+  | "Know About my Academic Major";
