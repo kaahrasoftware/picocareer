@@ -1,14 +1,15 @@
 import { DatePicker } from "@/components/ui/date-picker";
 import { SessionTypeSelector } from "./SessionTypeSelector";
 import { TimeSlotSelector } from "./TimeSlotSelector";
+import { SessionType } from "@/types/session";
 
 interface TimeSlotFormProps {
   selectedDate: Date | undefined;
   onDateSelect: (date: Date | undefined) => void;
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
-  selectedSessionType: string | undefined;
-  onSessionTypeSelect: (type: string) => void;
+  selectedSessionType: SessionType | undefined;
+  onSessionTypeSelect: (type: SessionType) => void;
 }
 
 export function TimeSlotForm({
@@ -30,17 +31,17 @@ export function TimeSlotForm({
       </div>
 
       <SessionTypeSelector
-        value={selectedSessionType}
-        onChange={onSessionTypeSelect}
+        sessionTypes={[]}
+        onSessionTypeSelect={onSessionTypeSelect}
       />
 
-      {selectedDate && (
+      {selectedDate && selectedSessionType && (
         <TimeSlotSelector
           date={selectedDate}
           mentorId=""
           selectedTime={selectedTime}
           onTimeSelect={onTimeSelect}
-          selectedSessionType={undefined}
+          selectedSessionType={selectedSessionType}
           title="Select Time"
         />
       )}

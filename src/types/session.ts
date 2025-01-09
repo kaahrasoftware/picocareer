@@ -1,7 +1,7 @@
 import { Database } from "@/types/database/database.types";
 
-export type SessionType = Database["public"]["Enums"]["session_type"];
-export type MeetingPlatform = "google_meet" | "whatsapp" | "telegram" | "phone_call";
+export type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"]["type"];
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
 
 export interface SessionTypeFormData {
   type: SessionType;
@@ -14,7 +14,7 @@ export interface SessionTypeFormData {
 }
 
 export const SESSION_TYPE_OPTIONS: SessionType[] = [
-  "Know About my Career",
+  "Know About your Career",
   "Resume/CV Review",
   "Campus France",
   "Undergrad Application",
@@ -22,12 +22,11 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "TOEFL Exam Prep Advice",
   "IELTS Exam Prep Advice",
   "Duolingo Exam Prep Advice",
-  "SAT Exam Prep Advice",
+  "LSAT Exam Prep Advice",
   "ACT Exam Prep Advice",
   "GRE Exam Prep Advice",
   "GMAT Exam Prep Advice",
   "MCAT Exam Prep Advice",
-  "LSAT Exam Prep Advice",
   "DAT Exam Prep Advice",
   "Advice for PhD Students",
   "How to Find Grants/Fellowships",
@@ -44,8 +43,8 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
 ];
 
 export const MEETING_PLATFORMS: MeetingPlatform[] = [
-  "google_meet",
-  "whatsapp",
-  "telegram",
-  "phone_call"
+  "Google Meet",
+  "WhatsApp",
+  "Telegram",
+  "Phone Call"
 ];
