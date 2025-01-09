@@ -3,16 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformFields } from "./PlatformFields";
-import type { SessionTypeFormData, SessionType, MeetingPlatform } from "@/types/session";
+import { SessionTypeFormData, SessionType, MeetingPlatform } from "@/types/session";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SessionTypeFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   profileId: string;
+  existingTypes?: SessionTypeFormData[];
 }
 
-export function SessionTypeForm({ onSuccess, onCancel, profileId }: SessionTypeFormProps) {
+export function SessionTypeForm({ onSuccess, onCancel, profileId, existingTypes }: SessionTypeFormProps) {
   const form = useForm<SessionTypeFormData>({
     defaultValues: {
       type: "Know About your Career",
@@ -48,8 +49,8 @@ export function SessionTypeForm({ onSuccess, onCancel, profileId }: SessionTypeF
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <SessionTypeSelect control={form.control} />
-        <PlatformFields control={form.control} />
+        <SessionTypeSelect control={form.control} availableTypes={existingTypes?.map(t => t.type)} />
+        <PlatformFields form={{ control: form.control }} />
         
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>

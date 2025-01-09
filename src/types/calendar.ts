@@ -27,7 +27,7 @@ export type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row
   };
 };
 
-export type NotificationCategory = Database["public"]["Enums"]["notification_category"];
+export type NotificationCategory = "mentorship" | "major_update" | "general" | "system" | "all" | "unread" | "session";
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
