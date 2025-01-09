@@ -1,45 +1,44 @@
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationType } from "@/types/database/enums";
 
-export async function notifyAdmins(sessionDetails: {
+interface AdminNotificationProps {
   mentorName: string;
   menteeName: string;
   sessionType: string;
   scheduledAt: Date;
-}) {
+}
+
+export async function notifyAdmins({
+  mentorName,
+  menteeName,
+  sessionType,
+  scheduledAt
+}: AdminNotificationProps) {
   try {
-    // Fetch all admin profiles
+    // Get all admin profiles
     const { data: adminProfiles } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_type', 'admin');
 
-    if (!adminProfiles?.length) {
-      console.log('No admin profiles found to notify');
-      return;
-    }
+    if (!adminProfiles?.length) return;
 
     // Create notifications for each admin
     const notifications = adminProfiles.map(admin => ({
       profile_id: admin.id,
-      title: 'New Session Booked',
-      message: `${sessionDetails.menteeName} has booked a ${sessionDetails.sessionType} session with ${sessionDetails.mentorName} scheduled for ${sessionDetails.scheduledAt.toLocaleString()}.`,
-      type: 'session_booked' as NotificationType,
-      action_url: '/admin/sessions'
+      title: "New Session Booked",
+      message: `${menteeName} booked a ${sessionType} session with ${mentorName} for ${scheduledAt.toLocaleString()}`,
+      type: "session_booked" as NotificationType,
+      category: "session",
+      action_url: `/calendar`
     }));
 
-    const { error: notificationError } = await supabase
+    // Insert notifications
+    await supabase
       .from('notifications')
       .insert(notifications);
 
-    if (notificationError) {
-      console.error('Error sending admin notifications:', notificationError);
-      throw notificationError;
-    }
-
-    console.log('Admin notifications sent successfully');
   } catch (error) {
-    console.error('Error in notifyAdmins:', error);
-    throw error;
+    console.error('Error notifying admins:', error);
   }
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookingForm } from "./booking/BookingForm";
-import { BookingConfirmation } from "./booking/BookingConfirmation";
+import { BookingForm } from "@/components/booking/BookingForm";
+import { BookingConfirmation } from "@/components/booking/BookingConfirmation";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { notifyAdmins } from "./booking/AdminNotification";
+import { notifyAdmins } from "@/components/booking/AdminNotification";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -216,33 +216,33 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl h-[95vh] sm:h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="space-y-3 sm:space-y-4">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl h-[90vh] overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-6">
+        <DialogHeader className="space-y-2 sm:space-y-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <Avatar className="h-8 w-8 sm:h-12 sm:w-12">
               <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
               <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <DialogTitle className="text-xl sm:text-2xl font-bold">
+              <DialogTitle className="text-lg sm:text-2xl font-bold">
                 Book a Session with {mentor.name}
               </DialogTitle>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                 Fill in the details below to schedule your mentoring session
               </p>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="mt-4 sm:mt-6">
-          <div className="bg-muted/30 rounded-lg p-3 sm:p-6">
+        <div className="flex flex-col space-y-3 sm:space-y-6">
+          <div className="bg-muted/30 rounded-lg p-2 sm:p-6">
             <BookingForm 
               mentorId={mentor.id}
               onFormChange={setFormData}
             />
           </div>
 
-          <div className="mt-4 sm:mt-6">
+          <div>
             <BookingConfirmation
               isSubmitting={isSubmitting}
               onCancel={() => onOpenChange(false)}
