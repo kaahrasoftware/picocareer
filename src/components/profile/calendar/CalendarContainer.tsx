@@ -5,7 +5,9 @@ import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { CalendarEvent, Availability } from "@/types/calendar";
 
 export function CalendarContainer() {
-  const { data: events = [], data: availabilitySlots = [] } = useSessionEvents();
+  const { data } = useSessionEvents();
+  const events = data?.events || [];
+  const availabilitySlots = data?.availability || [];
 
   const formatEventTime = (slot: Availability) => {
     return format(new Date(slot.start_date_time), "h:mm a");
