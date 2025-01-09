@@ -1,45 +1,42 @@
 import { Database } from "@/types/database/database.types";
 import { MeetingPlatform, SessionType } from "./session";
+import { NotificationType, NotificationCategory } from "./notification";
 
-export type MentorAvailability = {
+export interface MentorAvailability {
   id: string;
   start_date_time: string;
   end_date_time: string;
   is_available: boolean;
   recurring: boolean;
   day_of_week?: number;
-};
+}
 
-export type CalendarEvent = {
+export interface CalendarEvent {
   id: string;
   title: string;
   description?: string;
   start_time: string;
   end_time: string;
   event_type: string;
-};
-
-export interface MentorSession {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  mentor: {
-    id: string;
-    full_name: string;
+  session_details?: {
+    scheduled_at: string;
+    status: string;
+    mentor: {
+      id: string;
+      full_name: string;
+    };
+    mentee: {
+      id: string;
+      full_name: string;
+    };
+    session_type: {
+      type: SessionType;
+      duration: number;
+    };
+    meeting_platform?: MeetingPlatform;
+    meeting_link?: string;
+    attendance_confirmed?: boolean;
   };
-  mentee: {
-    id: string;
-    full_name: string;
-  };
-  session_type: {
-    type: SessionType;
-    duration: number;
-  };
-  meeting_link?: string | null;
-  meeting_platform?: MeetingPlatform;
-  attendance_confirmed?: boolean;
-  availability_slot_id?: string | null;
 }
 
 export interface Availability {
@@ -51,7 +48,7 @@ export interface Availability {
   day_of_week?: number;
 }
 
-export const getNotificationCategory = (type: string): string => {
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
     case 'session_booked':
     case 'session_cancelled':

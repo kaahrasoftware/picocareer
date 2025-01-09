@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationType, NotificationCategory } from "@/types/notification";
-import { getNotificationCategory } from "@/types/calendar";
 
 export async function notifyAdmins(sessionDetails: {
   mentorName: string;
@@ -20,7 +19,7 @@ export async function notifyAdmins(sessionDetails: {
     }
 
     const type: NotificationType = 'session_booked';
-    const category: NotificationCategory = getNotificationCategory(type);
+    const category: NotificationCategory = 'session';
 
     const notifications = adminProfiles.map(admin => ({
       profile_id: admin.id,

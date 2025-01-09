@@ -4,7 +4,7 @@ import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
-import { SessionType } from "@/types/session";
+import { MeetingPlatform, SessionType } from "@/types/session";
 
 interface BookingFormProps {
   mentorId: string;
@@ -24,7 +24,7 @@ export function BookingForm({ mentorId, onSuccess }: BookingFormProps) {
     const scheduledAt = new Date(selectedDate);
     scheduledAt.setHours(parseInt(selectedTime.split(':')[0]), parseInt(selectedTime.split(':')[1]));
 
-    const success = await bookSession(mentorId, selectedSessionType.id, scheduledAt.toISOString(), "google_meet");
+    const success = await bookSession(mentorId, selectedSessionType, scheduledAt.toISOString(), "Google Meet");
     if (success) {
       onSuccess();
     }
@@ -34,9 +34,9 @@ export function BookingForm({ mentorId, onSuccess }: BookingFormProps) {
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Book a Session</h3>
       <MeetingPlatformSelector
-        value="google_meet"
+        value="Google Meet"
         onValueChange={() => {}}
-        availablePlatforms={["google_meet", "whatsapp", "telegram"]}
+        availablePlatforms={["Google Meet", "WhatsApp", "Telegram"]}
       />
       <TimeSlotSelector
         date={selectedDate}

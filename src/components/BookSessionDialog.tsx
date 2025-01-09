@@ -20,7 +20,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
   const [selectedSessionType, setSelectedSessionType] = useState<SessionType | undefined>(undefined);
-  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
+  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
   const { bookSession, isLoading } = useBookSession();
 
   const handleBookSession = async () => {
@@ -55,7 +55,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         <MeetingPlatformSelector
           value={meetingPlatform}
           onValueChange={setMeetingPlatform}
-          availablePlatforms={["google_meet", "whatsapp", "telegram", "phone_call"]}
+          availablePlatforms={["Google Meet", "WhatsApp", "Telegram", "Phone Call"]}
         />
 
         <Button onClick={handleBookSession} disabled={isLoading}>
