@@ -12,7 +12,11 @@ export interface SessionTypeFormData {
 }
 
 export interface SessionTypeFormProps {
-  onSubmit: (data: SessionTypeFormData) => void;
+  profileId: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+  existingTypes: SessionTypeFormData[];
+  onSubmit?: (data: SessionTypeFormData) => void;
   defaultValues?: Partial<SessionTypeFormData>;
   control: Control<SessionTypeFormData>;
 }

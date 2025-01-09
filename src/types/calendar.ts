@@ -1,5 +1,5 @@
-import type { MeetorSession } from "./database/session";
-import type { NotificationType, NotificationCategory } from "./database/enums";
+import type { MentorSession } from "./database/session";
+import type { NotificationType, NotificationCategory, MeetingPlatform } from "./database/enums";
 
 export interface Availability {
   id: string;
@@ -25,45 +25,6 @@ export interface CalendarEvent {
   updated_at: string;
   session_details: MentorSession;
 }
-
-export interface MentorSession {
-  id: string;
-  mentor_id: string;
-  mentee_id: string;
-  session_type_id: string;
-  scheduled_at: string;
-  notes?: string;
-  meeting_platform: MeetingPlatform;
-  meeting_link?: string;
-  calendar_event_id?: string;
-  status: string;
-  attendance_confirmed: boolean;
-  calendar_event_etag?: string;
-  last_calendar_sync?: string;
-  availability_slot_id?: string;
-  mentee_telegram_username?: string;
-  mentee_phone_number?: string;
-  mentor?: {
-    id: string;
-    full_name: string;
-    avatar_url: string;
-  };
-  mentee?: {
-    id: string;
-    full_name: string;
-    avatar_url: string;
-  };
-  session_type?: {
-    type: SessionType;
-    duration: number;
-  };
-}
-
-export type MeetingPlatform = 
-  | "Google Meet"
-  | "WhatsApp"
-  | "Telegram"
-  | "Phone Call";
 
 export type SessionType =
   | "Know About my Career"
@@ -114,4 +75,4 @@ export function getNotificationCategory(type: NotificationType): NotificationCat
   }
 }
 
-export type { NotificationType, NotificationCategory };
+export type { MentorSession, NotificationType, NotificationCategory, MeetingPlatform };
