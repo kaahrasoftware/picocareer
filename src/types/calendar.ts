@@ -1,15 +1,5 @@
-import { Database } from "@/types/database/database.types";
 import { MeetingPlatform, SessionType } from "./session";
 import { NotificationType, NotificationCategory } from "./notification";
-
-export interface MentorAvailability {
-  id: string;
-  start_date_time: string;
-  end_date_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week?: number;
-}
 
 export interface CalendarEvent {
   id: string;
@@ -62,3 +52,25 @@ export const getNotificationCategory = (type: NotificationType): NotificationCat
       return 'general';
   }
 };
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: {
+    id: string;
+    full_name: string;
+  };
+  mentee: {
+    id: string;
+    full_name: string;
+  };
+  session_type: {
+    type: SessionType;
+    duration: number;
+  };
+  meeting_link?: string;
+  meeting_platform?: MeetingPlatform;
+  attendance_confirmed?: boolean;
+}

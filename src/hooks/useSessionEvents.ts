@@ -30,19 +30,19 @@ export function useSessionEvents() {
 
       const events: CalendarEvent[] = sessions.map((session) => ({
         id: session.id,
-        title: `Session with ${session.mentee.full_name}`,
+        title: `Session with ${session.mentee?.full_name || 'Unknown'}`,
         description: session.notes || "",
         start_date_time: session.scheduled_at,
         end_date_time: new Date(new Date(session.scheduled_at).getTime() + 
-          (session.session_type.duration * 60 * 1000)).toISOString(),
+          (session.session_type?.duration || 60) * 60 * 1000).toISOString(),
         event_type: "session",
         status: session.status,
         session_details: {
           id: session.id,
           scheduled_at: session.scheduled_at,
           status: session.status,
-          mentor: session.mentor,
-          mentee: session.mentee,
+          mentor: session.mentor || { id: '', full_name: 'Unknown' },
+          mentee: session.mentee || { id: '', full_name: 'Unknown' },
           session_type: session.session_type as { type: SessionType; duration: number },
           meeting_link: session.meeting_link,
         }

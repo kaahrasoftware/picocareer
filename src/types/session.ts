@@ -7,11 +7,12 @@ export type SessionType =
   | "TOEFL Exam Prep Advice"
   | "IELTS Exam Prep Advice"
   | "Duolingo Exam Prep Advice"
-  | "LSAT Exam Prep Advice"
+  | "SAT Exam Prep Advice"
   | "ACT Exam Prep Advice"
   | "GRE Exam Prep Advice"
   | "GMAT Exam Prep Advice"
   | "MCAT Exam Prep Advice"
+  | "LSAT Exam Prep Advice"
   | "DAT Exam Prep Advice"
   | "Advice for PhD Students"
   | "How to Find Grants/Fellowships"
@@ -51,11 +52,12 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "TOEFL Exam Prep Advice",
   "IELTS Exam Prep Advice",
   "Duolingo Exam Prep Advice",
-  "LSAT Exam Prep Advice",
+  "SAT Exam Prep Advice",
   "ACT Exam Prep Advice",
   "GRE Exam Prep Advice",
   "GMAT Exam Prep Advice",
   "MCAT Exam Prep Advice",
+  "LSAT Exam Prep Advice",
   "DAT Exam Prep Advice",
   "Advice for PhD Students",
   "How to Find Grants/Fellowships",
