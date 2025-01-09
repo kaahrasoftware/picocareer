@@ -1,65 +1,147 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatInTimeZone } from 'date-fns-tz';
+import { isSameDay } from 'date-fns';
 import { CalendarEvent, Availability } from "@/types/calendar";
-import { format } from "date-fns";
+import { TimeGrid } from "./TimeGrid";
+import { TimeGridLines } from "./TimeGridLines";
+import { EventSlot } from "./EventSlot";
+import { AvailabilitySlot } from "./AvailabilitySlot";
 
-export interface EventsSidebarProps {
-  events?: CalendarEvent[];
+interface EventsSidebarProps {
+  date: Date;
+  events: CalendarEvent[];
   availability?: Availability[];
-  formatEventTime?: (slot: Availability) => string;
-  date?: Date;
   isMentor?: boolean;
-  onEventDelete?: () => void;
+  onEventClick?: (event: CalendarEvent) => void;
+  onEventDelete?: (event: CalendarEvent) => void;
+  timezone?: string;
 }
 
 export function EventsSidebar({ 
-  events = [], // Provide default empty array
-  availability = [], // Provide default empty array
-  formatEventTime,
-  date,
-  isMentor,
-  onEventDelete 
+  date, 
+  events, 
+  availability = [], 
+  isMentor = false, 
+  onEventClick,
+  onEventDelete,
+  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
-  const defaultFormatTime = (slot: Availability) => {
-    return format(new Date(slot.start_date_time), "h:mm a");
+  const CELL_HEIGHT = 52;
+
+  // Filter events for the selected date and exclude cancelled events
+  const activeEvents = events.filter(event => {
+    const eventDate = new Date(event.start_time);
+    return event.status !== 'cancelled' && isSameDay(eventDate, date);
+  });
+
+  // Calculate overlapping events and their positions
+  const getEventPositions = (events: CalendarEvent[]) => {
+    const sortedEvents = [...events].sort((a, b) => 
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    );
+
+    const positions = new Map<string, { left: number; width: number }>();
+    const overlaps = new Map<string, Set<string>>();
+
+    // Find overlapping events
+    for (let i = 0; i < sortedEvents.length; i++) {
+      const event = sortedEvents[i];
+      const eventStart = new Date(event.start_time);
+      const eventEnd = new Date(event.end_time);
+      const overlappingEvents = new Set<string>();
+
+      for (let j = 0; j < sortedEvents.length; j++) {
+        if (i === j) continue;
+        const otherEvent = sortedEvents[j];
+        const otherStart = new Date(otherEvent.start_time);
+        const otherEnd = new Date(otherEvent.end_time);
+
+        if (eventStart < otherEnd && eventEnd > otherStart) {
+          overlappingEvents.add(otherEvent.id);
+        }
+      }
+
+      overlaps.set(event.id, overlappingEvents);
+    }
+
+    // Calculate positions for each event
+    sortedEvents.forEach(event => {
+      const overlappingEvents = overlaps.get(event.id) || new Set();
+      const totalOverlaps = overlappingEvents.size + 1;
+      const usedPositions = new Set<number>();
+
+      // Check positions already taken by overlapping events
+      overlappingEvents.forEach(overlapId => {
+        const pos = positions.get(overlapId);
+        if (pos) {
+          usedPositions.add(Math.floor(pos.left / (100 / totalOverlaps)));
+        }
+      });
+
+      // Find first available position
+      let position = 0;
+      while (usedPositions.has(position)) {
+        position++;
+      }
+
+      positions.set(event.id, {
+        left: (position * (100 / totalOverlaps)),
+        width: (100 / totalOverlaps)
+      });
+    });
+
+    return positions;
   };
 
-  const formatTime = formatEventTime || defaultFormatTime;
-
-  // Ensure events is always an array
-  const eventsList = Array.isArray(events) ? events : [];
-  const availabilityList = Array.isArray(availability) ? availability : [];
+  const eventPositions = getEventPositions(activeEvents);
 
   return (
-    <div className="sidebar p-4 border rounded-lg">
-      <h2 className="text-lg font-semibold mb-4">Events</h2>
-      {eventsList.length === 0 ? (
-        <p className="text-muted-foreground">No events scheduled</p>
-      ) : (
-        <ul className="space-y-3">
-          {eventsList.map(event => (
-            <li key={event.id} className="event-item p-3 border rounded-md">
-              <h3 className="font-medium">{event.title}</h3>
-              {event.session_details && (
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(event.start_date_time), "h:mm a")}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="w-full lg:w-[600px] bg-background border border-border rounded-lg p-4">
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-medium text-lg text-center lg:text-left">
+            {formatInTimeZone(date, timezone, 'MMMM d, yyyy')}
+          </h3>
+          <p className="text-sm text-muted-foreground text-center lg:text-left">
+            Timezone: {timezone}
+          </p>
+        </div>
 
-      <h2 className="text-lg font-semibold mt-6 mb-4">Availability</h2>
-      {availabilityList.length === 0 ? (
-        <p className="text-muted-foreground">No availability set</p>
-      ) : (
-        <ul className="space-y-2">
-          {availabilityList.map(slot => (
-            <li key={slot.id} className="availability-item p-2 border rounded-md">
-              <p className="text-sm">{formatTime(slot)}</p>
-            </li>
-          ))}
-        </ul>
-      )}
+        <ScrollArea className="h-[calc(100vh-12rem)]">
+          <div className="overflow-x-auto">
+            <div className="relative grid grid-cols-[80px_1fr] gap-4 min-w-[350px] md:min-w-[500px]">
+              <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
+
+              <div className="relative border-l border-border min-h-[2496px]">
+                <TimeGridLines cellHeight={CELL_HEIGHT} />
+
+                {isMentor && availability.map((slot, index) => (
+                  <AvailabilitySlot
+                    key={`${slot.start_date_time}-${index}`}
+                    slot={slot}
+                    date={date}
+                    timezone={timezone}
+                    index={index}
+                    cellHeight={CELL_HEIGHT}
+                  />
+                ))}
+
+                {activeEvents.map((event) => (
+                  <EventSlot
+                    key={event.id}
+                    event={event}
+                    timezone={timezone}
+                    onClick={onEventClick}
+                    onDelete={onEventDelete}
+                    cellHeight={CELL_HEIGHT}
+                    position={eventPositions.get(event.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

@@ -83,7 +83,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
             content_type: "profile",
             content_id: profileId,
           })
-          .maybeSingle();
+          .maybeSingle(); // Changed from .single() to .maybeSingle()
 
         if (error) throw error;
         setIsBookmarked(!!data);

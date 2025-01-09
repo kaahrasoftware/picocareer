@@ -1,59 +1,69 @@
-import { MeetingPlatform, SessionType } from "./session";
-import { NotificationType } from "./notification";
+import { Database } from "@/integrations/supabase/types";
+import { NotificationType, NotificationCategory, MeetingPlatform } from "./database/enums";
+
+export interface MentorAvailability {
+  id: string;
+  profile_id: string;
+  is_available: boolean;
+  start_date_time: string;
+  end_date_time: string;
+  recurring: boolean;
+  day_of_week: number | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface CalendarEvent {
   id: string;
   title: string;
-  description?: string;
-  start_date_time: string;
-  end_date_time: string;
+  description: string;
+  start_time: string;
+  end_time: string;
   event_type: string;
-  status?: string;
-  session_details?: {
+  status: string;
+  created_at: string;
+  updated_at: string;
+  session_details?: MentorSession;
+}
+
+export interface MentorSession {
+  id: string;
+  mentor_id: string;
+  mentee_id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  meeting_platform: MeetingPlatform;
+  meeting_link: string | null;
+  mentor: {
     id: string;
-    scheduled_at: string;
-    status: string;
-    mentor: {
-      id: string;
-      full_name: string;
-    };
-    mentee: {
-      id: string;
-      full_name: string;
-    };
-    session_type: {
-      type: SessionType;
-      duration: number;
-    };
-    meeting_platform?: MeetingPlatform;
-    meeting_link?: string;
-    attendance_confirmed?: boolean;
+    full_name: string;
+    avatar_url: string;
+  };
+  mentee: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  session_type: {
+    type: string;
+    duration: number;
   };
 }
 
-export interface Availability {
-  id: string;
-  start_date_time: string;
-  end_date_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week?: number;
-}
-
-export type NotificationCategory = 
-  | 'session'
-  | 'major_update'
-  | 'general';
-
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
-    case 'session_booked':
-    case 'session_cancelled':
-    case 'session_reminder':
-      return 'session';
-    case 'major_update':
-      return 'major_update';
+    case "session_booked":
+    case "session_cancelled":
+    case "session_reminder":
+      return "session";
+    case "mentor_request":
+      return "mentorship";
+    case "system_update":
+      return "system";
     default:
-      return 'general';
+      return "general";
   }
 };
+
+export type { NotificationType, NotificationCategory, MeetingPlatform };

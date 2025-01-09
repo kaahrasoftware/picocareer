@@ -1,66 +1,86 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarEvent, Availability } from "@/types/calendar";
-import { SessionType, MeetingPlatform } from "@/types/session";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import type { CalendarEvent } from "@/types/calendar";
 
 export function useSessionEvents() {
+  const { session } = useAuthSession();
+  const { toast } = useToast();
+  const currentUserId = session?.user?.id;
+
   return useQuery({
     queryKey: ["session-events"],
     queryFn: async () => {
-      const { data: sessions, error: sessionsError } = await supabase
+      if (!currentUserId) {
+        throw new Error("No user session found");
+      }
+
+      const { data: sessions, error } = await supabase
         .from("mentor_sessions")
         .select(`
           id,
           scheduled_at,
           status,
-          notes,
           meeting_link,
-          mentor:mentor_id(id, full_name),
-          mentee:mentee_id(id, full_name),
-          session_type:session_type_id(type, duration)
-        `);
+          notes,
+          mentor:profiles!mentor_sessions_mentor_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(
+            type,
+            duration
+          )
+        `)
+        .or(`mentor_id.eq.${currentUserId},mentee_id.eq.${currentUserId}`);
 
-      if (sessionsError) throw sessionsError;
-
-      const { data: availability, error: availabilityError } = await supabase
-        .from("mentor_availability")
-        .select("*");
-
-      if (availabilityError) throw availabilityError;
+      if (error) {
+        toast({
+          title: "Error fetching sessions",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
 
       const events: CalendarEvent[] = sessions.map((session) => ({
         id: session.id,
-        title: `Session with ${session.mentee?.full_name || 'Unknown'}`,
-        description: session.notes || "",
-        start_date_time: session.scheduled_at,
-        end_date_time: new Date(new Date(session.scheduled_at).getTime() + 
-          (session.session_type?.duration || 60) * 60 * 1000).toISOString(),
-        event_type: "session",
+        title: `Session with ${
+          session.mentor.id === currentUserId
+            ? session.mentee.full_name
+            : session.mentor.full_name
+        }`,
+        description: `Mentoring session`,
+        start_time: session.scheduled_at,
+        end_time: new Date(
+          new Date(session.scheduled_at).getTime() +
+            (session.session_type?.duration || 60) * 60 * 1000
+        ).toISOString(),
+        event_type: 'session',
         status: session.status,
+        created_at: new Date().toISOString(), // Add missing properties
+        updated_at: new Date().toISOString(),
         session_details: {
           id: session.id,
           scheduled_at: session.scheduled_at,
           status: session.status,
-          mentor: session.mentor || { id: '', full_name: 'Unknown' },
-          mentee: session.mentee || { id: '', full_name: 'Unknown' },
-          session_type: session.session_type as { type: SessionType; duration: number },
+          notes: session.notes,
           meeting_link: session.meeting_link,
-        }
+          mentor: session.mentor,
+          mentee: session.mentee,
+          session_type: session.session_type,
+        },
       }));
 
-      const availabilitySlots: Availability[] = availability.map((slot) => ({
-        id: slot.id,
-        start_date_time: slot.start_date_time,
-        end_date_time: slot.end_date_time,
-        is_available: slot.is_available,
-        recurring: slot.recurring,
-        day_of_week: slot.day_of_week
-      }));
-
-      return {
-        events,
-        availability: availabilitySlots
-      };
-    }
+      return events;
+    },
+    enabled: !!session?.user,
   });
 }

@@ -1,61 +1,72 @@
-import { useState } from "react";
-import { MeetingPlatform, SessionType } from "@/types/session";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./use-toast";
-import { useAuthSession } from "./useAuthSession";
+import { MeetingPlatform } from "@/types/calendar";
+
+interface BookSessionParams {
+  mentorId: string;
+  date: Date;
+  selectedTime: string;
+  sessionTypeId: string;
+  note: string;
+  meetingPlatform: MeetingPlatform;
+  menteePhoneNumber?: string;
+  menteeTelegramUsername?: string;
+}
+
+interface BookSessionResult {
+  success: boolean;
+  sessionId?: string;
+  error?: string;
+}
 
 export function useBookSession() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { session } = useAuthSession();
-
-  const bookSession = async (
-    mentorId: string,
-    sessionTypeId: string,
-    scheduledAt: string,
-    meetingPlatform: MeetingPlatform,
-    notes?: string
-  ) => {
-    if (!session?.user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to book a session",
-        variant: "destructive",
-      });
-      return false;
+  const bookSession = async ({ 
+    mentorId, 
+    date, 
+    selectedTime, 
+    sessionTypeId, 
+    note,
+    meetingPlatform,
+    menteePhoneNumber,
+    menteeTelegramUsername
+  }: BookSessionParams): Promise<BookSessionResult> => {
+    if (!date || !selectedTime || !sessionTypeId || !mentorId) {
+      return { success: false, error: "Missing required fields" };
     }
 
-    setIsLoading(true);
+    const scheduledAt = new Date(date);
+    const [hours, minutes] = selectedTime.split(':');
+    scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
     try {
-      const { error } = await supabase.from("mentor_sessions").insert({
-        mentor_id: mentorId,
-        mentee_id: session.user.id,
-        session_type_id: sessionTypeId,
-        scheduled_at: scheduledAt,
-        meeting_platform: meetingPlatform,
-        notes,
-      });
+      const { data: session, error } = await supabase
+        .from('mentor_sessions')
+        .insert({
+          mentor_id: mentorId,
+          mentee_id: (await supabase.auth.getUser()).data.user?.id,
+          session_type_id: sessionTypeId,
+          scheduled_at: scheduledAt.toISOString(),
+          notes: note,
+          meeting_platform: meetingPlatform,
+          mentee_phone_number: menteePhoneNumber,
+          mentee_telegram_username: menteeTelegramUsername,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Session booked successfully",
-      });
-
-      return true;
-    } catch (error) {
-      console.error("Error booking session:", error);
-      toast({
-        title: "Error",
-        description: "Failed to book session",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
+      return { 
+        success: true, 
+        sessionId: session.id 
+      };
+    } catch (error: any) {
+      console.error('Error booking session:', error);
+      return { 
+        success: false, 
+        error: error.message 
+      };
     }
   };
 
-  return { bookSession, isLoading };
+  return bookSession;
 }

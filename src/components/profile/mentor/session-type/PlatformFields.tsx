@@ -1,50 +1,63 @@
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
-import { SessionTypeFormData } from "@/types/session";
-import { PlatformSelect } from "./PlatformSelect";
+import { SessionTypeFormData } from "./types";
 
-export interface PlatformFieldsProps {
+interface PlatformFieldsProps {
   form: {
     control: Control<SessionTypeFormData>;
   };
-  showTelegramField?: boolean;
-  showPhoneField?: boolean;
-  showWhatsAppField?: boolean;
+  showTelegramField: boolean;
+  showPhoneField: boolean;
+  showWhatsAppField: boolean;
 }
 
 export function PlatformFields({ form, showTelegramField, showPhoneField, showWhatsAppField }: PlatformFieldsProps) {
   return (
-    <div className="space-y-4">
-      <PlatformSelect form={form} />
+    <>
       {showTelegramField && (
-        <div>
-          <label htmlFor="telegram_username">Telegram Username</label>
-          <input
-            id="telegram_username"
-            {...form.control.register("telegram_username")}
-            placeholder="Enter your Telegram username"
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="telegram_username"
+          rules={{ required: "Telegram username is required for Telegram sessions" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Telegram Username</FormLabel>
+              <FormControl>
+                <Input 
+                  {...field} 
+                  placeholder="@username"
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (!value.startsWith('@') && value) {
+                      value = '@' + value;
+                    }
+                    field.onChange(value);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
-      {showPhoneField && (
-        <div>
-          <label htmlFor="phone_number">Phone Number</label>
-          <input
-            id="phone_number"
-            {...form.control.register("phone_number")}
-            placeholder="Enter your phone number"
-          />
-        </div>
+
+      {(showPhoneField || showWhatsAppField) && (
+        <FormField
+          control={form.control}
+          name="phone_number"
+          rules={{ required: "Phone number is required for phone call/WhatsApp sessions" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="+1234567890" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
-      {showWhatsAppField && (
-        <div>
-          <label htmlFor="whatsapp_number">WhatsApp Number</label>
-          <input
-            id="whatsapp_number"
-            {...form.control.register("whatsapp_number")}
-            placeholder="Enter your WhatsApp number"
-          />
-        </div>
-      )}
-    </div>
+    </>
   );
 }
