@@ -438,34 +438,34 @@ export type Database = {
         Row: {
           created_at: string
           day_of_week: number | null
-          end_date_time: string | null
+          end_time: string | null
           id: string
           is_available: boolean | null
           profile_id: string
           recurring: boolean | null
-          start_date_time: string | null
+          start_time: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           day_of_week?: number | null
-          end_date_time?: string | null
+          end_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id: string
           recurring?: boolean | null
-          start_date_time?: string | null
+          start_time?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           day_of_week?: number | null
-          end_date_time?: string | null
+          end_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id?: string
           recurring?: boolean | null
-          start_date_time?: string | null
+          start_time?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -892,6 +892,7 @@ export type Database = {
           country: Database["public"]["Enums"]["country"] | null
           created_at: string
           id: string
+          location: string | null
           name: string
           state: Database["public"]["Enums"]["states"] | null
           status: Database["public"]["Enums"]["status"] | null
@@ -904,6 +905,7 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           id?: string
+          location?: string | null
           name: string
           state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
@@ -916,6 +918,7 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           id?: string
+          location?: string | null
           name?: string
           state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
@@ -1690,8 +1693,7 @@ export type Database = {
         | "Associate"
         | "Bachelor"
         | "Master"
-        | "MD"
-        | "PhD"
+        | "Doctorate"
       feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
         | "page_view"
@@ -1742,10 +1744,9 @@ export type Database = {
         | "session_booked"
         | "session_cancelled"
         | "session_reminder"
-        | "profile_update"
         | "mentor_request"
-        | "blog_posted"
-        | "major_update"
+        | "system_update"
+        | "profile_update"
       onboarding_status:
         | "Pending"
         | "Under Review"

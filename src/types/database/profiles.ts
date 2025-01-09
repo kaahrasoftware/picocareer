@@ -26,7 +26,7 @@ export interface Profile {
   first_name: string | null;
   last_name: string | null;
   user_type: UserType;
-  highest_degree: 'No Degree' | 'Associate' | 'Bachelor' | 'Master' | 'PhD';
+  highest_degree: 'No Degree' | 'High School' | 'Associate' | 'Bachelor' | 'Master' | 'Doctorate';
   total_booked_sessions: number;
   position: string | null;
   X_url: string | null;
