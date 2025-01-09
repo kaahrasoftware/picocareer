@@ -1693,7 +1693,7 @@ export type Database = {
         | "Associate"
         | "Bachelor"
         | "Master"
-        | "Doctorate"
+        | "PhD"
         | "MD"
       feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
@@ -1741,6 +1741,7 @@ export type Database = {
         | "system"
         | "mentorship"
         | "general"
+        | "major_update"
       notification_type:
         | "session_booked"
         | "session_cancelled"
@@ -1748,6 +1749,7 @@ export type Database = {
         | "mentor_request"
         | "system_update"
         | "profile_update"
+        | "major_update"
       onboarding_status:
         | "Pending"
         | "Under Review"
@@ -1764,7 +1766,7 @@ export type Database = {
         | "TOEFL Exam Prep Advice"
         | "IELTS Exam Prep Advice"
         | "Duolingo Exam Prep Advice"
-        | "SAT Exam Prep Advise"
+        | "SAT Exam Prep Advice"
         | "ACT Exam Prep Advice"
         | "GRE Exam Prep Advice"
         | "GMAT Exam Prep Advice"
