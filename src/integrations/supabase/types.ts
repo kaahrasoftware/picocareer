@@ -1766,7 +1766,7 @@ export type Database = {
         | "TOEFL Exam Prep Advice"
         | "IELTS Exam Prep Advice"
         | "Duolingo Exam Prep Advice"
-        | "SAT Exam Prep Advise"
+        | "SAT Exam Prep Advice"
         | "ACT Exam Prep Advice"
         | "GRE Exam Prep Advice"
         | "GMAT Exam Prep Advice"
