@@ -75,12 +75,5 @@ export interface SessionTypeFormProps {
   profileId: string;
   onSuccess: () => void;
   onCancel: () => void;
-  existingTypes: {
-    id: string;
-    type: string;
-    duration: number;
-    description: string | null;
-  }[];
+  existingTypes: SessionTypeFormData[];
 }
-
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
