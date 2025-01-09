@@ -27,6 +27,19 @@ export interface Profile {
   highest_degree: 'No Degree' | 'Associate' | 'Bachelor' | 'Master' | 'PhD';
   total_booked_sessions: number;
   position: string | null;
+  X_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  youtube_url: string | null;
+  instagram_url: string | null;
+  languages: string[] | null;
+  company_name?: string | null;
+  school_name?: string | null;
+  academic_major?: string | null;
+  career?: {
+    title: string;
+    id: string;
+  } | null;
   school?: School;
 }
 
