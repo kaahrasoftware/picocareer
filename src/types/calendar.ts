@@ -1,5 +1,5 @@
 import { MeetingPlatform, SessionType } from "./session";
-import { NotificationType, NotificationCategory } from "./notification";
+import { NotificationType } from "./notification";
 
 export interface CalendarEvent {
   id: string;
@@ -40,6 +40,11 @@ export interface Availability {
   day_of_week?: number;
 }
 
+export type NotificationCategory = 
+  | 'session'
+  | 'major_update'
+  | 'general';
+
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
     case 'session_booked':
@@ -52,25 +57,3 @@ export const getNotificationCategory = (type: NotificationType): NotificationCat
       return 'general';
   }
 };
-
-export interface MentorSession {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  mentor: {
-    id: string;
-    full_name: string;
-  };
-  mentee: {
-    id: string;
-    full_name: string;
-  };
-  session_type: {
-    type: SessionType;
-    duration: number;
-  };
-  meeting_link?: string;
-  meeting_platform?: MeetingPlatform;
-  attendance_confirmed?: boolean;
-}

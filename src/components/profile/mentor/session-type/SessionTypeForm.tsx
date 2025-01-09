@@ -16,11 +16,11 @@ interface SessionTypeFormProps {
 export function SessionTypeForm({ onSuccess, onCancel, profileId, existingTypes }: SessionTypeFormProps) {
   const form = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: "Know About your Career",
+      type: "Know About my Career",
       duration: 30,
       price: 0,
       description: "",
-      meeting_platform: ["google_meet"],
+      meeting_platform: ["Google Meet"],
     },
   });
 
@@ -37,6 +37,7 @@ export function SessionTypeForm({ onSuccess, onCancel, profileId, existingTypes 
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username,
           phone_number: data.phone_number,
+          whatsapp_number: data.whatsapp_number,
         });
 
       if (error) throw error;
@@ -49,7 +50,7 @@ export function SessionTypeForm({ onSuccess, onCancel, profileId, existingTypes 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <SessionTypeSelect control={form.control} availableTypes={existingTypes?.map(t => t.type)} />
+        <SessionTypeSelect control={form.control} />
         <PlatformFields form={{ control: form.control }} />
         
         <div className="flex justify-end gap-2">

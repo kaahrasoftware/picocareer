@@ -41,6 +41,7 @@ export interface SessionTypeFormData {
   meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
+  whatsapp_number?: string;
 }
 
 export const SESSION_TYPE_OPTIONS: SessionType[] = [
