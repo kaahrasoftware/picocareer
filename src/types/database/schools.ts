@@ -3,11 +3,11 @@ export interface School {
   name: string;
   state: string;
   type: string;
-  website: string | null;
+  website: string;
   created_at: string;
   updated_at: string;
   status: string;
-  acceptance_rate: number | null;
+  acceptance_rate: number;
   country: string;
   location: string;
 }

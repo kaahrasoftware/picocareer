@@ -1,5 +1,28 @@
 export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
 
+export interface SessionParticipant {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+}
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: SessionParticipant;
+  mentee: SessionParticipant;
+  mentor_id: string;
+  mentee_id: string;
+  session_type: {
+    type: string;
+    duration: number;
+  };
+  meeting_link?: string;
+  meeting_platform?: MeetingPlatform;
+}
+
 export interface Availability {
   id: string;
   profile_id: string;
@@ -22,30 +45,28 @@ export interface CalendarEvent {
   status: string;
   created_at: string;
   updated_at: string;
-  session_details?: {
-    id: string;
-    scheduled_at: string;
-    status: string;
-    mentor_id: string;
-    mentee_id: string;
-    session_type: {
-      type: string;
-      duration: number;
-    };
-  };
+  session_details?: MentorSession;
 }
 
-export type NotificationCategory = "all" | "unread" | "session" | "system";
+export type NotificationCategory = "all" | "unread" | "session" | "system" | "mentorship" | "general";
 
-export function getNotificationCategory(type: string): NotificationCategory {
+export type NotificationType = 
+  | "session_booked" 
+  | "session_cancelled" 
+  | "session_reminder" 
+  | "profile_update" 
+  | "mentor_request" 
+  | "blog_posted" 
+  | "major_update";
+
+export function getNotificationCategory(type: NotificationType): NotificationCategory {
   switch (type) {
+    case "session_booked":
+    case "session_cancelled":
     case "session_reminder":
-    case "session_update":
-      return "session";
-    case "system_update":
-    case "maintenance":
-      return "system";
+    case "mentor_request":
+      return "mentorship";
     default:
-      return "all";
+      return "general";
   }
 }
