@@ -23,7 +23,7 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "TOEFL Exam Prep Advice",
   "IELTS Exam Prep Advice",
   "Duolingo Exam Prep Advice",
-  "SAT Exam Prep Advise",
+  "SAT Exam Prep Advice",
   "ACT Exam Prep Advice",
   "GRE Exam Prep Advice",
   "GMAT Exam Prep Advice",
@@ -41,12 +41,14 @@ export const SESSION_TYPE_OPTIONS: SessionType[] = [
   "College Application Last Review",
   "Application Essays Review",
   "I need someone to practice my presentation with",
+  "Study Tips",
+  "Volunteer Opportunities",
   "Know About my Academic Major"
 ] as const;
 
 export const MEETING_PLATFORMS: MeetingPlatform[] = [
-  "google_meet",
-  "whatsapp",
-  "telegram",
-  "phone_call"
+  "Google Meet",
+  "WhatsApp",
+  "Telegram",
+  "Phone Call"
 ] as const;

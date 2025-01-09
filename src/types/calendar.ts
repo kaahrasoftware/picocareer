@@ -9,8 +9,8 @@ export type Availability = {
   updated_at: string;
   recurring: boolean;
   day_of_week: number | null;
-  start_date_time: string | null;
-  end_date_time: string | null;
+  start_time: string | null;
+  end_time: string | null;
 };
 
 export type CalendarEvent = {
