@@ -216,40 +216,42 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl h-[90vh] overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-6">
-        <DialogHeader className="space-y-2 sm:space-y-4">
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <Avatar className="h-8 w-8 sm:h-12 sm:w-12">
-              <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
-              <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <DialogTitle className="text-lg sm:text-2xl font-bold">
-                Book a Session with {mentor.name}
-              </DialogTitle>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-                Fill in the details below to schedule your mentoring session
-              </p>
+      <DialogContent className="max-w-full sm:max-w-4xl h-[90vh] overflow-y-auto p-0 sm:p-6">
+        <div className="px-3 sm:px-0">
+          <DialogHeader className="space-y-2 sm:space-y-4 pt-3 sm:pt-0">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Avatar className="h-8 w-8 sm:h-12 sm:w-12">
+                <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
+                <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <DialogTitle className="text-lg sm:text-2xl font-bold">
+                  Book a Session with {mentor.name}
+                </DialogTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+                  Fill in the details below to schedule your mentoring session
+                </p>
+              </div>
             </div>
-          </div>
-        </DialogHeader>
+          </DialogHeader>
 
-        <div className="flex flex-col space-y-3 sm:space-y-6">
-          <div className="bg-muted/30 rounded-lg p-2 sm:p-6">
-            <BookingForm 
-              mentorId={mentor.id}
-              onFormChange={setFormData}
-            />
-          </div>
+          <div className="flex flex-col space-y-3 sm:space-y-6 mt-3 sm:mt-6">
+            <div className="bg-muted/30 rounded-lg p-3 sm:p-6">
+              <BookingForm 
+                mentorId={mentor.id}
+                onFormChange={setFormData}
+              />
+            </div>
 
-          <div>
-            <BookingConfirmation
-              isSubmitting={isSubmitting}
-              onCancel={() => onOpenChange(false)}
-              onConfirm={handleSubmit}
-              isValid={isValid}
-              googleAuthError={false}
-            />
+            <div className="pb-3 sm:pb-0">
+              <BookingConfirmation
+                isSubmitting={isSubmitting}
+                onCancel={() => onOpenChange(false)}
+                onConfirm={handleSubmit}
+                isValid={isValid}
+                googleAuthError={false}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>
