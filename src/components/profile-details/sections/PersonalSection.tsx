@@ -1,6 +1,6 @@
-import { Profile } from "@/types/database/profiles";
 import { UseFormRegister } from "react-hook-form";
 import { FormFields } from "../types/form-types";
+import { Profile } from "@/types/database/profiles";
 
 export interface PersonalSectionProps {
   profile: Profile;

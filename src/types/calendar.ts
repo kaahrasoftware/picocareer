@@ -1,5 +1,6 @@
 import type { NotificationType, NotificationCategory, MeetingPlatform } from "./database/enums";
 import type { SessionType } from "./database/session";
+import type { Profile } from "./database/profiles";
 
 export interface Availability {
   id: string;
@@ -56,6 +57,8 @@ export interface CalendarEvent {
   session_details: MentorSession;
 }
 
+export { type MeetingPlatform, type NotificationType, type NotificationCategory };
+
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
     case "session_booked":
@@ -73,5 +76,3 @@ export const getNotificationCategory = (type: NotificationType): NotificationCat
       return "general";
   }
 };
-
-export type { MeetingPlatform, NotificationType, NotificationCategory };

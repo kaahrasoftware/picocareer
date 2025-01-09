@@ -1,6 +1,7 @@
 import type { School } from "./schools";
 
 export type UserType = "mentee" | "mentor" | "admin" | "editor";
+export type Degree = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "Doctorate" | "MD";
 
 export interface Profile {
   id: string;
@@ -26,7 +27,7 @@ export interface Profile {
   first_name: string | null;
   last_name: string | null;
   user_type: UserType;
-  highest_degree: 'No Degree' | 'High School' | 'Associate' | 'Bachelor' | 'Master' | 'Doctorate';
+  highest_degree: Degree;
   total_booked_sessions: number;
   position: string | null;
   X_url: string | null;
