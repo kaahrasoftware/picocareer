@@ -24,14 +24,18 @@ export function EventsSidebar({
 
   const formatTime = formatEventTime || defaultFormatTime;
 
+  // Ensure events is always an array
+  const eventsList = Array.isArray(events) ? events : [];
+  const availabilityList = Array.isArray(availability) ? availability : [];
+
   return (
     <div className="sidebar p-4 border rounded-lg">
       <h2 className="text-lg font-semibold mb-4">Events</h2>
-      {events.length === 0 ? (
+      {eventsList.length === 0 ? (
         <p className="text-muted-foreground">No events scheduled</p>
       ) : (
         <ul className="space-y-3">
-          {events.map(event => (
+          {eventsList.map(event => (
             <li key={event.id} className="event-item p-3 border rounded-md">
               <h3 className="font-medium">{event.title}</h3>
               {event.session_details && (
@@ -45,11 +49,11 @@ export function EventsSidebar({
       )}
 
       <h2 className="text-lg font-semibold mt-6 mb-4">Availability</h2>
-      {availability.length === 0 ? (
+      {availabilityList.length === 0 ? (
         <p className="text-muted-foreground">No availability set</p>
       ) : (
         <ul className="space-y-2">
-          {availability.map(slot => (
+          {availabilityList.map(slot => (
             <li key={slot.id} className="availability-item p-2 border rounded-md">
               <p className="text-sm">{formatTime(slot)}</p>
             </li>
