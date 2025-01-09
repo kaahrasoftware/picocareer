@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthError } from "@supabase/supabase-js";
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -19,41 +20,7 @@ export function useAuth() {
         password,
       });
 
-      if (error) {
-        if (error.message === "Email not confirmed") {
-          toast({
-            title: "Email not verified",
-            description: "Please check your email for the verification link.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (error.message === "Invalid login credentials") {
-          toast({
-            title: "Invalid credentials",
-            description: "Please check your email and password.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (error.message.includes("rate limit")) {
-          toast({
-            title: "Too many attempts",
-            description: "Please try again later.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        toast({
-          title: "Error",
-          description: "An error occurred while signing in.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       // Invalidate all queries to force a refresh of data
       await queryClient.invalidateQueries();
@@ -67,13 +34,13 @@ export function useAuth() {
       setTimeout(() => {
         navigate("/");
       }, 100);
-    } catch (error: any) {
-      console.error('Sign in error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      } else {
+        console.error('Sign in error:', error);
+        throw new Error("An unexpected error occurred.");
+      }
     } finally {
       setIsLoading(false);
     }

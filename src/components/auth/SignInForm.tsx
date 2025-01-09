@@ -5,9 +5,12 @@ import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
 import { useAuth } from "@/hooks/useAuth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError } from "@supabase/supabase-js";
 
 export function SignInForm() {
   const { signIn, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,15 +22,40 @@ export function SignInForm() {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await signIn(formData.email, formData.password);
+    try {
+      await signIn(formData.email, formData.password);
+    } catch (err) {
+      if (err instanceof AuthError) {
+        switch (err.message) {
+          case "Invalid login credentials":
+            setError("Invalid email or password. Please check your credentials.");
+            break;
+          case "Email not confirmed":
+            setError("Please verify your email address before signing in.");
+            break;
+          default:
+            setError(err.message);
+        }
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
+    }
   };
 
   return (
     <div className="grid gap-6">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4">
           <div className="grid gap-2">
