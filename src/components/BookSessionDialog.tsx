@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MeetingPlatformSelector } from "./booking/MeetingPlatformSelector";
 import { TimeSlotForm } from "./booking/TimeSlotForm";
 import { useBookSession } from "@/hooks/useBookSession";
-import { MeetingPlatform } from "@/types/session";
+import { MeetingPlatform, SessionType } from "@/types/session";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -19,13 +19,12 @@ interface BookSessionDialogProps {
 export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDialogProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
-  const [selectedSessionType, setSelectedSessionType] = useState<string | undefined>(undefined);
+  const [selectedSessionType, setSelectedSessionType] = useState<SessionType | undefined>(undefined);
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("google_meet");
   const { bookSession, isLoading } = useBookSession();
 
   const handleBookSession = async () => {
     if (!selectedDate || !selectedTime || !selectedSessionType) {
-      // Handle missing information
       return;
     }
 

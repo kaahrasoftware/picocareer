@@ -1,7 +1,7 @@
 import { Database } from "@/types/database/database.types";
 
 export type NotificationType = Database["public"]["Enums"]["notification_type"];
-export type NotificationCategory = Database["public"]["Enums"]["notification_category"];
+export type NotificationCategory = "general" | "session" | "content" | "system";
 
 export interface Notification {
   id: string;

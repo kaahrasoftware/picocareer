@@ -1,46 +1,37 @@
 import { Database } from "@/types/database/database.types";
-import { NotificationType } from "./notification";
+import { MeetingPlatform, SessionType } from "./session";
 
-export type Availability = Database["public"]["Tables"]["mentor_availability"]["Row"];
-export type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row"] & {
-  session_details?: {
+export type MentorAvailability = Database["public"]["Tables"]["mentor_availability"]["Row"];
+export type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row"];
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: {
     id: string;
-    scheduled_at: string;
-    status: string;
-    notes?: string;
-    meeting_link?: string;
-    mentor: {
-      id: string;
-      full_name: string;
-      avatar_url?: string;
-    };
-    mentee: {
-      id: string;
-      full_name: string;
-      avatar_url?: string;
-    };
-    session_type: {
-      id: string;
-      type: string;
-      duration: number;
-    };
+    full_name: string;
   };
-};
+  mentee: {
+    id: string;
+    full_name: string;
+  };
+  session_type: {
+    type: SessionType;
+    duration: number;
+  };
+  meeting_link?: string | null;
+  meeting_platform?: MeetingPlatform;
+  attendance_confirmed?: boolean;
+  availability_slot_id?: string | null;
+}
 
-export type NotificationCategory = "mentorship" | "major_update" | "general" | "system" | "all" | "unread" | "session";
-
-export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
-  switch (type) {
-    case "session_booked":
-    case "session_cancelled":
-    case "session_reminder":
-      return "mentorship";
-    case "major_update":
-      return "major_update";
-    case "profile_update":
-    case "mentor_request":
-      return "general";
-    default:
-      return "system";
-  }
-};
+export interface Availability {
+  id: string;
+  start_date_time: string;
+  end_date_time: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week?: number;
+}
