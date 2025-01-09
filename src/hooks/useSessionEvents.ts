@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import type { CalendarEvent } from "@/types/calendar";
+import type { CalendarEvent, MentorSession } from "@/types/calendar";
 
 export function useSessionEvents() {
   const { session } = useAuthSession();
@@ -20,6 +20,9 @@ export function useSessionEvents() {
         .from("mentor_sessions")
         .select(`
           id,
+          mentor_id,
+          mentee_id,
+          session_type_id,
           scheduled_at,
           status,
           meeting_link,
@@ -65,18 +68,9 @@ export function useSessionEvents() {
         ).toISOString(),
         event_type: 'session',
         status: session.status,
-        created_at: new Date().toISOString(), // Add missing properties
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        session_details: {
-          id: session.id,
-          scheduled_at: session.scheduled_at,
-          status: session.status,
-          notes: session.notes,
-          meeting_link: session.meeting_link,
-          mentor: session.mentor,
-          mentee: session.mentee,
-          session_type: session.session_type,
-        },
+        session_details: session as unknown as MentorSession,
       }));
 
       return events;

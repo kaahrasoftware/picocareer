@@ -32,7 +32,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
       company_id: profile.company_id || "",
       school_id: profile.school_id || "",
       academic_major_id: profile.academic_major_id || "",
-      highest_degree: (profile.highest_degree as Degree) || "No Degree",
+      highest_degree: profile.highest_degree || "No Degree",
     }
   });
 
@@ -99,6 +99,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         register={register}
         handleFieldChange={handleFieldChange}
         schoolId={localProfile.school_id}
+        profile={profile}
       />
       
       <BioSection 

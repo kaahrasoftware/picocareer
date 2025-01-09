@@ -57,7 +57,7 @@ export interface CalendarEvent {
   session_details: MentorSession;
 }
 
-export { type MeetingPlatform, type NotificationType, type NotificationCategory };
+export type { MeetingPlatform, NotificationType, NotificationCategory };
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {

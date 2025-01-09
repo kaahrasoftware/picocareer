@@ -19,17 +19,19 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
       
       setIsLoading(true);
       try {
-        // Try to extract meeting link first
         const meetingLinkMatch = message.match(/href="([^"]+)"/);
         if (meetingLinkMatch) {
           console.log('Found meeting link:', meetingLinkMatch[1]);
           
-          // Query sessions with this meeting link
           const { data, error } = await supabase
             .from('mentor_sessions')
             .select(`
               id,
+              mentor_id,
+              mentee_id,
+              session_type_id,
               scheduled_at,
+              status,
               notes,
               meeting_platform,
               meeting_link,
@@ -69,7 +71,6 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
     fetchSessionData();
   }, [isExpanded, message, toast]);
 
-  // Get first sentence for collapsed view
   const firstSentence = message.split(/[.!?]/)[0];
   
   if (!isExpanded) {
@@ -101,7 +102,7 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
       <p><span className="font-medium text-zinc-300">Mentor:</span> {sessionData.mentor?.full_name}</p>
       <p><span className="font-medium text-zinc-300">Mentee:</span> {sessionData.mentee?.full_name}</p>
       <p><span className="font-medium text-zinc-300">Start Time:</span> {new Date(sessionData.scheduled_at).toLocaleString()}</p>
-      <p><span className="font-medium text-zinc-300">Session Type:</span> {sessionData.session_type?.type}</p>
+      <p><span className="font-medium text-zinc-300">Session Type:</span> {sessionData.session_type?.type.toString()}</p>
       <p><span className="font-medium text-zinc-300">Duration:</span> {sessionData.session_type?.duration} minutes</p>
       <p><span className="font-medium text-zinc-300">Platform:</span> {sessionData.meeting_platform}</p>
       {sessionData.meeting_link && (

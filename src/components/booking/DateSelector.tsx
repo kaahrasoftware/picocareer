@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { MentorAvailability } from "@/types/calendar";
+import { Availability } from "@/types/calendar";
 import { format } from "date-fns";
 
 interface DateSelectorProps {
@@ -28,7 +28,7 @@ export function DateSelector({
         .eq('is_available', true);
 
       if (error) throw error;
-      return data as MentorAvailability[];
+      return data as Availability[];
     }
   });
 
