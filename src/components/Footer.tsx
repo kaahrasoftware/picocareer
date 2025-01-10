@@ -127,7 +127,7 @@ export function Footer() {
               {otherLinks.map((link, index) => (
                 <li key={index}>
                   <a 
-                    href={link.href} 
+                    href={link.href}
                     onClick={link.onClick}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
