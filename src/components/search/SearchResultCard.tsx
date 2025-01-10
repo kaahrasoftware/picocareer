@@ -1,20 +1,54 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap } from "lucide-react";
-import { SearchResult } from "@/types/search";
 import { useState } from "react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import type { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
   result: SearchResult;
-  onClick: (result: SearchResult) => void;
 }
 
-export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
+export const SearchResultCard = ({ result }: SearchResultCardProps) => {
   const [selectedMajor, setSelectedMajor] = useState<any | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { session } = useAuthSession();
+
+  const handleClick = () => {
+    if (result.type === 'mentor' && !session) {
+      toast({
+        title: "Authentication Required",
+        description: "Join our community to connect with amazing mentors and unlock your career potential!",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/auth")}
+            className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+          >
+            Login
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    if (result.type === 'major') {
+      setSelectedMajor(result);
+    } else if (result.type === 'career') {
+      setSelectedCareerId(result.id);
+    }
+  };
 
   const renderContent = () => {
     switch (result.type) {
@@ -50,7 +84,10 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                     </Badge>
                   ))}
                   {result.keywords.length > 3 && (
-                    <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                    >
                       +{result.keywords.length - 3}
                     </Badge>
                   )}
@@ -78,7 +115,10 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                       </Badge>
                     ))}
                     {result.academic_majors.length > 3 && (
-                      <Badge variant="secondary" className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10">
+                      <Badge 
+                        variant="secondary" 
+                        className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                      >
                         +{result.academic_majors.length - 3}
                       </Badge>
                     )}
@@ -122,16 +162,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             )}
           </>
         );
-    }
-  };
-
-  const handleClick = () => {
-    if (result.type === 'major') {
-      setSelectedMajor(result);
-    } else if (result.type === 'career') {
-      setSelectedCareerId(result.id);
-    } else {
-      onClick(result);
     }
   };
 
