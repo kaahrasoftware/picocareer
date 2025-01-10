@@ -93,7 +93,7 @@ export function SearchResultCard({ result, type }: SearchResultCardProps) {
                 >
                   +{result.skills.length - 3} more
                 </Badge>
-              ))}
+              )}
             </div>
           )}
         </Card>
@@ -149,7 +149,7 @@ export function SearchResultCard({ result, type }: SearchResultCardProps) {
                   >
                     +{result.skills.length - 3} more
                   </Badge>
-                ))}
+                )}
               </div>
             )}
           </Card>
@@ -211,7 +211,7 @@ export function SearchResultCard({ result, type }: SearchResultCardProps) {
                   >
                     +{result.skills.length - 3} more
                   </Badge>
-                ))}
+                )}
               </div>
             )}
           </Card>
