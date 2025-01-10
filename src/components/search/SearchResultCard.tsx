@@ -5,6 +5,7 @@ import { SearchResult } from "@/types/search";
 import { useState } from "react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -21,6 +22,12 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         return (
           <>
             <div className="flex items-center gap-3 mb-3">
+              <ProfileAvatar
+                avatarUrl={result.avatar_url}
+                fallback={result.title[0]}
+                size="sm"
+                editable={false}
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
                 <div className="space-y-1">
