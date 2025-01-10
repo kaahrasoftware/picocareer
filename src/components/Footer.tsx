@@ -162,7 +162,7 @@ export function Footer() {
             </div>
             
             {/* Copyright and Product Info */}
-            <div className="text-sm text-muted-foreground text-center flex items-center gap-2">
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
               <p>© {new Date().getFullYear()} PicoCareer. All rights reserved.</p>
               <span className="mx-2">•</span>
               <p>A product of <strong>Kaahra</strong></p>
