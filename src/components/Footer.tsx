@@ -12,10 +12,10 @@ export function Footer() {
   ];
 
   const otherLinks = [
+    { label: "Fields of Study", href: "/program", onClick: () => navigate("/program") },
+    { label: "Careers", href: "/career", onClick: () => navigate("/career") },
+    { label: "Mentors", href: "/mentor", onClick: () => navigate("/mentor") },
     { label: "Blog", href: "/blog", onClick: () => navigate("/blog") },
-    { label: "Schools", href: "/school", onClick: () => navigate("/school") },
-    { label: "Funding", href: "/funding", onClick: () => navigate("/funding") },
-    { label: "How PicoCareer works", href: "#" },
   ];
 
   const socialLinks = [
@@ -52,8 +52,6 @@ export function Footer() {
       label: "YouTube"
     }
   ];
-
-  // ... keep existing code
 
   return (
     <footer className="mt-20 border-t border-border bg-white">
@@ -164,9 +162,10 @@ export function Footer() {
             </div>
             
             {/* Copyright and Product Info */}
-            <div className="text-sm text-muted-foreground text-center md:text-right">
+            <div className="text-sm text-muted-foreground text-center flex items-center gap-2">
               <p>© {new Date().getFullYear()} PicoCareer. All rights reserved.</p>
-              <p className="mt-1">A product of <strong>Kaahra</strong></p>
+              <span className="mx-2">•</span>
+              <p>A product of <strong>Kaahra</strong></p>
             </div>
           </div>
         </div>
