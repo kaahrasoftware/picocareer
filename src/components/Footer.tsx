@@ -56,9 +56,26 @@ export function Footer() {
   return (
     <footer className="mt-20 border-t border-border bg-white">
       <div className="max-w-[1400px] mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {/* Company Info Section */}
-          <div className="space-y-6">
+        {/* Logo Section - Full width and centered on mobile */}
+        <div className="w-full flex justify-center mb-8 md:hidden">
+          <div className="flex items-center space-x-4">
+            <img 
+              src="/lovable-uploads/d6b217eb-2cec-4933-b8ee-09a438e5d28d.png"
+              alt="PicoCareer Logo"
+              className="h-12 w-12 object-contain"
+            />
+            <img 
+              src="/lovable-uploads/facac3f6-d693-4d3f-a971-a6aa734c804e.png"
+              alt="PicoCareer"
+              className="h-8"
+            />
+          </div>
+        </div>
+
+        {/* Main Grid Section */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {/* Company Info Section - Hidden on mobile as it's shown above */}
+          <div className="hidden md:block space-y-6">
             <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/d6b217eb-2cec-4933-b8ee-09a438e5d28d.png"
@@ -122,7 +139,7 @@ export function Footer() {
           </div>
 
           {/* Newsletter Section */}
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <h4 className="font-semibold text-base mb-4">Stay Updated</h4>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
