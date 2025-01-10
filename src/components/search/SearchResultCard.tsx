@@ -23,27 +23,26 @@ export const SearchResultCard = ({ result }: SearchResultCardProps) => {
   const { session } = useAuthSession();
 
   const handleClick = () => {
-    if (result.type === 'mentor' && !session) {
-      toast({
-        title: "Authentication Required",
-        description: "Join our community to connect with amazing mentors and unlock your career potential!",
-        variant: "default",
-        className: "bg-green-50 border-green-200",
-        action: (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate("/auth")}
-            className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
-          >
-            Login
-          </Button>
-        ),
-      });
-      return;
-    }
-
-    if (result.type === 'major') {
+    if (result.type === 'mentor') {
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Join our community to connect with amazing mentors and unlock your career potential!",
+          variant: "default",
+          className: "bg-green-50 border-green-200",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("/auth")}
+              className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+            >
+              Login
+            </Button>
+          ),
+        });
+      }
+    } else if (result.type === 'major') {
       setSelectedMajor(result);
     } else if (result.type === 'career') {
       setSelectedCareerId(result.id);
