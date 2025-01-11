@@ -158,6 +158,7 @@ export type Database = {
           status: Database["public"]["Enums"]["status"] | null
           stress_levels: string | null
           title: string
+          token_cost: number
           transferable_skills: string[] | null
           updated_at: string
           work_environment: string | null
@@ -188,6 +189,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["status"] | null
           stress_levels?: string | null
           title: string
+          token_cost?: number
           transferable_skills?: string[] | null
           updated_at?: string
           work_environment?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["status"] | null
           stress_levels?: string | null
           title?: string
+          token_cost?: number
           transferable_skills?: string[] | null
           updated_at?: string
           work_environment?: string | null
@@ -354,6 +357,7 @@ export type Database = {
           status: Database["public"]["Enums"]["status"] | null
           stress_level: string | null
           title: string
+          token_cost: number
           tools_knowledge: string[] | null
           transferable_skills: string[] | null
           updated_at: string
@@ -387,6 +391,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["status"] | null
           stress_level?: string | null
           title: string
+          token_cost?: number
           tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
           updated_at?: string
@@ -420,6 +425,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["status"] | null
           stress_level?: string | null
           title?: string
+          token_cost?: number
           tools_knowledge?: string[] | null
           transferable_skills?: string[] | null
           updated_at?: string
@@ -491,6 +497,7 @@ export type Database = {
           price: number
           profile_id: string
           telegram_username: string | null
+          token_cost: number
           type: Database["public"]["Enums"]["session_type"]
           updated_at: string
         }
@@ -506,6 +513,7 @@ export type Database = {
           price: number
           profile_id: string
           telegram_username?: string | null
+          token_cost?: number
           type: Database["public"]["Enums"]["session_type"]
           updated_at?: string
         }
@@ -521,6 +529,7 @@ export type Database = {
           price?: number
           profile_id?: string
           telegram_username?: string | null
+          token_cost?: number
           type?: Database["public"]["Enums"]["session_type"]
           updated_at?: string
         }
@@ -1021,6 +1030,77 @@ export type Database = {
           },
         ]
       }
+      token_packages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          price_usd: number
+          token_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_usd: number
+          token_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_usd?: number
+          token_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      token_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          transaction_type: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          transaction_type: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          transaction_type?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_bookmarks: {
         Row: {
           content_id: string
@@ -1373,6 +1453,38 @@ export type Database = {
           {
             foreignKeyName: "videos_author_id_fkey"
             columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
