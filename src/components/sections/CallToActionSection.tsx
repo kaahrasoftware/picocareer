@@ -1,61 +1,58 @@
 import { Button } from "@/components/ui/button";
-import { UserPlus, GraduationCap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
-export const CallToActionSection = () => {
+export function CallToActionSection() {
+  const navigate = useNavigate();
   const { session } = useAuthSession();
 
+  // Always call hooks at the top level before any conditional returns
+  const handleGetStarted = () => {
+    if (session) {
+      navigate("/profile");
+    } else {
+      navigate("/auth");
+    }
+  };
+
   return (
-    <>
-      <h2 className="text-3xl font-bold text-center mb-8">
-        Join Our Community Today
-      </h2>
-      <section className="py-16 relative overflow-hidden rounded-xl mx-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col items-center gap-8">
-            {/* Video Container */}
-            <div className="w-full max-w-3xl mx-auto rounded-lg overflow-hidden shadow-xl bg-black/20 p-4">
-              <div className="relative aspect-video">
-                <video 
-                  className="absolute inset-0 w-full h-full object-cover"
-                  src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/videos/Koffi.mp4?t=2025-01-11T20%3A57%3A11.094Z"
-                  controls
-                  preload="metadata"
-                />
-              </div>
-            </div>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-              {!session?.user && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="w-full md:w-auto bg-picocareer-primary hover:bg-picocareer-accent text-white font-semibold"
-                >
-                  <Link to="/auth">
-                    <UserPlus className="mr-2 h-5 w-5" />
-                    Sign Up
-                  </Link>
-                </Button>
-              )}
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="w-full md:w-auto bg-white hover:bg-gray-100 text-picocareer-dark font-semibold"
-              >
-                <Link to="/mentor/register" className="flex items-center justify-center gap-2">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  Become a Mentor
-                </Link>
-              </Button>
+    <section className="py-16 bg-background">
+      <div className="container mx-auto px-4">
+        <div className="text-center space-y-12">
+          <h2 className="text-4xl font-bold tracking-tight">
+            Discover Your Path to Success
+          </h2>
+
+          {/* Video Container */}
+          <div className="w-full max-w-3xl mx-auto rounded-lg overflow-hidden shadow-xl bg-black/20 p-4">
+            <div className="relative aspect-video">
+              <video 
+                className="absolute inset-0 w-full h-full object-cover"
+                src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/videos/Koffi.mp4?t=2025-01-11T20%3A57%3A11.094Z"
+                controls
+                preload="metadata"
+              />
             </div>
           </div>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button
+              onClick={handleGetStarted}
+              size="lg"
+              className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+            >
+              Get Started
+            </Button>
+            <Button
+              onClick={() => navigate("/mentor/register")}
+              variant="outline"
+              size="lg"
+            >
+              Become a Mentor
+            </Button>
+          </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
-};
+}
