@@ -13,9 +13,10 @@ import type { SearchResult } from "@/types/search";
 
 interface SearchResultCardProps {
   result: SearchResult;
+  onClick?: (result: SearchResult) => void;
 }
 
-export const SearchResultCard = ({ result }: SearchResultCardProps) => {
+export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
   const [selectedMajor, setSelectedMajor] = useState<any | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -23,6 +24,11 @@ export const SearchResultCard = ({ result }: SearchResultCardProps) => {
   const { session } = useAuthSession();
 
   const handleClick = () => {
+    if (onClick) {
+      onClick(result);
+      return;
+    }
+
     if (result.type === 'mentor') {
       if (!session) {
         toast({

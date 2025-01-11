@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { NotificationType } from "@/types/database/enums";
+import { NotificationType, NotificationCategory } from "@/types/calendar";
 
 interface AdminNotificationProps {
   mentorName: string;
@@ -29,7 +29,7 @@ export async function notifyAdmins({
       title: "New Session Booked",
       message: `${menteeName} booked a ${sessionType} session with ${mentorName} for ${scheduledAt.toLocaleString()}`,
       type: "session_booked" as NotificationType,
-      category: "session",
+      category: "session" as NotificationCategory,
       action_url: `/calendar`
     }));
 

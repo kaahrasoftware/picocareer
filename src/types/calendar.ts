@@ -57,7 +57,7 @@ export type NotificationType =
   | "blog_posted" 
   | "major_update";
 
-export type NotificationCategory = "mentorship" | "general";
+export type NotificationCategory = "mentorship" | "general" | "session" | "major_update" | "system" | "unread" | "all";
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
