@@ -23,18 +23,6 @@ export function CallToActionSection() {
             Discover Your Path to Success
           </h2>
 
-          {/* Video Container */}
-          <div className="w-full max-w-3xl mx-auto rounded-lg overflow-hidden shadow-xl bg-black/20 p-4">
-            <div className="relative aspect-video">
-              <video 
-                className="absolute inset-0 w-full h-full object-cover"
-                src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/videos/Koffi.mp4?t=2025-01-11T20%3A57%3A11.094Z"
-                controls
-                preload="metadata"
-              />
-            </div>
-          </div>
-
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button
               onClick={handleGetStarted}
