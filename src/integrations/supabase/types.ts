@@ -1496,6 +1496,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_tokens_to_wallet: {
+        Args: {
+          p_wallet_id: string
+          p_amount: number
+          p_description: string
+          p_related_entity_type?: string
+          p_related_entity_id?: string
+        }
+        Returns: undefined
+      }
       check_and_insert_major: {
         Args: {
           major_data: Json
