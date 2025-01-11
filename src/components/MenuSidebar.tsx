@@ -75,7 +75,6 @@ export function MenuSidebar() {
               alt="PicoCareer Logo" 
               className="h-10"
             />
-            <span className="text-xl font-semibold">PicoCareer</span>
           </Link>
           <div className="flex items-center gap-4">
             <Button 
@@ -113,7 +112,6 @@ export function MenuSidebar() {
               alt="PicoCareer Logo" 
               className="h-10"
             />
-            <span className="text-xl font-semibold">PicoCareer</span>
           </Link>
         </div>
 
