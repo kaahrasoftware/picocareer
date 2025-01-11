@@ -18,13 +18,11 @@ export const CallToActionSection = () => {
             {/* Video Container */}
             <div className="w-full max-w-3xl mx-auto rounded-lg overflow-hidden shadow-xl bg-black/20 p-4">
               <div className="relative aspect-video">
-                <iframe 
-                  className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube-nocookie.com/embed/-1Oltidy_ig?si=eiVCW9HVff4XZi9x&amp;clip=Ugkx5kP_YoFTbF8OVJcrt5xp8bROXl6rx8bK&amp;clipt=EJO-ARjq0wM" 
-                  title="YouTube video player" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
+                <video 
+                  className="absolute inset-0 w-full h-full object-cover"
+                  src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/videos/Koffi.mp4?t=2025-01-11T20%3A57%3A11.094Z"
+                  controls
+                  preload="metadata"
                 />
               </div>
             </div>
