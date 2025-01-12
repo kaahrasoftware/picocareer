@@ -7,7 +7,16 @@ import { CalendarTab } from "@/components/profile/CalendarTab";
 import { MentorTab } from "@/components/profile/MentorTab";
 import { BookmarksTab } from "@/components/profile/BookmarksTab";
 import { SettingsTab } from "@/components/profile/SettingsTab";
-import { User, LayoutDashboard, Calendar, GraduationCap, Bookmark, Settings } from "lucide-react";
+import { WalletTab } from "@/components/profile/WalletTab";
+import { 
+  User, 
+  LayoutDashboard, 
+  Calendar, 
+  GraduationCap, 
+  Bookmark, 
+  Settings,
+  Wallet 
+} from "lucide-react";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabsProps {
@@ -20,11 +29,8 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
   const isAdmin = profile?.user_type === 'admin';
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
-
-  // Set initial tab value based on URL parameter
   const defaultTab = tabFromUrl || 'profile';
 
-  // Ensure profile data is available before rendering tabs
   if (!profile) {
     return null;
   }
@@ -36,7 +42,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
       onValueChange={onTabChange}
     >
       <TabsList className="grid w-full" style={{ 
-        gridTemplateColumns: `repeat(${isAdmin ? 6 : 5}, minmax(0, 1fr))`
+        gridTemplateColumns: `repeat(${isAdmin ? 7 : 6}, minmax(0, 1fr))`
       }}>
         <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1">
           <User className="h-4 w-4" />
@@ -65,6 +71,11 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <TabsTrigger value="bookmarks" className="flex flex-col sm:flex-row items-center gap-1">
           <Bookmark className="h-4 w-4" />
           <span className="hidden sm:inline">Bookmarks</span>
+        </TabsTrigger>
+
+        <TabsTrigger value="wallet" className="flex flex-col sm:flex-row items-center gap-1">
+          <Wallet className="h-4 w-4" />
+          <span className="hidden sm:inline">Wallet</span>
         </TabsTrigger>
         
         <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1">
@@ -95,6 +106,10 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
 
       <TabsContent value="bookmarks">
         <BookmarksTab />
+      </TabsContent>
+
+      <TabsContent value="wallet">
+        <WalletTab profile={profile} />
       </TabsContent>
 
       <TabsContent value="settings">
