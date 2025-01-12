@@ -24,22 +24,18 @@ export async function notifyAdmins({
     if (!adminProfiles?.length) return;
 
     // Create notifications for each admin
-    const notifications = adminProfiles.map(admin => ({
-      profile_id: admin.id,
-      title: "New Session Booked",
-      message: `${menteeName} booked a ${sessionType} session with ${mentorName} for ${scheduledAt.toLocaleString()}`,
-      type: "session_booked" as NotificationType,
-      category: "session" as NotificationCategory,
-      action_url: `/calendar`
-    }));
-
-    // Insert notifications one by one to match the expected type
-    for (const notification of notifications) {
+    for (const admin of adminProfiles) {
       await supabase
         .from('notifications')
-        .insert(notification);
+        .insert({
+          profile_id: admin.id,
+          title: "New Session Booked",
+          message: `${menteeName} booked a ${sessionType} session with ${mentorName} for ${scheduledAt.toLocaleString()}`,
+          type: "session_booked" as NotificationType,
+          category: "session" as NotificationCategory,
+          action_url: `/calendar`
+        });
     }
-
   } catch (error) {
     console.error('Error notifying admins:', error);
   }

@@ -28,17 +28,17 @@ export interface CalendarEvent {
     id: string;
     scheduled_at: string;
     status: string;
-    notes: string | null;
-    meeting_link: string | null;
+    notes: string;
+    meeting_link: string;
     mentor: {
       id: string;
       full_name: string;
-      avatar_url: string | null;
+      avatar_url: string;
     };
     mentee: {
       id: string;
       full_name: string;
-      avatar_url: string | null;
+      avatar_url: string;
     };
     session_type: {
       type: string;
@@ -67,8 +67,7 @@ export type NotificationType =
   | 'session_reminder'
   | 'mentor_request'
   | 'system_update'
-  | 'profile_update'
-  | 'blog_posted';
+  | 'profile_update';
 
 export type NotificationCategory = 
   | 'all'
@@ -79,29 +78,65 @@ export type NotificationCategory =
   | 'general'
   | 'major_update';
 
-export type SessionTypeEnum = 
+export type SessionType = 
   | 'Know About my Career'
+  | 'Resume/CV Review'
+  | 'Campus France'
+  | 'Undergrad Application'
+  | 'Grad Application'
+  | 'TOEFL Exam Prep Advice'
+  | 'IELTS Exam Prep Advice'
+  | 'Duolingo Exam Prep Advice'
   | 'Mock Interview'
-  | 'Resume Review'
   | 'Portfolio Review'
   | 'General Mentorship'
   | 'Technical Discussion'
   | 'Project Feedback'
   | 'Study Planning'
   | 'Exam Preparation'
-  | 'Industry Insights';
+  | 'Industry Insights'
+  | 'Career Switch Advice'
+  | 'Salary Negotiation'
+  | 'Job Search Strategy'
+  | 'Interview Preparation'
+  | 'Resume Building'
+  | 'LinkedIn Profile Review'
+  | 'Personal Branding'
+  | 'Networking Tips'
+  | 'Work-Life Balance'
+  | 'Leadership Skills'
+  | 'Entrepreneurship'
+  | 'Know About my Academic Major';
 
-export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
+export const SESSION_TYPES: SessionType[] = [
   'Know About my Career',
+  'Resume/CV Review',
+  'Campus France',
+  'Undergrad Application',
+  'Grad Application',
+  'TOEFL Exam Prep Advice',
+  'IELTS Exam Prep Advice',
+  'Duolingo Exam Prep Advice',
   'Mock Interview',
-  'Resume Review',
   'Portfolio Review',
   'General Mentorship',
   'Technical Discussion',
   'Project Feedback',
   'Study Planning',
   'Exam Preparation',
-  'Industry Insights'
+  'Industry Insights',
+  'Career Switch Advice',
+  'Salary Negotiation',
+  'Job Search Strategy',
+  'Interview Preparation',
+  'Resume Building',
+  'LinkedIn Profile Review',
+  'Personal Branding',
+  'Networking Tips',
+  'Work-Life Balance',
+  'Leadership Skills',
+  'Entrepreneurship',
+  'Know About my Academic Major'
 ];
 
 export interface TimeSlot {
@@ -118,6 +153,11 @@ export interface TimeSlot {
 
 export interface CalendarViewProps {
   isMentor: boolean;
+  events: CalendarEvent[];
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+  availabilitySlots: TimeSlot[];
+  isLoading: boolean;
 }
 
 export interface EventsSidebarProps {
@@ -130,17 +170,29 @@ export interface EventsSidebarProps {
 
 export interface TimeSlotFormProps {
   profileId: string;
-  handleSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
+  onSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
   onCancel: () => void;
 }
 
 export interface UnavailableTimeFormProps {
   profileId: string;
-  handleSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
+  onSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
   onCancel: () => void;
 }
 
 export interface AvailabilityManagerProps {
   profileId: string;
   handleUpdate?: () => Promise<void>;
+  onUpdate?: () => Promise<void>;
+}
+
+export interface ExistingTimeSlotsProps {
+  slots: TimeSlot[];
+  onDelete: (id: string) => Promise<void>;
+  isLoading: boolean;
+}
+
+export interface SessionTypeSelectProps {
+  control: Control;
+  availableTypes: SessionType[];
 }
