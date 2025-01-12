@@ -19,6 +19,15 @@ interface TokenPackage {
 export default function TokenShop() {
   const navigate = useNavigate();
 
+  // Call all hooks at the top level
+  const { data: session } = useQuery({
+    queryKey: ['auth-session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    }
+  });
+
   const { data: tokenPackages, isLoading } = useQuery({
     queryKey: ['tokenPackages'],
     queryFn: async () => {
@@ -30,8 +39,7 @@ export default function TokenShop() {
 
   const handlePurchase = async (priceId: string) => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
+      if (!session) {
         toast({
           title: "Authentication required",
           description: "Please sign in to purchase tokens",
@@ -41,13 +49,13 @@ export default function TokenShop() {
         return;
       }
 
-      console.log('Package price ID:', priceId); // Debug log
+      console.log('Package price ID:', priceId);
 
       const response = await supabase.functions.invoke('create-token-checkout', {
         body: { priceId },
       });
 
-      console.log('Checkout response:', response); // Debug log
+      console.log('Checkout response:', response);
 
       if (response.error) {
         throw response.error;
