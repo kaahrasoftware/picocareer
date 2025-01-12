@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TokenPackage {
   id: string;
@@ -41,8 +41,10 @@ export default function TokenShop() {
         return;
       }
 
+      console.log('Initiating purchase with priceId:', priceId); // Debug log
+
       const response = await supabase.functions.invoke('create-token-checkout', {
-        body: { priceId },
+        body: { priceId: priceId }, // Ensure priceId is explicitly named in the object
       });
 
       if (response.error) {
@@ -105,7 +107,10 @@ export default function TokenShop() {
             <CardFooter>
               <Button 
                 className="w-full" 
-                onClick={() => handlePurchase(pkg.default_price)}
+                onClick={() => {
+                  console.log('Package:', pkg); // Debug log
+                  handlePurchase(pkg.default_price);
+                }}
               >
                 Purchase
               </Button>
