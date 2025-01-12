@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface TokenPackage {
   id: string;
@@ -10,10 +12,13 @@ interface TokenPackage {
   description?: string;
   token_amount: number;
   price_usd: number;
+  default_price: string;
   image_url?: string;
 }
 
 export default function TokenShop() {
+  const navigate = useNavigate();
+
   const { data: tokenPackages, isLoading } = useQuery({
     queryKey: ['tokenPackages'],
     queryFn: async () => {
@@ -22,6 +27,40 @@ export default function TokenShop() {
       return response.data as TokenPackage[];
     }
   });
+
+  const handlePurchase = async (priceId: string) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to purchase tokens",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      const response = await supabase.functions.invoke('create-token-checkout', {
+        body: { priceId },
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initiate purchase. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -64,7 +103,12 @@ export default function TokenShop() {
               <div className="text-2xl font-bold">${pkg.price_usd}</div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">Purchase</Button>
+              <Button 
+                className="w-full" 
+                onClick={() => handlePurchase(pkg.default_price)}
+              >
+                Purchase
+              </Button>
             </CardFooter>
           </Card>
         ))}
