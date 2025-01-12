@@ -12,10 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const stripeKey = Deno.env.get('STRIPE_API');
     if (!stripeKey) {
-      console.error('STRIPE_SECRET_KEY is not configured in edge function secrets');
-      throw new Error('Stripe secret key is not configured');
+      console.error('STRIPE_API is not configured in edge function secrets');
+      throw new Error('Stripe API key is not configured');
     }
 
     console.log('Initializing Stripe client...');
