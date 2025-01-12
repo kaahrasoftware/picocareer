@@ -3,10 +3,10 @@ import { CalendarView } from "./CalendarView";
 import { EventsSidebar } from "./EventsSidebar";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { format } from "date-fns";
-import type { TimeSlot, CalendarEvent } from "@/types/session";
+import type { Availability, CalendarEvent } from "@/types/session";
 
 interface CalendarContainerProps {
-  availabilitySlots: TimeSlot[];
+  availabilitySlots: Availability[];
   onDeleteAvailability: (id: string) => void;
 }
 
@@ -15,7 +15,7 @@ export function CalendarContainer({
   onDeleteAvailability 
 }: CalendarContainerProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const { data: events = [], isLoading } = useSessionEvents();
+  const { events, isLoading } = useSessionEvents(selectedDate);
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
@@ -23,7 +23,7 @@ export function CalendarContainer({
 
   // Filter availability slots for the selected date
   const filteredAvailability = availabilitySlots.filter(slot => {
-    const slotDate = new Date(slot.start_date_time);
+    const slotDate = new Date(slot.start_time);
     return format(slotDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
 
@@ -31,10 +31,9 @@ export function CalendarContainer({
     <div className="flex flex-col md:flex-row gap-4 h-full">
       <div className="flex-1">
         <CalendarView
-          isMentor={true}
-          events={events}
           selectedDate={selectedDate}
           onDateChange={handleDateChange}
+          events={events as CalendarEvent[]}
           availabilitySlots={filteredAvailability}
           isLoading={isLoading}
         />
@@ -42,9 +41,10 @@ export function CalendarContainer({
       <div className="w-full md:w-80">
         <EventsSidebar
           selectedDate={selectedDate}
-          events={events}
-          isMentor={true}
-          onEventDelete={() => {}}
+          events={events as CalendarEvent[]}
+          availabilitySlots={filteredAvailability}
+          onDeleteAvailability={onDeleteAvailability}
+          isLoading={isLoading}
         />
       </div>
     </div>

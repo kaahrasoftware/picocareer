@@ -1,28 +1,17 @@
-import { Control } from "react-hook-form";
+import { Control as FormControl } from "react-hook-form";
 
-export interface SessionParticipant {
+export type MeetingPlatform = 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Skype' | 'Phone' | 'In Person';
+
+export interface Availability {
   id: string;
-  full_name: string;
-  avatar_url?: string;
-}
-
-export interface SessionType {
-  type: string;
-  duration: number;
-}
-
-export interface MentorSession {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes?: string;
-  meeting_link?: string;
-  mentor: SessionParticipant;
-  mentee: SessionParticipant;
-  session_type: SessionType;
-  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram';
-  attendance_confirmed?: boolean;
-  availability_slot_id?: string;
+  profile_id: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CalendarEvent {
@@ -34,17 +23,32 @@ export interface CalendarEvent {
   event_type: string;
   created_at: string;
   updated_at: string;
+  status?: string;
   session_details?: MentorSession;
 }
 
-export type NotificationType =
+export interface SessionTypeFormData {
+  type: string;
+  duration: number;
+  price: number;
+  description: string;
+  meeting_platform: MeetingPlatform[];
+  telegram_username?: string;
+  phone_number?: string;
+  token_cost: number;
+}
+
+export type Control = FormControl<SessionTypeFormData>;
+
+export type NotificationType = 
   | 'major_update'
   | 'session_booked'
   | 'session_cancelled'
   | 'session_reminder'
   | 'mentor_request'
   | 'system_update'
-  | 'profile_update';
+  | 'profile_update'
+  | 'token_purchase';
 
 export type NotificationCategory = 
   | 'all'
@@ -54,119 +58,3 @@ export type NotificationCategory =
   | 'mentorship'
   | 'general'
   | 'major_update';
-
-export type SessionType =
-  | 'Know About my Career'
-  | 'Resume/CV Review'
-  | 'Campus France'
-  | 'Undergrad Application'
-  | 'Grad Application'
-  | 'TOEFL Exam Prep Advice'
-  | 'IELTS Exam Prep Advice'
-  | 'Duolingo Exam Prep Advice'
-  | 'Mock Interview'
-  | 'Portfolio Review'
-  | 'General Mentorship'
-  | 'Technical Discussion'
-  | 'Project Feedback'
-  | 'Study Planning'
-  | 'Exam Preparation'
-  | 'Industry Insights'
-  | 'Career Switch Advice'
-  | 'Salary Negotiation'
-  | 'Job Search Strategy'
-  | 'Interview Preparation'
-  | 'Resume Building'
-  | 'LinkedIn Profile Review'
-  | 'Personal Branding'
-  | 'Networking Tips'
-  | 'Work-Life Balance'
-  | 'Leadership Skills'
-  | 'Entrepreneurship'
-  | 'Know About my Academic Major';
-
-export const SESSION_TYPES: SessionType[] = [
-  'Know About my Career',
-  'Resume/CV Review',
-  'Campus France',
-  'Undergrad Application',
-  'Grad Application',
-  'TOEFL Exam Prep Advice',
-  'IELTS Exam Prep Advice',
-  'Duolingo Exam Prep Advice',
-  'Mock Interview',
-  'Portfolio Review',
-  'General Mentorship',
-  'Technical Discussion',
-  'Project Feedback',
-  'Study Planning',
-  'Exam Preparation',
-  'Industry Insights',
-  'Career Switch Advice',
-  'Salary Negotiation',
-  'Job Search Strategy',
-  'Interview Preparation',
-  'Resume Building',
-  'LinkedIn Profile Review',
-  'Personal Branding',
-  'Networking Tips',
-  'Work-Life Balance',
-  'Leadership Skills',
-  'Entrepreneurship',
-  'Know About my Academic Major'
-];
-
-export interface TimeSlot {
-  id: string;
-  start_date_time: string;
-  end_date_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week?: number;
-}
-
-export type Availability = TimeSlot;
-
-export interface CalendarViewProps {
-  isMentor: boolean;
-  events: CalendarEvent[];
-  selectedDate: Date;
-  onDateChange: (date: Date) => void;
-  availabilitySlots: TimeSlot[];
-  isLoading: boolean;
-}
-
-export interface EventsSidebarProps {
-  selectedDate: Date;
-  events: CalendarEvent[];
-  isMentor: boolean;
-  onEventDelete: (event: CalendarEvent) => void;
-}
-
-export interface TimeSlotFormProps {
-  profileId: string;
-  onSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
-  onCancel: () => void;
-}
-
-export interface UnavailableTimeFormProps {
-  profileId: string;
-  onSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
-  onCancel: () => void;
-}
-
-export interface AvailabilityManagerProps {
-  profileId: string;
-  onUpdate?: () => Promise<void>;
-}
-
-export interface ExistingTimeSlotsProps {
-  slots: TimeSlot[];
-  onDelete: (id: string) => Promise<void>;
-  isLoading: boolean;
-}
-
-export interface SessionTypeSelectProps {
-  control: Control<any>;
-  availableTypes: SessionType[];
-}
