@@ -1,106 +1,60 @@
-export type SessionTypeEnum = 
-  | "Know About my Career"
-  | "Resume/CV Review"
-  | "Campus France"
-  | "Undergrad Application"
-  | "Grad Application"
-  | "TOEFL Exam Prep Advice"
-  | "IELTS Exam Prep Advice"
-  | "Duolingo Exam Prep Advice"
-  | "SAT Exam Prep Advice"
-  | "ACT Exam Prep Advice"
-  | "GRE Exam Prep Advice"
-  | "GMAT Exam Prep Advice"
-  | "MCAT Exam Prep Advice"
-  | "LSAT Exam Prep Advice"
-  | "DAT Exam Prep Advice"
-  | "Advice for PhD Students"
-  | "How to Find Grants/Fellowships"
-  | "Grant Writing Guidance"
-  | "Interview Prep"
-  | "How to Succeed as a College Student"
-  | "Investment Strategies"
-  | "Study Abroad Programs"
-  | "Tips for F-1 Students"
-  | "College Application Last Review"
-  | "Application Essays Review"
-  | "I need someone to practice my presentation with"
-  | "Study Tips"
-  | "Volunteer Opportunities"
-  | "Know About my Academic Major";
+import { Control as FormControl } from "react-hook-form";
 
-export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
-  "Know About my Career",
-  "Resume/CV Review",
-  "Campus France",
-  "Undergrad Application",
-  "Grad Application",
-  "TOEFL Exam Prep Advice",
-  "IELTS Exam Prep Advice",
-  "Duolingo Exam Prep Advice",
-  "SAT Exam Prep Advice",
-  "ACT Exam Prep Advice",
-  "GRE Exam Prep Advice",
-  "GMAT Exam Prep Advice",
-  "MCAT Exam Prep Advice",
-  "LSAT Exam Prep Advice",
-  "DAT Exam Prep Advice",
-  "Advice for PhD Students",
-  "How to Find Grants/Fellowships",
-  "Grant Writing Guidance",
-  "Interview Prep",
-  "How to Succeed as a College Student",
-  "Investment Strategies",
-  "Study Abroad Programs",
-  "Tips for F-1 Students",
-  "College Application Last Review",
-  "Application Essays Review",
-  "I need someone to practice my presentation with",
-  "Study Tips",
-  "Volunteer Opportunities",
-  "Know About my Academic Major"
-];
+export type MeetingPlatform = 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Skype' | 'Phone' | 'In Person';
+
+export interface Availability {
+  id: string;
+  profile_id: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  event_type: string;
+  created_at: string;
+  updated_at: string;
+  status?: string;
+  session_details?: MentorSession;
+}
 
 export interface SessionTypeFormData {
-  type: SessionTypeEnum;
+  type: string;
   duration: number;
   price: number;
   description: string;
   meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
+  token_cost: number;
 }
 
-export interface SessionTypeFormProps {
-  profileId: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  existingTypes: {
-    id: string;
-    type: string;
-    duration: number;
-    description: string | null;
-  }[];
-}
+export type Control = FormControl<SessionTypeFormData>;
 
-export interface FormProps {
-  control: Control<SessionTypeFormData>;
-}
+export type NotificationType = 
+  | 'major_update'
+  | 'session_booked'
+  | 'session_cancelled'
+  | 'session_reminder'
+  | 'mentor_request'
+  | 'system_update'
+  | 'profile_update'
+  | 'token_purchase';
 
-export interface PlatformFieldsProps {
-  form: FormProps;
-  showTelegramField: boolean;
-  showPhoneField: boolean;
-  showWhatsAppField: boolean;
-}
-
-export interface PlatformSelectProps {
-  form: FormProps;
-}
-
-export interface SessionTypeSelectProps {
-  form: FormProps;
-  availableTypes: SessionTypeEnum[];
-}
-
-export type { MeetingPlatform } from './calendar';
+export type NotificationCategory = 
+  | 'all'
+  | 'system'
+  | 'unread'
+  | 'session'
+  | 'mentorship'
+  | 'general'
+  | 'major_update';
