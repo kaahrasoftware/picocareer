@@ -1,6 +1,6 @@
 import { Control as FormControl } from "react-hook-form";
 
-export type MeetingPlatform = 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Skype' | 'Phone' | 'In Person';
+export type MeetingPlatform = 'Google Meet' | 'WhatsApp' | 'Telegram' | 'Phone Call';
 
 export interface Availability {
   id: string;
@@ -8,8 +8,8 @@ export interface Availability {
   is_available: boolean;
   recurring: boolean;
   day_of_week: number;
-  start_time: string;
-  end_time: string;
+  start_date_time: string;
+  end_date_time: string;
   created_at: string;
   updated_at: string;
 }
@@ -24,7 +24,27 @@ export interface CalendarEvent {
   created_at: string;
   updated_at: string;
   status?: string;
-  session_details?: MentorSession;
+  session_details?: {
+    id: string;
+    scheduled_at: string;
+    status: string;
+    notes: string | null;
+    meeting_link: string | null;
+    mentor: {
+      id: string;
+      full_name: string;
+      avatar_url: string | null;
+    };
+    mentee: {
+      id: string;
+      full_name: string;
+      avatar_url: string | null;
+    };
+    session_type: {
+      type: string;
+      duration: number;
+    };
+  };
 }
 
 export interface SessionTypeFormData {
@@ -48,7 +68,7 @@ export type NotificationType =
   | 'mentor_request'
   | 'system_update'
   | 'profile_update'
-  | 'token_purchase';
+  | 'blog_posted';
 
 export type NotificationCategory = 
   | 'all'
@@ -58,3 +78,69 @@ export type NotificationCategory =
   | 'mentorship'
   | 'general'
   | 'major_update';
+
+export type SessionTypeEnum = 
+  | 'Know About my Career'
+  | 'Mock Interview'
+  | 'Resume Review'
+  | 'Portfolio Review'
+  | 'General Mentorship'
+  | 'Technical Discussion'
+  | 'Project Feedback'
+  | 'Study Planning'
+  | 'Exam Preparation'
+  | 'Industry Insights';
+
+export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
+  'Know About my Career',
+  'Mock Interview',
+  'Resume Review',
+  'Portfolio Review',
+  'General Mentorship',
+  'Technical Discussion',
+  'Project Feedback',
+  'Study Planning',
+  'Exam Preparation',
+  'Industry Insights'
+];
+
+export interface TimeSlot {
+  id: string;
+  profile_id: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week: number;
+  start_date_time: string;
+  end_date_time: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CalendarViewProps {
+  isMentor: boolean;
+}
+
+export interface EventsSidebarProps {
+  selectedDate: Date;
+  events: CalendarEvent[];
+  isMentor: boolean;
+  onEventClick?: (event: CalendarEvent) => void;
+  onEventDelete?: (event: CalendarEvent) => void;
+}
+
+export interface TimeSlotFormProps {
+  profileId: string;
+  handleSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
+  onCancel: () => void;
+}
+
+export interface UnavailableTimeFormProps {
+  profileId: string;
+  handleSubmit: (newSlot: Partial<TimeSlot>) => Promise<void>;
+  onCancel: () => void;
+}
+
+export interface AvailabilityManagerProps {
+  profileId: string;
+  handleUpdate?: () => Promise<void>;
+}

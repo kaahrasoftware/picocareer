@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { NotificationType, NotificationCategory } from "@/types/calendar";
+import { NotificationType, NotificationCategory } from "@/types/session";
 
 interface AdminNotificationProps {
   mentorName: string;
@@ -33,10 +33,12 @@ export async function notifyAdmins({
       action_url: `/calendar`
     }));
 
-    // Insert notifications
-    await supabase
-      .from('notifications')
-      .insert(notifications);
+    // Insert notifications one by one to match the expected type
+    for (const notification of notifications) {
+      await supabase
+        .from('notifications')
+        .insert(notification);
+    }
 
   } catch (error) {
     console.error('Error notifying admins:', error);
