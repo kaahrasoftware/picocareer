@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -32,11 +33,18 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    // Initialize Stripe with the correct environment variable name
+    const stripeKey = Deno.env.get('STRIPE_API');
+    if (!stripeKey) {
+      console.error('Stripe API key not found in environment variables');
+      throw new Error('Stripe configuration error');
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: '2023-10-16',
     });
 
-    // Create checkout session
+    console.log('Creating checkout session...');
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
