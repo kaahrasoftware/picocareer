@@ -27,7 +27,15 @@ import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
 
-const queryClient = new QueryClient();
+// Create a client with specific configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 // Layout component to wrap pages with MenuSidebar and Footer
 function MainLayout({ children }: { children: React.ReactNode }) {
