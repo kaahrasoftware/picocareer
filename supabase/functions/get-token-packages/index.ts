@@ -31,6 +31,7 @@ serve(async (req) => {
         description: product.description,
         price_usd: price.unit_amount ? price.unit_amount / 100 : 0,
         token_amount: parseInt(product.metadata.token_amount || '0'),
+        default_price: price.id, // Include the price ID
         image_url: product.images?.[0],
       };
     });

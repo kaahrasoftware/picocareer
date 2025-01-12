@@ -41,11 +41,13 @@ export default function TokenShop() {
         return;
       }
 
-      console.log('Initiating purchase with priceId:', priceId); // Debug log
+      console.log('Package price ID:', priceId); // Debug log
 
       const response = await supabase.functions.invoke('create-token-checkout', {
-        body: { priceId: priceId }, // Ensure priceId is explicitly named in the object
+        body: { priceId },
       });
+
+      console.log('Checkout response:', response); // Debug log
 
       if (response.error) {
         throw response.error;
@@ -107,10 +109,7 @@ export default function TokenShop() {
             <CardFooter>
               <Button 
                 className="w-full" 
-                onClick={() => {
-                  console.log('Package:', pkg); // Debug log
-                  handlePurchase(pkg.default_price);
-                }}
+                onClick={() => handlePurchase(pkg.default_price)}
               >
                 Purchase
               </Button>
