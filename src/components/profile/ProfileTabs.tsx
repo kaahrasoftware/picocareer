@@ -36,7 +36,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
       </TabsContent>
 
       <TabsContent value="calendar" className="mt-0">
-        <CalendarTab />
+        <CalendarTab profile={profile} />
       </TabsContent>
 
       <TabsContent value="wallet" className="mt-0">
