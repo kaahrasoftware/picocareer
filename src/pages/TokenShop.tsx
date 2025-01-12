@@ -7,23 +7,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface TokenPackage {
   id: string;
   name: string;
+  description?: string;
   token_amount: number;
   price_usd: number;
-  is_active: boolean;
+  image_url?: string;
 }
 
 export default function TokenShop() {
   const { data: tokenPackages, isLoading } = useQuery({
     queryKey: ['tokenPackages'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('token_packages')
-        .select('*')
-        .eq('is_active', true)
-        .order('token_amount', { ascending: true });
-      
-      if (error) throw error;
-      return data as TokenPackage[];
+      const response = await supabase.functions.invoke('get-token-packages');
+      if (response.error) throw response.error;
+      return response.data as TokenPackage[];
     }
   });
 
@@ -59,7 +55,10 @@ export default function TokenShop() {
           <Card key={pkg.id} className="w-full">
             <CardHeader>
               <CardTitle>{pkg.name}</CardTitle>
-              <CardDescription>{pkg.token_amount} Tokens</CardDescription>
+              <CardDescription>
+                {pkg.description}
+                <div className="mt-2">{pkg.token_amount} Tokens</div>
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${pkg.price_usd}</div>
