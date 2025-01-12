@@ -1,5 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ interface ProfileDetailsDialogProps {
 }
 
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
+  // Move all hooks to the top level
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
@@ -23,26 +24,22 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const { currentUser, profile, isLoading } = useProfileDetailsData(userId, open, session);
 
   // Handle authentication errors
-  useEffect(() => {
-    if (sessionError) {
-      console.log('Session error detected, cleaning up...');
-      
-      // Clear all auth-related data
-      const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-      localStorage.removeItem(key);
-      queryClient.clear();
-      
-      // Show error message
-      toast({
-        title: "Authentication Error",
-        description: "Please sign in again to continue.",
-        variant: "destructive",
-      });
-      
-      // Navigate to auth page
-      navigate("/auth");
-    }
-  }, [sessionError, navigate, queryClient, toast]);
+  if (sessionError) {
+    // Clear all auth-related data
+    const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+    localStorage.removeItem(key);
+    queryClient.clear();
+    
+    // Show error message and navigate
+    toast({
+      title: "Authentication Error",
+      description: "Please sign in again to continue.",
+      variant: "destructive",
+    });
+    
+    navigate("/auth");
+    return null;
+  }
 
   const handleBookSession = () => {
     if (!currentUser) {
@@ -57,7 +54,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     setBookingOpen(true);
   };
 
-  // Move the loading check after all hooks
+  // Calculate these values after hooks
   const isOwnProfile = currentUser?.id === userId;
   const isMentor = profile?.user_type === 'mentor';
 
