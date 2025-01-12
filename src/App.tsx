@@ -23,6 +23,7 @@ import Profile from "@/pages/Profile";
 import Program from "@/pages/Program";
 import School from "@/pages/School";
 import Terms from "@/pages/Terms";
+import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
@@ -162,6 +163,11 @@ const router = createBrowserRouter([
   {
     path: "/password-reset",
     element: <PasswordReset />,
+    errorElement: <Error />,
+  },
+  {
+    path: "/tokens",
+    element: <MainLayout><TokenShop /></MainLayout>,
     errorElement: <Error />,
   },
   {

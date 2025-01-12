@@ -18,6 +18,7 @@ export function MainNavigation() {
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
     { path: "/blog", label: "Blog" },
+    { path: "/tokens", label: "Token Shop" },
     { path: "/about", label: "About" },
   ];
 
