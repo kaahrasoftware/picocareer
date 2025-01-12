@@ -1,17 +1,28 @@
-import { Control as FormControl } from "react-hook-form";
+import { Control } from "react-hook-form";
 
-export type MeetingPlatform = 'Google Meet' | 'WhatsApp' | 'Telegram' | 'Phone Call';
-
-export interface Availability {
+export interface SessionParticipant {
   id: string;
-  profile_id: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week: number;
-  start_date_time: string;
-  end_date_time: string;
-  created_at: string;
-  updated_at: string;
+  full_name: string;
+  avatar_url?: string;
+}
+
+export interface SessionType {
+  type: string;
+  duration: number;
+}
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes?: string;
+  meeting_link?: string;
+  mentor: SessionParticipant;
+  mentee: SessionParticipant;
+  session_type: SessionType;
+  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram';
+  attendance_confirmed?: boolean;
+  availability_slot_id?: string;
 }
 
 export interface CalendarEvent {
@@ -23,44 +34,10 @@ export interface CalendarEvent {
   event_type: string;
   created_at: string;
   updated_at: string;
-  status?: string;
-  session_details?: {
-    id: string;
-    scheduled_at: string;
-    status: string;
-    notes: string;
-    meeting_link: string;
-    mentor: {
-      id: string;
-      full_name: string;
-      avatar_url: string;
-    };
-    mentee: {
-      id: string;
-      full_name: string;
-      avatar_url: string;
-    };
-    session_type: {
-      type: string;
-      duration: number;
-    };
-  };
+  session_details?: MentorSession;
 }
 
-export interface SessionTypeFormData {
-  type: string;
-  duration: number;
-  price: number;
-  description: string;
-  meeting_platform: MeetingPlatform[];
-  telegram_username?: string;
-  phone_number?: string;
-  token_cost: number;
-}
-
-export type Control = FormControl<SessionTypeFormData>;
-
-export type NotificationType = 
+export type NotificationType =
   | 'major_update'
   | 'session_booked'
   | 'session_cancelled'
@@ -78,7 +55,7 @@ export type NotificationCategory =
   | 'general'
   | 'major_update';
 
-export type SessionType = 
+export type SessionType =
   | 'Know About my Career'
   | 'Resume/CV Review'
   | 'Campus France'
@@ -141,15 +118,14 @@ export const SESSION_TYPES: SessionType[] = [
 
 export interface TimeSlot {
   id: string;
-  profile_id: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week: number;
   start_date_time: string;
   end_date_time: string;
-  created_at: string;
-  updated_at: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week?: number;
 }
+
+export type Availability = TimeSlot;
 
 export interface CalendarViewProps {
   isMentor: boolean;
@@ -164,8 +140,7 @@ export interface EventsSidebarProps {
   selectedDate: Date;
   events: CalendarEvent[];
   isMentor: boolean;
-  onEventClick?: (event: CalendarEvent) => void;
-  onEventDelete?: (event: CalendarEvent) => void;
+  onEventDelete: (event: CalendarEvent) => void;
 }
 
 export interface TimeSlotFormProps {
@@ -182,7 +157,6 @@ export interface UnavailableTimeFormProps {
 
 export interface AvailabilityManagerProps {
   profileId: string;
-  handleUpdate?: () => Promise<void>;
   onUpdate?: () => Promise<void>;
 }
 
@@ -193,6 +167,6 @@ export interface ExistingTimeSlotsProps {
 }
 
 export interface SessionTypeSelectProps {
-  control: Control;
+  control: Control<any>;
   availableTypes: SessionType[];
 }

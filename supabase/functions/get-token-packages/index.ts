@@ -16,11 +16,15 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
 
+    console.log('Fetching Stripe products...');
+
     // Fetch all active products with their prices
     const products = await stripe.products.list({
       active: true,
       expand: ['data.default_price'],
     });
+
+    console.log(`Found ${products.data.length} active products`);
 
     // Format the response
     const tokenPackages = products.data.map(product => {
@@ -31,7 +35,7 @@ serve(async (req) => {
         description: product.description,
         price_usd: price.unit_amount ? price.unit_amount / 100 : 0,
         token_amount: parseInt(product.metadata.token_amount || '0'),
-        default_price: price.id, // Include the price ID
+        default_price: price.id,
         image_url: product.images?.[0],
       };
     });
