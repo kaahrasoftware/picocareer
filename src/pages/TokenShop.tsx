@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface TokenPackage {
   id: string;
@@ -28,6 +29,21 @@ export default function TokenShop() {
     }
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
   const { data: tokenPackages, isLoading } = useQuery({
     queryKey: ['tokenPackages'],
     queryFn: async () => {
@@ -36,6 +52,18 @@ export default function TokenShop() {
       return response.data as TokenPackage[];
     }
   });
+
+  // Redirect non-admin users
+  useEffect(() => {
+    if (profile && profile.user_type !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can access the Token Shop.",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [profile, navigate]);
 
   const handlePurchase = async (priceId: string) => {
     try {
@@ -73,6 +101,16 @@ export default function TokenShop() {
       });
     }
   };
+
+  // Don't render anything while checking user type
+  if (!profile) {
+    return null;
+  }
+
+  // Only render for admin users
+  if (profile.user_type !== 'admin') {
+    return null;
+  }
 
   if (isLoading) {
     return (
