@@ -24,6 +24,8 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
   if (!profile) return null;
 
+  const isOwnProfile = session?.user?.id === profile.id;
+
   // Helper function to determine badge content and style
   const getBadgeContent = () => {
     if (profile.user_type !== 'mentor') return null;
@@ -54,9 +56,9 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
       <div className="flex-shrink-0">
         <ProfileAvatar 
           avatarUrl={profile.avatar_url}
-          fallback={profile.full_name?.[0] || 'U'}
+          userId={profile.id}
           size="md"
-          editable={false}
+          editable={isOwnProfile}
         />
       </div>
 

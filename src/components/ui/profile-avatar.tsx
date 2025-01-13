@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,28 +9,29 @@ interface ProfileAvatarProps {
   userId?: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
-  onAvatarUpdate?: (url: string) => void;
 }
 
 export function ProfileAvatar({ 
   avatarUrl, 
   userId,
   size = "md", 
-  editable = false,
-  onAvatarUpdate 
+  editable = false 
 }: ProfileAvatarProps) {
-  const [uploading, setUploading] = React.useState(false);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   const sizeClasses = {
-    sm: "h-10 w-10",
+    sm: "h-8 w-8",
     md: "h-16 w-16",
     lg: "h-24 w-24"
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!userId || !onAvatarUpdate) return;
+      if (!userId) {
+        throw new Error('User ID is required for avatar upload');
+      }
+
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
@@ -43,7 +44,10 @@ export function ProfileAvatar({
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -62,11 +66,13 @@ export function ProfileAvatar({
         throw updateError;
       }
 
-      onAvatarUpdate(publicUrl);
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
+
+      // Force a page reload to update the avatar everywhere
+      window.location.reload();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -80,42 +86,28 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      {/* Blue gradient border container with increased padding */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-dark via-picocareer-primary to-blue-500 p-[4px] -m-1">
-        <div className="h-full w-full bg-background rounded-full flex items-center justify-center">
-          <Avatar className={`${sizeClasses[size]} ring-2 ring-background shadow-lg`}>
-            <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
-            <AvatarFallback>
-              {avatarUrl ? '?' : 'U'}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-      
-      {/* Spacer to maintain layout */}
-      <Avatar className={`${sizeClasses[size]} opacity-0`}>
-        <AvatarFallback>U</AvatarFallback>
+      <Avatar className={sizeClasses[size]}>
+        <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+        <AvatarFallback className="bg-primary/10">
+          {uploading ? (
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : (
+            'U'
+          )}
+        </AvatarFallback>
       </Avatar>
       
       {editable && (
-        <>
-          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleUpload}
-              disabled={uploading}
-            />
-            <Upload className="w-6 h-6 text-white" />
-          </label>
-          
-          {uploading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-        </>
+        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleUpload}
+            disabled={uploading}
+          />
+          <Upload className="w-5 h-5 text-white" />
+        </label>
       )}
     </div>
   );
