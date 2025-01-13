@@ -35,7 +35,7 @@ export const Slides = () => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Explore Our Core Services</h2>
+        <h2 className="text-3xl font-bold mb-2">What We Do</h2>
         <p className="text-muted-foreground">
           Discover the key features that make PicoCareer your ultimate professional development companion.
         </p>
