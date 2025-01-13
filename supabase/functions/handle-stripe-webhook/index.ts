@@ -18,10 +18,12 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
 
+    console.log('Webhook received - starting processing');
+
     // Get the signature from the headers
     const signature = req.headers.get('stripe-signature');
     if (!signature) {
-      console.error('No Stripe signature found');
+      console.error('No Stripe signature found in headers');
       return new Response(
         JSON.stringify({ error: 'No signature found' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -30,7 +32,7 @@ serve(async (req) => {
 
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK');
     if (!webhookSecret) {
-      console.error('Webhook secret not configured');
+      console.error('Webhook secret not configured in environment');
       return new Response(
         JSON.stringify({ error: 'Webhook secret not configured' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -49,15 +51,16 @@ serve(async (req) => {
         signature,
         webhookSecret
       );
+      console.log('Webhook signature verified successfully');
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      console.error('Webhook signature verification failed:', err.message);
       return new Response(
         JSON.stringify({ error: 'Invalid signature' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Received Stripe webhook event:', event.type);
+    console.log('Processing Stripe webhook event:', event.type);
 
     // Initialize Supabase client with service role key
     const supabaseAdmin = createClient(
@@ -68,11 +71,12 @@ serve(async (req) => {
     // Handle successful payment
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      console.log('Processing successful payment:', session.id);
+      console.log('Processing successful payment. Session ID:', session.id);
 
       // Get user ID from metadata
       const userId = session.metadata?.userId;
       if (!userId) {
+        console.error('No user ID found in session metadata');
         throw new Error('No user ID found in session metadata');
       }
 
@@ -82,6 +86,7 @@ serve(async (req) => {
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
       const priceId = lineItems.data[0]?.price?.id;
       if (!priceId) {
+        console.error('No price ID found in session line items');
         throw new Error('No price ID found in session');
       }
 
@@ -175,7 +180,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('Error processing webhook:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }), 
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
