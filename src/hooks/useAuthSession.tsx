@@ -15,70 +15,35 @@ function useAuthSessionHook() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
-        const { data: { session: existingSession }, error: sessionError } = 
-          await supabase.auth.getSession();
+        console.log('Fetching auth session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          if (sessionError.message?.includes('Invalid Refresh Token') || 
-              sessionError.message?.includes('session_expired')) {
-            console.log('Session expired, clearing data...');
-            await supabase.auth.signOut();
-            localStorage.removeItem('picocareer_auth_token');
-            queryClient.removeQueries({ queryKey: ['auth-session'] });
-            queryClient.removeQueries({ queryKey: ['profile'] });
-            queryClient.removeQueries({ queryKey: ['notifications'] });
-            
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "default",
-            });
-            
-            navigate("/auth");
-            return null;
-          }
-          throw sessionError;
+        if (error) {
+          console.error('Session error:', error);
+          throw error;
         }
-
-        if (!existingSession) {
-          queryClient.removeQueries({ queryKey: ['auth-session'] });
-          queryClient.removeQueries({ queryKey: ['profile'] });
-          queryClient.removeQueries({ queryKey: ['notifications'] });
-          localStorage.removeItem('picocareer_auth_token');
+        
+        if (!session) {
+          console.log('No valid session found');
           return null;
         }
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (event === 'SIGNED_OUT') {
-              queryClient.removeQueries({ queryKey: ['auth-session'] });
-              queryClient.removeQueries({ queryKey: ['profile'] });
-              queryClient.removeQueries({ queryKey: ['notifications'] });
-              localStorage.removeItem('picocareer_auth_token');
-            } else if (event === 'TOKEN_REFRESHED') {
-              queryClient.invalidateQueries({ queryKey: ['auth-session'] });
-            }
-          }
-        );
-
-        return existingSession;
+        
+        console.log('Valid session found');
+        return session;
       } catch (error: any) {
-        console.error('Error in useAuthSession:', error);
-        
-        await supabase.auth.signOut();
-        queryClient.clear();
-        
-        if (error.message !== 'Auth session missing!') {
+        console.error('Detailed session error:', error);
+        if (error.message?.includes('refresh_token_not_found') || 
+            error.message?.includes('Invalid Refresh Token')) {
+          const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+          localStorage.removeItem(key);
           toast({
-            title: "Authentication Error",
-            description: "Please sign in again",
+            title: "Session Expired",
+            description: "Please sign in again to continue.",
             variant: "destructive",
           });
-          
           navigate("/auth");
         }
-        
-        return null;
+        throw error;
       }
     },
     retry: false,
