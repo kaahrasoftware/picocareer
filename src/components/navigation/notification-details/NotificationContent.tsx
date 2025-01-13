@@ -90,6 +90,8 @@ export function NotificationContent({ message, isExpanded, actionUrl }: Notifica
     );
   }
 
+  const isSessionPassed = sessionData && new Date(sessionData.scheduled_at) < new Date();
+
   return (
     <div className="space-y-2 mt-3 text-sm text-zinc-400">
       {sessionData ? (
@@ -100,7 +102,7 @@ export function NotificationContent({ message, isExpanded, actionUrl }: Notifica
           <p><span className="font-medium text-zinc-300">Session Type:</span> {sessionData.session_type?.type}</p>
           <p><span className="font-medium text-zinc-300">Duration:</span> {sessionData.session_type?.duration} minutes</p>
           <p><span className="font-medium text-zinc-300">Platform:</span> {sessionData.meeting_platform}</p>
-          {sessionData.meeting_link && (
+          {sessionData.meeting_link && !isSessionPassed && (
             <p>
               <span className="font-medium text-zinc-300">Meeting Link:</span>{' '}
               <a 
@@ -115,6 +117,16 @@ export function NotificationContent({ message, isExpanded, actionUrl }: Notifica
           )}
           {sessionData.notes && (
             <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
+          )}
+          {isSessionPassed && actionUrl && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="mt-4 w-full text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+              onClick={() => window.location.href = actionUrl}
+            >
+              Submit Session Feedback
+            </Button>
           )}
         </>
       ) : (
