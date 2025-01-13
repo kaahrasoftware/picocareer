@@ -25,7 +25,7 @@ export default function Career() {
         .from("careers")
         .select("*")
         .eq('status', 'Approved')
-        .eq('complete_career', true)  // Only fetch complete careers
+        .eq('complete_career', true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -78,12 +78,26 @@ export default function Career() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 animate-fade-in">
         <div className="space-y-8">
-          <Skeleton className="h-8 w-48" />
+          {/* Skeleton for filters */}
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Skeleton className="h-10" />
+              <Skeleton className="h-10" />
+              <Skeleton className="h-10" />
+            </div>
+          </div>
+          
+          {/* Skeleton for career cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-64" />
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="space-y-4 animate-pulse">
+                <Skeleton className="h-48 w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
             ))}
           </div>
         </div>
@@ -92,7 +106,7 @@ export default function Career() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="flex flex-col space-y-12">
         <section className="space-y-8">
           {/* Make the header and filters sticky with a compact design */}
