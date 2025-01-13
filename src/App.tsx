@@ -4,8 +4,6 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
-import { AuthProvider } from "@/hooks/useAuthSession";
-import { ProfileProvider } from "@/hooks/useProfileSession";
 import About from "@/pages/About";
 import Auth from "@/pages/Auth";
 import Blog from "@/pages/Blog";
@@ -188,13 +186,9 @@ function App() {
         enableSystem
         disableTransitionOnChange
       >
-        <AuthProvider>
-          <ProfileProvider>
-            <RouterProvider router={router} />
-            <Toaster />
-            <Sonner />
-          </ProfileProvider>
-        </AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+        <Sonner />
       </ThemeProvider>
     </QueryClientProvider>
   );
