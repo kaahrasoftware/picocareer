@@ -1,22 +1,17 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Star } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SessionFeedbackDialogProps {
   sessionId: string;
   isOpen: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   feedbackType: 'mentor_feedback' | 'mentee_feedback';
   fromProfileId: string;
   toProfileId: string;
@@ -25,7 +20,7 @@ interface SessionFeedbackDialogProps {
 export function SessionFeedbackDialog({
   sessionId,
   isOpen,
-  onClose,
+  onOpenChange,
   feedbackType,
   fromProfileId,
   toProfileId,
@@ -67,7 +62,7 @@ export function SessionFeedbackDialog({
         description: "Thank you for providing your feedback!",
       });
 
-      onClose();
+      onOpenChange(false);
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({
@@ -81,7 +76,7 @@ export function SessionFeedbackDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Session Feedback</DialogTitle>
@@ -128,7 +123,7 @@ export function SessionFeedbackDialog({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
