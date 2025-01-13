@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap, Users2, Briefcase } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const slides = [
   {
@@ -8,6 +9,7 @@ const slides = [
       "Discover your path, fuel your ambitions, and build the future you envision with our comprehensive career directory.",
     icon: Briefcase,
     gradient: "from-red-600 to-red-800",
+    route: "/career"
   },
   {
     title: "1 on 1 Mentorship",
@@ -15,6 +17,7 @@ const slides = [
       "Unlock exclusive one-on-one sessions with expert mentors tailored to your individual queries, ensuring personalized guidance and invaluable insights.",
     icon: Users2,
     gradient: "from-picocareer-primary to-picocareer-dark",
+    route: "/mentor"
   },
   {
     title: "Majors Exploration",
@@ -22,10 +25,13 @@ const slides = [
       "Navigate through diverse academic paths, discover your interests, and make informed decisions about your educational journey.",
     icon: GraduationCap,
     gradient: "from-emerald-600 to-teal-800",
+    route: "/program"
   },
 ];
 
 export const Slides = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -38,7 +44,8 @@ export const Slides = () => {
         {slides.map((slide, index) => (
           <Card 
             key={index} 
-            className="group relative overflow-hidden backdrop-blur-sm border border-white/20 hover:shadow-lg transition-all duration-300"
+            className="group relative overflow-hidden backdrop-blur-sm border border-white/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate(slide.route)}
           >
             <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${slide.gradient}`} />
             <CardContent className="relative p-8">
