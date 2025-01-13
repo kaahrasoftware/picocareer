@@ -24,19 +24,21 @@ export function MainNavigation() {
   return (
     <nav className={cn(
       "flex",
-      isMobile ? "flex-col w-full" : "flex-1 justify-center"
+      isMobile ? "flex-col w-full" : "flex-1 justify-center items-center"
     )}>
       <ul className={cn(
         "flex gap-8",
-        isMobile ? "flex-col w-full gap-2" : "items-center"
+        isMobile ? "flex-col w-full gap-2" : "items-center justify-center w-full"
       )}>
         {navItems.map(({ path, label }) => (
-          <li key={path} className={isMobile ? "w-full" : undefined}>
+          <li key={path} className={cn(
+            isMobile ? "w-full" : "text-center"
+          )}>
             <Link 
               to={path} 
               className={cn(
                 "px-4 py-2 rounded-md transition-colors block",
-                isMobile ? "w-full" : "",
+                isMobile ? "w-full" : "mx-auto",
                 isActive(path) && "bg-primary/20 text-primary"
               )}
             >
