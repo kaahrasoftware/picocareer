@@ -108,7 +108,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
     >
       <Heart
         className={`h-5 w-5 ${
-          isBookmarked ? "fill-primary text-primary" : "text-muted-foreground"
+          isBookmarked ? "fill-red-500 text-red-500" : "text-muted-foreground"
         }`}
       />
     </button>
