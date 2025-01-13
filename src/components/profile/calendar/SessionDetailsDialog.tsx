@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { Button } from "@/components/ui/button";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
@@ -38,16 +37,9 @@ export function SessionDetailsDialog({
   const canMarkAttendance = session.session_details.status === 'scheduled' && 
     Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
 
-  // Check if session has passed
-  const isSessionPassed = new Date(session.session_details.scheduled_at) < new Date();
-
   return (
     <Dialog open={!!session} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
-        <DialogTitle className="text-lg font-semibold">
-          Session Details
-        </DialogTitle>
-        
         <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
         {session.session_details.status === 'scheduled' && (
@@ -63,18 +55,6 @@ export function SessionDetailsDialog({
             onCancel={onCancel}
             onClose={onClose}
           />
-        )}
-
-        {isSessionPassed && session.session_details.status !== 'cancelled' && (
-          <div className="mt-4">
-            <Button
-              variant="outline"
-              className="w-full text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-              onClick={() => window.location.href = `/feedback/${session.session_details?.id}?type=${feedbackType}`}
-            >
-              Submit Session Feedback
-            </Button>
-          </div>
         )}
       </DialogContent>
     </Dialog>

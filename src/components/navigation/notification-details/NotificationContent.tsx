@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import type { MentorSession } from "@/types/calendar";
 
 interface NotificationContentProps {
   message: string;
   isExpanded: boolean;
-  actionUrl?: string;
 }
 
-export function NotificationContent({ message, isExpanded, actionUrl }: NotificationContentProps) {
+export function NotificationContent({ message, isExpanded }: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -90,59 +88,37 @@ export function NotificationContent({ message, isExpanded, actionUrl }: Notifica
     );
   }
 
-  const isSessionPassed = sessionData && new Date(sessionData.scheduled_at) < new Date();
+  if (!sessionData) {
+    return (
+      <div className="space-y-2 mt-3 text-sm text-zinc-400">
+        <p>{message}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2 mt-3 text-sm text-zinc-400">
-      {sessionData ? (
-        <>
-          <p><span className="font-medium text-zinc-300">Mentor:</span> {sessionData.mentor?.full_name}</p>
-          <p><span className="font-medium text-zinc-300">Mentee:</span> {sessionData.mentee?.full_name}</p>
-          <p><span className="font-medium text-zinc-300">Start Time:</span> {new Date(sessionData.scheduled_at).toLocaleString()}</p>
-          <p><span className="font-medium text-zinc-300">Session Type:</span> {sessionData.session_type?.type}</p>
-          <p><span className="font-medium text-zinc-300">Duration:</span> {sessionData.session_type?.duration} minutes</p>
-          <p><span className="font-medium text-zinc-300">Platform:</span> {sessionData.meeting_platform}</p>
-          {sessionData.meeting_link && !isSessionPassed && (
-            <p>
-              <span className="font-medium text-zinc-300">Meeting Link:</span>{' '}
-              <a 
-                href={sessionData.meeting_link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sky-400 hover:text-sky-300 hover:underline"
-              >
-                Join Meeting
-              </a>
-            </p>
-          )}
-          {sessionData.notes && (
-            <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
-          )}
-          {isSessionPassed && actionUrl && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="mt-4 w-full text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-              onClick={() => window.location.href = actionUrl}
-            >
-              Submit Session Feedback
-            </Button>
-          )}
-        </>
-      ) : (
-        <div className="space-y-4">
-          <p>{message}</p>
-          {actionUrl && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="mt-2 w-full text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-              onClick={() => window.location.href = actionUrl}
-            >
-              Submit Feedback
-            </Button>
-          )}
-        </div>
+      <p><span className="font-medium text-zinc-300">Mentor:</span> {sessionData.mentor?.full_name}</p>
+      <p><span className="font-medium text-zinc-300">Mentee:</span> {sessionData.mentee?.full_name}</p>
+      <p><span className="font-medium text-zinc-300">Start Time:</span> {new Date(sessionData.scheduled_at).toLocaleString()}</p>
+      <p><span className="font-medium text-zinc-300">Session Type:</span> {sessionData.session_type?.type}</p>
+      <p><span className="font-medium text-zinc-300">Duration:</span> {sessionData.session_type?.duration} minutes</p>
+      <p><span className="font-medium text-zinc-300">Platform:</span> {sessionData.meeting_platform}</p>
+      {sessionData.meeting_link && (
+        <p>
+          <span className="font-medium text-zinc-300">Meeting Link:</span>{' '}
+          <a 
+            href={sessionData.meeting_link} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sky-400 hover:text-sky-300 hover:underline"
+          >
+            Join Meeting
+          </a>
+        </p>
+      )}
+      {sessionData.notes && (
+        <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
       )}
     </div>
   );
