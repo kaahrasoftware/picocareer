@@ -4,10 +4,10 @@ import { AuthProvider } from "@/hooks/useAuthSession";
 import { ProfileProvider } from "@/hooks/useProfileSession";
 
 // Import pages
-import Home from "@/pages/Home";
-import Profile from "@/pages/Profile";
-import Calendar from "@/pages/Calendar";
-import Settings from "@/pages/Settings";
+import { Home } from "@/pages/Home";
+import { Profile } from "@/pages/Profile";
+import { Calendar } from "@/pages/Calendar";
+import { Settings } from "@/pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +18,7 @@ export function AppRoutes() {
         <ProfileProvider>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>

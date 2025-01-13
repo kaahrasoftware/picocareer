@@ -1,12 +1,17 @@
+import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { createContext, useContext, ReactNode } from "react";
 
-const AuthContext = createContext<ReturnType<typeof useAuthSessionHook> | null>(null);
+interface AuthContextType {
+  session: any | null;
+  isError: boolean;
+}
 
-function useAuthSessionHook() {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -47,21 +52,20 @@ function useAuthSessionHook() {
       }
     },
     retry: false,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
   });
 
-  return { session, isError };
-}
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const auth = useAuthSessionHook();
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ session, isError }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuthSession() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuthSession must be used within an AuthProvider");
+  if (context === undefined) {
+    throw new Error('useAuthSession must be used within an AuthProvider');
   }
   return context;
 }
