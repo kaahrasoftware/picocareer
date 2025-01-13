@@ -9,7 +9,7 @@ export const HeroSection = () => {
         <div className="space-y-4">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center flex-wrap gap-2">
             <span className="bg-gradient-to-r from-[#333333] to-[#555555] bg-clip-text text-transparent py-2">
-              Making Every Move Matter
+              The Key to Unlocking Your Career Potential
             </span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
