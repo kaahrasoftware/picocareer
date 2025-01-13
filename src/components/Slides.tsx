@@ -37,7 +37,7 @@ export const Slides = () => {
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">What We Do</h2>
         <p className="text-muted-foreground">
-          Discover the key features that make PicoCareer your ultimate professional development companion.
+          Empowering your journey with clarity, connection, and confidence at every step.
         </p>
       </div>
       <div className="grid md:grid-cols-3 gap-6">
