@@ -6,6 +6,11 @@ interface PersonalSectionProps {
 }
 
 export function PersonalSection({ profile }: PersonalSectionProps) {
+  // Early return with loading state if profile is undefined
+  if (!profile) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
       <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4 w-full">
