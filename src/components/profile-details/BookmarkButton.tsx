@@ -14,6 +14,11 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
   const { toast } = useToast();
   const { session: authSession } = useAuthSession();
 
+  // Don't render the button if the profile belongs to the current user
+  if (authSession?.user?.id === profileId) {
+    return null;
+  }
+
   const handleBookmark = async () => {
     if (!authSession) {
       toast({
@@ -83,7 +88,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
             content_type: "profile",
             content_id: profileId,
           })
-          .maybeSingle(); // Changed from .single() to .maybeSingle()
+          .maybeSingle();
 
         if (error) throw error;
         setIsBookmarked(!!data);
