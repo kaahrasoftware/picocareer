@@ -70,11 +70,9 @@ export function MentorRegistrationForm({
 
   const handleSubmit = async (data: FormValues) => {
     try {
-      // First check if user is logged in
-      const { data: sessionData } = await supabase.auth.getSession();
       const userEmail = data.email.toLowerCase();
 
-      // Check profiles table
+      // Check profiles table first
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type, email')
@@ -85,22 +83,8 @@ export function MentorRegistrationForm({
         throw profileError;
       }
 
-      // Check auth users table
-      const { data: { users }, error: authError } = await supabase.auth.admin.listUsers({
-        params: {
-          email: userEmail
-        }
-      });
-
-      if (authError) {
-        throw authError;
-      }
-
-      const existingAuthUser = users && users.length > 0 ? users[0] : null;
-
-      // Handle different scenarios
+      // Handle existing profile scenarios
       if (existingProfile) {
-        // User exists in profiles
         if (existingProfile.user_type === 'mentor') {
           toast({
             title: "Already Registered",
@@ -110,7 +94,7 @@ export function MentorRegistrationForm({
           return;
         }
 
-        if (!sessionData?.session) {
+        if (!session) {
           toast({
             title: "Login Required",
             description: "Please login to your existing account to continue with mentor registration.",
@@ -121,14 +105,31 @@ export function MentorRegistrationForm({
         }
       }
 
-      if (existingAuthUser && !sessionData?.session) {
-        toast({
-          title: "Login Required",
-          description: "An account with this email already exists. Please login to continue.",
-          variant: "destructive",
+      // If no existing profile, try to create a new user
+      if (!existingProfile && !session) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: userEmail,
+          password: Math.random().toString(36).slice(-8), // Generate random password
+          options: {
+            data: {
+              first_name: data.first_name,
+              last_name: data.last_name
+            }
+          }
         });
-        navigate("/auth");
-        return;
+
+        if (signUpError) {
+          if (signUpError.message.includes('User already registered')) {
+            toast({
+              title: "Login Required",
+              description: "An account with this email already exists. Please login to continue.",
+              variant: "destructive",
+            });
+            navigate("/auth");
+            return;
+          }
+          throw signUpError;
+        }
       }
 
       // If we get here, either:
@@ -136,7 +137,7 @@ export function MentorRegistrationForm({
       // 2. User exists but is not a mentor (updating profile)
       await onSubmit(data);
 
-      if (!existingProfile && !existingAuthUser) {
+      if (!existingProfile && !session) {
         toast({
           title: "Check your email",
           description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
