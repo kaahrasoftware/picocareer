@@ -1,70 +1,60 @@
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import { useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { GraduationCap, Users2, Briefcase } from "lucide-react";
 
-interface SlideContent {
-  title: string;
-  description: string;
-  gradient: string;
-}
-
-const slides: SlideContent[] = [
+const slides = [
   {
-    title: "CAREER EXPLORATION",
+    title: "Career Exploration",
     description:
       "Discover your path, fuel your ambitions, and build the future you envision with our comprehensive career directory.",
-    gradient: "from-red-600/90 to-red-800/90",
+    icon: Briefcase,
+    gradient: "from-red-600 to-red-800",
   },
   {
-    title: "1 ON 1 MENTORSHIP",
+    title: "1 on 1 Mentorship",
     description:
       "Unlock exclusive one-on-one sessions with expert mentors tailored to your individual queries, ensuring personalized guidance and invaluable insights.",
-    gradient: "from-picocareer-primary/90 to-picocareer-dark/90",
+    icon: Users2,
+    gradient: "from-picocareer-primary to-picocareer-dark",
   },
   {
-    title: "MAJORS EXPLORATION",
+    title: "Majors Exploration",
     description:
       "Navigate through diverse academic paths, discover your interests, and make informed decisions about your educational journey.",
-    gradient: "from-emerald-600/90 to-teal-800/90",
+    icon: GraduationCap,
+    gradient: "from-emerald-600 to-teal-800",
   },
 ];
 
 export const Slides = () => {
-  const plugin = useRef(
-    Autoplay({ delay: 7000, stopOnInteraction: true })
-  );
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">Explore Our Core Services</h2>
-        <p className="text-muted-foreground">Discover the key features that make PicoCareer your ultimate professional development companion.</p>
+        <p className="text-muted-foreground">
+          Discover the key features that make PicoCareer your ultimate professional development companion.
+        </p>
       </div>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-          dragFree: true,
-          skipSnaps: true,
-        }}
-        plugins={[plugin.current]}
-        className="w-full max-w-4xl mx-auto"
-      >
-        <CarouselContent>
-          {slides.map((slide, index) => (
-            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/1">
-              <div className={`h-full p-8 rounded-lg bg-gradient-to-br ${slide.gradient} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}>
-                <h2 className="text-2xl font-bold mb-4 text-white text-center">{slide.title}</h2>
-                <p className="text-white/90 text-lg leading-relaxed">{slide.description}</p>
+      <div className="grid md:grid-cols-3 gap-6">
+        {slides.map((slide, index) => (
+          <Card 
+            key={index} 
+            className="group relative overflow-hidden backdrop-blur-sm border border-white/20 hover:shadow-lg transition-all duration-300"
+          >
+            <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${slide.gradient}`} />
+            <CardContent className="relative p-8">
+              <div className="mb-6 flex justify-center">
+                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${slide.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                  <slide.icon className="w-8 h-8 text-white" />
+                </div>
               </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
+              <h3 className="text-xl font-semibold mb-4 text-center">{slide.title}</h3>
+              <p className="text-muted-foreground text-center leading-relaxed">
+                {slide.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
