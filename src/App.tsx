@@ -4,6 +4,8 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
+import { AuthProvider } from "@/hooks/useAuthSession";
+import { ProfileProvider } from "@/hooks/useProfileSession";
 import About from "@/pages/About";
 import Auth from "@/pages/Auth";
 import Blog from "@/pages/Blog";
@@ -29,7 +31,7 @@ import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
 
-// Create a client with specific configuration
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -39,7 +41,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Layout component to wrap pages with MenuSidebar and Footer
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
@@ -186,9 +187,13 @@ function App() {
         enableSystem
         disableTransitionOnChange
       >
-        <RouterProvider router={router} />
-        <Toaster />
-        <Sonner />
+        <AuthProvider>
+          <ProfileProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+            <Sonner />
+          </ProfileProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

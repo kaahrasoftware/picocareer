@@ -1,96 +1,92 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
-export function useAuthSession() {
+interface AuthContextType {
+  session: Session | null;
+  isError: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [session, setSession] = useState<Session | null>(null);
+  const [isError, setIsError] = useState(false);
 
-  // Get initial session and listen for auth changes
-  const { data: session, isError } = useQuery({
-    queryKey: ['auth-session'],
-    queryFn: async () => {
+  useEffect(() => {
+    const getInitialSession = async () => {
       try {
-        // First try to get the existing session
-        const { data: { session: existingSession }, error: sessionError } = 
-          await supabase.auth.getSession();
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          // Check specifically for refresh token errors
-          if (sessionError.message?.includes('Invalid Refresh Token') || 
-              sessionError.message?.includes('session_expired')) {
-            console.log('Session expired, clearing data...');
-            // Clear all auth-related data
-            await supabase.auth.signOut();
-            localStorage.removeItem('picocareer_auth_token');
-            queryClient.removeQueries({ queryKey: ['auth-session'] });
-            queryClient.removeQueries({ queryKey: ['profile'] });
-            queryClient.removeQueries({ queryKey: ['notifications'] });
-            
-            // Show a friendly message to the user
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "default",
-            });
-            
-            // Redirect to auth page
-            navigate("/auth");
-            return null;
+        if (error) {
+          if (error.message?.includes('Invalid Refresh Token') || 
+              error.message?.includes('session_expired')) {
+            await handleSessionExpired();
           }
-          throw sessionError;
+          throw error;
         }
 
-        if (!existingSession) {
-          // If no session exists, clear any stale data
-          queryClient.removeQueries({ queryKey: ['auth-session'] });
-          queryClient.removeQueries({ queryKey: ['profile'] });
-          queryClient.removeQueries({ queryKey: ['notifications'] });
-          localStorage.removeItem('picocareer_auth_token');
-          return null;
-        }
-
-        // Set up a listener for auth state changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-              queryClient.removeQueries({ queryKey: ['auth-session'] });
-              queryClient.removeQueries({ queryKey: ['profile'] });
-              queryClient.removeQueries({ queryKey: ['notifications'] });
-              localStorage.removeItem('picocareer_auth_token');
-            } else if (event === 'TOKEN_REFRESHED') {
-              queryClient.invalidateQueries({ queryKey: ['auth-session'] });
-            }
-          }
-        );
-
-        return existingSession;
-      } catch (error: any) {
-        console.error('Error in useAuthSession:', error);
-        
-        // Clear any stale session data
-        await supabase.auth.signOut();
-        queryClient.clear();
-        
-        // Only show toast and redirect if it's not an AuthSessionMissingError
-        if (error.message !== 'Auth session missing!') {
-          toast({
-            title: "Authentication Error",
-            description: "Please sign in again",
-            variant: "destructive",
-          });
-          
-          navigate("/auth");
-        }
-        
-        return null;
+        setSession(initialSession);
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+        setIsError(true);
       }
-    },
-    retry: false,
-    staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
-  });
+    };
 
-  return { session, isError };
+    getInitialSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        setSession(currentSession);
+
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          await handleSessionExpired();
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, queryClient, toast]);
+
+  const handleSessionExpired = async () => {
+    const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+    localStorage.removeItem(key);
+    queryClient.clear();
+    setSession(null);
+    
+    toast({
+      title: "Session Expired",
+      description: "Please sign in again to continue.",
+      variant: "destructive",
+    });
+    
+    navigate("/auth");
+  };
+
+  return (
+    <AuthContext.Provider value={{ session, isError }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuthSession() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuthSession must be used within an AuthProvider");
+  }
+  return context;
 }
