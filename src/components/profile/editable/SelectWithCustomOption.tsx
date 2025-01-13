@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TableName, FieldName, TitleField, InsertData, Status, QueryResult } from "./types";
@@ -35,7 +36,13 @@ export function SelectWithCustomOption({
 }: SelectWithCustomOptionProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+
+  const filteredOptions = options.filter(option => {
+    const searchValue = option[titleField]?.toLowerCase() || '';
+    return searchValue.includes(searchQuery.toLowerCase());
+  });
 
   const handleCustomSubmit = async () => {
     try {
@@ -46,9 +53,8 @@ export function SelectWithCustomOption({
         .eq(titleField, customValue)
         .maybeSingle();
 
-      if (existingData && 'id' in existingData) {
-        const record = existingData as QueryResult;
-        handleSelectChange(fieldName, record.id);
+      if (existingData) {
+        handleSelectChange(fieldName, existingData.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
@@ -147,12 +153,22 @@ export function SelectWithCustomOption({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option[titleField] || ''}
-            </SelectItem>
-          ))}
-          <SelectItem value="other">Other (Add New)</SelectItem>
+          <div className="p-2">
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-2"
+            />
+          </div>
+          <ScrollArea className="h-[200px]">
+            {filteredOptions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option[titleField] || ''}
+              </SelectItem>
+            ))}
+            <SelectItem value="other">Other (Add New)</SelectItem>
+          </ScrollArea>
         </SelectContent>
       </Select>
     </div>
