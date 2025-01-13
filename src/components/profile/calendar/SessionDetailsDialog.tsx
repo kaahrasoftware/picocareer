@@ -6,6 +6,7 @@ import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Button } from "@/components/ui/button";
+import { useSessionFeedback } from "@/hooks/useSessionFeedback";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
@@ -23,6 +24,7 @@ export function SessionDetailsDialog({
   const [cancellationNote, setCancellationNote] = useState("");
   const { getSetting } = useUserSettings(authSession?.user?.id || '');
   const userTimezone = getSetting('timezone');
+  const { openFeedbackDialog } = useSessionFeedback();
 
   if (!session?.session_details) return null;
 
@@ -40,6 +42,16 @@ export function SessionDetailsDialog({
 
   // Check if session has passed
   const isSessionPassed = new Date(session.session_details.scheduled_at) < new Date();
+
+  const handleFeedbackClick = () => {
+    openFeedbackDialog({
+      sessionId: session.session_details!.id,
+      feedbackType,
+      fromProfileId: authSession?.user?.id || '',
+      toProfileId: isMentor ? session.session_details!.mentee.id : session.session_details!.mentor.id,
+    });
+    onClose();
+  };
 
   return (
     <Dialog open={!!session} onOpenChange={onClose}>
@@ -70,7 +82,7 @@ export function SessionDetailsDialog({
             <Button
               variant="outline"
               className="w-full text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-              onClick={() => window.location.href = `/feedback/${session.session_details?.id}?type=${feedbackType}`}
+              onClick={handleFeedbackClick}
             >
               Submit Session Feedback
             </Button>
