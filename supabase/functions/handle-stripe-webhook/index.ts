@@ -112,7 +112,7 @@ serve(async (req) => {
           p_amount: tokenPackage.token_amount,
           p_description: `Purchase of ${tokenPackage.name}`,
           p_related_entity_type: 'stripe_payment',
-          p_related_entity_id: null
+          p_related_entity_id: session.id
         }
       );
 
@@ -128,7 +128,8 @@ serve(async (req) => {
         profile_id: userId,
         title: 'Token Purchase Successful',
         message: `${tokenPackage.token_amount} tokens have been added to your wallet`,
-        type: 'token_purchase',
+        type: 'system_update',
+        category: 'general'
       });
 
       console.log('Successfully processed payment and added tokens for user:', userId);
