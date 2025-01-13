@@ -10,11 +10,6 @@ export const HeroSection = () => {
           <span className="bg-gradient-to-r from-picocareer-secondary to-picocareer-primary bg-clip-text text-transparent pt-3">
             Making Every Move Matter
           </span>
-          <img 
-            src="/lovable-uploads/65608658-2c3b-4eab-80f0-d9791cae7b50.png"
-            alt="PicoCareer"
-            className="h-12 md:h-16 lg:h-20 ml-0 md:ml-3"
-          />
         </h1>
       </section>
 
