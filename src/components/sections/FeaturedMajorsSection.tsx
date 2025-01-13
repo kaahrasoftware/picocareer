@@ -1,39 +1,79 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { MajorCard } from "@/components/MajorCard";
-import { supabase } from "@/integrations/supabase/client";
+import { MajorListDialog } from "@/components/MajorListDialog";
+import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export const FeaturedMajorsSection = () => {
-  const { data: majors, isLoading } = useQuery({
-    queryKey: ['featured-majors'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('majors')
-        .select('*')
-        .eq('is_featured', true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const { data: majors = [], isLoading, error } = useFeaturedMajors();
 
-      if (error) {
-        console.error('Error fetching featured majors:', error);
-        return [];
-      }
+  // Show error toast only when component mounts or when error changes
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load featured majors. Please try again later.",
+      variant: "destructive",
+    });
+  }
 
-      return data;
-    },
-  });
-
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Fields of Study</h2>
+        </div>
+        <div className="flex items-center justify-center p-8">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="mb-24">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold mb-2">Featured Majors</h2>
-        <p className="text-muted-foreground">Discover academic programs that align with your career goals.</p>
+    <section className="mb-16">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Featured Fields of Study</h2>
+        <Link 
+          to="/program"
+          className="text-primary hover:text-primary/80 transition-colors"
+        >
+          View all
+        </Link>
       </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {majors?.map((major) => (
-          <MajorCard key={major.id} {...major} />
-        ))}
+      <div className="relative -mx-8">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full px-8"
+        >
+          <CarouselContent className="-ml-4">
+            {majors.map((major) => (
+              <CarouselItem key={major.id} className="pl-4 basis-full md:basis-1/3">
+                <MajorCard {...major} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+        </Carousel>
       </div>
+      <MajorListDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        majors={majors}
+      />
     </section>
   );
 };
