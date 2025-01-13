@@ -77,7 +77,7 @@ export function MentorRegistrationForm({
         .from('profiles')
         .select('id, user_type, email')
         .eq('email', userEmail)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
       if (profileError && profileError.code !== 'PGRST116') {
         throw profileError;
