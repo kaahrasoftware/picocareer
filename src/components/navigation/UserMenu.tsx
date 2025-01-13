@@ -1,32 +1,38 @@
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  User, 
+  LayoutDashboard, 
+  Calendar, 
+  GraduationCap, 
+  Bookmark, 
+  Settings,
+  Wallet,
+  LogOut 
+} from "lucide-react";
 
 export function UserMenu() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate("/");
-    } catch (error: any) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      queryClient.clear();
+      navigate("/auth");
+    } catch (error) {
+      console.error('Error signing out:', error);
       toast({
-        title: "Error signing out",
-        description: error.message,
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
     }
@@ -35,26 +41,56 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="outline-none">
-          <ProfileAvatar
-            avatarUrl={profile?.avatar_url}
-            fallback={profile?.full_name?.[0] || "U"}
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <ProfileAvatar 
+            avatarUrl="/placeholder.svg"
             size="sm"
             editable={false}
           />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/profile")}>
-          Profile
+      <DropdownMenuContent className="w-56" align="end">
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=profile")}>
+          <User className="mr-2 h-4 w-4" />
+          <span>Profile</span>
         </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=dashboard")}>
+          <LayoutDashboard className="mr-2 h-4 w-4" />
+          <span>Dashboard</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=calendar")}>
+          <Calendar className="mr-2 h-4 w-4" />
+          <span>Calendar</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=mentor")}>
+          <GraduationCap className="mr-2 h-4 w-4" />
+          <span>Mentor</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=bookmarks")}>
+          <Bookmark className="mr-2 h-4 w-4" />
+          <span>Bookmarks</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=wallet")}>
+          <Wallet className="mr-2 h-4 w-4" />
+          <span>Wallet</span>
+        </DropdownMenuItem>
+
         <DropdownMenuItem onClick={() => navigate("/profile?tab=settings")}>
-          Settings
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Settings</span>
         </DropdownMenuItem>
+
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
+        
+        <DropdownMenuItem onClick={handleSignOut}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
