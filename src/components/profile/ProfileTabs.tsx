@@ -35,6 +35,17 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
     return null;
   }
 
+  // Calculate number of tabs to display for grid
+  const numTabs = [
+    true, // Profile tab always shown
+    isAdmin, // Dashboard tab
+    true, // Calendar tab
+    isMentor, // Mentor tab
+    true, // Bookmarks tab
+    isAdmin, // Wallet tab (only for admin)
+    true, // Settings tab
+  ].filter(Boolean).length;
+
   return (
     <Tabs 
       defaultValue={defaultTab}
@@ -42,7 +53,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
       onValueChange={onTabChange}
     >
       <TabsList className="grid w-full" style={{ 
-        gridTemplateColumns: `repeat(${isAdmin ? 7 : 6}, minmax(0, 1fr))`
+        gridTemplateColumns: `repeat(${numTabs}, minmax(0, 1fr))`
       }}>
         <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1">
           <User className="h-4 w-4" />
@@ -73,10 +84,12 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
           <span className="hidden sm:inline">Bookmarks</span>
         </TabsTrigger>
 
-        <TabsTrigger value="wallet" className="flex flex-col sm:flex-row items-center gap-1">
-          <Wallet className="h-4 w-4" />
-          <span className="hidden sm:inline">Wallet</span>
-        </TabsTrigger>
+        {isAdmin && (
+          <TabsTrigger value="wallet" className="flex flex-col sm:flex-row items-center gap-1">
+            <Wallet className="h-4 w-4" />
+            <span className="hidden sm:inline">Wallet</span>
+          </TabsTrigger>
+        )}
         
         <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1">
           <Settings className="h-4 w-4" />
@@ -108,9 +121,11 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <BookmarksTab />
       </TabsContent>
 
-      <TabsContent value="wallet">
-        <WalletTab profile={profile} />
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="wallet">
+          <WalletTab profile={profile} />
+        </TabsContent>
+      )}
 
       <TabsContent value="settings">
         <SettingsTab />
