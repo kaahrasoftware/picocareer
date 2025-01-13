@@ -76,7 +76,7 @@ export function StatisticsSection() {
       color: "bg-green-100 text-green-600"
     },
     {
-      label: "Universities",
+      label: "Schools",
       value: stats?.schools || 0,
       icon: School,
       color: "bg-orange-100 text-orange-600"
