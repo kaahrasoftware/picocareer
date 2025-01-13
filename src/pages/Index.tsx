@@ -20,9 +20,9 @@ const Index = () => {
             <HeroSection />
             <StatisticsSection />
             <CallToActionSection />
+            <TopRatedMentorsSection />
             <FeaturedCareersSection />
             <FeaturedMajorsSection />
-            <TopRatedMentorsSection />
           </div>
         </div>
       </div>
