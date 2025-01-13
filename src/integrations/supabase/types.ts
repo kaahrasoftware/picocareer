@@ -1033,6 +1033,7 @@ export type Database = {
       token_packages: {
         Row: {
           created_at: string
+          default_price: string | null
           id: string
           is_active: boolean | null
           name: string
@@ -1042,6 +1043,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_price?: string | null
           id?: string
           is_active?: boolean | null
           name: string
@@ -1051,6 +1053,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_price?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
