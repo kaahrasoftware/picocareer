@@ -8,7 +8,7 @@ export const HeroSection = () => {
       <section className="text-center mb-12">
         <div className="space-y-4">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center flex-wrap gap-2">
-            <span className="bg-gradient-to-r from-[#333333] to-[#555555] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#333333] to-[#555555] bg-clip-text text-transparent py-2">
               Making Every Move Matter
             </span>
           </h1>
