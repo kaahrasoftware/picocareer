@@ -57,6 +57,15 @@ export function SelectWithCustomOption({
   const { toast } = useToast();
 
   const handleCustomSubmit = async () => {
+    if (!customValue.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a value",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // First check if entry already exists
       const { data: existingData, error: checkError } = await supabase
@@ -140,7 +149,10 @@ export function SelectWithCustomOption({
           </Button>
           <Button
             type="button"
-            onClick={() => setShowCustomInput(false)}
+            onClick={() => {
+              setShowCustomInput(false);
+              setCustomValue("");
+            }}
             variant="outline"
             size="sm"
           >
@@ -153,12 +165,12 @@ export function SelectWithCustomOption({
 
   return (
     <Select
-      value={value}
-      onValueChange={(value) => {
-        if (value === "other") {
+      value={value || ""}
+      onValueChange={(newValue) => {
+        if (newValue === "other") {
           setShowCustomInput(true);
         } else {
-          onValueChange(value);
+          onValueChange(newValue);
         }
       }}
     >
