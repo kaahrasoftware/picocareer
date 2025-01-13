@@ -106,24 +106,40 @@ serve(async (req) => {
 
       console.log('Found wallet:', wallet);
 
-      // Call the function to add tokens
-      const { error: addTokensError } = await supabaseAdmin.rpc(
-        'add_tokens_to_wallet',
-        {
-          p_wallet_id: wallet.id,
-          p_amount: tokenPackage.token_amount,
-          p_description: `Purchase of ${tokenPackage.name}`,
-          p_related_entity_type: 'stripe_payment',
-          p_related_entity_id: session.id
-        }
-      );
+      // First, update the wallet balance
+      const { error: updateWalletError } = await supabaseAdmin
+        .from('wallets')
+        .update({ 
+          balance: wallet.balance + tokenPackage.token_amount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', wallet.id);
 
-      if (addTokensError) {
-        console.error('Add tokens error:', addTokensError);
-        throw addTokensError;
+      if (updateWalletError) {
+        console.error('Update wallet error:', updateWalletError);
+        throw updateWalletError;
       }
 
-      console.log('Successfully added tokens to wallet');
+      console.log('Successfully updated wallet balance');
+
+      // Then, record the transaction
+      const { error: transactionError } = await supabaseAdmin
+        .from('token_transactions')
+        .insert({
+          wallet_id: wallet.id,
+          transaction_type: 'credit',
+          amount: tokenPackage.token_amount,
+          description: `Purchase of ${tokenPackage.name}`,
+          related_entity_type: 'stripe_payment',
+          related_entity_id: session.id
+        });
+
+      if (transactionError) {
+        console.error('Transaction error:', transactionError);
+        throw transactionError;
+      }
+
+      console.log('Successfully recorded token transaction');
 
       // Create a success notification for the user
       const { error: notificationError } = await supabaseAdmin
