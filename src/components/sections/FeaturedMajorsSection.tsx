@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { MajorCard } from "@/components/major/MajorCard";
+import { MajorCard } from "@/components/MajorCard";
 import { supabase } from "@/integrations/supabase/client";
 
 export const FeaturedMajorsSection = () => {
@@ -31,7 +31,7 @@ export const FeaturedMajorsSection = () => {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {majors?.map((major) => (
-          <MajorCard key={major.id} major={major} />
+          <MajorCard key={major.id} {...major} />
         ))}
       </div>
     </section>
