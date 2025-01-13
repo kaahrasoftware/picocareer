@@ -9,14 +9,14 @@ const formatNumber = (num: number): string => {
   // For numbers less than 1000, round to nearest 10 and add +
   if (num < 1000) {
     const rounded = Math.floor(num / 10) * 10;
-    return rounded === 0 ? "10+" : `${rounded}+`;
+    return rounded === 0 ? "10+" : `+${rounded}`;
   }
   
   // For numbers 1000 and above, use K, M, T notation
   const units = ["", "K", "M", "T"];
   const order = Math.floor(Math.log10(num) / 3);
   const unitValue = num / Math.pow(1000, order);
-  const roundedValue = Math.floor(unitValue * 10) / 10;
+  const roundedValue = Math.floor(unitValue * 100) / 100;
   return `+${roundedValue}${units[order]}`;
 };
 
