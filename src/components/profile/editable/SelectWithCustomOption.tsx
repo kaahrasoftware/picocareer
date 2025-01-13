@@ -15,7 +15,7 @@ import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
-  options: Array<{ id: string; title?: string; name?: string }>;
+  options: Array<{ id: string; title?: string; name?: string; }>;
   placeholder: string;
   handleSelectChange: (name: string, value: string) => void;
   tableName: TableName;
@@ -25,9 +25,9 @@ interface SelectWithCustomOptionProps {
 }
 
 export function SelectWithCustomOption({ 
-  value, 
-  options, 
-  placeholder, 
+  value = "", 
+  options = [],
+  placeholder,
   handleSelectChange,
   tableName,
   fieldName,
@@ -45,6 +45,15 @@ export function SelectWithCustomOption({
   });
 
   const handleCustomSubmit = async () => {
+    if (!customValue.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a value",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
@@ -63,7 +72,7 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry
-      let insertData: InsertData[typeof tableName] = {
+      const insertData: InsertData[typeof tableName] = {
         status: 'Pending' as Status,
         ...(tableName === 'majors' || tableName === 'careers' 
           ? {
@@ -73,7 +82,7 @@ export function SelectWithCustomOption({
           : {
               name: customValue
             })
-      } as InsertData[typeof tableName];
+      };
 
       const { data, error } = await supabase
         .from(tableName)
@@ -139,15 +148,18 @@ export function SelectWithCustomOption({
     );
   }
 
+  // Ensure value exists in options before using it
+  const isValidValue = value && options.some(option => option.id === value);
+
   return (
     <div className="w-full">
       <Select
-        value={value}
-        onValueChange={(value) => {
-          if (value === "other") {
+        value={isValidValue ? value : undefined}
+        onValueChange={(newValue) => {
+          if (newValue === "other") {
             setShowCustomInput(true);
           } else {
-            handleSelectChange(fieldName, value);
+            handleSelectChange(fieldName, newValue);
           }
         }}
       >
