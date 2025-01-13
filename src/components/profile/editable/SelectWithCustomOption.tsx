@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { TableName, FieldName, TitleField, InsertData, Status, QueryResult } from "./types";
+import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -47,11 +47,13 @@ export function SelectWithCustomOption({
   const handleCustomSubmit = async () => {
     try {
       // Check if entry already exists
-      const { data: existingData } = await supabase
+      const { data: existingData, error: checkError } = await supabase
         .from(tableName)
         .select(`id, ${titleField}`)
         .eq(titleField, customValue)
         .maybeSingle();
+
+      if (checkError) throw checkError;
 
       if (existingData) {
         handleSelectChange(fieldName, existingData.id);
