@@ -2,7 +2,6 @@ import { useState } from "react";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
 import { Button } from "@/components/ui/button";
@@ -76,40 +75,10 @@ export default function Career() {
     setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8 animate-fade-in">
-        <div className="space-y-8">
-          {/* Skeleton for filters */}
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Skeleton className="h-10" />
-              <Skeleton className="h-10" />
-              <Skeleton className="h-10" />
-            </div>
-          </div>
-          
-          {/* Skeleton for career cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="space-y-4 animate-pulse">
-                <Skeleton className="h-48 w-full rounded-lg" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="flex flex-col space-y-12">
         <section className="space-y-8">
-          {/* Make the header and filters sticky with a compact design */}
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
             <div className="transform transition-transform duration-200 py-2">
               <h2 className="text-xl font-bold">Explore All Careers</h2>
@@ -138,7 +107,10 @@ export default function Career() {
             </div>
           </div>
 
-          <CareerResults filteredCareers={visibleCareers} />
+          <CareerResults 
+            filteredCareers={visibleCareers} 
+            isLoading={isLoading}
+          />
           
           {hasMore && (
             <div className="flex justify-center mt-8">

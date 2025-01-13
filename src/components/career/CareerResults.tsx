@@ -1,12 +1,14 @@
 import { CareerCard } from "@/components/CareerCard";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 
 interface CareerResultsProps {
   filteredCareers: Tables<"careers">[];
+  isLoading?: boolean;
 }
 
-export const CareerResults = ({ filteredCareers }: CareerResultsProps) => {
+export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps) => {
   // Filter for complete careers only
   const completeCareers = filteredCareers.filter(career => career.complete_career);
 
@@ -24,6 +26,16 @@ export const CareerResults = ({ filteredCareers }: CareerResultsProps) => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+        {[...Array(6)].map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>
