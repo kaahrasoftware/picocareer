@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -58,6 +59,7 @@ export function SelectWithCustomOption({
 }: SelectWithCustomOptionProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   const handleCustomSubmit = async () => {
@@ -121,6 +123,12 @@ export function SelectWithCustomOption({
     }
   };
 
+  const filteredOptions = options.filter(option => {
+    const searchTerm = searchQuery.toLowerCase();
+    const optionText = (option.title || option.name || '').toLowerCase();
+    return optionText.includes(searchTerm);
+  });
+
   if (showCustomInput) {
     return (
       <div className="space-y-2">
@@ -161,16 +169,26 @@ export function SelectWithCustomOption({
         }
       }}
     >
-      <SelectTrigger>
+      <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.id} value={option.id}>
-            {option.title || option.name || ''}
-          </SelectItem>
-        ))}
-        <SelectItem value="other">Other (Add New)</SelectItem>
+        <div className="p-2">
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="mb-2"
+          />
+        </div>
+        <ScrollArea className="h-[200px]">
+          {filteredOptions.map((option) => (
+            <SelectItem key={option.id} value={option.id}>
+              {option.title || option.name || ''}
+            </SelectItem>
+          ))}
+          <SelectItem value="other">Other (Add New)</SelectItem>
+        </ScrollArea>
       </SelectContent>
     </Select>
   );
