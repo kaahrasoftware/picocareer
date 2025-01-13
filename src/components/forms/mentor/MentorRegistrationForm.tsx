@@ -11,6 +11,8 @@ import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SkillsSection } from "./sections/SkillsSection";
 import { SocialSection } from "./sections/SocialSection";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import type { FormValues } from "./types";
 
 interface MentorRegistrationFormProps {
@@ -31,6 +33,7 @@ export function MentorRegistrationForm({
   majors = [],
 }: MentorRegistrationFormProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const form = useForm<FormValues>({
     resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
@@ -65,53 +68,94 @@ export function MentorRegistrationForm({
 
   const handleSubmit = async (data: FormValues) => {
     try {
-      console.log('Form data before submission:', data);
-      
-      const formattedData = {
-        ...data,
-        years_of_experience: Number(data.years_of_experience),
-        // Keep languages as a string since that's what our schema expects
-        languages: data.languages?.trim() || ""
-      };
+      // First check if user is logged in
+      const { data: session } = await supabase.auth.getSession();
+      const userEmail = data.email.toLowerCase();
 
-      await onSubmit(formattedData);
-      
-      toast({
-        title: "Application Received",
-        description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
+      // Check profiles table
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, user_type, email')
+        .eq('email', userEmail)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      // Check auth users table
+      const { data: { users }, error: authError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: userEmail
+        }
       });
-      
+
+      if (authError) {
+        throw authError;
+      }
+
+      const existingAuthUser = users && users.length > 0 ? users[0] : null;
+
+      // Handle different scenarios
+      if (existingProfile) {
+        // User exists in profiles
+        if (existingProfile.user_type === 'mentor') {
+          toast({
+            title: "Already Registered",
+            description: "You are already registered as a mentor. Your application is under review.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!session?.user) {
+          toast({
+            title: "Login Required",
+            description: "Please login to your existing account to continue with mentor registration.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+      }
+
+      if (existingAuthUser && !session?.user) {
+        toast({
+          title: "Login Required",
+          description: "An account with this email already exists. Please login to continue.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      // If we get here, either:
+      // 1. User doesn't exist at all (new registration)
+      // 2. User exists but is not a mentor (updating profile)
+      await onSubmit(data);
+
+      if (!existingProfile && !existingAuthUser) {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
+        });
+      } else {
+        toast({
+          title: "Application Received",
+          description: "Thank you for applying to be a mentor! Our team will review your application.",
+        });
+      }
+
       form.reset();
-    } catch (error) {
-      console.error('Error submitting form:', error);
+    } catch (error: any) {
+      console.error('Error in mentor registration:', error);
       toast({
         title: "Error",
-        description: "Failed to submit mentor application. Please try again.",
+        description: error.message || "Failed to submit mentor application. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  // Group fields by category
-  const personalFields = mentorFormFields.filter(field => 
-    ['first_name', 'last_name', 'email', 'avatar_url'].includes(field.name)
-  );
-
-  const professionalFields = mentorFormFields.filter(field => 
-    ['position', 'company_id', 'years_of_experience', 'bio', 'location', 'languages'].includes(field.name)
-  );
-
-  const educationFields = mentorFormFields.filter(field => 
-    ['school_id', 'academic_major_id', 'highest_degree'].includes(field.name)
-  );
-
-  const skillsFields = mentorFormFields.filter(field => 
-    ['skills', 'tools_used', 'keywords', 'fields_of_interest'].includes(field.name)
-  );
-
-  const socialFields = mentorFormFields.filter(field => 
-    ['linkedin_url', 'github_url', 'website_url', 'X_url', 'facebook_url', 'instagram_url', 'tiktok_url', 'youtube_url'].includes(field.name)
-  );
 
   return (
     <Form {...form}>
