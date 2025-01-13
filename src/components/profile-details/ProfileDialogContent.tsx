@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileEditForm } from "./ProfileEditForm";
 import { ProfileView } from "./ProfileView";
+import { useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
 interface ProfileDialogContentProps {
@@ -25,6 +26,17 @@ export function ProfileDialogContent({
   isMentor,
   handleBookSession,
 }: ProfileDialogContentProps) {
+  const navigate = useNavigate();
+
+  const handleEditClick = () => {
+    if (isMentor && isOwnProfile) {
+      // Redirect to profile page with edit mode
+      navigate('/profile?tab=profile&edit=true');
+    } else {
+      setIsEditing(!isEditing);
+    }
+  };
+
   return (
     <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[85vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6">
       <DialogHeader className="pb-0">
@@ -34,7 +46,7 @@ export function ProfileDialogContent({
             isOwnProfile ? (
               <Button 
                 size="sm"
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={handleEditClick}
                 className="absolute right-0 top-10 sm:top-12"
               >
                 {isEditing ? "Cancel Editing" : "Edit Profile"}
