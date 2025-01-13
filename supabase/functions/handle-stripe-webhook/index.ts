@@ -20,6 +20,10 @@ serve(async (req) => {
 
     console.log('Webhook received - starting processing');
 
+    // Get the raw body
+    const body = await req.text();
+    console.log('Received webhook body:', body);
+    
     // Get the signature from the headers
     const signature = req.headers.get('stripe-signature');
     if (!signature) {
@@ -39,10 +43,6 @@ serve(async (req) => {
       );
     }
 
-    // Get the raw body
-    const body = await req.text();
-    console.log('Received webhook body:', body);
-    
     // Verify the webhook signature
     let event;
     try {
