@@ -6,11 +6,16 @@ export const HeroSection = () => {
     <>
       {/* Hero Section */}
       <section className="text-center mb-12">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 flex items-center justify-center flex-wrap gap-2">
-          <span className="bg-gradient-to-r from-picocareer-secondary to-picocareer-primary bg-clip-text text-transparent pt-3">
-            Making Every Move Matter
-          </span>
-        </h1>
+        <div className="space-y-4">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center flex-wrap gap-2">
+            <span className="bg-gradient-to-r from-[#333333] to-[#555555] bg-clip-text text-transparent pt-3">
+              Making Every Move Matter
+            </span>
+          </h1>
+          <p className="text-[#8E9196] text-lg md:text-xl max-w-2xl mx-auto">
+            Navigate your educational and career journey with confidence, backed by expert guidance and personalized support
+          </p>
+        </div>
       </section>
 
       {/* Header */}
