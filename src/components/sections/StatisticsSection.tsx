@@ -3,6 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Building, School, Trophy } from "lucide-react";
 
+const formatNumber = (num: number): string => {
+  if (num === 0) return "0";
+  
+  // For numbers less than 1000, round to nearest 10 and add +
+  if (num < 1000) {
+    const rounded = Math.floor(num / 10) * 10;
+    return rounded === 0 ? "10+" : `${rounded}+`;
+  }
+  
+  // For numbers 1000 and above, use K, M, T notation
+  const units = ["", "K", "M", "T"];
+  const order = Math.floor(Math.log10(num) / 3);
+  const unitValue = num / Math.pow(1000, order);
+  const roundedValue = Math.floor(unitValue * 10) / 10;
+  return `+${roundedValue}${units[order]}`;
+};
+
 export function StatisticsSection() {
   const { data: stats } = useQuery({
     queryKey: ['home-statistics'],
@@ -59,31 +76,31 @@ export function StatisticsSection() {
   const items = [
     {
       label: "Active Mentors",
-      value: stats?.mentors || 0,
+      value: formatNumber(stats?.mentors || 0),
       icon: Users,
       color: "bg-purple-100 text-purple-600"
     },
     {
       label: "Career Paths",
-      value: stats?.careers || 0,
+      value: formatNumber(stats?.careers || 0),
       icon: Building,
       color: "bg-blue-100 text-blue-600"
     },
     {
       label: "Fields of Study",
-      value: stats?.majors || 0,
+      value: formatNumber(stats?.majors || 0),
       icon: School,
       color: "bg-green-100 text-green-600"
     },
     {
       label: "Schools",
-      value: stats?.schools || 0,
+      value: formatNumber(stats?.schools || 0),
       icon: School,
       color: "bg-orange-100 text-orange-600"
     },
     {
       label: "Funding Sources",
-      value: stats?.scholarships || 0,
+      value: formatNumber(stats?.scholarships || 0),
       icon: Trophy,
       color: "bg-rose-100 text-rose-600"
     }
@@ -102,7 +119,7 @@ export function StatisticsSection() {
                 <div className={`p-3 rounded-full ${item.color}`}>
                   <item.icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-3xl font-bold">{item.value.toLocaleString()}</h3>
+                <h3 className="text-3xl font-bold">{item.value}</h3>
                 <p className="text-sm text-muted-foreground">{item.label}</p>
               </div>
             </CardContent>
