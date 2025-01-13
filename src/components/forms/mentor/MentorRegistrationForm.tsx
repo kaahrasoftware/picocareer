@@ -14,6 +14,7 @@ import { SocialSection } from "./sections/SocialSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import type { FormValues } from "./types";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: FormValues) => Promise<void>;
@@ -34,6 +35,7 @@ export function MentorRegistrationForm({
 }: MentorRegistrationFormProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { session } = useAuthSession();
   const form = useForm<FormValues>({
     resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
@@ -69,7 +71,7 @@ export function MentorRegistrationForm({
   const handleSubmit = async (data: FormValues) => {
     try {
       // First check if user is logged in
-      const { data: session } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       const userEmail = data.email.toLowerCase();
 
       // Check profiles table
@@ -85,7 +87,7 @@ export function MentorRegistrationForm({
 
       // Check auth users table
       const { data: { users }, error: authError } = await supabase.auth.admin.listUsers({
-        filters: {
+        params: {
           email: userEmail
         }
       });
@@ -108,7 +110,7 @@ export function MentorRegistrationForm({
           return;
         }
 
-        if (!session?.user) {
+        if (!sessionData?.session) {
           toast({
             title: "Login Required",
             description: "Please login to your existing account to continue with mentor registration.",
@@ -119,7 +121,7 @@ export function MentorRegistrationForm({
         }
       }
 
-      if (existingAuthUser && !session?.user) {
+      if (existingAuthUser && !sessionData?.session) {
         toast({
           title: "Login Required",
           description: "An account with this email already exists. Please login to continue.",
@@ -156,6 +158,18 @@ export function MentorRegistrationForm({
       });
     }
   };
+
+  // Get the field groups from mentorFormFields
+  const personalFields = mentorFormFields.filter(field => 
+    ['first_name', 'last_name', 'email', 'avatar_url'].includes(field.name));
+  const professionalFields = mentorFormFields.filter(field => 
+    ['bio', 'years_of_experience', 'position', 'company_id', 'location', 'languages'].includes(field.name));
+  const educationFields = mentorFormFields.filter(field => 
+    ['school_id', 'academic_major_id', 'highest_degree'].includes(field.name));
+  const skillsFields = mentorFormFields.filter(field => 
+    ['skills', 'tools_used', 'keywords', 'fields_of_interest'].includes(field.name));
+  const socialFields = mentorFormFields.filter(field => 
+    ['linkedin_url', 'github_url', 'website_url', 'X_url', 'facebook_url', 'instagram_url', 'tiktok_url', 'youtube_url'].includes(field.name));
 
   return (
     <Form {...form}>
