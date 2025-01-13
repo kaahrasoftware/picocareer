@@ -50,22 +50,24 @@ serve(async (req) => {
 
     console.log('Received Stripe webhook event:', event.type);
 
+    // Initialize Supabase client with service role key
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
     // Handle successful payment
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       console.log('Processing successful payment:', session.id);
-
-      // Initialize Supabase client with service role key
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      );
 
       // Get user ID from metadata
       const userId = session.metadata?.userId;
       if (!userId) {
         throw new Error('No user ID found in session metadata');
       }
+
+      console.log('User ID from metadata:', userId);
 
       // Get the price ID from the line items
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
@@ -124,13 +126,20 @@ serve(async (req) => {
       console.log('Successfully added tokens to wallet');
 
       // Create a success notification for the user
-      await supabaseAdmin.from('notifications').insert({
-        profile_id: userId,
-        title: 'Token Purchase Successful',
-        message: `${tokenPackage.token_amount} tokens have been added to your wallet`,
-        type: 'system_update',
-        category: 'general'
-      });
+      const { error: notificationError } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+          profile_id: userId,
+          title: 'Token Purchase Successful',
+          message: `${tokenPackage.token_amount} tokens have been added to your wallet`,
+          type: 'system_update',
+          category: 'general'
+        });
+
+      if (notificationError) {
+        console.error('Notification error:', notificationError);
+        // Don't throw here, as tokens were already added successfully
+      }
 
       console.log('Successfully processed payment and added tokens for user:', userId);
     }
