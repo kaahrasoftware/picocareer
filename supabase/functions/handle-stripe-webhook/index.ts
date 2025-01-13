@@ -28,6 +28,15 @@ serve(async (req) => {
       );
     }
 
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK');
+    if (!webhookSecret) {
+      console.error('Webhook secret not configured');
+      return new Response(
+        JSON.stringify({ error: 'Webhook secret not configured' }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get the raw body
     const body = await req.text();
     console.log('Received webhook body:', body);
@@ -38,7 +47,7 @@ serve(async (req) => {
       event = stripe.webhooks.constructEvent(
         body,
         signature,
-        Deno.env.get('STRIPE_WEBHOOK') || ''
+        webhookSecret
       );
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
