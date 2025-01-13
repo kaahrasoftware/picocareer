@@ -72,6 +72,7 @@ export function MentorRegistrationForm({
   const handleSubmit = async (data: FormValues) => {
     try {
       const userEmail = data.email.toLowerCase();
+      console.log('Starting registration process for:', userEmail);
 
       // Check profiles table first
       const { data: existingProfile, error: profileError } = await supabase
@@ -80,7 +81,10 @@ export function MentorRegistrationForm({
         .eq('email', userEmail)
         .maybeSingle();
 
+      console.log('Existing profile check:', { existingProfile, profileError });
+
       if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Profile check error:', profileError);
         throw profileError;
       }
 
@@ -106,9 +110,11 @@ export function MentorRegistrationForm({
         }
       }
 
-      // If no existing profile, try to create a new user
+      // If no existing profile and no session, create new user
       if (!existingProfile && !session) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        console.log('Creating new user with email:', userEmail);
+        
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: data.password,
           options: {
@@ -118,6 +124,8 @@ export function MentorRegistrationForm({
             }
           }
         });
+
+        console.log('Signup response:', { signUpData, signUpError });
 
         if (signUpError) {
           if (signUpError.message.includes('User already registered')) {
@@ -136,6 +144,7 @@ export function MentorRegistrationForm({
       // If we get here, either:
       // 1. User doesn't exist at all (new registration)
       // 2. User exists but is not a mentor (updating profile)
+      console.log('Proceeding with mentor registration');
       await onSubmit(data);
 
       if (!existingProfile && !session) {
@@ -152,7 +161,7 @@ export function MentorRegistrationForm({
 
       form.reset();
     } catch (error: any) {
-      console.error('Error in mentor registration:', error);
+      console.error('Detailed error in mentor registration:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to submit mentor application. Please try again.",
@@ -184,7 +193,7 @@ export function MentorRegistrationForm({
             <FormField
               control={form.control}
               name="password"
-              type="text"
+              type="password"
               label="Password"
               description="Password must contain at least one lowercase letter, one uppercase letter, and one number."
               required={true}
