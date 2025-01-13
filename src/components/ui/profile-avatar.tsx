@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null;
-  fallback: string;
+  userId?: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
   onAvatarUpdate?: (url: string) => void;
@@ -14,7 +14,7 @@ interface ProfileAvatarProps {
 
 export function ProfileAvatar({ 
   avatarUrl, 
-  fallback, 
+  userId,
   size = "md", 
   editable = false,
   onAvatarUpdate 
@@ -30,7 +30,7 @@ export function ProfileAvatar({
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!onAvatarUpdate) return;
+      if (!userId || !onAvatarUpdate) return;
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
@@ -39,7 +39,7 @@ export function ProfileAvatar({
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${userId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -53,13 +53,21 @@ export function ProfileAvatar({
         .from('avatars')
         .getPublicUrl(filePath);
 
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
       onAvatarUpdate(publicUrl);
-      
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -77,14 +85,16 @@ export function ProfileAvatar({
         <div className="h-full w-full bg-background rounded-full flex items-center justify-center">
           <Avatar className={`${sizeClasses[size]} ring-2 ring-background shadow-lg`}>
             <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
-            <AvatarFallback>{fallback}</AvatarFallback>
+            <AvatarFallback>
+              {avatarUrl ? '?' : 'U'}
+            </AvatarFallback>
           </Avatar>
         </div>
       </div>
       
       {/* Spacer to maintain layout */}
       <Avatar className={`${sizeClasses[size]} opacity-0`}>
-        <AvatarFallback>{fallback}</AvatarFallback>
+        <AvatarFallback>U</AvatarFallback>
       </Avatar>
       
       {editable && (
