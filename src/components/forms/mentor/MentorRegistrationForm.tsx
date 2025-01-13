@@ -25,29 +25,6 @@ interface MentorRegistrationFormProps {
   majors?: any[];
 }
 
-function generateSecurePassword() {
-  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const numbers = '0123456789';
-  const special = '!@#$%^&*';
-  
-  // Ensure at least one of each character type
-  let password = '';
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += special[Math.floor(Math.random() * special.length)];
-  
-  // Add additional random characters to meet minimum length
-  const allChars = lowercase + uppercase + numbers + special;
-  for (let i = 0; i < 8; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
-  }
-  
-  // Shuffle the password
-  return password.split('').sort(() => Math.random() - 0.5).join('');
-}
-
 export function MentorRegistrationForm({
   onSubmit,
   isSubmitting,
@@ -66,6 +43,7 @@ export function MentorRegistrationForm({
       first_name: "",
       last_name: "",
       email: "",
+      password: "",
       avatar_url: "",
       bio: "",
       years_of_experience: 0,
@@ -130,12 +108,9 @@ export function MentorRegistrationForm({
 
       // If no existing profile, try to create a new user
       if (!existingProfile && !session) {
-        const securePassword = generateSecurePassword();
-        console.log('Generated secure password:', securePassword); // For debugging
-
         const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
-          password: securePassword,
+          password: data.password,
           options: {
             data: {
               first_name: data.first_name,
@@ -202,6 +177,21 @@ export function MentorRegistrationForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <PersonalInfoSection control={form.control} fields={personalFields} />
+        
+        {/* Show password field only for new users who aren't logged in */}
+        {!session && (
+          <Card className="p-6">
+            <FormField
+              control={form.control}
+              name="password"
+              type="text"
+              label="Password"
+              description="Password must contain at least one lowercase letter, one uppercase letter, and one number."
+              required={true}
+            />
+          </Card>
+        )}
+
         <ProfessionalSection 
           control={form.control} 
           fields={professionalFields}
