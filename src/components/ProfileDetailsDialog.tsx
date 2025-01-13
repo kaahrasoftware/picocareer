@@ -23,6 +23,10 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const { session, sessionError, queryClient } = useProfileSession();
   const { currentUser, profile, isLoading } = useProfileDetailsData(userId, open, session);
 
+  // Calculate these values after hooks
+  const isOwnProfile = currentUser?.id === userId;
+  const isMentor = profile?.user_type === 'mentor';
+
   // Handle authentication errors
   if (sessionError) {
     // Clear all auth-related data
@@ -54,13 +58,14 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     setBookingOpen(true);
   };
 
-  // Calculate these values after hooks
-  const isOwnProfile = currentUser?.id === userId;
-  const isMentor = profile?.user_type === 'mentor';
+  // Return loading state instead of null
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  // Return null only after all hooks have been called
-  if (isLoading || !profile) {
-    return null;
+  // Return error state if no profile
+  if (!profile) {
+    return <div>Profile not found</div>;
   }
 
   return (
