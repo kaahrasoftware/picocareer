@@ -74,18 +74,18 @@ export function MentorRegistrationForm({
       const userEmail = data.email.toLowerCase();
       console.log('Starting registration process for:', userEmail);
 
-      // Check profiles table first
+      // First, check if user exists in profiles
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, user_type, email')
         .eq('email', userEmail)
         .maybeSingle();
 
-      console.log('Existing profile check:', { existingProfile, profileError });
+      console.log('Profile check result:', { existingProfile, profileError });
 
-      if (profileError && profileError.code !== 'PGRST116') {
+      if (profileError) {
         console.error('Profile check error:', profileError);
-        throw profileError;
+        throw new Error('Error checking user profile');
       }
 
       // Handle existing profile scenarios
@@ -110,11 +110,11 @@ export function MentorRegistrationForm({
         }
       }
 
-      // If no existing profile and no session, create new user
+      // Create new user if needed
       if (!existingProfile && !session) {
-        console.log('Creating new user with email:', userEmail);
+        console.log('Creating new user account');
         
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: data.password,
           options: {
@@ -125,9 +125,11 @@ export function MentorRegistrationForm({
           }
         });
 
-        console.log('Signup response:', { signUpData, signUpError });
+        console.log('Signup result:', { authData, signUpError });
 
         if (signUpError) {
+          console.error('Signup error:', signUpError);
+          
           if (signUpError.message.includes('User already registered')) {
             toast({
               title: "Login Required",
@@ -141,12 +143,11 @@ export function MentorRegistrationForm({
         }
       }
 
-      // If we get here, either:
-      // 1. User doesn't exist at all (new registration)
-      // 2. User exists but is not a mentor (updating profile)
+      // Process mentor registration
       console.log('Proceeding with mentor registration');
       await onSubmit(data);
 
+      // Show appropriate success message
       if (!existingProfile && !session) {
         toast({
           title: "Check your email",
@@ -161,7 +162,7 @@ export function MentorRegistrationForm({
 
       form.reset();
     } catch (error: any) {
-      console.error('Detailed error in mentor registration:', error);
+      console.error('Registration error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to submit mentor application. Please try again.",
@@ -193,8 +194,8 @@ export function MentorRegistrationForm({
             <FormField
               control={form.control}
               name="password"
-              type="password"
               label="Password"
+              type="password"
               description="Password must contain at least one lowercase letter, one uppercase letter, and one number."
               required={true}
             />
