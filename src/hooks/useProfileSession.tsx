@@ -1,22 +1,14 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { createContext, useContext, ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface ProfileData {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  user_type: "mentee" | "mentor" | "admin" | "editor";
-  [key: string]: any;
-}
+import { useNavigate } from "react-router-dom";
+import { Profile } from "@/types/database/profiles";
 
 interface ProfileContextType {
-  profile: ProfileData | null;
+  profile: Profile | null;
   isLoading: boolean;
-  isError: boolean;
-  refetchProfile: () => Promise<void>;
+  error: Error | null;
 }
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
@@ -26,52 +18,58 @@ interface ProfileProviderProps {
 }
 
 export function ProfileProvider({ children }: ProfileProviderProps) {
-  const { session } = useAuthSession();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchProfile = async () => {
-    try {
-      if (!session?.user) {
-        setProfile(null);
-        return;
+  const { data: profile, isLoading, error } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        if (!session?.user) {
+          return null;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        return profile;
+      } catch (error: any) {
+        if (error.message?.includes('Invalid Refresh Token') || 
+            error.message?.includes('session_expired')) {
+          const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+          localStorage.removeItem(key);
+          queryClient.clear();
+          
+          toast({
+            title: "Session Expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          
+          navigate("/auth");
+        }
+        throw error;
       }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      if (error) throw error;
-
-      setProfile(data);
-    } catch (error: any) {
-      console.error("Error fetching profile:", error.message);
-      setIsError(true);
-      toast({
-        title: "Error fetching profile",
-        description: "Please try refreshing the page.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProfile();
-  }, [session]);
-
-  const refetchProfile = async () => {
-    setIsLoading(true);
-    await fetchProfile();
-  };
+    },
+    retry: false,
+  });
 
   return (
-    <ProfileContext.Provider value={{ profile, isLoading, isError, refetchProfile }}>
+    <ProfileContext.Provider value={{ profile, isLoading, error: error as Error | null }}>
       {children}
     </ProfileContext.Provider>
   );
