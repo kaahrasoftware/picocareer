@@ -12,7 +12,7 @@ export const HeroSection = () => {
               Making Every Move Matter
             </span>
           </h1>
-          <p className="text-[#8E9196] text-lg md:text-xl max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Navigate your educational and career journey with confidence, backed by expert guidance and personalized support
           </p>
         </div>
