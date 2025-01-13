@@ -22,12 +22,9 @@ export function MainNavigation() {
   ];
 
   return (
-    <nav className={cn(
-      "flex w-full",
-      isMobile ? "flex-col" : "justify-center"
-    )}>
+    <nav className="flex justify-center w-full">
       <ul className={cn(
-        "flex",
+        "flex max-w-3xl mx-auto",
         isMobile ? "flex-col gap-2" : "gap-8 justify-center"
       )}>
         {navItems.map(({ path, label }) => (
