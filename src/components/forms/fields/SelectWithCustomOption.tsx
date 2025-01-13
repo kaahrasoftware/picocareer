@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Database } from "@/integrations/supabase/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Database } from "@/integrations/supabase/types";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -44,12 +44,6 @@ type InsertData = {
   };
 }
 
-interface TableRecord {
-  id: string;
-  title?: string;
-  name?: string;
-}
-
 export function SelectWithCustomOption({
   value,
   onValueChange,
@@ -67,15 +61,14 @@ export function SelectWithCustomOption({
       // First check if entry already exists
       const { data: existingData, error: checkError } = await supabase
         .from(tableName)
-        .select('id, name, title')
+        .select(tableName === 'majors' || tableName === 'careers' ? 'id, title' : 'id, name')
         .eq(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name', customValue)
         .maybeSingle();
 
       if (checkError) throw checkError;
 
-      if (existingData && 'id' in existingData) {
-        const record = existingData as TableRecord;
-        onValueChange(record.id);
+      if (existingData) {
+        onValueChange(existingData.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
