@@ -9,7 +9,7 @@ export const CallToActionSection = () => {
   return (
     <>
       <h2 className="text-3xl font-bold text-center mb-8">
-        Join Our Community Today
+        Sign Up or Become a Mentor
       </h2>
       <section className="py-16 relative overflow-hidden rounded-xl mx-4">
         <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
