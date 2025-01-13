@@ -18,7 +18,7 @@ type Status = Database["public"]["Enums"]["status"];
 interface SelectWithCustomOptionProps {
   value: string;
   onValueChange: (value: string) => void;
-  options: Array<{ id: string; title?: string; name?: string }>;
+  options: Array<{ id: string; title?: string; name?: string; }>;
   placeholder: string;
   tableName: 'majors' | 'schools' | 'companies' | 'careers';
 }
@@ -45,7 +45,7 @@ type InsertData = {
 }
 
 export function SelectWithCustomOption({
-  value,
+  value = "",
   onValueChange,
   options,
   placeholder,
@@ -165,7 +165,7 @@ export function SelectWithCustomOption({
 
   return (
     <Select
-      value={value || ""}
+      value={value}
       onValueChange={(newValue) => {
         if (newValue === "other") {
           setShowCustomInput(true);
@@ -173,6 +173,7 @@ export function SelectWithCustomOption({
           onValueChange(newValue);
         }
       }}
+      defaultValue={value || undefined}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />
