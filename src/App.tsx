@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { GoToTopButton } from "@/components/ui/go-to-top-button";
 import About from "@/pages/About";
 import Auth from "@/pages/Auth";
 import Blog from "@/pages/Blog";
@@ -47,11 +48,11 @@ function MainLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
+      <GoToTopButton />
     </div>
   );
 }
 
-// Simple layout without footer for auth pages
 function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
