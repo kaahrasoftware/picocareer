@@ -22,7 +22,6 @@ export default function Mentor() {
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
       console.log('Fetching profiles...');
-      const { data: { user } } = await supabase.auth.getUser();
       
       try {
         let query = supabase
@@ -31,7 +30,7 @@ export default function Mentor() {
             *,
             company:companies(name),
             school:schools(name),
-            academic_major:majors(title),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
             career:careers(title)
           `)
           .eq('user_type', 'mentor')
@@ -79,10 +78,6 @@ export default function Mentor() {
           selectedSkills.forEach(skill => {
             query = query.contains('skills', [skill.toLowerCase()]);
           });
-        }
-
-        if (user?.id) {
-          query = query.neq('id', user.id);
         }
 
         const { data, error } = await query;
