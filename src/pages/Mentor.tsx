@@ -9,6 +9,7 @@ import type { Profile } from "@/types/database/profiles";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Mentor() {
+  // Move all hooks to the top level
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
@@ -85,7 +86,6 @@ export default function Mentor() {
         const { data, error } = await query;
 
         if (error) {
-          console.error('Supabase query error:', error);
           throw error;
         }
 
@@ -97,7 +97,7 @@ export default function Mentor() {
           description: "There was an error loading the community profiles. Please try again later.",
           variant: "destructive",
         });
-        throw err;
+        return [];
       }
     },
     retry: 2,
