@@ -38,9 +38,9 @@ export default function Privacy() {
                     <li>Profile Information (username, email, phone number, password)</li>
                     <li>User Content (photographs, videos, audio recordings, comments)</li>
                     <li>Direct Messages</li>
-                    <li>Contact Information</li>
+                    <li>Your Contacts</li>
                     <li>Purchase Information</li>
-                    <li>Survey and Research Responses</li>
+                    <li>Surveys and Research Responses</li>
                   </ul>
                 </div>
               </div>
