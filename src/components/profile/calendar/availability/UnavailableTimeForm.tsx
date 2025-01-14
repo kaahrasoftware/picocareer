@@ -48,13 +48,17 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
+      // Calculate timezone offset in minutes
+      const timezoneOffset = new Date().getTimezoneOffset();
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
           profile_id: profileId,
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
-          is_available: false
+          is_available: false,
+          timezone_offset: timezoneOffset
         });
 
       if (error) throw error;

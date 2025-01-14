@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
 
@@ -52,6 +51,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
       const dayOfWeek = selectedDate.getDay();
+      
+      // Calculate timezone offset in minutes
+      const timezoneOffset = new Date().getTimezoneOffset();
 
       const { error } = await supabase
         .from('mentor_availability')
@@ -61,7 +63,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
           end_date_time: endDateTime.toISOString(),
           is_available: true,
           recurring: isRecurring,
-          day_of_week: isRecurring ? dayOfWeek : null
+          day_of_week: isRecurring ? dayOfWeek : null,
+          timezone_offset: timezoneOffset
         });
 
       if (error) throw error;
