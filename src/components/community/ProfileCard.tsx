@@ -21,10 +21,16 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
   const displayKeywords = profile.keywords?.slice(0, 3) || [];
   const remainingKeywordsCount = profile.keywords ? profile.keywords.length - 3 : 0;
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick(profile);
+    }
+  };
+
   return (
     <Card 
       className="group relative overflow-hidden p-6 h-full flex flex-col cursor-pointer hover:bg-accent/50 transition-colors"
-      onClick={() => onClick?.(profile)}
+      onClick={handleClick}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative flex flex-col h-full">
@@ -159,10 +165,7 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
           <Button 
             variant="outline" 
             className="w-full bg-background hover:bg-muted/50 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick?.(profile);
-            }}
+            onClick={handleClick}
           >
             View Profile
           </Button>
