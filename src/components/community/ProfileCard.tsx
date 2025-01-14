@@ -38,7 +38,9 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
         description: "Please sign in to view mentor profiles.",
         variant: "destructive",
       });
-      navigate("/auth");
+      setTimeout(() => {
+        navigate("/auth");
+      }, 1000); // Add a small delay to ensure the toast is visible
       return;
     }
     
