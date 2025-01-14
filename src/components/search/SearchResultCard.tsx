@@ -47,6 +47,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             </Button>
           ),
         });
+        return;
       }
     } else if (result.type === 'major') {
       setSelectedMajor(result);
@@ -63,7 +64,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             <div className="flex items-center gap-3 mb-3">
               <ProfileAvatar
                 avatarUrl={result.avatar_url}
-                fallback={result.title[0]}
                 size="sm"
                 editable={false}
               />
