@@ -1,5 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
 import { useToast } from "@/hooks/use-toast";
@@ -22,29 +22,42 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session, sessionError, queryClient } = useProfileSession();
-  const { currentUser, profile, isLoading } = useProfileDetailsData(userId, open, session);
+  const { currentUser, profile, isLoading, error } = useProfileDetailsData(userId, open, session);
 
   // Calculate these values after hooks
   const isOwnProfile = currentUser?.id === userId;
   const isMentor = profile?.user_type === 'mentor';
 
   // Handle authentication errors
-  if (sessionError) {
-    // Clear all auth-related data
-    const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-    localStorage.removeItem(key);
-    queryClient.clear();
-    
-    // Show error message and navigate
-    toast({
-      title: "Authentication Error",
-      description: "Please sign in again to continue.",
-      variant: "destructive",
-    });
-    
-    navigate("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (sessionError) {
+      // Clear all auth-related data
+      const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+      localStorage.removeItem(key);
+      queryClient.clear();
+      
+      // Show error message and navigate
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in again to continue.",
+        variant: "destructive",
+      });
+      
+      navigate("/auth");
+    }
+  }, [sessionError, queryClient, toast, navigate]);
+
+  // Handle profile load errors
+  useEffect(() => {
+    if (error && open) {
+      toast({
+        title: "Error",
+        description: "Could not load mentor profile. Please try again later.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    }
+  }, [error, open, toast, onOpenChange]);
 
   // Return loading state
   if (isLoading) {
@@ -63,14 +76,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     );
   }
 
-  // Return error state if no profile
+  // Don't render anything if there's no profile
   if (!profile) {
-    onOpenChange(false); // Close the dialog
-    toast({
-      title: "Error",
-      description: "Could not load mentor profile. Please try again later.",
-      variant: "destructive",
-    });
     return null;
   }
 
