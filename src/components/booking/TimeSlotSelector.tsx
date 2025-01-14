@@ -37,17 +37,13 @@ export function TimeSlotSelector({
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
-      console.log("Fetching availability for date:", date);
-      console.log("Start of day:", startOfDay.toISOString());
-      console.log("End of day:", endOfDay.toISOString());
-
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
-        .gte('start_time', startOfDay.toISOString())
-        .lte('start_time', endOfDay.toISOString())
+        .gte('start_date_time', startOfDay.toISOString())
+        .lte('start_date_time', endOfDay.toISOString())
         .maybeSingle();
 
       if (error) {
@@ -77,17 +73,17 @@ export function TimeSlotSelector({
           const startDate = new Date(date);
           const endDate = new Date(date);
           
-          if (recurringData.start_time && recurringData.end_time) {
-            const startDateTime = new Date(recurringData.start_time);
-            const endDateTime = new Date(recurringData.end_time);
+          if (recurringData.start_date_time && recurringData.end_date_time) {
+            const startDateTime = new Date(recurringData.start_date_time);
+            const endDateTime = new Date(recurringData.end_date_time);
             
             startDate.setHours(startDateTime.getHours(), startDateTime.getMinutes());
             endDate.setHours(endDateTime.getHours(), endDateTime.getMinutes());
             
             return {
               ...recurringData,
-              start_time: startDate.toISOString(),
-              end_time: endDate.toISOString()
+              start_date_time: startDate.toISOString(),
+              end_date_time: endDate.toISOString()
             };
           }
         }
@@ -107,7 +103,6 @@ export function TimeSlotSelector({
 
   console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
-  console.log("TimeSlotSelector - Mentor availability:", mentorAvailability);
 
   return (
     <div>

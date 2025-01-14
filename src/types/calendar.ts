@@ -1,18 +1,26 @@
-export interface Availability {
-  id: string;
-  profile_id: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week: number | null;
-  created_at: string;
-  updated_at: string;
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
+export interface SessionType {
+  type: string;
+  duration: number;
 }
 
-export interface TimeSlot {
-  time: string;
-  available: boolean;
+export interface SessionParticipant {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+}
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: SessionParticipant;
+  mentee: SessionParticipant;
+  session_type: SessionType;
+  meeting_link?: string;
+  meeting_platform?: MeetingPlatform;
 }
 
 export interface CalendarEvent {
@@ -21,19 +29,37 @@ export interface CalendarEvent {
   description: string;
   start_time: string;
   end_time: string;
-  event_type: 'session' | 'holiday' | 'webinar';
+  event_type: 'session';
+  status?: string;
   created_at: string;
   updated_at: string;
-  status?: string;
-  session_details?: {
-    id: string;
-    scheduled_at: string;
-    status: string;
-    mentor_id: string;
-    mentee_id: string;
-    session_type: {
-      duration: number;
-      type: string;
-    };
-  };
+  session_details?: MentorSession;
 }
+
+export interface Availability {
+  id: string;
+  profile_id: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  recurring?: boolean;
+  day_of_week?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type NotificationType = 
+  | "session_booked" 
+  | "session_cancelled" 
+  | "session_reminder" 
+  | "profile_update" 
+  | "mentor_request" 
+  | "blog_posted" 
+  | "major_update";
+
+export type NotificationCategory = "mentorship" | "general" | "session" | "major_update" | "system" | "unread" | "all";
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
+  return mentorshipTypes.includes(type) ? "mentorship" : "general";
+};
