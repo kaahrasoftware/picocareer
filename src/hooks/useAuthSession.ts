@@ -18,10 +18,11 @@ export function useAuthSession() {
           await supabase.auth.getSession();
         
         if (sessionError) {
-          // Check specifically for refresh token errors
-          if (sessionError.message?.includes('Invalid Refresh Token') || 
-              sessionError.message?.includes('session_expired')) {
-            console.log('Session expired, clearing data...');
+          // Check specifically for session errors
+          if (sessionError.message?.includes('session_not_found') || 
+              sessionError.message?.includes('Invalid JWT') ||
+              sessionError.message?.includes('JWT expired')) {
+            console.log('Session invalid or expired, clearing data...');
             // Clear all auth-related data
             await supabase.auth.signOut();
             localStorage.removeItem('picocareer_auth_token');
@@ -55,16 +56,24 @@ export function useAuthSession() {
         // Set up a listener for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
+            console.log('Auth state changed:', event);
+            
             if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
               queryClient.removeQueries({ queryKey: ['auth-session'] });
               queryClient.removeQueries({ queryKey: ['profile'] });
               queryClient.removeQueries({ queryKey: ['notifications'] });
               localStorage.removeItem('picocareer_auth_token');
             } else if (event === 'TOKEN_REFRESHED') {
+              console.log('Token refreshed successfully');
               queryClient.invalidateQueries({ queryKey: ['auth-session'] });
             }
           }
         );
+
+        // Store the session token
+        if (existingSession?.access_token) {
+          localStorage.setItem('picocareer_auth_token', existingSession.access_token);
+        }
 
         return existingSession;
       } catch (error: any) {
