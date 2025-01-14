@@ -4,7 +4,7 @@ import { GraduationCap, Building2 } from "lucide-react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useQuery } from "@tanstack/react-query";
@@ -68,18 +68,9 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         if (!session) {
           toast({
             title: "Authentication Required",
-            description: "Join our community to connect with amazing mentors and unlock your career potential!",
-            variant: "default",
-            className: "bg-green-50 border-green-200",
-            action: (
-              <button 
-                onClick={() => navigate("/auth")}
-                className="border border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-2 text-sm rounded-md"
-              >
-                Login
-              </button>
-            ),
+            description: "Join our community to connect with amazing mentors!",
           });
+          navigate("/auth");
           return;
         }
       } else if (result.type === 'major') {
@@ -92,7 +83,6 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
-        variant: "destructive",
       });
     }
   };
@@ -110,38 +100,35 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
               />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
-                <div className="space-y-1">
-                  {result.career?.title && (
-                    <p className="text-sm text-[#8E9196] truncate">{result.career.title}</p>
-                  )}
-                </div>
+                {result.career?.title && (
+                  <p className="text-sm text-[#8E9196] truncate">{result.career.title}</p>
+                )}
               </div>
             </div>
-            <div className="flex flex-col gap-2 mt-auto">
-              {result.keywords && result.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {result.keywords.slice(0, 3).map((keyword, index) => (
-                    <Badge 
-                      key={index}
-                      variant="secondary"
-                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
-                    >
-                      {keyword}
-                    </Badge>
-                  ))}
-                  {result.keywords.length > 3 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
-                    >
-                      +{result.keywords.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
+            {result.keywords && result.keywords.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {result.keywords.slice(0, 3).map((keyword, index) => (
+                  <Badge 
+                    key={index}
+                    variant="secondary"
+                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                  >
+                    {keyword}
+                  </Badge>
+                ))}
+                {result.keywords.length > 3 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                  >
+                    +{result.keywords.length - 3}
+                  </Badge>
+                )}
+              </div>
+            )}
           </>
         );
+
       case 'career':
         return (
           <>
@@ -177,6 +164,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             )}
           </>
         );
+
       case 'major':
         return (
           <>
