@@ -1,19 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 export function useAuthSession() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
-  // Get initial session and listen for auth changes
-  const { data: session, isError } = useQuery({
+  const { data: session, error: sessionError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
-        // First try to get the existing session
         const { data: { session: existingSession }, error: sessionError } = 
           await supabase.auth.getSession();
         
@@ -29,36 +23,16 @@ export function useAuthSession() {
             queryClient.removeQueries({ queryKey: ['auth-session'] });
             queryClient.removeQueries({ queryKey: ['profile'] });
             queryClient.removeQueries({ queryKey: ['notifications'] });
-            
-            // Show a friendly message to the user
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "default",
-            });
-            
-            // Redirect to auth page
-            navigate("/auth");
-            return null;
           }
           throw sessionError;
         }
 
-        if (!existingSession) {
-          // If no session exists, clear any stale data
-          queryClient.removeQueries({ queryKey: ['auth-session'] });
-          queryClient.removeQueries({ queryKey: ['profile'] });
-          queryClient.removeQueries({ queryKey: ['notifications'] });
-          localStorage.removeItem('picocareer_auth_token');
-          return null;
-        }
-
-        // Set up a listener for auth state changes
+        // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('Auth state changed:', event);
             
-            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+            if (event === 'SIGNED_OUT') {
               queryClient.removeQueries({ queryKey: ['auth-session'] });
               queryClient.removeQueries({ queryKey: ['profile'] });
               queryClient.removeQueries({ queryKey: ['notifications'] });
@@ -78,28 +52,17 @@ export function useAuthSession() {
         return existingSession;
       } catch (error: any) {
         console.error('Error in useAuthSession:', error);
-        
-        // Clear any stale session data
-        await supabase.auth.signOut();
-        queryClient.clear();
-        
-        // Only show toast and redirect if it's not an AuthSessionMissingError
-        if (error.message !== 'Auth session missing!') {
-          toast({
-            title: "Authentication Error",
-            description: "Please sign in again",
-            variant: "destructive",
-          });
-          
-          navigate("/auth");
-        }
-        
-        return null;
+        throw error;
       }
     },
     retry: false,
-    staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  return { session, isError };
+  return {
+    session,
+    sessionError,
+    queryClient
+  };
 }
