@@ -33,7 +33,7 @@ export function TimeSlotButton({
   const slotDate = new Date(date);
   slotDate.setHours(hours, minutes, 0, 0);
   
-  // Adjust for timezone offset
+  // Apply the timezone offset if available
   if (timezoneOffset) {
     slotDate.setMinutes(slotDate.getMinutes() + timezoneOffset);
   }

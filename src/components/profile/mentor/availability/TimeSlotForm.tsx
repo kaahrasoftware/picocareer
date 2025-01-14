@@ -68,6 +68,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
     setIsSubmitting(true);
     try {
+      // Create date objects in the mentor's timezone
       const startDateTime = new Date(selectedDate);
       const [startHours, startMinutes] = selectedStartTime.split(':').map(Number);
       startDateTime.setHours(startHours, startMinutes, 0, 0);
@@ -90,7 +91,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
       const dayOfWeek = selectedDate.getDay();
       
-      // Get timezone offset in minutes
+      // Calculate timezone offset in minutes
       const timezoneOffset = new Date().getTimezoneOffset();
 
       const { error } = await supabase
