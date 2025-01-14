@@ -77,3 +77,23 @@ export interface MentorSession {
 }
 
 export type MeetingPlatform = "Google Meet" | "Phone Call" | "WhatsApp" | "Telegram" | "Zoom";
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  switch (type) {
+    case "session_booked":
+    case "session_cancelled":
+    case "session_reminder":
+      return "session";
+    case "mentor_request":
+      return "mentorship";
+    case "major_update":
+      return "major_update";
+    case "system_update":
+      return "system";
+    case "profile_update":
+    case "blog_posted":
+      return "general";
+    default:
+      return "general";
+  }
+};
