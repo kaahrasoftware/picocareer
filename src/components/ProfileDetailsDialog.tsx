@@ -1,4 +1,4 @@
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
@@ -16,7 +16,6 @@ interface ProfileDetailsDialogProps {
 }
 
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
-  // Move all hooks to the top level
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
@@ -36,7 +35,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     localStorage.removeItem(key);
     queryClient.clear();
     
-    // Show error message and navigate
     toast({
       title: "Authentication Error",
       description: "Please sign in again to continue.",
@@ -64,7 +62,12 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   }
 
   // Return early if no profile or if mentor is not approved
-  if (!profile || (isMentor && !isApprovedMentor && !isOwnProfile)) {
+  if (!profile) {
+    return null;
+  }
+
+  // If the profile is a mentor and not approved, only show to the profile owner
+  if (isMentor && !isApprovedMentor && !isOwnProfile) {
     return null;
   }
 
