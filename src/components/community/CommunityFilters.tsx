@@ -35,7 +35,7 @@ export function CommunityFilters({
   onSearchChange,
   fieldFilter,
   onFieldChange,
-  fields,
+  fields = [], // Add default empty array
   selectedSkills,
   onSkillsChange,
   isSkillsDropdownOpen,
@@ -51,9 +51,9 @@ export function CommunityFilters({
   onCompanyChange,
   schoolFilter,
   onSchoolChange,
-  locations,
-  companies,
-  schools,
+  locations = [], // Add default empty array
+  companies = [], // Add default empty array
+  schools = [], // Add default empty array
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 

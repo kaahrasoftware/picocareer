@@ -8,7 +8,16 @@ interface SelectFilterProps {
   className?: string;
 }
 
-export function SelectFilter({ value, onValueChange, placeholder, options, className }: SelectFilterProps) {
+export function SelectFilter({ 
+  value, 
+  onValueChange, 
+  placeholder, 
+  options = [], // Add default empty array
+  className 
+}: SelectFilterProps) {
+  // Ensure options is always an array
+  const safeOptions = Array.isArray(options) ? options : [];
+
   return (
     <Select value={value || "all"} onValueChange={(value) => onValueChange(value === "all" ? null : value)}>
       <SelectTrigger className={className}>
@@ -16,7 +25,7 @@ export function SelectFilter({ value, onValueChange, placeholder, options, class
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All {placeholder}s</SelectItem>
-        {options.map((option) => (
+        {safeOptions.map((option) => (
           <SelectItem key={option} value={option}>{option}</SelectItem>
         ))}
       </SelectContent>
