@@ -28,19 +28,18 @@ export function TimeSlotButton({
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Create a date object in the mentor's timezone
+  // Create a date object for the slot
   const [hours, minutes] = time.split(':').map(Number);
   const slotDate = new Date(date);
   slotDate.setHours(hours, minutes, 0, 0);
-  
-  // Apply the timezone offset if available
-  if (timezoneOffset) {
-    slotDate.setMinutes(slotDate.getMinutes() + timezoneOffset);
-  }
+
+  // First, adjust the slot time using the mentor's stored timezone offset
+  const offsetMillis = timezoneOffset * 60000; // Convert minutes to milliseconds
+  const adjustedSlotDate = new Date(slotDate.getTime() + offsetMillis);
 
   // Format times in respective timezones
-  const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
-  const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
+  const mentorTime = formatInTimeZone(adjustedSlotDate, mentorTimezone, 'h:mm a');
+  const userTime = formatInTimeZone(adjustedSlotDate, userTimezone, 'h:mm a');
 
   return (
     <Button

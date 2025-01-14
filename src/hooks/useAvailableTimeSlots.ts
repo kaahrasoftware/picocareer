@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
-import { formatInTimeZone, zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -76,6 +76,7 @@ export function useAvailableTimeSlots(
         let endTime: Date;
 
         if (availability.recurring) {
+          // For recurring slots, use the time portion from start/end times
           const availabilityStart = new Date(availability.start_date_time);
           const availabilityEnd = new Date(availability.end_date_time);
           
@@ -85,34 +86,31 @@ export function useAvailableTimeSlots(
           endTime = new Date(date);
           endTime.setHours(availabilityEnd.getHours(), availabilityEnd.getMinutes());
         } else {
-          // Convert UTC times back to mentor's timezone using the stored offset
+          // For non-recurring slots, convert UTC times back to original timezone using offset
           const utcStart = new Date(availability.start_date_time);
           const utcEnd = new Date(availability.end_date_time);
           
-          if (availability.timezone_offset) {
-            startTime = new Date(utcStart.getTime() + (availability.timezone_offset * 60000));
-            endTime = new Date(utcEnd.getTime() + (availability.timezone_offset * 60000));
-          } else {
-            startTime = utcStart;
-            endTime = utcEnd;
-          }
+          // Apply the stored timezone offset
+          const offsetMillis = (availability.timezone_offset || 0) * 60000; // Convert minutes to milliseconds
+          startTime = new Date(utcStart.getTime() + offsetMillis);
+          endTime = new Date(utcEnd.getTime() + offsetMillis);
         }
 
         let currentTime = startTime;
-
         while (currentTime < endTime) {
-          const timeString = formatInTimeZone(currentTime, mentorTimezone, 'HH:mm');
           const slotStart = new Date(currentTime);
           const slotEnd = addMinutes(slotStart, sessionDuration);
 
+          // Check for overlapping unavailable slots
           const isOverlappingUnavailable = unavailableSlots.some(unavailable => {
             const unavailableStart = new Date(unavailable.start_date_time);
             const unavailableEnd = new Date(unavailable.end_date_time);
             
             // Apply timezone offset for unavailable slots
             if (unavailable.timezone_offset) {
-              unavailableStart.setMinutes(unavailableStart.getMinutes() + unavailable.timezone_offset);
-              unavailableEnd.setMinutes(unavailableEnd.getMinutes() + unavailable.timezone_offset);
+              const offsetMillis = unavailable.timezone_offset * 60000;
+              unavailableStart.setTime(unavailableStart.getTime() + offsetMillis);
+              unavailableEnd.setTime(unavailableEnd.getTime() + offsetMillis);
             }
             
             return areIntervalsOverlapping(
@@ -121,6 +119,7 @@ export function useAvailableTimeSlots(
             );
           });
 
+          // Check for overlapping bookings
           const isOverlappingBooking = bookingsData?.some(booking => {
             const bookingTime = new Date(booking.scheduled_at);
             const bookingDuration = booking.session_type?.duration || 60;
@@ -134,6 +133,8 @@ export function useAvailableTimeSlots(
 
           const now = new Date();
           if (slotStart > now && !isOverlappingUnavailable && !isOverlappingBooking) {
+            // Format time in mentor's timezone and include the offset
+            const timeString = formatInTimeZone(slotStart, mentorTimezone, 'HH:mm');
             slots.push({
               time: timeString,
               available: true,
