@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import type { SearchResult } from "@/types/search";
+import type { Major } from "@/types/database/majors";
+import type { Career } from "@/types/database/careers";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -17,7 +19,7 @@ interface SearchResultCardProps {
 }
 
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
-  const [selectedMajor, setSelectedMajor] = useState<any | null>(null);
+  const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -50,7 +52,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         return;
       }
     } else if (result.type === 'major') {
-      setSelectedMajor(result);
+      setSelectedMajor(result as Major);
     } else if (result.type === 'career') {
       setSelectedCareerId(result.id);
     }
