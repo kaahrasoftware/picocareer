@@ -444,34 +444,34 @@ export type Database = {
         Row: {
           created_at: string
           day_of_week: number | null
-          end_date_time: string | null
+          end_time: string | null
           id: string
           is_available: boolean | null
           profile_id: string
           recurring: boolean | null
-          start_date_time: string | null
+          start_time: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           day_of_week?: number | null
-          end_date_time?: string | null
+          end_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id: string
           recurring?: boolean | null
-          start_date_time?: string | null
+          start_time?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           day_of_week?: number | null
-          end_date_time?: string | null
+          end_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id?: string
           recurring?: boolean | null
-          start_date_time?: string | null
+          start_time?: string | null
           updated_at?: string
         }
         Relationships: [
