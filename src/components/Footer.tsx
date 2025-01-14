@@ -69,6 +69,19 @@ export function Footer() {
     setIsSubmitting(true);
 
     try {
+      // First check if email exists
+      const { data: existingEmail } = await supabase
+        .from('email_subscriptions')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (existingEmail) {
+        toast.error('This email is already subscribed to our newsletter');
+        return;
+      }
+
+      // If email doesn't exist, insert it
       const { error } = await supabase
         .from('email_subscriptions')
         .insert([{ email }]);
@@ -77,9 +90,14 @@ export function Footer() {
 
       toast.success('Thank you for subscribing to our newsletter!');
       setEmail(''); // Clear the input after successful submission
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error subscribing to newsletter:', error);
-      toast.error('Failed to subscribe. Please try again later.');
+      // Handle specific error cases
+      if (error.code === '23505') {
+        toast.error('This email is already subscribed to our newsletter');
+      } else {
+        toast.error('Failed to subscribe. Please try again later.');
+      }
     } finally {
       setIsSubmitting(false);
     }
