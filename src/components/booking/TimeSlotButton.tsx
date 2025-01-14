@@ -51,9 +51,9 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start">
-        <span>{mentorTime}</span>
+        <span>{userTime}</span>
         <span className="text-xs text-muted-foreground">
-          Your time: {userTime} ({userTimezone})
+          Mentor's time: {mentorTime} ({mentorTimezone})
         </span>
       </div>
     </Button>
