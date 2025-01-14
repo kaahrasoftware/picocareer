@@ -23,6 +23,27 @@ export default function Mentor() {
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
       try {
+        // First get available mentor IDs if filter is active
+        let availableProfileIds: string[] | null = null;
+        if (hasAvailability) {
+          const { data: availabilityData, error: availabilityError } = await supabase
+            .from('mentor_availability')
+            .select('profile_id')
+            .eq('is_available', true);
+
+          if (availabilityError) {
+            console.error('Error fetching availability:', availabilityError);
+            return [];
+          }
+
+          availableProfileIds = availabilityData.map(row => row.profile_id);
+          
+          // If no available mentors, return empty array
+          if (availableProfileIds.length === 0) {
+            return [];
+          }
+        }
+
         let query = supabase
           .from('profiles')
           .select(`
@@ -35,16 +56,9 @@ export default function Mentor() {
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
 
-        // Handle availability filter
-        if (hasAvailability) {
-          const availableProfileIds = await supabase
-            .from('mentor_availability')
-            .select('profile_id')
-            .eq('is_available', true);
-
-          if (availableProfileIds.data) {
-            query = query.in('id', availableProfileIds.data.map(row => row.profile_id));
-          }
+        // Apply availability filter if active
+        if (hasAvailability && availableProfileIds) {
+          query = query.in('id', availableProfileIds);
         }
 
         // Apply search filters
