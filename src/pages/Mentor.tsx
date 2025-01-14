@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { MentorGrid } from "@/components/community/MentorGrid";
 import type { Profile } from "@/types/database/profiles";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,7 +18,7 @@ export default function Mentor() {
   const [hasAvailability, setHasAvailability] = useState(false);
   const { toast } = useToast();
 
-  const { data: profiles = [], isLoading, error } = useQuery({
+  const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
       try {
@@ -47,11 +48,11 @@ export default function Mentor() {
             *,
             company:companies(name),
             school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title)
+            academic_major:majors(title),
+            career:careers(title)
           `)
           .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved'); // Add this line to filter for approved mentors
+          .eq('onboarding_status', 'Approved');
 
         if (hasAvailability && availableProfileIds) {
           query = query.in('id', availableProfileIds);
@@ -94,15 +95,21 @@ export default function Mentor() {
         const { data, error } = await query;
 
         if (error) {
-          throw error;
+          console.error('Error fetching profiles:', error);
+          toast({
+            title: "Error loading mentors",
+            description: "There was an error loading the mentor profiles. Please try again.",
+            variant: "destructive",
+          });
+          return [];
         }
 
         return data as Profile[];
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({
-          title: "Error loading profiles",
-          description: "There was an error loading the community profiles. Please try again later.",
+          title: "Error loading mentors",
+          description: "There was an error loading the mentor profiles. Please try again.",
           variant: "destructive",
         });
         return [];
@@ -119,25 +126,31 @@ export default function Mentor() {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
-              <h1 className="text-3xl font-bold">PicoCareer Mentors</h1>
-              
-              <CommunityFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedSkills={selectedSkills}
-                onSkillsChange={setSelectedSkills}
-                locationFilter={locationFilter}
-                onLocationChange={setLocationFilter}
-                companyFilter={companyFilter}
-                onCompanyChange={setCompanyFilter}
-                schoolFilter={schoolFilter}
-                onSchoolChange={setSchoolFilter}
-                fieldFilter={fieldFilter}
-                onFieldChange={setFieldFilter}
-                fields={[]}
-                hasAvailabilityFilter={true}
-                onAvailabilityChange={setHasAvailability}
-              />
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 pb-4">
+                <div className="transform transition-transform duration-200 py-2">
+                  <h1 className="text-xl font-bold">PicoCareer Mentors</h1>
+                </div>
+                
+                <div className="transform transition-all duration-200 -mx-2">
+                  <CommunityFilters
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    selectedSkills={selectedSkills}
+                    onSkillsChange={setSelectedSkills}
+                    locationFilter={locationFilter}
+                    onLocationChange={setLocationFilter}
+                    companyFilter={companyFilter}
+                    onCompanyChange={setCompanyFilter}
+                    schoolFilter={schoolFilter}
+                    onSchoolChange={setSchoolFilter}
+                    fieldFilter={fieldFilter}
+                    onFieldChange={setFieldFilter}
+                    fields={[]}
+                    hasAvailabilityFilter={true}
+                    onAvailabilityChange={setHasAvailability}
+                  />
+                </div>
+              </div>
 
               {error ? (
                 <div className="text-center py-8">
