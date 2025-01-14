@@ -2,6 +2,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
+import { Availability } from "@/types/calendar";
 
 interface DateSelectorProps {
   mentorId: string;
@@ -9,20 +10,11 @@ interface DateSelectorProps {
   onDateSelect: (date: Date | undefined) => void;
 }
 
-interface MentorAvailability {
-  availabilities: {
-    recurring: boolean;
-    day_of_week: number;
-    start_date_time: string;
-    is_available: boolean;
-  }[];
-}
-
 export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelectorProps) {
   const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
   
   // Fetch mentor availability data
-  const { data: mentorAvailability } = useQuery<MentorAvailability>({
+  const { data: mentorAvailability } = useQuery<{ availabilities: Availability[] }>({
     queryKey: ['mentor-availability', mentorId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -58,7 +50,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
 
     // Check specific date availability
     const hasSpecificSlot = mentorAvailability.availabilities.some(availability => {
-      const availabilityStart = new Date(availability.start_date_time);
+      const availabilityStart = new Date(availability.start_time);
       return availabilityStart >= startOfDay && 
              availabilityStart <= endOfDay && 
              availability.is_available === true;
@@ -86,7 +78,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
 
     // Check specific date unavailability
     const hasSpecificUnavailable = mentorAvailability.availabilities.some(availability => {
-      const availabilityStart = new Date(availability.start_date_time);
+      const availabilityStart = new Date(availability.start_time);
       return availabilityStart >= startOfDay && 
              availabilityStart <= endOfDay && 
              availability.is_available === false;

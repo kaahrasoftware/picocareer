@@ -3,11 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
-
-interface TimeSlot {
-  time: string;
-  available: boolean;
-}
+import { TimeSlot } from "@/types/calendar";
 
 export function useAvailableTimeSlots(
   date: Date | undefined, 
@@ -83,8 +79,6 @@ export function useAvailableTimeSlots(
       const unavailableSlots = availabilityData?.filter(slot => !slot.is_available) || [];
 
       availableSlots.forEach((availability) => {
-        if (!availability.start_time || !availability.end_time) return;
-
         let startTime: Date;
         let endTime: Date;
 
