@@ -109,3 +109,5 @@ export const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
   "Volunteer Opportunities": "Discover meaningful volunteer opportunities and their impact on personal growth.",
   "Know About my Academic Major": "Get detailed insights about specific academic majors, coursework, and career prospects."
 };
+
+export { MeetingPlatform };

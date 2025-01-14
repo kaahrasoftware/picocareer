@@ -2,7 +2,19 @@ import { type Session } from "@supabase/supabase-js";
 import { type Database } from "@/integrations/supabase/types";
 
 export type NotificationType = Database["public"]["Enums"]["notification_type"];
-export type NotificationCategory = "all" | "unread" | "session" | "system";
+export type NotificationCategory = "mentorship" | "general";
+
+export interface Availability {
+  id: string;
+  profile_id: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week?: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface TimeSlot {
   id: string;
@@ -33,8 +45,9 @@ export interface MentorSession {
   id: string;
   scheduled_at: string;
   status: string;
-  notes: string;
-  meeting_link: string;
+  notes: string | null;
+  meeting_platform: MeetingPlatform;
+  meeting_link: string | null;
   mentor: {
     id: string;
     full_name: string;
@@ -46,25 +59,27 @@ export interface MentorSession {
     avatar_url: string;
   };
   session_type: {
-    id: string;
     type: string;
     duration: number;
-    price: number;
   };
 }
 
-export type MeetingPlatform = "Google Meet" | "Phone Call" | "WhatsApp" | "Telegram" | "Zoom";
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call" | "Zoom";
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
   switch (type) {
     case "session_reminder":
     case "session_cancelled":
+    case "session_booked":
     case "session_rescheduled":
-      return "session";
+      return "mentorship";
     case "system_update":
     case "maintenance":
-      return "system";
+    case "major_update":
+    case "profile_update":
+    case "mentor_request":
+      return "general";
     default:
-      return "all";
+      return "general";
   }
 };
