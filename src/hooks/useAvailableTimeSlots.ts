@@ -33,8 +33,8 @@ export function useAvailableTimeSlots(
         .from('mentor_availability')
         .select('*')
         .eq('profile_id', mentorId)
-        .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
-        .order('start_date_time', { ascending: true });
+        .or(`and(start_time.gte.${startOfDay.toISOString()},start_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
+        .order('start_time', { ascending: true });
 
       if (availabilityError) {
         console.error("Error fetching availability:", availabilityError);
@@ -71,14 +71,14 @@ export function useAvailableTimeSlots(
       const unavailableSlots = availabilityData?.filter(slot => !slot.is_available) || [];
 
       availableSlots.forEach((availability) => {
-        if (!availability.start_date_time || !availability.end_date_time) return;
+        if (!availability.start_time || !availability.end_time) return;
 
         let startTime: Date;
         let endTime: Date;
 
         if (availability.recurring) {
-          const availabilityStart = new Date(availability.start_date_time);
-          const availabilityEnd = new Date(availability.end_date_time);
+          const availabilityStart = new Date(availability.start_time);
+          const availabilityEnd = new Date(availability.end_time);
           
           startTime = new Date(date);
           startTime.setHours(availabilityStart.getHours(), availabilityStart.getMinutes());
@@ -86,8 +86,8 @@ export function useAvailableTimeSlots(
           endTime = new Date(date);
           endTime.setHours(availabilityEnd.getHours(), availabilityEnd.getMinutes());
         } else {
-          startTime = new Date(availability.start_date_time);
-          endTime = new Date(availability.end_date_time);
+          startTime = new Date(availability.start_time);
+          endTime = new Date(availability.end_time);
         }
 
         let currentTime = startTime;
@@ -99,8 +99,8 @@ export function useAvailableTimeSlots(
 
           // Check if slot overlaps with any unavailable time
           const isOverlappingUnavailable = unavailableSlots.some(unavailable => {
-            const unavailableStart = new Date(unavailable.start_date_time);
-            const unavailableEnd = new Date(unavailable.end_date_time);
+            const unavailableStart = new Date(unavailable.start_time);
+            const unavailableEnd = new Date(unavailable.end_time);
             return areIntervalsOverlapping(
               { start: slotStart, end: slotEnd },
               { start: unavailableStart, end: unavailableEnd }
