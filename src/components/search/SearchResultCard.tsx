@@ -21,7 +21,6 @@ interface SearchResultCardProps {
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
   const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
 
@@ -44,11 +43,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
 
       if (error) {
         console.error('Error fetching major:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load major details. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to load major details. Please try again.");
         return null;
       }
       
@@ -66,9 +61,8 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
     try {
       if (result.type === 'mentor') {
         if (!session) {
-          toast({
-            title: "Authentication Required",
-            description: "Join our community to connect with amazing mentors!",
+          toast.error("Authentication Required", {
+            description: "Join our community to connect with amazing mentors!"
           });
           navigate("/auth");
           return;
@@ -80,10 +74,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       }
     } catch (error) {
       console.error('Error handling card click:', error);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-      });
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
