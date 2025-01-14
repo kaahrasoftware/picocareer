@@ -28,6 +28,14 @@ export function useAvailableTimeSlots(
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
+      console.log("Fetching availability for:", {
+        date: date.toISOString(),
+        mentorId,
+        startOfDay: startOfDay.toISOString(),
+        endOfDay: endOfDay.toISOString(),
+        timezone: mentorTimezone
+      });
+
       // Fetch both available and unavailable slots
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
@@ -45,6 +53,8 @@ export function useAvailableTimeSlots(
         });
         return;
       }
+
+      console.log("Availability data:", availabilityData);
 
       // Get existing bookings
       const { data: bookingsData, error: bookingsError } = await supabase
@@ -64,6 +74,8 @@ export function useAvailableTimeSlots(
         });
         return;
       }
+
+      console.log("Bookings data:", bookingsData);
 
       // Process available and unavailable slots
       const slots: TimeSlot[] = [];
@@ -132,6 +144,7 @@ export function useAvailableTimeSlots(
         }
       });
 
+      console.log("Generated time slots:", slots);
       setAvailableTimeSlots(slots);
     }
 
