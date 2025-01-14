@@ -1,35 +1,37 @@
 import React, { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 
-export interface ProfileAvatarProps {
+interface ProfileAvatarProps {
   avatarUrl: string | null;
+  userId?: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
-  onAvatarUpdate?: (url: string) => void;
 }
 
 export function ProfileAvatar({ 
   avatarUrl, 
+  userId,
   size = "md", 
-  editable = false,
-  onAvatarUpdate 
+  editable = false 
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   const sizeClasses = {
     sm: "h-8 w-8",
-    md: "h-12 w-12",
-    lg: "h-16 w-16"
+    md: "h-16 w-16",
+    lg: "h-24 w-24"
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      if (!userId) {
+        throw new Error('User ID is required for avatar upload');
+      }
+
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
@@ -38,11 +40,11 @@ export function ProfileAvatar({
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${userId}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { 
+        .upload(filePath, file, { 
           upsert: true,
           contentType: file.type
         });
@@ -53,18 +55,25 @@ export function ProfileAvatar({
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
-      if (onAvatarUpdate) {
-        onAvatarUpdate(publicUrl);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw updateError;
       }
 
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
+
+      // Force a page reload to update the avatar everywhere
+      window.location.reload();
     } catch (error: any) {
-      console.error('Upload error:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -77,17 +86,13 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={cn(sizeClasses[size], "border-2 border-primary")}>
-        <AvatarImage
-          src={avatarUrl || "/placeholder.svg"}
-          alt="Profile"
-          className="object-cover"
-        />
-        <AvatarFallback>
+      <Avatar className={sizeClasses[size]}>
+        <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+        <AvatarFallback className="bg-primary/10">
           {uploading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
-            <ImageIcon className="h-4 w-4" />
+            'U'
           )}
         </AvatarFallback>
       </Avatar>
@@ -101,11 +106,9 @@ export function ProfileAvatar({
             onChange={handleUpload}
             disabled={uploading}
           />
-          <Upload className="w-4 h-4 text-white" />
+          <Upload className="w-5 h-5 text-white" />
         </label>
       )}
     </div>
   );
 }
-
-import { ImageIcon } from "lucide-react";

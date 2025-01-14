@@ -3,8 +3,6 @@ import { SelectFilter } from "./filters/SelectFilter";
 import { SearchInput } from "./filters/SearchInput";
 import { Card } from "@/components/ui/card";
 import { Filter } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 export interface CommunityFiltersProps {
   searchQuery: string;
@@ -30,8 +28,6 @@ export interface CommunityFiltersProps {
   locations?: string[];
   companies?: string[];
   schools?: string[];
-  hasAvailabilityFilter?: boolean;
-  onAvailabilityChange?: (value: boolean) => void;
 }
 
 export function CommunityFilters({
@@ -39,7 +35,7 @@ export function CommunityFilters({
   onSearchChange,
   fieldFilter,
   onFieldChange,
-  fields = [],
+  fields,
   selectedSkills,
   onSkillsChange,
   isSkillsDropdownOpen,
@@ -55,11 +51,9 @@ export function CommunityFilters({
   onCompanyChange,
   schoolFilter,
   onSchoolChange,
-  locations = [],
-  companies = [],
-  schools = [],
-  hasAvailabilityFilter = false,
-  onAvailabilityChange,
+  locations,
+  companies,
+  schools,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -83,22 +77,9 @@ export function CommunityFilters({
         isScrolled ? 'p-2' : 'p-4'
       }`}>
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Filter className="h-4 w-4" />
-              <h2 className="text-sm font-medium">Filters</h2>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Switch
-                id="availability"
-                onCheckedChange={onAvailabilityChange}
-                className="data-[state=checked]:bg-primary"
-              />
-              <Label htmlFor="availability" className="text-sm text-muted-foreground">
-                Available mentors only
-              </Label>
-            </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Filter className="h-4 w-4" />
+            <h2 className="text-sm font-medium">Filters</h2>
           </div>
 
           <div className="flex gap-4">

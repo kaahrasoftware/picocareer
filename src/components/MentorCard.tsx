@@ -26,8 +26,6 @@ interface MentorCardProps {
   location?: string;
   bio?: string;
   skills?: string[];
-  fields_of_interest?: string[];
-  keywords?: string[];
 }
 
 export function MentorCard(props: MentorCardProps) {
@@ -36,15 +34,9 @@ export function MentorCard(props: MentorCardProps) {
   const { session } = useProfileSession();
   const navigate = useNavigate();
 
-  // Get the first 3 items for each array and calculate remaining counts
+  // Get the first 3 skills and calculate remaining count
   const displaySkills = props.skills?.slice(0, 3) || [];
-  const remainingSkillsCount = props.skills ? props.skills.length - 3 : 0;
-
-  const displayInterests = props.fields_of_interest?.slice(0, 3) || [];
-  const remainingInterestsCount = props.fields_of_interest ? props.fields_of_interest.length - 3 : 0;
-
-  const displayKeywords = props.keywords?.slice(0, 3) || [];
-  const remainingKeywordsCount = props.keywords ? props.keywords.length - 3 : 0;
+  const remainingCount = props.skills ? props.skills.length - 3 : 0;
 
   const handleViewProfile = () => {
     if (!session) {
@@ -77,7 +69,8 @@ export function MentorCard(props: MentorCardProps) {
           {/* Header Section with Avatar and Basic Info */}
           <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
-              avatarUrl={props.imageUrl}
+              avatarUrl={props.imageUrl || ""}
+              fallback={props.name ? props.name[0] : "?"}
               size="md"
               editable={false}
             />
@@ -135,62 +128,12 @@ export function MentorCard(props: MentorCardProps) {
                     {skill}
                   </Badge>
                 ))}
-                {remainingSkillsCount > 0 && (
+                {remainingCount > 0 && (
                   <Badge 
                     variant="secondary"
                     className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
                   >
-                    +{remainingSkillsCount} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Fields of Interest Section */}
-          {props.fields_of_interest?.length > 0 && (
-            <div className="w-full mb-4">
-              <div className="flex flex-wrap gap-1.5">
-                {displayInterests.map((interest) => (
-                  <Badge 
-                    key={interest} 
-                    variant="secondary" 
-                    className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-                  >
-                    {interest}
-                  </Badge>
-                ))}
-                {remainingInterestsCount > 0 && (
-                  <Badge 
-                    variant="secondary"
-                    className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-                  >
-                    +{remainingInterestsCount} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Keywords Section */}
-          {props.keywords?.length > 0 && (
-            <div className="w-full mb-4">
-              <div className="flex flex-wrap gap-1.5">
-                {displayKeywords.map((keyword) => (
-                  <Badge 
-                    key={keyword} 
-                    variant="secondary" 
-                    className="text-xs bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
-                  >
-                    {keyword}
-                  </Badge>
-                ))}
-                {remainingKeywordsCount > 0 && (
-                  <Badge 
-                    variant="secondary"
-                    className="text-xs bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
-                  >
-                    +{remainingKeywordsCount} more
+                    +{remainingCount} more
                   </Badge>
                 )}
               </div>

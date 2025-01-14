@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { useState } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
 import { ProfileDialogContent } from "./profile-details/ProfileDialogContent";
@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useProfileSession } from "@/hooks/useProfileSession";
 import { useProfileDetailsData } from "@/hooks/useProfileDetailsData";
 import { ProfileRealtime } from "./profile-details/ProfileRealtime";
-import { Skeleton } from "./ui/skeleton";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -16,6 +15,7 @@ interface ProfileDetailsDialogProps {
 }
 
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
+  // Move all hooks to the top level
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
@@ -26,7 +26,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   // Calculate these values after hooks
   const isOwnProfile = currentUser?.id === userId;
   const isMentor = profile?.user_type === 'mentor';
-  const isApprovedMentor = isMentor && profile?.onboarding_status === 'Approved';
 
   // Handle authentication errors
   if (sessionError) {
@@ -35,6 +34,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     localStorage.removeItem(key);
     queryClient.clear();
     
+    // Show error message and navigate
     toast({
       title: "Authentication Error",
       description: "Please sign in again to continue.",
@@ -42,32 +42,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     });
     
     navigate("/auth");
-    return null;
-  }
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
-          <div className="space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Return early if no profile or if mentor is not approved
-  if (!profile) {
-    return null;
-  }
-
-  // If the profile is a mentor and not approved, only show to the profile owner
-  if (isMentor && !isApprovedMentor && !isOwnProfile) {
     return null;
   }
 
@@ -83,6 +57,16 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     }
     setBookingOpen(true);
   };
+
+  // Return loading state instead of null
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // Return error state if no profile
+  if (!profile) {
+    return <div>Profile not found</div>;
+  }
 
   return (
     <>
@@ -105,7 +89,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         queryClient={queryClient}
       />
 
-      {!isOwnProfile && isApprovedMentor && (
+      {!isOwnProfile && (
         <BookSessionDialog
           mentor={{
             id: userId,

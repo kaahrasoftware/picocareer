@@ -51,10 +51,7 @@ export function CareerCard({
 
   return (
     <>
-      <Card 
-        className="group relative overflow-hidden p-6 h-full flex flex-col cursor-pointer hover:shadow-lg transition-all duration-200"
-        onClick={handleOpenDialog}
-      >
+      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
         <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="relative flex flex-col h-full">
@@ -111,10 +108,7 @@ export function CareerCard({
             <Button 
               variant="outline"
               className="w-full bg-background hover:bg-muted/50 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click from triggering
-                handleOpenDialog();
-              }}
+              onClick={handleOpenDialog}
             >
               View Details
             </Button>
