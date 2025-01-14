@@ -146,7 +146,9 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
 
               <SkillsAndTools 
                 skill_match={major.skill_match}
+                tools_knowledge={major.tools_knowledge}
                 transferable_skills={major.transferable_skills}
+                interdisciplinary_connections={major.interdisciplinary_connections}
               />
 
               <AdditionalInfo 
