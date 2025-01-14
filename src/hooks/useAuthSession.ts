@@ -9,36 +9,35 @@ export function useAuthSession() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
-        const { data: { session: existingSession }, error: sessionError } = 
+        const { data: { session: existingSession }, error } = 
           await supabase.auth.getSession();
 
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          throw sessionError;
+        if (error) {
+          console.error('Session error:', error);
+          throw error;
         }
 
         // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
+          async (event, newSession) => {
             console.log('Auth state changed:', event);
             
-            // Handle session cleanup events
-            if (event === 'SIGNED_OUT' || 
-                sessionError?.message?.includes('session_not_found') || 
-                sessionError?.message?.includes('Invalid JWT') || 
-                sessionError?.message?.includes('JWT expired')) {
-              console.log('Clearing session data...');
+            if (event === 'SIGNED_OUT') {
+              console.log('User signed out, cleaning up...');
               localStorage.removeItem('picocareer_auth_token');
               queryClient.removeQueries({ queryKey: ['auth-session'] });
               queryClient.removeQueries({ queryKey: ['profile'] });
               queryClient.removeQueries({ queryKey: ['notifications'] });
-              
-              // Only sign out if not already signed out
-              if (event !== 'SIGNED_OUT') {
-                await supabase.auth.signOut();
+            } 
+            else if (event === 'TOKEN_REFRESHED') {
+              console.log('Token refreshed, updating session...');
+              queryClient.invalidateQueries({ queryKey: ['auth-session'] });
+            }
+            else if (event === 'SIGNED_IN') {
+              console.log('User signed in, updating session...');
+              if (newSession?.access_token) {
+                localStorage.setItem('picocareer_auth_token', newSession.access_token);
               }
-            } else if (event === 'TOKEN_REFRESHED') {
-              console.log('Token refreshed successfully');
               queryClient.invalidateQueries({ queryKey: ['auth-session'] });
             }
           }
