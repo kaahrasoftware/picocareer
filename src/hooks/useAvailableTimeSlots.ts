@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
-import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -84,17 +84,19 @@ export function useAvailableTimeSlots(
           startTime.setHours(availabilityStart.getHours(), availabilityStart.getMinutes());
           
           endTime = new Date(date);
-          endTime.setHours(availabilityEnd.getHours(), availabilityEnd.getMinutes());
+          endTime.setHours(endTime.getHours(), endTime.getMinutes());
         } else {
-          // For non-recurring slots, convert UTC times back to original timezone using offset
-          const utcStart = new Date(availability.start_date_time);
-          const utcEnd = new Date(availability.end_date_time);
-          
-          // Apply the stored timezone offset
-          const offsetMillis = (availability.timezone_offset || 0) * 60000; // Convert minutes to milliseconds
-          startTime = new Date(utcStart.getTime() + offsetMillis);
-          endTime = new Date(utcEnd.getTime() + offsetMillis);
+          // For non-recurring slots, use the stored UTC times
+          startTime = new Date(availability.start_date_time);
+          endTime = new Date(availability.end_date_time);
         }
+
+        console.log('Processing availability slot:', {
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          timezoneOffset: availability.timezone_offset,
+          mentorTimezone
+        });
 
         let currentTime = startTime;
         while (currentTime < endTime) {
@@ -133,8 +135,8 @@ export function useAvailableTimeSlots(
 
           const now = new Date();
           if (slotStart > now && !isOverlappingUnavailable && !isOverlappingBooking) {
-            // Format time in mentor's timezone and include the offset
-            const timeString = formatInTimeZone(slotStart, mentorTimezone, 'HH:mm');
+            // Format time in UTC
+            const timeString = format(slotStart, 'HH:mm');
             slots.push({
               time: timeString,
               available: true,

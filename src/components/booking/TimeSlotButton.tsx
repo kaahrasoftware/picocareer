@@ -28,18 +28,22 @@ export function TimeSlotButton({
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Create a date object for the slot
+  // Create a date object for the slot in UTC
   const [hours, minutes] = time.split(':').map(Number);
-  const slotDate = new Date(date);
-  slotDate.setHours(hours, minutes, 0, 0);
-
-  // First, adjust the slot time using the mentor's stored timezone offset
-  const offsetMillis = timezoneOffset * 60000; // Convert minutes to milliseconds
-  const adjustedSlotDate = new Date(slotDate.getTime() + offsetMillis);
-
-  // Format times in respective timezones
-  const mentorTime = formatInTimeZone(adjustedSlotDate, mentorTimezone, 'h:mm a');
-  const userTime = formatInTimeZone(adjustedSlotDate, userTimezone, 'h:mm a');
+  const slotDateUTC = new Date(date);
+  slotDateUTC.setHours(hours, minutes, 0, 0);
+  
+  // Convert UTC time back to mentor's original time
+  const mentorOriginalTime = new Date(slotDateUTC.getTime() - (timezoneOffset * 60000));
+  
+  console.log('TimeSlotButton - Conversion details:', {
+    originalTime: time,
+    utcTime: slotDateUTC.toISOString(),
+    mentorTimezone,
+    userTimezone,
+    timezoneOffset,
+    mentorOriginalTime: mentorOriginalTime.toISOString()
+  });
 
   return (
     <Button
@@ -49,9 +53,11 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start">
-        <span>Mentor's time: {mentorTime}</span>
+        <span className="font-medium">
+          Mentor's time: {formatInTimeZone(mentorOriginalTime, mentorTimezone, 'h:mm a')}
+        </span>
         <span className="text-xs text-muted-foreground">
-          {userTime} ({userTimezone})
+          Your time: {formatInTimeZone(mentorOriginalTime, userTimezone, 'h:mm a')} ({userTimezone})
         </span>
       </div>
     </Button>
