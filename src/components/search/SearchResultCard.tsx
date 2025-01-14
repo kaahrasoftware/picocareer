@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GraduationCap, Building2 } from "lucide-react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
@@ -64,14 +63,12 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
           variant: "default",
           className: "bg-green-50 border-green-200",
           action: (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <button 
               onClick={() => navigate("/auth")}
-              className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+              className="border border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-2 text-sm rounded-md"
             >
               Login
-            </Button>
+            </button>
           ),
         });
         return;
