@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
