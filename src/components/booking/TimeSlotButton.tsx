@@ -3,8 +3,6 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface TimeSlotButtonProps {
   time: string;
@@ -28,19 +26,20 @@ export function TimeSlotButton({
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Create UTC date from the provided date and time
-  const slotDate = new Date(date);
+  // Create a date object in the mentor's timezone
   const [hours, minutes] = time.split(':').map(Number);
+  const slotDate = new Date(date);
   slotDate.setHours(hours, minutes, 0, 0);
 
-  // First convert UTC to mentor's timezone, then to user's timezone
+  // Format times in respective timezones
   const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
   const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
 
-  console.log('TimeSlotButton - UTC time:', slotDate.toISOString());
+  console.log('TimeSlotButton - Original date:', date);
+  console.log('TimeSlotButton - Slot date:', slotDate);
   console.log('TimeSlotButton - Mentor timezone:', mentorTimezone);
-  console.log('TimeSlotButton - Mentor time:', mentorTime);
   console.log('TimeSlotButton - User timezone:', userTimezone);
+  console.log('TimeSlotButton - Mentor time:', mentorTime);
   console.log('TimeSlotButton - User time:', userTime);
 
   return (
@@ -51,9 +50,9 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start">
-        <span>{userTime}</span>
+        <span>{mentorTime}</span>
         <span className="text-xs text-muted-foreground">
-          Mentor's time: {mentorTime} ({mentorTimezone})
+          Your time: {userTime} ({userTimezone})
         </span>
       </div>
     </Button>
