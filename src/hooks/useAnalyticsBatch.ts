@@ -53,7 +53,7 @@ export function useAnalyticsBatch() {
       // Re-add failed events to the batch
       batchRef.current = [...events, ...batchRef.current];
     }
-  }, [location.pathname, session?.user]);
+  }, [session?.user]);
 
   const addEvent = useCallback((
     eventType: InteractionType,
@@ -61,7 +61,10 @@ export function useAnalyticsBatch() {
     elementId?: string,
     elementType?: string
   ) => {
-    if (!session?.user) return;
+    if (!session?.user) {
+      console.log('User not authenticated, skipping analytics event');
+      return;
+    }
     
     batchRef.current.push({
       interaction_type: eventType,

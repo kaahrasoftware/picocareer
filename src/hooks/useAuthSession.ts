@@ -17,7 +17,6 @@ export function useAuthSession() {
               sessionError.message?.includes('Invalid JWT') ||
               sessionError.message?.includes('JWT expired')) {
             console.log('Session invalid or expired, clearing data...');
-            // Clear all auth-related data
             await supabase.auth.signOut();
             localStorage.removeItem('picocareer_auth_token');
             queryClient.removeQueries({ queryKey: ['auth-session'] });
