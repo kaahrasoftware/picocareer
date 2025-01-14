@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import type { SearchResult } from "@/types/search";
 import type { Major } from "@/types/database/majors";
-import type { Career } from "@/types/database/careers";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -19,11 +20,29 @@ interface SearchResultCardProps {
 }
 
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
-  const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
+  const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
+
+  // Fetch complete major data when selectedMajorId changes
+  const { data: selectedMajor } = useQuery({
+    queryKey: ['major', selectedMajorId],
+    queryFn: async () => {
+      if (!selectedMajorId) return null;
+      
+      const { data, error } = await supabase
+        .from('majors')
+        .select('*')
+        .eq('id', selectedMajorId)
+        .single();
+
+      if (error) throw error;
+      return data as Major;
+    },
+    enabled: !!selectedMajorId,
+  });
 
   const handleClick = () => {
     if (onClick) {
@@ -52,7 +71,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         return;
       }
     } else if (result.type === 'major') {
-      setSelectedMajor(result as Major);
+      setSelectedMajorId(result.id);
     } else if (result.type === 'career') {
       setSelectedCareerId(result.id);
     }
@@ -185,7 +204,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         <MajorDetails
           major={selectedMajor}
           open={!!selectedMajor}
-          onOpenChange={(open) => !open && setSelectedMajor(null)}
+          onOpenChange={(open) => !open && setSelectedMajorId(null)}
         />
       )}
 
