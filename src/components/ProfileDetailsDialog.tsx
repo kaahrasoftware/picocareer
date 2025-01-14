@@ -63,9 +63,9 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     return <div>Loading...</div>;
   }
 
-  // Return error state if no profile
-  if (!profile) {
-    return <div>Profile not found</div>;
+  // Return early if no profile or if profile is not approved
+  if (!profile || (profile.user_type === 'mentor' && profile.onboarding_status !== 'Approved')) {
+    return null;
   }
 
   return (
