@@ -48,7 +48,7 @@ export default function Mentor() {
             *,
             company:companies(name),
             school:schools(name),
-            academic_major:majors(title),
+            academic_major:majors!profiles_academic_major_id_fkey(title),
             career:careers(title)
           `)
           .eq('user_type', 'mentor')
