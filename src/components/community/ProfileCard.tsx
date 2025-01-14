@@ -5,6 +5,9 @@ import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileCardProps {
@@ -14,6 +17,9 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile, onClick }: ProfileCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { session } = useAuthSession();
 
   // Get the first 3 items for each array and calculate remaining counts
   const displaySkills = profile.skills?.slice(0, 3) || [];
@@ -26,6 +32,16 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
   const remainingKeywordsCount = profile.keywords ? profile.keywords.length - 3 : 0;
 
   const handleClick = () => {
+    if (!session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to view mentor profiles.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    
     setDialogOpen(true);
     if (onClick) {
       onClick(profile);
