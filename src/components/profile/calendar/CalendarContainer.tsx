@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { format, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import type { Availability, CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,13 +21,23 @@ export function CalendarContainer({
 }: CalendarContainerProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
+  // Function to safely parse date strings
+  const parseDateSafely = (dateString: string): Date | null => {
+    try {
+      const date = parseISO(dateString);
+      return isValid(date) ? date : null;
+    } catch {
+      return null;
+    }
+  };
+
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
     if (!isValid(date)) return false;
     const dateStr = format(date, 'yyyy-MM-dd');
     return events.some(event => {
-      const eventDate = new Date(event.start_time);
-      return isValid(eventDate) && format(eventDate, 'yyyy-MM-dd') === dateStr;
+      const eventDate = parseDateSafely(event.start_time);
+      return eventDate && format(eventDate, 'yyyy-MM-dd') === dateStr;
     });
   };
 
@@ -43,8 +53,8 @@ export function CalendarContainer({
       if (slot.recurring && slot.day_of_week === dayOfWeek) {
         return true;
       }
-      const slotDate = new Date(slot.start_time);
-      return isValid(slotDate) && format(slotDate, 'yyyy-MM-dd') === dateStr;
+      const slotDate = parseDateSafely(slot.start_time);
+      return slotDate && format(slotDate, 'yyyy-MM-dd') === dateStr;
     });
 
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
@@ -59,8 +69,8 @@ export function CalendarContainer({
   // Filter events for selected date
   const selectedDateEvents = events.filter(event => {
     if (!selectedDate || !isValid(selectedDate)) return false;
-    const eventDate = new Date(event.start_time);
-    return isValid(eventDate) && format(eventDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+    const eventDate = parseDateSafely(event.start_time);
+    return eventDate && format(eventDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
 
   const handleEventClick = (event: CalendarEvent) => {
@@ -140,7 +150,7 @@ export function CalendarContainer({
                         )}
                       </div>
                       <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {format(new Date(event.start_time), 'h:mm a')}
+                        {format(parseDateSafely(event.start_time) || new Date(), 'h:mm a')}
                       </span>
                     </div>
                     {event.status === 'cancelled' && (
