@@ -10,6 +10,16 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ profile, onClick }: ProfileCardProps) {
+  // Get the first 3 items for each array and calculate remaining counts
+  const displaySkills = profile.skills?.slice(0, 3) || [];
+  const remainingSkillsCount = profile.skills ? profile.skills.length - 3 : 0;
+
+  const displayInterests = profile.fields_of_interest?.slice(0, 3) || [];
+  const remainingInterestsCount = profile.fields_of_interest ? profile.fields_of_interest.length - 3 : 0;
+
+  const displayKeywords = profile.keywords?.slice(0, 3) || [];
+  const remainingKeywordsCount = profile.keywords ? profile.keywords.length - 3 : 0;
+
   return (
     <Card 
       className="group relative overflow-hidden p-6 h-full flex flex-col cursor-pointer hover:bg-accent/50 transition-colors"
@@ -42,10 +52,10 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
               {profile.career?.title || "No position set"}
             </p>
             <div className="flex flex-col gap-1">
-              {profile.company && (
+              {profile.company_id && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground text-left">
                   <Building2 className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">{profile.company.name}</span>
+                  <span className="truncate">{profile.company?.name}</span>
                 </div>
               )}
               {profile.location && (
@@ -68,8 +78,9 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
         {/* Skills Section */}
         {profile.skills && profile.skills.length > 0 && (
           <div className="w-full mb-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Skills</h4>
             <div className="flex flex-wrap gap-1.5">
-              {profile.skills.slice(0, 3).map((skill) => (
+              {displaySkills.map((skill) => (
                 <Badge 
                   key={skill} 
                   variant="secondary" 
@@ -78,12 +89,64 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
                   {skill}
                 </Badge>
               ))}
-              {profile.skills.length > 3 && (
+              {remainingSkillsCount > 0 && (
                 <Badge 
                   variant="secondary"
                   className="text-xs bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
                 >
-                  +{profile.skills.length - 3} more
+                  +{remainingSkillsCount} more
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Fields of Interest Section */}
+        {profile.fields_of_interest && profile.fields_of_interest.length > 0 && (
+          <div className="w-full mb-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Fields of Interest</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {displayInterests.map((interest) => (
+                <Badge 
+                  key={interest} 
+                  variant="secondary" 
+                  className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                >
+                  {interest}
+                </Badge>
+              ))}
+              {remainingInterestsCount > 0 && (
+                <Badge 
+                  variant="secondary"
+                  className="text-xs bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
+                >
+                  +{remainingInterestsCount} more
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Keywords Section */}
+        {profile.keywords && profile.keywords.length > 0 && (
+          <div className="w-full mb-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Keywords</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {displayKeywords.map((keyword) => (
+                <Badge 
+                  key={keyword} 
+                  variant="secondary" 
+                  className="text-xs bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
+                >
+                  {keyword}
+                </Badge>
+              ))}
+              {remainingKeywordsCount > 0 && (
+                <Badge 
+                  variant="secondary"
+                  className="text-xs bg-[#FDE2E2] text-[#4B5563] hover:bg-[#FACACA] transition-colors border border-[#FAD4D4]"
+                >
+                  +{remainingKeywordsCount} more
                 </Badge>
               )}
             </div>
