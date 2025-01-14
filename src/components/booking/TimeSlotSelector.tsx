@@ -5,6 +5,7 @@ import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { TimeSlot } from "@/types/calendar";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -100,9 +101,6 @@ export function TimeSlotSelector({
     selectedSessionType?.duration || 60,
     mentorTimezone || 'UTC'
   );
-
-  console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
-  console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
   return (
     <div>

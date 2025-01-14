@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
+import type { TimeSlot } from "@/types/calendar";
 
-interface TimeSlot {
+interface AvailableTimeSlot {
   time: string;
   available: boolean;
 }
@@ -15,7 +16,7 @@ export function useAvailableTimeSlots(
   sessionDuration: number = 15,
   mentorTimezone: string = 'UTC'
 ) {
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<AvailableTimeSlot[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export function useAvailableTimeSlots(
         }
 
         // Process available and unavailable slots
-        const slots: TimeSlot[] = [];
+        const slots: AvailableTimeSlot[] = [];
         const availableSlots = availabilityData?.filter(slot => slot.is_available) || [];
         const unavailableSlots = availabilityData?.filter(slot => !slot.is_available) || [];
 
