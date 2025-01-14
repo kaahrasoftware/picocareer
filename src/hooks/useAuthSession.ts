@@ -22,8 +22,8 @@ export function useAuthSession() {
           async (event, session) => {
             console.log('Auth state changed:', event);
             
+            // Handle session cleanup events
             if (event === 'SIGNED_OUT' || 
-                event === 'USER_DELETED' || 
                 sessionError?.message?.includes('session_not_found') || 
                 sessionError?.message?.includes('Invalid JWT') || 
                 sessionError?.message?.includes('JWT expired')) {
@@ -33,7 +33,8 @@ export function useAuthSession() {
               queryClient.removeQueries({ queryKey: ['profile'] });
               queryClient.removeQueries({ queryKey: ['notifications'] });
               
-              if (event !== 'SIGNED_OUT' && event !== 'USER_DELETED') {
+              // Only sign out if not already signed out
+              if (event !== 'SIGNED_OUT') {
                 await supabase.auth.signOut();
               }
             } else if (event === 'TOKEN_REFRESHED') {
