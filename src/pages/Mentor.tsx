@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
@@ -7,16 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { MentorGrid } from "@/components/community/MentorGrid";
 import type { Profile } from "@/types/database/profiles";
-
-type ExtendedProfile = Profile & {
-  company_name?: string | null;
-  school_name?: string | null;
-  academic_major?: string | null;
-  career_title?: string | null;
-  career?: {
-    title?: string | null;
-  } | null;
-};
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +18,7 @@ export default function Mentor() {
   const { toast } = useToast();
 
   const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles'],
+    queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter],
     queryFn: async () => {
       console.log('Fetching profiles...');
       const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +34,7 @@ export default function Mentor() {
             career:careers!profiles_position_fkey(title, id)
           `)
           .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved'); // Only fetch approved mentors
+          .eq('onboarding_status', 'Approved');
 
         if (searchQuery) {
           query = query.or(
@@ -53,16 +43,38 @@ export default function Mentor() {
             `full_name.ilike.%${searchQuery}%,` +
             `bio.ilike.%${searchQuery}%,` +
             `location.ilike.%${searchQuery}%,` +
-            `skills.cs.{${searchQuery}},` +
-            `tools_used.cs.{${searchQuery}},` +
-            `keywords.cs.{${searchQuery}},` +
-            `fields_of_interest.cs.{${searchQuery}},` +
-            `career.title.ilike.%${searchQuery}%`
+            `skills.cs.{${searchQuery.toLowerCase()}},` + // Case-sensitive array containment
+            `tools_used.cs.{${searchQuery.toLowerCase()}},` +
+            `keywords.cs.{${searchQuery.toLowerCase()}},` +
+            `fields_of_interest.cs.{${searchQuery.toLowerCase()}}`
           );
         }
 
         if (user?.id) {
           query = query.neq('id', user.id);
+        }
+
+        if (locationFilter) {
+          query = query.eq('location', locationFilter);
+        }
+
+        if (companyFilter) {
+          query = query.eq('company_id', companyFilter);
+        }
+
+        if (schoolFilter) {
+          query = query.eq('school_id', schoolFilter);
+        }
+
+        if (fieldFilter) {
+          query = query.contains('fields_of_interest', [fieldFilter]);
+        }
+
+        if (selectedSkills.length > 0) {
+          // For each selected skill, ensure it exists in the skills array
+          selectedSkills.forEach(skill => {
+            query = query.contains('skills', [skill.toLowerCase()]);
+          });
         }
         
         const { data, error } = await query;
@@ -73,13 +85,7 @@ export default function Mentor() {
         }
 
         console.log('Profiles fetched successfully:', data?.length);
-        return (data || []).map((profile: any) => ({
-          ...profile,
-          company_name: profile.company?.name,
-          school_name: profile.school?.name,
-          academic_major: profile.academic_major?.title,
-          career_title: profile.career?.title
-        })) as ExtendedProfile[];
+        return data as Profile[];
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({
@@ -92,44 +98,6 @@ export default function Mentor() {
     },
     retry: 2,
     retryDelay: 1000,
-  });
-
-  const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
-  const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
-  const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
-  const fields = Array.from(new Set(profiles?.flatMap(p => p.fields_of_interest || []) || [])).sort();
-  const allSkills = Array.from(new Set(profiles?.flatMap(p => p.skills || []) || [])).sort();
-
-  const filteredProfiles = profiles?.filter(profile => {
-    const searchableFields = [
-      profile.first_name,
-      profile.last_name,
-      profile.full_name,
-      profile.position,
-      profile.highest_degree,
-      profile.bio,
-      profile.location,
-      profile.company_name,
-      profile.school_name,
-      profile.academic_major,
-      ...(profile.keywords || []),
-      ...(profile.skills || []),
-      ...(profile.tools_used || []),
-      ...(profile.fields_of_interest || [])
-    ].filter(Boolean).map(field => field.toLowerCase());
-
-    const matchesSearch = searchQuery === "" || 
-      searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
-
-    const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => (profile.skills || []).includes(skill));
-    const matchesLocation = !locationFilter || profile.location === locationFilter;
-    const matchesCompany = !companyFilter || profile.company_name === companyFilter;
-    const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
-    const matchesField = !fieldFilter || (profile.fields_of_interest || []).includes(fieldFilter);
-
-    return matchesSearch && matchesSkills && matchesLocation && 
-           matchesCompany && matchesSchool && matchesField;
   });
 
   return (
@@ -154,11 +122,6 @@ export default function Mentor() {
                 onSchoolChange={setSchoolFilter}
                 fieldFilter={fieldFilter}
                 onFieldChange={setFieldFilter}
-                locations={locations}
-                companies={companies}
-                schools={schools}
-                fields={fields}
-                allSkills={allSkills}
               />
 
               {error ? (
@@ -173,7 +136,7 @@ export default function Mentor() {
                 </div>
               ) : (
                 <MentorGrid 
-                  profiles={filteredProfiles || []} 
+                  profiles={profiles || []} 
                   isLoading={isLoading} 
                 />
               )}
