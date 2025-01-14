@@ -1,3 +1,5 @@
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
 export type CalendarEvent = {
   id: string;
   title: string;
@@ -14,6 +16,18 @@ export type CalendarEvent = {
     status: string;
     mentor_id: string;
     mentee_id: string;
+    mentor: {
+      id: string;
+      full_name: string;
+      avatar_url?: string;
+    };
+    mentee: {
+      id: string;
+      full_name: string;
+      avatar_url?: string;
+    };
+    meeting_link?: string;
+    meeting_platform?: MeetingPlatform;
     session_type: {
       duration: number;
       type: string;
@@ -83,3 +97,24 @@ export type TimeSlot = {
   created_at: string;
   updated_at: string;
 };
+
+export interface SessionParticipant {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+}
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: SessionParticipant;
+  mentee: SessionParticipant;
+  session_type: {
+    duration: number;
+    type: string;
+  };
+  meeting_link?: string;
+  meeting_platform?: MeetingPlatform;
+}
