@@ -18,7 +18,7 @@ export default function Mentor() {
   const [hasAvailability, setHasAvailability] = useState(false);
   const { toast } = useToast();
 
-  const { data: profiles = [], isLoading } = useQuery({
+  const { data: profiles = [], isLoading, error: queryError } = useQuery({
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
       try {
@@ -92,10 +92,10 @@ export default function Mentor() {
           });
         }
 
-        const { data, error } = await query;
+        const { data, error: profilesError } = await query;
 
-        if (error) {
-          console.error('Error fetching profiles:', error);
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
           toast({
             title: "Error loading mentors",
             description: "There was an error loading the mentor profiles. Please try again.",
@@ -152,7 +152,7 @@ export default function Mentor() {
                 </div>
               </div>
 
-              {error ? (
+              {queryError ? (
                 <div className="text-center py-8">
                   <p className="text-destructive">Failed to load community profiles.</p>
                   <button 
