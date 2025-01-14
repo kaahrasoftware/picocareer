@@ -1,5 +1,7 @@
 import { Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SkillsAndToolsProps {
   skill_match?: string[];
@@ -14,6 +16,28 @@ export function SkillsAndTools({
   transferable_skills,
   interdisciplinary_connections
 }: SkillsAndToolsProps) {
+  const { data: toolsData } = useQuery({
+    queryKey: ['tools-data'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('tools_knowledge')
+        .eq('status', 'Approved');
+
+      if (error) {
+        console.error('Error fetching tools:', error);
+        return [];
+      }
+
+      // Flatten and deduplicate tools from all majors
+      const allTools = data
+        .flatMap(major => major.tools_knowledge || [])
+        .filter((tool, index, self) => self.indexOf(tool) === index);
+
+      return allTools;
+    },
+  });
+
   return (
     <div className="space-y-4">
       <h4 className="text-lg font-semibold flex items-center gap-2">
@@ -47,6 +71,23 @@ export function SkillsAndTools({
                 key={index} 
                 variant="outline"
                 className="bg-[#D3E4FD] text-[#4B5563] border-[#C1D9F9]"
+              >
+                {tool}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {toolsData && toolsData.length > 0 && (
+        <div className="space-y-2">
+          <h5 className="text-sm font-medium">All Available Tools</h5>
+          <div className="flex flex-wrap gap-2">
+            {toolsData.map((tool, index) => (
+              <Badge 
+                key={index} 
+                variant="outline"
+                className="bg-[#E2D4F0] text-[#4B5563] border-[#D4C4E3]"
               >
                 {tool}
               </Badge>
