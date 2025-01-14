@@ -1,53 +1,60 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Mentor } from "@/types/mentor";
 
-export const useTopRatedMentors = () => {
+export function useTopRatedMentors() {
   return useQuery({
-    queryKey: ['topRatedMentors'],
+    queryKey: ["top-rated-mentors"],
     queryFn: async () => {
-      console.log('Fetching top rated mentors...');
       const { data, error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .select(`
-          *,
+          id,
+          full_name,
+          avatar_url,
+          bio,
+          location,
           company:companies(name),
-          career:careers!profiles_position_fkey(title)
+          career:careers!profiles_position_fkey(title),
+          skills,
+          fields_of_interest,
+          keywords,
+          top_mentor,
+          position,
+          career_title:career:careers!profiles_position_fkey(title)
         `)
-        .eq('user_type', 'mentor')
-        .eq('top_mentor', true)
-        .limit(10)
-        .order('created_at', { ascending: false });
+        .eq("user_type", "mentor")
+        .eq("onboarding_status", "Approved")
+        .eq("top_mentor", true)
+        .limit(10);
 
       if (error) {
-        console.error('Error fetching mentors:', error);
+        console.error("Error fetching top rated mentors:", error);
         throw error;
       }
-      
-      // Shuffle the results in JavaScript instead of using random() in SQL
-      const shuffledData = data
-        .sort(() => Math.random() - 0.5)
-        .map(mentor => ({
-          id: mentor.id,
-          title: mentor.position || "Mentor",
-          company: mentor.company?.name || "",
-          imageUrl: mentor.avatar_url || "",
-          name: mentor.full_name || "",
-          stats: {
-            mentees: `${Math.floor(Math.random() * 900 + 100)}`,
-            connected: `${Math.floor(Math.random() * 900 + 100)}K`,
-            recordings: `${Math.floor(Math.random() * 90 + 10)}`
-          },
-          top_mentor: mentor.top_mentor,
-          position: mentor.position,
-          career_title: mentor.career?.title || "No position set",
-          location: mentor.location,
-          bio: mentor.bio,
-          skills: mentor.skills
-        }));
 
-      console.log('Fetched mentors:', shuffledData?.length);
-      return shuffledData;
-    },
-    staleTime: 1000 * 60 * 5,
+      const mentors = data.map((profile): Mentor => ({
+        id: profile.id,
+        name: profile.full_name,
+        imageUrl: profile.avatar_url,
+        bio: profile.bio,
+        location: profile.location,
+        company: profile.company?.name,
+        title: profile.career?.title,
+        stats: {
+          mentees: "50+",
+          connected: "100+",
+          recordings: "10+"
+        },
+        top_mentor: profile.top_mentor,
+        position: profile.position,
+        career_title: profile.career_title,
+        skills: profile.skills,
+        fields_of_interest: profile.fields_of_interest,
+        keywords: profile.keywords
+      }));
+
+      return mentors;
+    }
   });
-};
+}
