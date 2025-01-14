@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { Availability } from "@/types/calendar";
-import type { CalendarEvent } from "@/types/calendar";
+import { format, isValid } from "date-fns";
+import type { Availability, CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionDetailsDialog } from "./SessionDetailsDialog";
@@ -24,12 +23,18 @@ export function CalendarContainer({
 
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
+    if (!isValid(date)) return false;
     const dateStr = format(date, 'yyyy-MM-dd');
-    return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
+    return events.some(event => {
+      const eventDate = new Date(event.start_time);
+      return isValid(eventDate) && format(eventDate, 'yyyy-MM-dd') === dateStr;
+    });
   };
 
   // Function to determine availability status for a date
   const getAvailabilityStatus = (date: Date) => {
+    if (!isValid(date)) return null;
+    
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
 
@@ -38,7 +43,8 @@ export function CalendarContainer({
       if (slot.recurring && slot.day_of_week === dayOfWeek) {
         return true;
       }
-      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
+      const slotDate = new Date(slot.start_time);
+      return isValid(slotDate) && format(slotDate, 'yyyy-MM-dd') === dateStr;
     });
 
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
@@ -52,8 +58,9 @@ export function CalendarContainer({
 
   // Filter events for selected date
   const selectedDateEvents = events.filter(event => {
-    if (!selectedDate) return false;
-    return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+    if (!selectedDate || !isValid(selectedDate)) return false;
+    const eventDate = new Date(event.start_time);
+    return isValid(eventDate) && format(eventDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
 
   const handleEventClick = (event: CalendarEvent) => {
@@ -107,7 +114,7 @@ export function CalendarContainer({
       {selectedDate && selectedDateEvents.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-medium text-lg text-center sm:text-left">
-            Events for {format(selectedDate, 'MMMM d, yyyy')}
+            Events for {isValid(selectedDate) ? format(selectedDate, 'MMMM d, yyyy') : 'Invalid Date'}
           </h3>
           <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
             <div className="space-y-3 px-2">
@@ -151,7 +158,7 @@ export function CalendarContainer({
 
       <SessionDetailsDialog
         session={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={handleCloseDialog}
         onCancel={handleCancelSession}
       />
     </div>
