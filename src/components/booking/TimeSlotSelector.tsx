@@ -5,7 +5,6 @@ import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { TimeSlot } from "@/types/calendar";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -43,8 +42,8 @@ export function TimeSlotSelector({
         .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
-        .gte('start_time', startOfDay.toISOString())
-        .lte('start_time', endOfDay.toISOString())
+        .gte('start_date_time', startOfDay.toISOString())
+        .lte('start_date_time', endOfDay.toISOString())
         .maybeSingle();
 
       if (error) {
@@ -74,17 +73,17 @@ export function TimeSlotSelector({
           const startDate = new Date(date);
           const endDate = new Date(date);
           
-          if (recurringData.start_time && recurringData.end_time) {
-            const startDateTime = new Date(recurringData.start_time);
-            const endDateTime = new Date(recurringData.end_time);
+          if (recurringData.start_date_time && recurringData.end_date_time) {
+            const startDateTime = new Date(recurringData.start_date_time);
+            const endDateTime = new Date(recurringData.end_date_time);
             
             startDate.setHours(startDateTime.getHours(), startDateTime.getMinutes());
             endDate.setHours(endDateTime.getHours(), endDateTime.getMinutes());
             
             return {
               ...recurringData,
-              start_time: startDate.toISOString(),
-              end_time: endDate.toISOString()
+              start_date_time: startDate.toISOString(),
+              end_date_time: endDate.toISOString()
             };
           }
         }
@@ -101,6 +100,9 @@ export function TimeSlotSelector({
     selectedSessionType?.duration || 60,
     mentorTimezone || 'UTC'
   );
+
+  console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
+  console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
 
   return (
     <div>

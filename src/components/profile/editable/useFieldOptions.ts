@@ -6,13 +6,19 @@ const tableMap: Record<FieldName, TableName> = {
   academic_major_id: 'majors',
   school_id: 'schools',
   position: 'careers',
-  company_id: 'companies'
+  company_id: 'companies',
+  highest_degree: 'majors' // Added this line, though we won't query the table for degrees
 };
 
 export function useFieldOptions(fieldName: string) {
   return useQuery({
     queryKey: ['field-options', fieldName],
     queryFn: async () => {
+      // Skip database query for highest_degree as it uses predefined options
+      if (fieldName === 'highest_degree') {
+        return null;
+      }
+
       if (!['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)) {
         return null;
       }
@@ -31,7 +37,8 @@ export function useFieldOptions(fieldName: string) {
         return [];
       }
 
-      return (data as QueryResult[]) || [];
+      // Type assertion to ensure the data matches QueryResult type
+      return (data as unknown as QueryResult[]) || [];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });

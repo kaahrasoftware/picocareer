@@ -1,31 +1,26 @@
-import { type Session } from "@supabase/supabase-js";
-import { type Database } from "@/integrations/supabase/types";
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
 
-export type NotificationType = Database["public"]["Enums"]["notification_type"];
-export type NotificationCategory = "mentorship" | "general";
-
-export interface Availability {
-  id: string;
-  profile_id: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week?: number;
-  created_at: string;
-  updated_at: string;
+export interface SessionType {
+  type: string;
+  duration: number;
 }
 
-export interface TimeSlot {
+export interface SessionParticipant {
   id: string;
-  profile_id: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week?: number;
-  created_at: string;
-  updated_at: string;
+  full_name: string;
+  avatar_url?: string;
+}
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+  mentor: SessionParticipant;
+  mentee: SessionParticipant;
+  session_type: SessionType;
+  meeting_link?: string;
+  meeting_platform?: MeetingPlatform;
 }
 
 export interface CalendarEvent {
@@ -34,52 +29,37 @@ export interface CalendarEvent {
   description: string;
   start_time: string;
   end_time: string;
-  event_type: string;
+  event_type: 'session';
+  status?: string;
   created_at: string;
   updated_at: string;
-  status?: string;
   session_details?: MentorSession;
 }
 
-export interface MentorSession {
+export interface Availability {
   id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  meeting_platform: MeetingPlatform;
-  meeting_link: string | null;
-  mentor: {
-    id: string;
-    full_name: string;
-    avatar_url: string;
-  };
-  mentee: {
-    id: string;
-    full_name: string;
-    avatar_url: string;
-  };
-  session_type: {
-    type: string;
-    duration: number;
-  };
+  profile_id: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  recurring?: boolean;
+  day_of_week?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call" | "Zoom";
+export type NotificationType = 
+  | "session_booked" 
+  | "session_cancelled" 
+  | "session_reminder" 
+  | "profile_update" 
+  | "mentor_request" 
+  | "blog_posted" 
+  | "major_update";
+
+export type NotificationCategory = "mentorship" | "general" | "session" | "major_update" | "system" | "unread" | "all";
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
-  switch (type) {
-    case "session_reminder":
-    case "session_cancelled":
-    case "session_booked":
-    case "session_rescheduled":
-      return "mentorship";
-    case "system_update":
-    case "maintenance":
-    case "major_update":
-    case "profile_update":
-    case "mentor_request":
-      return "general";
-    default:
-      return "general";
-  }
+  const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
+  return mentorshipTypes.includes(type) ? "mentorship" : "general";
 };
