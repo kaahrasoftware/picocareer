@@ -48,7 +48,7 @@ export function Footer() {
     },
     { 
       icon: <Twitter className="w-5 h-5" />, 
-      href: "https://twitter.com/picocareer",
+      href: "https://x.com/pico_career",
       label: "X (Twitter)"
     },
     { 
