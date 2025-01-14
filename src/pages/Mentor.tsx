@@ -21,8 +21,6 @@ export default function Mentor() {
   const { data: profiles = [], isLoading, error } = useQuery({
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
-      console.log('Fetching profiles...');
-      
       try {
         let query = supabase
           .from('profiles')
@@ -36,6 +34,7 @@ export default function Mentor() {
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
 
+        // Handle availability filter
         if (hasAvailability) {
           const availableProfileIds = await supabase
             .from('mentor_availability')
@@ -47,6 +46,7 @@ export default function Mentor() {
           }
         }
 
+        // Apply search filters
         if (searchQuery) {
           query = query.or(
             `full_name.ilike.%${searchQuery}%,` +
@@ -59,6 +59,7 @@ export default function Mentor() {
           );
         }
 
+        // Apply additional filters
         if (locationFilter) {
           query = query.eq('location', locationFilter);
         }
@@ -88,7 +89,6 @@ export default function Mentor() {
           throw error;
         }
 
-        console.log('Profiles fetched successfully:', data?.length);
         return data as Profile[];
       } catch (err) {
         console.error('Error in profiles query:', err);
