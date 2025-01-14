@@ -7,6 +7,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 interface TimeSlot {
   time: string;
   available: boolean;
+  timezoneOffset?: number;
 }
 
 export function useAvailableTimeSlots(
@@ -88,12 +89,6 @@ export function useAvailableTimeSlots(
           endTime = new Date(availability.end_date_time);
         }
 
-        // Apply timezone offset if available
-        if (availability.timezone_offset) {
-          startTime.setMinutes(startTime.getMinutes() + availability.timezone_offset);
-          endTime.setMinutes(endTime.getMinutes() + availability.timezone_offset);
-        }
-
         let currentTime = startTime;
 
         while (currentTime < endTime) {
@@ -132,7 +127,8 @@ export function useAvailableTimeSlots(
           if (slotStart > now && !isOverlappingUnavailable && !isOverlappingBooking) {
             slots.push({
               time: timeString,
-              available: true
+              available: true,
+              timezoneOffset: availability.timezone_offset
             });
           }
 

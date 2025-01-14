@@ -4,6 +4,7 @@ import { TimeSlotButton } from "./TimeSlotButton";
 interface TimeSlot {
   time: string;
   available: boolean;
+  timezoneOffset?: number;
 }
 
 interface TimeSlotsGridProps {
@@ -55,6 +56,7 @@ export function TimeSlotsGrid({
               onSelect={onTimeSelect}
               mentorTimezone={mentorTimezone}
               date={date}
+              timezoneOffset={slot.timezoneOffset}
             />
           ))}
         </div>
