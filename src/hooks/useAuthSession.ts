@@ -8,7 +8,6 @@ export function useAuthSession() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Get initial session and listen for auth changes
   const { data: session, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
@@ -18,37 +17,19 @@ export function useAuthSession() {
           await supabase.auth.getSession();
         
         if (sessionError) {
-          // Check specifically for refresh token errors
+          // Check specifically for session expiration errors
           if (sessionError.message?.includes('Invalid Refresh Token') || 
               sessionError.message?.includes('session_expired')) {
             console.log('Session expired, clearing data...');
-            // Clear all auth-related data
-            await supabase.auth.signOut();
-            localStorage.removeItem('picocareer_auth_token');
-            queryClient.removeQueries({ queryKey: ['auth-session'] });
-            queryClient.removeQueries({ queryKey: ['profile'] });
-            queryClient.removeQueries({ queryKey: ['notifications'] });
-            
-            // Show a friendly message to the user
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "default",
-            });
-            
-            // Redirect to auth page
-            navigate("/auth");
+            await handleSessionExpiration();
             return null;
           }
           throw sessionError;
         }
 
         if (!existingSession) {
-          // If no session exists, clear any stale data
-          queryClient.removeQueries({ queryKey: ['auth-session'] });
-          queryClient.removeQueries({ queryKey: ['profile'] });
-          queryClient.removeQueries({ queryKey: ['notifications'] });
-          localStorage.removeItem('picocareer_auth_token');
+          console.log('No valid session found');
+          clearSessionData();
           return null;
         }
 
@@ -56,12 +37,12 @@ export function useAuthSession() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-              queryClient.removeQueries({ queryKey: ['auth-session'] });
-              queryClient.removeQueries({ queryKey: ['profile'] });
-              queryClient.removeQueries({ queryKey: ['notifications'] });
-              localStorage.removeItem('picocareer_auth_token');
+              clearSessionData();
             } else if (event === 'TOKEN_REFRESHED') {
               queryClient.invalidateQueries({ queryKey: ['auth-session'] });
+            } else if (event === 'SIGNED_IN') {
+              // Refresh queries when user signs in
+              await queryClient.invalidateQueries();
             }
           }
         );
@@ -70,9 +51,11 @@ export function useAuthSession() {
       } catch (error: any) {
         console.error('Error in useAuthSession:', error);
         
-        // Clear any stale session data
-        await supabase.auth.signOut();
-        queryClient.clear();
+        if (error.message?.includes('Invalid Refresh Token') || 
+            error.message?.includes('session_expired')) {
+          await handleSessionExpiration();
+          return null;
+        }
         
         // Only show toast and redirect if it's not an AuthSessionMissingError
         if (error.message !== 'Auth session missing!') {
@@ -90,7 +73,28 @@ export function useAuthSession() {
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // Consider session data fresh for 5 minutes
+    refetchInterval: 1000 * 60 * 4, // Refetch every 4 minutes to prevent expiration
   });
+
+  const clearSessionData = () => {
+    queryClient.removeQueries({ queryKey: ['auth-session'] });
+    queryClient.removeQueries({ queryKey: ['profile'] });
+    queryClient.removeQueries({ queryKey: ['notifications'] });
+    localStorage.removeItem('picocareer_auth_token');
+  };
+
+  const handleSessionExpiration = async () => {
+    await supabase.auth.signOut();
+    clearSessionData();
+    
+    toast({
+      title: "Session Expired",
+      description: "Your session has expired. Please sign in again.",
+      variant: "default",
+    });
+    
+    navigate("/auth");
+  };
 
   return { session, isError };
 }
