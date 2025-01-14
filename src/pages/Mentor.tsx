@@ -15,10 +15,11 @@ export default function Mentor() {
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
+  const [hasAvailability, setHasAvailability] = useState(false);
   const { toast } = useToast();
 
   const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter],
+    queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
       console.log('Fetching profiles...');
       const { data: { user } } = await supabase.auth.getUser();
@@ -36,10 +37,17 @@ export default function Mentor() {
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
 
+        if (hasAvailability) {
+          query = query.in('id', 
+            supabase
+              .from('mentor_availability')
+              .select('profile_id')
+              .eq('is_available', true)
+          );
+        }
+
         if (searchQuery) {
           query = query.or(
-            `first_name.ilike.%${searchQuery}%,` +
-            `last_name.ilike.%${searchQuery}%,` +
             `full_name.ilike.%${searchQuery}%,` +
             `bio.ilike.%${searchQuery}%,` +
             `location.ilike.%${searchQuery}%,` +
@@ -49,10 +57,6 @@ export default function Mentor() {
             `fields_of_interest.cs.{${searchQuery.toLowerCase()}},` +
             `career.title.ilike.%${searchQuery}%`
           );
-        }
-
-        if (user?.id) {
-          query = query.neq('id', user.id);
         }
 
         if (locationFilter) {
@@ -76,9 +80,13 @@ export default function Mentor() {
             query = query.contains('skills', [skill.toLowerCase()]);
           });
         }
-        
+
+        if (user?.id) {
+          query = query.neq('id', user.id);
+        }
+
         const { data, error } = await query;
-        
+
         if (error) {
           console.error('Supabase query error:', error);
           throw error;
@@ -123,6 +131,8 @@ export default function Mentor() {
                 fieldFilter={fieldFilter}
                 onFieldChange={setFieldFilter}
                 fields={[]}
+                hasAvailabilityFilter={true}
+                onAvailabilityChange={setHasAvailability}
               />
 
               {error ? (

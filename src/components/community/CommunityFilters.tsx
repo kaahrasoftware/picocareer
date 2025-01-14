@@ -3,6 +3,8 @@ import { SelectFilter } from "./filters/SelectFilter";
 import { SearchInput } from "./filters/SearchInput";
 import { Card } from "@/components/ui/card";
 import { Filter } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export interface CommunityFiltersProps {
   searchQuery: string;
@@ -28,6 +30,8 @@ export interface CommunityFiltersProps {
   locations?: string[];
   companies?: string[];
   schools?: string[];
+  hasAvailabilityFilter?: boolean;
+  onAvailabilityChange?: (value: boolean) => void;
 }
 
 export function CommunityFilters({
@@ -35,7 +39,7 @@ export function CommunityFilters({
   onSearchChange,
   fieldFilter,
   onFieldChange,
-  fields = [], // Add default empty array
+  fields = [],
   selectedSkills,
   onSkillsChange,
   isSkillsDropdownOpen,
@@ -51,9 +55,11 @@ export function CommunityFilters({
   onCompanyChange,
   schoolFilter,
   onSchoolChange,
-  locations = [], // Add default empty array
-  companies = [], // Add default empty array
-  schools = [], // Add default empty array
+  locations = [],
+  companies = [],
+  schools = [],
+  hasAvailabilityFilter = false,
+  onAvailabilityChange,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -105,6 +111,17 @@ export function CommunityFilters({
                 }`}
               />
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="availability"
+              onCheckedChange={onAvailabilityChange}
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label htmlFor="availability" className="text-sm text-muted-foreground">
+              Show only mentors with availability
+            </Label>
           </div>
         </div>
       </Card>
