@@ -30,8 +30,8 @@ export default function Mentor() {
             *,
             company:companies(name),
             school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title, id)
+            academic_major:majors(title),
+            career:careers(title)
           `)
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
@@ -43,10 +43,11 @@ export default function Mentor() {
             `full_name.ilike.%${searchQuery}%,` +
             `bio.ilike.%${searchQuery}%,` +
             `location.ilike.%${searchQuery}%,` +
-            `skills.cs.{${searchQuery.toLowerCase()}},` + // Case-sensitive array containment
+            `skills.cs.{${searchQuery.toLowerCase()}},` +
             `tools_used.cs.{${searchQuery.toLowerCase()}},` +
             `keywords.cs.{${searchQuery.toLowerCase()}},` +
-            `fields_of_interest.cs.{${searchQuery.toLowerCase()}}`
+            `fields_of_interest.cs.{${searchQuery.toLowerCase()}},` +
+            `career.title.ilike.%${searchQuery}%`
           );
         }
 
@@ -71,7 +72,6 @@ export default function Mentor() {
         }
 
         if (selectedSkills.length > 0) {
-          // For each selected skill, ensure it exists in the skills array
           selectedSkills.forEach(skill => {
             query = query.contains('skills', [skill.toLowerCase()]);
           });
@@ -122,6 +122,7 @@ export default function Mentor() {
                 onSchoolChange={setSchoolFilter}
                 fieldFilter={fieldFilter}
                 onFieldChange={setFieldFilter}
+                fields={[]}
               />
 
               {error ? (
@@ -136,7 +137,7 @@ export default function Mentor() {
                 </div>
               ) : (
                 <MentorGrid 
-                  profiles={profiles || []} 
+                  profiles={profiles} 
                   isLoading={isLoading} 
                 />
               )}
