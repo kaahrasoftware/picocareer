@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Building2, MapPin } from "lucide-react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { Button } from "@/components/ui/button";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileCardProps {
@@ -152,6 +153,20 @@ export function ProfileCard({ profile, onClick }: ProfileCardProps) {
             </div>
           </div>
         )}
+
+        {/* View Profile Button */}
+        <div className="mt-auto pt-4">
+          <Button 
+            variant="outline" 
+            className="w-full bg-background hover:bg-muted/50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.(profile);
+            }}
+          >
+            View Profile
+          </Button>
+        </div>
       </div>
     </Card>
   );
