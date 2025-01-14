@@ -31,7 +31,7 @@ export default function Mentor() {
             company:companies(name),
             school:schools(name),
             academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers(title)
+            career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
