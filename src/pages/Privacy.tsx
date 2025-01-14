@@ -36,10 +36,9 @@ export default function Privacy() {
                 </p>
 
                 {/* Information You Provide */}
-                <div>
+                <div className="space-y-6">
                   <h3 className="text-xl font-medium mb-4">Information You Provide</h3>
-                  <div className="space-y-4">
-                    {/* Each information type in a card */}
+                  <div className="grid gap-6">
                     {[
                       {
                         title: "Profile Information",
@@ -47,68 +46,138 @@ export default function Privacy() {
                       },
                       {
                         title: "User Content",
-                        content: "We collect the content you create or publish through the Platform, such as photographs, videos, audio recordings, livestreams, comments, hashtags, feedback, reviews, and the associated metadata (such as when, where, and by whom the content was created)."
+                        content: "We collect the content you create or publish through the Platform, such as photographs, videos, audio recordings, livestreams, comments, hashtags, feedback, reviews, and the associated metadata."
                       },
-                      // ... Continue with all other sections
+                      {
+                        title: "Direct Messages",
+                        content: "If you communicate with others using direct messages, we collect the content of the message and the associated metadata."
+                      },
+                      {
+                        title: "Your Contacts",
+                        content: "If you choose to sync your contacts, we will collect information from your device's phone book."
+                      },
+                      {
+                        title: "Purchase Information",
+                        content: "When you make a purchase or payment on or through the Platform, we collect information about the transaction."
+                      }
                     ].map((item, index) => (
-                      <Card key={index} className="p-4">
-                        <h4 className="font-medium mb-2">{item.title}</h4>
+                      <Card key={index} className="p-6">
+                        <h4 className="font-medium text-lg mb-2">{item.title}</h4>
                         <p className="text-gray-600">{item.content}</p>
                       </Card>
                     ))}
                   </div>
                 </div>
 
-                {/* Continue with all other sections */}
-                {/* Each major section should be wrapped in a div with appropriate spacing */}
+                {/* Automatically Collected Information */}
                 <div className="space-y-6">
                   <h3 className="text-xl font-medium mb-4">Automatically Collected Information</h3>
-                  {/* Technical Information, Location Information, etc. */}
+                  <div className="grid gap-6">
+                    {[
+                      {
+                        title: "Technical Information",
+                        content: "We collect device and network connection information when you access the Platform."
+                      },
+                      {
+                        title: "Location Information",
+                        content: "We automatically collect information about your approximate location based on your Technical Information."
+                      },
+                      {
+                        title: "Usage Information",
+                        content: "We collect information about how you engage with the Platform."
+                      },
+                      {
+                        title: "Content Characteristics",
+                        content: "We detect and collect characteristics and features about the videos, images, and audio recordings."
+                      }
+                    ].map((item, index) => (
+                      <Card key={index} className="p-6">
+                        <h4 className="font-medium text-lg mb-2">{item.title}</h4>
+                        <p className="text-gray-600">{item.content}</p>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-
-                <div className="space-y-6">
-                  <h3 className="text-xl font-medium mb-4">Service Providers</h3>
-                  {/* Service Providers content */}
-                </div>
-
-                {/* Continue with all other sections */}
-                {/* Each section should maintain consistent styling and spacing */}
               </div>
             </section>
 
             <Separator />
 
-            {/* Rights and Choices Section */}
+            {/* Data Usage Section */}
+            <section>
+              <h2 className="text-2xl font-semibold mb-6">How We Use Your Information</h2>
+              <div className="grid gap-6">
+                {[
+                  {
+                    title: "Service Providers",
+                    content: "We engage service providers that help us provide, support, and develop the Platform."
+                  },
+                  {
+                    title: "Partners",
+                    content: "We share limited information with third party platforms and partners whose services are integrated with the Platform."
+                  },
+                  {
+                    title: "Our Corporate Group",
+                    content: "As a global company, the Platform is supported by certain entities within our corporate group."
+                  }
+                ].map((item, index) => (
+                  <Card key={index} className="p-6">
+                    <h3 className="text-xl font-medium mb-2">{item.title}</h3>
+                    <p className="text-gray-600">{item.content}</p>
+                  </Card>
+                ))}
+              </div>
+            </section>
+
+            <Separator />
+
+            {/* Your Rights Section */}
             <section>
               <h2 className="text-2xl font-semibold mb-6">Your Rights and Choices</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Rights cards */}
-                {/* Each right should be in its own card with consistent styling */}
+              <div className="grid gap-6">
+                {[
+                  {
+                    title: "Access Your Information",
+                    content: "You can request access to your information free of charge."
+                  },
+                  {
+                    title: "Delete Your Information",
+                    content: "You can delete or request deletion of your information."
+                  },
+                  {
+                    title: "Control Your Privacy",
+                    content: "You can control your privacy settings and manage your data."
+                  }
+                ].map((item, index) => (
+                  <Card key={index} className="p-6 bg-gray-50">
+                    <h3 className="text-lg font-medium mb-2">{item.title}</h3>
+                    <p className="text-gray-600">{item.content}</p>
+                  </Card>
+                ))}
               </div>
             </section>
 
             <Separator />
 
-            {/* Security and Data Retention */}
+            {/* Security and Updates Section */}
             <section>
-              <h2 className="text-2xl font-semibold mb-6">Data Security and Retention</h2>
-              {/* Security and retention content */}
-            </section>
-
-            <Separator />
-
-            {/* Global Operations */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-6">Our Global Operations and Data Transfers</h2>
-              {/* Global operations content */}
-            </section>
-
-            <Separator />
-
-            {/* Updates Section */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-6">Privacy Policy Updates</h2>
-              {/* Updates content */}
+              <h2 className="text-2xl font-semibold mb-6">Security and Updates</h2>
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-medium mb-2">Data Security</h3>
+                    <p className="text-gray-600">
+                      We maintain appropriate technical, administrative, and physical security measures to protect your information.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-medium mb-2">Policy Updates</h3>
+                    <p className="text-gray-600">
+                      We may update this Privacy Policy from time to time and will notify you of any material changes.
+                    </p>
+                  </div>
+                </div>
+              </Card>
             </section>
           </div>
         </ScrollArea>
