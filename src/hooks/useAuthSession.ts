@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 export function useAuthSession() {
   const queryClient = useQueryClient();
@@ -10,19 +11,9 @@ export function useAuthSession() {
       try {
         const { data: { session: existingSession }, error: sessionError } = 
           await supabase.auth.getSession();
-        
+
         if (sessionError) {
-          // Check specifically for session errors
-          if (sessionError.message?.includes('session_not_found') || 
-              sessionError.message?.includes('Invalid JWT') ||
-              sessionError.message?.includes('JWT expired')) {
-            console.log('Session invalid or expired, clearing data...');
-            await supabase.auth.signOut();
-            localStorage.removeItem('picocareer_auth_token');
-            queryClient.removeQueries({ queryKey: ['auth-session'] });
-            queryClient.removeQueries({ queryKey: ['profile'] });
-            queryClient.removeQueries({ queryKey: ['notifications'] });
-          }
+          console.error('Session error:', sessionError);
           throw sessionError;
         }
 
@@ -31,11 +22,20 @@ export function useAuthSession() {
           async (event, session) => {
             console.log('Auth state changed:', event);
             
-            if (event === 'SIGNED_OUT') {
+            if (event === 'SIGNED_OUT' || 
+                event === 'USER_DELETED' || 
+                sessionError?.message?.includes('session_not_found') || 
+                sessionError?.message?.includes('Invalid JWT') || 
+                sessionError?.message?.includes('JWT expired')) {
+              console.log('Clearing session data...');
+              localStorage.removeItem('picocareer_auth_token');
               queryClient.removeQueries({ queryKey: ['auth-session'] });
               queryClient.removeQueries({ queryKey: ['profile'] });
               queryClient.removeQueries({ queryKey: ['notifications'] });
-              localStorage.removeItem('picocareer_auth_token');
+              
+              if (event !== 'SIGNED_OUT' && event !== 'USER_DELETED') {
+                await supabase.auth.signOut();
+              }
             } else if (event === 'TOKEN_REFRESHED') {
               console.log('Token refreshed successfully');
               queryClient.invalidateQueries({ queryKey: ['auth-session'] });
@@ -43,13 +43,13 @@ export function useAuthSession() {
           }
         );
 
-        // Store the session token
+        // Store the session token if it exists
         if (existingSession?.access_token) {
           localStorage.setItem('picocareer_auth_token', existingSession.access_token);
         }
 
         return existingSession;
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error in useAuthSession:', error);
         throw error;
       }
