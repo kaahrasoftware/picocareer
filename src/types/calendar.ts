@@ -1,65 +1,85 @@
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
-
-export interface SessionType {
-  type: string;
-  duration: number;
-}
-
-export interface SessionParticipant {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-}
-
-export interface MentorSession {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  mentor: SessionParticipant;
-  mentee: SessionParticipant;
-  session_type: SessionType;
-  meeting_link?: string;
-  meeting_platform?: MeetingPlatform;
-}
-
-export interface CalendarEvent {
+export type CalendarEvent = {
   id: string;
   title: string;
   description: string;
   start_time: string;
   end_time: string;
-  event_type: 'session';
-  status?: string;
+  event_type: string;
   created_at: string;
   updated_at: string;
-  session_details?: MentorSession;
-}
+  status?: string;
+  session_details?: {
+    id: string;
+    scheduled_at: string;
+    status: string;
+    mentor_id: string;
+    mentee_id: string;
+    session_type: {
+      duration: number;
+      type: string;
+    };
+  };
+};
 
-export interface Availability {
+export type Availability = {
   id: string;
   profile_id: string;
   start_time: string;
   end_time: string;
   is_available: boolean;
-  recurring?: boolean;
-  day_of_week?: number;
+  recurring: boolean;
+  day_of_week: number | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type NotificationType = 
-  | "session_booked" 
-  | "session_cancelled" 
-  | "session_reminder" 
-  | "profile_update" 
-  | "mentor_request" 
-  | "blog_posted" 
-  | "major_update";
+  | "session_booked"
+  | "session_cancelled"
+  | "session_reminder"
+  | "profile_update"
+  | "mentor_request"
+  | "major_update"
+  | "system_update"
+  | "blog_posted";
 
-export type NotificationCategory = "mentorship" | "general" | "session" | "major_update" | "system" | "unread" | "all";
+export type NotificationCategory = 
+  | "mentorship"
+  | "general"
+  | "session"
+  | "system"
+  | "major_update"
+  | "unread"
+  | "all";
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
-  const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
-  return mentorshipTypes.includes(type) ? "mentorship" : "general";
+  switch (type) {
+    case "session_booked":
+    case "session_cancelled":
+    case "session_reminder":
+      return "mentorship";
+    case "profile_update":
+    case "mentor_request":
+      return "general";
+    case "major_update":
+      return "major_update";
+    case "system_update":
+      return "system";
+    case "blog_posted":
+      return "general";
+    default:
+      return "general";
+  }
+};
+
+export type TimeSlot = {
+  id: string;
+  profile_id: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  recurring: boolean;
+  day_of_week: number | null;
+  created_at: string;
+  updated_at: string;
 };
