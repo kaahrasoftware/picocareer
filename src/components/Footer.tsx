@@ -1,8 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Mail, Phone, Facebook, Instagram, Linkedin, Youtube, Twitter } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function Footer() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const companyLinks = [
     { label: "About Us", href: "/about", onClick: () => navigate("/about") },
@@ -52,6 +57,33 @@ export function Footer() {
       label: "YouTube"
     }
   ];
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('email_subscriptions')
+        .insert([{ email }]);
+
+      if (error) throw error;
+
+      toast.success('Thank you for subscribing to our newsletter!');
+      setEmail(''); // Clear the input after successful submission
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      toast.error('Failed to subscribe. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer className="mt-20 border-t border-border bg-white">
@@ -145,16 +177,23 @@ export function Footer() {
               <p className="text-sm text-muted-foreground">
                 Subscribe to our newsletter for the latest updates and opportunities.
               </p>
-              <div className="relative">
+              <form onSubmit={handleEmailSubmit} className="relative">
                 <input
                   type="email"
                   placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-2 bg-muted rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={isSubmitting}
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90 transition-colors">
-                  Subscribe
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Subscribing...' : 'Subscribe'}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
