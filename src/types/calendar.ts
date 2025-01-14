@@ -1,4 +1,8 @@
-export type MeetingPlatform = "Google Meet" | "Phone Call" | "WhatsApp" | "Telegram" | "Zoom";
+import { type Session } from "@supabase/supabase-js";
+import { type Database } from "@/integrations/supabase/types";
+
+export type NotificationType = Database["public"]["Enums"]["notification_type"];
+export type NotificationCategory = "all" | "unread" | "session" | "system";
 
 export interface TimeSlot {
   id: string;
@@ -7,41 +11,10 @@ export interface TimeSlot {
   end_time: string;
   is_available: boolean;
   recurring: boolean;
-  day_of_week?: number | null;
+  day_of_week?: number;
   created_at: string;
   updated_at: string;
 }
-
-export interface Availability extends TimeSlot {}
-
-export type NotificationCategory = "major_update" | "mentorship" | "general" | "session" | "system" | "unread" | "all";
-
-export type NotificationType = 
-  | "session_booked"
-  | "session_cancelled"
-  | "session_reminder"
-  | "profile_update"
-  | "mentor_request"
-  | "major_update"
-  | "system_update";
-
-export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
-  switch (type) {
-    case "session_booked":
-    case "session_cancelled":
-    case "session_reminder":
-      return "session";
-    case "profile_update":
-    case "mentor_request":
-      return "mentorship";
-    case "major_update":
-      return "major_update";
-    case "system_update":
-      return "system";
-    default:
-      return "general";
-  }
-};
 
 export interface CalendarEvent {
   id: string;
@@ -50,28 +23,48 @@ export interface CalendarEvent {
   start_time: string;
   end_time: string;
   event_type: string;
-  status: string;
   created_at: string;
   updated_at: string;
-  session_details?: {
+  status?: string;
+  session_details?: MentorSession;
+}
+
+export interface MentorSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string;
+  meeting_link: string;
+  mentor: {
     id: string;
-    scheduled_at: string;
-    status: string;
-    notes: string;
-    meeting_link: string;
-    mentor: {
-      id: string;
-      full_name: string;
-      avatar_url: string | null;
-    };
-    mentee: {
-      id: string;
-      full_name: string;
-      avatar_url: string | null;
-    };
-    session_type: {
-      type: string;
-      duration: number;
-    };
+    full_name: string;
+    avatar_url: string;
+  };
+  mentee: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  session_type: {
+    id: string;
+    type: string;
+    duration: number;
+    price: number;
   };
 }
+
+export type MeetingPlatform = "Google Meet" | "Phone Call" | "WhatsApp" | "Telegram" | "Zoom";
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  switch (type) {
+    case "session_reminder":
+    case "session_cancelled":
+    case "session_rescheduled":
+      return "session";
+    case "system_update":
+    case "maintenance":
+      return "system";
+    default:
+      return "all";
+  }
+};

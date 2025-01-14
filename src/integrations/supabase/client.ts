@@ -1,52 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://wurdmlkfkzuivvwxjmxk.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cmRtbGtma3p1aXZ2d3hqbXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4NTE4MzgsImV4cCI6MjA0OTQyNzgzOH0.x4jgZjedKprq19f2A7QpMrWRHfan3f24Th6sfoy-2eg";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_PROJECT_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'picocareer_auth_token',
-    flowType: 'pkce',
+    detectSessionInUrl: true
   },
   global: {
     headers: {
-      'X-Client-Info': 'picocareer-web',
-    },
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 2,
-    },
-  },
+      'x-application-name': 'lovable'
+    }
+  }
 });
 
-// Add error handling and retry logic for failed requests
-supabase.handleFailedRequest = async (error: any, retryCount = 0) => {
-  console.error('Supabase request failed:', error);
-  
-  if (retryCount < 3) {
-    // Wait for exponential backoff time
-    await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-    return true; // Retry the request
-  }
-  
-  return false; // Stop retrying after 3 attempts
-};
-
-// Add a health check function
-export const checkSupabaseConnection = async () => {
-  try {
-    const { data, error } = await supabase.from('profiles').select('count').limit(1);
-    if (error) throw error;
-    console.log('Supabase connection successful');
-    return true;
-  } catch (error) {
-    console.error('Supabase connection failed:', error);
-    return false;
-  }
+// Add error handling utilities
+export const handleSupabaseError = (error: any) => {
+  console.error('Supabase error:', error);
+  throw new Error(error.message || 'An error occurred while accessing the database');
 };
