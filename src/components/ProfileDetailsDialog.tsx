@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useProfileSession } from "@/hooks/useProfileSession";
 import { useProfileDetailsData } from "@/hooks/useProfileDetailsData";
 import { ProfileRealtime } from "./profile-details/ProfileRealtime";
+import { Skeleton } from "./ui/skeleton";
 
 interface ProfileDetailsDialogProps {
   userId: string;
@@ -26,6 +27,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   // Calculate these values after hooks
   const isOwnProfile = currentUser?.id === userId;
   const isMentor = profile?.user_type === 'mentor';
+  const isApprovedMentor = isMentor && profile?.onboarding_status === 'Approved';
 
   // Handle authentication errors
   if (sessionError) {
@@ -45,6 +47,27 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     return null;
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl">
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Return early if no profile or if mentor is not approved
+  if (!profile || (isMentor && !isApprovedMentor && !isOwnProfile)) {
+    return null;
+  }
+
   const handleBookSession = () => {
     if (!currentUser) {
       toast({
@@ -57,16 +80,6 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     }
     setBookingOpen(true);
   };
-
-  // Return loading state instead of null
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  // Return early if no profile or if profile is not approved
-  if (!profile || (profile.user_type === 'mentor' && profile.onboarding_status !== 'Approved')) {
-    return null;
-  }
 
   return (
     <>
@@ -89,7 +102,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         queryClient={queryClient}
       />
 
-      {!isOwnProfile && (
+      {!isOwnProfile && isApprovedMentor && (
         <BookSessionDialog
           mentor={{
             id: userId,
