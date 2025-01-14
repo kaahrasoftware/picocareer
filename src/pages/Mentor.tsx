@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
@@ -9,7 +8,6 @@ import type { Profile } from "@/types/database/profiles";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Mentor() {
-  // Move all hooks to the top level
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
@@ -23,8 +21,8 @@ export default function Mentor() {
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailability],
     queryFn: async () => {
       try {
-        // First get available mentor IDs if filter is active
         let availableProfileIds: string[] | null = null;
+        
         if (hasAvailability) {
           const { data: availabilityData, error: availabilityError } = await supabase
             .from('mentor_availability')
@@ -38,7 +36,6 @@ export default function Mentor() {
 
           availableProfileIds = availabilityData.map(row => row.profile_id);
           
-          // If no available mentors, return empty array
           if (availableProfileIds.length === 0) {
             return [];
           }
@@ -54,14 +51,12 @@ export default function Mentor() {
             career:careers!profiles_position_fkey(title)
           `)
           .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved');
+          .eq('onboarding_status', 'Approved'); // Add this line to filter for approved mentors
 
-        // Apply availability filter if active
         if (hasAvailability && availableProfileIds) {
           query = query.in('id', availableProfileIds);
         }
 
-        // Apply search filters
         if (searchQuery) {
           query = query.or(
             `full_name.ilike.%${searchQuery}%,` +
@@ -74,7 +69,6 @@ export default function Mentor() {
           );
         }
 
-        // Apply additional filters
         if (locationFilter) {
           query = query.eq('location', locationFilter);
         }
