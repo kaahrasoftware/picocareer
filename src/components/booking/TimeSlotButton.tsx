@@ -11,6 +11,7 @@ interface TimeSlotButtonProps {
   onSelect: (time: string) => void;
   mentorTimezone: string;
   date: Date;
+  timezoneOffset?: number;
 }
 
 export function TimeSlotButton({ 
@@ -19,7 +20,8 @@ export function TimeSlotButton({
   isSelected, 
   onSelect,
   mentorTimezone,
-  date
+  date,
+  timezoneOffset = 0
 }: TimeSlotButtonProps) {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
@@ -30,17 +32,15 @@ export function TimeSlotButton({
   const [hours, minutes] = time.split(':').map(Number);
   const slotDate = new Date(date);
   slotDate.setHours(hours, minutes, 0, 0);
+  
+  // Adjust for timezone offset
+  if (timezoneOffset) {
+    slotDate.setMinutes(slotDate.getMinutes() + timezoneOffset);
+  }
 
   // Format times in respective timezones
   const mentorTime = formatInTimeZone(slotDate, mentorTimezone, 'h:mm a');
   const userTime = formatInTimeZone(slotDate, userTimezone, 'h:mm a');
-
-  console.log('TimeSlotButton - Original date:', date);
-  console.log('TimeSlotButton - Slot date:', slotDate);
-  console.log('TimeSlotButton - Mentor timezone:', mentorTimezone);
-  console.log('TimeSlotButton - User timezone:', userTimezone);
-  console.log('TimeSlotButton - Mentor time:', mentorTime);
-  console.log('TimeSlotButton - User time:', userTime);
 
   return (
     <Button

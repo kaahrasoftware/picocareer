@@ -450,6 +450,7 @@ export type Database = {
           profile_id: string
           recurring: boolean | null
           start_date_time: string | null
+          timezone_offset: number
           updated_at: string
         }
         Insert: {
@@ -461,6 +462,7 @@ export type Database = {
           profile_id: string
           recurring?: boolean | null
           start_date_time?: string | null
+          timezone_offset: number
           updated_at?: string
         }
         Update: {
@@ -472,6 +474,7 @@ export type Database = {
           profile_id?: string
           recurring?: boolean | null
           start_date_time?: string | null
+          timezone_offset?: number
           updated_at?: string
         }
         Relationships: [

@@ -89,6 +89,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       }
 
       const dayOfWeek = selectedDate.getDay();
+      
+      // Get timezone offset in minutes
+      const timezoneOffset = new Date().getTimezoneOffset();
 
       const { error } = await supabase
         .from('mentor_availability')
@@ -98,7 +101,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           end_date_time: endDateTime.toISOString(),
           is_available: true,
           recurring: isRecurring,
-          day_of_week: isRecurring ? dayOfWeek : null
+          day_of_week: isRecurring ? dayOfWeek : null,
+          timezone_offset: timezoneOffset
         });
 
       if (error) throw error;
