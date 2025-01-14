@@ -25,7 +25,10 @@ export function CalendarContainer({
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
+    return events.some(event => {
+      const eventDate = new Date(event.start_time);
+      return format(eventDate, 'yyyy-MM-dd') === dateStr;
+    });
   };
 
   // Function to determine availability status for a date
@@ -38,7 +41,8 @@ export function CalendarContainer({
       if (slot.recurring && slot.day_of_week === dayOfWeek) {
         return true;
       }
-      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
+      const slotDate = new Date(slot.start_time);
+      return format(slotDate, 'yyyy-MM-dd') === dateStr;
     });
 
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
@@ -53,7 +57,8 @@ export function CalendarContainer({
   // Filter events for selected date
   const selectedDateEvents = events.filter(event => {
     if (!selectedDate) return false;
-    return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+    const eventDate = new Date(event.start_time);
+    return format(eventDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
 
   const handleEventClick = (event: CalendarEvent) => {
@@ -151,7 +156,7 @@ export function CalendarContainer({
 
       <SessionDetailsDialog
         session={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={handleCloseDialog}
         onCancel={handleCancelSession}
       />
     </div>
