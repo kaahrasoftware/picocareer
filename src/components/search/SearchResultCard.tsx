@@ -1,11 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -13,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { SearchResult } from "@/types/search";
 import type { Major } from "@/types/database/majors";
+import { useState } from "react";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -34,11 +33,17 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       
       const { data, error } = await supabase
         .from('majors')
-        .select('*')
+        .select(`
+          *,
+          career_major_relations(
+            career:careers(id, title, salary_range)
+          )
+        `)
         .eq('id', selectedMajorId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      console.log("Fetched major data:", data);
       return data as Major;
     },
     enabled: !!selectedMajorId,
