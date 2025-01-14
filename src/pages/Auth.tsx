@@ -1,16 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,39 +16,6 @@ export default function Auth() {
     navigate('/');
     return null;
   }
-
-  const { data: mentors = [], isError } = useQuery({
-    queryKey: ['random-mentors'],
-    queryFn: async () => {
-      try {
-        console.log('Fetching mentors...');
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, avatar_url, first_name, last_name')
-          .eq('user_type', 'mentor')
-          .limit(10)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
-
-        if (!data) {
-          console.log('No mentors found');
-          return [];
-        }
-
-        console.log('Fetched mentors:', data?.length);
-        return data;
-      } catch (error) {
-        console.error('Error fetching mentors:', error);
-        return [];
-      }
-    },
-    retry: false,
-    staleTime: 1000 * 60 * 5,
-  });
 
   return (
     <div className="min-h-screen">
@@ -98,49 +56,6 @@ export default function Auth() {
               <p className="text-gray-300 text-sm lg:text-base">
                 Share your expertise, inspire the next generation, and make a lasting impact as a PicoCareer mentor.
               </p>
-              
-              {!isError && mentors && mentors.length > 0 && (
-                <div className="mt-6 lg:mt-8 flex justify-center items-center">
-                  <Carousel
-                    opts={{
-                      align: "start",
-                      loop: true,
-                      dragFree: true,
-                    }}
-                    plugins={[
-                      Autoplay({
-                        delay: 2000,
-                        stopOnInteraction: false,
-                      }),
-                    ]}
-                    className="w-full max-w-xs mx-auto"
-                  >
-                    <CarouselContent className="-ml-1">
-                      {mentors.map((mentor) => (
-                        <CarouselItem key={mentor.id} className="basis-1/5 pl-1 flex items-center justify-center">
-                          <div className="relative w-10 lg:w-12 h-10 lg:h-12">
-                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
-                            <div className="absolute inset-[2px] rounded-full bg-background" />
-                            <div className="absolute inset-[4px] rounded-full overflow-hidden">
-                              <Avatar className="h-full w-full">
-                                <AvatarImage 
-                                  src={mentor.avatar_url || ''} 
-                                  alt={`${mentor.first_name} ${mentor.last_name}`}
-                                  className="h-full w-full object-cover"
-                                />
-                                <AvatarFallback>
-                                  {mentor.first_name?.[0]}
-                                  {mentor.last_name?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                            </div>
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                  </Carousel>
-                </div>
-              )}
             </div>
           </div>
         </div>
