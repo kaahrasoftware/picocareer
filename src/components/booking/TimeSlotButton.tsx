@@ -51,7 +51,7 @@ export function TimeSlotButton({
       <div className="flex flex-col items-start">
         <span>{mentorTime}</span>
         <span className="text-xs text-muted-foreground">
-          Your time: {userTime} ({userTimezone})
+          Your local time: {userTime} ({userTimezone})
         </span>
       </div>
     </Button>
