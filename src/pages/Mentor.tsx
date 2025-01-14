@@ -37,12 +37,14 @@ export default function Mentor() {
           .eq('onboarding_status', 'Approved');
 
         if (hasAvailability) {
-          query = query.in('id', 
-            supabase
-              .from('mentor_availability')
-              .select('profile_id')
-              .eq('is_available', true)
-          );
+          const availableProfileIds = await supabase
+            .from('mentor_availability')
+            .select('profile_id')
+            .eq('is_available', true);
+
+          if (availableProfileIds.data) {
+            query = query.in('id', availableProfileIds.data.map(row => row.profile_id));
+          }
         }
 
         if (searchQuery) {
@@ -53,8 +55,7 @@ export default function Mentor() {
             `skills.cs.{${searchQuery.toLowerCase()}},` +
             `tools_used.cs.{${searchQuery.toLowerCase()}},` +
             `keywords.cs.{${searchQuery.toLowerCase()}},` +
-            `fields_of_interest.cs.{${searchQuery.toLowerCase()}},` +
-            `career.title.ilike.%${searchQuery}%`
+            `fields_of_interest.cs.{${searchQuery.toLowerCase()}}`
           );
         }
 
