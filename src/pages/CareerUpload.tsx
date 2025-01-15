@@ -17,6 +17,21 @@ export default function CareerUpload() {
     try {
       setIsSubmitting(true);
 
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // First get the profile id for the current user
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        throw new Error('Could not find user profile');
+      }
+
       const formattedData = {
         title: data.title,
         description: data.description,
@@ -38,8 +53,8 @@ export default function CareerUpload() {
         rare: data.rare,
         popular: data.popular,
         new_career: data.new_career,
-        status: 'Approved' as const,
-        author_id: session?.user?.id
+        status: 'Pending' as const,
+        author_id: profile.id
       };
 
       const { error } = await supabase
@@ -50,7 +65,7 @@ export default function CareerUpload() {
 
       toast({
         title: "Success",
-        description: "Career uploaded successfully!",
+        description: "Career submitted successfully! It will be reviewed by our team.",
       });
 
       setFormKey(prev => prev + 1);
@@ -85,7 +100,7 @@ export default function CareerUpload() {
           <ContentUploadForm 
             key={formKey}
             onSubmit={handleSubmit}
-            buttonText={isSubmitting ? "Uploading..." : "Upload Career"}
+            buttonText={isSubmitting ? "Uploading..." : "Submit Career for Review"}
           />
         </div>
       </div>

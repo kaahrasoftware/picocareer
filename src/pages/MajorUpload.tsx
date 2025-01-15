@@ -21,6 +21,17 @@ export default function MajorUpload() {
         throw new Error('User not authenticated');
       }
 
+      // First get the profile id for the current user
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        throw new Error('Could not find user profile');
+      }
+
       if (!data.title?.trim()) {
         throw new Error('Title is required');
       }
@@ -31,7 +42,7 @@ export default function MajorUpload() {
 
       const formattedData = {
         ...formatMajorData(data),
-        author_id: session.user.id,
+        author_id: profile.id,
         status: 'Pending'
       };
       
