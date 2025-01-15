@@ -73,6 +73,67 @@ export function SessionActions({
     }
   };
 
+  const handleCancelSession = async () => {
+    try {
+      // Update session status to cancelled
+      const { error: sessionError } = await supabase
+        .from('mentor_sessions')
+        .update({ 
+          status: 'cancelled',
+          notes: cancellationNote 
+        })
+        .eq('id', session.session_details?.id);
+
+      if (sessionError) throw sessionError;
+
+      // Cancel the meeting link
+      if (session.session_details?.calendar_event_id) {
+        const { error: cancelError } = await supabase.functions.invoke('cancel-meet-link', {
+          body: { sessionId: session.session_details.id }
+        });
+        if (cancelError) console.error('Error cancelling meet link:', cancelError);
+      }
+
+      // Create notifications for both mentor and mentee
+      const notifications = [
+        {
+          profile_id: session.session_details?.mentor.id,
+          title: 'Session Cancelled',
+          message: `Session with ${session.session_details?.mentee.full_name} has been cancelled. Reason: ${cancellationNote}`,
+          type: 'session_cancelled',
+          action_url: '/profile?tab=calendar'
+        },
+        {
+          profile_id: session.session_details?.mentee.id,
+          title: 'Session Cancelled',
+          message: `Session with ${session.session_details?.mentor.full_name} has been cancelled. Reason: ${cancellationNote}`,
+          type: 'session_cancelled',
+          action_url: '/profile?tab=calendar'
+        }
+      ];
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (notificationError) throw notificationError;
+
+      toast({
+        title: "Session cancelled",
+        description: "The session has been cancelled successfully",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel the session",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (session.status === 'cancelled') {
     return (
       <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
@@ -119,7 +180,7 @@ export function SessionActions({
           
           <Button
             variant="destructive"
-            onClick={onCancel}
+            onClick={handleCancelSession}
             disabled={!cancellationNote.trim() || isCancelling}
             className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
           >
