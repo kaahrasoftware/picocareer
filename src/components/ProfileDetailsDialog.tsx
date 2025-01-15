@@ -16,27 +16,22 @@ interface ProfileDetailsDialogProps {
 }
 
 export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDetailsDialogProps) {
-  // Move all hooks to the top level
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session, sessionError, queryClient } = useProfileSession();
-  const { currentUser, profile, isLoading, error } = useProfileDetailsData(userId, open, session);
+  const { currentUser, profile, isLoading, isError } = useProfileDetailsData(userId, open, session);
 
-  // Calculate these values after hooks
   const isOwnProfile = currentUser?.id === userId;
   const isMentor = profile?.user_type === 'mentor';
 
-  // Handle authentication errors
   useEffect(() => {
     if (sessionError) {
-      // Clear all auth-related data
       const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
       localStorage.removeItem(key);
       queryClient.clear();
       
-      // Show error message and navigate
       toast({
         title: "Authentication Error",
         description: "Please sign in again to continue.",
@@ -47,9 +42,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     }
   }, [sessionError, queryClient, toast, navigate]);
 
-  // Handle profile load errors
   useEffect(() => {
-    if (error && open) {
+    if (isError && open) {
       toast({
         title: "Error",
         description: "Could not load mentor profile. Please try again later.",
@@ -57,9 +51,8 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       });
       onOpenChange(false);
     }
-  }, [error, open, toast, onOpenChange]);
+  }, [isError, open, toast, onOpenChange]);
 
-  // Return loading state
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>

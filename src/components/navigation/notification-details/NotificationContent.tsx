@@ -1,15 +1,12 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import type { MentorSession } from "@/types/calendar";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
-import { MajorDetails } from "@/components/MajorDetails";
-import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
-import { useQuery } from "@tanstack/react-query";
-import type { Major } from "@/types/database/majors";
-import type { BlogWithAuthor } from "@/types/blog/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useNotificationData } from "./hooks/useNotificationData";
+import { NotificationDialogs } from "./NotificationDialogs";
+import { SessionNotificationContent } from "./SessionNotificationContent";
+import type { MentorSession } from "@/types/calendar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NotificationContentProps {
   message: string;
@@ -18,67 +15,30 @@ interface NotificationContentProps {
   action_url?: string;
 }
 
-export function NotificationContent({ message, isExpanded, type, action_url }: NotificationContentProps) {
+export function NotificationContent({ 
+  message, 
+  isExpanded, 
+  type, 
+  action_url 
+}: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
 
-  // Fetch major data if needed
-  const { data: majorData } = useQuery({
-    queryKey: ['major', contentId],
-    queryFn: async () => {
-      if (!contentId || type !== 'major_update') return null;
-      const { data, error } = await supabase
-        .from('majors')
-        .select('*')
-        .eq('id', contentId)
-        .single();
-      
-      if (error) throw error;
-      return data as Major;
-    },
-    enabled: !!contentId && type === 'major_update' && dialogOpen,
-  });
-
-  // Fetch blog data if needed
-  const { data: blogData } = useQuery({
-    queryKey: ['blog', contentId],
-    queryFn: async () => {
-      if (!contentId || type !== 'blog_update') return null;
-      const { data, error } = await supabase
-        .from('blogs')
-        .select(`
-          *,
-          profiles:author_id (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('id', contentId)
-        .single();
-      
-      if (error) throw error;
-      return data as BlogWithAuthor;
-    },
-    enabled: !!contentId && type === 'blog_update' && dialogOpen,
-  });
+  // Fetch data using custom hook
+  const { majorData, careerData, blogData } = useNotificationData(contentId, type, dialogOpen);
 
   useEffect(() => {
     const fetchSessionData = async () => {
       if (!isExpanded) return;
-      
       setIsLoading(true);
+      
       try {
-        // Try to extract meeting link first
         const meetingLinkMatch = message.match(/href="([^"]+)"/);
         if (meetingLinkMatch) {
-          console.log('Found meeting link:', meetingLinkMatch[1]);
-          
-          // Query sessions with this meeting link
           const { data, error } = await supabase
             .from('mentor_sessions')
             .select(`
@@ -100,88 +60,30 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
           }
 
           if (data) {
-            console.log('Session data fetched successfully:', data);
             setSessionData(data as MentorSession);
-          } else {
-            console.log('No session data found for meeting link');
           }
-        } else {
-          console.log('No meeting link found in message');
         }
       } catch (error) {
-        console.error('Error in fetchSessionData:', error);
-        toast({
-          title: "Error loading session details",
-          description: "Please try again later",
-          variant: "destructive",
-        });
+        console.error('Error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSessionData();
-  }, [isExpanded, message, toast]);
-
-  // Get first sentence for collapsed view
-  const firstSentence = message.split(/[.!?]/)[0];
-
-  const handleActionClick = () => {
-    if (!action_url || !contentId) return;
-    setDialogOpen(true);
-  };
-
-  const renderDialog = () => {
-    if (!action_url || !dialogOpen || !contentId) return null;
-
-    switch (type) {
-      case "major_update":
-        if (!majorData) return null;
-        return (
-          <MajorDetails
-            major={majorData}
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-          />
-        );
-      case "career_update":
-        return (
-          <CareerDetailsDialog
-            careerId={contentId}
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-          />
-        );
-      case "blog_update":
-        if (!blogData) return null;
-        return (
-          <BlogPostDialog
-            blog={blogData}
-            isOpen={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+  }, [isExpanded, message]);
 
   const renderActionButton = () => {
     if (!action_url) return null;
-
-    let buttonText = "View Details";
-    if (type === "major_update") buttonText = "View Major";
-    if (type === "career_update") buttonText = "View Career";
-    if (type === "blog_update") buttonText = "View Blog Post";
 
     return (
       <Button
         variant="outline"
         size="sm"
         className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={handleActionClick}
+        onClick={() => setDialogOpen(true)}
       >
-        {buttonText}
+        View Detail
         <ExternalLink className="w-4 h-4 ml-2" />
       </Button>
     );
@@ -190,15 +92,17 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
   if (!isExpanded) {
     return (
       <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
-        {firstSentence}
+        {message.split(/[.!?]/)[0]}
       </p>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="space-y-2 mt-3 text-sm text-zinc-400">
-        <p>Loading session details...</p>
+      <div className="space-y-2 mt-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-2/3" />
       </div>
     );
   }
@@ -208,37 +112,23 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       <div className="space-y-2 mt-3 text-sm text-zinc-400">
         <p>{message}</p>
         {renderActionButton()}
-        {renderDialog()}
+        <NotificationDialogs
+          type={type}
+          contentId={contentId!}
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
+          majorData={majorData}
+          careerData={careerData}
+          blogData={blogData}
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-2 mt-3 text-sm text-zinc-400">
-      <p><span className="font-medium text-zinc-300">Mentor:</span> {sessionData.mentor?.full_name}</p>
-      <p><span className="font-medium text-zinc-300">Mentee:</span> {sessionData.mentee?.full_name}</p>
-      <p><span className="font-medium text-zinc-300">Start Time:</span> {new Date(sessionData.scheduled_at).toLocaleString()}</p>
-      <p><span className="font-medium text-zinc-300">Session Type:</span> {sessionData.session_type?.type}</p>
-      <p><span className="font-medium text-zinc-300">Duration:</span> {sessionData.session_type?.duration} minutes</p>
-      <p><span className="font-medium text-zinc-300">Platform:</span> {sessionData.meeting_platform}</p>
-      {sessionData.meeting_link && (
-        <p>
-          <span className="font-medium text-zinc-300">Meeting Link:</span>{' '}
-          <a 
-            href={sessionData.meeting_link} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sky-400 hover:text-sky-300 hover:underline"
-          >
-            Join Meeting
-          </a>
-        </p>
-      )}
-      {sessionData.notes && (
-        <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
-      )}
+    <div className="space-y-2 mt-3">
+      <SessionNotificationContent sessionData={sessionData} />
       {renderActionButton()}
-      {renderDialog()}
     </div>
   );
 }
