@@ -1,63 +1,59 @@
-import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import { FormField } from "./FormField";
-import { FormFieldProps } from "./FormField";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { Button } from "@/components/ui/button";
+import { FormField } from "./FormField";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GenericUploadFormProps {
-  fields: (FormFieldProps & { defaultValue?: any })[];
+  fields: any[];
   onSubmit: (data: any) => Promise<void>;
-  buttonText?: string;
-  isSubmitting?: boolean;
+  submitButtonText?: string;
 }
 
-export function GenericUploadForm({ 
-  fields, 
-  onSubmit, 
-  buttonText = "Submit",
-  isSubmitting = false 
-}: GenericUploadFormProps) {
+export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit" }: GenericUploadFormProps) {
+  // Move all hooks to the top level
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
-  
-  const defaultValues = fields.reduce((acc, field) => ({
-    ...acc,
-    [field.name]: field.defaultValue || ""
-  }), {});
+  const { data: profile } = useUserProfile(session);
 
-  const form = useForm({ defaultValues });
+  const handleFieldChange = (fieldName: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+  };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!session?.user?.id || !profile?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to submit content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      if (!session?.user?.id) {
-        throw new Error('User not authenticated');
-      }
-
-      // Get the profile id for the current user
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileError || !profile) {
-        throw new Error('Could not find user profile');
-      }
-
-      // Add author_id to the form data
-      const formDataWithAuthor = {
-        ...data,
-        author_id: profile.id
+      setIsSubmitting(true);
+      
+      // Add author_id to form data
+      const dataWithAuthor = {
+        ...formData,
+        author_id: profile.id,
+        status: 'Pending'
       };
 
-      console.log('Submitting form data with author:', formDataWithAuthor);
-      await onSubmit(formDataWithAuthor);
-      
-      // Reset form after successful submission
-      form.reset(defaultValues);
-      
+      await onSubmit(dataWithAuthor);
+
+      // Clear form after successful submission
+      setFormData({});
+
       toast({
         title: "Success",
         description: "Your changes have been saved successfully.",
@@ -83,29 +79,28 @@ export function GenericUploadForm({
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {fields.map((field) => (
-          <FormField
-            key={field.name}
-            control={form.control}
-            {...field}
-          />
-        ))}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : buttonText}
-          </button>
-        </div>
-      </form>
-    </Form>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {fields.map((field) => (
+        <FormField
+          key={field.name}
+          field={field}
+          value={formData[field.name] || ""}
+          onChange={(value) => handleFieldChange(field.name, value)}
+        />
+      ))}
+      <Button 
+        type="submit" 
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? "Submitting..." : submitButtonText}
+      </Button>
+    </form>
   );
 }
