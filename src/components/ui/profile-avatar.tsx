@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,17 +33,17 @@ export function ProfileAvatar({
     lg: "h-24 w-24"
   };
 
-  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadAvatar = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      setUploading(true);
-      
+      if (!profileId) {
+        throw new Error('Profile ID is required for upload.');
+      }
+
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('You must select an image to upload.');
       }
 
-      if (!profileId) {
-        throw new Error('Profile ID is required for upload.');
-      }
+      setUploading(true);
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
@@ -80,7 +80,7 @@ export function ProfileAvatar({
         title: "Success",
         description: "Profile picture updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
@@ -89,7 +89,7 @@ export function ProfileAvatar({
     } finally {
       setUploading(false);
     }
-  };
+  }, [profileId, onAvatarUpdate, toast]);
 
   return (
     <div className="relative group">
