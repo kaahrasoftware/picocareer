@@ -17,7 +17,7 @@ export function useNotificationData(contentId: string | undefined, type: string 
   const { data: majorData } = useQuery({
     queryKey: ['major', contentId],
     queryFn: async () => {
-      if (!contentId || type !== 'major_update') return null;
+      if (!contentId) return null;
       
       const { data, error } = await supabase
         .from('majors')
@@ -38,7 +38,7 @@ export function useNotificationData(contentId: string | undefined, type: string 
   const { data: careerData } = useQuery({
     queryKey: ['career', contentId],
     queryFn: async () => {
-      if (!contentId || type !== 'career_update') return null;
+      if (!contentId) return null;
       
       const { data, error } = await supabase
         .from('careers')
@@ -64,7 +64,7 @@ export function useNotificationData(contentId: string | undefined, type: string 
   const { data: blogData } = useQuery({
     queryKey: ['blog', contentId],
     queryFn: async () => {
-      if (!contentId || type !== 'blog_update') return null;
+      if (!contentId) return null;
       
       const { data, error } = await supabase
         .from('blogs')

@@ -43,7 +43,7 @@ export function NotificationDialogs({
           onOpenChange={setDialogOpen}
         />
       )}
-      {dialogOpen && type === 'career_update' && careerData && (
+      {dialogOpen && type === 'career_update' && (
         <CareerDetailsDialog
           careerId={contentId}
           open={dialogOpen}
