@@ -28,7 +28,6 @@ import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
-import React from 'react';
 
 // Create a client with specific configuration
 const queryClient = new QueryClient({
@@ -179,24 +178,19 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  // Memoize the QueryClient instance
-  const [queryClientInstance] = React.useState(() => queryClient);
-
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClientInstance}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <RouterProvider router={router} />
-          <Toaster />
-          <Sonner />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <RouterProvider router={router} />
+        <Toaster />
+        <Sonner />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
