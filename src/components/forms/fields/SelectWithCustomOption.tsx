@@ -58,7 +58,6 @@ export function SelectWithCustomOption({
   const { toast } = useToast();
 
   // Fetch all options for the given table with pagination
-
   const { data: allOptions } = useQuery({
     queryKey: [tableName, 'all', searchQuery],
     queryFn: async () => {
@@ -69,18 +68,25 @@ export function SelectWithCustomOption({
       
       while (true) {
         console.log(`Fetching page starting at ${start}`);
-        const query = supabase
+        let query = supabase
           .from(tableName)
-          .select('id, name, title')
-          .range(start, start + pageSize - 1)
-          .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+          .select('id, name, title');
+
+        // Log the SQL query being generated (for debugging)
+        console.log('Query:', query.toSQL());
+
+        // Add range for pagination
+        query = query.range(start, start + pageSize - 1);
+
+        // Add ordering
+        query = query.order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
 
         // Add search filter if query exists
         if (searchQuery) {
           if (tableName === 'majors' || tableName === 'careers') {
-            query.ilike('title', `%${searchQuery}%`);
+            query = query.ilike('title', `%${searchQuery}%`);
           } else {
-            query.ilike('name', `%${searchQuery}%`);
+            query = query.ilike('name', `%${searchQuery}%`);
           }
         }
 
@@ -91,17 +97,26 @@ export function SelectWithCustomOption({
           throw error;
         }
 
-        if (!data || data.length === 0) break; // No more data to fetch
+        console.log(`Raw response data:`, data);
+        
+        if (!data || data.length === 0) {
+          console.log('No more data to fetch');
+          break;
+        }
         
         console.log(`Fetched ${data.length} records`);
         allData = [...allData, ...data];
         
-        if (data.length < pageSize) break; // Last page
+        if (data.length < pageSize) {
+          console.log('Last page reached (less than pageSize records returned)');
+          break;
+        }
         
-        start += pageSize; // Move to next page
+        start += pageSize;
       }
       
       console.log(`Total ${tableName} fetched:`, allData.length);
+      console.log('Sample of data:', allData.slice(0, 5));
       return allData;
     },
     enabled: true // Always fetch to ensure we have the latest data
