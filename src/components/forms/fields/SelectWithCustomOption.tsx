@@ -37,21 +37,23 @@ export function SelectWithCustomOption({
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  // Fetch all options for the given table with pagination
+  // Fetch all options for the given table
   const { data: allOptions, isLoading } = useQuery({
     queryKey: [tableName, 'all', searchQuery],
     queryFn: async () => {
       console.log(`Fetching ${tableName} with search: ${searchQuery}`);
       let allData = [];
-      let start = 0;
-      const pageSize = 1000; // Keep this at 1000 as it's Supabase's maximum
+      let offset = 0;
+      const limit = 1000;
       let hasMore = true;
 
       while (hasMore) {
-        console.log(`Fetching page starting at ${start}`);
+        console.log(`Fetching batch with offset: ${offset}`);
         let query = supabase
           .from(tableName)
-          .select('id, name, title', { count: 'exact' });
+          .select('id, name, title')
+          .limit(limit)
+          .offset(offset);
 
         // Add search filter if query exists
         if (searchQuery) {
@@ -64,9 +66,6 @@ export function SelectWithCustomOption({
 
         // Add ordering
         query = query.order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
-
-        // Add range for pagination
-        query = query.range(start, start + pageSize - 1);
 
         const { data, error } = await query;
         
@@ -81,16 +80,15 @@ export function SelectWithCustomOption({
           break;
         }
 
-        console.log(`Fetched ${data.length} records on this page`);
+        console.log(`Fetched ${data.length} records in this batch`);
         allData = [...allData, ...data];
         
-        // If we got less than pageSize records, we've reached the end
-        if (data.length < pageSize) {
-          console.log('Last page reached (less than pageSize records returned)');
+        if (data.length < limit) {
+          console.log('Last batch reached (less than limit records returned)');
           hasMore = false;
         } else {
-          start += pageSize;
-          console.log(`Moving to next page, start: ${start}`);
+          offset += limit;
+          console.log(`Moving to next batch, offset: ${offset}`);
         }
       }
       
