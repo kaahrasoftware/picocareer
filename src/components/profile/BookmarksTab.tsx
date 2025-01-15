@@ -8,10 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookmarkX } from "lucide-react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { MajorDetails } from "@/components/MajorDetails";
 
 export function BookmarksTab() {
   const { session } = useAuthSession();
   const [selectedProfile, setSelectedProfile] = React.useState<string | null>(null);
+  const [selectedCareer, setSelectedCareer] = React.useState<string | null>(null);
+  const [selectedMajor, setSelectedMajor] = React.useState<string | null>(null);
 
   const { data: bookmarks, isLoading } = useQuery({
     queryKey: ['bookmarks', session?.user?.id],
@@ -19,23 +23,26 @@ export function BookmarksTab() {
       if (!session?.user?.id) return null;
 
       try {
-        // First get the user's bookmarks
+        // Get all bookmarks for the user
         const { data: bookmarkData, error: bookmarkError } = await supabase
           .from('user_bookmarks')
           .select('content_type, content_id')
-          .eq('profile_id', session.user.id)
-          .eq('content_type', 'mentor');
+          .eq('profile_id', session.user.id);
 
         if (bookmarkError) {
           console.error('Error fetching bookmarks:', bookmarkError);
           return null;
         }
 
-        if (!bookmarkData || bookmarkData.length === 0) return { mentor: [] };
+        if (!bookmarkData || bookmarkData.length === 0) return { mentors: [], careers: [], majors: [] };
 
-        // Get the mentor profiles for the bookmarked mentor IDs
-        const mentorIds = bookmarkData.map(b => b.content_id);
-        const { data: mentorData, error: mentorError } = await supabase
+        // Separate bookmarks by type
+        const mentorIds = bookmarkData.filter(b => b.content_type === 'mentor').map(b => b.content_id);
+        const careerIds = bookmarkData.filter(b => b.content_type === 'career').map(b => b.content_id);
+        const majorIds = bookmarkData.filter(b => b.content_type === 'major').map(b => b.content_id);
+
+        // Fetch mentor profiles
+        const { data: mentorData } = await supabase
           .from('profiles')
           .select(`
             id,
@@ -50,12 +57,23 @@ export function BookmarksTab() {
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
 
-        if (mentorError) {
-          console.error('Error fetching mentor profiles:', mentorError);
-          return null;
-        }
+        // Fetch careers
+        const { data: careerData } = await supabase
+          .from('careers')
+          .select('*')
+          .in('id', careerIds);
 
-        return { mentor: mentorData || [] };
+        // Fetch majors
+        const { data: majorData } = await supabase
+          .from('majors')
+          .select('*')
+          .in('id', majorIds);
+
+        return {
+          mentors: mentorData || [],
+          careers: careerData || [],
+          majors: majorData || [],
+        };
       } catch (error) {
         console.error('Error in bookmark query:', error);
         return null;
@@ -77,7 +95,7 @@ export function BookmarksTab() {
     );
   }
 
-  if (!bookmarks || Object.keys(bookmarks).length === 0) {
+  if (!bookmarks || (!bookmarks.mentors.length && !bookmarks.careers.length && !bookmarks.majors.length)) {
     return (
       <Card className="p-6">
         <h2 className="text-2xl font-semibold mb-6">Bookmarks</h2>
@@ -89,40 +107,107 @@ export function BookmarksTab() {
     );
   }
 
-  const mentors = bookmarks.mentor || [];
-
   return (
     <Card className="p-6">
       <h2 className="text-2xl font-semibold mb-6">Bookmarks</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {mentors.map((mentor) => (
-          <Card 
-            key={mentor.id} 
-            className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => setSelectedProfile(mentor.id)}
-          >
-            <div className="flex flex-col items-center text-center">
-              <ProfileAvatar
-                avatarUrl={mentor.avatar_url}
-                fallback={mentor.full_name?.charAt(0) || '?'}
-                size="md"
-              />
-              <h3 className="font-semibold text-lg mt-3 mb-1">
-                {mentor.full_name}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-1">
-                {mentor.careers?.title || 'No position set'} | {mentor.company?.name || 'No company set'}
-              </p>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <Tabs defaultValue="mentors" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="mentors">Mentors</TabsTrigger>
+          <TabsTrigger value="careers">Careers</TabsTrigger>
+          <TabsTrigger value="majors">Majors</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="mentors">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {bookmarks.mentors.map((mentor) => (
+              <Card 
+                key={mentor.id} 
+                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => setSelectedProfile(mentor.id)}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <ProfileAvatar
+                    avatarUrl={mentor.avatar_url}
+                    fallback={mentor.full_name?.charAt(0) || '?'}
+                    size="md"
+                  />
+                  <h3 className="font-semibold text-lg mt-3 mb-1">
+                    {mentor.full_name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {mentor.careers?.title || 'No position set'} | {mentor.company?.name || 'No company set'}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="careers">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {bookmarks.careers.map((career) => (
+              <Card 
+                key={career.id} 
+                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => setSelectedCareer(career.id)}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <h3 className="font-semibold text-lg mb-2">{career.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {career.description}
+                  </p>
+                  {career.salary_range && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {career.salary_range}
+                    </p>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="majors">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {bookmarks.majors.map((major) => (
+              <Card 
+                key={major.id} 
+                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => setSelectedMajor(major.id)}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <h3 className="font-semibold text-lg mb-2">{major.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {major.description}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {selectedProfile && (
         <ProfileDetailsDialog
           userId={selectedProfile}
           open={!!selectedProfile}
           onOpenChange={(open) => !open && setSelectedProfile(null)}
+        />
+      )}
+
+      {selectedCareer && (
+        <CareerDetailsDialog
+          careerId={selectedCareer}
+          open={!!selectedCareer}
+          onOpenChange={(open) => !open && setSelectedCareer(null)}
+        />
+      )}
+
+      {selectedMajor && (
+        <MajorDetails
+          major={bookmarks.majors.find(m => m.id === selectedMajor)}
+          open={!!selectedMajor}
+          onOpenChange={(open) => !open && setSelectedMajor(null)}
         />
       )}
     </Card>
