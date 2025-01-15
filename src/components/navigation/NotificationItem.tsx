@@ -9,6 +9,7 @@ interface Notification {
   message: string;
   created_at: string;
   read: boolean;
+  type?: string;
   action_url?: string;
 }
 
@@ -46,6 +47,8 @@ export function NotificationItem({
           <NotificationContent
             message={notification.message}
             isExpanded={isExpanded}
+            type={notification.type}
+            action_url={notification.action_url}
           />
         </div>
       </div>

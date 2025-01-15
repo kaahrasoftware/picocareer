@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { MentorSession } from "@/types/calendar";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 
 interface NotificationContentProps {
   message: string;
   isExpanded: boolean;
+  type?: string;
+  action_url?: string;
 }
 
-export function NotificationContent({ message, isExpanded }: NotificationContentProps) {
+export function NotificationContent({ message, isExpanded, type, action_url }: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -72,6 +76,27 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
   // Get first sentence for collapsed view
   const firstSentence = message.split(/[.!?]/)[0];
   
+  const renderActionButton = () => {
+    if (!action_url) return null;
+
+    let buttonText = "View Details";
+    if (type === "major_update") buttonText = "View Major";
+    if (type === "career_update") buttonText = "View Career";
+    if (type === "blog_update") buttonText = "View Blog Post";
+
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+        onClick={() => window.location.href = action_url}
+      >
+        {buttonText}
+        <ExternalLink className="w-4 h-4 ml-2" />
+      </Button>
+    );
+  };
+
   if (!isExpanded) {
     return (
       <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
@@ -92,6 +117,7 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
     return (
       <div className="space-y-2 mt-3 text-sm text-zinc-400">
         <p>{message}</p>
+        {renderActionButton()}
       </div>
     );
   }
@@ -120,6 +146,7 @@ export function NotificationContent({ message, isExpanded }: NotificationContent
       {sessionData.notes && (
         <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
       )}
+      {renderActionButton()}
     </div>
   );
 }
