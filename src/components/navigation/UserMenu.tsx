@@ -32,13 +32,15 @@ export function UserMenu() {
     }
   };
 
+  if (!profile) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="outline-none">
           <ProfileAvatar
-            avatarUrl={profile?.avatar_url}
-            fallback={profile?.full_name?.[0] || "U"}
+            avatarUrl={profile.avatar_url}
+            profileId={profile.id}
             size="sm"
             editable={false}
           />

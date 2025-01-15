@@ -3,12 +3,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
-  onAvatarUpdate?: (url: string) => void;
   profileId: string;
 }
 
@@ -16,11 +16,11 @@ export function ProfileAvatar({
   avatarUrl, 
   size = "md", 
   editable = false,
-  onAvatarUpdate,
   profileId
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const sizeClasses = {
     sm: "h-8 w-8",
@@ -68,9 +68,9 @@ export function ProfileAvatar({
         throw updateError;
       }
 
-      if (onAvatarUpdate) {
-        onAvatarUpdate(publicUrl);
-      }
+      // Invalidate and refetch profile queries
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({ queryKey: ['profile', profileId] });
 
       toast({
         title: "Success",
