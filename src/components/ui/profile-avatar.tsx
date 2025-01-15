@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ export function ProfileAvatar({
   profileId
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
   const { toast } = useToast();
 
   const sizeClasses = {
@@ -28,7 +29,7 @@ export function ProfileAvatar({
     lg: "h-24 w-24"
   };
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
 
@@ -68,6 +69,9 @@ export function ProfileAvatar({
         throw updateError;
       }
 
+      // Update local state immediately
+      setCurrentAvatarUrl(publicUrl);
+      
       if (onAvatarUpdate) {
         onAvatarUpdate(publicUrl);
       }
@@ -85,14 +89,14 @@ export function ProfileAvatar({
     } finally {
       setUploading(false);
     }
-  };
+  }, [profileId, onAvatarUpdate, toast]);
 
   return (
     <div className="relative group">
       <Avatar className={sizeClasses[size]}>
-        <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
+        <AvatarImage src={currentAvatarUrl || "/placeholder.svg"} alt="Profile" />
         <AvatarFallback>
-          {avatarUrl ? "Loading..." : "?"}
+          {currentAvatarUrl ? "Loading..." : "?"}
         </AvatarFallback>
       </Avatar>
       {editable && (
