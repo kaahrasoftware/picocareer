@@ -20,7 +20,7 @@ const slides = [
     route: "/mentor"
   },
   {
-    title: "Majors Exploration",
+    title: "Academic Guidance",
     description:
       "Navigate through diverse academic paths, discover your interests, and make informed decisions about your educational journey.",
     icon: GraduationCap,
