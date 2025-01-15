@@ -1,65 +1,29 @@
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+export type NotificationType = 
+  | "major_update"
+  | "session_booked"
+  | "session_cancelled"
+  | "session_reminder"
+  | "mentor_request"
+  | "system_update"
+  | "profile_update";
 
-export interface SessionType {
-  type: string;
-  duration: number;
-}
-
-export interface SessionParticipant {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-}
-
-export interface MentorSession {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  mentor: SessionParticipant;
-  mentee: SessionParticipant;
-  session_type: SessionType;
-  meeting_link?: string;
-  meeting_platform?: MeetingPlatform;
-}
-
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  event_type: 'session';
-  status?: string;
-  created_at: string;
-  updated_at: string;
-  session_details?: MentorSession;
-}
-
-export interface Availability {
+export type NotificationCategory = 
+  | "all"
+  | "system"
+  | "unread"
+  | "session"
+  | "mentorship"
+  | "general"
+  | "major_update";
+  
+export interface Notification {
   id: string;
   profile_id: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  recurring?: boolean;
-  day_of_week?: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  category: NotificationCategory;
+  action_url: string;
   created_at: string;
-  updated_at: string;
+  read: boolean;
 }
-
-export type NotificationType = 
-  | "session_booked" 
-  | "session_cancelled" 
-  | "session_reminder" 
-  | "profile_update" 
-  | "mentor_request" 
-  | "blog_posted" 
-  | "major_update";
-
-export type NotificationCategory = "mentorship" | "general" | "session" | "major_update" | "system" | "unread" | "all";
-
-export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
-  const mentorshipTypes = ["session_booked", "session_cancelled", "session_reminder", "mentor_request"];
-  return mentorshipTypes.includes(type) ? "mentorship" : "general";
-};
