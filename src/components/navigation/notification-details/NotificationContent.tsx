@@ -7,6 +7,9 @@ import { ExternalLink } from "lucide-react";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { MajorDetails } from "@/components/MajorDetails";
 import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
+import { useQuery } from "@tanstack/react-query";
+import type { Major } from "@/types/database/majors";
+import type { BlogWithAuthor } from "@/types/blog/types";
 
 interface NotificationContentProps {
   message: string;
@@ -21,6 +24,49 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
+  // Extract ID from action URL
+  const contentId = action_url?.split('/').pop();
+
+  // Fetch major data if needed
+  const { data: majorData } = useQuery({
+    queryKey: ['major', contentId],
+    queryFn: async () => {
+      if (!contentId || type !== 'major_update') return null;
+      const { data, error } = await supabase
+        .from('majors')
+        .select('*')
+        .eq('id', contentId)
+        .single();
+      
+      if (error) throw error;
+      return data as Major;
+    },
+    enabled: !!contentId && type === 'major_update' && dialogOpen,
+  });
+
+  // Fetch blog data if needed
+  const { data: blogData } = useQuery({
+    queryKey: ['blog', contentId],
+    queryFn: async () => {
+      if (!contentId || type !== 'blog_update') return null;
+      const { data, error } = await supabase
+        .from('blogs')
+        .select(`
+          *,
+          profiles:author_id (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('id', contentId)
+        .single();
+      
+      if (error) throw error;
+      return data as BlogWithAuthor;
+    },
+    enabled: !!contentId && type === 'blog_update' && dialogOpen,
+  });
+
   useEffect(() => {
     const fetchSessionData = async () => {
       if (!isExpanded) return;
@@ -81,26 +127,19 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
   const firstSentence = message.split(/[.!?]/)[0];
 
   const handleActionClick = () => {
-    if (!action_url) return;
-    
-    // Extract the ID from the action URL
-    const id = action_url.split('/').pop();
-    if (!id) return;
-    
+    if (!action_url || !contentId) return;
     setDialogOpen(true);
   };
 
   const renderDialog = () => {
-    if (!action_url || !dialogOpen) return null;
-    
-    const id = action_url.split('/').pop();
-    if (!id) return null;
+    if (!action_url || !dialogOpen || !contentId) return null;
 
     switch (type) {
       case "major_update":
+        if (!majorData) return null;
         return (
           <MajorDetails
-            major={{ id }}
+            major={majorData}
             open={dialogOpen}
             onOpenChange={setDialogOpen}
           />
@@ -108,15 +147,16 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       case "career_update":
         return (
           <CareerDetailsDialog
-            careerId={id}
+            careerId={contentId}
             open={dialogOpen}
             onOpenChange={setDialogOpen}
           />
         );
       case "blog_update":
+        if (!blogData) return null;
         return (
           <BlogPostDialog
-            blog={{ id }}
+            blog={blogData}
             isOpen={dialogOpen}
             onClose={() => setDialogOpen(false)}
           />
