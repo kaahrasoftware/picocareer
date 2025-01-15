@@ -62,11 +62,25 @@ export function GenericUploadForm({
         title: "Success",
         description: "Your changes have been saved successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Form submission error:', error);
+      
+      // Parse the error message if it's from Supabase
+      let errorMessage = "Failed to save changes. Please try again.";
+      
+      if (error.body) {
+        try {
+          const parsedError = JSON.parse(error.body);
+          errorMessage = parsedError.message;
+        } catch {
+          // If parsing fails, use the original error message
+          errorMessage = error instanceof Error ? error.message : errorMessage;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save changes. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
