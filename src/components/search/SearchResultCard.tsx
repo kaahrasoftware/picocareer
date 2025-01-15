@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { GraduationCap } from "lucide-react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
