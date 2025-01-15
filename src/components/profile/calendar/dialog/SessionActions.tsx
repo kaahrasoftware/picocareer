@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { AlertCircle, ExternalLink } from "lucide-react";
 import { CalendarEvent } from "@/types/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SessionActionsProps {
   session: CalendarEvent;
@@ -34,6 +35,7 @@ export function SessionActions({
   onClose,
 }: SessionActionsProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleAttendanceToggle = async (checked: boolean) => {
     try {
@@ -123,6 +125,9 @@ export function SessionActions({
         description: "The session has been cancelled successfully",
       });
 
+      // Invalidate and refetch session events
+      await queryClient.invalidateQueries({ queryKey: ['session-events'] });
+      
       onClose();
     } catch (error) {
       console.error('Error cancelling session:', error);
