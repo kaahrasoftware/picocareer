@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button"; // Add this import
+import { Button } from "@/components/ui/button";
 import { SessionInfo } from "./dialog/SessionInfo";
 import { SessionActions } from "./dialog/SessionActions";
 import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SessionDetailsDialogProps {
   session: CalendarEvent | null;
@@ -26,6 +28,28 @@ export function SessionDetailsDialog({
   const { getSetting } = useUserSettings(authSession?.user?.id || '');
   const userTimezone = getSetting('timezone');
 
+  const { data: existingFeedback } = useQuery({
+    queryKey: ['session-feedback', session?.session_details?.id],
+    queryFn: async () => {
+      if (!session?.session_details?.id || !authSession?.user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('session_feedback')
+        .select('*')
+        .eq('session_id', session.session_details.id)
+        .eq('from_profile_id', authSession.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching feedback:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!session?.session_details?.id && !!authSession?.user?.id
+  });
+
   if (!session?.session_details) return null;
 
   const isMentor = authSession?.user?.id === session.session_details.mentor.id;
@@ -40,8 +64,8 @@ export function SessionDetailsDialog({
   const canMarkAttendance = session.session_details.status === 'scheduled' && 
     Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
 
-  // Can provide feedback if session is completed
-  const canProvideFeedback = session.session_details.status === 'completed';
+  // Can provide feedback if session is completed and feedback hasn't been provided yet
+  const canProvideFeedback = session.session_details.status === 'completed' && !existingFeedback;
 
   return (
     <>
@@ -64,10 +88,13 @@ export function SessionDetailsDialog({
             />
           )}
 
-          {canProvideFeedback && (
+          {session.session_details.status === 'completed' && (
             <div className="flex justify-end pt-4">
-              <Button onClick={() => setShowFeedback(true)}>
-                Provide Feedback
+              <Button 
+                onClick={() => setShowFeedback(true)}
+                disabled={!canProvideFeedback}
+              >
+                {existingFeedback ? 'Feedback Provided' : 'Provide Feedback'}
               </Button>
             </div>
           )}
