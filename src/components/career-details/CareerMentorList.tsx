@@ -6,6 +6,10 @@ import { BlogPagination } from "@/components/blog/BlogPagination";
 import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useProfileSession } from "@/hooks/useProfileSession";
 
 interface CareerMentorListProps {
   careerId: string;
@@ -14,6 +18,9 @@ interface CareerMentorListProps {
 export function CareerMentorList({ careerId }: CareerMentorListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { session } = useProfileSession();
   const MENTORS_PER_PAGE = 6;
 
   const { data: mentors, isLoading, error } = useQuery({
@@ -45,6 +52,29 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
     enabled: !!careerId,
   });
 
+  const handleMentorClick = (mentorId: string) => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to view mentor profiles and connect with them!",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/auth")}
+            className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+          >
+            Login
+          </Button>
+        ),
+      });
+      return;
+    }
+    setSelectedMentorId(mentorId);
+  };
+
   if (isLoading) {
     return <div>Loading mentors...</div>;
   }
@@ -72,7 +102,7 @@ export function CareerMentorList({ careerId }: CareerMentorListProps) {
           <Card 
             key={mentor.id}
             className="flex flex-col items-center p-6 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
-            onClick={() => setSelectedMentorId(mentor.id)}
+            onClick={() => handleMentorClick(mentor.id)}
           >
             <div className="relative w-16 h-16 group mb-3">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />
