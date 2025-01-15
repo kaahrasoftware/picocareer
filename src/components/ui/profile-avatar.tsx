@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -89,12 +88,13 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={`${sizeClasses[size]} border-4 border-primary`}>
-        <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
-        <AvatarFallback>
-          {avatarUrl ? "Loading..." : "?"}
-        </AvatarFallback>
-      </Avatar>
+      <div className={`${sizeClasses[size]} rounded-full overflow-hidden`}>
+        <img
+          src={avatarUrl || "/placeholder.svg"}
+          alt="Profile"
+          className="w-full h-full object-cover"
+        />
+      </div>
       {editable && (
         <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
           <input
