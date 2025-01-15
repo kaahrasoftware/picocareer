@@ -45,6 +45,8 @@ export function SelectWithCustomOption({
       let start = 0;
       const pageSize = 1000;
       let hasMore = true;
+      let totalCount = 0;
+      let firstPage = true;
 
       while (hasMore) {
         console.log(`Fetching page starting at ${start}`);
@@ -74,37 +76,39 @@ export function SelectWithCustomOption({
           throw error;
         }
 
-        console.log(`Raw response data for page ${start / pageSize + 1}:`, data);
-        console.log(`Total count from database: ${count}`);
-        
+        // On first page, get the total count
+        if (firstPage && count !== null) {
+          totalCount = count;
+          console.log(`Total records in database: ${totalCount}`);
+          firstPage = false;
+        }
+
         if (!data || data.length === 0) {
           console.log('No more data to fetch');
           hasMore = false;
           break;
         }
-        
-        console.log(`Fetched ${data.length} records`);
+
+        console.log(`Fetched ${data.length} records on this page`);
         allData = [...allData, ...data];
         
-        // Check if we need to fetch more data
+        // If we got less than pageSize records, we've reached the end
         if (data.length < pageSize) {
           console.log('Last page reached (less than pageSize records returned)');
           hasMore = false;
         } else {
-          start += pageSize;
-          console.log(`Moving to next page, start: ${start}`);
-        }
-
-        // Additional check against total count
-        if (count && allData.length >= count) {
-          console.log(`Fetched all records (${allData.length} of ${count})`);
-          hasMore = false;
+          // Only continue if we haven't fetched all records yet
+          if (totalCount > 0 && allData.length >= totalCount) {
+            console.log(`Fetched all ${allData.length} records of ${totalCount}`);
+            hasMore = false;
+          } else {
+            start += pageSize;
+            console.log(`Moving to next page, start: ${start}`);
+          }
         }
       }
       
       console.log(`Total ${tableName} fetched:`, allData.length);
-      console.log('First few records:', allData.slice(0, 5));
-      console.log('Last few records:', allData.slice(-5));
       return allData;
     },
     enabled: true
@@ -139,8 +143,8 @@ export function SelectWithCustomOption({
 
       // Create new entry
       const insertData = tableName === 'majors' || tableName === 'careers' 
-        ? { title: customValue, description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, status: 'Pending' }
-        : { name: customValue, status: 'Pending' };
+        ? { title: customValue, description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, status: 'Pending' as Status }
+        : { name: customValue, status: 'Pending' as Status };
 
       const { data, error } = await supabase
         .from(tableName)
@@ -211,38 +215,39 @@ export function SelectWithCustomOption({
   }
 
   return (
-    <Select
-      value={value}
-      onValueChange={(newValue) => {
-        if (newValue === "other") {
-          setShowCustomInput(true);
-        } else {
-          onValueChange(newValue);
-        }
-      }}
-      defaultValue={value || undefined}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <div className="p-2">
-          <Input
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="mb-2"
-          />
-        </div>
-        <ScrollArea className="h-[200px]">
-          {combinedOptions.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.title || option.name || ''}
-            </SelectItem>
-          ))}
-          <SelectItem value="other">Other (Add New)</SelectItem>
-        </ScrollArea>
-      </SelectContent>
-    </Select>
+    <div className="w-full">
+      <Select
+        value={value}
+        onValueChange={(newValue) => {
+          if (newValue === "other") {
+            setShowCustomInput(true);
+          } else {
+            onValueChange(newValue);
+          }
+        }}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <div className="p-2">
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-2"
+            />
+          </div>
+          <ScrollArea className="h-[200px]">
+            {combinedOptions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.title || option.name || ''}
+              </SelectItem>
+            ))}
+            <SelectItem value="other">Other (Add New)</SelectItem>
+          </ScrollArea>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
