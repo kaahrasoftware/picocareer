@@ -1,16 +1,13 @@
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { MentorSession } from "@/types/calendar";
-import { useToast } from "@/hooks/use-toast";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
-import { MajorDetails } from "@/components/MajorDetails";
-import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
-import { useQuery } from "@tanstack/react-query";
-import type { Major } from "@/types/database/majors";
-import type { BlogWithAuthor } from "@/types/blog/types";
-import type { Tables } from "@/integrations/supabase/types";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
+import { MajorDetails } from '@/components/MajorDetails';
+import { BlogPostDialog } from '@/components/blog/BlogPostDialog';
+import type { BlogWithAuthor } from '@/types/blog/types';
+import type { Major } from '@/types/database/majors';
+import type { Tables } from '@/integrations/supabase/types';
+import type { MentorSession } from '@/types/calendar';
 
 interface NotificationContentProps {
   message: string;
@@ -31,7 +28,6 @@ type CareerWithMajors = Tables<"careers"> & {
 export function NotificationContent({ message, isExpanded, type, action_url }: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { toast } = useToast();
   
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
@@ -45,9 +41,9 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         .from('majors')
         .select('*')
         .eq('id', contentId)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
       return data as Major;
     },
     enabled: !!contentId && type === 'major_update' && dialogOpen,
@@ -67,9 +63,9 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
           )
         `)
         .eq('id', contentId)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
       return data as CareerWithMajors;
     },
     enabled: !!contentId && type === 'career_update' && dialogOpen,
@@ -90,9 +86,9 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
           )
         `)
         .eq('id', contentId)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
       return data as BlogWithAuthor;
     },
     enabled: !!contentId && type === 'blog_update' && dialogOpen,
@@ -131,7 +127,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     };
 
     fetchSessionData();
-  }, [isExpanded, message, toast]);
+  }, [isExpanded, message]);
 
   if (!isExpanded) {
     return (
