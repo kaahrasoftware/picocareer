@@ -47,7 +47,10 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             </Button>
           ),
         });
+        return;
       }
+      // Handle mentor click
+      navigate(`/mentor/${result.id}`);
     } else if (result.type === 'major') {
       setSelectedMajor(result);
     } else if (result.type === 'career') {
