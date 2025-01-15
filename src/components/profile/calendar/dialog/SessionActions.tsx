@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -28,10 +28,8 @@ export function SessionActions({
   canMarkAttendance,
   attendance,
   setAttendance,
-  isCancelling,
   cancellationNote,
   onCancellationNoteChange,
-  onCancel,
   onClose,
 }: SessionActionsProps) {
   const { toast } = useToast();
@@ -97,6 +95,19 @@ export function SessionActions({
         }
       }
 
+      // Restore mentor availability if there was an availability slot
+      if (session.session_details.availability_slot_id) {
+        const { error: availabilityError } = await supabase
+          .from('mentor_availability')
+          .update({ is_available: true })
+          .eq('id', session.session_details.availability_slot_id);
+
+        if (availabilityError) {
+          console.error('Error restoring availability:', availabilityError);
+          throw new Error('Failed to restore mentor availability');
+        }
+      }
+
       // Update session status
       const { error: updateError } = await supabase
         .from('mentor_sessions')
@@ -114,17 +125,17 @@ export function SessionActions({
           profile_id: session.session_details.mentor.id,
           title: 'Session Cancelled',
           message: `Session with ${session.session_details.mentee.full_name} has been cancelled. Reason: ${cancellationNote}`,
-          type: 'session_cancelled',
+          type: 'session_cancelled' as const,
           action_url: '/profile?tab=calendar',
-          category: 'mentorship'
+          category: 'mentorship' as const
         },
         {
           profile_id: session.session_details.mentee.id,
           title: 'Session Cancelled',
           message: `Session with ${session.session_details.mentor.full_name} has been cancelled. Reason: ${cancellationNote}`,
-          type: 'session_cancelled',
+          type: 'session_cancelled' as const,
           action_url: '/profile?tab=calendar',
-          category: 'mentorship'
+          category: 'mentorship' as const
         }
       ];
 
@@ -135,22 +146,29 @@ export function SessionActions({
       if (notificationError) throw notificationError;
 
       // Send email notifications
-      await supabase.functions.invoke('send-session-email', {
+      const { error: emailError } = await supabase.functions.invoke('send-session-email', {
         body: { 
           sessionId: session.session_details.id,
           type: 'cancellation'
         }
       });
 
+      if (emailError) {
+        console.error('Error sending cancellation emails:', emailError);
+      }
+
       toast({
         title: "Session cancelled",
-        description: "The session has been cancelled successfully",
+        description: "The session has been cancelled and notifications have been sent.",
       });
 
-      // Invalidate and refetch session events
-      await queryClient.invalidateQueries({ queryKey: ['session-events'] });
-      
+      // Close the dialog and reset state
+      setIsProcessing(false);
       onClose();
+      
+      // Refresh events
+      await queryClient.invalidateQueries({ queryKey: ['session-events'] });
+
     } catch (error) {
       console.error('Error cancelling session:', error);
       toast({
