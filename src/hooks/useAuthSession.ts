@@ -1,23 +1,22 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 
 export function useAuthSession() {
   const queryClient = useQueryClient();
 
+  // Set up auth state change listener outside of the query
   const { data: session, error: sessionError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
-        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Initial session error:', error);
+          console.error('Session error:', error);
           throw error;
         }
 
-        // Store the session token if it exists
         if (session?.access_token) {
           localStorage.setItem('picocareer_auth_token', session.access_token);
         }
@@ -31,38 +30,28 @@ export function useAuthSession() {
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    initialData: () => {
-      // Check for existing session in localStorage
-      const token = localStorage.getItem('picocareer_auth_token');
-      return token ? {} as Session : null;
-    },
   });
 
   // Set up auth state change listener
   supabase.auth.onAuthStateChange((event, newSession) => {
-    console.log('Auth state changed:', event);
+    console.log('Auth state changed:', event, newSession);
     
-    switch (event) {
-      case 'SIGNED_IN':
-        if (newSession?.access_token) {
-          localStorage.setItem('picocareer_auth_token', newSession.access_token);
-          queryClient.setQueryData(['auth-session'], newSession);
-        }
-        break;
-        
-      case 'SIGNED_OUT':
-        localStorage.removeItem('picocareer_auth_token');
-        queryClient.setQueryData(['auth-session'], null);
-        queryClient.removeQueries({ queryKey: ['profile'] });
-        queryClient.removeQueries({ queryKey: ['notifications'] });
-        break;
-        
-      case 'TOKEN_REFRESHED':
-        if (newSession?.access_token) {
-          localStorage.setItem('picocareer_auth_token', newSession.access_token);
-          queryClient.setQueryData(['auth-session'], newSession);
-        }
-        break;
+    if (event === 'SIGNED_IN' && newSession?.access_token) {
+      console.log('User signed in, updating session...');
+      localStorage.setItem('picocareer_auth_token', newSession.access_token);
+      queryClient.setQueryData(['auth-session'], newSession);
+    } 
+    else if (event === 'SIGNED_OUT') {
+      console.log('User signed out, cleaning up...');
+      localStorage.removeItem('picocareer_auth_token');
+      queryClient.setQueryData(['auth-session'], null);
+      queryClient.removeQueries({ queryKey: ['profile'] });
+      queryClient.removeQueries({ queryKey: ['notifications'] });
+    }
+    else if (event === 'TOKEN_REFRESHED' && newSession?.access_token) {
+      console.log('Token refreshed, updating session...');
+      localStorage.setItem('picocareer_auth_token', newSession.access_token);
+      queryClient.setQueryData(['auth-session'], newSession);
     }
   });
 
