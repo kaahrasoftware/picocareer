@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
@@ -8,6 +8,8 @@ import type { BlogWithAuthor } from '@/types/blog/types';
 import type { Major } from '@/types/database/majors';
 import type { Tables } from '@/integrations/supabase/types';
 import type { MentorSession } from '@/types/calendar';
+import { Button } from '@/components/ui/button';
+import { ExternalLink } from 'lucide-react';
 
 interface NotificationContentProps {
   message: string;
@@ -37,13 +39,20 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     queryKey: ['major', contentId],
     queryFn: async () => {
       if (!contentId || type !== 'major_update') return null;
+      
+      console.log('Fetching major data for ID:', contentId);
       const { data, error } = await supabase
         .from('majors')
         .select('*')
         .eq('id', contentId)
         .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching major:', error);
+        throw error;
+      }
+      
+      console.log('Fetched major data:', data);
       return data as Major;
     },
     enabled: !!contentId && type === 'major_update' && dialogOpen,
@@ -54,6 +63,8 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     queryKey: ['career', contentId],
     queryFn: async () => {
       if (!contentId || type !== 'career_update') return null;
+      
+      console.log('Fetching career data for ID:', contentId);
       const { data, error } = await supabase
         .from('careers')
         .select(`
@@ -65,7 +76,12 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         .eq('id', contentId)
         .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching career:', error);
+        throw error;
+      }
+      
+      console.log('Fetched career data:', data);
       return data as CareerWithMajors;
     },
     enabled: !!contentId && type === 'career_update' && dialogOpen,
@@ -76,6 +92,8 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     queryKey: ['blog', contentId],
     queryFn: async () => {
       if (!contentId || type !== 'blog_update') return null;
+      
+      console.log('Fetching blog data for ID:', contentId);
       const { data, error } = await supabase
         .from('blogs')
         .select(`
@@ -88,7 +106,12 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         .eq('id', contentId)
         .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching blog:', error);
+        throw error;
+      }
+      
+      console.log('Fetched blog data:', data);
       return data as BlogWithAuthor;
     },
     enabled: !!contentId && type === 'blog_update' && dialogOpen,
