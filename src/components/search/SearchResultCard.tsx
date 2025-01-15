@@ -82,29 +82,27 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 mt-auto">
-              {result.keywords && result.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {result.keywords.slice(0, 3).map((keyword, index) => (
-                    <Badge 
-                      key={index}
-                      variant="secondary"
-                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
-                    >
-                      {keyword}
-                    </Badge>
-                  ))}
-                  {result.keywords.length > 3 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
-                    >
-                      +{result.keywords.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
+            {result.keywords && result.keywords.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-auto">
+                {result.keywords.slice(0, 3).map((keyword, index) => (
+                  <Badge 
+                    key={index}
+                    variant="secondary"
+                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                  >
+                    {keyword}
+                  </Badge>
+                ))}
+                {result.keywords.length > 3 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                  >
+                    +{result.keywords.length - 3}
+                  </Badge>
+                )}
+              </div>
+            )}
           </>
         );
       case 'career':
@@ -113,29 +111,14 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             <div className="flex-1">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-[#1A1F2C]">{result.title}</h3>
               <p className="text-sm text-[#8E9196] mb-3 line-clamp-2">{result.description}</p>
-              <div className="space-y-3">
-                {result.academic_majors && result.academic_majors.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {result.academic_majors.slice(0, 3).map((major, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary"
-                        className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
-                      >
-                        {major}
-                      </Badge>
-                    ))}
-                    {result.academic_majors.length > 3 && (
-                      <Badge 
-                        variant="secondary" 
-                        className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
-                      >
-                        +{result.academic_majors.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </div>
+              {result.salary_range && (
+                <Badge 
+                  variant="secondary"
+                  className="bg-red-100 text-red-700 hover:bg-red-200"
+                >
+                  {result.salary_range}
+                </Badge>
+              )}
             </div>
           </>
         );
