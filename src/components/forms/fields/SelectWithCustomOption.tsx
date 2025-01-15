@@ -13,6 +13,7 @@ import { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -37,7 +38,7 @@ export function SelectWithCustomOption({
   const { toast } = useToast();
 
   // Fetch all options for the given table with pagination
-  const { data: allOptions } = useQuery({
+  const { data: allOptions, isLoading } = useQuery({
     queryKey: [tableName, 'all', searchQuery],
     queryFn: async () => {
       console.log(`Fetching ${tableName} with search: ${searchQuery}`);
@@ -67,7 +68,7 @@ export function SelectWithCustomOption({
         // Add range for pagination
         query = query.range(start, start + pageSize - 1);
 
-        const { data, error, count } = await query;
+        const { data, error } = await query;
         
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
@@ -199,6 +200,9 @@ export function SelectWithCustomOption({
     );
   }
 
+  // Ensure we have data before rendering the select
+  const isDataReady = !isLoading && combinedOptions.length > 0;
+
   return (
     <div className="w-full">
       <Select
@@ -212,27 +216,34 @@ export function SelectWithCustomOption({
         }}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
         </SelectTrigger>
-        <SelectContent>
-          <div className="p-2">
-            <Input
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-2"
-            />
-          </div>
-          <ScrollArea className="h-[200px]">
-            {combinedOptions.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.title || option.name || ''}
-              </SelectItem>
-            ))}
-            <SelectItem value="other">Other (Add New)</SelectItem>
-          </ScrollArea>
-        </SelectContent>
+        {isDataReady && (
+          <SelectContent>
+            <div className="p-2">
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="mb-2"
+              />
+            </div>
+            <ScrollArea className="h-[200px]">
+              {combinedOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option.title || option.name || ''}
+                </SelectItem>
+              ))}
+              <SelectItem value="other">Other (Add New)</SelectItem>
+            </ScrollArea>
+          </SelectContent>
+        )}
       </Select>
+      {isLoading && (
+        <div className="flex items-center justify-center mt-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
