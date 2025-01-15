@@ -89,7 +89,7 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={`${sizeClasses[size]} border-4 border-primary`}>
+      <Avatar className={sizeClasses[size]}>
         <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
         <AvatarFallback>
           {avatarUrl ? "Loading..." : "?"}
