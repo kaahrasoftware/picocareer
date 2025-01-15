@@ -24,11 +24,9 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
   const { toast } = useToast();
   const { session } = useAuthSession();
 
-  const { data: majorWithCareers, isError } = useQuery({
+  const { data: majorWithCareers } = useQuery({
     queryKey: ['major-careers', major.id],
     queryFn: async () => {
-      console.log("Fetching major data for ID:", major.id);
-      
       const { data, error } = await supabase
         .from('majors')
         .select(`
@@ -38,18 +36,9 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
           )
         `)
         .eq('id', major.id)
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        console.error("Error fetching major data:", error);
-        throw error;
-      }
-
-      if (!data) {
-        console.log("No major found with ID:", major.id);
-        return null;
-      }
-
+      if (error) throw error;
       console.log("Fetched major data:", data);
       return data as Major;
     },
@@ -70,11 +59,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         .eq('content_id', major.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error checking bookmark status:", error);
-        throw error;
-      }
-
+      if (error) throw error;
       setIsBookmarked(!!data);
       return data;
     },
@@ -115,7 +100,6 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
         description: isBookmarked ? "Major removed from your bookmarks" : "Major added to your bookmarks",
       });
     } catch (error) {
-      console.error("Error toggling bookmark:", error);
       toast({
         title: "Error",
         description: "Failed to update bookmark",
@@ -125,19 +109,6 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
   };
 
   if (!major) return null;
-
-  // Show error state
-  if (isError) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <div className="p-4 text-center text-red-500">
-            Error loading major details. Please try again later.
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

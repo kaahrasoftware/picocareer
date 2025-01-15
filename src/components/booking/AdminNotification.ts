@@ -33,12 +33,10 @@ export async function notifyAdmins({
       action_url: `/calendar`
     }));
 
-    // Insert notifications one by one to match the table structure
-    for (const notification of notifications) {
-      await supabase
-        .from('notifications')
-        .insert(notification);
-    }
+    // Insert notifications
+    await supabase
+      .from('notifications')
+      .insert(notifications);
 
   } catch (error) {
     console.error('Error notifying admins:', error);

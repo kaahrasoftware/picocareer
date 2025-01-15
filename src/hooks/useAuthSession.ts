@@ -5,7 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 export function useAuthSession() {
   const queryClient = useQueryClient();
 
-  const { data: session, error: sessionError, isError } = useQuery({
+  const { data: session, error: sessionError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -32,7 +32,6 @@ export function useAuthSession() {
   return {
     session,
     sessionError,
-    isError,
     queryClient
   };
 }

@@ -27,7 +27,7 @@ export function useProfileDetailsData(userId: string, open: boolean, session: an
   });
 
   // Profile data query
-  const { data: profile, isLoading, isError } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
       try {
@@ -42,15 +42,11 @@ export function useProfileDetailsData(userId: string, open: boolean, session: an
             career:careers!profiles_position_fkey(title, id)
           `)
           .eq('id', userId)
-          .maybeSingle();
+          .single();
         
         if (error) {
           console.error('Error fetching profile:', error);
           throw error;
-        }
-
-        if (!data) {
-          throw new Error('Profile not found');
         }
 
         console.log('Profile data fetched successfully:', data);
@@ -72,5 +68,5 @@ export function useProfileDetailsData(userId: string, open: boolean, session: an
     retry: 1,
   });
 
-  return { currentUser, profile, isLoading, isError };
+  return { currentUser, profile, isLoading };
 }
