@@ -65,7 +65,8 @@ serve(async (req: Request) => {
         },
         attendees: [
           { email: session.mentor.email, responseStatus: 'accepted' },
-          { email: session.mentee.email }
+          { email: session.mentee.email },
+          { email: 'info@picocareer.com' } // Add company email for recordings
         ],
         conferenceData: {
           createRequest: {
@@ -79,8 +80,8 @@ serve(async (req: Request) => {
         reminders: {
           useDefault: false,
           overrides: [
-            { method: 'email', minutes: 60 }, // 1 hour before
-            { method: 'popup', minutes: 10 }  // 10 minutes before
+            { method: 'email', minutes: 60 },
+            { method: 'popup', minutes: 10 }
           ]
         }
       };

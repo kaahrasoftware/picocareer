@@ -7,7 +7,44 @@ export async function createCalendarEvent(eventDetails: any, accessToken: string
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(eventDetails),
+      body: JSON.stringify({
+        ...eventDetails,
+        conferenceData: {
+          createRequest: {
+            requestId: eventDetails.conferenceData.createRequest.requestId,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+            status: { statusCode: 'success' },
+          },
+          // Add recording settings
+          entryPoints: [{
+            entryPointType: 'video',
+            uri: '',
+            label: 'Meet Recording',
+          }],
+          conferenceSolution: {
+            key: { type: 'hangoutsMeet' },
+            name: 'Google Meet',
+            iconUri: '',
+          },
+          parameters: {
+            addOnParameters: {
+              parameters: {
+                'recording': {
+                  'type': 'hangoutsMeet',
+                  'recordingOptions': {
+                    'enabled': true,
+                    'initiatedBy': 'organizer',
+                    'retentionPeriod': {
+                      'count': 30,
+                      'unit': 'days'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }),
     }
   );
 
