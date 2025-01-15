@@ -74,7 +74,8 @@ export function NotificationContent({
   }, [isExpanded, message]);
 
   const renderActionButton = () => {
-    if (!action_url) return null;
+    // Don't show View Detail button for session-related notifications
+    if (!action_url || type?.includes('session')) return null;
 
     return (
       <Button
