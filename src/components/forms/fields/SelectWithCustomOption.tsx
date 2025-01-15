@@ -58,19 +58,21 @@ export function SelectWithCustomOption({
   const { toast } = useToast();
 
   // Fetch all options for the given table with pagination
+
   const { data: allOptions } = useQuery({
     queryKey: [tableName, 'all', searchQuery],
     queryFn: async () => {
       console.log(`Fetching ${tableName} with search: ${searchQuery}`);
       let allData = [];
-      let page = 0;
+      let start = 0;
       const pageSize = 1000; // Fetch 1000 records at a time
       
       while (true) {
+        console.log(`Fetching page starting at ${start}`);
         const query = supabase
           .from(tableName)
           .select('id, name, title')
-          .range(page * pageSize, (page + 1) * pageSize - 1)
+          .range(start, start + pageSize - 1)
           .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
 
         // Add search filter if query exists
@@ -91,13 +93,15 @@ export function SelectWithCustomOption({
 
         if (!data || data.length === 0) break; // No more data to fetch
         
+        console.log(`Fetched ${data.length} records`);
         allData = [...allData, ...data];
+        
         if (data.length < pageSize) break; // Last page
         
-        page++;
+        start += pageSize; // Move to next page
       }
       
-      console.log(`Fetched ${tableName} data:`, allData);
+      console.log(`Total ${tableName} fetched:`, allData.length);
       return allData;
     },
     enabled: true // Always fetch to ensure we have the latest data
