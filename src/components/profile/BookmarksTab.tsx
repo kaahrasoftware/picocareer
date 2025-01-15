@@ -10,6 +10,7 @@ import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { MajorDetails } from "@/components/MajorDetails";
+import { Badge } from "@/components/ui/badge";
 
 export function BookmarksTab() {
   const { session } = useAuthSession();
@@ -153,13 +154,15 @@ export function BookmarksTab() {
               >
                 <div className="flex flex-col items-center text-center">
                   <h3 className="font-semibold text-lg mb-2">{career.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                     {career.description}
                   </p>
                   {career.salary_range && (
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <Badge 
+                      className="bg-[#ea384c] hover:bg-[#ea384c]/90 text-white"
+                    >
                       {career.salary_range}
-                    </p>
+                    </Badge>
                   )}
                 </div>
               </Card>
@@ -177,9 +180,16 @@ export function BookmarksTab() {
               >
                 <div className="flex flex-col items-center text-center">
                   <h3 className="font-semibold text-lg mb-2">{major.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                     {major.description}
                   </p>
+                  {major.potential_salary && (
+                    <Badge 
+                      className="bg-[#ea384c] hover:bg-[#ea384c]/90 text-white"
+                    >
+                      {major.potential_salary}
+                    </Badge>
+                  )}
                 </div>
               </Card>
             ))}
