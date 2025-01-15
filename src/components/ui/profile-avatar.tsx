@@ -4,20 +4,20 @@ import { Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export interface ProfileAvatarProps {
+interface ProfileAvatarProps {
   avatarUrl: string | null;
-  profileId: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
   onAvatarUpdate?: (url: string) => void;
+  profileId: string;
 }
 
 export function ProfileAvatar({ 
   avatarUrl, 
-  profileId,
   size = "md", 
   editable = false,
-  onAvatarUpdate
+  onAvatarUpdate,
+  profileId
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -34,6 +34,10 @@ export function ProfileAvatar({
 
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('You must select an image to upload.');
+      }
+
+      if (!profileId) {
+        throw new Error('Profile ID is required for avatar upload.');
       }
 
       const file = event.target.files[0];
@@ -85,7 +89,7 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={sizeClasses[size]}>
+      <Avatar className={`${sizeClasses[size]} border-4 border-primary`}>
         <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
         <AvatarFallback>
           {avatarUrl ? "Loading..." : "?"}
