@@ -9,7 +9,7 @@ interface ProfileAvatarProps {
   size?: "sm" | "md" | "lg";
   editable?: boolean;
   onAvatarUpdate?: (url: string) => void;
-  profileId: string; // Add profileId as a required prop
+  profileId: string;
 }
 
 export function ProfileAvatar({ 
@@ -89,7 +89,7 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={`${sizeClasses[size]} border-4 border-yellow-400`}>
+      <Avatar className={`${sizeClasses[size]} border-4 border-primary`}>
         <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
         <AvatarFallback>
           {avatarUrl ? "Loading..." : "?"}
