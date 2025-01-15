@@ -141,16 +141,16 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
         <MajorDialogHeader 
           major={major}
           isBookmarked={isBookmarked}
           onBookmarkToggle={handleBookmarkToggle}
         />
         
-        <ScrollArea className="h-[calc(90vh-100px)]">
-          <div className="p-2 md:p-4 space-y-3 md:space-y-6">
-            <div className="grid gap-2 md:gap-4">
+        <ScrollArea className="h-[calc(90vh-120px)]">
+          <div className="px-4 py-6 space-y-6">
+            <div className="grid gap-6">
               <AboutSection 
                 description={major.description}
                 learning_objectives={major.learning_objectives}
