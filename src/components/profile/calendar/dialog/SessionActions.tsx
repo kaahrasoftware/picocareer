@@ -36,6 +36,7 @@ export function SessionActions({
 }: SessionActionsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleAttendanceToggle = async (checked: boolean) => {
     try {
@@ -76,41 +77,54 @@ export function SessionActions({
   };
 
   const handleCancelSession = async () => {
+    if (!session.session_details?.id) return;
+    
+    setIsProcessing(true);
     try {
-      // Update session status to cancelled
-      const { error: sessionError } = await supabase
+      // Cancel Google Calendar event if it exists
+      if (session.session_details?.calendar_event_id) {
+        console.log('Cancelling Google Calendar event:', session.session_details.calendar_event_id);
+        
+        const { error: cancelError } = await supabase.functions.invoke('cancel-meet-link', {
+          body: { 
+            sessionId: session.session_details.id 
+          }
+        });
+
+        if (cancelError) {
+          console.error('Error cancelling Google Calendar event:', cancelError);
+          throw new Error('Failed to cancel Google Calendar event');
+        }
+      }
+
+      // Update session status
+      const { error: updateError } = await supabase
         .from('mentor_sessions')
         .update({ 
           status: 'cancelled',
           notes: cancellationNote 
         })
-        .eq('id', session.session_details?.id);
+        .eq('id', session.session_details.id);
 
-      if (sessionError) throw sessionError;
-
-      // Cancel the meeting link
-      if (session.session_details?.calendar_event_id) {
-        const { error: cancelError } = await supabase.functions.invoke('cancel-meet-link', {
-          body: { sessionId: session.session_details.id }
-        });
-        if (cancelError) console.error('Error cancelling meet link:', cancelError);
-      }
+      if (updateError) throw updateError;
 
       // Create notifications for both mentor and mentee
       const notifications = [
         {
-          profile_id: session.session_details?.mentor.id,
+          profile_id: session.session_details.mentor.id,
           title: 'Session Cancelled',
-          message: `Session with ${session.session_details?.mentee.full_name} has been cancelled. Reason: ${cancellationNote}`,
+          message: `Session with ${session.session_details.mentee.full_name} has been cancelled. Reason: ${cancellationNote}`,
           type: 'session_cancelled',
-          action_url: '/profile?tab=calendar'
+          action_url: '/profile?tab=calendar',
+          category: 'mentorship'
         },
         {
-          profile_id: session.session_details?.mentee.id,
+          profile_id: session.session_details.mentee.id,
           title: 'Session Cancelled',
-          message: `Session with ${session.session_details?.mentor.full_name} has been cancelled. Reason: ${cancellationNote}`,
+          message: `Session with ${session.session_details.mentor.full_name} has been cancelled. Reason: ${cancellationNote}`,
           type: 'session_cancelled',
-          action_url: '/profile?tab=calendar'
+          action_url: '/profile?tab=calendar',
+          category: 'mentorship'
         }
       ];
 
@@ -119,6 +133,14 @@ export function SessionActions({
         .insert(notifications);
 
       if (notificationError) throw notificationError;
+
+      // Send email notifications
+      await supabase.functions.invoke('send-session-email', {
+        body: { 
+          sessionId: session.session_details.id,
+          type: 'cancellation'
+        }
+      });
 
       toast({
         title: "Session cancelled",
@@ -136,6 +158,8 @@ export function SessionActions({
         description: "Failed to cancel the session",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -186,10 +210,10 @@ export function SessionActions({
           <Button
             variant="destructive"
             onClick={handleCancelSession}
-            disabled={!cancellationNote.trim() || isCancelling}
+            disabled={!cancellationNote.trim() || isProcessing}
             className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
           >
-            {isCancelling ? "Cancelling..." : "Cancel Session"}
+            {isProcessing ? "Cancelling..." : "Cancel Session"}
           </Button>
         </>
       )}
