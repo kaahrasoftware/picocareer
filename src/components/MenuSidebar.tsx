@@ -160,7 +160,7 @@ export function MenuSidebar() {
               />
             )}
             {session?.user ? (
-              <UserMenu />
+              <UserMenu profile={profile} />
             ) : (
               <Button 
                 variant="default" 

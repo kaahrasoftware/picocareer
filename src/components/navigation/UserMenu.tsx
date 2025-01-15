@@ -10,14 +10,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import type { Profile } from "@/types/database/profiles";
 
-export function UserMenu() {
+interface UserMenuProps {
+  profile: Profile | null;
+}
+
+export function UserMenu({ profile }: UserMenuProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
 
   const handleSignOut = async () => {
     try {
