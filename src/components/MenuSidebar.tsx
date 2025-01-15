@@ -25,28 +25,6 @@ export function MenuSidebar() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -144,7 +122,7 @@ export function MenuSidebar() {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col gap-6 pt-6">
                   <MainNavigation />
-                  {session?.user && <UserMenu />}
+                  {session?.user && profile && <UserMenu profile={profile} />}
                 </div>
               </SheetContent>
             </Sheet>
@@ -159,8 +137,8 @@ export function MenuSidebar() {
                 onMarkAsRead={handleMarkAsRead}
               />
             )}
-            {session?.user ? (
-              <UserMenu />
+            {session?.user && profile ? (
+              <UserMenu profile={profile} />
             ) : (
               <Button 
                 variant="default" 
