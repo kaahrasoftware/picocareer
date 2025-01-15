@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,9 +8,15 @@ interface ProfileAvatarProps {
   avatarUrl: string | null;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
+  onAvatarUpdate?: (url: string) => void;
 }
 
-export function ProfileAvatar({ avatarUrl, size = "md", editable = false }: ProfileAvatarProps) {
+export function ProfileAvatar({ 
+  avatarUrl, 
+  size = "md", 
+  editable = false,
+  onAvatarUpdate 
+}: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
@@ -33,7 +38,7 @@ export function ProfileAvatar({ avatarUrl, size = "md", editable = false }: Prof
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { 
           upsert: true,
@@ -58,13 +63,14 @@ export function ProfileAvatar({ avatarUrl, size = "md", editable = false }: Prof
         throw updateError;
       }
 
+      if (onAvatarUpdate) {
+        onAvatarUpdate(publicUrl);
+      }
+
       toast({
         title: "Success",
         description: "Profile picture updated successfully",
       });
-
-      // Force reload to show new avatar
-      window.location.reload();
     } catch (error: any) {
       toast({
         title: "Error",
