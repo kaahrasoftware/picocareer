@@ -198,10 +198,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
   const renderActionButton = () => {
     if (!action_url) return null;
 
-    let buttonText = "View Details";
-    if (type === "major_update") buttonText = "View Major";
-    if (type === "career_update") buttonText = "View Career";
-    if (type === "blog_update") buttonText = "View Blog Post";
+    let buttonText = "View Detail";
 
     return (
       <Button
