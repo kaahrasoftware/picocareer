@@ -59,22 +59,34 @@ export function SelectWithCustomOption({
 
   // Fetch all options for the given table
   const { data: allOptions } = useQuery({
-    queryKey: [tableName, 'all'],
+    queryKey: [tableName, 'all', searchQuery],
     queryFn: async () => {
-      console.log(`Fetching all ${tableName}...`);
-      const { data, error } = await supabase
+      console.log(`Fetching ${tableName} with search: ${searchQuery}`);
+      const query = supabase
         .from(tableName)
         .select('id, name, title')
         .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+
+      // Add search filter if query exists
+      if (searchQuery) {
+        if (tableName === 'majors' || tableName === 'careers') {
+          query.ilike('title', `%${searchQuery}%`);
+        } else {
+          query.ilike('name', `%${searchQuery}%`);
+        }
+      }
+
+      const { data, error } = await query;
       
       if (error) {
         console.error(`Error fetching ${tableName}:`, error);
         throw error;
       }
+      
       console.log(`Fetched ${tableName} data:`, data);
       return data || [];
     },
-    enabled: options.length === 0 // Only fetch if no options were provided
+    enabled: true // Always fetch to ensure we have the latest data
   });
 
   // Combine provided options with fetched options, removing duplicates
@@ -156,12 +168,6 @@ export function SelectWithCustomOption({
     }
   };
 
-  const filteredOptions = combinedOptions.filter(option => {
-    const searchTerm = searchQuery.toLowerCase();
-    const optionText = (option.title || option.name || '').toLowerCase();
-    return optionText.includes(searchTerm);
-  });
-
   if (showCustomInput) {
     return (
       <div className="space-y-2">
@@ -194,11 +200,6 @@ export function SelectWithCustomOption({
     );
   }
 
-  // Only render the Select component if there are options or a value
-  if (!combinedOptions.length && !value) {
-    return null;
-  }
-
   return (
     <Select
       value={value}
@@ -224,7 +225,7 @@ export function SelectWithCustomOption({
           />
         </div>
         <ScrollArea className="h-[200px]">
-          {filteredOptions.map((option) => (
+          {combinedOptions.map((option) => (
             <SelectItem key={option.id} value={option.id}>
               {option.title || option.name || ''}
             </SelectItem>
