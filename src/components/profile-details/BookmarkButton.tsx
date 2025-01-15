@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BookmarkButtonProps {
   profileId: string;
@@ -13,6 +14,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
   const { session: authSession } = useAuthSession();
+  const queryClient = useQueryClient();
 
   // Don't render the button if the profile belongs to the current user
   if (authSession?.user?.id === profileId) {
@@ -37,13 +39,16 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
           .delete()
           .match({
             profile_id: authSession.user.id,
-            content_type: "profile",
+            content_type: "mentor",
             content_id: profileId,
           });
 
         if (error) throw error;
 
         setIsBookmarked(false);
+        // Invalidate the bookmarks query to trigger a refetch
+        queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        
         toast({
           title: "Bookmark removed",
           description: "Profile has been removed from your bookmarks",
@@ -52,13 +57,16 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
         // Add bookmark
         const { error } = await supabase.from("user_bookmarks").insert({
           profile_id: authSession.user.id,
-          content_type: "profile",
+          content_type: "mentor",
           content_id: profileId,
         });
 
         if (error) throw error;
 
         setIsBookmarked(true);
+        // Invalidate the bookmarks query to trigger a refetch
+        queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        
         toast({
           title: "Profile bookmarked",
           description: "Profile has been added to your bookmarks",
@@ -75,7 +83,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
   };
 
   // Check if profile is bookmarked on component mount
-  useState(() => {
+  useEffect(() => {
     const checkBookmarkStatus = async () => {
       if (!authSession) return;
 
@@ -85,7 +93,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
           .select()
           .match({
             profile_id: authSession.user.id,
-            content_type: "profile",
+            content_type: "mentor",
             content_id: profileId,
           })
           .maybeSingle();
@@ -98,7 +106,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
     };
 
     checkBookmarkStatus();
-  });
+  }, [authSession, profileId]);
 
   return (
     <button
