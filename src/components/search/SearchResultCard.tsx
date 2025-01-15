@@ -18,7 +18,7 @@ interface SearchResultCardProps {
 
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
   const [selectedMajor, setSelectedMajor] = useState<any | null>(null);
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const [isCareerDialogOpen, setIsCareerDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
@@ -49,12 +49,11 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         });
         return;
       }
-      // Handle mentor click
       navigate(`/mentor/${result.id}`);
     } else if (result.type === 'major') {
       setSelectedMajor(result);
     } else if (result.type === 'career') {
-      setSelectedCareerId(result.id);
+      setIsCareerDialogOpen(true);
     }
   };
 
@@ -190,11 +189,11 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         />
       )}
 
-      {selectedCareerId && (
+      {result.type === 'career' && (
         <CareerDetailsDialog
-          careerId={selectedCareerId}
-          open={!!selectedCareerId}
-          onOpenChange={(open) => !open && setSelectedCareerId(null)}
+          careerId={result.id}
+          open={isCareerDialogOpen}
+          onOpenChange={setIsCareerDialogOpen}
         />
       )}
     </>
