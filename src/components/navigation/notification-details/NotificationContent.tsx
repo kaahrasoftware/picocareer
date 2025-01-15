@@ -4,6 +4,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { MentorSession } from "@/types/calendar";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { MajorDetails } from "@/components/MajorDetails";
+import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
 
 interface NotificationContentProps {
   message: string;
@@ -15,6 +18,7 @@ interface NotificationContentProps {
 export function NotificationContent({ message, isExpanded, type, action_url }: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -75,7 +79,53 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
 
   // Get first sentence for collapsed view
   const firstSentence = message.split(/[.!?]/)[0];
-  
+
+  const handleActionClick = () => {
+    if (!action_url) return;
+    
+    // Extract the ID from the action URL
+    const id = action_url.split('/').pop();
+    if (!id) return;
+    
+    setDialogOpen(true);
+  };
+
+  const renderDialog = () => {
+    if (!action_url || !dialogOpen) return null;
+    
+    const id = action_url.split('/').pop();
+    if (!id) return null;
+
+    switch (type) {
+      case "major_update":
+        return (
+          <MajorDetails
+            major={{ id }}
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+          />
+        );
+      case "career_update":
+        return (
+          <CareerDetailsDialog
+            careerId={id}
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+          />
+        );
+      case "blog_update":
+        return (
+          <BlogPostDialog
+            blog={{ id }}
+            isOpen={dialogOpen}
+            onClose={() => setDialogOpen(false)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   const renderActionButton = () => {
     if (!action_url) return null;
 
@@ -89,7 +139,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         variant="outline"
         size="sm"
         className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={() => window.location.href = action_url}
+        onClick={handleActionClick}
       >
         {buttonText}
         <ExternalLink className="w-4 h-4 ml-2" />
@@ -118,6 +168,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       <div className="space-y-2 mt-3 text-sm text-zinc-400">
         <p>{message}</p>
         {renderActionButton()}
+        {renderDialog()}
       </div>
     );
   }
@@ -147,6 +198,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
       )}
       {renderActionButton()}
+      {renderDialog()}
     </div>
   );
 }
