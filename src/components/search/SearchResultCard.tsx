@@ -1,11 +1,10 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { MajorDetails } from "@/components/MajorDetails";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -120,6 +119,16 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 </Badge>
               )}
             </div>
+            <Button 
+              variant="outline" 
+              className="mt-4 w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCareerDialogOpen(true);
+              }}
+            >
+              View Details
+            </Button>
           </>
         );
       case 'major':
