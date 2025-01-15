@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { format } from "date-fns";
+import { areIntervalsOverlapping } from "date-fns";
 
 interface TimeSlotFormProps {
-  selectedDate: Date | undefined;
+  selectedDate: Date;
   profileId: string;
   onSuccess: () => void;
 }
@@ -21,30 +22,35 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
   const { getSetting } = useUserSettings(profileId);
   const userTimezone = getSetting('timezone');
 
-  useEffect(() => {
-    if (!userTimezone) {
-      toast({
-        title: "Timezone not set",
-        description: "Please set your timezone in settings before setting availability",
-        variant: "destructive",
-      });
-    }
-  }, [userTimezone, toast]);
-
   const checkForOverlap = async (startDateTime: Date, endDateTime: Date) => {
-    const { data: existingSlots } = await supabase
+    const startOfDay = new Date(selectedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(selectedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Get existing availability slots for the day
+    const { data: existingSlots, error } = await supabase
       .from('mentor_availability')
-      .select('start_date_time, end_date_time')
+      .select('*')
       .eq('profile_id', profileId)
-      .eq('is_available', true);
+      .eq('is_available', true)
+      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
 
-    if (!existingSlots) return false;
+    if (error) {
+      console.error('Error checking availability:', error);
+      return true;
+    }
 
-    return existingSlots.some(slot => {
+    return existingSlots?.some(slot => {
       const slotStart = new Date(slot.start_date_time);
       const slotEnd = new Date(slot.end_date_time);
-      return (startDateTime < slotEnd && endDateTime > slotStart);
-    });
+      
+      return areIntervalsOverlapping(
+        { start: startDateTime, end: endDateTime },
+        { start: slotStart, end: slotEnd }
+      );
+    }) || false;
   };
 
   const handleSaveAvailability = async () => {
@@ -68,7 +74,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
 
     setIsSubmitting(true);
     try {
-      // Create date objects in the mentor's timezone
       const startDateTime = new Date(selectedDate);
       const [startHours, startMinutes] = selectedStartTime.split(':').map(Number);
       startDateTime.setHours(startHours, startMinutes, 0, 0);
@@ -77,6 +82,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
+      // Check for overlapping slots
       const hasOverlap = await checkForOverlap(startDateTime, endDateTime);
 
       if (hasOverlap) {
@@ -90,8 +96,6 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       }
 
       const dayOfWeek = selectedDate.getDay();
-      
-      // Calculate timezone offset in minutes
       const timezoneOffset = new Date().getTimezoneOffset();
 
       const { error } = await supabase
