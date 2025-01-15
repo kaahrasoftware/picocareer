@@ -60,7 +60,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
   const { data: careerData } = useQuery({
     queryKey: ['career', contentId],
     queryFn: async () => {
-      if (!contentId || type !== 'career_update') return null;
+      if (!contentId || !type?.includes('career')) return null;
       
       const { data, error } = await supabase
         .from('careers')
@@ -80,7 +80,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       
       return data as CareerWithMajors;
     },
-    enabled: !!contentId && type === 'career_update' && dialogOpen,
+    enabled: !!contentId && type?.includes('career') && dialogOpen,
   });
 
   // Fetch blog data if needed
@@ -146,6 +146,22 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     fetchSessionData();
   }, [isExpanded, message]);
 
+  const renderActionButton = () => {
+    if (!action_url) return null;
+
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+        onClick={() => setDialogOpen(true)}
+      >
+        View Detail
+        <ExternalLink className="w-4 h-4 ml-2" />
+      </Button>
+    );
+  };
+
   if (!isExpanded) {
     return (
       <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
@@ -154,71 +170,32 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     );
   }
 
-  const handleActionClick = () => {
-    if (!action_url || !contentId) return;
-    setDialogOpen(true);
-  };
-
-  const renderDialog = () => {
-    if (!action_url || !dialogOpen || !contentId) return null;
-
-    switch (type) {
-      case "major_update":
-        if (!majorData) return null;
-        return (
-          <MajorDetails
-            major={majorData}
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-          />
-        );
-      case "career_update":
-        if (!careerData) return null;
-        return (
-          <CareerDetailsDialog
-            careerId={contentId}
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-          />
-        );
-      case "blog_update":
-        if (!blogData) return null;
-        return (
-          <BlogPostDialog
-            blog={blogData}
-            isOpen={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const renderActionButton = () => {
-    if (!action_url) return null;
-
-    let buttonText = "View Detail";
-
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={handleActionClick}
-      >
-        {buttonText}
-        <ExternalLink className="w-4 h-4 ml-2" />
-      </Button>
-    );
-  };
-
   if (!sessionData) {
     return (
       <div className="space-y-2 mt-3 text-sm text-zinc-400">
         <p>{message}</p>
         {renderActionButton()}
-        {renderDialog()}
+        {dialogOpen && type === 'major_update' && majorData && (
+          <MajorDetails
+            major={majorData}
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+          />
+        )}
+        {dialogOpen && type?.includes('career') && careerData && (
+          <CareerDetailsDialog
+            careerId={contentId!}
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+          />
+        )}
+        {dialogOpen && type === 'blog_update' && blogData && (
+          <BlogPostDialog
+            blog={blogData}
+            isOpen={dialogOpen}
+            onClose={() => setDialogOpen(false)}
+          />
+        )}
       </div>
     );
   }
@@ -248,7 +225,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
       )}
       {renderActionButton()}
-      {renderDialog()}
     </div>
   );
 }
