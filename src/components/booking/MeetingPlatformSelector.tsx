@@ -32,11 +32,7 @@ export function MeetingPlatformSelector({
           <SelectValue placeholder="Select meeting platform" />
         </SelectTrigger>
         <SelectContent>
-          {availablePlatforms.map((platform) => (
-            <SelectItem key={platform} value={platform}>
-              {platform}
-            </SelectItem>
-          ))}
+          <SelectItem value="Google Meet">Google Meet</SelectItem>
         </SelectContent>
       </Select>
     </div>
