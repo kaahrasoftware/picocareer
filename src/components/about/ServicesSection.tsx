@@ -5,8 +5,8 @@ export default function ServicesSection() {
   const services = [
     {
       icon: GraduationCap,
-      title: "Career Exploration",
-      description: "Discover diverse career paths and opportunities through our comprehensive database of professions, complete with detailed insights and requirements."
+      title: "Academic Guidance",
+      description: "Navigate your educational journey with expert advice on majors, courses, and academic pathways aligned with your career goals."
     },
     {
       icon: Users2,
@@ -15,8 +15,8 @@ export default function ServicesSection() {
     },
     {
       icon: Briefcase,
-      title: "Academic Guidance",
-      description: "Navigate your educational journey with expert advice on majors, courses, and academic pathways aligned with your career goals."
+      title: "Career Exploration",
+      description: "Discover diverse career paths and opportunities through our comprehensive database of professions, complete with detailed insights and requirements."
     }
   ];
 
