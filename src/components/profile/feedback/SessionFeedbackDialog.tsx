@@ -120,7 +120,7 @@ export function SessionFeedbackDialog({
           <div className="space-y-2">
             <Label>Additional Notes</Label>
             <Textarea
-              placeholder="Share your thoughts about the session..."
+              placeholder="Share your thoughts about the session... If the mentor/mentee did not show up or was late, please mention it here."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="min-h-[100px]"
