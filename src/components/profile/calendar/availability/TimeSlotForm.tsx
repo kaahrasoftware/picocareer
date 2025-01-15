@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { format } from "date-fns";
+import { format, areIntervalsOverlapping } from "date-fns";
 
 interface TimeSlotFormProps {
   selectedDate: Date;
@@ -21,6 +21,53 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
   const { toast } = useToast();
   const { getSetting } = useUserSettings(profileId);
   const userTimezone = getSetting('timezone');
+
+  const checkExistingAvailability = async (startDateTime: Date, endDateTime: Date) => {
+    const startOfDay = new Date(selectedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(selectedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Get existing availability slots for the day, including recurring slots
+    const { data: existingSlots, error } = await supabase
+      .from('mentor_availability')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('is_available', true)
+      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+
+    if (error) {
+      console.error('Error checking availability:', error);
+      return true;
+    }
+
+    // Check for overlaps with existing slots
+    return existingSlots?.some(slot => {
+      let slotStart: Date;
+      let slotEnd: Date;
+
+      if (slot.recurring) {
+        // For recurring slots, use the time portion from start/end times but the date from selectedDate
+        const recurringStart = new Date(slot.start_date_time);
+        const recurringEnd = new Date(slot.end_date_time);
+        
+        slotStart = new Date(selectedDate);
+        slotStart.setHours(recurringStart.getHours(), recurringStart.getMinutes(), 0, 0);
+        
+        slotEnd = new Date(selectedDate);
+        slotEnd.setHours(recurringEnd.getHours(), recurringEnd.getMinutes(), 0, 0);
+      } else {
+        slotStart = new Date(slot.start_date_time);
+        slotEnd = new Date(slot.end_date_time);
+      }
+
+      return areIntervalsOverlapping(
+        { start: startDateTime, end: endDateTime },
+        { start: slotStart, end: slotEnd }
+      );
+    }) || false;
+  };
 
   const handleSaveAvailability = async () => {
     if (!selectedDate || !selectedStartTime || !selectedEndTime) {
@@ -51,9 +98,19 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
+      // Check for existing overlapping availability
+      const hasConflict = await checkExistingAvailability(startDateTime, endDateTime);
+      if (hasConflict) {
+        toast({
+          title: "Availability Conflict",
+          description: "There is already existing availability during this time period. Please choose a different time.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const dayOfWeek = selectedDate.getDay();
-      
-      // Calculate timezone offset in minutes
       const timezoneOffset = new Date().getTimezoneOffset();
 
       const { error } = await supabase
@@ -114,6 +171,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
         selectedEndTime={selectedEndTime}
         isRecurring={isRecurring}
         userTimezone={userTimezone || 'Not set'}
+        selectedDate={selectedDate}
         onStartTimeSelect={setSelectedStartTime}
         onEndTimeSelect={setSelectedEndTime}
         onRecurringChange={setIsRecurring}
