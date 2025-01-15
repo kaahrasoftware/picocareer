@@ -181,19 +181,19 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
         {renderContent()}
       </Card>
 
-      {result.type === 'major' && (
-        <MajorDetails
-          major={result}
-          open={isMajorDialogOpen}
-          onOpenChange={setIsMajorDialogOpen}
-        />
-      )}
-
       {result.type === 'career' && (
         <CareerDetailsDialog
           careerId={result.id}
           open={isCareerDialogOpen}
           onOpenChange={setIsCareerDialogOpen}
+        />
+      )}
+
+      {result.type === 'major' && (
+        <MajorDetails
+          major={result}
+          open={isMajorDialogOpen}
+          onOpenChange={setIsMajorDialogOpen}
         />
       )}
     </>
