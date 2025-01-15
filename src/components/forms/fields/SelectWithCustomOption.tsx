@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Database } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -55,6 +56,32 @@ export function SelectWithCustomOption({
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+
+  // Fetch all approved options for the given table
+  const { data: allOptions } = useQuery({
+    queryKey: [tableName, 'approved'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('id, name, title')
+        .eq('status', 'Approved')
+        .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: options.length === 0 // Only fetch if no options were provided
+  });
+
+  // Combine provided options with fetched options, removing duplicates
+  const combinedOptions = [...options];
+  if (allOptions) {
+    allOptions.forEach(option => {
+      if (!combinedOptions.some(existing => existing.id === option.id)) {
+        combinedOptions.push(option);
+      }
+    });
+  }
 
   const handleCustomSubmit = async () => {
     if (!customValue.trim()) {
@@ -125,7 +152,7 @@ export function SelectWithCustomOption({
     }
   };
 
-  const filteredOptions = options.filter(option => {
+  const filteredOptions = combinedOptions.filter(option => {
     const searchTerm = searchQuery.toLowerCase();
     const optionText = (option.title || option.name || '').toLowerCase();
     return optionText.includes(searchTerm);
