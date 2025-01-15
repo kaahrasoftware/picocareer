@@ -4,8 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { format } from "date-fns";
-import { areIntervalsOverlapping } from "date-fns";
+import { format, areIntervalsOverlapping } from "date-fns";
 
 interface TimeSlotFormProps {
   selectedDate: Date;
@@ -29,7 +28,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get existing availability slots for the day
+    // Get existing availability slots for the day, including recurring slots
     const { data: existingSlots, error } = await supabase
       .from('mentor_availability')
       .select('*')
@@ -42,10 +41,26 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       return true;
     }
 
+    // Check for overlaps with existing slots
     return existingSlots?.some(slot => {
-      const slotStart = new Date(slot.start_date_time);
-      const slotEnd = new Date(slot.end_date_time);
-      
+      let slotStart: Date;
+      let slotEnd: Date;
+
+      if (slot.recurring) {
+        // For recurring slots, use the time portion from start/end times but the date from selectedDate
+        const recurringStart = new Date(slot.start_date_time);
+        const recurringEnd = new Date(slot.end_date_time);
+        
+        slotStart = new Date(selectedDate);
+        slotStart.setHours(recurringStart.getHours(), recurringStart.getMinutes(), 0, 0);
+        
+        slotEnd = new Date(selectedDate);
+        slotEnd.setHours(recurringEnd.getHours(), recurringEnd.getMinutes(), 0, 0);
+      } else {
+        slotStart = new Date(slot.start_date_time);
+        slotEnd = new Date(slot.end_date_time);
+      }
+
       return areIntervalsOverlapping(
         { start: startDateTime, end: endDateTime },
         { start: slotStart, end: slotEnd }
@@ -123,7 +138,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       setSelectedEndTime(undefined);
       setIsRecurring(false);
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error setting availability:', error);
       toast({
         title: "Error",
