@@ -5,6 +5,7 @@ import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
 import type { Major } from "@/types/database/majors";
 import type { BlogWithAuthor } from "@/types/blog/types";
 import type { Tables } from "@/integrations/supabase/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type CareerWithMajors = Tables<"careers"> & {
   career_major_relations: {
@@ -34,23 +35,25 @@ export function NotificationDialogs({
   careerData,
   blogData
 }: NotificationDialogsProps) {
+  if (!dialogOpen) return null;
+
   return (
     <>
-      {dialogOpen && type === 'major_update' && majorData && (
+      {type === 'major_update' && majorData && (
         <MajorDetails
           major={majorData}
           open={dialogOpen}
           onOpenChange={setDialogOpen}
         />
       )}
-      {dialogOpen && type === 'career_update' && (
+      {type === 'career_update' && (
         <CareerDetailsDialog
           careerId={contentId}
           open={dialogOpen}
           onOpenChange={setDialogOpen}
         />
       )}
-      {dialogOpen && type === 'blog_update' && blogData && (
+      {type === 'blog_update' && blogData && (
         <BlogPostDialog
           blog={blogData}
           isOpen={dialogOpen}

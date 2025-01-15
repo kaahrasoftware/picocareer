@@ -6,6 +6,7 @@ import { useNotificationData } from "./hooks/useNotificationData";
 import { NotificationDialogs } from "./NotificationDialogs";
 import { SessionNotificationContent } from "./SessionNotificationContent";
 import type { MentorSession } from "@/types/calendar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NotificationContentProps {
   message: string;
@@ -22,6 +23,7 @@ export function NotificationContent({
 }: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
@@ -32,32 +34,39 @@ export function NotificationContent({
   useEffect(() => {
     const fetchSessionData = async () => {
       if (!isExpanded) return;
+      setIsLoading(true);
       
-      const meetingLinkMatch = message.match(/href="([^"]+)"/);
-      if (meetingLinkMatch) {
-        const { data, error } = await supabase
-          .from('mentor_sessions')
-          .select(`
-            id,
-            scheduled_at,
-            notes,
-            meeting_platform,
-            meeting_link,
-            session_type:mentor_session_types(type, duration),
-            mentor:profiles!mentor_sessions_mentor_id_fkey(full_name),
-            mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
-          `)
-          .eq('meeting_link', meetingLinkMatch[1])
-          .maybeSingle();
+      try {
+        const meetingLinkMatch = message.match(/href="([^"]+)"/);
+        if (meetingLinkMatch) {
+          const { data, error } = await supabase
+            .from('mentor_sessions')
+            .select(`
+              id,
+              scheduled_at,
+              notes,
+              meeting_platform,
+              meeting_link,
+              session_type:mentor_session_types(type, duration),
+              mentor:profiles!mentor_sessions_mentor_id_fkey(full_name),
+              mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
+            `)
+            .eq('meeting_link', meetingLinkMatch[1])
+            .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching session data:', error);
-          throw error;
-        }
+          if (error) {
+            console.error('Error fetching session data:', error);
+            throw error;
+          }
 
-        if (data) {
-          setSessionData(data as MentorSession);
+          if (data) {
+            setSessionData(data as MentorSession);
+          }
         }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -85,6 +94,16 @@ export function NotificationContent({
       <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
         {message.split(/[.!?]/)[0]}
       </p>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2 mt-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
     );
   }
 
