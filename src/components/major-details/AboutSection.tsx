@@ -8,6 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useNavigate } from "react-router-dom";
 
 interface AboutSectionProps {
   description: string;
@@ -24,6 +27,9 @@ export function AboutSection({
 }: AboutSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { session } = useAuthSession();
+  const navigate = useNavigate();
   const MENTORS_PER_PAGE = 6;
 
   const { data: totalCount } = useQuery({
@@ -68,6 +74,27 @@ export function AboutSection({
     enabled: !!majorId,
   });
 
+  const handleMentorClick = (mentorId: string) => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to view mentor profiles and connect with them!",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
+        action: (
+          <button
+            onClick={() => navigate("/auth")}
+            className="bg-green-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-colors"
+          >
+            Login
+          </button>
+        ),
+      });
+      return;
+    }
+    setSelectedMentorId(mentorId);
+  };
+
   const totalPages = Math.ceil((totalCount || 0) / MENTORS_PER_PAGE);
 
   return (
@@ -82,7 +109,7 @@ export function AboutSection({
                   <Card 
                     key={mentor.id}
                     className="flex flex-col items-center p-6 hover:bg-accent/50 transition-colors cursor-pointer w-[120px]"
-                    onClick={() => setSelectedMentorId(mentor.id)}
+                    onClick={() => handleMentorClick(mentor.id)}
                   >
                     <div className="relative w-16 h-16 group mb-3">
                       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-picocareer-primary to-picocareer-secondary" />

@@ -1552,6 +1552,10 @@ export type Database = {
         }
         Returns: unknown
       }
+      manually_update_majors_profiles_count: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       mark_past_sessions_completed: {
         Args: Record<PropertyKey, never>
         Returns: undefined
