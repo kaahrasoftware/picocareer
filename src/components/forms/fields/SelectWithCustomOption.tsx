@@ -24,27 +24,6 @@ interface SelectWithCustomOptionProps {
   tableName: 'majors' | 'schools' | 'companies' | 'careers';
 }
 
-type InsertData = {
-  majors: {
-    title: string;
-    description: string;
-    status: Status;
-  };
-  schools: {
-    name: string;
-    status: Status;
-  };
-  companies: {
-    name: string;
-    status: Status;
-  };
-  careers: {
-    title: string;
-    description: string;
-    status: Status;
-  };
-}
-
 export function SelectWithCustomOption({
   value = "",
   onValueChange,
@@ -71,7 +50,7 @@ export function SelectWithCustomOption({
         console.log(`Fetching page starting at ${start}`);
         let query = supabase
           .from(tableName)
-          .select('id, name, title');
+          .select('id, name, title', { count: 'exact' });
 
         // Add range for pagination
         query = query.range(start, start + pageSize - 1);
@@ -96,6 +75,7 @@ export function SelectWithCustomOption({
         }
 
         console.log(`Raw response data for page ${start / pageSize + 1}:`, data);
+        console.log(`Total count from database: ${count}`);
         
         if (!data || data.length === 0) {
           console.log('No more data to fetch');
@@ -114,6 +94,12 @@ export function SelectWithCustomOption({
           start += pageSize;
           console.log(`Moving to next page, start: ${start}`);
         }
+
+        // Additional check against total count
+        if (count && allData.length >= count) {
+          console.log(`Fetched all records (${allData.length} of ${count})`);
+          hasMore = false;
+        }
       }
       
       console.log(`Total ${tableName} fetched:`, allData.length);
@@ -123,16 +109,6 @@ export function SelectWithCustomOption({
     },
     enabled: true
   });
-
-  // Combine provided options with fetched options, removing duplicates
-  const combinedOptions = [...options];
-  if (allOptions) {
-    allOptions.forEach(option => {
-      if (!combinedOptions.some(existing => existing.id === option.id)) {
-        combinedOptions.push(option);
-      }
-    });
-  }
 
   const handleCustomSubmit = async () => {
     if (!customValue.trim()) {
@@ -145,10 +121,10 @@ export function SelectWithCustomOption({
     }
 
     try {
-      // First check if entry already exists
+      // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
         .from(tableName)
-        .select(tableName === 'majors' || tableName === 'careers' ? 'id, title' : 'id, name')
+        .select(`id, ${tableName === 'majors' || tableName === 'careers' ? 'title' : 'name'}`)
         .eq(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name', customValue)
         .maybeSingle();
 
@@ -161,21 +137,10 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // If it doesn't exist, create new entry
-      let insertData: InsertData[typeof tableName];
-
-      if (tableName === 'majors' || tableName === 'careers') {
-        insertData = {
-          title: customValue,
-          description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`,
-          status: 'Pending'
-        };
-      } else {
-        insertData = {
-          name: customValue,
-          status: 'Pending'
-        };
-      }
+      // Create new entry
+      const insertData = tableName === 'majors' || tableName === 'careers' 
+        ? { title: customValue, description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, status: 'Pending' }
+        : { name: customValue, status: 'Pending' };
 
       const { data, error } = await supabase
         .from(tableName)
@@ -202,6 +167,16 @@ export function SelectWithCustomOption({
       });
     }
   };
+
+  // Combine provided options with fetched options, removing duplicates
+  const combinedOptions = [...options];
+  if (allOptions) {
+    allOptions.forEach(option => {
+      if (!combinedOptions.some(existing => existing.id === option.id)) {
+        combinedOptions.push(option);
+      }
+    });
+  }
 
   if (showCustomInput) {
     return (
