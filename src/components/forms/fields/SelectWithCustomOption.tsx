@@ -57,14 +57,13 @@ export function SelectWithCustomOption({
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  // Fetch all approved options for the given table
+  // Fetch all options for the given table, without status filter
   const { data: allOptions } = useQuery({
-    queryKey: [tableName, 'approved'],
+    queryKey: [tableName, 'all'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from(tableName)
         .select('id, name, title')
-        .eq('status', 'Approved')
         .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
       
       if (error) throw error;
