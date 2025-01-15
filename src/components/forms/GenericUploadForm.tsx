@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -13,23 +14,21 @@ interface GenericUploadFormProps {
 }
 
 export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit" }: GenericUploadFormProps) {
-  // Move all hooks to the top level
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
+  
+  // Initialize form with default values
+  const defaultValues = fields.reduce((acc, field) => ({
+    ...acc,
+    [field.name]: field.defaultValue || ""
+  }), {});
 
-  const handleFieldChange = (fieldName: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-  };
+  const form = useForm({
+    defaultValues
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (data: any) => {
     if (!session?.user?.id || !profile?.id) {
       toast({
         title: "Authentication Required",
@@ -40,19 +39,17 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
     }
 
     try {
-      setIsSubmitting(true);
-      
       // Add author_id to form data
       const dataWithAuthor = {
-        ...formData,
+        ...data,
         author_id: profile.id,
         status: 'Pending'
       };
 
       await onSubmit(dataWithAuthor);
 
-      // Clear form after successful submission
-      setFormData({});
+      // Reset form after successful submission
+      form.reset(defaultValues);
 
       toast({
         title: "Success",
@@ -79,28 +76,32 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {fields.map((field) => (
-        <FormField
-          key={field.name}
-          field={field}
-          value={formData[field.name] || ""}
-          onChange={(value) => handleFieldChange(field.name, value)}
-        />
-      ))}
-      <Button 
-        type="submit" 
-        disabled={isSubmitting}
-        className="w-full"
-      >
-        {isSubmitting ? "Submitting..." : submitButtonText}
-      </Button>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {fields.map((field) => (
+          <FormField
+            key={field.name}
+            control={form.control}
+            name={field.name}
+            label={field.label}
+            type={field.type}
+            placeholder={field.placeholder}
+            description={field.description}
+            required={field.required}
+          />
+        ))}
+        <Button 
+          type="submit" 
+          disabled={form.formState.isSubmitting}
+          className="w-full"
+        >
+          {form.formState.isSubmitting ? "Submitting..." : submitButtonText}
+        </Button>
+      </form>
+    </Form>
   );
 }
