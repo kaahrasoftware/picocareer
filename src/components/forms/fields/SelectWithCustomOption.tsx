@@ -9,9 +9,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Database } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 
 type Status = Database["public"]["Enums"]["status"];
@@ -57,16 +57,21 @@ export function SelectWithCustomOption({
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  // Fetch all options for the given table, without status filter
+  // Fetch all options for the given table
   const { data: allOptions } = useQuery({
     queryKey: [tableName, 'all'],
     queryFn: async () => {
+      console.log(`Fetching all ${tableName}...`);
       const { data, error } = await supabase
         .from(tableName)
         .select('id, name, title')
         .order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
       
-      if (error) throw error;
+      if (error) {
+        console.error(`Error fetching ${tableName}:`, error);
+        throw error;
+      }
+      console.log(`Fetched ${tableName} data:`, data);
       return data || [];
     },
     enabled: options.length === 0 // Only fetch if no options were provided
