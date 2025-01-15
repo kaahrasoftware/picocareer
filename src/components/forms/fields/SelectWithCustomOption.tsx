@@ -189,6 +189,11 @@ export function SelectWithCustomOption({
     );
   }
 
+  // Only render the Select component if there are options or a value
+  if (!combinedOptions.length && !value) {
+    return null;
+  }
+
   return (
     <Select
       value={value}
