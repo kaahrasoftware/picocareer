@@ -28,6 +28,7 @@ import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
+import React from 'react';
 
 // Create a client with specific configuration
 const queryClient = new QueryClient({
@@ -35,6 +36,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false, // Disable automatic refetching
     },
   },
 });
@@ -106,7 +108,6 @@ const router = createBrowserRouter([
     errorElement: <Error />,
   },
   {
-    // Update the email confirmation route to match Supabase's redirect
     path: "/auth/confirm",
     element: <EmailConfirmation />,
     errorElement: <Error />,
@@ -178,19 +179,24 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  // Memoize the QueryClient instance
+  const [queryClientInstance] = React.useState(() => queryClient);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <RouterProvider router={router} />
-        <Toaster />
-        <Sonner />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClientInstance}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <RouterProvider router={router} />
+          <Toaster />
+          <Sonner />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 
