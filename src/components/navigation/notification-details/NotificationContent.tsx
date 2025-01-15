@@ -60,7 +60,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
   const { data: careerData } = useQuery({
     queryKey: ['career', contentId],
     queryFn: async () => {
-      if (!contentId || !type?.includes('career')) return null;
+      if (!contentId || type !== 'career_update') return null;
       
       const { data, error } = await supabase
         .from('careers')
@@ -80,7 +80,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       
       return data as CareerWithMajors;
     },
-    enabled: !!contentId && type?.includes('career') && dialogOpen,
+    enabled: !!contentId && type === 'career_update' && dialogOpen,
   });
 
   // Fetch blog data if needed
@@ -182,7 +182,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
             onOpenChange={setDialogOpen}
           />
         )}
-        {dialogOpen && type?.includes('career') && careerData && (
+        {dialogOpen && type === 'career_update' && careerData && (
           <CareerDetailsDialog
             careerId={contentId!}
             open={dialogOpen}
