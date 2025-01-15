@@ -3,6 +3,8 @@ import { Form } from "@/components/ui/form";
 import { FormField } from "./FormField";
 import { FormFieldProps } from "./FormField";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GenericUploadFormProps {
   fields: (FormFieldProps & { defaultValue?: any })[];
@@ -18,6 +20,8 @@ export function GenericUploadForm({
   isSubmitting = false 
 }: GenericUploadFormProps) {
   const { toast } = useToast();
+  const { session } = useAuthSession();
+  
   const defaultValues = fields.reduce((acc, field) => ({
     ...acc,
     [field.name]: field.defaultValue || ""
@@ -27,8 +31,29 @@ export function GenericUploadForm({
 
   const handleSubmit = async (data: any) => {
     try {
-      console.log('Submitting form data:', data);
-      await onSubmit(data);
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get the profile id for the current user
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        throw new Error('Could not find user profile');
+      }
+
+      // Add author_id to the form data
+      const formDataWithAuthor = {
+        ...data,
+        author_id: profile.id
+      };
+
+      console.log('Submitting form data with author:', formDataWithAuthor);
+      await onSubmit(formDataWithAuthor);
       
       // Reset form after successful submission
       form.reset(defaultValues);
@@ -41,7 +66,7 @@ export function GenericUploadForm({
       console.error('Form submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to save changes. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save changes. Please try again.",
         variant: "destructive",
       });
     }
