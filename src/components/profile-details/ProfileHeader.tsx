@@ -56,7 +56,7 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
       <div className="flex-shrink-0">
         <ProfileAvatar 
           avatarUrl={profile.avatar_url}
-          userId={profile.id}
+          profileId={profile.id}
           size="md"
           editable={isOwnProfile}
         />

@@ -9,19 +9,21 @@ interface ProfileAvatarProps {
   size?: "sm" | "md" | "lg";
   editable?: boolean;
   onAvatarUpdate?: (url: string) => void;
+  profileId: string; // Add profileId as a required prop
 }
 
 export function ProfileAvatar({ 
   avatarUrl, 
   size = "md", 
   editable = false,
-  onAvatarUpdate 
+  onAvatarUpdate,
+  profileId
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   const sizeClasses = {
-    sm: "h-10 w-10",
+    sm: "h-8 w-8",
     md: "h-16 w-16",
     lg: "h-24 w-24"
   };
@@ -34,9 +36,13 @@ export function ProfileAvatar({
         throw new Error('You must select an image to upload.');
       }
 
+      if (!profileId) {
+        throw new Error('Profile ID is required for avatar upload.');
+      }
+
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${profileId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -53,11 +59,10 @@ export function ProfileAvatar({
         .from('avatars')
         .getPublicUrl(fileName);
 
-      // Update the profile with the new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('id', profileId);
 
       if (updateError) {
         throw updateError;
@@ -84,22 +89,14 @@ export function ProfileAvatar({
 
   return (
     <div className="relative group">
-      <Avatar className={`${sizeClasses[size]} border-2 border-primary`}>
+      <Avatar className={`${sizeClasses[size]} border-4 border-yellow-400`}>
         <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
         <AvatarFallback>
-          {avatarUrl ? "Loading..." : "No Image"}
+          {avatarUrl ? "Loading..." : "?"}
         </AvatarFallback>
       </Avatar>
-      
       {editable && (
-        <label 
-          className={`
-            absolute inset-0 flex items-center justify-center 
-            bg-black/50 opacity-0 group-hover:opacity-100 
-            rounded-full cursor-pointer transition-opacity
-            ${uploading ? 'pointer-events-none' : ''}
-          `}
-        >
+        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
           <input
             type="file"
             accept="image/*"
@@ -107,12 +104,13 @@ export function ProfileAvatar({
             onChange={handleUpload}
             disabled={uploading}
           />
-          {uploading ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Camera className="w-5 h-5 text-white" />
-          )}
+          <Camera className="w-6 h-6 text-white" />
         </label>
+      )}
+      {uploading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
       )}
     </div>
   );
