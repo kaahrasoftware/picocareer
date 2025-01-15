@@ -37,6 +37,9 @@ export function EventSlot({
   const height = (duration / 30) * cellHeight;
 
   const getEventColor = () => {
+    if (event.status === 'cancelled') {
+      return "bg-[#ea384c] hover:bg-[#ea384c]/90 border-[#ea384c] text-white";
+    }
     if (event.event_type === "session") {
       return "bg-blue-500 hover:bg-blue-600 border-blue-600 text-white";
     }
