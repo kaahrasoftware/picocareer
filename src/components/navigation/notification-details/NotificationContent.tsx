@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import type { MentorSession } from "@/types/calendar";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import type { MentorSession } from "@/types/calendar";
+import { useToast } from "@/hooks/use-toast";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { MajorDetails } from "@/components/MajorDetails";
 import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
 import { useQuery } from "@tanstack/react-query";
 import type { Major } from "@/types/database/majors";
 import type { BlogWithAuthor } from "@/types/blog/types";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface NotificationContentProps {
   message: string;
@@ -18,9 +19,17 @@ interface NotificationContentProps {
   action_url?: string;
 }
 
+type CareerWithMajors = Tables<"careers"> & {
+  career_major_relations: {
+    major: {
+      title: string;
+      id: string;
+    };
+  }[];
+};
+
 export function NotificationContent({ message, isExpanded, type, action_url }: NotificationContentProps) {
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
@@ -42,6 +51,28 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       return data as Major;
     },
     enabled: !!contentId && type === 'major_update' && dialogOpen,
+  });
+
+  // Fetch career data if needed
+  const { data: careerData } = useQuery({
+    queryKey: ['career', contentId],
+    queryFn: async () => {
+      if (!contentId || type !== 'career_update') return null;
+      const { data, error } = await supabase
+        .from('careers')
+        .select(`
+          *,
+          career_major_relations(
+            major:majors(id, title)
+          )
+        `)
+        .eq('id', contentId)
+        .single();
+      
+      if (error) throw error;
+      return data as CareerWithMajors;
+    },
+    enabled: !!contentId && type === 'career_update' && dialogOpen,
   });
 
   // Fetch blog data if needed
@@ -71,60 +102,44 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     const fetchSessionData = async () => {
       if (!isExpanded) return;
       
-      setIsLoading(true);
-      try {
-        // Try to extract meeting link first
-        const meetingLinkMatch = message.match(/href="([^"]+)"/);
-        if (meetingLinkMatch) {
-          console.log('Found meeting link:', meetingLinkMatch[1]);
-          
-          // Query sessions with this meeting link
-          const { data, error } = await supabase
-            .from('mentor_sessions')
-            .select(`
-              id,
-              scheduled_at,
-              notes,
-              meeting_platform,
-              meeting_link,
-              session_type:mentor_session_types(type, duration),
-              mentor:profiles!mentor_sessions_mentor_id_fkey(full_name),
-              mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
-            `)
-            .eq('meeting_link', meetingLinkMatch[1])
-            .maybeSingle();
+      const meetingLinkMatch = message.match(/href="([^"]+)"/);
+      if (meetingLinkMatch) {
+        const { data, error } = await supabase
+          .from('mentor_sessions')
+          .select(`
+            id,
+            scheduled_at,
+            notes,
+            meeting_platform,
+            meeting_link,
+            session_type:mentor_session_types(type, duration),
+            mentor:profiles!mentor_sessions_mentor_id_fkey(full_name),
+            mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
+          `)
+          .eq('meeting_link', meetingLinkMatch[1])
+          .maybeSingle();
 
-          if (error) {
-            console.error('Error fetching session data:', error);
-            throw error;
-          }
-
-          if (data) {
-            console.log('Session data fetched successfully:', data);
-            setSessionData(data as MentorSession);
-          } else {
-            console.log('No session data found for meeting link');
-          }
-        } else {
-          console.log('No meeting link found in message');
+        if (error) {
+          console.error('Error fetching session data:', error);
+          throw error;
         }
-      } catch (error) {
-        console.error('Error in fetchSessionData:', error);
-        toast({
-          title: "Error loading session details",
-          description: "Please try again later",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+
+        if (data) {
+          setSessionData(data as MentorSession);
+        }
       }
     };
 
     fetchSessionData();
   }, [isExpanded, message, toast]);
 
-  // Get first sentence for collapsed view
-  const firstSentence = message.split(/[.!?]/)[0];
+  if (!isExpanded) {
+    return (
+      <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
+        {message.split(/[.!?]/)[0]}
+      </p>
+    );
+  }
 
   const handleActionClick = () => {
     if (!action_url || !contentId) return;
@@ -145,6 +160,7 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
           />
         );
       case "career_update":
+        if (!careerData) return null;
         return (
           <CareerDetailsDialog
             careerId={contentId}
@@ -186,22 +202,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
       </Button>
     );
   };
-
-  if (!isExpanded) {
-    return (
-      <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
-        {firstSentence}
-      </p>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2 mt-3 text-sm text-zinc-400">
-        <p>Loading session details...</p>
-      </div>
-    );
-  }
 
   if (!sessionData) {
     return (
