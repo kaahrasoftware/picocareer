@@ -23,42 +23,27 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
   const navigate = useNavigate();
   const { session } = useAuthSession();
 
-  const handleClick = () => {
-    if (onClick) {
-      onClick(result);
+  const handleMentorClick = () => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Join our community to connect with amazing mentors and unlock your career potential!",
+        variant: "default",
+        className: "bg-green-50 border-green-200",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/auth")}
+            className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+          >
+            Login
+          </Button>
+        ),
+      });
       return;
     }
-
-    switch (result.type) {
-      case 'mentor':
-        if (!session) {
-          toast({
-            title: "Authentication Required",
-            description: "Join our community to connect with amazing mentors and unlock your career potential!",
-            variant: "default",
-            className: "bg-green-50 border-green-200",
-            action: (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate("/auth")}
-                className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
-              >
-                Login
-              </Button>
-            ),
-          });
-          return;
-        }
-        navigate(`/mentor/${result.id}`);
-        break;
-      case 'career':
-        setIsCareerDialogOpen(true);
-        break;
-      case 'major':
-        setIsMajorDialogOpen(true);
-        break;
-    }
+    navigate(`/mentor/${result.id}`);
   };
 
   const renderContent = () => {
@@ -103,6 +88,13 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 )}
               </div>
             )}
+            <Button 
+              variant="outline" 
+              className="mt-4 w-full"
+              onClick={handleMentorClick}
+            >
+              View Details
+            </Button>
           </>
         );
       case 'career':
@@ -164,6 +156,16 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 )}
               </div>
             )}
+            <Button 
+              variant="outline" 
+              className="mt-4 w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMajorDialogOpen(true);
+              }}
+            >
+              View Details
+            </Button>
           </>
         );
     }
@@ -172,8 +174,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
   return (
     <>
       <Card
-        className="flex flex-col p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white h-full"
-        onClick={handleClick}
+        className="flex flex-col p-4 bg-white h-full"
       >
         {renderContent()}
       </Card>
