@@ -4,20 +4,20 @@ import { Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface ProfileAvatarProps {
-  avatarUrl: string | null;
+export interface ProfileAvatarProps {
+  avatarUrl: string | null | undefined;
+  profileId?: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
   onAvatarUpdate?: (url: string) => void;
-  profileId: string;
 }
 
-export function ProfileAvatar({ 
-  avatarUrl, 
-  size = "md", 
+export function ProfileAvatar({
+  avatarUrl,
+  profileId,
+  size = "md",
   editable = false,
-  onAvatarUpdate,
-  profileId
+  onAvatarUpdate
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
@@ -43,14 +43,11 @@ export function ProfileAvatar({
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profileId}.${fileExt}`;
+      const filePath = `${profileId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { 
-          upsert: true,
-          contentType: file.type
-        });
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
         throw uploadError;
@@ -58,7 +55,7 @@ export function ProfileAvatar({
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -100,21 +97,27 @@ export function ProfileAvatar({
         </AvatarFallback>
       </Avatar>
       {editable && (
-        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-          <Camera className="w-6 h-6 text-white" />
-        </label>
-      )}
-      {uploading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        </div>
+        <>
+          <label
+            htmlFor="avatar-upload"
+            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity"
+          >
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+            <Camera className="h-5 w-5 text-white" />
+          </label>
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

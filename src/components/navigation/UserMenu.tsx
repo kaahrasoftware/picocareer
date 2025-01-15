@@ -32,15 +32,22 @@ export function UserMenu() {
     }
   };
 
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    // The profile will be automatically refreshed through the useUserProfile hook
+    // when the avatar is updated in the database
+    console.log("Avatar updated:", newAvatarUrl);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="outline-none">
           <ProfileAvatar
             avatarUrl={profile?.avatar_url}
-            fallback={profile?.full_name?.[0] || "U"}
+            profileId={profile?.id}
             size="sm"
             editable={false}
+            onAvatarUpdate={handleAvatarUpdate}
           />
         </button>
       </DropdownMenuTrigger>
