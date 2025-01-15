@@ -29,31 +29,35 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       return;
     }
 
-    if (result.type === 'mentor') {
-      if (!session) {
-        toast({
-          title: "Authentication Required",
-          description: "Join our community to connect with amazing mentors and unlock your career potential!",
-          variant: "default",
-          className: "bg-green-50 border-green-200",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => navigate("/auth")}
-              className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
-            >
-              Login
-            </Button>
-          ),
-        });
-        return;
-      }
-      navigate(`/mentor/${result.id}`);
-    } else if (result.type === 'major') {
-      setIsMajorDialogOpen(true);
-    } else if (result.type === 'career') {
-      setIsCareerDialogOpen(true);
+    switch (result.type) {
+      case 'mentor':
+        if (!session) {
+          toast({
+            title: "Authentication Required",
+            description: "Join our community to connect with amazing mentors and unlock your career potential!",
+            variant: "default",
+            className: "bg-green-50 border-green-200",
+            action: (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/auth")}
+                className="border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700"
+              >
+                Login
+              </Button>
+            ),
+          });
+          return;
+        }
+        navigate(`/mentor/${result.id}`);
+        break;
+      case 'career':
+        setIsCareerDialogOpen(true);
+        break;
+      case 'major':
+        setIsMajorDialogOpen(true);
+        break;
     }
   };
 
