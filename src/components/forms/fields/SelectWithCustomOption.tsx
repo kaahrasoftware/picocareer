@@ -64,16 +64,14 @@ export function SelectWithCustomOption({
       console.log(`Fetching ${tableName} with search: ${searchQuery}`);
       let allData = [];
       let start = 0;
-      const pageSize = 1000; // Fetch 1000 records at a time
-      
-      while (true) {
+      const pageSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
         console.log(`Fetching page starting at ${start}`);
         let query = supabase
           .from(tableName)
           .select('id, name, title');
-
-        // Log the SQL query being generated (for debugging)
-        console.log('Query:', query.toSQL());
 
         // Add range for pagination
         query = query.range(start, start + pageSize - 1);
@@ -90,36 +88,40 @@ export function SelectWithCustomOption({
           }
         }
 
-        const { data, error } = await query;
+        const { data, error, count } = await query;
         
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
           throw error;
         }
 
-        console.log(`Raw response data:`, data);
+        console.log(`Raw response data for page ${start / pageSize + 1}:`, data);
         
         if (!data || data.length === 0) {
           console.log('No more data to fetch');
+          hasMore = false;
           break;
         }
         
         console.log(`Fetched ${data.length} records`);
         allData = [...allData, ...data];
         
+        // Check if we need to fetch more data
         if (data.length < pageSize) {
           console.log('Last page reached (less than pageSize records returned)');
-          break;
+          hasMore = false;
+        } else {
+          start += pageSize;
+          console.log(`Moving to next page, start: ${start}`);
         }
-        
-        start += pageSize;
       }
       
       console.log(`Total ${tableName} fetched:`, allData.length);
-      console.log('Sample of data:', allData.slice(0, 5));
+      console.log('First few records:', allData.slice(0, 5));
+      console.log('Last few records:', allData.slice(-5));
       return allData;
     },
-    enabled: true // Always fetch to ensure we have the latest data
+    enabled: true
   });
 
   // Combine provided options with fetched options, removing duplicates
