@@ -1,27 +1,31 @@
-import { useState } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Camera } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null;
+  profileId: string;
   size?: "sm" | "md" | "lg";
   editable?: boolean;
   onAvatarUpdate?: (url: string) => void;
-  profileId: string;
 }
 
-export function ProfileAvatar({ 
-  avatarUrl, 
-  size = "md", 
+export function ProfileAvatar({
+  avatarUrl,
+  profileId,
+  size = "md",
   editable = false,
-  onAvatarUpdate,
-  profileId
+  onAvatarUpdate
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
-  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(avatarUrl);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalAvatarUrl(avatarUrl);
+  }, [avatarUrl]);
 
   const sizeClasses = {
     sm: "h-8 w-8",
@@ -29,28 +33,25 @@ export function ProfileAvatar({
     lg: "h-24 w-24"
   };
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
-
+      
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('You must select an image to upload.');
       }
 
       if (!profileId) {
-        throw new Error('Profile ID is required for avatar upload.');
+        throw new Error('Profile ID is required for upload.');
       }
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profileId}.${fileExt}`;
+      const filePath = `${profileId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { 
-          upsert: true,
-          contentType: file.type
-        });
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
         throw uploadError;
@@ -58,7 +59,7 @@ export function ProfileAvatar({
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -69,10 +70,8 @@ export function ProfileAvatar({
         throw updateError;
       }
 
-      // Update local state
-      setCurrentAvatarUrl(publicUrl);
+      setLocalAvatarUrl(publicUrl);
       
-      // Notify parent component
       if (onAvatarUpdate) {
         onAvatarUpdate(publicUrl);
       }
@@ -81,7 +80,7 @@ export function ProfileAvatar({
         title: "Success",
         description: "Profile picture updated successfully",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
         description: error.message,
@@ -95,21 +94,21 @@ export function ProfileAvatar({
   return (
     <div className="relative group">
       <Avatar className={`${sizeClasses[size]} border-4 border-primary`}>
-        <AvatarImage src={currentAvatarUrl || "/placeholder.svg"} alt="Profile" />
+        <AvatarImage src={localAvatarUrl || "/placeholder.svg"} alt="Profile" />
         <AvatarFallback>
-          {currentAvatarUrl ? "Loading..." : "?"}
+          {localAvatarUrl ? "Loading..." : "?"}
         </AvatarFallback>
       </Avatar>
       {editable && (
-        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
+        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
           <input
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={handleUpload}
+            onChange={uploadAvatar}
             disabled={uploading}
           />
-          <Camera className="w-6 h-6 text-white" />
+          <Upload className="w-6 h-6 text-white" />
         </label>
       )}
       {uploading && (
