@@ -43,22 +43,14 @@ export function SelectWithCustomOption({
       console.log(`Fetching ${tableName} with search: ${searchQuery}`);
       let allData = [];
       let start = 0;
-      const pageSize = 1000;
+      const pageSize = 1000; // Keep this at 1000 as it's Supabase's maximum
       let hasMore = true;
-      let totalCount = 0;
-      let firstPage = true;
 
       while (hasMore) {
         console.log(`Fetching page starting at ${start}`);
         let query = supabase
           .from(tableName)
           .select('id, name, title', { count: 'exact' });
-
-        // Add range for pagination
-        query = query.range(start, start + pageSize - 1);
-
-        // Add ordering
-        query = query.order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
 
         // Add search filter if query exists
         if (searchQuery) {
@@ -69,18 +61,17 @@ export function SelectWithCustomOption({
           }
         }
 
+        // Add ordering
+        query = query.order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+
+        // Add range for pagination
+        query = query.range(start, start + pageSize - 1);
+
         const { data, error, count } = await query;
         
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
           throw error;
-        }
-
-        // On first page, get the total count
-        if (firstPage && count !== null) {
-          totalCount = count;
-          console.log(`Total records in database: ${totalCount}`);
-          firstPage = false;
         }
 
         if (!data || data.length === 0) {
@@ -97,14 +88,8 @@ export function SelectWithCustomOption({
           console.log('Last page reached (less than pageSize records returned)');
           hasMore = false;
         } else {
-          // Only continue if we haven't fetched all records yet
-          if (totalCount > 0 && allData.length >= totalCount) {
-            console.log(`Fetched all ${allData.length} records of ${totalCount}`);
-            hasMore = false;
-          } else {
-            start += pageSize;
-            console.log(`Moving to next page, start: ${start}`);
-          }
+          start += pageSize;
+          console.log(`Moving to next page, start: ${start}`);
         }
       }
       
