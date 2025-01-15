@@ -40,7 +40,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     queryFn: async () => {
       if (!contentId || type !== 'major_update') return null;
       
-      console.log('Fetching major data for ID:', contentId);
       const { data, error } = await supabase
         .from('majors')
         .select('*')
@@ -52,7 +51,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         throw error;
       }
       
-      console.log('Fetched major data:', data);
       return data as Major;
     },
     enabled: !!contentId && type === 'major_update' && dialogOpen,
@@ -64,7 +62,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     queryFn: async () => {
       if (!contentId || type !== 'career_update') return null;
       
-      console.log('Fetching career data for ID:', contentId);
       const { data, error } = await supabase
         .from('careers')
         .select(`
@@ -81,7 +78,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         throw error;
       }
       
-      console.log('Fetched career data:', data);
       return data as CareerWithMajors;
     },
     enabled: !!contentId && type === 'career_update' && dialogOpen,
@@ -93,7 +89,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
     queryFn: async () => {
       if (!contentId || type !== 'blog_update') return null;
       
-      console.log('Fetching blog data for ID:', contentId);
       const { data, error } = await supabase
         .from('blogs')
         .select(`
@@ -111,7 +106,6 @@ export function NotificationContent({ message, isExpanded, type, action_url }: N
         throw error;
       }
       
-      console.log('Fetched blog data:', data);
       return data as BlogWithAuthor;
     },
     enabled: !!contentId && type === 'blog_update' && dialogOpen,
