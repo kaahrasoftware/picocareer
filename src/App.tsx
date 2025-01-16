@@ -11,6 +11,7 @@ import BlogUpload from "@/pages/BlogUpload";
 import Career from "@/pages/Career";
 import CareerUpload from "@/pages/CareerUpload";
 import Contact from "@/pages/Contact";
+import Dashboard from "@/pages/Dashboard";
 import EmailConfirmation from "@/pages/EmailConfirmation";
 import Error from "@/pages/Error";
 import Funding from "@/pages/Funding";
@@ -104,6 +105,11 @@ const router = createBrowserRouter([
   {
     path: "/contact",
     element: <MainLayout><Contact /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/dashboard",
+    element: <MainLayout><Dashboard /></MainLayout>,
     errorElement: <Error />,
   },
   {

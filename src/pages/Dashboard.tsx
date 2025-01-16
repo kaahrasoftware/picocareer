@@ -1,9 +1,11 @@
 import { DashboardTab } from "@/components/profile/DashboardTab";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Navigate } from "react-router-dom";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export default function Dashboard() {
-  const { profile } = useUserProfile();
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
   
   if (!profile) {
     return null;
