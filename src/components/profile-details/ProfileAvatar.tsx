@@ -1,10 +1,20 @@
 import React from "react";
 
-interface ProfileAvatarProps {
+export interface ProfileAvatarProps {
   avatarUrl: string | null;
+  profileId?: string;
+  size?: "sm" | "md" | "lg";
+  editable?: boolean;
+  fallback?: string;
 }
 
-export function ProfileHeaderAvatar({ avatarUrl }: ProfileAvatarProps) {
+export function ProfileHeaderAvatar({ 
+  avatarUrl, 
+  profileId,
+  size = "md",
+  editable = false,
+  fallback = "User"
+}: ProfileAvatarProps) {
   return (
     <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-yellow-400">
       <img

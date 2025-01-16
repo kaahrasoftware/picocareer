@@ -31,6 +31,7 @@ const columns: ColumnDef<User>[] = [
         avatarUrl={row.original.avatar_url}
         size="sm"
         editable={false}
+        profileId={row.original.id}
       />
     ),
   },
@@ -53,7 +54,7 @@ const columns: ColumnDef<User>[] = [
     accessorKey: "onboarding_status",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.original.onboarding_status === "Approved" ? "success" : "secondary"}>
+      <Badge variant={row.original.onboarding_status === "Approved" ? "default" : "secondary"}>
         {row.original.onboarding_status}
       </Badge>
     ),
