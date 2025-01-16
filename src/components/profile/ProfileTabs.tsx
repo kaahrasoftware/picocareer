@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/profile/ProfileTab";
-import { DashboardTab } from "@/components/profile/DashboardTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { MentorTab } from "@/components/profile/MentorTab";
 import { BookmarksTab } from "@/components/profile/BookmarksTab";
@@ -10,7 +9,6 @@ import { SettingsTab } from "@/components/profile/SettingsTab";
 import { WalletTab } from "@/components/profile/WalletTab";
 import { 
   User, 
-  LayoutDashboard, 
   Calendar, 
   GraduationCap, 
   Bookmark, 
@@ -38,7 +36,6 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
   // Calculate number of tabs to display for grid
   const numTabs = [
     true, // Profile tab always shown
-    isAdmin, // Dashboard tab
     true, // Calendar tab
     isMentor, // Mentor tab
     true, // Bookmarks tab
@@ -59,13 +56,6 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
           <User className="h-4 w-4" />
           <span className="hidden sm:inline">Profile</span>
         </TabsTrigger>
-        
-        {isAdmin && (
-          <TabsTrigger value="dashboard" className="flex flex-col sm:flex-row items-center gap-1">
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </TabsTrigger>
-        )}
         
         <TabsTrigger value="calendar" className="flex flex-col sm:flex-row items-center gap-1">
           <Calendar className="h-4 w-4" />
@@ -100,12 +90,6 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
       <TabsContent value="profile">
         <ProfileTab profile={profile} />
       </TabsContent>
-
-      {isAdmin && (
-        <TabsContent value="dashboard">
-          <DashboardTab />
-        </TabsContent>
-      )}
 
       <TabsContent value="calendar">
         <CalendarTab profile={profile} />
