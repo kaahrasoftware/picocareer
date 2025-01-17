@@ -32,7 +32,7 @@ const statusColors: Record<OnboardingStatus, string> = {
   "Rejected": "text-red-500"
 };
 
-export default function UsersTab() {
+export function UsersTab() {  // Changed from 'export default' to 'export function'
   const { toast } = useToast();
   const [selectedUserType, setSelectedUserType] = useState<"all" | UserType>("all");
   const [selectedStatus, setSelectedStatus] = useState<"all" | OnboardingStatus>("all");
