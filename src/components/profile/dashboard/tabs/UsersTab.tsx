@@ -82,6 +82,11 @@ export function UsersTab() {
     }
   });
 
+  // Calculate user statistics
+  const totalUsers = users?.length || 0;
+  const totalMentors = users?.filter(user => user.user_type === 'mentor').length || 0;
+  const totalMentees = users?.filter(user => user.user_type === 'mentee').length || 0;
+
   const handleUserTypeChange = async (userId: string, newType: UserType) => {
     try {
       console.log('Updating user type:', { userId, newType });
@@ -247,7 +252,23 @@ export function UsersTab() {
         </TabsList>
         <TabsContent value="overview">
           <Card className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Users Management</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Users Management</h2>
+              <div className="flex gap-4 text-sm">
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <span className="font-semibold">Total Users:</span>
+                  <span className="ml-2">{totalUsers}</span>
+                </div>
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <span className="font-semibold text-[#9b87f5]">Mentors:</span>
+                  <span className="ml-2">{totalMentors}</span>
+                </div>
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <span className="font-semibold text-[#7E69AB]">Mentees:</span>
+                  <span className="ml-2">{totalMentees}</span>
+                </div>
+              </div>
+            </div>
             <div className="flex items-center gap-4 mb-4">
               <Select value={selectedUserType} onValueChange={setSelectedUserType}>
                 <SelectTrigger className="w-[180px]">
