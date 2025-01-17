@@ -60,7 +60,7 @@ export function ActivityChart({ title }: ActivityChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle>Monthly User Registration</CardTitle>
       </CardHeader>
       <CardContent className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
