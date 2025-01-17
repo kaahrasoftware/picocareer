@@ -98,12 +98,54 @@ export function UsersTab() {
         description: `User type has been updated to ${newType}`,
       });
 
-      refetch(); // Refresh the data
+      refetch();
     } catch (error) {
       console.error('Detailed error updating user type:', error);
       toast({
         title: "Error",
         description: "Failed to update user type. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStatusChange = async (userId: string, newStatus: OnboardingStatus) => {
+    try {
+      console.log('Updating user status:', { userId, newStatus });
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ 
+          onboarding_status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select('id, onboarding_status')
+        .single();
+
+      if (error) {
+        console.error('Error updating user status:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error('No data returned after update');
+        throw new Error('No data returned after update');
+      }
+
+      console.log('Update successful:', data);
+
+      toast({
+        title: "Status updated",
+        description: `User status has been updated to ${newStatus}`,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Detailed error updating user status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status. Please try again.",
         variant: "destructive",
       });
     }
@@ -154,9 +196,21 @@ export function UsersTab() {
       accessorKey: "onboarding_status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge variant={row.original.onboarding_status === "Approved" ? "default" : "secondary"}>
-          {row.original.onboarding_status}
-        </Badge>
+        <Select
+          value={row.original.onboarding_status}
+          onValueChange={(value: OnboardingStatus) => handleStatusChange(row.original.id, value)}
+        >
+          <SelectTrigger className="w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Under Review">Under Review</SelectItem>
+            <SelectItem value="Consent Signed">Consent Signed</SelectItem>
+            <SelectItem value="Approved">Approved</SelectItem>
+            <SelectItem value="Rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
       ),
     },
     {
