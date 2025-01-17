@@ -69,19 +69,27 @@ export function UsersTab() {
 
   const handleUserTypeChange = async (userId: string, newType: UserType) => {
     try {
-      const { error } = await supabase
+      console.log('Updating user type:', { userId, newType });
+      
+      const { data, error } = await supabase
         .from('profiles')
         .update({ 
           user_type: newType,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
-        .select();
+        .select('id, user_type');
 
       if (error) {
         console.error('Error updating user type:', error);
         throw error;
       }
+
+      if (!data || data.length === 0) {
+        throw new Error('No data returned after update');
+      }
+
+      console.log('Update successful:', data);
 
       toast({
         title: "User type updated",
@@ -90,7 +98,7 @@ export function UsersTab() {
 
       refetch(); // Refresh the data
     } catch (error) {
-      console.error('Error updating user type:', error);
+      console.error('Detailed error updating user type:', error);
       toast({
         title: "Error",
         description: "Failed to update user type. Please try again.",
