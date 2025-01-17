@@ -7,6 +7,8 @@ import { UserType, OnboardingStatus, Degree } from "@/types/database/enums";
 import { ColumnDef } from "@tanstack/react-table";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 type User = {
   id: string;
@@ -71,10 +73,13 @@ const columns: ColumnDef<User>[] = [
 ];
 
 export function UsersTab() {
+  const [selectedUserType, setSelectedUserType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
   const { data: users, isLoading } = useQuery({
-    queryKey: ['dashboard-users'],
+    queryKey: ['dashboard-users', selectedUserType, selectedStatus],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select(`
           id,
@@ -90,6 +95,16 @@ export function UsersTab() {
           created_at
         `);
 
+      if (selectedUserType !== "all") {
+        query = query.eq('user_type', selectedUserType);
+      }
+
+      if (selectedStatus !== "all") {
+        query = query.eq('onboarding_status', selectedStatus);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       return data || [];
     }
@@ -104,6 +119,34 @@ export function UsersTab() {
         <TabsContent value="overview">
           <Card className="p-4">
             <h2 className="text-2xl font-bold mb-4">Users Management</h2>
+            <div className="flex items-center gap-4 mb-4">
+              <Select value={selectedUserType} onValueChange={setSelectedUserType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by user type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="mentor">Mentors</SelectItem>
+                  <SelectItem value="mentee">Mentees</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                  <SelectItem value="editor">Editors</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Under Review">Under Review</SelectItem>
+                  <SelectItem value="Consent Signed">Consent Signed</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {users && <DataTable columns={columns} data={users} />}
           </Card>
         </TabsContent>
