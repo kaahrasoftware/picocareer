@@ -9,6 +9,7 @@ import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 type User = {
   id: string;
@@ -24,59 +25,12 @@ type User = {
   created_at: string;
 };
 
-const columns: ColumnDef<User>[] = [
-  {
-    accessorKey: "avatar_url",
-    header: "Avatar",
-    cell: ({ row }) => (
-      <ProfileAvatar
-        avatarUrl={row.original.avatar_url}
-        size="sm"
-        editable={false}
-        profileId={row.original.id}
-      />
-    ),
-  },
-  {
-    accessorKey: "full_name",
-    header: "Name",
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "user_type",
-    header: "User Type",
-    cell: ({ row }) => (
-      <Badge variant="outline">{row.original.user_type}</Badge>
-    ),
-  },
-  {
-    accessorKey: "onboarding_status",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge variant={row.original.onboarding_status === "Approved" ? "default" : "secondary"}>
-        {row.original.onboarding_status}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "highest_degree",
-    header: "Degree",
-  },
-  {
-    accessorKey: "created_at",
-    header: "Joined",
-    cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
-  },
-];
-
 export function UsersTab() {
   const [selectedUserType, setSelectedUserType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const { toast } = useToast();
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-users', selectedUserType, selectedStatus],
     queryFn: async () => {
       let query = supabase
@@ -109,6 +63,92 @@ export function UsersTab() {
       return data || [];
     }
   });
+
+  const handleUserTypeChange = async (userId: string, newType: UserType) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ user_type: newType })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "User type updated",
+        description: "The user type has been successfully updated.",
+      });
+
+      refetch(); // Refresh the data
+    } catch (error) {
+      console.error('Error updating user type:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user type. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "avatar_url",
+      header: "Avatar",
+      cell: ({ row }) => (
+        <ProfileAvatar
+          avatarUrl={row.original.avatar_url}
+          size="sm"
+          editable={false}
+          profileId={row.original.id}
+        />
+      ),
+    },
+    {
+      accessorKey: "full_name",
+      header: "Name",
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+    },
+    {
+      accessorKey: "user_type",
+      header: "User Type",
+      cell: ({ row }) => (
+        <Select
+          value={row.original.user_type}
+          onValueChange={(value: UserType) => handleUserTypeChange(row.original.id, value)}
+        >
+          <SelectTrigger className="w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mentor">Mentor</SelectItem>
+            <SelectItem value="mentee">Mentee</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="editor">Editor</SelectItem>
+          </SelectContent>
+        </Select>
+      ),
+    },
+    {
+      accessorKey: "onboarding_status",
+      header: "Status",
+      cell: ({ row }) => (
+        <Badge variant={row.original.onboarding_status === "Approved" ? "default" : "secondary"}>
+          {row.original.onboarding_status}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "highest_degree",
+      header: "Degree",
+    },
+    {
+      accessorKey: "created_at",
+      header: "Joined",
+      cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
+    },
+  ];
 
   return (
     <div className="space-y-4">
