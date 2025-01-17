@@ -52,10 +52,11 @@ export function ChartsTab() {
 
       const mentorCount = mentors?.length || 0;
       const totalCount = total?.length || 0;
+      const menteeCount = totalCount - mentorCount;
 
       return [
         { name: 'Mentors', value: mentorCount },
-        { name: 'Other Users', value: totalCount - mentorCount }
+        { name: 'Mentees', value: menteeCount }
       ];
     }
   });
@@ -68,7 +69,7 @@ export function ChartsTab() {
       />
       <ContentDistributionChart 
         data={userDistributionData || []} 
-        title="Mentor Distribution" 
+        title="User Distribution" 
       />
     </div>
   );
