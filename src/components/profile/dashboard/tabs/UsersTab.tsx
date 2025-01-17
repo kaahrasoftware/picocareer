@@ -1,11 +1,11 @@
+import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { OnboardingStatus, UserType } from "@/types/database/enums";
 
 interface User {
@@ -32,12 +32,12 @@ const statusColors: Record<OnboardingStatus, string> = {
   "Rejected": "text-red-500"
 };
 
-export function UsersTab() {
-  const [selectedUserType, setSelectedUserType] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+export default function UsersTab() {
   const { toast } = useToast();
+  const [selectedUserType, setSelectedUserType] = useState<"all" | UserType>("all");
+  const [selectedStatus, setSelectedStatus] = useState<"all" | OnboardingStatus>("all");
 
-  const { data: users, isLoading, refetch } = useQuery({
+  const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['dashboard-users', selectedUserType, selectedStatus],
     queryFn: async () => {
       console.log('Fetching users with filters:', { selectedUserType, selectedStatus });
@@ -54,11 +54,11 @@ export function UsersTab() {
         `);
 
       if (selectedUserType !== "all") {
-        query = query.eq('user_type', selectedUserType as UserType);
+        query = query.eq('user_type', selectedUserType);
       }
 
       if (selectedStatus !== "all") {
-        query = query.eq('onboarding_status', selectedStatus as OnboardingStatus);
+        query = query.eq('onboarding_status', selectedStatus);
       }
 
       const { data, error } = await query;
@@ -73,36 +73,25 @@ export function UsersTab() {
     }
   });
 
-  // Calculate user statistics
-  const totalUsers = users?.length || 0;
-  const totalMentors = users?.filter(user => user.user_type === 'mentor').length || 0;
-  const totalMentees = users?.filter(user => user.user_type === 'mentee').length || 0;
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalUsers = users.length;
+    const totalMentors = users.filter(user => user.user_type === 'mentor').length;
+    const totalMentees = users.filter(user => user.user_type === 'mentee').length;
+    return { totalUsers, totalMentors, totalMentees };
+  }, [users]);
 
   const handleUserTypeChange = async (userId: string, newType: UserType) => {
     try {
-      console.log('Updating user type:', { userId, newType });
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ 
           user_type: newType,
           updated_at: new Date().toISOString()
         })
-        .eq('id', userId)
-        .select('id, user_type')
-        .single();
+        .eq('id', userId);
 
-      if (error) {
-        console.error('Error updating user type:', error);
-        throw error;
-      }
-
-      if (!data) {
-        console.error('No data returned after update');
-        throw new Error('No data returned after update');
-      }
-
-      console.log('Update successful:', data);
+      if (error) throw error;
 
       toast({
         title: "User type updated",
@@ -111,7 +100,7 @@ export function UsersTab() {
 
       refetch();
     } catch (error) {
-      console.error('Detailed error updating user type:', error);
+      console.error('Error updating user type:', error);
       toast({
         title: "Error",
         description: "Failed to update user type. Please try again.",
@@ -122,29 +111,15 @@ export function UsersTab() {
 
   const handleStatusChange = async (userId: string, newStatus: OnboardingStatus) => {
     try {
-      console.log('Updating user status:', { userId, newStatus });
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ 
           onboarding_status: newStatus,
           updated_at: new Date().toISOString()
         })
-        .eq('id', userId)
-        .select('id, onboarding_status')
-        .single();
+        .eq('id', userId);
 
-      if (error) {
-        console.error('Error updating user status:', error);
-        throw error;
-      }
-
-      if (!data) {
-        console.error('No data returned after update');
-        throw new Error('No data returned after update');
-      }
-
-      console.log('Update successful:', data);
+      if (error) throw error;
 
       toast({
         title: "Status updated",
@@ -153,7 +128,7 @@ export function UsersTab() {
 
       refetch();
     } catch (error) {
-      console.error('Detailed error updating user status:', error);
+      console.error('Error updating user status:', error);
       toast({
         title: "Error",
         description: "Failed to update user status. Please try again.",
@@ -232,15 +207,15 @@ export function UsersTab() {
               <div className="flex gap-4 text-sm">
                 <div className="bg-gray-100 rounded-lg px-4 py-2">
                   <span className="font-semibold">Total Users:</span>
-                  <span className="ml-2">{totalUsers}</span>
+                  <span className="ml-2">{stats.totalUsers}</span>
                 </div>
                 <div className="bg-gray-100 rounded-lg px-4 py-2">
                   <span className="font-semibold text-[#9b87f5]">Mentors:</span>
-                  <span className="ml-2">{totalMentors}</span>
+                  <span className="ml-2">{stats.totalMentors}</span>
                 </div>
                 <div className="bg-gray-100 rounded-lg px-4 py-2">
                   <span className="font-semibold text-[#7E69AB]">Mentees:</span>
-                  <span className="ml-2">{totalMentees}</span>
+                  <span className="ml-2">{stats.totalMentees}</span>
                 </div>
               </div>
             </div>
