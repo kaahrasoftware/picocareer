@@ -1,29 +1,21 @@
-import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { UserType, OnboardingStatus, Degree } from "@/types/database/enums";
-import { ColumnDef } from "@tanstack/react-table";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { DataTable } from "@/components/ui/data-table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import type { OnboardingStatus, UserType } from "@/types/database/enums";
 
-type User = {
+interface User {
   id: string;
-  full_name: string;
+  full_name: string | null;
   email: string;
-  avatar_url: string;
   user_type: UserType;
   onboarding_status: OnboardingStatus;
-  school_id: string;
-  academic_major_id: string;
-  position: string;
-  highest_degree: Degree;
   created_at: string;
-};
+}
 
 const userTypeColors: Record<UserType, string> = {
   mentor: "text-[#9b87f5]",
@@ -48,19 +40,16 @@ export function UsersTab() {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-users', selectedUserType, selectedStatus],
     queryFn: async () => {
+      console.log('Fetching users with filters:', { selectedUserType, selectedStatus });
+      
       let query = supabase
         .from('profiles')
         .select(`
           id,
           full_name,
           email,
-          avatar_url,
           user_type,
           onboarding_status,
-          school_id,
-          academic_major_id,
-          position,
-          highest_degree,
           created_at
         `);
 
@@ -78,6 +67,8 @@ export function UsersTab() {
         console.error('Error fetching users:', error);
         throw error;
       }
+      
+      console.log('Fetched users:', data?.length);
       return data as User[];
     }
   });
@@ -171,19 +162,7 @@ export function UsersTab() {
     }
   };
 
-  const columns: ColumnDef<User>[] = [
-    {
-      accessorKey: "avatar_url",
-      header: "Avatar",
-      cell: ({ row }) => (
-        <ProfileAvatar
-          avatarUrl={row.original.avatar_url}
-          size="sm"
-          editable={false}
-          profileId={row.original.id}
-        />
-      ),
-    },
+  const columns = [
     {
       accessorKey: "full_name",
       header: "Name",
@@ -200,8 +179,8 @@ export function UsersTab() {
           value={row.original.user_type}
           onValueChange={(value: UserType) => handleUserTypeChange(row.original.id, value)}
         >
-          <SelectTrigger className="w-[130px]">
-            <SelectValue className={userTypeColors[row.original.user_type]} />
+          <SelectTrigger className={`w-[130px] ${userTypeColors[row.original.user_type]}`}>
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="mentor" className={userTypeColors.mentor}>Mentor</SelectItem>
@@ -220,8 +199,8 @@ export function UsersTab() {
           value={row.original.onboarding_status}
           onValueChange={(value: OnboardingStatus) => handleStatusChange(row.original.id, value)}
         >
-          <SelectTrigger className="w-[130px]">
-            <SelectValue className={statusColors[row.original.onboarding_status]} />
+          <SelectTrigger className={`w-[130px] ${statusColors[row.original.onboarding_status]}`}>
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Pending" className={statusColors["Pending"]}>Pending</SelectItem>
@@ -232,10 +211,6 @@ export function UsersTab() {
           </SelectContent>
         </Select>
       ),
-    },
-    {
-      accessorKey: "highest_degree",
-      header: "Degree",
     },
     {
       accessorKey: "created_at",
