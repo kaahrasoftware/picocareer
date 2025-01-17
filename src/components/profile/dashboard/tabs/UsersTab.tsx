@@ -6,10 +6,10 @@ import { Card } from "@/components/ui/card";
 import { UserType, OnboardingStatus, Degree } from "@/types/database/enums";
 import { ColumnDef } from "@tanstack/react-table";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type User = {
   id: string;
@@ -23,6 +23,21 @@ type User = {
   position: string;
   highest_degree: Degree;
   created_at: string;
+};
+
+const userTypeColors: Record<UserType, string> = {
+  mentor: "text-[#9b87f5]",
+  mentee: "text-[#7E69AB]",
+  admin: "text-[#6E59A5]",
+  editor: "text-[#D946EF]"
+};
+
+const statusColors: Record<OnboardingStatus, string> = {
+  "Pending": "text-orange-500",
+  "Under Review": "text-blue-500",
+  "Consent Signed": "text-purple-500",
+  "Approved": "text-green-500",
+  "Rejected": "text-red-500"
 };
 
 export function UsersTab() {
@@ -181,13 +196,13 @@ export function UsersTab() {
           onValueChange={(value: UserType) => handleUserTypeChange(row.original.id, value)}
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue />
+            <SelectValue className={userTypeColors[row.original.user_type]} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="mentor">Mentor</SelectItem>
-            <SelectItem value="mentee">Mentee</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="editor">Editor</SelectItem>
+            <SelectItem value="mentor" className={userTypeColors.mentor}>Mentor</SelectItem>
+            <SelectItem value="mentee" className={userTypeColors.mentee}>Mentee</SelectItem>
+            <SelectItem value="admin" className={userTypeColors.admin}>Admin</SelectItem>
+            <SelectItem value="editor" className={userTypeColors.editor}>Editor</SelectItem>
           </SelectContent>
         </Select>
       ),
@@ -201,14 +216,14 @@ export function UsersTab() {
           onValueChange={(value: OnboardingStatus) => handleStatusChange(row.original.id, value)}
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue />
+            <SelectValue className={statusColors[row.original.onboarding_status]} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Under Review">Under Review</SelectItem>
-            <SelectItem value="Consent Signed">Consent Signed</SelectItem>
-            <SelectItem value="Approved">Approved</SelectItem>
-            <SelectItem value="Rejected">Rejected</SelectItem>
+            <SelectItem value="Pending" className={statusColors["Pending"]}>Pending</SelectItem>
+            <SelectItem value="Under Review" className={statusColors["Under Review"]}>Under Review</SelectItem>
+            <SelectItem value="Consent Signed" className={statusColors["Consent Signed"]}>Consent Signed</SelectItem>
+            <SelectItem value="Approved" className={statusColors["Approved"]}>Approved</SelectItem>
+            <SelectItem value="Rejected" className={statusColors["Rejected"]}>Rejected</SelectItem>
           </SelectContent>
         </Select>
       ),
@@ -240,10 +255,10 @@ export function UsersTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Users</SelectItem>
-                  <SelectItem value="mentor">Mentors</SelectItem>
-                  <SelectItem value="mentee">Mentees</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
-                  <SelectItem value="editor">Editors</SelectItem>
+                  <SelectItem value="mentor" className={userTypeColors.mentor}>Mentors</SelectItem>
+                  <SelectItem value="mentee" className={userTypeColors.mentee}>Mentees</SelectItem>
+                  <SelectItem value="admin" className={userTypeColors.admin}>Admins</SelectItem>
+                  <SelectItem value="editor" className={userTypeColors.editor}>Editors</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -253,11 +268,11 @@ export function UsersTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Under Review">Under Review</SelectItem>
-                  <SelectItem value="Consent Signed">Consent Signed</SelectItem>
-                  <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Pending" className={statusColors["Pending"]}>Pending</SelectItem>
+                  <SelectItem value="Under Review" className={statusColors["Under Review"]}>Under Review</SelectItem>
+                  <SelectItem value="Consent Signed" className={statusColors["Consent Signed"]}>Consent Signed</SelectItem>
+                  <SelectItem value="Approved" className={statusColors["Approved"]}>Approved</SelectItem>
+                  <SelectItem value="Rejected" className={statusColors["Rejected"]}>Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
