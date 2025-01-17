@@ -1,6 +1,6 @@
 import { ProfileCard } from "@/components/community/ProfileCard";
 import { LoadMoreButton } from "./LoadMoreButton";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorGridProps {
@@ -15,7 +15,13 @@ interface MentorGridProps {
 
 export function MentorGrid({ profiles, isLoading }: MentorGridProps) {
   const [displayCount, setDisplayCount] = useState(12);
-  const displayedProfiles = profiles.slice(0, displayCount);
+  
+  // Randomize profiles order using useMemo to prevent re-shuffling on every render
+  const randomizedProfiles = useMemo(() => {
+    return [...profiles].sort(() => Math.random() - 0.5);
+  }, [profiles]);
+
+  const displayedProfiles = randomizedProfiles.slice(0, displayCount);
   const hasMore = displayCount < profiles.length;
 
   const handleLoadMore = () => {
