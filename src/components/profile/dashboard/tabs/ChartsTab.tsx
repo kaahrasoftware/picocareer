@@ -11,7 +11,7 @@ export function ChartsTab() {
     queryKey: ['userActivity'],
     queryFn: async () => {
       const startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 6); // Last 6 months
+      startDate.setMonth(startDate.getMonth() - 12); // Last 12 months
 
       const { data, error } = await supabase
         .from('profiles')
@@ -29,7 +29,7 @@ export function ChartsTab() {
 
       return Object.entries(monthlyData).map(([month, total]) => ({
         month,
-        total,
+        total: total as number,
         completed: Math.floor((total as number) * 0.8) // Example completion rate
       }));
     }
@@ -44,27 +44,19 @@ export function ChartsTab() {
         .select('count')
         .eq('user_type', 'mentor');
 
-      const { data: pending, error: pendingError } = await supabase
-        .from('profiles')
-        .select('count')
-        .eq('onboarding_status', 'Pending');
-
       const { data: total, error: totalError } = await supabase
         .from('profiles')
         .select('count');
 
-      if (mentorsError || pendingError || totalError) throw new Error('Failed to fetch data');
+      if (mentorsError || totalError) throw new Error('Failed to fetch data');
 
       const mentorCount = mentors?.length || 0;
-      const pendingCount = pending?.length || 0;
       const totalCount = total?.length || 0;
       const menteeCount = totalCount - mentorCount;
 
       return [
         { name: 'Mentors', value: mentorCount },
-        { name: 'Mentees', value: menteeCount },
-        { name: 'Pending', value: pendingCount },
-        { name: 'Active', value: totalCount - pendingCount }
+        { name: 'Mentees', value: menteeCount }
       ];
     }
   });
@@ -73,7 +65,7 @@ export function ChartsTab() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
       <ActivityChart 
         data={userActivityData || []} 
-        title="User Activity (Last 6 Months)" 
+        title="Monthly User Registration" 
       />
       <ContentDistributionChart 
         data={userDistributionData || []} 
