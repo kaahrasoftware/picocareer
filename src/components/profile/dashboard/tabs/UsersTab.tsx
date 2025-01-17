@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DataTable } from "@/components/ui/data-table";
-import { columns } from "@/components/profile/dashboard/users/columns";
+import { columns } from "../users/columns";
 
 export function UsersTab() {
   const { data: users, isLoading } = useQuery({
