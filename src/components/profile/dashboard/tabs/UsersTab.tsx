@@ -78,14 +78,16 @@ export function UsersTab() {
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
-        .select('id, user_type');
+        .select('id, user_type')
+        .single();
 
       if (error) {
         console.error('Error updating user type:', error);
         throw error;
       }
 
-      if (!data || data.length === 0) {
+      if (!data) {
+        console.error('No data returned after update');
         throw new Error('No data returned after update');
       }
 
@@ -93,7 +95,7 @@ export function UsersTab() {
 
       toast({
         title: "User type updated",
-        description: "The user type has been successfully updated.",
+        description: `User type has been updated to ${newType}`,
       });
 
       refetch(); // Refresh the data
