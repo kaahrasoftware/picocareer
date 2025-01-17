@@ -50,17 +50,20 @@ export function UsersTab() {
         `);
 
       if (selectedUserType !== "all") {
-        query = query.eq('user_type', selectedUserType);
+        query = query.eq('user_type', selectedUserType as UserType);
       }
 
       if (selectedStatus !== "all") {
-        query = query.eq('onboarding_status', selectedStatus);
+        query = query.eq('onboarding_status', selectedStatus as OnboardingStatus);
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+      return data as User[];
     }
   });
 
@@ -68,10 +71,17 @@ export function UsersTab() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ user_type: newType })
-        .eq('id', userId);
+        .update({ 
+          user_type: newType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating user type:', error);
+        throw error;
+      }
 
       toast({
         title: "User type updated",
