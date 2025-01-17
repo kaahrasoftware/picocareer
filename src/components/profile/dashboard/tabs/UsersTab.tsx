@@ -180,38 +180,32 @@ export function UsersTab() {
           <Card className="p-4">
             <h2 className="text-2xl font-bold mb-4">Users Management</h2>
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex-1 flex items-center gap-4">
-                <input
-                  type="text"
-                  placeholder="Filter by name..."
-                  className="flex-1 px-4 py-2 border rounded"
-                />
-                <Select value={selectedUserType} onValueChange={setSelectedUserType}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by user type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Users</SelectItem>
-                    <SelectItem value="mentor">Mentors</SelectItem>
-                    <SelectItem value="mentee">Mentees</SelectItem>
-                    <SelectItem value="admin">Admins</SelectItem>
-                    <SelectItem value="editor">Editors</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Under Review">Under Review</SelectItem>
-                    <SelectItem value="Consent Signed">Consent Signed</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={selectedUserType} onValueChange={setSelectedUserType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by user type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="mentor">Mentors</SelectItem>
+                  <SelectItem value="mentee">Mentees</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                  <SelectItem value="editor">Editors</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Under Review">Under Review</SelectItem>
+                  <SelectItem value="Consent Signed">Consent Signed</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {users && <DataTable columns={columns} data={users} />}
           </Card>
