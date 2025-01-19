@@ -4,6 +4,39 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "./FormField";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Define the enums based on the database schema
+const COUNTRIES = [
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Spain",
+  "Italy",
+  "Japan",
+  "China",
+  "India",
+  "Brazil",
+  "Mexico",
+  "South Africa",
+  "Other"
+] as const;
+
+const HEAR_ABOUT_US_OPTIONS = [
+  "Google Search",
+  "Social Media",
+  "Friend Referral",
+  "School/University",
+  "Professional Network",
+  "Email Newsletter",
+  "Online Advertisement",
+  "Blog/Article",
+  "Conference/Event",
+  "Other"
+] as const;
 
 interface WebinarRegistrationFormProps {
   webinarId: string;
@@ -82,18 +115,47 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
             label="Current School/Company"
             type="text"
           />
-          <FormField
-            control={form.control}
-            name="country"
-            label="Country"
-            type="text"
-          />
-          <FormField
-            control={form.control}
-            name="hear_about_us"
-            label="How did you hear about us?"
-            type="text"
-          />
+          
+          {/* Country Select */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Country</label>
+            <Select
+              onValueChange={(value) => form.setValue('country', value)}
+              value={form.watch('country')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select your country" />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRIES.map((country) => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* How did you hear about us Select */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">How did you hear about us?</label>
+            <Select
+              onValueChange={(value) => form.setValue('hear_about_us', value)}
+              value={form.watch('hear_about_us')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an option" />
+              </SelectTrigger>
+              <SelectContent>
+                {HEAR_ABOUT_US_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex gap-4 justify-end pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
