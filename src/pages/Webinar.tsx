@@ -30,7 +30,7 @@ export default function Webinar() {
   const [registering, setRegistering] = useState<string | null>(null);
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
 
-  // Query for webinars - runs regardless of authentication
+  // Query for webinars - available to all users
   const { data: webinars, isLoading } = useQuery({
     queryKey: ['webinars'],
     queryFn: async () => {
