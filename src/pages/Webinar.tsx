@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Calendar, Clock, Users, Video } from "lucide-react";
 import { format } from "date-fns";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface Webinar {
   id: string;
@@ -23,6 +24,7 @@ interface Webinar {
 export default function Webinar() {
   const { toast } = useToast();
   const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
   const [registering, setRegistering] = useState<string | null>(null);
 
   const { data: webinars, isLoading } = useQuery({
@@ -56,7 +58,7 @@ export default function Webinar() {
   });
 
   const handleRegister = async (webinarId: string) => {
-    if (!session) {
+    if (!session || !profile) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to register for webinars",
@@ -72,6 +74,7 @@ export default function Webinar() {
         .insert({
           webinar_id: webinarId,
           profile_id: session.user.id,
+          email: profile.email // Include the user's email from their profile
         });
 
       if (error) throw error;
@@ -80,7 +83,7 @@ export default function Webinar() {
         title: "Registration Successful",
         description: "You have been registered for the webinar",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
