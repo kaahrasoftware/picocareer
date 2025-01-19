@@ -27,6 +27,7 @@ import School from "@/pages/School";
 import Terms from "@/pages/Terms";
 import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
+import Webinar from "@/pages/Webinar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
 
@@ -175,6 +176,11 @@ const router = createBrowserRouter([
   {
     path: "/tokens",
     element: <MainLayout><TokenShop /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/webinar",
+    element: <MainLayout><Webinar /></MainLayout>,
     errorElement: <Error />,
   },
   {

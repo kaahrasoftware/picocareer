@@ -1497,6 +1497,107 @@ export type Database = {
           },
         ]
       }
+      webinar_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          profile_id: string | null
+          status: string | null
+          updated_at: string
+          webinar_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          profile_id?: string | null
+          status?: string | null
+          updated_at?: string
+          webinar_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          profile_id?: string | null
+          status?: string | null
+          updated_at?: string
+          webinar_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webinar_registrations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webinar_registrations_webinar_id_fkey"
+            columns: ["webinar_id"]
+            isOneToOne: false
+            referencedRelation: "webinars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webinars: {
+        Row: {
+          created_at: string
+          description: string
+          end_time: string
+          host_id: string | null
+          id: string
+          max_attendees: number | null
+          meeting_link: string | null
+          platform: Database["public"]["Enums"]["webinar_platform"]
+          start_time: string
+          status: Database["public"]["Enums"]["status"] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_time: string
+          host_id?: string | null
+          id?: string
+          max_attendees?: number | null
+          meeting_link?: string | null
+          platform?: Database["public"]["Enums"]["webinar_platform"]
+          start_time: string
+          status?: Database["public"]["Enums"]["status"] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_time?: string
+          host_id?: string | null
+          id?: string
+          max_attendees?: number | null
+          meeting_link?: string | null
+          platform?: Database["public"]["Enums"]["webinar_platform"]
+          start_time?: string
+          status?: Database["public"]["Enums"]["status"] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webinars_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2086,6 +2187,7 @@ export type Database = {
         | "How Extracurriculars Boost Applications"
         | "Starting Your Own Club or Organization"
       user_type: "mentor" | "mentee" | "admin" | "editor"
+      webinar_platform: "Google Meet" | "Zoom"
     }
     CompositeTypes: {
       [_ in never]: never
