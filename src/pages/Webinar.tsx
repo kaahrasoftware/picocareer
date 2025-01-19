@@ -70,15 +70,38 @@ export default function Webinar() {
   };
 
   const handleRegistrationSubmit = async (formData: any) => {
-    if (!session?.user?.id || !selectedWebinar) return;
+    if (!selectedWebinar) return;
 
     setRegistering(selectedWebinar.id);
     try {
-      const { error } = await supabase
+      // First check if the email is already registered for this webinar
+      const { data: existingRegistration, error: checkError } = await supabase
+        .from('webinar_registrations')
+        .select('id')
+        .eq('webinar_id', selectedWebinar.id)
+        .eq('email', formData.email)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        throw checkError;
+      }
+
+      if (existingRegistration) {
+        toast({
+          title: "Already Registered",
+          description: "You have already registered for this webinar with this email address.",
+          variant: "destructive",
+        });
+        setSelectedWebinar(null);
+        return;
+      }
+
+      // If no existing registration, proceed with registration
+      const { error: insertError } = await supabase
         .from('webinar_registrations')
         .insert({
           webinar_id: selectedWebinar.id,
-          profile_id: session.user.id,
+          profile_id: session?.user?.id || null,
           email: formData.email,
           first_name: formData.first_name,
           last_name: formData.last_name,
@@ -89,7 +112,7 @@ export default function Webinar() {
           "where did you hear about us": formData.hear_about_us
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       toast({
         title: "Registration Successful",
@@ -100,7 +123,7 @@ export default function Webinar() {
       console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
-        description: "Failed to register for the webinar. Please try again.",
+        description: error.message || "Failed to register for the webinar. Please try again.",
         variant: "destructive",
       });
     } finally {
