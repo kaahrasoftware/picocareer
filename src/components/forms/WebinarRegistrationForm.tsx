@@ -44,7 +44,7 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
   return (
     <Form {...form}>
       <ScrollArea className="h-[400px] pr-4">
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 max-w-md mx-auto">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 max-w-md mx-auto [&_input]:w-full [&_input:hover]:w-full [&_input:focus]:w-full">
           <FormField
             control={form.control}
             name="first_name"
