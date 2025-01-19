@@ -18,6 +18,22 @@ export function useProfileSession() {
         
         if (error) {
           console.error('Session error:', error);
+          if (error.message?.includes('Invalid Refresh Token') || 
+              error.message?.includes('session_expired')) {
+            // Clear auth data
+            const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+            localStorage.removeItem(key);
+            await supabase.auth.signOut();
+            queryClient.clear();
+            
+            toast({
+              title: "Session Expired",
+              description: "Your session has expired. Please sign in again.",
+              variant: "destructive",
+            });
+            
+            navigate("/auth");
+          }
           throw error;
         }
         
@@ -30,23 +46,18 @@ export function useProfileSession() {
         return session;
       } catch (error: any) {
         console.error('Detailed session error:', error);
-        // Check for refresh token errors
-        if (error.message?.includes('refresh_token_not_found') || 
-            error.message?.includes('Invalid Refresh Token')) {
-          const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-          localStorage.removeItem(key);
-          toast({
-            title: "Session Expired",
-            description: "Please sign in again to continue.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-        }
         throw error;
       }
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+  });
+
+  // Set up auth state change listener
+  supabase.auth.onAuthStateChange((event, newSession) => {
+    if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+      queryClient.invalidateQueries({ queryKey: ['auth-session'] });
+    }
   });
 
   return { session, sessionError, queryClient };
