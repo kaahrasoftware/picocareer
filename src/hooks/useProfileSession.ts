@@ -1,8 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function useProfileSession() {
   const { toast } = useToast();
@@ -18,21 +17,10 @@ export function useProfileSession() {
         
         if (error) {
           console.error('Session error:', error);
+          // Handle session expiration and invalid refresh token errors
           if (error.message?.includes('Invalid Refresh Token') || 
               error.message?.includes('session_expired')) {
-            // Clear auth data
-            const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-            localStorage.removeItem(key);
-            await supabase.auth.signOut();
-            queryClient.clear();
-            
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "destructive",
-            });
-            
-            navigate("/auth");
+            await handleSessionExpiration();
           }
           throw error;
         }
@@ -51,7 +39,33 @@ export function useProfileSession() {
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 10, // Keep data in cache for 10 minutes
   });
+
+  // Handle session expiration
+  const handleSessionExpiration = async () => {
+    console.log('Handling session expiration...');
+    
+    // Clear auth data from localStorage
+    const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+    localStorage.removeItem(key);
+    
+    // Sign out from Supabase
+    await supabase.auth.signOut();
+    
+    // Clear all queries from cache
+    queryClient.clear();
+    
+    // Show toast notification
+    toast({
+      title: "Session Expired",
+      description: "Your session has expired. Please sign in again.",
+      variant: "destructive",
+    });
+    
+    // Redirect to auth page
+    navigate("/auth");
+  };
 
   // Set up auth state change listener
   supabase.auth.onAuthStateChange((event, newSession) => {
