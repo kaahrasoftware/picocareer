@@ -16,7 +16,11 @@ export type NotificationCategory =
   | "general"
   | "major_update";
 
-export type MeetingPlatform = "Google Meet";
+export type MeetingPlatform = 
+  | "Google Meet"
+  | "WhatsApp"
+  | "Telegram"
+  | "Phone Call";
 
 export interface Availability {
   id: string;
@@ -49,6 +53,8 @@ export interface MentorSession {
   notes?: string;
   meeting_link?: string;
   meeting_platform?: MeetingPlatform;
+  calendar_event_id?: string;
+  availability_slot_id?: string;
   mentor: {
     id: string;
     full_name: string;
