@@ -1499,58 +1499,34 @@ export type Database = {
       }
       webinar_registrations: {
         Row: {
-          country: Database["public"]["Enums"]["country"] | null
           created_at: string
-          "current academic field/position": string | null
-          "current school/company": string | null
           email: string
-          first_name: string | null
           id: string
-          last_name: string | null
+          name: string | null
           profile_id: string | null
           status: string | null
-          student_or_professional: string | null
           updated_at: string
           webinar_id: string | null
-          "where did you hear about us":
-            | Database["public"]["Enums"]["where did you hear about us"]
-            | null
         }
         Insert: {
-          country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
-          "current academic field/position"?: string | null
-          "current school/company"?: string | null
           email: string
-          first_name?: string | null
           id?: string
-          last_name?: string | null
+          name?: string | null
           profile_id?: string | null
           status?: string | null
-          student_or_professional?: string | null
           updated_at?: string
           webinar_id?: string | null
-          "where did you hear about us"?:
-            | Database["public"]["Enums"]["where did you hear about us"]
-            | null
         }
         Update: {
-          country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
-          "current academic field/position"?: string | null
-          "current school/company"?: string | null
           email?: string
-          first_name?: string | null
           id?: string
-          last_name?: string | null
+          name?: string | null
           profile_id?: string | null
           status?: string | null
-          student_or_professional?: string | null
           updated_at?: string
           webinar_id?: string | null
-          "where did you hear about us"?:
-            | Database["public"]["Enums"]["where did you hear about us"]
-            | null
         }
         Relationships: [
           {
@@ -2215,18 +2191,6 @@ export type Database = {
         | "Starting Your Own Club or Organization"
       user_type: "mentor" | "mentee" | "admin" | "editor"
       webinar_platform: "Google Meet" | "Zoom"
-      "where did you hear about us":
-        | "Instagram"
-        | "Facebook"
-        | "TikTok"
-        | "LinkedIn"
-        | "X (Twitter)"
-        | "WhatsApp"
-        | "YouTube"
-        | "Search Engine (Google, Bing...)"
-        | "RedNote"
-        | "Friend/Family"
-        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
