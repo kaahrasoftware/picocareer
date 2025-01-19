@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
-import { formatInTimeZone } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -29,10 +28,12 @@ export function useAvailableTimeSlots(
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
+      // Fetch both one-time and recurring availability
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('*')
         .eq('profile_id', mentorId)
+        .eq('is_available', true)
         .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
         .order('start_date_time', { ascending: true });
 
@@ -66,8 +67,7 @@ export function useAvailableTimeSlots(
       }
 
       const slots: TimeSlot[] = [];
-      const availableSlots = availabilityData?.filter(slot => slot.is_available) || [];
-      const unavailableSlots = availabilityData?.filter(slot => !slot.is_available) || [];
+      const availableSlots = availabilityData || [];
 
       availableSlots.forEach((availability) => {
         if (!availability.start_date_time || !availability.end_date_time) return;
@@ -76,50 +76,24 @@ export function useAvailableTimeSlots(
         let endTime: Date;
 
         if (availability.recurring) {
-          // For recurring slots, use the time portion from start/end times
-          const availabilityStart = new Date(availability.start_date_time);
-          const availabilityEnd = new Date(availability.end_date_time);
+          // For recurring slots, use the time portion from start/end times and apply it to the selected date
+          const recurringStart = new Date(availability.start_date_time);
+          const recurringEnd = new Date(availability.end_date_time);
           
           startTime = new Date(date);
-          startTime.setHours(availabilityStart.getHours(), availabilityStart.getMinutes());
+          startTime.setHours(recurringStart.getHours(), recurringStart.getMinutes(), 0, 0);
           
           endTime = new Date(date);
-          endTime.setHours(endTime.getHours(), endTime.getMinutes());
+          endTime.setHours(recurringEnd.getHours(), recurringEnd.getMinutes(), 0, 0);
         } else {
-          // For non-recurring slots, use the stored UTC times
           startTime = new Date(availability.start_date_time);
           endTime = new Date(availability.end_date_time);
         }
 
-        console.log('Processing availability slot:', {
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-          timezoneOffset: availability.timezone_offset,
-          mentorTimezone
-        });
-
-        let currentTime = startTime;
+        let currentTime = new Date(startTime);
         while (currentTime < endTime) {
           const slotStart = new Date(currentTime);
           const slotEnd = addMinutes(slotStart, sessionDuration);
-
-          // Check for overlapping unavailable slots
-          const isOverlappingUnavailable = unavailableSlots.some(unavailable => {
-            const unavailableStart = new Date(unavailable.start_date_time);
-            const unavailableEnd = new Date(unavailable.end_date_time);
-            
-            // Apply timezone offset for unavailable slots
-            if (unavailable.timezone_offset) {
-              const offsetMillis = unavailable.timezone_offset * 60000;
-              unavailableStart.setTime(unavailableStart.getTime() + offsetMillis);
-              unavailableEnd.setTime(unavailableEnd.getTime() + offsetMillis);
-            }
-            
-            return areIntervalsOverlapping(
-              { start: slotStart, end: slotEnd },
-              { start: unavailableStart, end: unavailableEnd }
-            );
-          });
 
           // Check for overlapping bookings
           const isOverlappingBooking = bookingsData?.some(booking => {
@@ -134,11 +108,9 @@ export function useAvailableTimeSlots(
           });
 
           const now = new Date();
-          if (slotStart > now && !isOverlappingUnavailable && !isOverlappingBooking) {
-            // Format time in UTC
-            const timeString = format(slotStart, 'HH:mm');
+          if (slotStart > now && !isOverlappingBooking) {
             slots.push({
-              time: timeString,
+              time: format(slotStart, 'HH:mm'),
               available: true,
               timezoneOffset: availability.timezone_offset
             });
