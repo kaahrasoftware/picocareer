@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/types/database/database.types";
 
 type HearAboutUs = Database["public"]["Enums"]["hear_about_us"];
 type Country = Database["public"]["Enums"]["country"];
@@ -99,7 +99,7 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
                 <SelectValue placeholder="Select your country" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(Database.public.Enums.country).map((country) => (
+                {(Object.keys(Database["public"]["Enums"]["country"]) as Array<Country>).map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
                   </SelectItem>
@@ -119,7 +119,7 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(Database.public.Enums.hear_about_us).map((option) => (
+                {(Object.keys(Database["public"]["Enums"]["hear_about_us"]) as Array<HearAboutUs>).map((option) => (
                   <SelectItem key={option} value={option}>
                     {option}
                   </SelectItem>
