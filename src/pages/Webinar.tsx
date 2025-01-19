@@ -63,15 +63,6 @@ export default function Webinar() {
   });
 
   const handleRegister = async (webinarId: string) => {
-    if (!session || !profile) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to register for webinars",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const webinar = webinars?.find(w => w.id === webinarId);
     if (webinar) {
       setSelectedWebinar(webinar);
@@ -170,13 +161,11 @@ export default function Webinar() {
                   onClick={() => handleRegister(webinar.id)}
                   disabled={registering === webinar.id || registrations?.includes(webinar.id)}
                 >
-                  {!session 
-                    ? "Sign in to Register"
-                    : registering === webinar.id 
-                      ? "Registering..." 
-                      : registrations?.includes(webinar.id)
-                        ? "Registered"
-                        : "Register Now"}
+                  {registering === webinar.id 
+                    ? "Registering..." 
+                    : registrations?.includes(webinar.id)
+                      ? "Registered"
+                      : "Register Now"}
                 </Button>
               </CardFooter>
             </Card>
