@@ -1,19 +1,23 @@
+import { Control } from "react-hook-form";
+
 export type MeetingPlatform = "Google Meet";
 
-export interface Availability {
+export interface SessionType {
   id: string;
   profile_id: string;
-  is_available: boolean;
+  type: SessionTypeEnum;
+  duration: number;
+  price: number;
+  description?: string;
   created_at: string;
   updated_at: string;
-  recurring?: boolean;
-  day_of_week?: number;
-  start_date_time: string;
-  end_date_time: string;
-  timezone_offset: number;
+  meeting_platform: MeetingPlatform[];
+  telegram_username?: string;
+  phone_number?: string;
+  token_cost: number;
 }
 
-export type SessionTypeEnum = 
+export type SessionTypeEnum =
   | "Know About my Career"
   | "Resume/CV Review"
   | "Campus France"
@@ -44,6 +48,7 @@ export type SessionTypeEnum =
   | "Volunteer Opportunities"
   | "Know About my Academic Major";
 
+// Add the SESSION_TYPE_OPTIONS export
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Know About my Career",
   "Resume/CV Review",
@@ -86,7 +91,7 @@ export interface SessionTypeFormData {
   phone_number?: string;
 }
 
-export interface Session {
+export interface MentorSession {
   id: string;
   mentor_id: string;
   mentee_id: string;
@@ -98,11 +103,36 @@ export interface Session {
   meeting_platform?: MeetingPlatform;
   meeting_link?: string;
   calendar_event_id?: string;
-  status: string;
-  attendance_confirmed: boolean;
+  status?: string;
+  attendance_confirmed?: boolean;
   calendar_event_etag?: string;
   last_calendar_sync?: string;
   availability_slot_id?: string;
   mentee_telegram_username?: string;
   mentee_phone_number?: string;
+}
+
+export interface Availability {
+  id: string;
+  profile_id: string;
+  is_available?: boolean;
+  created_at: string;
+  updated_at: string;
+  recurring?: boolean;
+  day_of_week?: number;
+  start_date_time?: string;
+  end_date_time?: string;
+  timezone_offset: number;
+}
+
+export interface TimeSlotInputsProps {
+  timeSlots: any[];
+  selectedDate: Date;
+  selectedStartTime: string;
+  selectedEndTime: string;
+  isRecurring: boolean;
+  userTimezone: string;
+  onStartTimeSelect: (time: string) => void;
+  onEndTimeSelect: (time: string) => void;
+  onRecurringChange: () => void;
 }

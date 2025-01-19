@@ -1,48 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { TimeSlotForm } from "./availability/TimeSlotForm";
-import { UnavailableTimeForm } from "./availability/UnavailableTimeForm";
-import { ExistingTimeSlots } from "./availability/ExistingTimeSlots";
+import { format } from "date-fns";
 
 interface MentorAvailabilityFormProps {
-  mentorId: string;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
-export function MentorAvailabilityForm({ mentorId }: MentorAvailabilityFormProps) {
+export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilityFormProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const [userId, setUserId] = useState<string>('');
 
-  const handleSubmit = async (formData: {
-    profile_id: string;
-    start_date_time: string;
-    end_date_time: string;
-    is_available: boolean;
-    recurring?: boolean;
-    day_of_week?: number;
-  }) => {
+  // Get user ID on component mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUserId();
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!selectedDate || !selectedTime) return;
+
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          ...formData,
-          timezone_offset: new Date().getTimezoneOffset()
+          profile_id: userId,
+          date_available: format(selectedDate, 'yyyy-MM-dd'),
+          start_time: selectedTime,
+          end_time: format(
+            new Date(selectedDate.setHours(parseInt(selectedTime.split(':')[0]) + 1)),
+            'HH:mm'
+          ),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         });
 
       if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Availability updated successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      onSuccess();
+    } catch (error) {
+      console.error('Error setting availability:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -50,17 +56,42 @@ export function MentorAvailabilityForm({ mentorId }: MentorAvailabilityFormProps
 
   return (
     <div className="space-y-6">
-      <TimeSlotForm 
-        mentorId={mentorId} 
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-      />
-      <UnavailableTimeForm 
-        mentorId={mentorId}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-      />
-      <ExistingTimeSlots mentorId={mentorId} />
+      <div>
+        <h3 className="text-lg font-medium mb-4">Set Your Availability</h3>
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={setSelectedDate}
+          className="rounded-md border bg-kahra-darker"
+          disabled={(date) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return date < today;
+          }}
+        />
+      </div>
+
+      {selectedDate && (
+        <TimeSlotSelector
+          date={selectedDate}
+          mentorId={userId}
+          selectedTime={selectedTime}
+          onTimeSelect={setSelectedTime}
+          selectedSessionType={undefined}
+        />
+      )}
+
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={!selectedDate || !selectedTime || isSubmitting}
+        >
+          Save Availability
+        </Button>
+      </div>
     </div>
   );
 }
