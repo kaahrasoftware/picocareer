@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
-import { Availability } from "@/types/calendar";
+import { Availability } from "@/types/session";
 
 interface AvailabilitySlotProps {
   slot: Availability;
@@ -31,11 +31,11 @@ export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: Av
 
   return (
     <div
-      key={`${slot.start_time}-${index}`}
+      key={`${slot.start_date_time}-${index}`}
       className={`absolute left-2 right-2 p-3 rounded-lg border transition-colors z-10 ${slotStyle}`}
       style={{
-        top: `${getSlotPosition(slot.start_time) + cellHeight}px`,
-        height: `${calculateSlotHeight(slot.start_time, slot.end_time)}px`,
+        top: `${getSlotPosition(slot.start_date_time) + cellHeight}px`,
+        height: `${calculateSlotHeight(slot.start_date_time, slot.end_date_time)}px`,
       }}
     >
       <div className="flex flex-col gap-1">
@@ -44,8 +44,8 @@ export function AvailabilitySlot({ slot, date, timezone, index, cellHeight }: Av
           {slot.recurring && " (Recurring)"}
         </h4>
         <span className="text-xs text-muted-foreground">
-          {formatInTimeZone(new Date(slot.start_time), timezone, 'h:mm a')} - 
-          {formatInTimeZone(new Date(slot.end_time), timezone, ' h:mm a')}
+          {formatInTimeZone(new Date(slot.start_date_time), timezone, 'h:mm a')} - 
+          {formatInTimeZone(new Date(slot.end_date_time), timezone, ' h:mm a')}
         </span>
       </div>
     </div>
