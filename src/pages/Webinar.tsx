@@ -8,6 +8,8 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { Calendar, Clock, Users, Video } from "lucide-react";
 import { format } from "date-fns";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WebinarRegistrationForm } from "@/components/forms/WebinarRegistrationForm";
 
 interface Webinar {
   id: string;
@@ -26,6 +28,7 @@ export default function Webinar() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const [registering, setRegistering] = useState<string | null>(null);
+  const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
 
   // Query for webinars - runs regardless of authentication
   const { data: webinars, isLoading } = useQuery({
@@ -69,14 +72,30 @@ export default function Webinar() {
       return;
     }
 
-    setRegistering(webinarId);
+    const webinar = webinars?.find(w => w.id === webinarId);
+    if (webinar) {
+      setSelectedWebinar(webinar);
+    }
+  };
+
+  const handleRegistrationSubmit = async (formData: any) => {
+    if (!session?.user?.id || !selectedWebinar) return;
+
+    setRegistering(selectedWebinar.id);
     try {
       const { error } = await supabase
         .from('webinar_registrations')
         .insert({
-          webinar_id: webinarId,
+          webinar_id: selectedWebinar.id,
           profile_id: session.user.id,
-          email: profile.email
+          email: formData.email,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          "current academic field/position": formData.current_field,
+          student_or_professional: formData.student_or_professional,
+          "current school/company": formData.current_organization,
+          country: formData.country,
+          "where did you hear about us": formData.hear_about_us
         });
 
       if (error) throw error;
@@ -85,6 +104,7 @@ export default function Webinar() {
         title: "Registration Successful",
         description: "You have been registered for the webinar",
       });
+      setSelectedWebinar(null);
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
@@ -170,6 +190,21 @@ export default function Webinar() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!selectedWebinar} onOpenChange={() => setSelectedWebinar(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Register for Webinar</DialogTitle>
+          </DialogHeader>
+          {selectedWebinar && (
+            <WebinarRegistrationForm
+              webinarId={selectedWebinar.id}
+              onSubmit={handleRegistrationSubmit}
+              onCancel={() => setSelectedWebinar(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
