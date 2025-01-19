@@ -1,42 +1,14 @@
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
 import { FormField } from "./FormField";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Database } from "@/integrations/supabase/types";
 
-// Define the enums based on the database schema
-const COUNTRIES = [
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Germany",
-  "France",
-  "Spain",
-  "Italy",
-  "Japan",
-  "China",
-  "India",
-  "Brazil",
-  "Mexico",
-  "South Africa",
-  "Other"
-] as const;
-
-const HEAR_ABOUT_US_OPTIONS = [
-  "Google Search",
-  "Social Media",
-  "Friend Referral",
-  "School/University",
-  "Professional Network",
-  "Email Newsletter",
-  "Online Advertisement",
-  "Blog/Article",
-  "Conference/Event",
-  "Other"
-] as const;
+type HearAboutUs = Database["public"]["Enums"]["hear_about_us"];
+type Country = Database["public"]["Enums"]["country"];
 
 interface WebinarRegistrationFormProps {
   webinarId: string;
@@ -55,8 +27,8 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
       current_field: "",
       student_or_professional: "",
       current_organization: "",
-      country: "",
-      hear_about_us: "",
+      country: "" as Country,
+      hear_about_us: "" as HearAboutUs,
     }
   });
 
@@ -120,14 +92,14 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
           <div className="space-y-2">
             <label className="text-sm font-medium">Country</label>
             <Select
-              onValueChange={(value) => form.setValue('country', value)}
+              onValueChange={(value: Country) => form.setValue('country', value)}
               value={form.watch('country')}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select your country" />
               </SelectTrigger>
               <SelectContent>
-                {COUNTRIES.map((country) => (
+                {Object.values(Database.public.Enums.country).map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
                   </SelectItem>
@@ -140,14 +112,14 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
           <div className="space-y-2">
             <label className="text-sm font-medium">How did you hear about us?</label>
             <Select
-              onValueChange={(value) => form.setValue('hear_about_us', value)}
+              onValueChange={(value: HearAboutUs) => form.setValue('hear_about_us', value)}
               value={form.watch('hear_about_us')}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
-                {HEAR_ABOUT_US_OPTIONS.map((option) => (
+                {Object.values(Database.public.Enums.hear_about_us).map((option) => (
                   <SelectItem key={option} value={option}>
                     {option}
                   </SelectItem>
