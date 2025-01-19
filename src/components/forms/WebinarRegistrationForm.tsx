@@ -3,6 +3,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "./FormField";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WebinarRegistrationFormProps {
   webinarId: string;
@@ -42,65 +43,67 @@ export function WebinarRegistrationForm({ webinarId, onSubmit, onCancel }: Webin
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="first_name"
-          label="First Name"
-          required
-        />
-        <FormField
-          control={form.control}
-          name="last_name"
-          label="Last Name"
-          required
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          label="Email"
-          type="text"
-          required
-        />
-        <FormField
-          control={form.control}
-          name="current_field"
-          label="Current Academic Field/Position"
-          type="text"
-        />
-        <FormField
-          control={form.control}
-          name="student_or_professional"
-          label="Are you a student or professional?"
-          type="text"
-        />
-        <FormField
-          control={form.control}
-          name="current_organization"
-          label="Current School/Company"
-          type="text"
-        />
-        <FormField
-          control={form.control}
-          name="country"
-          label="Country"
-          type="text"
-        />
-        <FormField
-          control={form.control}
-          name="hear_about_us"
-          label="How did you hear about us?"
-          type="text"
-        />
-        <div className="flex gap-4 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Registering..." : "Register"}
-          </Button>
-        </div>
-      </form>
+      <ScrollArea className="h-[400px] pr-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="first_name"
+            label="First Name"
+            required
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            label="Last Name"
+            required
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            label="Email"
+            type="text"
+            required
+          />
+          <FormField
+            control={form.control}
+            name="current_field"
+            label="Current Academic Field/Position"
+            type="text"
+          />
+          <FormField
+            control={form.control}
+            name="student_or_professional"
+            label="Are you a student or professional?"
+            type="text"
+          />
+          <FormField
+            control={form.control}
+            name="current_organization"
+            label="Current School/Company"
+            type="text"
+          />
+          <FormField
+            control={form.control}
+            name="country"
+            label="Country"
+            type="text"
+          />
+          <FormField
+            control={form.control}
+            name="hear_about_us"
+            label="How did you hear about us?"
+            type="text"
+          />
+          <div className="flex gap-4 justify-end pt-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Registering..." : "Register"}
+            </Button>
+          </div>
+        </form>
+      </ScrollArea>
     </Form>
   );
 }
