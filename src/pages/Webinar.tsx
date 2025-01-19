@@ -27,6 +27,7 @@ export default function Webinar() {
   const { data: profile } = useUserProfile(session);
   const [registering, setRegistering] = useState<string | null>(null);
 
+  // Query for webinars - runs regardless of authentication
   const { data: webinars, isLoading } = useQuery({
     queryKey: ['webinars'],
     queryFn: async () => {
@@ -42,6 +43,7 @@ export default function Webinar() {
     }
   });
 
+  // Query for registrations - only runs when user is authenticated
   const { data: registrations } = useQuery({
     queryKey: ['webinar-registrations', session?.user?.id],
     queryFn: async () => {
@@ -74,7 +76,7 @@ export default function Webinar() {
         .insert({
           webinar_id: webinarId,
           profile_id: session.user.id,
-          email: profile.email // Include the user's email from their profile
+          email: profile.email
         });
 
       if (error) throw error;
@@ -148,11 +150,13 @@ export default function Webinar() {
                   onClick={() => handleRegister(webinar.id)}
                   disabled={registering === webinar.id || registrations?.includes(webinar.id)}
                 >
-                  {registering === webinar.id 
-                    ? "Registering..." 
-                    : registrations?.includes(webinar.id)
-                    ? "Registered"
-                    : "Register Now"}
+                  {!session 
+                    ? "Sign in to Register"
+                    : registering === webinar.id 
+                      ? "Registering..." 
+                      : registrations?.includes(webinar.id)
+                        ? "Registered"
+                        : "Register Now"}
                 </Button>
               </CardFooter>
             </Card>
