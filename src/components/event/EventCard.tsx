@@ -63,7 +63,7 @@ export function EventCard({
       <CardHeader>
         <CardTitle className="text-lg">{event.title}</CardTitle>
         <CardDescription className="text-xs">
-          {event.organized_by && `Organized by ${event.organized_by}`}
+          {event.organized_by && `By: ${event.organized_by}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
