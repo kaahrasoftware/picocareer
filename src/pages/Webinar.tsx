@@ -165,7 +165,9 @@ export default function Webinar() {
       <Dialog open={!!selectedWebinar} onOpenChange={() => setSelectedWebinar(null)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Register for Webinar</DialogTitle>
+            <DialogTitle>
+              {selectedWebinar?.title || 'Register for Webinar'}
+            </DialogTitle>
           </DialogHeader>
           {selectedWebinar && (
             <WebinarRegistrationForm
