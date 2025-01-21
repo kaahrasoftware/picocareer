@@ -48,13 +48,13 @@ export function EventCard({
             className="absolute inset-0 bg-cover bg-center rounded-t-lg"
             style={{ 
               backgroundImage: `url(${event.thumbnail_url})`,
-              height: '200px'
+              height: '250px'
             }}
           >
             <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
           </div>
         )}
-        <CardHeader className="relative z-10 h-[200px] flex flex-col justify-end space-y-2">
+        <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end space-y-2">
           {event.event_type && (
             <div className="absolute top-4 right-4">
               <Badge variant="destructive" className="text-xs font-medium">
