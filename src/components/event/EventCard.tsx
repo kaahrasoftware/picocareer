@@ -42,7 +42,7 @@ export function EventCard({
       const { count, error } = await supabase
         .from('event_registrations')
         .select('*', { count: 'exact', head: true })
-        .eq('event_id', event.id);
+        .eq('webinar_id', event.id);
       
       if (error) throw error;
       return count || 0;
@@ -79,21 +79,25 @@ export function EventCard({
         <p className="text-sm text-muted-foreground mb-4">
           {truncateDescription(event.description)}
         </p>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4" />
-            {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Video className="h-4 w-4" />
-            {event.platform}
-          </div>
-          {event.max_attendees && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4" />
-              {registrationCount} / {event.max_attendees} registered
+              <Clock className="h-4 w-4" />
+              {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}
             </div>
-          )}
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Video className="h-4 w-4" />
+              {event.platform}
+            </div>
+            {event.max_attendees && (
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4" />
+                {registrationCount} / {event.max_attendees} registered
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
       <CardFooter className="flex gap-2">

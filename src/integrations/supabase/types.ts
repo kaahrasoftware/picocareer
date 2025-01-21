@@ -334,6 +334,7 @@ export type Database = {
           "current academic field/position": string | null
           "current school/company": string | null
           email: string
+          event_id: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -341,7 +342,6 @@ export type Database = {
           status: string | null
           student_or_professional: string | null
           updated_at: string
-          webinar_id: string | null
           "where did you hear about us":
             | Database["public"]["Enums"]["where did you hear about us"]
             | null
@@ -352,6 +352,7 @@ export type Database = {
           "current academic field/position"?: string | null
           "current school/company"?: string | null
           email: string
+          event_id?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -359,7 +360,6 @@ export type Database = {
           status?: string | null
           student_or_professional?: string | null
           updated_at?: string
-          webinar_id?: string | null
           "where did you hear about us"?:
             | Database["public"]["Enums"]["where did you hear about us"]
             | null
@@ -370,6 +370,7 @@ export type Database = {
           "current academic field/position"?: string | null
           "current school/company"?: string | null
           email?: string
+          event_id?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -377,24 +378,23 @@ export type Database = {
           status?: string | null
           student_or_professional?: string | null
           updated_at?: string
-          webinar_id?: string | null
           "where did you hear about us"?:
             | Database["public"]["Enums"]["where did you hear about us"]
             | null
         }
         Relationships: [
           {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "webinar_registrations_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "webinar_registrations_webinar_id_fkey"
-            columns: ["webinar_id"]
-            isOneToOne: false
-            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
