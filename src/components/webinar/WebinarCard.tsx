@@ -3,6 +3,8 @@ import { Calendar, Clock, Users, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WebinarCardProps {
   webinar: {
@@ -29,6 +31,20 @@ export function WebinarCard({
   isPast,
   onRegister 
 }: WebinarCardProps) {
+  // Query to get the registration count
+  const { data: registrationCount = 0 } = useQuery({
+    queryKey: ['webinar-registration-count', webinar.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('webinar_registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('webinar_id', webinar.id);
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
   return (
     <Card key={webinar.id} className="flex flex-col">
       {webinar.thumbnail_url && (
@@ -63,7 +79,7 @@ export function WebinarCard({
           {webinar.max_attendees && (
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4" />
-              Limited to {webinar.max_attendees} attendees
+              {registrationCount} / {webinar.max_attendees} registered
             </div>
           )}
         </div>
@@ -72,7 +88,7 @@ export function WebinarCard({
         <Button 
           className="w-full"
           onClick={() => onRegister(webinar.id)}
-          disabled={isRegistering || isRegistered || isPast}
+          disabled={isRegistering || isRegistered || isPast || (webinar.max_attendees && registrationCount >= webinar.max_attendees)}
         >
           {isPast 
             ? "Webinar Ended"
@@ -80,7 +96,9 @@ export function WebinarCard({
               ? "Registering..." 
               : isRegistered
                 ? "Registered"
-                : "Register Now"}
+                : webinar.max_attendees && registrationCount >= webinar.max_attendees
+                  ? "Registration Full"
+                  : "Register Now"}
         </Button>
       </CardFooter>
     </Card>
