@@ -25,6 +25,7 @@ interface Webinar {
   max_attendees?: number;
   thumbnail_url?: string;
   host_id?: string;
+  organized_by?: string;
 }
 
 export default function Webinar() {
