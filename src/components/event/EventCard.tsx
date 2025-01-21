@@ -66,12 +66,12 @@ export function EventCard({
           <CardTitle className={`text-xl ${event.thumbnail_url ? 'text-white' : ''}`}>
             {event.title}
           </CardTitle>
-          <CardDescription className={`space-y-1 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
-            <p>By: PicoCareer & I-Impact</p>
+          <div className={`space-y-1 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
+            <p>By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
             {event.facilitator && (
               <p>Facilitator: {event.facilitator}</p>
             )}
-          </CardDescription>
+          </div>
         </CardHeader>
       </div>
 
