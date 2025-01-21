@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WebinarRegistrationForm } from "@/components/forms/WebinarRegistrationForm";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface Webinar {
   id: string;
@@ -29,17 +30,20 @@ export default function Webinar() {
   const { data: profile } = useUserProfile(session);
   const [registering, setRegistering] = useState<string | null>(null);
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
+  const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
   // Query for webinars - available to all users
   const { data: webinars, isLoading } = useQuery({
-    queryKey: ['webinars'],
+    queryKey: ['webinars', filter],
     queryFn: async () => {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('webinars')
         .select('*')
         .eq('status', 'Approved')
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true });
+        .gte('start_time', filter === 'upcoming' ? now : '2000-01-01')
+        .lt('start_time', filter === 'upcoming' ? '2100-01-01' : now)
+        .order('start_time', { ascending: filter === 'upcoming' });
 
       if (error) throw error;
       return data as Webinar[];
@@ -142,11 +146,21 @@ export default function Webinar() {
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Upcoming Webinars</h1>
-          <p className="text-muted-foreground mt-2">
-            Join our interactive webinars to learn from industry experts
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Webinars</h1>
+            <p className="text-muted-foreground mt-2">
+              Join our interactive webinars to learn from industry experts
+            </p>
+          </div>
+          <ToggleGroup type="single" value={filter} onValueChange={(value) => value && setFilter(value as 'upcoming' | 'past')}>
+            <ToggleGroupItem value="upcoming" aria-label="Show upcoming webinars">
+              Upcoming
+            </ToggleGroupItem>
+            <ToggleGroupItem value="past" aria-label="Show past webinars">
+              Past
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -182,13 +196,15 @@ export default function Webinar() {
                 <Button 
                   className="w-full"
                   onClick={() => handleRegister(webinar.id)}
-                  disabled={registering === webinar.id || registrations?.includes(webinar.id)}
+                  disabled={registering === webinar.id || registrations?.includes(webinar.id) || filter === 'past'}
                 >
-                  {registering === webinar.id 
-                    ? "Registering..." 
-                    : registrations?.includes(webinar.id)
-                      ? "Registered"
-                      : "Register Now"}
+                  {filter === 'past' 
+                    ? "Webinar Ended"
+                    : registering === webinar.id 
+                      ? "Registering..." 
+                      : registrations?.includes(webinar.id)
+                        ? "Registered"
+                        : "Register Now"}
                 </Button>
               </CardFooter>
             </Card>
@@ -197,8 +213,12 @@ export default function Webinar() {
 
         {webinars?.length === 0 && (
           <div className="text-center py-12">
-            <h3 className="text-lg font-semibold">No Upcoming Webinars</h3>
-            <p className="text-muted-foreground">Check back later for new webinars</p>
+            <h3 className="text-lg font-semibold">No {filter} Webinars</h3>
+            <p className="text-muted-foreground">
+              {filter === 'upcoming' 
+                ? "Check back later for new webinars" 
+                : "There are no past webinars to display"}
+            </p>
           </div>
         )}
       </div>
