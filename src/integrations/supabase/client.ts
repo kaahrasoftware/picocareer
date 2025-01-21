@@ -23,22 +23,50 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       eventsPerSecond: 2,
     },
   },
+  // Add retry configuration
+  db: {
+    schema: 'public',
+  },
+  fetch: (url, options = {}) => {
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Cache-Control': 'no-cache',
+      },
+    }).then(async (response) => {
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Supabase request failed:', error);
+        throw new Error(error.message || 'Failed to fetch data');
+      }
+      return response;
+    }).catch(async (error) => {
+      console.error('Network error:', error);
+      // Retry the request up to 3 times with exponential backoff
+      for (let i = 0; i < 3; i++) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+          const retryResponse = await fetch(url, {
+            ...options,
+            headers: {
+              ...options.headers,
+              'Cache-Control': 'no-cache',
+            },
+          });
+          if (retryResponse.ok) {
+            return retryResponse;
+          }
+        } catch (retryError) {
+          console.error(`Retry ${i + 1} failed:`, retryError);
+        }
+      }
+      throw error;
+    });
+  },
 });
 
-// Add error handling and retry logic for failed requests
-supabase.handleFailedRequest = async (error: any, retryCount = 0) => {
-  console.error('Supabase request failed:', error);
-  
-  if (retryCount < 3) {
-    // Wait for exponential backoff time
-    await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-    return true; // Retry the request
-  }
-  
-  return false; // Stop retrying after 3 attempts
-};
-
-// Add a health check function
+// Add health check function
 export const checkSupabaseConnection = async () => {
   try {
     const { data, error } = await supabase.from('profiles').select('count').limit(1);
