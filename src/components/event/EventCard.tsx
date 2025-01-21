@@ -76,10 +76,7 @@ export function EventCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground mb-4">
-          {truncateDescription(event.description)}
-        </p>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4" />
@@ -99,6 +96,9 @@ export function EventCard({
             )}
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          {truncateDescription(event.description)}
+        </p>
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button 
