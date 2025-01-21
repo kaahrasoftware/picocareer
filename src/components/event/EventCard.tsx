@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Tag } from "lucide-react";
+import { Tag, Calendar, Clock, Monitor, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,10 +85,12 @@ export function EventCard({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4" />
               <span className="font-medium">Date:</span>
               <span className="text-muted-foreground">{formatDate(event.start_time)}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4" />
               <span className="font-medium">Time:</span>
               <span className="text-muted-foreground">
                 {formatTime(event.start_time)} - {formatTime(event.end_time)}
@@ -97,11 +99,13 @@ export function EventCard({
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
+              <Monitor className="h-4 w-4" />
               <span className="font-medium">Platform:</span>
               <span className="text-muted-foreground">{event.platform}</span>
             </div>
             {event.max_attendees && (
               <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4" />
                 <span className="font-medium">Capacity:</span>
                 <span className="text-muted-foreground">{event.max_attendees} attendees</span>
               </div>
