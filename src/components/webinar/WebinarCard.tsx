@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Calendar, Clock, Users, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface WebinarCardProps {
   webinar: {
@@ -13,6 +14,7 @@ interface WebinarCardProps {
     platform: 'Google Meet' | 'Zoom';
     meeting_link?: string;
     max_attendees?: number;
+    thumbnail_url?: string;
   };
   isRegistering: boolean;
   isRegistered: boolean;
@@ -28,7 +30,18 @@ export function WebinarCard({
   onRegister 
 }: WebinarCardProps) {
   return (
-    <Card key={webinar.id}>
+    <Card key={webinar.id} className="flex flex-col">
+      {webinar.thumbnail_url && (
+        <div className="p-4 pb-0">
+          <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
+            <img 
+              src={webinar.thumbnail_url} 
+              alt={webinar.title}
+              className="object-cover w-full h-full"
+            />
+          </AspectRatio>
+        </div>
+      )}
       <CardHeader>
         <CardTitle>{webinar.title}</CardTitle>
         <CardDescription className="flex items-center gap-2">
