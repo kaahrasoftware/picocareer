@@ -68,7 +68,7 @@ export function EventCard({
             className="absolute inset-0 bg-cover bg-center rounded-t-lg"
             style={{ 
               backgroundImage: `url(${event.thumbnail_url})`,
-              height: '120px'
+              height: '160px'
             }}
           >
             <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
