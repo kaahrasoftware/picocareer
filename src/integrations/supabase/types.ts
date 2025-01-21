@@ -327,6 +327,132 @@ export type Database = {
         }
         Relationships: []
       }
+      event_registrations: {
+        Row: {
+          country: Database["public"]["Enums"]["country"] | null
+          created_at: string
+          "current academic field/position": string | null
+          "current school/company": string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          profile_id: string | null
+          status: string | null
+          student_or_professional: string | null
+          updated_at: string
+          webinar_id: string | null
+          "where did you hear about us":
+            | Database["public"]["Enums"]["where did you hear about us"]
+            | null
+        }
+        Insert: {
+          country?: Database["public"]["Enums"]["country"] | null
+          created_at?: string
+          "current academic field/position"?: string | null
+          "current school/company"?: string | null
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          profile_id?: string | null
+          status?: string | null
+          student_or_professional?: string | null
+          updated_at?: string
+          webinar_id?: string | null
+          "where did you hear about us"?:
+            | Database["public"]["Enums"]["where did you hear about us"]
+            | null
+        }
+        Update: {
+          country?: Database["public"]["Enums"]["country"] | null
+          created_at?: string
+          "current academic field/position"?: string | null
+          "current school/company"?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          profile_id?: string | null
+          status?: string | null
+          student_or_professional?: string | null
+          updated_at?: string
+          webinar_id?: string | null
+          "where did you hear about us"?:
+            | Database["public"]["Enums"]["where did you hear about us"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webinar_registrations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webinar_registrations_webinar_id_fkey"
+            columns: ["webinar_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string
+          end_time: string
+          event_type: Database["public"]["Enums"]["event_types"]
+          facilitator: string | null
+          id: string
+          max_attendees: number | null
+          meeting_link: string | null
+          organized_by: string | null
+          platform: Database["public"]["Enums"]["webinar_platform"]
+          start_time: string
+          status: Database["public"]["Enums"]["status"] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_time: string
+          event_type: Database["public"]["Enums"]["event_types"]
+          facilitator?: string | null
+          id?: string
+          max_attendees?: number | null
+          meeting_link?: string | null
+          organized_by?: string | null
+          platform?: Database["public"]["Enums"]["webinar_platform"]
+          start_time: string
+          status?: Database["public"]["Enums"]["status"] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_time?: string
+          event_type?: Database["public"]["Enums"]["event_types"]
+          facilitator?: string | null
+          id?: string
+          max_attendees?: number | null
+          meeting_link?: string | null
+          organized_by?: string | null
+          platform?: Database["public"]["Enums"]["webinar_platform"]
+          start_time?: string
+          status?: Database["public"]["Enums"]["status"] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       majors: {
         Row: {
           affiliated_programs: string[] | null
@@ -1497,137 +1623,6 @@ export type Database = {
           },
         ]
       }
-      webinar_registrations: {
-        Row: {
-          country: Database["public"]["Enums"]["country"] | null
-          created_at: string
-          "current academic field/position": string | null
-          "current school/company": string | null
-          email: string
-          first_name: string | null
-          id: string
-          last_name: string | null
-          profile_id: string | null
-          status: string | null
-          student_or_professional: string | null
-          updated_at: string
-          webinar_id: string | null
-          "where did you hear about us":
-            | Database["public"]["Enums"]["where did you hear about us"]
-            | null
-        }
-        Insert: {
-          country?: Database["public"]["Enums"]["country"] | null
-          created_at?: string
-          "current academic field/position"?: string | null
-          "current school/company"?: string | null
-          email: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          profile_id?: string | null
-          status?: string | null
-          student_or_professional?: string | null
-          updated_at?: string
-          webinar_id?: string | null
-          "where did you hear about us"?:
-            | Database["public"]["Enums"]["where did you hear about us"]
-            | null
-        }
-        Update: {
-          country?: Database["public"]["Enums"]["country"] | null
-          created_at?: string
-          "current academic field/position"?: string | null
-          "current school/company"?: string | null
-          email?: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          profile_id?: string | null
-          status?: string | null
-          student_or_professional?: string | null
-          updated_at?: string
-          webinar_id?: string | null
-          "where did you hear about us"?:
-            | Database["public"]["Enums"]["where did you hear about us"]
-            | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "webinar_registrations_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "webinar_registrations_webinar_id_fkey"
-            columns: ["webinar_id"]
-            isOneToOne: false
-            referencedRelation: "webinars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      webinars: {
-        Row: {
-          created_at: string
-          description: string
-          end_time: string
-          host_id: string | null
-          id: string
-          max_attendees: number | null
-          meeting_link: string | null
-          organized_by: string | null
-          platform: Database["public"]["Enums"]["webinar_platform"]
-          start_time: string
-          status: Database["public"]["Enums"]["status"] | null
-          thumbnail_url: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          end_time: string
-          host_id?: string | null
-          id?: string
-          max_attendees?: number | null
-          meeting_link?: string | null
-          organized_by?: string | null
-          platform?: Database["public"]["Enums"]["webinar_platform"]
-          start_time: string
-          status?: Database["public"]["Enums"]["status"] | null
-          thumbnail_url?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          end_time?: string
-          host_id?: string | null
-          id?: string
-          max_attendees?: number | null
-          meeting_link?: string | null
-          organized_by?: string | null
-          platform?: Database["public"]["Enums"]["webinar_platform"]
-          start_time?: string
-          status?: Database["public"]["Enums"]["status"] | null
-          thumbnail_url?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "webinars_host_id_fkey"
-            columns: ["host_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -1958,6 +1953,12 @@ export type Database = {
         | "Master"
         | "PhD"
         | "MD"
+      event_types:
+        | "Coffee Time"
+        | "Hackathon"
+        | "Panel"
+        | "Webinar"
+        | "Workshop"
       feedback_type: "mentor_feedback" | "mentee_feedback"
       interaction_type:
         | "page_view"
