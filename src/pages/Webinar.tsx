@@ -10,7 +10,7 @@ import { WebinarHeader } from "@/components/webinar/WebinarHeader";
 import { WebinarCard } from "@/components/webinar/WebinarCard";
 import { EmptyState } from "@/components/webinar/EmptyState";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Calendar, Clock, Users, Video } from "lucide-react";
+import { Calendar, Clock, Users, Video, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
@@ -230,42 +230,55 @@ export default function Webinar() {
                 </AspectRatio>
               )}
 
-              <div className="space-y-4">
-                {hostProfile && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  {hostProfile && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="h-4 w-4" />
+                      Hosted by {hostProfile.full_name}
+                    </div>
+                  )}
+
+                  {viewingWebinar.organized_by && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Building className="h-4 w-4" />
+                      Organized by {viewingWebinar.organized_by}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 text-sm">
-                    <Users className="h-4 w-4" />
-                    Hosted by {hostProfile.full_name}
+                    <Calendar className="h-4 w-4" />
+                    {format(new Date(viewingWebinar.start_time), 'PPP')}
                   </div>
-                )}
 
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(viewingWebinar.start_time), 'PPP')}
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4" />
-                  {format(new Date(viewingWebinar.start_time), 'p')} - {format(new Date(viewingWebinar.end_time), 'p')}
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Video className="h-4 w-4" />
-                  {viewingWebinar.platform}
-                </div>
-
-                {viewingWebinar.max_attendees && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Users className="h-4 w-4" />
-                    Maximum {viewingWebinar.max_attendees} participants
+                    <Clock className="h-4 w-4" />
+                    {format(new Date(viewingWebinar.start_time), 'p')} - {format(new Date(viewingWebinar.end_time), 'p')}
                   </div>
-                )}
-
-                <div className="text-sm text-muted-foreground">
-                  {viewingWebinar.description}
                 </div>
 
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Video className="h-4 w-4" />
+                    {viewingWebinar.platform}
+                  </div>
+
+                  {viewingWebinar.max_attendees && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="h-4 w-4" />
+                      Maximum {viewingWebinar.max_attendees} participants
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                {viewingWebinar.description}
+              </div>
+
+              <div className="flex justify-center pt-4">
                 <Button 
-                  className="w-full"
+                  className="w-[200px]"
                   onClick={() => {
                     setViewingWebinar(null);
                     handleRegister(viewingWebinar.id);
