@@ -54,7 +54,7 @@ export function EventCard({
             <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
           </div>
         )}
-        <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-6 space-y-4">
+        <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-4">
           {event.event_type && (
             <div className="absolute top-4 right-4">
               <Badge variant="destructive" className="text-xs font-medium">
@@ -63,18 +63,20 @@ export function EventCard({
               </Badge>
             </div>
           )}
-          <CardTitle className={`text-xl ${event.thumbnail_url ? 'text-white' : ''}`}>
-            {event.title}
-          </CardTitle>
-          <div className={`grid grid-cols-2 gap-4 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
-            <div>
-              <p className="text-sm">By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
-            </div>
-            {event.facilitator && (
+          <div className="mt-auto">
+            <CardTitle className={`text-xl mb-4 ${event.thumbnail_url ? 'text-white' : ''}`}>
+              {event.title}
+            </CardTitle>
+            <div className={`grid grid-cols-2 gap-4 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
               <div>
-                <p className="text-sm">Facilitator: {event.facilitator}</p>
+                <p className="text-sm">By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
               </div>
-            )}
+              {event.facilitator && (
+                <div>
+                  <p className="text-sm">Facilitator: {event.facilitator}</p>
+                </div>
+              )}
+            </div>
           </div>
         </CardHeader>
       </div>
