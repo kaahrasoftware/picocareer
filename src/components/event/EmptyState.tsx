@@ -5,11 +5,11 @@ interface EmptyStateProps {
 export function EmptyState({ filter }: EmptyStateProps) {
   return (
     <div className="text-center py-12">
-      <h3 className="text-lg font-semibold">No {filter} Webinars</h3>
+      <h3 className="text-lg font-semibold">No {filter} Events</h3>
       <p className="text-muted-foreground">
         {filter === 'upcoming' 
-          ? "Check back later for new webinars" 
-          : "There are no past webinars to display"}
+          ? "Check back later for new events" 
+          : "There are no past events to display"}
       </p>
     </div>
   );

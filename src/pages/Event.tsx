@@ -5,16 +5,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { WebinarRegistrationForm } from "@/components/forms/WebinarRegistrationForm";
-import { WebinarHeader } from "@/components/webinar/WebinarHeader";
-import { WebinarCard } from "@/components/webinar/WebinarCard";
-import { EmptyState } from "@/components/webinar/EmptyState";
+import { EventRegistrationForm } from "@/components/forms/EventRegistrationForm";
+import { EventHeader } from "@/components/event/EventHeader";
+import { EventCard } from "@/components/event/EventCard";
+import { EmptyState } from "@/components/event/EmptyState";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Calendar, Clock, Users, Video, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
-interface Webinar {
+interface Event {
   id: string;
   title: string;
   description: string;
@@ -28,22 +28,22 @@ interface Webinar {
   organized_by?: string;
 }
 
-export default function Webinar() {
+export default function Event() {
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const [registering, setRegistering] = useState<string | null>(null);
-  const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
-  const [viewingWebinar, setViewingWebinar] = useState<Webinar | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  // Query for webinars
-  const { data: webinars, isLoading } = useQuery({
-    queryKey: ['webinars', filter],
+  // Query for events
+  const { data: events, isLoading } = useQuery({
+    queryKey: ['events', filter],
     queryFn: async () => {
       const now = new Date().toISOString();
       const { data, error } = await supabase
-        .from('webinars')
+        .from('events')
         .select('*')
         .eq('status', 'Approved')
         .gte('start_time', filter === 'upcoming' ? now : '2000-01-01')
@@ -51,67 +51,67 @@ export default function Webinar() {
         .order('start_time', { ascending: filter === 'upcoming' });
 
       if (error) throw error;
-      return data as Webinar[];
+      return data as Event[];
     }
   });
 
   // Query for registrations
   const { data: registrations } = useQuery({
-    queryKey: ['webinar-registrations', session?.user?.id],
+    queryKey: ['event-registrations', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return [];
       const { data, error } = await supabase
-        .from('webinar_registrations')
-        .select('webinar_id')
+        .from('event_registrations')
+        .select('event_id')
         .eq('profile_id', session.user.id);
 
       if (error) throw error;
-      return data.map(r => r.webinar_id);
+      return data.map(r => r.event_id);
     },
     enabled: !!session?.user?.id
   });
 
-  // Query for host details when viewing a webinar
+  // Query for host details when viewing an event
   const { data: hostProfile } = useQuery({
-    queryKey: ['host-profile', viewingWebinar?.host_id],
+    queryKey: ['host-profile', viewingEvent?.host_id],
     queryFn: async () => {
-      if (!viewingWebinar?.host_id) return null;
+      if (!viewingEvent?.host_id) return null;
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name')
-        .eq('id', viewingWebinar.host_id)
+        .eq('id', viewingEvent.host_id)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!viewingWebinar?.host_id
+    enabled: !!viewingEvent?.host_id
   });
 
-  const handleRegister = async (webinarId: string) => {
-    const webinar = webinars?.find(w => w.id === webinarId);
-    if (webinar) {
-      setSelectedWebinar(webinar);
+  const handleRegister = async (eventId: string) => {
+    const event = events?.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
     }
   };
 
-  const handleViewDetails = (webinarId: string) => {
-    const webinar = webinars?.find(w => w.id === webinarId);
-    if (webinar) {
-      setViewingWebinar(webinar);
+  const handleViewDetails = (eventId: string) => {
+    const event = events?.find(e => e.id === eventId);
+    if (event) {
+      setViewingEvent(event);
     }
   };
 
   const handleRegistrationSubmit = async (formData: any) => {
-    if (!selectedWebinar) return;
+    if (!selectedEvent) return;
 
-    setRegistering(selectedWebinar.id);
+    setRegistering(selectedEvent.id);
     try {
-      // First check if the email is already registered for this webinar
+      // First check if the email is already registered for this event
       const { data: existingRegistration, error: checkError } = await supabase
-        .from('webinar_registrations')
+        .from('event_registrations')
         .select('id')
-        .eq('webinar_id', selectedWebinar.id)
+        .eq('event_id', selectedEvent.id)
         .eq('email', formData.email)
         .single();
 
@@ -122,18 +122,18 @@ export default function Webinar() {
       if (existingRegistration) {
         toast({
           title: "Already Registered",
-          description: "You have already registered for this webinar with this email address.",
+          description: "You have already registered for this event with this email address.",
           variant: "destructive",
         });
-        setSelectedWebinar(null);
+        setSelectedEvent(null);
         return;
       }
 
       // If no existing registration, proceed with registration
       const { error: insertError } = await supabase
-        .from('webinar_registrations')
+        .from('event_registrations')
         .insert({
-          webinar_id: selectedWebinar.id,
+          event_id: selectedEvent.id,
           profile_id: session?.user?.id || null,
           email: formData.email,
           first_name: formData.first_name,
@@ -149,14 +149,14 @@ export default function Webinar() {
 
       toast({
         title: "Registration Successful",
-        description: "You have been registered for the webinar",
+        description: "You have been registered for the event",
       });
-      setSelectedWebinar(null);
+      setSelectedEvent(null);
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
-        description: error.message || "Failed to register for the webinar. Please try again.",
+        description: error.message || "Failed to register for the event. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -167,7 +167,7 @@ export default function Webinar() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold mb-6">Loading webinars...</h1>
+        <h1 className="text-2xl font-bold mb-6">Loading events...</h1>
       </div>
     );
   }
@@ -175,15 +175,15 @@ export default function Webinar() {
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
-        <WebinarHeader filter={filter} onFilterChange={setFilter} />
+        <EventHeader filter={filter} onFilterChange={setFilter} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {webinars?.map((webinar) => (
-            <WebinarCard
-              key={webinar.id}
-              webinar={webinar}
-              isRegistering={registering === webinar.id}
-              isRegistered={registrations?.includes(webinar.id) || false}
+          {events?.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              isRegistering={registering === event.id}
+              isRegistered={registrations?.includes(event.id) || false}
               isPast={filter === 'past'}
               onRegister={handleRegister}
               onViewDetails={handleViewDetails}
@@ -191,41 +191,41 @@ export default function Webinar() {
           ))}
         </div>
 
-        {webinars?.length === 0 && <EmptyState filter={filter} />}
+        {events?.length === 0 && <EmptyState filter={filter} />}
       </div>
 
       {/* Registration Dialog */}
-      <Dialog open={!!selectedWebinar} onOpenChange={() => setSelectedWebinar(null)}>
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {selectedWebinar?.title || 'Register for Webinar'}
+              {selectedEvent?.title || 'Register for Event'}
             </DialogTitle>
           </DialogHeader>
-          {selectedWebinar && (
-            <WebinarRegistrationForm
-              webinarId={selectedWebinar.id}
+          {selectedEvent && (
+            <EventRegistrationForm
+              eventId={selectedEvent.id}
               onSubmit={handleRegistrationSubmit}
-              onCancel={() => setSelectedWebinar(null)}
+              onCancel={() => setSelectedEvent(null)}
             />
           )}
         </DialogContent>
       </Dialog>
 
       {/* Details Dialog */}
-      <Dialog open={!!viewingWebinar} onOpenChange={() => setViewingWebinar(null)}>
+      <Dialog open={!!viewingEvent} onOpenChange={() => setViewingEvent(null)}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
-            <DialogTitle>{viewingWebinar?.title}</DialogTitle>
+            <DialogTitle>{viewingEvent?.title}</DialogTitle>
           </DialogHeader>
           
-          {viewingWebinar && (
+          {viewingEvent && (
             <div className="space-y-6">
-              {viewingWebinar.thumbnail_url && (
+              {viewingEvent.thumbnail_url && (
                 <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
                   <img 
-                    src={viewingWebinar.thumbnail_url} 
-                    alt={viewingWebinar.title}
+                    src={viewingEvent.thumbnail_url} 
+                    alt={viewingEvent.title}
                     className="object-cover w-full h-full"
                   />
                 </AspectRatio>
@@ -240,57 +240,57 @@ export default function Webinar() {
                     </div>
                   )}
 
-                  {viewingWebinar.organized_by && (
+                  {viewingEvent.organized_by && (
                     <div className="flex items-center gap-2 text-sm">
                       <Building className="h-4 w-4" />
-                      Organized by {viewingWebinar.organized_by}
+                      Organized by {viewingEvent.organized_by}
                     </div>
                   )}
 
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    {format(new Date(viewingWebinar.start_time), 'PPP')}
+                    {format(new Date(viewingEvent.start_time), 'PPP')}
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4" />
-                    {format(new Date(viewingWebinar.start_time), 'p')} - {format(new Date(viewingWebinar.end_time), 'p')}
+                    {format(new Date(viewingEvent.start_time), 'p')} - {format(new Date(viewingEvent.end_time), 'p')}
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm">
                     <Video className="h-4 w-4" />
-                    {viewingWebinar.platform}
+                    {viewingEvent.platform}
                   </div>
 
-                  {viewingWebinar.max_attendees && (
+                  {viewingEvent.max_attendees && (
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4" />
-                      Maximum {viewingWebinar.max_attendees} participants
+                      Maximum {viewingEvent.max_attendees} participants
                     </div>
                   )}
                 </div>
               </div>
 
               <div className="text-sm text-muted-foreground">
-                {viewingWebinar.description}
+                {viewingEvent.description}
               </div>
 
               <div className="flex justify-center pt-4">
                 <Button 
                   className="w-[200px]"
                   onClick={() => {
-                    setViewingWebinar(null);
-                    handleRegister(viewingWebinar.id);
+                    setViewingEvent(null);
+                    handleRegister(viewingEvent.id);
                   }}
-                  disabled={registering === viewingWebinar.id || registrations?.includes(viewingWebinar.id) || filter === 'past'}
+                  disabled={registering === viewingEvent.id || registrations?.includes(viewingEvent.id) || filter === 'past'}
                 >
                   {filter === 'past' 
-                    ? "Webinar Ended"
-                    : registering === viewingWebinar.id 
+                    ? "Event Ended"
+                    : registering === viewingEvent.id 
                       ? "Registering..." 
-                      : registrations?.includes(viewingWebinar.id)
+                      : registrations?.includes(viewingEvent.id)
                         ? "Registered"
                         : "Register Now"}
                 </Button>
