@@ -59,37 +59,37 @@ export function EventCard({
   return (
     <Card className="flex flex-col h-full">
       <CardHeader>
-        <CardTitle>{event.title}</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg">{event.title}</CardTitle>
+        <CardDescription className="text-xs">
           {event.organized_by && `Organized by ${event.organized_by}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs">
+              <Calendar className="h-3 w-3" />
               {format(new Date(event.start_time), 'PPP')}
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs">
+              <Clock className="h-3 w-3" />
               {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')} {event.timezone && `(${event.timezone})`}
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <Video className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs">
+              <Video className="h-3 w-3" />
               {event.platform}
             </div>
             {event.max_attendees && (
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-xs">
+                <Users className="h-3 w-3" />
                 {registrations?.length || 0} / {event.max_attendees} registered
               </div>
             )}
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {truncateDescription(event.description)}
         </p>
       </CardContent>
