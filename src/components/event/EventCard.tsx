@@ -76,27 +76,31 @@ export function EventCard({
       </div>
 
       <CardContent className="space-y-6 pt-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">Date:</span>
-            <span className="text-muted-foreground">{formatDate(event.start_time)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">Time:</span>
-            <span className="text-muted-foreground">
-              {formatTime(event.start_time)} - {formatTime(event.end_time)} {event.timezone && `(${event.timezone})`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">Platform:</span>
-            <span className="text-muted-foreground">{event.platform}</span>
-          </div>
-          {event.max_attendees && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">Capacity:</span>
-              <span className="text-muted-foreground">{event.max_attendees} attendees</span>
+              <span className="font-medium">Date:</span>
+              <span className="text-muted-foreground">{formatDate(event.start_time)}</span>
             </div>
-          )}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">Time:</span>
+              <span className="text-muted-foreground">
+                {formatTime(event.start_time)} - {formatTime(event.end_time)}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">Platform:</span>
+              <span className="text-muted-foreground">{event.platform}</span>
+            </div>
+            {event.max_attendees && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium">Capacity:</span>
+                <span className="text-muted-foreground">{event.max_attendees} attendees</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2">
