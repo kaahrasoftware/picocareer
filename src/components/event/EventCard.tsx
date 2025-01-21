@@ -42,7 +42,7 @@ export function EventCard({
       const { count, error } = await supabase
         .from('event_registrations')
         .select('*', { count: 'exact', head: true })
-        .eq('webinar_id', event.id);
+        .eq('event_id', event.id);
       
       if (error) throw error;
       return count || 0;
