@@ -18,13 +18,19 @@ export default function Program() {
     queryKey: ['majors'],
     queryFn: async () => {
       try {
+        console.log('Fetching majors...');
         const { data, error } = await supabase
           .from('majors')
           .select('*')
           .eq('status', 'Approved')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+
+        console.log('Fetched majors:', data);
         return data;
       } catch (err) {
         console.error('Error fetching majors:', err);
