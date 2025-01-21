@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, Video, Tag, User } from "lucide-react";
+import { Calendar, Clock, Users, Video, Tag } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -71,8 +71,11 @@ export function EventCard({
           )}
         </div>
         <CardTitle className="text-lg">{event.title}</CardTitle>
-        <CardDescription className="text-xs">
+        <CardDescription className="text-xs space-y-1">
           {event.organized_by && `By: ${event.organized_by}`}
+          {event.facilitator && (
+            <div>Facilitator: {event.facilitator}</div>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
@@ -96,12 +99,6 @@ export function EventCard({
               <div className="flex items-center gap-2 text-xs">
                 <Users className="h-3 w-3" />
                 {registrations?.length || 0} / {event.max_attendees} registered
-              </div>
-            )}
-            {event.facilitator && (
-              <div className="flex items-center gap-2 text-xs">
-                <User className="h-3 w-3" />
-                {event.facilitator}
               </div>
             )}
           </div>
