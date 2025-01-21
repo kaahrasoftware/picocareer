@@ -74,18 +74,18 @@ export function EventCard({
               <Clock className="h-4 w-4" />
               {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}
             </div>
-            {event.max_attendees && (
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4" />
-                {registrations?.length || 0} / {event.max_attendees} registered
-              </div>
-            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Video className="h-4 w-4" />
               {event.platform}
             </div>
+            {event.max_attendees && (
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4" />
+                {registrations?.length || 0} / {event.max_attendees} registered
+              </div>
+            )}
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
