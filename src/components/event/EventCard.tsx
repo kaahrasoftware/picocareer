@@ -68,11 +68,11 @@ export function EventCard({
           </CardTitle>
           <div className={`grid grid-cols-2 gap-4 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
             <div>
-              <p>By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
+              <p className="text-sm">By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
             </div>
             {event.facilitator && (
               <div>
-                <p>Facilitator: {event.facilitator}</p>
+                <p className="text-sm">Facilitator: {event.facilitator}</p>
               </div>
             )}
           </div>
