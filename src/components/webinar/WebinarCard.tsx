@@ -22,6 +22,7 @@ interface WebinarCardProps {
   isRegistered: boolean;
   isPast: boolean;
   onRegister: (webinarId: string) => void;
+  onViewDetails: (webinarId: string) => void;
 }
 
 export function WebinarCard({ 
@@ -29,7 +30,8 @@ export function WebinarCard({
   isRegistering, 
   isRegistered, 
   isPast,
-  onRegister 
+  onRegister,
+  onViewDetails
 }: WebinarCardProps) {
   // Query to get the registration count
   const { data: registrationCount = 0 } = useQuery({
@@ -84,11 +86,12 @@ export function WebinarCard({
           )}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex gap-2">
         <Button 
-          className="w-full"
+          className="flex-1"
           onClick={() => onRegister(webinar.id)}
           disabled={isRegistering || isRegistered || isPast || (webinar.max_attendees && registrationCount >= webinar.max_attendees)}
+          variant="default"
         >
           {isPast 
             ? "Webinar Ended"
@@ -99,6 +102,12 @@ export function WebinarCard({
                 : webinar.max_attendees && registrationCount >= webinar.max_attendees
                   ? "Registration Full"
                   : "Register Now"}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => onViewDetails(webinar.id)}
+        >
+          View Details
         </Button>
       </CardFooter>
     </Card>
