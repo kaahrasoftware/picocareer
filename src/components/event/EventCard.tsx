@@ -49,6 +49,12 @@ export function EventCard({
     }
   });
 
+  // Function to truncate description
+  const truncateDescription = (text: string, maxLength: number = 150) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength).trim() + '...';
+  };
+
   return (
     <Card key={event.id} className="flex flex-col">
       {event.thumbnail_url && (
@@ -70,7 +76,9 @@ export function EventCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground mb-4">{event.description}</p>
+        <p className="text-sm text-muted-foreground mb-4">
+          {truncateDescription(event.description)}
+        </p>
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4" />
