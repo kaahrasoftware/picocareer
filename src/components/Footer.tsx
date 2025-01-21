@@ -20,6 +20,7 @@ export function Footer() {
     { label: "Fields of Study", href: "/program", onClick: () => navigate("/program") },
     { label: "Careers", href: "/career", onClick: () => navigate("/career") },
     { label: "Mentors", href: "/mentor", onClick: () => navigate("/mentor") },
+    { label: "Events", href: "/event", onClick: () => navigate("/event") },
     { label: "Blog", href: "/blog", onClick: () => navigate("/blog") },
   ];
 

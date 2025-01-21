@@ -17,6 +17,7 @@ export function MainNavigation() {
     { path: "/program", label: "Fields of Study" },
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
+    { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
     { path: "/about", label: "About" },
   ];
