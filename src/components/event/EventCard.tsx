@@ -18,6 +18,7 @@ interface EventCardProps {
     event_type?: string;
     facilitator?: string;
     thumbnail_url?: string;
+    registrations_count?: number;
   };
   onRegister: (eventId: string) => void;
   onViewDetails: (eventId: string) => void;
@@ -103,7 +104,9 @@ export function EventCard({
             {event.max_attendees && (
               <div className="flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4" />
-                <span className="text-muted-foreground">{event.max_attendees} attendees</span>
+                <span className="text-muted-foreground">
+                  {event.registrations_count || 0} / {event.max_attendees} registered
+                </span>
               </div>
             )}
           </div>

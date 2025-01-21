@@ -26,6 +26,7 @@ interface Event {
   thumbnail_url?: string;
   host_id?: string;
   organized_by?: string;
+  registrations_count?: number;
 }
 
 export default function Event() {
@@ -37,21 +38,28 @@ export default function Event() {
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  // Query for events
+  // Query for events with registration counts
   const { data: events, isLoading } = useQuery({
     queryKey: ['events', filter],
     queryFn: async () => {
       const now = new Date().toISOString();
-      const { data, error } = await supabase
+      const { data: eventsData, error: eventsError } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          registrations_count:event_registrations(count)
+        `)
         .eq('status', 'Approved')
         .gte('start_time', filter === 'upcoming' ? now : '2000-01-01')
         .lt('start_time', filter === 'upcoming' ? '2100-01-01' : now)
         .order('start_time', { ascending: filter === 'upcoming' });
 
-      if (error) throw error;
-      return data as Event[];
+      if (eventsError) throw eventsError;
+
+      return eventsData.map(event => ({
+        ...event,
+        registrations_count: event.registrations_count[0]?.count || 0
+      }));
     }
   });
 
@@ -232,20 +240,6 @@ export default function Event() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  {hostProfile && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4" />
-                      Hosted by {hostProfile.full_name}
-                    </div>
-                  )}
-
-                  {viewingEvent.organized_by && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Building className="h-4 w-4" />
-                      Organized by {viewingEvent.organized_by}
-                    </div>
-                  )}
-
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4" />
                     {format(new Date(viewingEvent.start_time), 'PPP')}
@@ -266,7 +260,14 @@ export default function Event() {
                   {viewingEvent.max_attendees && (
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4" />
-                      Maximum {viewingEvent.max_attendees} participants
+                      {viewingEvent.registrations_count} / {viewingEvent.max_attendees} registered
+                    </div>
+                  )}
+
+                  {viewingEvent.organized_by && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Building className="h-4 w-4" />
+                      Organized by {viewingEvent.organized_by}
                     </div>
                   )}
                 </div>
