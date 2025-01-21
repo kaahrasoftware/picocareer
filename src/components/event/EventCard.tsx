@@ -66,10 +66,14 @@ export function EventCard({
           <CardTitle className={`text-xl ${event.thumbnail_url ? 'text-white' : ''}`}>
             {event.title}
           </CardTitle>
-          <div className={`space-y-1 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
-            <p>By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
+          <div className={`grid grid-cols-2 gap-4 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
+            <div>
+              <p>By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
+            </div>
             {event.facilitator && (
-              <p>Facilitator: {event.facilitator}</p>
+              <div>
+                <p>Facilitator: {event.facilitator}</p>
+              </div>
             )}
           </div>
         </CardHeader>
