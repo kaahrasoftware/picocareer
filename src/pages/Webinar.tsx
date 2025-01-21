@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Calendar, Clock, Users, Video } from "lucide-react";
-import { format } from "date-fns";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WebinarRegistrationForm } from "@/components/forms/WebinarRegistrationForm";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { WebinarHeader } from "@/components/webinar/WebinarHeader";
+import { WebinarCard } from "@/components/webinar/WebinarCard";
+import { EmptyState } from "@/components/webinar/EmptyState";
 
 interface Webinar {
   id: string;
@@ -146,81 +144,22 @@ export default function Webinar() {
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Webinars</h1>
-            <p className="text-muted-foreground mt-2">
-              Join our interactive webinars to learn from industry experts
-            </p>
-          </div>
-          <ToggleGroup type="single" value={filter} onValueChange={(value) => value && setFilter(value as 'upcoming' | 'past')}>
-            <ToggleGroupItem value="upcoming" aria-label="Show upcoming webinars">
-              Upcoming
-            </ToggleGroupItem>
-            <ToggleGroupItem value="past" aria-label="Show past webinars">
-              Past
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+        <WebinarHeader filter={filter} onFilterChange={setFilter} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {webinars?.map((webinar) => (
-            <Card key={webinar.id} className="flex flex-col">
-              <CardHeader>
-                <CardTitle>{webinar.title}</CardTitle>
-                <CardDescription className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(webinar.start_time), 'PPP')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <p className="text-sm text-muted-foreground mb-4">{webinar.description}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4" />
-                    {format(new Date(webinar.start_time), 'p')} - {format(new Date(webinar.end_time), 'p')}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Video className="h-4 w-4" />
-                    {webinar.platform}
-                  </div>
-                  {webinar.max_attendees && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4" />
-                      Limited to {webinar.max_attendees} attendees
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full"
-                  onClick={() => handleRegister(webinar.id)}
-                  disabled={registering === webinar.id || registrations?.includes(webinar.id) || filter === 'past'}
-                >
-                  {filter === 'past' 
-                    ? "Webinar Ended"
-                    : registering === webinar.id 
-                      ? "Registering..." 
-                      : registrations?.includes(webinar.id)
-                        ? "Registered"
-                        : "Register Now"}
-                </Button>
-              </CardFooter>
-            </Card>
+            <WebinarCard
+              key={webinar.id}
+              webinar={webinar}
+              isRegistering={registering === webinar.id}
+              isRegistered={registrations?.includes(webinar.id) || false}
+              isPast={filter === 'past'}
+              onRegister={handleRegister}
+            />
           ))}
         </div>
 
-        {webinars?.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold">No {filter} Webinars</h3>
-            <p className="text-muted-foreground">
-              {filter === 'upcoming' 
-                ? "Check back later for new webinars" 
-                : "There are no past webinars to display"}
-            </p>
-          </div>
-        )}
+        {webinars?.length === 0 && <EmptyState filter={filter} />}
       </div>
 
       <Dialog open={!!selectedWebinar} onOpenChange={() => setSelectedWebinar(null)}>
