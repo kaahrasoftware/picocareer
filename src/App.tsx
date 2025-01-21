@@ -14,7 +14,6 @@ import Contact from "@/pages/Contact";
 import Dashboard from "@/pages/Dashboard";
 import EmailConfirmation from "@/pages/EmailConfirmation";
 import Error from "@/pages/Error";
-import Event from "@/pages/Event";
 import Funding from "@/pages/Funding";
 import Index from "@/pages/Index";
 import MajorUpload from "@/pages/MajorUpload";
@@ -28,6 +27,7 @@ import School from "@/pages/School";
 import Terms from "@/pages/Terms";
 import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
+import Webinar from "@/pages/Webinar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
 
@@ -179,8 +179,8 @@ const router = createBrowserRouter([
     errorElement: <Error />,
   },
   {
-    path: "/event",
-    element: <MainLayout><Event /></MainLayout>,
+    path: "/webinar",
+    element: <MainLayout><Webinar /></MainLayout>,
     errorElement: <Error />,
   },
   {
