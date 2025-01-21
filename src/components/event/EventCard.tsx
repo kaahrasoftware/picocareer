@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface EventCardProps {
   event: {
@@ -60,7 +61,15 @@ export function EventCard({
 
   return (
     <Card className="flex flex-col h-full">
-      <CardHeader>
+      <CardHeader className="relative">
+        <div className="absolute top-4 right-4">
+          {event.event_type && (
+            <Badge variant="destructive" className="text-xs">
+              <Tag className="h-3 w-3 mr-1" />
+              {event.event_type}
+            </Badge>
+          )}
+        </div>
         <CardTitle className="text-lg">{event.title}</CardTitle>
         <CardDescription className="text-xs">
           {event.organized_by && `By: ${event.organized_by}`}
@@ -77,12 +86,6 @@ export function EventCard({
               <Clock className="h-3 w-3" />
               {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')} {event.timezone && `(${event.timezone})`}
             </div>
-            {event.event_type && (
-              <div className="flex items-center gap-2 text-xs">
-                <Tag className="h-3 w-3" />
-                {event.event_type}
-              </div>
-            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs">
