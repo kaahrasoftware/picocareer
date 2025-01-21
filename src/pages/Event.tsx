@@ -184,7 +184,6 @@ export default function Event() {
               event={event}
               isRegistering={registering === event.id}
               isRegistered={registrations?.includes(event.id) || false}
-              isPast={filter === 'past'}
               onRegister={handleRegister}
               onViewDetails={handleViewDetails}
             />
@@ -196,7 +195,7 @@ export default function Event() {
 
       {/* Registration Dialog */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedEvent?.title || 'Register for Event'}
@@ -214,7 +213,7 @@ export default function Event() {
 
       {/* Details Dialog */}
       <Dialog open={!!viewingEvent} onOpenChange={() => setViewingEvent(null)}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{viewingEvent?.title}</DialogTitle>
           </DialogHeader>
