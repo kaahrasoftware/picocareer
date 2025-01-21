@@ -9,6 +9,10 @@ import { WebinarRegistrationForm } from "@/components/forms/WebinarRegistrationF
 import { WebinarHeader } from "@/components/webinar/WebinarHeader";
 import { WebinarCard } from "@/components/webinar/WebinarCard";
 import { EmptyState } from "@/components/webinar/EmptyState";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Calendar, Clock, Users, Video } from "lucide-react";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface Webinar {
   id: string;
@@ -20,6 +24,7 @@ interface Webinar {
   meeting_link?: string;
   max_attendees?: number;
   thumbnail_url?: string;
+  host_id?: string;
 }
 
 export default function Webinar() {
@@ -28,9 +33,10 @@ export default function Webinar() {
   const { data: profile } = useUserProfile(session);
   const [registering, setRegistering] = useState<string | null>(null);
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
+  const [viewingWebinar, setViewingWebinar] = useState<Webinar | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  // Query for webinars - available to all users
+  // Query for webinars
   const { data: webinars, isLoading } = useQuery({
     queryKey: ['webinars', filter],
     queryFn: async () => {
@@ -48,7 +54,7 @@ export default function Webinar() {
     }
   });
 
-  // Query for registrations - only runs when user is authenticated
+  // Query for registrations
   const { data: registrations } = useQuery({
     queryKey: ['webinar-registrations', session?.user?.id],
     queryFn: async () => {
@@ -64,10 +70,34 @@ export default function Webinar() {
     enabled: !!session?.user?.id
   });
 
+  // Query for host details when viewing a webinar
+  const { data: hostProfile } = useQuery({
+    queryKey: ['host-profile', viewingWebinar?.host_id],
+    queryFn: async () => {
+      if (!viewingWebinar?.host_id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', viewingWebinar.host_id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!viewingWebinar?.host_id
+  });
+
   const handleRegister = async (webinarId: string) => {
     const webinar = webinars?.find(w => w.id === webinarId);
     if (webinar) {
       setSelectedWebinar(webinar);
+    }
+  };
+
+  const handleViewDetails = (webinarId: string) => {
+    const webinar = webinars?.find(w => w.id === webinarId);
+    if (webinar) {
+      setViewingWebinar(webinar);
     }
   };
 
@@ -155,6 +185,7 @@ export default function Webinar() {
               isRegistered={registrations?.includes(webinar.id) || false}
               isPast={filter === 'past'}
               onRegister={handleRegister}
+              onViewDetails={handleViewDetails}
             />
           ))}
         </div>
@@ -162,6 +193,7 @@ export default function Webinar() {
         {webinars?.length === 0 && <EmptyState filter={filter} />}
       </div>
 
+      {/* Registration Dialog */}
       <Dialog open={!!selectedWebinar} onOpenChange={() => setSelectedWebinar(null)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -175,6 +207,81 @@ export default function Webinar() {
               onSubmit={handleRegistrationSubmit}
               onCancel={() => setSelectedWebinar(null)}
             />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Dialog */}
+      <Dialog open={!!viewingWebinar} onOpenChange={() => setViewingWebinar(null)}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{viewingWebinar?.title}</DialogTitle>
+          </DialogHeader>
+          
+          {viewingWebinar && (
+            <div className="space-y-6">
+              {viewingWebinar.thumbnail_url && (
+                <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
+                  <img 
+                    src={viewingWebinar.thumbnail_url} 
+                    alt={viewingWebinar.title}
+                    className="object-cover w-full h-full"
+                  />
+                </AspectRatio>
+              )}
+
+              <div className="space-y-4">
+                {hostProfile && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4" />
+                    Hosted by {hostProfile.full_name}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4" />
+                  {format(new Date(viewingWebinar.start_time), 'PPP')}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4" />
+                  {format(new Date(viewingWebinar.start_time), 'p')} - {format(new Date(viewingWebinar.end_time), 'p')}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <Video className="h-4 w-4" />
+                  {viewingWebinar.platform}
+                </div>
+
+                {viewingWebinar.max_attendees && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4" />
+                    Maximum {viewingWebinar.max_attendees} participants
+                  </div>
+                )}
+
+                <div className="text-sm text-muted-foreground">
+                  {viewingWebinar.description}
+                </div>
+
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    setViewingWebinar(null);
+                    handleRegister(viewingWebinar.id);
+                  }}
+                  disabled={registering === viewingWebinar.id || registrations?.includes(viewingWebinar.id) || filter === 'past'}
+                >
+                  {filter === 'past' 
+                    ? "Webinar Ended"
+                    : registering === viewingWebinar.id 
+                      ? "Registering..." 
+                      : registrations?.includes(viewingWebinar.id)
+                        ? "Registered"
+                        : "Register Now"}
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>

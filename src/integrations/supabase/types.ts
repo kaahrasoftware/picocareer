@@ -1578,6 +1578,7 @@ export type Database = {
           id: string
           max_attendees: number | null
           meeting_link: string | null
+          organized_by: string | null
           platform: Database["public"]["Enums"]["webinar_platform"]
           start_time: string
           status: Database["public"]["Enums"]["status"] | null
@@ -1593,6 +1594,7 @@ export type Database = {
           id?: string
           max_attendees?: number | null
           meeting_link?: string | null
+          organized_by?: string | null
           platform?: Database["public"]["Enums"]["webinar_platform"]
           start_time: string
           status?: Database["public"]["Enums"]["status"] | null
@@ -1608,6 +1610,7 @@ export type Database = {
           id?: string
           max_attendees?: number | null
           meeting_link?: string | null
+          organized_by?: string | null
           platform?: Database["public"]["Enums"]["webinar_platform"]
           start_time?: string
           status?: Database["public"]["Enums"]["status"] | null
