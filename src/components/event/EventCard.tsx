@@ -86,12 +86,10 @@ export function EventCard({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4" />
-              <span className="font-medium">Date:</span>
               <span className="text-muted-foreground">{formatDate(event.start_time)}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4" />
-              <span className="font-medium">Time:</span>
               <span className="text-muted-foreground">
                 {formatTime(event.start_time)} - {formatTime(event.end_time)}
               </span>
@@ -100,13 +98,11 @@ export function EventCard({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Monitor className="h-4 w-4" />
-              <span className="font-medium">Platform:</span>
               <span className="text-muted-foreground">{event.platform}</span>
             </div>
             {event.max_attendees && (
               <div className="flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4" />
-                <span className="font-medium">Capacity:</span>
                 <span className="text-muted-foreground">{event.max_attendees} attendees</span>
               </div>
             )}
