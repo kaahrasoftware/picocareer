@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, Video } from "lucide-react";
+import { Calendar, Clock, Users, Video, Tag, User } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -23,6 +23,8 @@ interface EventCardProps {
     max_attendees?: number;
     organized_by?: string;
     timezone?: string;
+    event_type?: string;
+    facilitator?: string;
   };
   onRegister: (eventId: string) => void;
   onViewDetails: (eventId: string) => void;
@@ -75,6 +77,12 @@ export function EventCard({
               <Clock className="h-3 w-3" />
               {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')} {event.timezone && `(${event.timezone})`}
             </div>
+            {event.event_type && (
+              <div className="flex items-center gap-2 text-xs">
+                <Tag className="h-3 w-3" />
+                {event.event_type}
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs">
@@ -85,6 +93,12 @@ export function EventCard({
               <div className="flex items-center gap-2 text-xs">
                 <Users className="h-3 w-3" />
                 {registrations?.length || 0} / {event.max_attendees} registered
+              </div>
+            )}
+            {event.facilitator && (
+              <div className="flex items-center gap-2 text-xs">
+                <User className="h-3 w-3" />
+                {event.facilitator}
               </div>
             )}
           </div>
