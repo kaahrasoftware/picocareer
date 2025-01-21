@@ -109,11 +109,9 @@ export function EventCard({
           </div>
         </div>
 
-        <div className="max-h-24 overflow-y-auto scrollbar-hide">
-          <p className="text-sm text-muted-foreground">
-            {event.description}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {event.description}
+        </p>
 
         <div className="flex gap-3 pt-2">
           <Button
