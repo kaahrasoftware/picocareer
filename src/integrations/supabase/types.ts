@@ -414,6 +414,7 @@ export type Database = {
           start_time: string
           status: Database["public"]["Enums"]["status"] | null
           thumbnail_url: string | null
+          timezone: string
           title: string
           updated_at: string
         }
@@ -431,6 +432,7 @@ export type Database = {
           start_time: string
           status?: Database["public"]["Enums"]["status"] | null
           thumbnail_url?: string | null
+          timezone?: string
           title: string
           updated_at?: string
         }
@@ -448,6 +450,7 @@ export type Database = {
           start_time?: string
           status?: Database["public"]["Enums"]["status"] | null
           thumbnail_url?: string | null
+          timezone?: string
           title?: string
           updated_at?: string
         }

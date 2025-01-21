@@ -22,6 +22,7 @@ interface EventCardProps {
     platform: string;
     max_attendees?: number;
     organized_by?: string;
+    timezone?: string;
   };
   onRegister: (eventId: string) => void;
   onViewDetails: (eventId: string) => void;
@@ -72,7 +73,7 @@ export function EventCard({
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4" />
-              {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')}
+              {format(new Date(event.start_time), 'p')} - {format(new Date(event.end_time), 'p')} {event.timezone && `(${event.timezone})`}
             </div>
           </div>
           <div className="space-y-2">
