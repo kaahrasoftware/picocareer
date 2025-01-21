@@ -26,6 +26,7 @@ interface EventCardProps {
     timezone?: string;
     event_type?: string;
     facilitator?: string;
+    thumbnail_url?: string;
   };
   onRegister: (eventId: string) => void;
   onViewDetails: (eventId: string) => void;
@@ -62,6 +63,17 @@ export function EventCard({
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="relative">
+        {event.thumbnail_url && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center rounded-t-lg"
+            style={{ 
+              backgroundImage: `url(${event.thumbnail_url})`,
+              height: '120px'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
+          </div>
+        )}
         <div className="absolute top-4 right-4">
           {event.event_type && (
             <Badge variant="destructive" className="text-xs">
@@ -70,8 +82,10 @@ export function EventCard({
             </Badge>
           )}
         </div>
-        <CardTitle className="text-lg">{event.title}</CardTitle>
-        <CardDescription className="text-xs space-y-1">
+        <CardTitle className={`text-lg relative z-10 ${event.thumbnail_url ? 'text-white' : ''}`}>
+          {event.title}
+        </CardTitle>
+        <CardDescription className={`text-xs space-y-1 relative z-10 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
           {event.organized_by && `By: ${event.organized_by}`}
           {event.facilitator && (
             <div>Facilitator: {event.facilitator}</div>
