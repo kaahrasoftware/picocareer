@@ -39,8 +39,8 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
       first_name: "",
       last_name: "",
       email: "",
-      current_field: "",
       student_or_professional: "",
+      current_field: "",
       current_organization: "",
       country: "" as Country,
       hear_about_us: "" as HearAboutUs,
@@ -86,13 +86,13 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
           />
           <FormField
             control={form.control}
-            name="current_field"
-            label="Current Academic Field/Position"
+            name="student_or_professional"
+            label="Are you a student or professional?"
           />
           <FormField
             control={form.control}
-            name="student_or_professional"
-            label="Are you a student or professional?"
+            name="current_field"
+            label="Current Academic Field/Position"
           />
           <FormField
             control={form.control}
