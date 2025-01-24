@@ -57,17 +57,17 @@ const handler = async (req: Request): Promise<Response> => {
       dateStyle: 'full',
       timeStyle: 'short'
     });
-    const formattedEndTime = new Date(event.end_time).toLocaleString('en-US', {
+    const formattedEndTime = endTime.toLocaleString('en-US', {
       timeStyle: 'short'
     });
 
-    // Create calendar event using Google Calendar API
-    const calendarId = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
+    // Get Google service account credentials
     const serviceAccountEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
     const privateKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+    const calendarId = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
 
-    if (!calendarId || !serviceAccountEmail || !privateKey) {
-      throw new Error('Missing Google Calendar configuration');
+    if (!serviceAccountEmail || !privateKey || !calendarId) {
+      throw new Error('Missing Google service account configuration');
     }
 
     // Create JWT for Google API authentication
@@ -110,6 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     if (!calendarResponse.ok) {
+      console.error('Calendar API error:', await calendarResponse.text());
       throw new Error('Failed to create calendar event');
     }
 
@@ -163,6 +164,7 @@ Content-Transfer-Encoding: 7bit
     );
 
     if (!gmailResponse.ok) {
+      console.error('Gmail API error:', await gmailResponse.text());
       throw new Error('Failed to send email');
     }
 
@@ -203,7 +205,7 @@ async function createJWT(serviceAccountEmail: string, privateKey: string, scopes
   // Create signing key
   const keyData = await crypto.subtle.importKey(
     'pkcs8',
-    new TextEncoder().encode(privateKey),
+    encoder.encode(privateKey),
     {
       name: 'RSASSA-PKCS1-v1_5',
       hash: 'SHA-256'
@@ -235,6 +237,7 @@ async function createJWT(serviceAccountEmail: string, privateKey: string, scopes
   });
 
   if (!tokenResponse.ok) {
+    console.error('Token response:', await tokenResponse.text());
     throw new Error('Failed to get access token');
   }
 
