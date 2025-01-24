@@ -121,7 +121,7 @@ export default function Event() {
         .select('id')
         .eq('event_id', selectedEvent.id)
         .eq('email', formData.email)
-        .maybeSingle();
+        .maybeSingle();  // Changed from .single() to .maybeSingle()
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
         throw checkError;
@@ -165,7 +165,6 @@ export default function Event() {
 
         if (emailError) {
           console.error('Error sending confirmation email:', emailError);
-          // Don't throw here - we want to show success even if email fails
           toast({
             title: "Registration Successful",
             description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",

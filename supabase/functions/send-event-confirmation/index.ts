@@ -64,15 +64,15 @@ const handler = async (req: Request): Promise<Response> => {
     // Get Google service account credentials
     const serviceAccountEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
     const calendarId = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
-    let privateKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY');
+    let privateKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY') || '';
 
     if (!serviceAccountEmail || !privateKey || !calendarId) {
       throw new Error('Missing Google service account configuration');
     }
 
-    // Fix private key formatting - replace literal \n with actual newlines
+    // Fix private key formatting
     privateKey = privateKey
-      .replace(/\\n/g, '\n')
+      .replace(/\\n/g, '\n')  // Replace literal \n with newlines
       .replace(/^"|"$/g, ''); // Remove any surrounding quotes
 
     console.log('Creating JWT with service account:', serviceAccountEmail);
