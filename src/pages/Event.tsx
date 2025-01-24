@@ -121,7 +121,7 @@ export default function Event() {
         .select('id')
         .eq('event_id', selectedEvent.id)
         .eq('email', formData.email)
-        .single();
+        .maybeSingle();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
         throw checkError;
