@@ -7,17 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/types/database/database.types";
 
-type HearAboutUs = "Facebook" | "Instagram" | "LinkedIn" | "Twitter" | "TikTok" | "YouTube" |
-  "Google Search" | "Friend/Family" | "School/University" | "Event/Conference" |
-  "Email" | "Other";
-
+type HearAboutUs = Database["public"]["Enums"]["where did you hear about us"];
 type Country = Database["public"]["Enums"]["country"];
-
-const HEAR_ABOUT_US_OPTIONS: HearAboutUs[] = [
-  "Facebook", "Instagram", "LinkedIn", "Twitter", "TikTok", "YouTube",
-  "Google Search", "Friend/Family", "School/University", "Event/Conference",
-  "Email", "Other"
-];
 
 // Get all countries from the database enum
 const COUNTRIES: Country[] = [
@@ -49,6 +40,21 @@ const COUNTRIES: Country[] = [
   "Yemen", "Zambia", "Zimbabwe"
 ];
 
+// Get all options from the database enum
+const HEAR_ABOUT_US_OPTIONS: HearAboutUs[] = [
+  "Instagram",
+  "Facebook",
+  "TikTok",
+  "LinkedIn",
+  "X (Twitter)",
+  "WhatsApp",
+  "YouTube",
+  "Search Engine (Google, Bing...)",
+  "RedNote",
+  "Friend/Family",
+  "Other"
+];
+
 interface EventRegistrationFormProps {
   eventId: string;
   onSubmit: (data: any) => Promise<void>;
@@ -67,7 +73,7 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
       current_field: "",
       current_organization: "",
       country: "" as Country,
-      hear_about_us: "" as HearAboutUs,
+      "where did you hear about us": "" as HearAboutUs,
     }
   });
 
@@ -148,8 +154,8 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
           <div className="space-y-2">
             <label className="text-sm font-medium">How did you hear about us?</label>
             <Select
-              onValueChange={(value: HearAboutUs) => form.setValue('hear_about_us', value)}
-              value={form.watch('hear_about_us')}
+              onValueChange={(value: HearAboutUs) => form.setValue('where did you hear about us', value)}
+              value={form.watch('where did you hear about us')}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select an option" />
