@@ -138,7 +138,7 @@ export default function Event() {
       }
 
       // If no existing registration, proceed with registration
-      const { error: insertError } = await supabase
+      const { data: registration, error: insertError } = await supabase
         .from('event_registrations')
         .insert({
           event_id: selectedEvent.id,
@@ -150,15 +150,43 @@ export default function Event() {
           student_or_professional: formData.student_or_professional,
           "current school/company": formData.current_organization,
           country: formData.country,
-          "where did you hear about us": formData.hear_about_us
-        });
+          "where did you hear about us": formData["where did you hear about us"]
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
-      toast({
-        title: "Registration Successful",
-        description: "You have been registered for the event",
-      });
+      // Send confirmation email
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-event-confirmation', {
+          body: { registrationId: registration.id }
+        });
+
+        if (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+          // Don't throw here - we want to show success even if email fails
+          toast({
+            title: "Registration Successful",
+            description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Registration Successful",
+            description: "You have been registered for the event. Check your email for confirmation details.",
+            variant: "default",
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        toast({
+          title: "Registration Successful",
+          description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",
+          variant: "default",
+        });
+      }
+
       setSelectedEvent(null);
     } catch (error: any) {
       console.error('Registration error:', error);
