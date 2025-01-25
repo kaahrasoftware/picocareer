@@ -121,7 +121,7 @@ export default function Event() {
         .select('id')
         .eq('event_id', selectedEvent.id)
         .eq('email', formData.email)
-        .maybeSingle();  // Changed from .single() to .maybeSingle()
+        .maybeSingle();  // Use maybeSingle instead of single
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
         throw checkError;

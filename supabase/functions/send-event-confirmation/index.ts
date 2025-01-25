@@ -7,10 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailRequest {
-  registrationId: string;
-}
-
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -18,7 +14,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { registrationId } = await req.json() as EmailRequest;
+    const { registrationId } = await req.json();
     
     // Initialize Supabase client
     const supabase = createClient(
