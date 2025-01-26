@@ -15,6 +15,7 @@ import Dashboard from "@/pages/Dashboard";
 import EmailConfirmation from "@/pages/EmailConfirmation";
 import Error from "@/pages/Error";
 import Event from "@/pages/Event";
+import EventUpload from "@/pages/EventUpload";
 import Funding from "@/pages/Funding";
 import Index from "@/pages/Index";
 import MajorUpload from "@/pages/MajorUpload";
@@ -181,6 +182,11 @@ const router = createBrowserRouter([
   {
     path: "/event",
     element: <MainLayout><Event /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/event/upload",
+    element: <MainLayout><EventUpload /></MainLayout>,
     errorElement: <Error />,
   },
   {
