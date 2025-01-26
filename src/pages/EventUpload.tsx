@@ -40,7 +40,7 @@ export default function EventUpload() {
     {
       name: "description",
       label: "Event Description",
-      type: "textarea",
+      type: "richtext",
       placeholder: "Enter event description",
       description: "Detailed description of the event",
       required: true,
