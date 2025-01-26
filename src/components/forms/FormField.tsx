@@ -37,58 +37,58 @@ export function FormField({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            {type === "textarea" && (
-              <Textarea
-                placeholder={placeholder}
-                {...field}
-                className="min-h-[100px]"
-              />
-            )}
-            {type === "richtext" && (
-              <div className="w-full">
+            <div className="w-full">
+              {type === "textarea" && (
+                <Textarea
+                  placeholder={placeholder}
+                  {...field}
+                  className="min-h-[100px]"
+                />
+              )}
+              {type === "richtext" && (
                 <RichTextEditor
                   value={field.value || ''}
                   onChange={field.onChange}
                   placeholder={placeholder}
                 />
-              </div>
-            )}
-            {type === "select" && options && (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {type === "image" && bucket && (
-              <ImageUpload
-                control={control}
-                name={name}
-                label={label}
-                description={description}
-                bucket={bucket}
-              />
-            )}
-            {type === "checkbox" && (
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            )}
-            {(type === "text" || type === "number" || type === "datetime-local") && (
-              <Input
-                type={type}
-                placeholder={placeholder}
-                {...field}
-              />
-            )}
+              )}
+              {type === "select" && options && (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={placeholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {options.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {type === "image" && bucket && (
+                <ImageUpload
+                  control={control}
+                  name={name}
+                  label={label}
+                  description={description}
+                  bucket={bucket}
+                />
+              )}
+              {type === "checkbox" && (
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+              {(type === "text" || type === "number" || type === "datetime-local") && (
+                <Input
+                  type={type}
+                  placeholder={placeholder}
+                  {...field}
+                />
+              )}
+            </div>
           </FormControl>
           {description && (
             <FormDescription>
