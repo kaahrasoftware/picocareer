@@ -4,6 +4,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 export default function EventUpload() {
   const navigate = useNavigate();
@@ -11,11 +12,22 @@ export default function EventUpload() {
   const { data: profile } = useUserProfile(session);
   const { toast } = useToast();
 
-  // Check if user is admin
-  if (profile?.user_type !== 'admin') {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (profile && profile.user_type !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can access this page",
+        variant: "destructive",
+      });
+      navigate('/');
+    }
+  }, [profile, navigate, toast]);
+
+  // If profile is not loaded yet, don't redirect
+  if (!profile) return null;
+
+  // If user is not admin, don't render the form
+  if (profile.user_type !== 'admin') return null;
 
   const fields = [
     {
