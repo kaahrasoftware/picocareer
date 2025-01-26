@@ -25,15 +25,15 @@ export function MainNavigation() {
   return (
     <nav className="flex justify-center w-full">
       <ul className={cn(
-        "flex max-w-3xl mx-auto",
-        isMobile ? "flex-col gap-2" : "gap-8 justify-center"
+        "flex items-center",
+        isMobile ? "flex-col gap-2" : "flex-row gap-4"
       )}>
         {navItems.map(({ path, label }) => (
           <li key={path}>
             <Link 
               to={path} 
               className={cn(
-                "px-4 py-2 rounded-md transition-colors block",
+                "px-3 py-2 rounded-md transition-colors whitespace-nowrap",
                 isMobile ? "w-full" : "",
                 isActive(path) && "bg-primary/20 text-primary"
               )}
