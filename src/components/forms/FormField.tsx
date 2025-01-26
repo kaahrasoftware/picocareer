@@ -5,8 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageUpload } from "./ImageUpload";
 import { RichTextEditor } from "./RichTextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface FormFieldProps {
   control: any;
@@ -47,11 +45,13 @@ export function FormField({
               />
             )}
             {type === "richtext" && (
-              <RichTextEditor
-                value={field.value}
-                onChange={field.onChange}
-                placeholder={placeholder}
-              />
+              <div className="w-full">
+                <RichTextEditor
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  placeholder={placeholder}
+                />
+              </div>
             )}
             {type === "select" && options && (
               <Select onValueChange={field.onChange} defaultValue={field.value}>
