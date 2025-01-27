@@ -40,7 +40,7 @@ export default function EventUpload() {
     {
       name: "description",
       label: "Event Description",
-      type: "richtext",
+      type: "textarea",
       placeholder: "Enter event description",
       description: "Detailed description of the event",
       required: true,
@@ -133,8 +133,7 @@ export default function EventUpload() {
         .from('events')
         .insert({
           ...data,
-          status: 'Pending',
-          author_id: profile.id
+          status: 'Pending'
         });
 
       if (error) throw error;

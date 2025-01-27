@@ -401,7 +401,6 @@ export type Database = {
       }
       events: {
         Row: {
-          author_id: string | null
           created_at: string
           description: string
           end_time: string
@@ -420,7 +419,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          author_id?: string | null
           created_at?: string
           description: string
           end_time: string
@@ -439,7 +437,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          author_id?: string | null
           created_at?: string
           description?: string
           end_time?: string
@@ -457,15 +454,7 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       majors: {
         Row: {

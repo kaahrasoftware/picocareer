@@ -12,19 +12,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'picocareer_auth_token',
     flowType: 'pkce',
-    onAuthStateChange: (event, session) => {
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-        // Handle session expiration
-        if (!session && event === 'TOKEN_REFRESHED') {
-          // Clear auth data
-          const key = `sb-${SUPABASE_URL.split('//')[1]}-auth-token`;
-          localStorage.removeItem(key);
-          
-          // Redirect to auth page with session expired parameter
-          window.location.href = '/auth?error=session_expired';
-        }
-      }
-    },
   },
   global: {
     headers: {
@@ -36,6 +23,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       eventsPerSecond: 2,
     },
   },
+  // Add retry configuration
   db: {
     schema: 'public',
   },
@@ -49,19 +37,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     }).then(async (response) => {
       if (!response.ok) {
         const error = await response.json();
-        
-        // Handle session expiration specifically
-        if (error.message?.includes('Invalid Refresh Token') || 
-            error.message?.includes('session_expired')) {
-          // Clear auth data
-          const key = `sb-${SUPABASE_URL.split('//')[1]}-auth-token`;
-          localStorage.removeItem(key);
-          
-          // Redirect to auth page with session expired parameter
-          window.location.href = '/auth?error=session_expired';
-          throw new Error('Session expired. Please sign in again.');
-        }
-        
         console.error('Supabase request failed:', error);
         throw new Error(error.message || 'Failed to fetch data');
       }

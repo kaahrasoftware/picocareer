@@ -4,7 +4,7 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -15,26 +15,10 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useToast } from "@/hooks/use-toast";
-import React from "react";
 
 export default function Auth() {
   const { session } = useAuthSession();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-
-  React.useEffect(() => {
-    // Show session expired message if redirected from session expiration
-    const error = searchParams.get('error');
-    if (error === 'session_expired') {
-      toast({
-        title: "Session Expired",
-        description: "Your session has expired. Please sign in again.",
-        variant: "destructive",
-      });
-    }
-  }, [searchParams, toast]);
 
   // Redirect authenticated users away from auth page
   if (session?.user) {
