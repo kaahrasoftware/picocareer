@@ -115,30 +115,26 @@ export default function Event() {
 
     setRegistering(selectedEvent.id);
     try {
-      // First check if the email is already registered for this event
-      const { data: existingRegistration, error: checkError } = await supabase
+      // Check for existing registration
+      const { data: existingReg } = await supabase
         .from('event_registrations')
-        .select('id')
+        .select('event_id')
         .eq('event_id', selectedEvent.id)
         .eq('email', formData.email)
-        .maybeSingle();  // Use maybeSingle instead of single
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
-        throw checkError;
-      }
-
-      if (existingRegistration) {
+      if (existingReg) {
         toast({
           title: "Already Registered",
           description: "You have already registered for this event with this email address.",
-          variant: "destructive",
+          variant: "destructive"
         });
         setSelectedEvent(null);
         return;
       }
 
-      // If no existing registration, proceed with registration
-      const { data: registration, error: insertError } = await supabase
+      // Create registration
+      const { data: registration, error: regError } = await supabase
         .from('event_registrations')
         .insert({
           event_id: selectedEvent.id,
@@ -155,7 +151,7 @@ export default function Event() {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (regError) throw regError;
 
       // Send confirmation email
       try {
@@ -192,7 +188,7 @@ export default function Event() {
       toast({
         title: "Registration Failed",
         description: error.message || "Failed to register for the event. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setRegistering(null);
