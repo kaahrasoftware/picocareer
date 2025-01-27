@@ -69,6 +69,7 @@ export default function EventUpload() {
       placeholder: "Select event type",
       description: "Type of event",
       required: true,
+      defaultValue: "Webinar",
     },
     {
       name: "platform",
@@ -78,6 +79,7 @@ export default function EventUpload() {
       placeholder: "Select platform",
       description: "Platform where the event will be hosted",
       required: true,
+      defaultValue: "Google Meet",
     },
     {
       name: "meeting_link",
