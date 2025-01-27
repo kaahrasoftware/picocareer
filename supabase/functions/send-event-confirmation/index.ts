@@ -3,6 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,85 +23,70 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    if (!Deno.env.get("RESEND_API_KEY")) {
-      throw new Error('RESEND_API_KEY is not configured');
-    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { registrationId }: EmailRequest = await req.json();
 
-    const { registrationId } = await req.json() as EmailRequest;
-    console.log('Processing email request:', { registrationId });
+    console.log('Fetching registration details for:', registrationId);
 
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Fetch registration details with event information
+    // Get registration details with event and profile information
     const { data: registration, error: regError } = await supabase
       .from('event_registrations')
       .select(`
         *,
-        event:events (
+        event:events(
           title,
           description,
           start_time,
           end_time,
-          meeting_link,
           platform,
+          meeting_link,
           organized_by
+        ),
+        profile:profiles(
+          full_name,
+          email
         )
       `)
       .eq('id', registrationId)
       .single();
 
     if (regError || !registration) {
+      console.error('Error fetching registration:', regError);
       throw new Error('Registration not found');
     }
 
-    const event = registration.event;
-    const startTime = new Date(event.start_time);
-    const endTime = new Date(event.end_time);
+    console.log('Registration details:', registration);
 
-    // Format dates for email
-    const formattedStartTime = startTime.toLocaleString('en-US', {
+    const eventDate = new Date(registration.event.start_time).toLocaleString('en-US', {
       dateStyle: 'full',
       timeStyle: 'short'
     });
-    const formattedEndTime = endTime.toLocaleString('en-US', {
-      timeStyle: 'short'
-    });
 
-    // Create email content
     const emailContent = `
-      <html>
-      <body>
-        <h2>Event Registration Confirmation</h2>
-        <p>Thank you for registering for ${event.title}!</p>
-        
-        <h3>Event Details:</h3>
-        <p><strong>Date and Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
-        <p><strong>Platform:</strong> ${event.platform}</p>
-        ${event.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${event.meeting_link}">${event.meeting_link}</a></p>` : ''}
-        ${event.organized_by ? `<p><strong>Organized by:</strong> ${event.organized_by}</p>` : ''}
-        
-        <h3>Description:</h3>
-        <p>${event.description}</p>
-        
-        <p>A calendar invitation has been sent to your email. You can add it to your calendar to receive reminders.</p>
-        
-        <p>If you have any questions, please don't hesitate to contact us.</p>
-      </body>
-      </html>`;
+      <h2>Event Registration Confirmation</h2>
+      <p>Thank you for registering for ${registration.event.title}!</p>
+      
+      <h3>Event Details:</h3>
+      <p><strong>Date:</strong> ${eventDate}</p>
+      <p><strong>Platform:</strong> ${registration.event.platform}</p>
+      ${registration.event.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${registration.event.meeting_link}">${registration.event.meeting_link}</a></p>` : ''}
+      ${registration.event.organized_by ? `<p><strong>Organized by:</strong> ${registration.event.organized_by}</p>` : ''}
+      
+      <h3>Event Description:</h3>
+      <p>${registration.event.description}</p>
+      
+      <p>We look forward to seeing you at the event!</p>
+      <p>Best regards,<br>The PicoCareer Team</p>
+    `;
 
-    // Send email using Resend
-    const emailRes = await resend.emails.send({
+    const emailResponse = await resend.emails.send({
       from: "PicoCareer <info@picocareer.com>",
       to: [registration.email],
-      subject: `Event Registration Confirmation: ${event.title}`,
+      subject: `Registration Confirmed: ${registration.event.title}`,
       html: emailContent,
     });
 
-    console.log('Email sent successfully:', emailRes);
+    console.log('Email sent successfully:', emailResponse);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
