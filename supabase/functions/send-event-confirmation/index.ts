@@ -1,14 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -60,46 +57,195 @@ const handler = async (req: Request): Promise<Response> => {
       timeStyle: 'short'
     });
 
-    // Send email using Resend
-    const emailResponse = await resend.emails.send({
-      from: "PicoCareer <info@picocareer.com>",
-      to: registration.email,
-      subject: `Event Registration Confirmation: ${event.title}`,
-      html: `
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <h2>Event Registration Confirmation</h2>
-          <p>Thank you for registering for ${event.title}!</p>
-          
-          <h3>Event Details:</h3>
-          <p><strong>Date and Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
-          <p><strong>Platform:</strong> ${event.platform}</p>
-          ${event.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${event.meeting_link}">${event.meeting_link}</a></p>` : ''}
-          ${event.organized_by ? `<p><strong>Organized by:</strong> ${event.organized_by}</p>` : ''}
-          
-          <h3>Description:</h3>
-          <p>${event.description}</p>
-          
-          <p>A calendar invitation has been sent to your email. You can add it to your calendar to receive reminders.</p>
-          
-          <p>If you have any questions, please don't hesitate to contact us.</p>
-          
-          <p style="color: #666; font-size: 0.9em; margin-top: 30px;">
-            Best regards,<br>
-            The PicoCareer Team
-          </p>
-        </body>
-        </html>
-      `,
-    });
+    // Get Google service account credentials
+    const serviceAccountEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+    const calendarId = Deno.env.get('GOOGLE_CALENDAR_EMAIL');
+    let privateKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY') || '';
 
-    console.log('Email sent successfully:', emailResponse);
+    if (!serviceAccountEmail || !privateKey || !calendarId) {
+      throw new Error('Missing Google service account configuration');
+    }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    // Fix private key formatting
+    privateKey = privateKey
+      .replace(/\\n/g, '\n')  // Replace literal \n with newlines
+      .replace(/^"|"$/g, ''); // Remove any surrounding quotes
 
+    console.log('Creating JWT with service account:', serviceAccountEmail);
+
+    // Create JWT for Google API authentication
+    const header = {
+      alg: 'RS256',
+      typ: 'JWT'
+    };
+
+    const now = Math.floor(Date.now() / 1000);
+    const claim = {
+      iss: serviceAccountEmail,
+      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send',
+      aud: 'https://oauth2.googleapis.com/token',
+      exp: now + 3600,
+      iat: now
+    };
+
+    const encoder = new TextEncoder();
+    const headerB64 = btoa(JSON.stringify(header));
+    const claimB64 = btoa(JSON.stringify(claim));
+    const message = `${headerB64}.${claimB64}`;
+
+    try {
+      console.log('Importing private key...');
+      // Create signing key
+      const keyData = await crypto.subtle.importKey(
+        'pkcs8',
+        encoder.encode(privateKey),
+        {
+          name: 'RSASSA-PKCS1-v1_5',
+          hash: 'SHA-256'
+        },
+        false,
+        ['sign']
+      );
+
+      console.log('Signing JWT...');
+      // Sign the message
+      const signature = await crypto.subtle.sign(
+        'RSASSA-PKCS1-v1_5',
+        keyData,
+        encoder.encode(message)
+      );
+
+      // Convert signature to base64
+      const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+
+      console.log('Getting access token...');
+      // Get access token
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: `${message}.${signatureB64}`
+        })
+      });
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('Token response error:', errorText);
+        throw new Error('Failed to get access token');
+      }
+
+      const { access_token } = await tokenResponse.json();
+
+      // Create Google Calendar event
+      console.log('Creating calendar event...');
+      const calendarEvent = {
+        summary: event.title,
+        description: `${event.description}\n\nMeeting Link: ${event.meeting_link || 'To be provided'}`,
+        start: {
+          dateTime: startTime.toISOString(),
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: endTime.toISOString(),
+          timeZone: 'UTC'
+        },
+        attendees: [{ email: registration.email }],
+        conferenceData: event.meeting_link ? {
+          createRequest: {
+            requestId: registration.id,
+            conferenceSolutionKey: { type: "hangoutsMeet" }
+          }
+        } : undefined
+      };
+
+      const calendarResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?conferenceDataVersion=1`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(calendarEvent)
+        }
+      );
+
+      if (!calendarResponse.ok) {
+        const errorText = await calendarResponse.text();
+        console.error('Calendar API error:', errorText);
+        throw new Error('Failed to create calendar event');
+      }
+
+      const calData = await calendarResponse.json();
+
+      // Create email content
+      const emailContent = `
+Content-Type: text/html; charset="UTF-8"
+MIME-Version: 1.0
+From: PicoCareer <info@picocareer.com>
+To: ${registration.email}
+Subject: Event Registration Confirmation: ${event.title}
+Content-Transfer-Encoding: 7bit
+
+<html>
+<body>
+  <h2>Event Registration Confirmation</h2>
+  <p>Thank you for registering for ${event.title}!</p>
+  
+  <h3>Event Details:</h3>
+  <p><strong>Date and Time:</strong> ${formattedStartTime} - ${formattedEndTime}</p>
+  <p><strong>Platform:</strong> ${event.platform}</p>
+  ${event.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${event.meeting_link}">${event.meeting_link}</a></p>` : ''}
+  ${event.organized_by ? `<p><strong>Organized by:</strong> ${event.organized_by}</p>` : ''}
+  
+  <h3>Description:</h3>
+  <p>${event.description}</p>
+  
+  <p>A calendar invitation has been sent to your email. You can add it to your calendar to receive reminders.</p>
+  
+  <p>If you have any questions, please don't hesitate to contact us.</p>
+</body>
+</html>`;
+
+      // Encode the email content
+      const encodedEmail = btoa(emailContent)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      // Send email using Gmail API
+      console.log('Sending email...');
+      const gmailResponse = await fetch(
+        'https://www.googleapis.com/gmail/v1/users/info@picocareer.com/messages/send',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            raw: encodedEmail
+          })
+        }
+      );
+
+      if (!gmailResponse.ok) {
+        const errorText = await gmailResponse.text();
+        console.error('Gmail API error:', errorText);
+        throw new Error('Failed to send email');
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } catch (error) {
+      console.error('JWT/API error:', error);
+      throw error;
+    }
   } catch (error: any) {
     console.error("Error in send-event-confirmation function:", error);
     return new Response(JSON.stringify({ error: error.message }), {
