@@ -74,7 +74,7 @@ export default function EventUpload() {
     {
       name: "platform",
       label: "Platform",
-      type: "select",
+      type: "select", 
       options: ["Google Meet", "Zoom"],
       placeholder: "Select platform",
       description: "Platform where the event will be hosted",
@@ -136,7 +136,7 @@ export default function EventUpload() {
         .insert({
           ...data,
           status: 'Pending',
-          author_id: profile.id // Add the author_id
+          author_id: profile.id
         });
 
       if (error) throw error;
