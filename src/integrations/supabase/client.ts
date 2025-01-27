@@ -20,8 +20,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
           const key = `sb-${SUPABASE_URL.split('//')[1]}-auth-token`;
           localStorage.removeItem(key);
           
-          // Redirect to auth page
-          window.location.href = '/auth';
+          // Redirect to auth page with session expired parameter
+          window.location.href = '/auth?error=session_expired';
         }
       }
     },
@@ -36,11 +36,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       eventsPerSecond: 2,
     },
   },
-  // Add retry configuration
   db: {
     schema: 'public',
   },
-  // Add error handling for fetch operations
   fetch: (url, options = {}) => {
     return fetch(url, {
       ...options,
@@ -59,8 +57,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
           const key = `sb-${SUPABASE_URL.split('//')[1]}-auth-token`;
           localStorage.removeItem(key);
           
-          // Redirect to auth page
+          // Redirect to auth page with session expired parameter
           window.location.href = '/auth?error=session_expired';
+          throw new Error('Session expired. Please sign in again.');
         }
         
         console.error('Supabase request failed:', error);
