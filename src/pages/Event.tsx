@@ -121,9 +121,9 @@ export default function Event() {
         .select('id')
         .eq('event_id', selectedEvent.id)
         .eq('email', formData.email)
-        .maybeSingle();  // Use maybeSingle instead of single
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
+      if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;
       }
 
@@ -158,35 +158,27 @@ export default function Event() {
       if (insertError) throw insertError;
 
       // Send confirmation email
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-event-confirmation', {
-          body: { registrationId: registration.id }
-        });
+      const { error: emailError } = await supabase.functions.invoke('send-event-confirmation', {
+        body: { registrationId: registration.id }
+      });
 
-        if (emailError) {
-          console.error('Error sending confirmation email:', emailError);
-          toast({
-            title: "Registration Successful",
-            description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: "Registration Successful",
-            description: "You have been registered for the event. Check your email for confirmation details.",
-            variant: "default",
-          });
-        }
-      } catch (emailError) {
+      if (emailError) {
         console.error('Error sending confirmation email:', emailError);
         toast({
           title: "Registration Successful",
           description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",
           variant: "default",
         });
+      } else {
+        toast({
+          title: "Registration Successful",
+          description: "You have been registered for the event. Check your email for confirmation details.",
+          variant: "default",
+        });
       }
 
       setSelectedEvent(null);
+      queryClient.invalidateQueries({ queryKey: ['event-registrations'] });
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
