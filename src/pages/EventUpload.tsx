@@ -133,7 +133,8 @@ export default function EventUpload() {
         .from('events')
         .insert({
           ...data,
-          status: 'Pending'
+          status: 'Pending',
+          author_id: profile.id // Add the author_id
         });
 
       if (error) throw error;
