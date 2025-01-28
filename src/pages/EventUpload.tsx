@@ -140,11 +140,28 @@ export default function EventUpload() {
 
   const handleSubmit = async (data: any) => {
     try {
+      // Basic validation
+      if (!data.title || !data.description || !data.start_time || !data.end_time || !data.event_type || !data.platform) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      // Validate dates
+      const startTime = new Date(data.start_time);
+      const endTime = new Date(data.end_time);
+      
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        throw new Error("Invalid date format");
+      }
+
+      if (endTime <= startTime) {
+        throw new Error("End time must be after start time");
+      }
+
       // Convert datetime strings to ISO format
       const formattedData = {
         ...data,
-        start_time: new Date(data.start_time).toISOString(),
-        end_time: new Date(data.end_time).toISOString(),
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
         status: 'Pending',
         author_id: profile.id
       };
@@ -165,9 +182,10 @@ export default function EventUpload() {
       console.error('Event creation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create event",
         variant: "destructive",
       });
+      return false; // Return false to prevent form reset
     }
   };
 
