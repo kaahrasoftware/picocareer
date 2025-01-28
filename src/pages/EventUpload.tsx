@@ -144,7 +144,8 @@ export default function EventUpload() {
         .from('events')
         .insert({
           ...data,
-          status: 'Pending'
+          status: 'Pending',
+          author_id: profile.id
         });
 
       if (error) throw error;
@@ -156,6 +157,7 @@ export default function EventUpload() {
 
       navigate('/event');
     } catch (error: any) {
+      console.error('Event creation error:', error);
       toast({
         title: "Error",
         description: error.message,
