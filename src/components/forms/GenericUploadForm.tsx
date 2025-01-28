@@ -82,18 +82,33 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {fields.map((field) => (
-          <FormField
-            key={field.name}
-            control={form.control}
-            name={field.name}
-            label={field.label}
-            type={field.type}
-            placeholder={field.placeholder}
-            description={field.description}
-            required={field.required}
-          />
-        ))}
+        {fields.map((field) => {
+          if (field.type === "richtext" && field.component) {
+            const RichTextComponent = field.component;
+            return (
+              <div key={field.name} className="space-y-2">
+                <label className="text-sm font-medium">{field.label}</label>
+                <RichTextComponent
+                  value={form.watch(field.name) || ""}
+                  onChange={(value: string) => form.setValue(field.name, value)}
+                  placeholder={field.placeholder}
+                />
+              </div>
+            );
+          }
+          return (
+            <FormField
+              key={field.name}
+              control={form.control}
+              name={field.name}
+              label={field.label}
+              type={field.type}
+              placeholder={field.placeholder}
+              description={field.description}
+              required={field.required}
+            />
+          );
+        })}
         <Button 
           type="submit" 
           disabled={form.formState.isSubmitting}

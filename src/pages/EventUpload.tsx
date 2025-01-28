@@ -5,6 +5,7 @@ import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
 
 export default function EventUpload() {
   const navigate = useNavigate();
@@ -40,10 +41,11 @@ export default function EventUpload() {
     {
       name: "description",
       label: "Event Description",
-      type: "textarea",
+      type: "richtext",
       placeholder: "Enter event description",
       description: "Detailed description of the event",
       required: true,
+      component: RichTextEditor,
     },
     {
       name: "start_time",
