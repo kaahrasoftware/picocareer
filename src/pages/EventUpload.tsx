@@ -140,13 +140,18 @@ export default function EventUpload() {
 
   const handleSubmit = async (data: any) => {
     try {
+      // Convert datetime strings to ISO format
+      const formattedData = {
+        ...data,
+        start_time: new Date(data.start_time).toISOString(),
+        end_time: new Date(data.end_time).toISOString(),
+        status: 'Pending',
+        author_id: profile.id
+      };
+
       const { error } = await supabase
         .from('events')
-        .insert({
-          ...data,
-          status: 'Pending',
-          author_id: profile.id
-        });
+        .insert(formattedData);
 
       if (error) throw error;
 
