@@ -12,7 +12,7 @@ interface BasicInputFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number";
+  type?: "text" | "number" | "datetime-local";
   required?: boolean;
 }
 

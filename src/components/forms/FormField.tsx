@@ -17,13 +17,14 @@ export interface FormFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "category" | "subcategory" | "select";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "category" | "subcategory" | "select" | "datetime-local" | "richtext";
   bucket?: string;
   required?: boolean;
   options?: Array<{ id: string; title?: string; name?: string; }>;
   dependsOn?: string;
   watch?: any;
   control?: any;
+  component?: any;
 }
 
 export function FormField({ 
@@ -37,7 +38,8 @@ export function FormField({
   required = false,
   options = [],
   dependsOn,
-  watch
+  watch,
+  component
 }: FormFieldProps) {
   const { data: schools } = useQuery({
     queryKey: ['schools'],
@@ -187,10 +189,11 @@ export function FormField({
               );
             }
 
-          case "textarea":
-            if (name === "content") {
+          case "richtext":
+            if (component) {
+              const RichTextComponent = component;
               return (
-                <RichTextEditor
+                <RichTextComponent
                   value={field.value || ''}
                   onChange={field.onChange}
                   placeholder={placeholder}
@@ -214,6 +217,18 @@ export function FormField({
                 field={field}
                 label={label}
                 description={description}
+              />
+            );
+
+          case "datetime-local":
+            return (
+              <BasicInputField
+                field={field}
+                label={label}
+                placeholder={placeholder}
+                description={description}
+                type="datetime-local"
+                required={required}
               />
             );
 
