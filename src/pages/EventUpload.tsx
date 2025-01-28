@@ -67,28 +67,28 @@ export default function EventUpload() {
       name: "event_type",
       label: "Event Type",
       type: "select",
+      placeholder: "Select event type",
+      description: "Type of event",
+      required: true,
       options: [
         { id: "Coffee Time", title: "Coffee Time" },
         { id: "Hackathon", title: "Hackathon" },
         { id: "Panel", title: "Panel" },
         { id: "Webinar", title: "Webinar" },
         { id: "Workshop", title: "Workshop" }
-      ],
-      placeholder: "Select event type",
-      description: "Type of event",
-      required: true,
+      ]
     },
     {
       name: "platform",
       label: "Platform",
       type: "select",
-      options: [
-        { id: "Google Meet", title: "Google Meet" },
-        { id: "Zoom", title: "Zoom" }
-      ],
       placeholder: "Select platform",
       description: "Platform where the event will be hosted",
       required: true,
+      options: [
+        { id: "Google Meet", title: "Google Meet" },
+        { id: "Zoom", title: "Zoom" }
+      ]
     },
     {
       name: "meeting_link",
