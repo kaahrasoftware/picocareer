@@ -28,23 +28,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Fetching registration details for:', registrationId);
 
-    // Get registration details with event and profile information
+    // Get registration details with event information
     const { data: registration, error: regError } = await supabase
       .from('event_registrations')
       .select(`
         *,
         event:events(
           title,
-          description,
           start_time,
-          end_time,
           platform,
-          meeting_link,
-          organized_by
-        ),
-        profile:profiles(
-          full_name,
-          email
+          meeting_link
         )
       `)
       .eq('id', registrationId)
@@ -57,25 +50,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Registration details:', registration);
 
-    const eventDate = new Date(registration.event.start_time).toLocaleString('en-US', {
-      dateStyle: 'full',
-      timeStyle: 'short'
-    });
-
     const emailContent = `
       <h2>Event Registration Confirmation</h2>
       <p>Thank you for registering for ${registration.event.title}!</p>
+      <p>The event will start at ${registration.event.start_time}</p>
+      ${registration.event.meeting_link ? `<p>Meeting Link: <a href="${registration.event.meeting_link}">${registration.event.meeting_link}</a></p>` : ''}
       
-      <h3>Event Details:</h3>
-      <p><strong>Date:</strong> ${eventDate}</p>
-      <p><strong>Platform:</strong> ${registration.event.platform}</p>
-      ${registration.event.meeting_link ? `<p><strong>Meeting Link:</strong> <a href="${registration.event.meeting_link}">${registration.event.meeting_link}</a></p>` : ''}
-      ${registration.event.organized_by ? `<p><strong>Organized by:</strong> ${registration.event.organized_by}</p>` : ''}
-      
-      <h3>Event Description:</h3>
-      <p>${registration.event.description}</p>
-      
-      <p>We look forward to seeing you at the event!</p>
       <p>Best regards,<br>The PicoCareer Team</p>
     `;
 
