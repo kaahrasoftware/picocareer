@@ -45,14 +45,12 @@ export function EventCard({
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <div className="relative">
         {event.thumbnail_url && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center rounded-t-lg"
-            style={{ 
-              backgroundImage: `url(${event.thumbnail_url})`,
-              height: '250px'
-            }}
-          >
-            <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
+          <div className="absolute inset-0 bg-black/50">
+            <img 
+              src={event.thumbnail_url} 
+              alt={event.title}
+              className="w-full h-[250px] object-cover"
+            />
           </div>
         )}
         <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-4">
