@@ -8,22 +8,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage
+    detectSessionInUrl: true
   },
   global: {
     headers: {
-      'apikey': supabaseAnonKey,
-      'X-Client-Info': 'supabase-js-web',
-      'Cache-Control': 'no-cache'
+      'apikey': supabaseAnonKey
     }
   }
 });
 
-// Listen for auth state changes
-supabase.auth.onAuthStateChange((event) => {
+// Handle auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
-    // Clear auth data
+    // Clear local storage
     const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
     localStorage.removeItem(key);
     
@@ -40,5 +37,3 @@ supabase.auth.onAuthStateChange((event) => {
     }
   }
 });
-
-export default supabase;
