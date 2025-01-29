@@ -45,11 +45,11 @@ export function EventCard({
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <div className="relative">
         {event.thumbnail_url && (
-          <div className="absolute inset-0 bg-black/50">
+          <div className="absolute inset-0 bg-black/70">
             <img 
               src={event.thumbnail_url} 
               alt={event.title}
-              className="w-full h-[250px] object-cover"
+              className="w-full h-[250px] object-cover opacity-60"
             />
           </div>
         )}
