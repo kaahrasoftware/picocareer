@@ -45,19 +45,20 @@ export function EventCard({
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <div className="relative">
         {event.thumbnail_url && (
-          <div className="h-[250px] w-full">
-            <img 
-              src={event.thumbnail_url}
-              alt={event.title}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50" />
+          <div 
+            className="absolute inset-0 bg-cover bg-center rounded-t-lg"
+            style={{ 
+              backgroundImage: `url(${event.thumbnail_url})`,
+              height: '250px'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
           </div>
         )}
         <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-4">
           {event.event_type && (
             <div className="absolute top-4 right-4">
-              <Badge variant="secondary" className="text-xs font-medium">
+              <Badge variant="destructive" className="text-xs font-medium">
                 <Tag className="h-3 w-3 mr-1" />
                 {event.event_type}
               </Badge>
