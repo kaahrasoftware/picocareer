@@ -9,7 +9,6 @@ import { EventRegistrationForm } from "@/components/forms/EventRegistrationForm"
 import { EventHeader } from "@/components/event/EventHeader";
 import { EventCard } from "@/components/event/EventCard";
 import { EmptyState } from "@/components/event/EmptyState";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Calendar, Clock, Users, Video, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -195,14 +194,6 @@ export default function Event() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold mb-6">Loading events...</h1>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
@@ -251,16 +242,6 @@ export default function Event() {
           
           {viewingEvent && (
             <div className="space-y-6">
-              {viewingEvent.thumbnail_url && (
-                <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg">
-                  <img 
-                    src={viewingEvent.thumbnail_url} 
-                    alt={viewingEvent.title}
-                    className="object-cover w-full h-full"
-                  />
-                </AspectRatio>
-              )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm">
