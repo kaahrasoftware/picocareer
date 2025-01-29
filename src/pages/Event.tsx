@@ -1,306 +1,178 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EventRegistrationForm } from "@/components/forms/EventRegistrationForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { EventHeader } from "@/components/event/EventHeader";
 import { EventCard } from "@/components/event/EventCard";
 import { EmptyState } from "@/components/event/EmptyState";
 import { Calendar, Clock, Users, Video, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  platform: 'Google Meet' | 'Zoom';
-  meeting_link?: string;
-  max_attendees?: number;
-  thumbnail_url?: string;
-  host_id?: string;
-  organized_by?: string;
-  registrations_count?: number;
-}
+import { EventRegistrationForm } from "@/components/forms/EventRegistrationForm";
 
 export default function Event() {
-  const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const [registering, setRegistering] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
-  const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
+  const [viewingEvent, setViewingEvent] = useState<any>(null);
 
-  // Query for events with registration counts
   const { data: events, isLoading } = useQuery({
-    queryKey: ['events', filter],
+    queryKey: ["events"],
     queryFn: async () => {
-      const now = new Date().toISOString();
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select(`
-          *,
-          registrations_count:event_registrations(count)
-        `)
-        .eq('status', 'Approved')
-        .gte('start_time', filter === 'upcoming' ? now : '2000-01-01')
-        .lt('start_time', filter === 'upcoming' ? '2100-01-01' : now)
-        .order('start_time', { ascending: filter === 'upcoming' });
-
-      if (eventsError) throw eventsError;
-
-      return eventsData.map(event => ({
-        ...event,
-        registrations_count: event.registrations_count[0]?.count || 0
-      }));
-    }
-  });
-
-  // Query for registrations
-  const { data: registrations } = useQuery({
-    queryKey: ['event-registrations', session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return [];
       const { data, error } = await supabase
-        .from('event_registrations')
-        .select('event_id')
-        .eq('profile_id', session.user.id);
-
-      if (error) throw error;
-      return data.map(r => r.event_id);
-    },
-    enabled: !!session?.user?.id
-  });
-
-  // Query for host details when viewing an event
-  const { data: hostProfile } = useQuery({
-    queryKey: ['host-profile', viewingEvent?.host_id],
-    queryFn: async () => {
-      if (!viewingEvent?.host_id) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', viewingEvent.host_id)
-        .single();
+        .from("events")
+        .select("*, registrations_count:registrations(count)")
+        .order("start_time", { ascending: true });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!viewingEvent?.host_id
   });
 
-  const handleRegister = async (eventId: string) => {
-    const event = events?.find(e => e.id === eventId);
-    if (event) {
-      setSelectedEvent(event);
-    }
-  };
-
-  const handleViewDetails = (eventId: string) => {
-    const event = events?.find(e => e.id === eventId);
-    if (event) {
-      setViewingEvent(event);
-    }
-  };
-
-  const handleRegistrationSubmit = async (formData: any) => {
-    if (!selectedEvent) return;
-
-    setRegistering(selectedEvent.id);
-    try {
-      // Check for existing registration
-      const { data: existingReg } = await supabase
-        .from('event_registrations')
-        .select('event_id')
-        .eq('event_id', selectedEvent.id)
-        .eq('email', formData.email)
-        .maybeSingle();
-
-      if (existingReg) {
-        toast({
-          title: "Already Registered",
-          description: "You have already registered for this event with this email address.",
-          variant: "destructive"
-        });
-        setSelectedEvent(null);
-        return;
-      }
-
-      // Create registration
-      const { data: registration, error: regError } = await supabase
-        .from('event_registrations')
-        .insert({
-          event_id: selectedEvent.id,
-          profile_id: session?.user?.id || null,
-          email: formData.email,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          "current academic field/position": formData.current_field,
-          student_or_professional: formData.student_or_professional,
-          "current school/company": formData.current_organization,
-          country: formData.country,
-          "where did you hear about us": formData["where did you hear about us"]
-        })
-        .select()
+  const { data: registration } = useQuery({
+    queryKey: ["event-registration", viewingEvent?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("event_id", viewingEvent.id)
         .single();
 
-      if (regError) throw regError;
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+    enabled: !!viewingEvent,
+  });
 
-      // Send confirmation email
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-event-confirmation', {
-          body: { registrationId: registration.id }
-        });
+  const isRegistered = !!registration;
 
-        if (emailError) {
-          console.error('Error sending confirmation email:', emailError);
-          toast({
-            title: "Registration Successful",
-            description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: "Registration Successful",
-            description: "You have been registered for the event. Check your email for confirmation details.",
-            variant: "default",
-          });
-        }
-      } catch (emailError) {
-        console.error('Error sending confirmation email:', emailError);
-        toast({
-          title: "Registration Successful",
-          description: "Registered successfully, but there was an issue sending the confirmation email. Please check your registration status in your profile.",
-          variant: "default",
-        });
-      }
-
-      setSelectedEvent(null);
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to register for the event. Please try again.",
-        variant: "destructive"
+  const handleRegistration = async (formData: any) => {
+    try {
+      const { error } = await supabase.from("registrations").insert({
+        event_id: viewingEvent.id,
+        ...formData,
       });
-    } finally {
-      setRegistering(null);
+
+      if (error) throw error;
+
+      setViewingEvent(null);
+    } catch (error) {
+      console.error("Error registering for event:", error);
     }
   };
 
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
-        <EventHeader filter={filter} onFilterChange={setFilter} />
+        <EventHeader />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events?.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isRegistering={registering === event.id}
-              isRegistered={registrations?.includes(event.id) || false}
-              onRegister={handleRegister}
-              onViewDetails={handleViewDetails}
-            />
-          ))}
-        </div>
-
-        {events?.length === 0 && <EmptyState filter={filter} />}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="h-[300px] rounded-lg bg-muted animate-pulse"
+              />
+            ))}
+          </div>
+        ) : events?.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events?.map((event) => (
+              <EventCard
+                key={event.id}
+                {...event}
+                registrationsCount={event.registrations_count}
+                onSelect={() => setViewingEvent(event)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Registration Dialog */}
-      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedEvent?.title || 'Register for Event'}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedEvent && (
-            <EventRegistrationForm
-              eventId={selectedEvent.id}
-              onSubmit={handleRegistrationSubmit}
-              onCancel={() => setSelectedEvent(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Details Dialog */}
       <Dialog open={!!viewingEvent} onOpenChange={() => setViewingEvent(null)}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{viewingEvent?.title}</DialogTitle>
-          </DialogHeader>
-          
-          {viewingEvent && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    {format(new Date(viewingEvent.start_time), 'PPP')}
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4" />
-                    {format(new Date(viewingEvent.start_time), 'p')} - {format(new Date(viewingEvent.end_time), 'p')}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Video className="h-4 w-4" />
-                    {viewingEvent.platform}
-                  </div>
-
-                  {viewingEvent.max_attendees && (
+        <DialogContent className="max-w-2xl">
+          <ScrollArea className="max-h-[80vh]">
+            {viewingEvent && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {format(new Date(viewingEvent.start_time), "MMMM d, yyyy")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>
+                        {format(new Date(viewingEvent.start_time), "h:mm a")} -{" "}
+                        {format(new Date(viewingEvent.end_time), "h:mm a")}{" "}
+                        ({viewingEvent.timezone})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Video className="h-4 w-4" />
+                      <span>{viewingEvent.platform}</span>
+                    </div>
+                    {viewingEvent.organized_by && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Building className="h-4 w-4" />
+                        <span>{viewingEvent.organized_by}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4" />
-                      {viewingEvent.registrations_count} / {viewingEvent.max_attendees} registered
+                      <span>
+                        {viewingEvent.registrations_count || 0} registered
+                        {viewingEvent.max_attendees &&
+                          ` / ${viewingEvent.max_attendees} max`}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
-                  {viewingEvent.organized_by && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Building className="h-4 w-4" />
-                      Organized by {viewingEvent.organized_by}
+                  <div className="space-y-4">
+                    <h3 className="font-medium">{viewingEvent.title}</h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {viewingEvent.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge>{viewingEvent.event_type}</Badge>
+                      {viewingEvent.facilitator && (
+                        <Badge variant="outline">
+                          Facilitator: {viewingEvent.facilitator}
+                        </Badge>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="text-sm text-muted-foreground">
-                {viewingEvent.description}
+                {isRegistered ? (
+                  <div className="rounded-lg border p-4 text-center space-y-2">
+                    <p className="text-sm font-medium">
+                      You are registered for this event
+                    </p>
+                    {viewingEvent.meeting_link && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(viewingEvent.meeting_link, "_blank")
+                        }
+                      >
+                        Join Meeting
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <EventRegistrationForm
+                    eventId={viewingEvent.id}
+                    onSubmit={handleRegistration}
+                  />
+                )}
               </div>
-
-              <div className="flex justify-center pt-4">
-                <Button 
-                  className="w-[200px]"
-                  onClick={() => {
-                    setViewingEvent(null);
-                    handleRegister(viewingEvent.id);
-                  }}
-                  disabled={registering === viewingEvent.id || registrations?.includes(viewingEvent.id) || filter === 'past'}
-                >
-                  {filter === 'past' 
-                    ? "Event Ended"
-                    : registering === viewingEvent.id 
-                      ? "Registering..." 
-                      : registrations?.includes(viewingEvent.id)
-                        ? "Registered"
-                        : "Register Now"}
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
