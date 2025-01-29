@@ -58,7 +58,7 @@ export function EventCard({
         <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-4">
           {event.event_type && (
             <div className="absolute top-4 right-4">
-              <Badge variant="destructive" className="text-xs font-medium">
+              <Badge variant="secondary" className="text-xs font-medium">
                 <Tag className="h-3 w-3 mr-1" />
                 {event.event_type}
               </Badge>
