@@ -13,41 +13,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
+      'apikey': supabaseAnonKey,
       'X-Client-Info': 'supabase-js-web',
       'Cache-Control': 'no-cache'
-    },
-    fetch: async (url, options = {}) => {
-      const headers = {
-        ...options.headers,
-        'Cache-Control': 'no-cache'
-      };
-
-      try {
-        const response = await fetch(url, { ...options, headers });
-        
-        if (response.status === 401) {
-          // Clear auth data from localStorage
-          const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
-          localStorage.removeItem(key);
-          
-          // Sign out from Supabase
-          await supabase.auth.signOut();
-          
-          // Show toast notification
-          toast({
-            title: "Session Expired",
-            description: "Your session has expired. Please sign in again.",
-            variant: "destructive",
-          });
-
-          // Redirect to auth page
-          window.location.href = '/auth';
-        }
-        return response;
-      } catch (error) {
-        console.error('Fetch error:', error);
-        throw error;
-      }
     }
   }
 });
