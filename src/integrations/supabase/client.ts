@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 
 const supabaseUrl = 'https://wurdmlkfkzuivvwxjmxk.supabase.co';
@@ -10,42 +9,36 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storage: window.localStorage,
+    storage: window.localStorage
   },
   global: {
-    fetch: (...args) => {
-      const [url, config] = args;
-      if (!config) {
-        config = {};
-      }
-      if (!config.headers) {
-        config.headers = {};
-      }
-      return fetch(...args).then(async (response) => {
-        if (response.status === 400) {
-          const errorData = await response.json();
-          if (
-            errorData.code === 'session_expired' ||
-            errorData.message?.includes('Invalid Refresh Token') ||
-            errorData.message?.includes('Session Expired')
-          ) {
-            // Clear auth data from localStorage
-            const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
-            localStorage.removeItem(key);
-            
-            // Sign out from Supabase
-            await supabase.auth.signOut();
-            
-            // Show toast notification
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "destructive",
-            });
+    headers: {
+      'X-Client-Info': 'supabase-js-web'
+    },
+    fetch: (url, options = {}) => {
+      const headers = {
+        ...options.headers,
+        'Cache-Control': 'no-cache'
+      };
 
-            // Redirect to auth page
-            window.location.href = '/auth';
-          }
+      return fetch(url, { ...options, headers }).then(async (response) => {
+        if (response.status === 401) {
+          // Clear auth data from localStorage
+          const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
+          localStorage.removeItem(key);
+          
+          // Sign out from Supabase
+          await supabase.auth.signOut();
+          
+          // Show toast notification
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please sign in again.",
+            variant: "destructive",
+          });
+
+          // Redirect to auth page
+          window.location.href = '/auth';
         }
         return response;
       });
@@ -55,7 +48,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Listen for auth state changes
 supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+  if (event === 'SIGNED_OUT') {
     // Clear auth data
     const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
     localStorage.removeItem(key);

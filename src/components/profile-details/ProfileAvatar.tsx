@@ -19,7 +19,7 @@ export function ProfileHeaderAvatar({
     <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-yellow-400">
       <img
         src={avatarUrl || "/placeholder.svg"}
-        alt="Profile"
+        alt={fallback}
         className="w-full h-full object-cover"
       />
     </div>
