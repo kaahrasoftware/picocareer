@@ -252,6 +252,7 @@ export default function Event() {
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4" />
                     {format(new Date(viewingEvent.start_time), 'p')} - {format(new Date(viewingEvent.end_time), 'p')}
+                    <span className="text-muted-foreground ml-1">({viewingEvent.timezone})</span>
                   </div>
                 </div>
 
