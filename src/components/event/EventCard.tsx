@@ -49,9 +49,9 @@ export function EventCard({
             <img 
               src={event.thumbnail_url}
               alt={event.title}
-              className="absolute inset-0 w-full h-[250px] object-cover rounded-t-lg"
+              className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/50 rounded-t-lg" />
+            <div className="absolute inset-0 bg-black/50" />
           </div>
         )}
         <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-4">
