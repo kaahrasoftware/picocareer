@@ -18,14 +18,16 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   
-  // Initialize form with default values
+  // Initialize form with default values and validation rules
   const defaultValues = fields.reduce((acc, field) => ({
     ...acc,
     [field.name]: field.defaultValue || ""
   }), {});
 
   const form = useForm({
-    defaultValues
+    defaultValues,
+    // Add validation mode to check on submit
+    mode: "onSubmit"
   });
 
   const handleSubmit = async (data: any) => {
@@ -33,6 +35,21 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
       toast({
         title: "Authentication Required",
         description: "Please sign in to submit content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate required fields
+    const missingFields = fields
+      .filter(field => field.required)
+      .filter(field => !data[field.name])
+      .map(field => field.label);
+
+    if (missingFields.length > 0) {
+      toast({
+        title: "Required Fields Missing",
+        description: `Please fill in the following fields: ${missingFields.join(", ")}`,
         variant: "destructive",
       });
       return;
@@ -93,6 +110,9 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
                   onChange={(value: string) => form.setValue(field.name, value)}
                   placeholder={field.placeholder}
                 />
+                {field.required && !form.watch(field.name) && (
+                  <p className="text-sm text-red-500">This field is required</p>
+                )}
               </div>
             );
           }
@@ -106,6 +126,8 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
               placeholder={field.placeholder}
               description={field.description}
               required={field.required}
+              options={field.options}
+              bucket={field.bucket}
             />
           );
         })}
