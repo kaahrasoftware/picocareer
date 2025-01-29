@@ -1,4 +1,14 @@
-export type MeetingPlatform = "Google Meet";
+export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
+export type NotificationType = 
+  | "session_booked"
+  | "session_cancelled"
+  | "session_reminder"
+  | "session_feedback"
+  | "career_update"
+  | "major_update";
+
+export type NotificationCategory = "session" | "general" | "mentorship";
 
 export interface CalendarEvent {
   id: string;
@@ -54,4 +64,33 @@ export interface MentorSession {
   status: string;
   calendar_event_id?: string;
   availability_slot_id?: string;
+  mentor: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+  mentee: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+  session_type: {
+    type: string;
+    duration: number;
+  };
 }
+
+export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
+  switch (type) {
+    case "session_booked":
+    case "session_cancelled":
+    case "session_reminder":
+    case "session_feedback":
+      return "mentorship";
+    case "career_update":
+    case "major_update":
+      return "general";
+    default:
+      return "general";
+  }
+};
