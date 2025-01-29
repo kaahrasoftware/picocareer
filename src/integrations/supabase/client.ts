@@ -13,15 +13,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'X-Client-Info': 'supabase-js-web'
+      'X-Client-Info': 'supabase-js-web',
+      'Cache-Control': 'no-cache'
     },
-    fetch: (url, options = {}) => {
+    fetch: async (url, options = {}) => {
       const headers = {
         ...options.headers,
         'Cache-Control': 'no-cache'
       };
 
-      return fetch(url, { ...options, headers }).then(async (response) => {
+      try {
+        const response = await fetch(url, { ...options, headers });
+        
         if (response.status === 401) {
           // Clear auth data from localStorage
           const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
@@ -41,13 +44,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           window.location.href = '/auth';
         }
         return response;
-      });
+      } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+      }
     }
   }
 });
 
 // Listen for auth state changes
-supabase.auth.onAuthStateChange((event, session) => {
+supabase.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') {
     // Clear auth data
     const key = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;

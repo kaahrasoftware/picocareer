@@ -17,10 +17,10 @@ export interface FormFieldProps {
   label: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "category" | "subcategory" | "select" | "datetime-local" | "richtext";
+  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "category" | "subcategory" | "select" | "datetime-local" | "richtext" | "email" | "password";
   bucket?: string;
   required?: boolean;
-  options?: Array<{ id: string; title?: string; name?: string; }>;
+  options?: Array<{ label: string; value: string; }>;
   dependsOn?: string;
   watch?: any;
   control?: any;
@@ -115,6 +115,18 @@ export function FormField({
       name={name}
       render={({ field }) => {
         switch (type) {
+          case "email":
+          case "password":
+            return (
+              <BasicInputField
+                field={field}
+                label={label}
+                placeholder={placeholder}
+                description={description}
+                type={type}
+                required={required}
+              />
+            );
           case "degree":
             return (
               <DegreeField
@@ -124,7 +136,6 @@ export function FormField({
                 required={required}
               />
             );
-            
           case "category":
             return (
               <CategoryField
@@ -134,7 +145,6 @@ export function FormField({
                 required={required}
               />
             );
-          
           case "subcategory":
             return (
               <SubcategoryField
@@ -145,7 +155,6 @@ export function FormField({
                 selectedCategory={watch && watch(dependsOn || "")}
               />
             );
-
           case "select":
             if (name === "position") {
               return (
@@ -188,7 +197,6 @@ export function FormField({
                 />
               );
             }
-
           case "richtext":
             if (component) {
               const RichTextComponent = component;
@@ -210,7 +218,6 @@ export function FormField({
                 type="text"
               />
             );
-
           case "checkbox":
             return (
               <FeatureField
@@ -219,7 +226,6 @@ export function FormField({
                 description={description}
               />
             );
-
           case "datetime-local":
             return (
               <BasicInputField
@@ -231,7 +237,6 @@ export function FormField({
                 required={required}
               />
             );
-
           default:
             return (
               <BasicInputField

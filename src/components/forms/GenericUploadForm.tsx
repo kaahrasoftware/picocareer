@@ -1,16 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FormField } from "./FormField";
-
-export interface FormFieldProps {
-  name: string;
-  label: string;
-  type?: "text" | "textarea" | "select" | "image" | "number" | "checkbox" | "datetime-local" | "degree" | "array" | "category" | "subcategory" | "richtext" | "email" | "password";
-  placeholder?: string;
-  description?: string;
-  required?: boolean;
-  defaultValue?: any;
-  options?: { label: string; value: string }[];
-}
+import { FormField, FormFieldProps } from "./FormField";
 
 export interface GenericUploadFormProps {
   fields: FormFieldProps[];
@@ -19,10 +8,15 @@ export interface GenericUploadFormProps {
   isSubmitting?: boolean;
 }
 
-export function GenericUploadForm({ fields, onSubmit, buttonText = "Submit", isSubmitting = false }: GenericUploadFormProps) {
-  const handleSubmit = async (event: React.FormEvent) => {
+export function GenericUploadForm({ 
+  fields, 
+  onSubmit, 
+  buttonText = "Submit", 
+  isSubmitting = false 
+}: GenericUploadFormProps) {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(event.currentTarget as HTMLFormElement);
     const data: any = {};
     fields.forEach(field => {
       data[field.name] = formData.get(field.name);
