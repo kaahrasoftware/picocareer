@@ -331,16 +331,16 @@ export type Database = {
         Row: {
           country: Database["public"]["Enums"]["country"] | null
           created_at: string
-          "current academic field/position": string | null
-          "current school/company": string | null
+          "current academic field/position": string
+          "current school/company": string
           email: string
           event_id: string | null
-          first_name: string | null
+          first_name: string
           id: string
-          last_name: string | null
+          last_name: string
           profile_id: string | null
           status: string | null
-          student_or_professional: string | null
+          student_or_professional: string
           updated_at: string
           "where did you hear about us":
             | Database["public"]["Enums"]["where did you hear about us"]
@@ -349,16 +349,16 @@ export type Database = {
         Insert: {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
-          "current academic field/position"?: string | null
-          "current school/company"?: string | null
+          "current academic field/position": string
+          "current school/company": string
           email: string
           event_id?: string | null
-          first_name?: string | null
+          first_name: string
           id?: string
-          last_name?: string | null
+          last_name: string
           profile_id?: string | null
           status?: string | null
-          student_or_professional?: string | null
+          student_or_professional: string
           updated_at?: string
           "where did you hear about us"?:
             | Database["public"]["Enums"]["where did you hear about us"]
@@ -367,16 +367,16 @@ export type Database = {
         Update: {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
-          "current academic field/position"?: string | null
-          "current school/company"?: string | null
+          "current academic field/position"?: string
+          "current school/company"?: string
           email?: string
           event_id?: string | null
-          first_name?: string | null
+          first_name?: string
           id?: string
-          last_name?: string | null
+          last_name?: string
           profile_id?: string | null
           status?: string | null
-          student_or_professional?: string | null
+          student_or_professional?: string
           updated_at?: string
           "where did you hear about us"?:
             | Database["public"]["Enums"]["where did you hear about us"]

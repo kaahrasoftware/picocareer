@@ -6,6 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/types/database/database.types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 type HearAboutUs = Database["public"]["Enums"]["where did you hear about us"];
 type Country = Database["public"]["Enums"]["country"];
@@ -55,6 +57,19 @@ const HEAR_ABOUT_US_OPTIONS: HearAboutUs[] = [
   "Other"
 ];
 
+const formSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  student_or_professional: z.string().min(1, "Please specify if you are a student or professional"),
+  current_field: z.string().min(1, "Current academic field/position is required"),
+  current_organization: z.string().min(1, "Current school/company is required"),
+  country: z.string().optional(),
+  "where did you hear about us": z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 interface EventRegistrationFormProps {
   eventId: string;
   onSubmit: (data: any) => Promise<void>;
@@ -64,7 +79,8 @@ interface EventRegistrationFormProps {
 export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegistrationFormProps) {
   const { toast } = useToast();
   
-  const form = useForm({
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       first_name: "",
       last_name: "",
@@ -72,12 +88,12 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
       student_or_professional: "",
       current_field: "",
       current_organization: "",
-      country: "" as Country,
-      "where did you hear about us": "" as HearAboutUs,
+      country: "",
+      "where did you hear about us": "",
     }
   });
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: FormData) => {
     try {
       await onSubmit(data);
       form.reset();
@@ -118,16 +134,19 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
             control={form.control}
             name="student_or_professional"
             label="Are you a student or professional?"
+            required
           />
           <FormField
             control={form.control}
             name="current_field"
             label="Current Academic Field/Position"
+            required
           />
           <FormField
             control={form.control}
             name="current_organization"
             label="Current School/Company"
+            required
           />
           
           {/* Country Select */}
@@ -174,7 +193,10 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={form.formState.isSubmitting || !form.formState.isValid}
+            >
               {form.formState.isSubmitting ? "Registering..." : "Register"}
             </Button>
           </div>
