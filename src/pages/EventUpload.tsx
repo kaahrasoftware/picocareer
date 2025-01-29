@@ -71,7 +71,7 @@ export default function EventUpload() {
       description: "Type of event",
       required: true,
       options: [
-        { id: "Coffee Time", title: "Coffee Time" },
+        { id: "Coffee_Time", title: "Coffee Time" },
         { id: "Hackathon", title: "Hackathon" },
         { id: "Panel", title: "Panel" },
         { id: "Webinar", title: "Webinar" },
@@ -86,7 +86,7 @@ export default function EventUpload() {
       description: "Platform where the event will be hosted",
       required: true,
       options: [
-        { id: "Google Meet", title: "Google Meet" },
+        { id: "Google_Meet", title: "Google Meet" },
         { id: "Zoom", title: "Zoom" }
       ]
     },
