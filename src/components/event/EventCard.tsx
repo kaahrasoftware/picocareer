@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { CalendarIcon, Clock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,8 +33,9 @@ export function EventCard({
   max_attendees,
   onClick,
 }: EventCardProps) {
-  const startDate = new Date(start_time);
-  const endDate = new Date(end_time);
+  // Parse the ISO strings into Date objects
+  const startDate = start_time ? parseISO(start_time) : new Date();
+  const endDate = end_time ? parseISO(end_time) : new Date();
 
   return (
     <Card 
