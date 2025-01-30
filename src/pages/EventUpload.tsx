@@ -33,16 +33,16 @@ export default function EventUpload() {
   const form = useForm<EventFormData>();
 
   const platformOptions = [
-    { id: 'Google Meet', title: 'Google Meet' },
-    { id: 'Zoom', title: 'Zoom' }
+    { id: 'Google Meet', name: 'Google Meet' },
+    { id: 'Zoom', name: 'Zoom' }
   ];
 
   const eventTypeOptions = [
-    { id: 'Coffee Time', title: 'Coffee Time' },
-    { id: 'Hackathon', title: 'Hackathon' },
-    { id: 'Panel', title: 'Panel' },
-    { id: 'Webinar', title: 'Webinar' },
-    { id: 'Workshop', title: 'Workshop' }
+    { id: 'Coffee Time', name: 'Coffee Time' },
+    { id: 'Hackathon', name: 'Hackathon' },
+    { id: 'Panel', name: 'Panel' },
+    { id: 'Webinar', name: 'Webinar' },
+    { id: 'Workshop', name: 'Workshop' }
   ];
 
   const onSubmit = async (data: EventFormData) => {
@@ -84,10 +84,7 @@ export default function EventUpload() {
     }
   }, [profile, navigate, toast]);
 
-  // If profile is not loaded yet, don't redirect
   if (!profile) return null;
-
-  // If user is not admin, don't render the page
   if (profile.user_type !== 'admin') return null;
 
   return (
