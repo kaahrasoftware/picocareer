@@ -32,25 +32,27 @@ export default function EventUpload() {
   const { toast } = useToast();
   const form = useForm<EventFormData>();
 
-  useEffect(() => {
-    if (profile && profile.user_type !== 'admin') {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can access this page",
-        variant: "destructive",
-      });
-      navigate('/');
-    }
-  }, [profile, navigate, toast]);
+  const platformOptions = [
+    { id: 'Google Meet', title: 'Google Meet' },
+    { id: 'Zoom', title: 'Zoom' }
+  ];
+
+  const eventTypeOptions = [
+    { id: 'Coffee Time', title: 'Coffee Time' },
+    { id: 'Hackathon', title: 'Hackathon' },
+    { id: 'Panel', title: 'Panel' },
+    { id: 'Webinar', title: 'Webinar' },
+    { id: 'Workshop', title: 'Workshop' }
+  ];
 
   const onSubmit = async (data: EventFormData) => {
     try {
       const { error } = await supabase
         .from('events')
         .insert({
-          ...data,
           author_id: session?.user.id,
-          status: 'Pending'
+          status: 'Pending',
+          ...data
         });
 
       if (error) throw error;
@@ -71,24 +73,22 @@ export default function EventUpload() {
     }
   };
 
+  useEffect(() => {
+    if (profile && profile.user_type !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can access this page",
+        variant: "destructive",
+      });
+      navigate('/');
+    }
+  }, [profile, navigate, toast]);
+
   // If profile is not loaded yet, don't redirect
   if (!profile) return null;
 
   // If user is not admin, don't render the page
   if (profile.user_type !== 'admin') return null;
-
-  const platformOptions = [
-    { id: 'Google Meet', title: 'Google Meet' },
-    { id: 'Zoom', title: 'Zoom' }
-  ];
-
-  const eventTypeOptions = [
-    { id: 'Coffee Time', title: 'Coffee Time' },
-    { id: 'Hackathon', title: 'Hackathon' },
-    { id: 'Panel', title: 'Panel' },
-    { id: 'Webinar', title: 'Webinar' },
-    { id: 'Workshop', title: 'Workshop' }
-  ];
 
   return (
     <div className="container max-w-3xl py-10">
