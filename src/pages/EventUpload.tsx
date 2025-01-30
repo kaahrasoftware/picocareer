@@ -132,7 +132,7 @@ export default function EventUpload() {
             <FormField
               control={form.control}
               name="platform"
-              label="Platform"
+              label="Meeting Platform"
               type="select"
               options={platformOptions}
               required
@@ -141,7 +141,7 @@ export default function EventUpload() {
             <FormField
               control={form.control}
               name="event_type"
-              label="Event Type"
+              label="Event Category"
               type="select"
               options={eventTypeOptions}
               required
