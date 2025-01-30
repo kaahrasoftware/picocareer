@@ -11,21 +11,6 @@ export function useAuth() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSessionExpired = () => {
-    // Clear all queries from cache
-    queryClient.clear();
-    
-    // Show toast notification
-    toast({
-      title: "Session Expired",
-      description: "Your session has expired. Please sign in again.",
-      variant: "destructive",
-    });
-
-    // Navigate to auth page
-    navigate("/auth");
-  };
-
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
 
@@ -35,14 +20,7 @@ export function useAuth() {
         password,
       });
 
-      if (error) {
-        if (error.message.includes('Invalid Refresh Token') || 
-            error.message.includes('session_expired')) {
-          handleSessionExpired();
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       // Invalidate all queries to force a refresh of data
       await queryClient.invalidateQueries();
@@ -68,34 +46,8 @@ export function useAuth() {
     }
   };
 
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Clear all queries from cache
-      queryClient.clear();
-      
-      // Navigate to auth page
-      navigate("/auth");
-
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
-    } catch (error) {
-      console.error('Sign out error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return {
     signIn,
-    signOut,
     isLoading,
   };
 }
