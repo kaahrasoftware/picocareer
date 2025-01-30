@@ -110,9 +110,10 @@ export function EventCard({
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {event.description}
-        </p>
+        <div 
+          className="text-sm text-muted-foreground line-clamp-2 prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: event.description }}
+        />
 
         <div className="flex gap-3 pt-2">
           <Button
