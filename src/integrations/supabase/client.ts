@@ -32,6 +32,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   fetch: async (url, options = {}) => {
     const MAX_RETRIES = 3;
     const BASE_DELAY = 1000; // Start with 1 second delay
+    const MAX_DELAY = 10000; // Maximum delay of 10 seconds
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
@@ -40,18 +41,20 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
           headers: {
             ...options.headers,
             'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
           },
         });
 
         // If we hit rate limit, wait and retry
         if (response.status === 429) {
-          const delay = BASE_DELAY * Math.pow(2, attempt);
+          const retryAfter = response.headers.get('Retry-After');
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(BASE_DELAY * Math.pow(2, attempt), MAX_DELAY);
           console.warn(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
           await sleep(delay);
           continue;
         }
 
-        // For other errors, throw them to be handled by error boundary
+        // For other client errors, throw them to be handled by error boundary
         if (!response.ok) {
           const error = await response.json();
           console.error('Supabase request failed:', error);
@@ -66,7 +69,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
         }
 
         // Otherwise wait and retry
-        const delay = BASE_DELAY * Math.pow(2, attempt);
+        const delay = Math.min(BASE_DELAY * Math.pow(2, attempt), MAX_DELAY);
         console.error(`Error on attempt ${attempt + 1}, retrying in ${delay}ms:`, error);
         await sleep(delay);
       }

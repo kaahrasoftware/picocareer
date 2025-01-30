@@ -9,7 +9,7 @@ export function useAuthSession() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSessionExpired = () => {
+  const handleSessionExpiration = () => {
     // Clear all queries from cache
     queryClient.clear();
     
@@ -36,7 +36,7 @@ export function useAuthSession() {
           // Handle session expiration and invalid refresh token errors
           if (error.message?.includes('Invalid Refresh Token') || 
               error.message?.includes('session_expired')) {
-            await handleSessionExpired();
+            await handleSessionExpiration();
           }
           throw error;
         }
@@ -66,7 +66,7 @@ export function useAuthSession() {
 
     // Handle session expiration
     if (event === 'TOKEN_REFRESHED' && !newSession) {
-      handleSessionExpired();
+      handleSessionExpiration();
     }
   });
 
