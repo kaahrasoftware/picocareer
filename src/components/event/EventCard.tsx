@@ -44,3 +44,5 @@ export function EventCard({
         </Button>
       </div>
     </div>
+  );
+}
