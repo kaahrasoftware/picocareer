@@ -11,6 +11,14 @@ import { FeatureField } from "./fields/FeatureField";
 import { DegreeField } from "./fields/DegreeField";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface FormFieldProps {
   name: string;
@@ -186,6 +194,27 @@ export function FormField({
                   placeholder={placeholder || "Select major"}
                   tableName="majors"
                 />
+              );
+            } else {
+              // Generic select for other cases (platform, event_type, etc.)
+              return (
+                <Select
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={placeholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <ScrollArea className="h-[200px]">
+                      {options.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          {option.name || option.title || ''}
+                        </SelectItem>
+                      ))}
+                    </ScrollArea>
+                  </SelectContent>
+                </Select>
               );
             }
 
