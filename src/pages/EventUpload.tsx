@@ -15,7 +15,7 @@ interface EventFormData {
   description: string;
   start_time: string;
   end_time: string;
-  platform: 'Google Meet' | 'Zoom' | 'Microsoft Teams';
+  platform: 'Google Meet' | 'Zoom';
   meeting_link?: string;
   max_attendees?: number;
   thumbnail_url?: string;
@@ -79,8 +79,15 @@ export default function EventUpload() {
 
   const platformOptions = [
     { id: 'Google Meet', title: 'Google Meet' },
-    { id: 'Zoom', title: 'Zoom' },
-    { id: 'Microsoft Teams', title: 'Microsoft Teams' }
+    { id: 'Zoom', title: 'Zoom' }
+  ];
+
+  const eventTypeOptions = [
+    { id: 'Coffee Time', title: 'Coffee Time' },
+    { id: 'Hackathon', title: 'Hackathon' },
+    { id: 'Panel', title: 'Panel' },
+    { id: 'Webinar', title: 'Webinar' },
+    { id: 'Workshop', title: 'Workshop' }
   ];
 
   return (
@@ -139,13 +146,7 @@ export default function EventUpload() {
               name="event_type"
               label="Event Type"
               type="select"
-              options={[
-                { id: 'Coffee Time', title: 'Coffee Time' },
-                { id: 'Hackathon', title: 'Hackathon' },
-                { id: 'Panel', title: 'Panel' },
-                { id: 'Webinar', title: 'Webinar' },
-                { id: 'Workshop', title: 'Workshop' }
-              ]}
+              options={eventTypeOptions}
               required
             />
           </div>
