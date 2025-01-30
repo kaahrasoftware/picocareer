@@ -77,6 +77,12 @@ export default function EventUpload() {
   // If user is not admin, don't render the page
   if (profile.user_type !== 'admin') return null;
 
+  const platformOptions = [
+    { id: 'Google Meet', title: 'Google Meet' },
+    { id: 'Zoom', title: 'Zoom' },
+    { id: 'Microsoft Teams', title: 'Microsoft Teams' }
+  ];
+
   return (
     <div className="container max-w-3xl py-10">
       <h1 className="text-3xl font-bold mb-8">Create New Event</h1>
@@ -124,11 +130,7 @@ export default function EventUpload() {
               name="platform"
               label="Platform"
               type="select"
-              options={[
-                { id: 'Google Meet', title: 'Google Meet' },
-                { id: 'Zoom', title: 'Zoom' },
-                { id: 'Microsoft Teams', title: 'Microsoft Teams' }
-              ]}
+              options={platformOptions}
               required
             />
 
