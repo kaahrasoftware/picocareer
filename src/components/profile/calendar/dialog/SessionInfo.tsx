@@ -38,6 +38,14 @@ export function SessionInfo({ session, userTimezone }: SessionInfoProps) {
       </div>
 
       <div className="py-4">
+        <h4 className="text-sm font-medium text-foreground mb-1">Description</h4>
+        <div 
+          className="text-sm text-muted-foreground prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: session.description || '' }}
+        />
+      </div>
+
+      <div className="py-4">
         <h4 className="text-sm font-medium text-foreground mb-1">Participants</h4>
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
