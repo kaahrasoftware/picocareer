@@ -12,7 +12,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     detectSessionInUrl: true,
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'picocareer_auth_token',
+    storageKey: `sb-${SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`,
     flowType: 'pkce',
   },
   global: {
@@ -22,7 +22,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   realtime: {
     params: {
-      eventsPerSecond: 1, // Reduce from 2 to 1 to help with rate limiting
+      eventsPerSecond: 1,
     },
   },
   db: {
