@@ -18,11 +18,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   global: {
     headers: {
       'X-Client-Info': 'picocareer-web',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
     },
   },
   realtime: {
     params: {
-      eventsPerSecond: 1, // Reduce from default 2 to 1 to help with rate limits
+      eventsPerSecond: 1, // Reduce from default 2 to 1
     },
   },
   db: {
@@ -33,6 +35,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     const MAX_RETRIES = 3;
     const BASE_DELAY = 1000; // Start with 1 second delay
     const MAX_DELAY = 10000; // Maximum delay of 10 seconds
+    const isAuthRequest = url.includes('/auth/v1/token');
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
@@ -48,17 +51,34 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
         // If we hit rate limit, wait and retry
         if (response.status === 429) {
           const retryAfter = response.headers.get('Retry-After');
-          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(BASE_DELAY * Math.pow(2, attempt), MAX_DELAY);
+          const delay = retryAfter 
+            ? parseInt(retryAfter) * 1000 
+            : Math.min(BASE_DELAY * Math.pow(2, attempt), MAX_DELAY);
+
           console.warn(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
-          await sleep(delay);
+          
+          // For auth requests, we want to wait longer
+          if (isAuthRequest) {
+            await sleep(delay * 2); // Double the delay for auth requests
+          } else {
+            await sleep(delay);
+          }
           continue;
         }
 
-        // For other client errors, throw them to be handled by error boundary
-        if (!response.ok) {
+        // For auth requests specifically
+        if (isAuthRequest && !response.ok) {
           const error = await response.json();
-          console.error('Supabase request failed:', error);
-          throw new Error(error.message || 'Failed to fetch data');
+          console.error('Auth request failed:', error);
+          
+          // If it's a refresh token error, clear the token and throw
+          if (error.message?.includes('invalid refresh token')) {
+            if (typeof window !== 'undefined') {
+              const key = `sb-${SUPABASE_URL.split('//')[1].split('.')[0]}-auth-token`;
+              localStorage.removeItem(key);
+            }
+            throw new Error('Session expired. Please sign in again.');
+          }
         }
 
         return response;
