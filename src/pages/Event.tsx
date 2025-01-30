@@ -278,9 +278,10 @@ export default function Event() {
                 </div>
               </div>
 
-              <div className="text-sm text-muted-foreground">
-                {viewingEvent.description}
-              </div>
+              <div 
+                className="prose prose-sm max-w-none text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: viewingEvent.description }}
+              />
 
               <div className="flex justify-center pt-4">
                 <Button 
