@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
-import { Button } from "@/components/ui/button";
+import { useInView } from "framer-motion";
+import { useRef, useEffect } from "react";
 
 export default function Career() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -15,7 +16,9 @@ export default function Career() {
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(9);
-  const LOAD_MORE_INCREMENT = 3;
+
+  const loadMoreRef = useRef(null);
+  const isInView = useInView(loadMoreRef);
 
   const { data: careers = [], isLoading } = useQuery({
     queryKey: ["careers"],
@@ -69,11 +72,13 @@ export default function Career() {
   });
 
   const visibleCareers = filteredCareers.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredCareers.length;
 
-  const handleLoadMore = () => {
-    setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
-  };
+  // Load more careers when the user scrolls near the bottom
+  useEffect(() => {
+    if (isInView && visibleCount < filteredCareers.length) {
+      setVisibleCount(prev => Math.min(prev + 3, filteredCareers.length));
+    }
+  }, [isInView, filteredCareers.length]);
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
@@ -112,16 +117,13 @@ export default function Career() {
             isLoading={isLoading}
           />
           
-          {hasMore && (
-            <div className="flex justify-center mt-8">
-              <Button 
-                variant="outline" 
-                onClick={handleLoadMore}
-                className="min-w-[200px]"
-              >
-                Load More Careers
-              </Button>
-            </div>
+          {/* Invisible element to trigger infinite scroll */}
+          {visibleCount < filteredCareers.length && (
+            <div 
+              ref={loadMoreRef}
+              className="h-10 w-full"
+              aria-hidden="true"
+            />
           )}
         </section>
       </div>
