@@ -7,6 +7,7 @@ import { CareerDetailsDialog } from "./CareerDetailsDialog";
 import { MentorResultsSection } from "./search/MentorResultsSection";
 import { CareerResultsSection } from "./search/CareerResultsSection";
 import { MajorResultsSection } from "./search/MajorResultsSection";
+import { SearchPagination } from "./search/SearchPagination";
 
 interface SearchResultsProps {
   query: string;
@@ -17,11 +18,19 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const { data = [], isLoading } = useSearchData(query);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
   
   const groupedResults = {
     mentors: data.filter(item => item.type === 'mentor'),
     careers: data.filter(item => item.type === 'career'),
     majors: data.filter(item => item.type === 'major')
+  };
+
+  const getPaginatedResults = (items: any[]) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return items.slice(startIndex, endIndex);
   };
 
   const renderResults = () => {
@@ -40,17 +49,17 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     const sections = [
       <MentorResultsSection 
         key="mentors"
-        mentors={groupedResults.mentors}
+        mentors={getPaginatedResults(groupedResults.mentors)}
         onSelectMentor={(id) => setSelectedProfileId(id)}
       />,
       <CareerResultsSection 
         key="careers"
-        careers={groupedResults.careers}
+        careers={getPaginatedResults(groupedResults.careers)}
         onSelectCareer={(id) => setSelectedCareerId(id)}
       />,
       <MajorResultsSection 
         key="majors"
-        majors={groupedResults.majors}
+        majors={getPaginatedResults(groupedResults.majors)}
       />
     ];
     
@@ -60,7 +69,20 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       section.props.majors?.length > 0
     );
 
-    return hasResults ? sections : <CommandEmpty>No results found</CommandEmpty>;
+    return hasResults ? (
+      <>
+        {sections}
+        <SearchPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(Math.max(
+            groupedResults.mentors.length,
+            groupedResults.careers.length,
+            groupedResults.majors.length
+          ) / itemsPerPage)}
+          onPageChange={setCurrentPage}
+        />
+      </>
+    ) : <CommandEmpty>No results found</CommandEmpty>;
   };
 
   return (
