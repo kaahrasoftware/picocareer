@@ -38,7 +38,7 @@ export function SessionDetailsDialog({
         .select('*')
         .eq('session_id', session.session_details.id)
         .eq('from_profile_id', authSession.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching feedback:', error);
@@ -64,8 +64,11 @@ export function SessionDetailsDialog({
   const canMarkAttendance = session.session_details.status === 'scheduled' && 
     Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
 
-  // Can provide feedback if session is completed and feedback hasn't been provided yet
-  const canProvideFeedback = session.session_details.status === 'completed' && !existingFeedback;
+  // Check if session is in the past
+  const isPastSession = new Date(session.session_details.scheduled_at) < new Date();
+
+  // Can provide feedback if session is completed or is in the past, and feedback hasn't been provided yet
+  const canProvideFeedback = (session.session_details.status === 'completed' || isPastSession) && !existingFeedback;
 
   return (
     <>
@@ -73,7 +76,7 @@ export function SessionDetailsDialog({
         <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
           <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
-          {session.session_details.status === 'scheduled' && (
+          {session.session_details.status === 'scheduled' && !isPastSession && (
             <SessionActions
               session={session}
               canCancel={canCancel}
@@ -88,7 +91,7 @@ export function SessionDetailsDialog({
             />
           )}
 
-          {session.session_details.status === 'completed' && (
+          {(session.session_details.status === 'completed' || isPastSession) && (
             <div className="flex justify-end pt-4">
               <Button 
                 onClick={() => setShowFeedback(true)}
