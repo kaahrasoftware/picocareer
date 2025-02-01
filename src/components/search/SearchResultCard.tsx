@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import type { SearchResult } from "@/types/search";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -19,6 +20,7 @@ interface SearchResultCardProps {
 export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
   const [isCareerDialogOpen, setIsCareerDialogOpen] = useState(false);
   const [isMajorDialogOpen, setIsMajorDialogOpen] = useState(false);
+  const [isMentorDialogOpen, setIsMentorDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
@@ -43,7 +45,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       });
       return;
     }
-    navigate(`/mentor/${result.id}`);
+    setIsMentorDialogOpen(true);
   };
 
   const renderContent = () => {
@@ -73,7 +75,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                   <Badge 
                     key={index}
                     variant="secondary"
-                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                    className="text-xs bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
                   >
                     {keyword}
                   </Badge>
@@ -81,7 +83,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
                 {result.keywords.length > 3 && (
                   <Badge 
                     variant="secondary" 
-                    className="bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
+                    className="text-xs bg-[#FEF7CD] text-[#1A1F2C] hover:bg-[#F97316]/10"
                   >
                     +{result.keywords.length - 3}
                   </Badge>
@@ -90,7 +92,7 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
             )}
             <Button 
               variant="outline" 
-              className="mt-4 w-full"
+              className="mt-4 w-full bg-background hover:bg-muted/50 transition-colors"
               onClick={handleMentorClick}
             >
               View Details
@@ -192,6 +194,14 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
           major={result}
           open={isMajorDialogOpen}
           onOpenChange={setIsMajorDialogOpen}
+        />
+      )}
+
+      {result.type === 'mentor' && (
+        <ProfileDetailsDialog
+          userId={result.id}
+          open={isMentorDialogOpen}
+          onOpenChange={setIsMentorDialogOpen}
         />
       )}
     </>
