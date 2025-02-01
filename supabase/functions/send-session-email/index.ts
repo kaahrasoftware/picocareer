@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { formatInTimeZone } from "npm:date-fns-tz";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -48,17 +49,28 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Session not found');
     }
 
-    console.log('Session details:', {
-      mentorEmail: session.mentor.email,
-      menteeEmail: session.mentee.email,
-      sessionType: session.session_type.type,
-      scheduledAt: session.scheduled_at
-    });
+    // Get mentor's timezone setting
+    const { data: mentorSettings } = await supabase
+      .from('user_settings')
+      .select('setting_value')
+      .eq('profile_id', session.mentor.id)
+      .eq('setting_type', 'timezone')
+      .single();
 
-    const scheduledDate = new Date(session.scheduled_at).toLocaleString('en-US', {
-      dateStyle: 'full',
-      timeStyle: 'short'
-    });
+    // Get mentee's timezone setting
+    const { data: menteeSettings } = await supabase
+      .from('user_settings')
+      .select('setting_value')
+      .eq('profile_id', session.mentee.id)
+      .eq('setting_type', 'timezone')
+      .single();
+
+    const mentorTimezone = mentorSettings?.setting_value || 'UTC';
+    const menteeTimezone = menteeSettings?.setting_value || 'UTC';
+    const scheduledDate = new Date(session.scheduled_at);
+
+    const mentorTime = formatInTimeZone(scheduledDate, mentorTimezone, 'PPP p');
+    const menteeTime = formatInTimeZone(scheduledDate, menteeTimezone, 'PPP p');
 
     let subject: string;
     let content: string;
@@ -69,7 +81,11 @@ const handler = async (req: Request): Promise<Response> => {
         content = `
           <h2>Session Confirmation</h2>
           <p>Your ${session.session_type.type} session has been booked!</p>
-          <p><strong>Date:</strong> ${scheduledDate}</p>
+          <div style="margin: 20px 0;">
+            <p><strong>Session Times:</strong></p>
+            <p>Mentor's time (${mentorTimezone}): ${mentorTime}</p>
+            <p>Your time (${menteeTimezone}): ${menteeTime}</p>
+          </div>
           <p><strong>Duration:</strong> ${session.session_type.duration} minutes</p>
           <p><strong>Mentor:</strong> ${session.mentor.full_name}</p>
           <p><strong>Mentee:</strong> ${session.mentee.full_name}</p>
@@ -145,6 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
+
   } catch (error) {
     console.error("Error in send-session-email function:", error);
     return new Response(JSON.stringify({ error: error.message }), {

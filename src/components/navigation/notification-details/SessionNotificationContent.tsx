@@ -4,6 +4,7 @@ import type { MentorSession } from '@/types/calendar';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { useMentorTimezone } from '@/hooks/useMentorTimezone';
 
 interface SessionNotificationContentProps {
   sessionData: MentorSession;
@@ -14,10 +15,7 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
   const { data: profile } = useUserProfile(session);
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  // Get mentor timezone from settings
-  const { getSetting: getMentorSettings } = useUserSettings(sessionData.mentor.id);
-  const mentorTimezone = getMentorSettings('timezone') || 'UTC';
+  const mentorTimezone = useMentorTimezone(sessionData.mentor.id);
 
   const scheduledTime = new Date(sessionData.scheduled_at);
 
