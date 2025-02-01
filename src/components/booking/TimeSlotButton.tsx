@@ -28,21 +28,16 @@ export function TimeSlotButton({
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Create a date object for the slot in UTC
+  // Create a date object for the slot
   const [hours, minutes] = time.split(':').map(Number);
-  const slotDateUTC = new Date(date);
-  slotDateUTC.setHours(hours, minutes, 0, 0);
-  
-  // Convert UTC time back to mentor's original time
-  const mentorOriginalTime = new Date(slotDateUTC.getTime() - (timezoneOffset * 60000));
-  
+  const slotDate = new Date(date);
+  slotDate.setHours(hours, minutes, 0, 0);
+
   console.log('TimeSlotButton - Conversion details:', {
     originalTime: time,
-    utcTime: slotDateUTC.toISOString(),
     mentorTimezone,
     userTimezone,
-    timezoneOffset,
-    mentorOriginalTime: mentorOriginalTime.toISOString()
+    slotDate: slotDate.toISOString(),
   });
 
   return (
@@ -54,10 +49,10 @@ export function TimeSlotButton({
     >
       <div className="flex flex-col items-start">
         <span className="font-medium">
-          Mentor's time: {formatInTimeZone(mentorOriginalTime, mentorTimezone, 'h:mm a')}
+          Mentor's time: {formatInTimeZone(slotDate, mentorTimezone, 'h:mm a')}
         </span>
         <span className="text-xs text-muted-foreground">
-          Your time: {formatInTimeZone(mentorOriginalTime, userTimezone, 'h:mm a')} ({userTimezone})
+          Your time: {formatInTimeZone(slotDate, userTimezone, 'h:mm a')} ({userTimezone})
         </span>
       </div>
     </Button>
