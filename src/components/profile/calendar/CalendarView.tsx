@@ -4,10 +4,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { AvailabilitySection } from "./AvailabilitySection";
 import { EventsSidebar } from "./EventsSidebar";
 import { SessionDetailsDialog } from "./SessionDetailsDialog";
-import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
 import { supabase } from "@/integrations/supabase/client";
 import type { CalendarEvent } from "@/types/calendar";
 
@@ -18,8 +16,6 @@ interface CalendarViewProps {
 export function CalendarView({ isMentor }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedSession, setSelectedSession] = useState<CalendarEvent | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const { session } = useAuthSession();
   const { toast } = useToast();
   const { data: events = [], refetch: refetchEvents } = useSessionEvents();
 
@@ -43,17 +39,13 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
           profile_id: selectedSession.session_details.mentor.id,
           title: 'Session Cancelled',
           message: `Session with ${selectedSession.session_details.mentee.full_name} has been cancelled.`,
-          type: 'session_cancelled' as const,
-          action_url: '/profile?tab=calendar',
-          category: 'mentorship' as const
+          type: 'session_cancelled' as const
         },
         {
           profile_id: selectedSession.session_details.mentee.id,
           title: 'Session Cancelled',
           message: `Session with ${selectedSession.session_details.mentor.full_name} has been cancelled.`,
-          type: 'session_cancelled' as const,
-          action_url: '/profile?tab=calendar',
-          category: 'mentorship' as const
+          type: 'session_cancelled' as const
         }
       ];
 
@@ -101,11 +93,6 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
     refetchEvents();
   };
 
-  const handleFeedbackSubmit = () => {
-    setShowFeedback(false);
-    refetchEvents();
-  };
-
   return (
     <div className="flex gap-4">
       <div className="w-fit">
@@ -139,22 +126,7 @@ export function CalendarView({ isMentor }: CalendarViewProps) {
         session={selectedSession}
         onClose={() => setSelectedSession(null)}
         onCancel={handleCancelSession}
-        onFeedback={() => setShowFeedback(true)}
       />
-
-      {showFeedback && selectedSession?.session_details && (
-        <SessionFeedbackDialog
-          sessionId={selectedSession.session_details.id}
-          isOpen={showFeedback}
-          onClose={() => setShowFeedback(false)}
-          feedbackType={isMentor ? 'mentor_feedback' : 'mentee_feedback'}
-          fromProfileId={session?.user?.id || ''}
-          toProfileId={isMentor ? 
-            selectedSession.session_details.mentee.id : 
-            selectedSession.session_details.mentor.id}
-          onSubmit={handleFeedbackSubmit}
-        />
-      )}
     </div>
   );
 }
