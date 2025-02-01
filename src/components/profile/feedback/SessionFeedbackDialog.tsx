@@ -108,14 +108,17 @@ export function SessionFeedbackDialog({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="recommend"
-              checked={recommend}
-              onCheckedChange={setRecommend}
-            />
-            <Label htmlFor="recommend">Would you recommend this mentor?</Label>
-          </div>
+          {/* Only show recommendation question for mentee feedback */}
+          {feedbackType === 'mentee_feedback' && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="recommend"
+                checked={recommend}
+                onCheckedChange={setRecommend}
+              />
+              <Label htmlFor="recommend">Would you recommend this mentor?</Label>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Additional Notes</Label>
