@@ -15,6 +15,7 @@ interface ProfileDialogContentProps {
   isOwnProfile: boolean;
   isMentor: boolean;
   handleBookSession: () => void;
+  onShare: () => void;
 }
 
 export function ProfileDialogContent({
@@ -25,6 +26,7 @@ export function ProfileDialogContent({
   isOwnProfile,
   isMentor,
   handleBookSession,
+  onShare,
 }: ProfileDialogContentProps) {
   const navigate = useNavigate();
 
@@ -41,7 +43,11 @@ export function ProfileDialogContent({
     <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[85vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6">
       <DialogHeader className="pb-0">
         <div className="relative pb-6 sm:pb-8">
-          <ProfileHeader profile={profile} session={session} />
+          <ProfileHeader 
+            profile={profile} 
+            session={session} 
+            onShare={onShare}
+          />
           {isMentor && (
             isOwnProfile ? (
               <Button 

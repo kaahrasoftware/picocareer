@@ -53,6 +53,38 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     }
   }, [isError, open, toast, onOpenChange]);
 
+  const handleShare = async () => {
+    if (!profile) return;
+
+    const shareUrl = `${window.location.origin}/mentor?dialog=true&mentorId=${userId}`;
+    const shareText = `Check out ${profile.full_name}'s profile!\n\n${profile.bio || ''}\n\nLocation: ${profile.location || 'Not specified'}\nExperience: ${profile.years_of_experience} years\n\nLearn more at:`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${profile.full_name}'s Profile`,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          fallbackShare(shareText, shareUrl);
+        }
+      }
+    } else {
+      fallbackShare(shareText, shareUrl);
+    }
+  };
+
+  const fallbackShare = (shareText: string, shareUrl: string) => {
+    const fullText = `${shareText} ${shareUrl}`;
+    navigator.clipboard.writeText(fullText);
+    toast({
+      title: "Success",
+      description: "Profile details copied to clipboard!",
+    });
+  };
+
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,6 +117,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
           isOwnProfile={isOwnProfile}
           isMentor={isMentor}
           handleBookSession={handleBookSession}
+          onShare={handleShare}
         />
       </Dialog>
 

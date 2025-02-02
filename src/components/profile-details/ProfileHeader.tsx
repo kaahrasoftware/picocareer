@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
-import { Award } from "lucide-react";
+import { Award, Share2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { BookmarkButton } from "./BookmarkButton";
 import { ProfileInfo } from "./ProfileInfo";
+import { Button } from "@/components/ui/button";
 import type { Session } from "@supabase/supabase-js";
 
 interface ProfileHeaderProps {
@@ -19,9 +20,10 @@ interface ProfileHeaderProps {
     academic_major?: string | null;
   } | null;
   session: Session | null;
+  onShare: () => void;
 }
 
-export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps) {
   if (!profile) return null;
 
   const isOwnProfile = session?.user?.id === profile.id;
@@ -82,11 +84,20 @@ export function ProfileHeader({ profile, session }: ProfileHeaderProps) {
             )}
           </div>
           
-          {/* Bookmark Button */}
-          <BookmarkButton 
-            profileId={profile.id} 
-            session={session} 
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onShare}
+              className="h-9 w-9"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <BookmarkButton 
+              profileId={profile.id} 
+              session={session} 
+            />
+          </div>
         </div>
 
         {/* Professional and Academic Information */}
