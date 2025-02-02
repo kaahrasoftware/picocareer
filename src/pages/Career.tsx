@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "react-router-dom";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 
 export default function Career() {
+  const [searchParams] = useSearchParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
@@ -16,6 +19,10 @@ export default function Career() {
   const [popularFilter, setPopularFilter] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(9);
   const LOAD_MORE_INCREMENT = 3;
+
+  // Get careerId from URL params
+  const dialogCareerId = searchParams.get("careerId");
+  const shouldOpenDialog = searchParams.get("dialog") === "true";
 
   const { data: careers = [], isLoading } = useQuery({
     queryKey: ["careers"],
@@ -131,6 +138,22 @@ export default function Career() {
         onClose={() => setIsDialogOpen(false)}
         careers={careers}
       />
+
+      {dialogCareerId && (
+        <CareerDetailsDialog
+          careerId={dialogCareerId}
+          open={shouldOpenDialog}
+          onOpenChange={(open) => {
+            // Update URL when dialog is closed
+            if (!open) {
+              const newSearchParams = new URLSearchParams(searchParams);
+              newSearchParams.delete("dialog");
+              newSearchParams.delete("careerId");
+              window.history.replaceState({}, "", `${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

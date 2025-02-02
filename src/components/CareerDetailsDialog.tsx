@@ -154,6 +154,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
           salaryRange={career.salary_range}
           isBookmarked={isBookmarked}
           onBookmarkToggle={handleBookmarkToggle}
+          careerId={careerId}
         />
         <CareerDialogContent career={career} />
       </DialogContent>
