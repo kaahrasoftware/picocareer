@@ -1,15 +1,17 @@
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Users, Heart } from "lucide-react";
+import { Users, Heart, Share2 } from "lucide-react";
 import type { Major } from "@/types/database/majors";
+import { Button } from "@/components/ui/button";
 
 interface MajorDialogHeaderProps {
   major: Major;
   isBookmarked: boolean;
   onBookmarkToggle: () => void;
+  onShare: () => void;
 }
 
-export function MajorDialogHeader({ major, isBookmarked, onBookmarkToggle }: MajorDialogHeaderProps) {
+export function MajorDialogHeader({ major, isBookmarked, onBookmarkToggle, onShare }: MajorDialogHeaderProps) {
   const formatProfileCount = (count: number | undefined) => {
     if (!count) return "0";
     if (count < 1000) return count.toString();
@@ -33,7 +35,15 @@ export function MajorDialogHeader({ major, isBookmarked, onBookmarkToggle }: Maj
             <Users className="h-3 w-3 md:h-4 md:w-4" />
             {formatProfileCount(major.profiles_count)} Mentors
           </Badge>
-          <div className="w-[100px] md:w-[120px] flex justify-center">
+          <div className="w-[100px] md:w-[120px] flex justify-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onShare}
+              className="h-9 w-9"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
             <Heart 
               className={`h-4 w-4 md:h-5 md:w-5 cursor-pointer hover:scale-110 transition-transform ${
                 isBookmarked ? 'fill-current text-[#ea384c]' : 'text-gray-400'

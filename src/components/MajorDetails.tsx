@@ -124,6 +124,36 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
     }
   };
 
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/program?dialog=true&majorId=${major.id}`;
+    const shareText = `Check out this major: ${major.title}\n\n${major.description}\n\nLearn more at:`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Share Major',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          fallbackShare(shareText, shareUrl);
+        }
+      }
+    } else {
+      fallbackShare(shareText, shareUrl);
+    }
+  };
+
+  const fallbackShare = (shareText: string, shareUrl: string) => {
+    const fullText = `${shareText} ${shareUrl}`;
+    navigator.clipboard.writeText(fullText);
+    toast({
+      title: "Success",
+      description: "Major details copied to clipboard!",
+    });
+  };
+
   if (!major) return null;
 
   // Show error state
@@ -146,6 +176,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
           major={major}
           isBookmarked={isBookmarked}
           onBookmarkToggle={handleBookmarkToggle}
+          onShare={handleShare}
         />
         
         <ScrollArea className="h-[calc(90vh-120px)]">
