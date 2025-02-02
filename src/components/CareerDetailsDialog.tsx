@@ -111,8 +111,10 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   };
 
   const handleShare = async () => {
+    if (!career) return;
+
     const shareUrl = `${window.location.origin}/career?dialog=true&careerId=${careerId}`;
-    const shareText = `Check out this career: ${career?.title}\n\nSalary Range: ${career?.salary_range || 'Not specified'}\n\n${career?.description}\n\nLearn more at:`;
+    const shareText = `Check out this career: ${career.title}\n\n${career.description}\n\nSalary Range: ${career.salary_range || 'Not specified'}\n\nImage: ${career.image_url || 'No image available'}\n\nLearn more at:`;
 
     if (navigator.share) {
       try {
