@@ -2,7 +2,6 @@ import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { HeaderBadges } from "./HeaderBadges";
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 interface DialogHeaderSectionProps {
   title: string;
@@ -10,6 +9,7 @@ interface DialogHeaderSectionProps {
   salaryRange?: string;
   isBookmarked: boolean;
   onBookmarkToggle: () => void;
+  onShare: () => void;
   careerId: string;
 }
 
@@ -19,35 +19,9 @@ export function DialogHeaderSection({
   salaryRange,
   isBookmarked,
   onBookmarkToggle,
+  onShare,
   careerId,
 }: DialogHeaderSectionProps) {
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/career?dialog=true&careerId=${careerId}`;
-    const shareText = `Check out this career: ${title}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Share Career',
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          fallbackShare();
-        }
-      }
-    } else {
-      fallbackShare();
-    }
-  };
-
-  const fallbackShare = () => {
-    const shareUrl = `${window.location.origin}/career?dialog=true&careerId=${careerId}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copied to clipboard!");
-  };
-
   return (
     <DialogHeader className="p-4 pb-0">
       <div className="flex justify-between items-center">
@@ -58,7 +32,7 @@ export function DialogHeaderSection({
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleShare}
+            onClick={onShare}
             className="h-9 w-9"
           >
             <Share2 className="h-5 w-5" />

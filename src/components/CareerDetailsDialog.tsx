@@ -110,6 +110,33 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     }
   };
 
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/career?dialog=true&careerId=${careerId}`;
+    const shareText = `Check out this career: ${career?.title}\n\nSalary Range: ${career?.salary_range || 'Not specified'}\n\n${career?.description}\n\nLearn more at:`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Share Career',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          fallbackShare(shareText, shareUrl);
+        }
+      }
+    } else {
+      fallbackShare(shareText, shareUrl);
+    }
+  };
+
+  const fallbackShare = (shareText: string, shareUrl: string) => {
+    const fullText = `${shareText} ${shareUrl}`;
+    navigator.clipboard.writeText(fullText);
+    toast.success("Career details copied to clipboard!");
+  };
+
   useEffect(() => {
     if (!open || !careerId) return;
 
@@ -154,6 +181,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
           salaryRange={career.salary_range}
           isBookmarked={isBookmarked}
           onBookmarkToggle={handleBookmarkToggle}
+          onShare={handleShare}
           careerId={careerId}
         />
         <CareerDialogContent career={career} />
