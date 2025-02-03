@@ -113,11 +113,24 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/career?dialog=true&careerId=${careerId}`;
     const shareText = `Check out this career: ${career?.title}\n\nSalary Range: ${career?.salary_range || 'Not specified'}\n\n${career?.description}\n\nLearn more at:`;
+    const imageUrl = career?.image_url || '';
+
+    // Add meta tags for social media preview
+    const metaTags = document.createElement('div');
+    metaTags.innerHTML = `
+      <meta property="og:title" content="${career?.title || ''}" />
+      <meta property="og:description" content="${career?.description || ''}" />
+      <meta property="og:image" content="${imageUrl}" />
+      <meta property="og:url" content="${shareUrl}" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content="${imageUrl}" />
+    `;
+    document.head.appendChild(metaTags);
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Share Career',
+          title: career?.title || 'Career Details',
           text: shareText,
           url: shareUrl,
         });
@@ -129,6 +142,11 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     } else {
       fallbackShare(shareText, shareUrl);
     }
+
+    // Clean up meta tags after sharing
+    setTimeout(() => {
+      document.head.removeChild(metaTags);
+    }, 1000);
   };
 
   const fallbackShare = (shareText: string, shareUrl: string) => {

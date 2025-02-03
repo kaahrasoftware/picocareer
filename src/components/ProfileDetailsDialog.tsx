@@ -58,6 +58,19 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
 
     const shareUrl = `${window.location.origin}/mentor?dialog=true&mentorId=${userId}`;
     const shareText = `Check out ${profile.full_name}'s profile!\n\n${profile.bio || ''}\n\nLocation: ${profile.location || 'Not specified'}\nExperience: ${profile.years_of_experience} years\n\nLearn more at:`;
+    const imageUrl = profile.avatar_url || '';
+
+    // Add meta tags for social media preview
+    const metaTags = document.createElement('div');
+    metaTags.innerHTML = `
+      <meta property="og:title" content="${profile.full_name}'s Profile" />
+      <meta property="og:description" content="${profile.bio || ''}" />
+      <meta property="og:image" content="${imageUrl}" />
+      <meta property="og:url" content="${shareUrl}" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content="${imageUrl}" />
+    `;
+    document.head.appendChild(metaTags);
 
     if (navigator.share) {
       try {
@@ -74,6 +87,11 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     } else {
       fallbackShare(shareText, shareUrl);
     }
+
+    // Clean up meta tags after sharing
+    setTimeout(() => {
+      document.head.removeChild(metaTags);
+    }, 1000);
   };
 
   const fallbackShare = (shareText: string, shareUrl: string) => {
