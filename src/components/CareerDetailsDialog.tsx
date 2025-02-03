@@ -113,13 +113,17 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/career?dialog=true&careerId=${careerId}`;
     const shareText = `Check out this career: ${career?.title}\n\nSalary Range: ${career?.salary_range || 'Not specified'}\n\n${career?.description}\n\nLearn more at:`;
-    const imageUrl = career?.image_url || '';
+    
+    // Ensure image URL is absolute
+    const imageUrl = career?.image_url ? 
+      (career.image_url.startsWith('http') ? career.image_url : `${window.location.origin}${career.image_url}`) 
+      : '';
 
     // Add meta tags for social media preview
     const metaTags = document.createElement('div');
     metaTags.innerHTML = `
       <meta property="og:title" content="${career?.title || ''}" />
-      <meta property="og:description" content="${career?.description || ''}" />
+      <meta property="og:description" content="${career?.description?.substring(0, 200) || ''}" />
       <meta property="og:image" content="${imageUrl}" />
       <meta property="og:url" content="${shareUrl}" />
       <meta name="twitter:card" content="summary_large_image" />
