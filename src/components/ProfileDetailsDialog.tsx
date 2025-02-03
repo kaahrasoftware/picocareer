@@ -57,7 +57,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
     if (!profile) return;
 
     const shareUrl = `${window.location.origin}/mentor?dialog=true&mentorId=${userId}`;
-    const shareText = `Check out ${profile.full_name}'s profile!\n\n${profile.bio || ''}\n\nLocation: ${profile.location || 'Not specified'}\nExperience: ${profile.years_of_experience} years\n\nProfile Picture: ${profile.avatar_url || 'No image available'}\n\nLearn more at:`;
+    const shareText = `Check out ${profile.full_name}'s profile!\n\n${profile.bio || ''}\n\nLocation: ${profile.location || 'Not specified'}\nExperience: ${profile.years_of_experience} years\n\nLearn more at:`;
 
     if (navigator.share) {
       try {
