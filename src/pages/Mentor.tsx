@@ -26,9 +26,17 @@ export default function Mentor() {
   // Effect to handle URL parameters for mentor profile dialog
   useEffect(() => {
     if (profileId && showDialog) {
+      const { data: { session } } = supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to view mentor details.",
+          variant: "destructive",
+        });
+      }
       setIsProfileDialogOpen(true);
     }
-  }, [profileId, showDialog]);
+  }, [profileId, showDialog, toast]);
 
   const handleCloseDialog = () => {
     setIsProfileDialogOpen(false);
