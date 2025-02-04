@@ -1,14 +1,14 @@
+import { Home, BookOpen, Users, RefreshCw, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useToast } from "@/hooks/use-toast";
 import { MentorGrid } from "@/components/community/MentorGrid";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
-import { useSearchParams } from "react-router-dom";
-import type { Profile } from "@/types/database/profiles";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,17 +25,21 @@ export default function Mentor() {
 
   // Effect to handle URL parameters for mentor profile dialog
   useEffect(() => {
-    if (profileId && showDialog) {
-      const { data: { session } } = supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in to view mentor details.",
-          variant: "destructive",
-        });
+    const checkSession = async () => {
+      if (profileId && showDialog) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to view mentor details.",
+            variant: "destructive",
+          });
+        }
+        setIsProfileDialogOpen(true);
       }
-      setIsProfileDialogOpen(true);
-    }
+    };
+    
+    checkSession();
   }, [profileId, showDialog, toast]);
 
   const handleCloseDialog = () => {
