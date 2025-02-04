@@ -56,7 +56,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const handleShare = async () => {
     if (!profile) return;
 
-    const shareUrl = `${window.location.origin}/mentor?dialog=true&mentorId=${userId}`;
+    const shareUrl = `${window.location.origin}/mentor?dialog=true&profileId=${userId}`;
     const shareText = `Check out ${profile.full_name}'s profile!\n\n${profile.bio || ''}\n\nLocation: ${profile.location || 'Not specified'}\nExperience: ${profile.years_of_experience} years\n\nLearn more at:`;
     const imageUrl = profile.avatar_url || '';
 
