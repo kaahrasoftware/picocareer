@@ -39,7 +39,7 @@ export default function Mentor() {
   };
 
   const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles'],
+    queryKey: ['profiles', profileId],
     queryFn: async () => {
       console.log('Fetching profiles...');
       const { data: { user } } = await supabase.auth.getUser();
@@ -55,7 +55,12 @@ export default function Mentor() {
             career:careers!profiles_position_fkey(title, id)
           `)
           .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved'); // Only fetch approved mentors
+          .eq('onboarding_status', 'Approved');
+
+        // If we have a specific profileId, prioritize fetching that profile
+        if (profileId) {
+          query = query.or(`id.eq.${profileId}`);
+        }
 
         if (searchQuery) {
           query = query.or(
