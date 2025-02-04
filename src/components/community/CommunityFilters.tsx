@@ -3,6 +3,8 @@ import { SelectFilter } from "./filters/SelectFilter";
 import { SearchInput } from "./filters/SearchInput";
 import { Card } from "@/components/ui/card";
 import { Filter } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export interface CommunityFiltersProps {
   searchQuery: string;
@@ -28,6 +30,8 @@ export interface CommunityFiltersProps {
   locations?: string[];
   companies?: string[];
   schools?: string[];
+  hasAvailabilityFilter?: boolean;
+  onHasAvailabilityChange?: (value: boolean) => void;
 }
 
 export function CommunityFilters({
@@ -54,6 +58,8 @@ export function CommunityFilters({
   locations,
   companies,
   schools,
+  hasAvailabilityFilter,
+  onHasAvailabilityChange,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -105,6 +111,15 @@ export function CommunityFilters({
                 }`}
               />
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="has-availability"
+              checked={hasAvailabilityFilter}
+              onCheckedChange={onHasAvailabilityChange}
+            />
+            <Label htmlFor="has-availability">Show only mentors with available time slots</Label>
           </div>
         </div>
       </Card>

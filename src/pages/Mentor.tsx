@@ -17,6 +17,7 @@ export default function Mentor() {
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
+  const [hasAvailabilityFilter, setHasAvailabilityFilter] = useState(false);
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -44,14 +45,13 @@ export default function Mentor() {
 
   const handleCloseDialog = () => {
     setIsProfileDialogOpen(false);
-    // Remove dialog and profileId parameters from URL
     searchParams.delete('dialog');
     searchParams.delete('profileId');
     setSearchParams(searchParams);
   };
 
   const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles'],
+    queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailabilityFilter],
     queryFn: async () => {
       console.log('Fetching profiles...');
       const { data: { user } } = await supabase.auth.getUser();
@@ -67,7 +67,16 @@ export default function Mentor() {
             career:careers!profiles_position_fkey(title, id)
           `)
           .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved'); // Only fetch approved mentors
+          .eq('onboarding_status', 'Approved');
+
+        if (hasAvailabilityFilter) {
+          query = query.in('id', 
+            supabase
+              .from('mentor_availability')
+              .select('profile_id')
+              .eq('is_available', true)
+          );
+        }
 
         if (searchQuery) {
           query = query.or(
@@ -87,6 +96,26 @@ export default function Mentor() {
         if (user?.id) {
           query = query.neq('id', user.id);
         }
+
+        if (locationFilter) {
+          query = query.eq('location', locationFilter);
+        }
+
+        if (companyFilter) {
+          query = query.eq('company_id', companyFilter);
+        }
+
+        if (schoolFilter) {
+          query = query.eq('school_id', schoolFilter);
+        }
+
+        if (fieldFilter) {
+          query = query.contains('fields_of_interest', [fieldFilter]);
+        }
+
+        if (selectedSkills.length > 0) {
+          query = query.contains('skills', selectedSkills);
+        }
         
         const { data, error } = await query;
         
@@ -102,7 +131,7 @@ export default function Mentor() {
           school_name: profile.school?.name,
           academic_major: profile.academic_major?.title,
           career_title: profile.career?.title
-        })) as Profile[];
+        }));
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({
@@ -122,38 +151,6 @@ export default function Mentor() {
   const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
   const fields = Array.from(new Set(profiles?.flatMap(p => p.fields_of_interest || []) || [])).sort();
   const allSkills = Array.from(new Set(profiles?.flatMap(p => p.skills || []) || [])).sort();
-
-  const filteredProfiles = profiles?.filter(profile => {
-    const searchableFields = [
-      profile.first_name,
-      profile.last_name,
-      profile.full_name,
-      profile.position,
-      profile.highest_degree,
-      profile.bio,
-      profile.location,
-      profile.company_name,
-      profile.school_name,
-      profile.academic_major,
-      ...(profile.keywords || []),
-      ...(profile.skills || []),
-      ...(profile.tools_used || []),
-      ...(profile.fields_of_interest || [])
-    ].filter(Boolean).map(field => field.toLowerCase());
-
-    const matchesSearch = searchQuery === "" || 
-      searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
-
-    const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => (profile.skills || []).includes(skill));
-    const matchesLocation = !locationFilter || profile.location === locationFilter;
-    const matchesCompany = !companyFilter || profile.company_name === companyFilter;
-    const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
-    const matchesField = !fieldFilter || (profile.fields_of_interest || []).includes(fieldFilter);
-
-    return matchesSearch && matchesSkills && matchesLocation && 
-           matchesCompany && matchesSchool && matchesField;
-  });
 
   return (
     <SidebarProvider>
@@ -182,6 +179,8 @@ export default function Mentor() {
                 schools={schools}
                 fields={fields}
                 allSkills={allSkills}
+                hasAvailabilityFilter={hasAvailabilityFilter}
+                onHasAvailabilityChange={setHasAvailabilityFilter}
               />
 
               {error ? (
@@ -196,7 +195,7 @@ export default function Mentor() {
                 </div>
               ) : (
                 <MentorGrid 
-                  profiles={filteredProfiles || []} 
+                  profiles={profiles || []} 
                   isLoading={isLoading} 
                 />
               )}
