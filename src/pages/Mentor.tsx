@@ -132,10 +132,10 @@ export default function Mentor() {
         // Transform the data to include the proper company and school names
         const transformedData = data?.map(profile => ({
           ...profile,
-          company_name: profile.company?.[0]?.name,
-          school_name: profile.school?.[0]?.name,
-          academic_major: profile.academic_major?.[0]?.title,
-          career_title: profile.career?.[0]?.title
+          company_name: profile.company?.[0]?.name || null,
+          school_name: profile.school?.[0]?.name || null,
+          academic_major: profile.academic_major?.[0]?.title || null,
+          career_title: profile.career?.[0]?.title || null
         })) || [];
 
         console.log('Profiles fetched successfully:', transformedData.length);
