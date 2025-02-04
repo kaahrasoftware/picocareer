@@ -32,7 +32,7 @@ export default function Career() {
         .select("*")
         .eq('status', 'Approved')
         .eq('complete_career', true)
-        .order("created_at", { ascending: false });
+        .order('id', { ascending: undefined }); // Changed to use id with undefined ascending to get random order
 
       if (error) throw error;
       return data;
