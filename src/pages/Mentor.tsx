@@ -17,6 +17,7 @@ export default function Mentor() {
   const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
+  const [hasAvailabilityFilter, setHasAvailabilityFilter] = useState(false);
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -42,118 +43,83 @@ export default function Mentor() {
     checkSession();
   }, [profileId, showDialog, toast]);
 
+  const { data: profiles = [], isLoading, error } = useQuery({
+    queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailabilityFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from('profiles')
+        .select(`
+          *,
+          company:companies(name),
+          school:schools(name),
+          academic_major:majors(title),
+          career:careers(title, id)
+        `)
+        .eq('user_type', 'mentor')
+        .eq('onboarding_status', 'Approved');
+
+      if (hasAvailabilityFilter) {
+        const { data: availableMentors } = await supabase
+          .from('mentor_availability')
+          .select('profile_id')
+          .eq('is_available', true);
+
+        const mentorIds = availableMentors?.map(m => m.profile_id) || [];
+        if (mentorIds.length > 0) {
+          query = query.in('id', mentorIds);
+        } else {
+          return []; // Return empty array if no mentors have availability
+        }
+      }
+
+      if (searchQuery) {
+        query = query.or(
+          `first_name.ilike.%${searchQuery}%,` +
+          `last_name.ilike.%${searchQuery}%,` +
+          `full_name.ilike.%${searchQuery}%,` +
+          `bio.ilike.%${searchQuery}%,` +
+          `skills.cs.{${searchQuery}},` +
+          `tools_used.cs.{${searchQuery}},` +
+          `keywords.cs.{${searchQuery}},` +
+          `fields_of_interest.cs.{${searchQuery}}`
+        );
+      }
+
+      if (locationFilter) {
+        query = query.eq('location', locationFilter);
+      }
+
+      if (companyFilter) {
+        query = query.eq('company_id', companyFilter);
+      }
+
+      if (schoolFilter) {
+        query = query.eq('school_id', schoolFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        throw error;
+      }
+
+      return data.map((profile: any) => ({
+        ...profile,
+        company_name: profile.company?.name,
+        school_name: profile.school?.name,
+        academic_major: profile.academic_major?.title,
+        career_title: profile.career?.title
+      }));
+    }
+  });
+
   const handleCloseDialog = () => {
     setIsProfileDialogOpen(false);
-    // Remove dialog and profileId parameters from URL
     searchParams.delete('dialog');
     searchParams.delete('profileId');
     setSearchParams(searchParams);
   };
-
-  const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => {
-      console.log('Fetching profiles...');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      try {
-        let query = supabase
-          .from('profiles')
-          .select(`
-            *,
-            company:companies(name),
-            school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title, id)
-          `)
-          .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved'); // Only fetch approved mentors
-
-        if (searchQuery) {
-          query = query.or(
-            `first_name.ilike.%${searchQuery}%,` +
-            `last_name.ilike.%${searchQuery}%,` +
-            `full_name.ilike.%${searchQuery}%,` +
-            `bio.ilike.%${searchQuery}%,` +
-            `location.ilike.%${searchQuery}%,` +
-            `skills.cs.{${searchQuery}},` +
-            `tools_used.cs.{${searchQuery}},` +
-            `keywords.cs.{${searchQuery}},` +
-            `fields_of_interest.cs.{${searchQuery}},` +
-            `career.title.ilike.%${searchQuery}%`
-          );
-        }
-
-        if (user?.id) {
-          query = query.neq('id', user.id);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
-
-        console.log('Profiles fetched successfully:', data?.length);
-        return (data || []).map((profile: any) => ({
-          ...profile,
-          company_name: profile.company?.name,
-          school_name: profile.school?.name,
-          academic_major: profile.academic_major?.title,
-          career_title: profile.career?.title
-        })) as Profile[];
-      } catch (err) {
-        console.error('Error in profiles query:', err);
-        toast({
-          title: "Error loading profiles",
-          description: "There was an error loading the community profiles. Please try again later.",
-          variant: "destructive",
-        });
-        throw err;
-      }
-    },
-    retry: 2,
-    retryDelay: 1000,
-  });
-
-  const locations = Array.from(new Set(profiles?.map(p => p.location).filter(Boolean) || [])).sort();
-  const companies = Array.from(new Set(profiles?.map(p => p.company_name).filter(Boolean) || [])).sort();
-  const schools = Array.from(new Set(profiles?.map(p => p.school_name).filter(Boolean) || [])).sort();
-  const fields = Array.from(new Set(profiles?.flatMap(p => p.fields_of_interest || []) || [])).sort();
-  const allSkills = Array.from(new Set(profiles?.flatMap(p => p.skills || []) || [])).sort();
-
-  const filteredProfiles = profiles?.filter(profile => {
-    const searchableFields = [
-      profile.first_name,
-      profile.last_name,
-      profile.full_name,
-      profile.position,
-      profile.highest_degree,
-      profile.bio,
-      profile.location,
-      profile.company_name,
-      profile.school_name,
-      profile.academic_major,
-      ...(profile.keywords || []),
-      ...(profile.skills || []),
-      ...(profile.tools_used || []),
-      ...(profile.fields_of_interest || [])
-    ].filter(Boolean).map(field => field.toLowerCase());
-
-    const matchesSearch = searchQuery === "" || 
-      searchableFields.some(field => field.includes(searchQuery.toLowerCase()));
-
-    const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.every(skill => (profile.skills || []).includes(skill));
-    const matchesLocation = !locationFilter || profile.location === locationFilter;
-    const matchesCompany = !companyFilter || profile.company_name === companyFilter;
-    const matchesSchool = !schoolFilter || profile.school_name === schoolFilter;
-    const matchesField = !fieldFilter || (profile.fields_of_interest || []).includes(fieldFilter);
-
-    return matchesSearch && matchesSkills && matchesLocation && 
-           matchesCompany && matchesSchool && matchesField;
-  });
 
   return (
     <SidebarProvider>
@@ -177,11 +143,8 @@ export default function Mentor() {
                 onSchoolChange={setSchoolFilter}
                 fieldFilter={fieldFilter}
                 onFieldChange={setFieldFilter}
-                locations={locations}
-                companies={companies}
-                schools={schools}
-                fields={fields}
-                allSkills={allSkills}
+                hasAvailabilityFilter={hasAvailabilityFilter}
+                onHasAvailabilityChange={setHasAvailabilityFilter}
               />
 
               {error ? (
@@ -196,7 +159,7 @@ export default function Mentor() {
                 </div>
               ) : (
                 <MentorGrid 
-                  profiles={filteredProfiles || []} 
+                  profiles={profiles} 
                   isLoading={isLoading} 
                 />
               )}
