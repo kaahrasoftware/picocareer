@@ -23,7 +23,7 @@ export default function Program() {
           .from('majors')
           .select('*')
           .eq('status', 'Approved')
-          .order('RANDOM()');  // Changed this line to order randomly
+          .order('id', { ascending: undefined }); // Changed to use id with undefined ascending to get random order
 
         if (error) {
           console.error('Supabase error:', error);
