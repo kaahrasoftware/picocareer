@@ -63,8 +63,8 @@ export default function Mentor() {
             *,
             company:companies(name),
             school:schools(name),
-            academic_major:majors!profiles_academic_major_id_fkey(title),
-            career:careers!profiles_position_fkey(title, id)
+            academic_major:majors(title),
+            career:careers(title, id)
           `)
           .eq('user_type', 'mentor')
           .eq('onboarding_status', 'Approved');
@@ -129,8 +129,17 @@ export default function Mentor() {
           throw error;
         }
 
-        console.log('Profiles fetched successfully:', data?.length);
-        return data || [];
+        // Transform the data to include the proper company and school names
+        const transformedData = data?.map(profile => ({
+          ...profile,
+          company_name: profile.company?.[0]?.name,
+          school_name: profile.school?.[0]?.name,
+          academic_major: profile.academic_major?.[0]?.title,
+          career_title: profile.career?.[0]?.title
+        })) || [];
+
+        console.log('Profiles fetched successfully:', transformedData.length);
+        return transformedData;
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({
@@ -194,7 +203,7 @@ export default function Mentor() {
                 </div>
               ) : (
                 <MentorGrid 
-                  profiles={profiles || []} 
+                  profiles={profiles} 
                   isLoading={isLoading} 
                 />
               )}
