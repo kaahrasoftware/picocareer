@@ -7,6 +7,7 @@ import { CareerResults } from "@/components/career/CareerResults";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import type { Tables } from "@/integrations/supabase/types";
 
 export default function Career() {
   const [searchParams] = useSearchParams();
@@ -30,12 +31,12 @@ export default function Career() {
       const { data, error } = await supabase
         .from("careers")
         .select("*")
-        .eq('status', 'Approved')
+        .eq('status', 'Approved' as Tables<"careers">["Row"]["status"])
         .eq('complete_career', true)
-        .order('id', { ascending: undefined }); // Using undefined ascending to get random order
+        .order('random()'); // Use PostgreSQL's random() function for true randomization
 
       if (error) throw error;
-      return data;
+      return (data || []) as Tables<"careers">["Row"][];
     },
   });
 
@@ -65,7 +66,7 @@ export default function Career() {
     const matchesIndustry = industryFilter === "all" || career.industry === industryFilter;
     const matchesSkills = selectedSkills.length === 0 || 
       (career.required_skills && selectedSkills.some(skill => 
-        career.required_skills.includes(skill)
+        career.required_skills?.includes(skill)
       ));
     const matchesPopular = popularFilter === "all" || 
       (popularFilter === "popular" ? career.popular : 
