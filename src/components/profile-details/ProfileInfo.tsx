@@ -19,9 +19,9 @@ export function ProfileInfo({
   const renderInfoItem = (icon: React.ReactNode, text: string | null) => {
     if (!text) return null;
     return (
-      <div className="flex items-center gap-2 text-muted-foreground">
-        {icon}
-        <span className="truncate">{text}</span>
+      <div className="flex items-start gap-2 text-muted-foreground">
+        <span className="flex-shrink-0 mt-1">{icon}</span>
+        <span className="text-sm sm:text-base break-words line-clamp-2">{text}</span>
       </div>
     );
   };
