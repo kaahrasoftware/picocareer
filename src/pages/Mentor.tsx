@@ -1,22 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { MentorGrid } from "@/components/community/MentorGrid";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { useSearchParams } from "react-router-dom";
 import type { Profile } from "@/types/database/profiles";
-
-type ExtendedProfile = Profile & {
-  company_name?: string | null;
-  school_name?: string | null;
-  academic_major?: string | null;
-  career_title?: string | null;
-  career?: {
-    title?: string | null;
-  } | null;
-};
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +18,25 @@ export default function Mentor() {
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const profileId = searchParams.get('profileId');
+  const showDialog = searchParams.get('dialog') === 'true';
+
+  // Effect to handle URL parameters for mentor profile dialog
+  useEffect(() => {
+    if (profileId && showDialog) {
+      setIsProfileDialogOpen(true);
+    }
+  }, [profileId, showDialog]);
+
+  const handleCloseDialog = () => {
+    setIsProfileDialogOpen(false);
+    // Remove dialog and profileId parameters from URL
+    searchParams.delete('dialog');
+    searchParams.delete('profileId');
+    setSearchParams(searchParams);
+  };
 
   const { data: profiles = [], isLoading, error } = useQuery({
     queryKey: ['profiles'],
@@ -79,7 +90,7 @@ export default function Mentor() {
           school_name: profile.school?.name,
           academic_major: profile.academic_major?.title,
           career_title: profile.career?.title
-        })) as ExtendedProfile[];
+        })) as Profile[];
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({
@@ -181,6 +192,14 @@ export default function Mentor() {
           </div>
         </div>
       </div>
+
+      {profileId && (
+        <ProfileDetailsDialog
+          userId={profileId}
+          open={isProfileDialogOpen}
+          onOpenChange={handleCloseDialog}
+        />
+      )}
     </SidebarProvider>
   );
 }
