@@ -32,6 +32,7 @@ export interface CommunityFiltersProps {
   schools?: string[];
   hasAvailabilityFilter?: boolean;
   onHasAvailabilityChange?: (value: boolean) => void;
+  showAvailabilityFilter?: boolean;
 }
 
 export function CommunityFilters({
@@ -60,6 +61,7 @@ export function CommunityFilters({
   schools,
   hasAvailabilityFilter = false,
   onHasAvailabilityChange,
+  showAvailabilityFilter = false,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -113,14 +115,16 @@ export function CommunityFilters({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="has-availability"
-              checked={hasAvailabilityFilter}
-              onCheckedChange={onHasAvailabilityChange}
-            />
-            <Label htmlFor="has-availability">Show only mentors with available time slots</Label>
-          </div>
+          {showAvailabilityFilter && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="has-availability"
+                checked={hasAvailabilityFilter}
+                onCheckedChange={onHasAvailabilityChange}
+              />
+              <Label htmlFor="has-availability">Show only mentors with available time slots</Label>
+            </div>
+          )}
         </div>
       </Card>
     </div>
