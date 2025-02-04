@@ -23,7 +23,7 @@ export default function Program() {
           .from('majors')
           .select('*')
           .eq('status', 'Approved')
-          .order('created_at', { ascending: false });
+          .order('RANDOM()');  // Changed this line to order randomly
 
         if (error) {
           console.error('Supabase error:', error);
