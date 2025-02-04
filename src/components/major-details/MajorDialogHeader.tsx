@@ -31,8 +31,8 @@ export function MajorDialogHeader({ major, isBookmarked, onBookmarkToggle, onSha
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-2">
-            <Users className="h-3 w-3 md:h-4 md:w-4" />
+          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-1 text-xs py-1">
+            <Users className="h-3 w-3" />
             {formatProfileCount(major.profiles_count)} Mentors
           </Badge>
           <div className="w-[100px] md:w-[120px] flex justify-center gap-2">
