@@ -8,7 +8,7 @@ interface SelectFilterProps {
   className?: string;
 }
 
-export function SelectFilter({ value, onValueChange, placeholder, options, className }: SelectFilterProps) {
+export function SelectFilter({ value, onValueChange, placeholder, options = [], className }: SelectFilterProps) {
   return (
     <Select value={value || "all"} onValueChange={(value) => onValueChange(value === "all" ? null : value)}>
       <SelectTrigger className={className}>
@@ -16,7 +16,7 @@ export function SelectFilter({ value, onValueChange, placeholder, options, class
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All {placeholder}s</SelectItem>
-        {options.map((option) => (
+        {Array.isArray(options) && options.map((option) => (
           <SelectItem key={option} value={option}>{option}</SelectItem>
         ))}
       </SelectContent>
