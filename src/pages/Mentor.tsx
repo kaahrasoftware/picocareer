@@ -70,27 +70,18 @@ export default function Mentor() {
           .eq('onboarding_status', 'Approved');
 
         if (hasAvailabilityFilter) {
-          query = query.in('id', 
-            supabase
-              .from('mentor_availability')
-              .select('profile_id')
-              .eq('is_available', true)
-          );
-        }
+          const { data: availableProfileIds } = await supabase
+            .from('mentor_availability')
+            .select('profile_id')
+            .eq('is_available', true)
+            .not('start_date_time', 'is', null);
 
-        if (searchQuery) {
-          query = query.or(
-            `first_name.ilike.%${searchQuery}%,` +
-            `last_name.ilike.%${searchQuery}%,` +
-            `full_name.ilike.%${searchQuery}%,` +
-            `bio.ilike.%${searchQuery}%,` +
-            `location.ilike.%${searchQuery}%,` +
-            `skills.cs.{${searchQuery}},` +
-            `tools_used.cs.{${searchQuery}},` +
-            `keywords.cs.{${searchQuery}},` +
-            `fields_of_interest.cs.{${searchQuery}},` +
-            `career.title.ilike.%${searchQuery}%`
-          );
+          if (availableProfileIds && availableProfileIds.length > 0) {
+            query = query.in('id', availableProfileIds.map(item => item.profile_id));
+          } else {
+            // If no profiles have availability, return empty result
+            return [];
+          }
         }
 
         if (user?.id) {
@@ -116,6 +107,20 @@ export default function Mentor() {
         if (selectedSkills.length > 0) {
           query = query.contains('skills', selectedSkills);
         }
+
+        if (searchQuery) {
+          query = query.or(
+            `first_name.ilike.%${searchQuery}%,` +
+            `last_name.ilike.%${searchQuery}%,` +
+            `full_name.ilike.%${searchQuery}%,` +
+            `bio.ilike.%${searchQuery}%,` +
+            `location.ilike.%${searchQuery}%,` +
+            `skills.cs.{${searchQuery}},` +
+            `tools_used.cs.{${searchQuery}},` +
+            `keywords.cs.{${searchQuery}},` +
+            `fields_of_interest.cs.{${searchQuery}}`
+          );
+        }
         
         const { data, error } = await query;
         
@@ -125,13 +130,7 @@ export default function Mentor() {
         }
 
         console.log('Profiles fetched successfully:', data?.length);
-        return (data || []).map((profile: any) => ({
-          ...profile,
-          company_name: profile.company?.name,
-          school_name: profile.school?.name,
-          academic_major: profile.academic_major?.title,
-          career_title: profile.career?.title
-        }));
+        return data || [];
       } catch (err) {
         console.error('Error in profiles query:', err);
         toast({
