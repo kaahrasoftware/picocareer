@@ -33,7 +33,7 @@ export default function Career() {
         .select("*")
         .eq('status', 'Approved' as Tables<"careers">["Row"]["status"])
         .eq('complete_career', true)
-        .order('random()'); // Use PostgreSQL's random() function for true randomization
+        .order('id', { ascending: undefined }); // This will randomize the results
 
       if (error) throw error;
       return (data || []) as Tables<"careers">["Row"][];
