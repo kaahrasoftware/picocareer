@@ -69,7 +69,7 @@ export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps)
         {/* Name and Badges Row */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap flex-1">
-            <h2 className="text-xl sm:text-2xl font-bold truncate">
+            <h2 className="text-base sm:text-2xl font-bold leading-tight sm:leading-normal break-words max-w-[200px] sm:max-w-none">
               {profile.full_name}
             </h2>
             
