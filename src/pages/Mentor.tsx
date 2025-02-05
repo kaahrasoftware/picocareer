@@ -1,3 +1,4 @@
+
 import { Home, BookOpen, Users, RefreshCw, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -145,6 +146,7 @@ export default function Mentor() {
                 onFieldChange={setFieldFilter}
                 hasAvailabilityFilter={hasAvailabilityFilter}
                 onHasAvailabilityChange={setHasAvailabilityFilter}
+                showAvailabilityFilter={true}
               />
 
               {error ? (
