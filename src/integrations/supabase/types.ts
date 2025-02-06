@@ -874,6 +874,125 @@ export type Database = {
           },
         ]
       }
+      personality_test_questions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          options: Json | null
+          order_index: number
+          question: string
+          question_type: Database["public"]["Enums"]["personality_question_type"]
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          options?: Json | null
+          order_index: number
+          question: string
+          question_type: Database["public"]["Enums"]["personality_question_type"]
+          section: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          options?: Json | null
+          order_index?: number
+          question?: string
+          question_type?: Database["public"]["Enums"]["personality_question_type"]
+          section?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      personality_test_responses: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          profile_id: string
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_test_responses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_test_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "personality_test_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personality_test_results: {
+        Row: {
+          career_matches: Json
+          created_at: string
+          id: string
+          major_matches: Json
+          personality_traits: Json
+          profile_id: string
+          raw_analysis: string | null
+          updated_at: string
+        }
+        Insert: {
+          career_matches: Json
+          created_at?: string
+          id?: string
+          major_matches: Json
+          personality_traits: Json
+          profile_id: string
+          raw_analysis?: string | null
+          updated_at?: string
+        }
+        Update: {
+          career_matches?: Json
+          created_at?: string
+          id?: string
+          major_matches?: Json
+          personality_traits?: Json
+          profile_id?: string
+          raw_analysis?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_test_results_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           academic_major_id: string | null
@@ -2034,6 +2153,10 @@ export type Database = {
         | "Consent Signed"
         | "Approved"
         | "Rejected"
+      personality_question_type:
+        | "multiple_choice"
+        | "likert_scale"
+        | "open_ended"
       school_type: "High School" | "College" | "University" | "Other"
       session_type:
         | "Know About my Career"
