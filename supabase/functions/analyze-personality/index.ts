@@ -18,6 +18,11 @@ serve(async (req) => {
   try {
     const { responses, profileId } = await req.json()
 
+    // Validate required inputs
+    if (!responses || !profileId) {
+      throw new Error('Missing required parameters: responses or profileId')
+    }
+
     // Create prompt for personality analysis
     const prompt = `
       Based on the following user responses to a personality test, analyze their traits, preferences, 
@@ -27,13 +32,23 @@ serve(async (req) => {
       ${JSON.stringify(responses, null, 2)}
 
       Please provide a structured analysis with:
-      1. Key personality traits and characteristics
-      2. Recommended career paths with reasoning
-      3. Recommended academic majors with reasoning
-      4. Areas for skill development
+      1. Key personality traits and characteristics (provide as a list of strings)
+      2. Recommended career paths (provide as a list of objects with title and reasoning fields)
+      3. Recommended academic majors (provide as a list of objects with title and reasoning fields)
+      4. Areas for skill development (include these within the JSON structure)
 
-      Format the response as a JSON object with these sections.
+      Format the response as a JSON object with these exact fields:
+      {
+        "personalityTraits": string[],
+        "careerRecommendations": Array<{ title: string, reasoning: string }>,
+        "majorRecommendations": Array<{ title: string, reasoning: string }>,
+        "skillDevelopment": string[]
+      }
     `
+
+    if (!DEEPSEEK_API_KEY) {
+      throw new Error('DeepSeek API key is not configured')
+    }
 
     // Call DeepSeek API for analysis
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -45,17 +60,37 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "deepseek-chat",
         messages: [
-          { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance." },
+          { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
           { role: "user", content: prompt }
         ],
         temperature: 0.7
       })
     })
 
+    if (!deepseekResponse.ok) {
+      throw new Error(`DeepSeek API error: ${deepseekResponse.statusText}`)
+    }
+
     const analysis = await deepseekResponse.json()
+    
+    if (!analysis?.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from DeepSeek API')
+    }
 
     // Parse the response to extract structured data
-    const parsedAnalysis = JSON.parse(analysis.choices[0].message.content)
+    let parsedAnalysis
+    try {
+      parsedAnalysis = JSON.parse(analysis.choices[0].message.content)
+    } catch (parseError) {
+      console.error('Error parsing DeepSeek response:', parseError)
+      throw new Error('Failed to parse analysis results')
+    }
+
+    // Validate the parsed data structure
+    if (!parsedAnalysis.personalityTraits || !parsedAnalysis.careerRecommendations || 
+        !parsedAnalysis.majorRecommendations || !parsedAnalysis.skillDevelopment) {
+      throw new Error('Invalid analysis structure from AI')
+    }
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -71,6 +106,7 @@ serve(async (req) => {
         personality_traits: parsedAnalysis.personalityTraits,
         career_matches: parsedAnalysis.careerRecommendations,
         major_matches: parsedAnalysis.majorRecommendations,
+        skill_development: parsedAnalysis.skillDevelopment,
         raw_analysis: analysis.choices[0].message.content
       })
 
@@ -89,7 +125,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-personality function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
