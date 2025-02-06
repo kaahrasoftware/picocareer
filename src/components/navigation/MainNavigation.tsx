@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -17,6 +18,7 @@ export function MainNavigation() {
     { path: "/program", label: "Fields of Study", className: "whitespace-nowrap" },
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
+    { path: "/personality-test", label: "Personality Test" },
     { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
     { path: "/about", label: "About" },

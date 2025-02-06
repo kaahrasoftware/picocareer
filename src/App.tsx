@@ -31,6 +31,7 @@ import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
+import PersonalityTest from "@/pages/PersonalityTest";
 
 // Create a client with specific configuration
 const queryClient = new QueryClient({
@@ -187,6 +188,11 @@ const router = createBrowserRouter([
   {
     path: "/event/upload",
     element: <MainLayout><EventUpload /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/personality-test",
+    element: <MainLayout><PersonalityTest /></MainLayout>,
     errorElement: <Error />,
   },
   {
