@@ -2,6 +2,13 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 export function MainNavigation() {
   const location = useLocation();
@@ -18,10 +25,13 @@ export function MainNavigation() {
     { path: "/program", label: "Fields of Study", className: "whitespace-nowrap" },
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
+    { path: "/about", label: "About" },
+  ];
+
+  const resourceItems = [
     { path: "/personality-test", label: "Personality Test" },
     { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
-    { path: "/about", label: "About" },
   ];
 
   return (
@@ -45,6 +55,50 @@ export function MainNavigation() {
             </Link>
           </li>
         ))}
+        <li>
+          {isMobile ? (
+            <>
+              {resourceItems.map(({ path, label }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={cn(
+                    "px-4 py-2 rounded-md transition-colors block w-full",
+                    isActive(path) && "bg-primary/20 text-primary"
+                  )}
+                >
+                  {label}
+                </Link>
+              ))}
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger className={cn(
+                "px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1",
+                isActive("/personality-test") || isActive("/event") || isActive("/blog") 
+                  ? "bg-primary/20 text-primary" 
+                  : ""
+              )}>
+                Resources <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {resourceItems.map(({ path, label }) => (
+                  <DropdownMenuItem key={path} asChild>
+                    <Link 
+                      to={path}
+                      className={cn(
+                        "w-full",
+                        isActive(path) && "bg-primary/20 text-primary"
+                      )}
+                    >
+                      {label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </li>
       </ul>
     </nav>
   );
