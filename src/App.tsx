@@ -1,9 +1,15 @@
+
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
+import { MenuSidebar } from "@/components/MenuSidebar";
+import { Footer } from "@/components/Footer";
+import PersonalityTest from "@/pages/PersonalityTest";
+
+// Import all pages
 import About from "@/pages/About";
 import Auth from "@/pages/Auth";
 import Blog from "@/pages/Blog";
@@ -29,9 +35,6 @@ import School from "@/pages/School";
 import Terms from "@/pages/Terms";
 import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
-import { MenuSidebar } from "@/components/MenuSidebar";
-import { Footer } from "@/components/Footer";
-import PersonalityTest from "@/pages/PersonalityTest";
 
 // Create a client with specific configuration
 const queryClient = new QueryClient({
@@ -39,7 +42,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
-      refetchOnWindowFocus: false, // Disable automatic refetching
+      refetchOnWindowFocus: false,
     },
   },
 });
