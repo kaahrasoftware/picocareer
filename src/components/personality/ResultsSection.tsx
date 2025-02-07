@@ -1,10 +1,8 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ResultsSectionProps {
@@ -26,8 +24,6 @@ type PersonalityTestResult = {
 }
 
 export function ResultsSection({ profileId }: ResultsSectionProps) {
-  const navigate = useNavigate();
-
   const { data: results, isLoading, error } = useQuery({
     queryKey: ['personality-test-results', profileId],
     queryFn: async () => {
@@ -60,12 +56,6 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
       }
     },
   });
-
-  useEffect(() => {
-    if (!profileId) {
-      navigate('/auth');
-    }
-  }, [profileId, navigate]);
 
   if (isLoading) {
     return (
