@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookingForm } from "./booking/BookingForm";
@@ -10,6 +11,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { notifyAdmins } from "./booking/AdminNotification";
+import type { Database } from "@/types/database/database.types";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -20,6 +22,9 @@ interface BookSessionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+type SessionType = Database['public']['Tables']['mentor_session_types']['Row'];
+type MentorSession = Database['public']['Tables']['mentor_sessions']['Row'];
 
 export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDialogProps) {
   const [formData, setFormData] = useState<{
@@ -50,7 +55,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       return;
     }
 
-    if (formData.meetingPlatform === "WhatsApp" && !formData.menteePhoneNumber) {
+    if (formData.meetingPlatform === 'WhatsApp' && !formData.menteePhoneNumber) {
       toast({
         title: "Missing Information",
         description: "Please provide your phone number for WhatsApp sessions.",
@@ -59,7 +64,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       return;
     }
 
-    if (formData.meetingPlatform === "Telegram" && !formData.menteeTelegramUsername) {
+    if (formData.meetingPlatform === 'Telegram' && !formData.menteeTelegramUsername) {
       toast({
         title: "Missing Information",
         description: "Please provide your Telegram username.",
@@ -68,7 +73,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       return;
     }
 
-    if (formData.meetingPlatform === "Phone Call" && !formData.menteePhoneNumber) {
+    if (formData.meetingPlatform === 'Phone Call' && !formData.menteePhoneNumber) {
       toast({
         title: "Missing Information",
         description: "Please provide your phone number for Phone Call sessions.",
@@ -110,7 +115,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
       // Notify admins about the new session booking
       const { data: sessionType } = await supabase
-        .from('mentor_session_types')
+        .from<'mentor_session_types', SessionType>('mentor_session_types')
         .select('type')
         .eq('id', formData.sessionType)
         .single();
@@ -148,7 +153,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
           // Update session with meet link
           const { error: updateError } = await supabase
-            .from('mentor_sessions')
+            .from<'mentor_sessions', MentorSession>('mentor_sessions')
             .update({ meeting_link: meetData.meetLink })
             .eq('id', sessionResult.sessionId);
 
