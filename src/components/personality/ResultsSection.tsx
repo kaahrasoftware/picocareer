@@ -11,12 +11,19 @@ interface ResultsSectionProps {
   profileId: string;
 }
 
-type TestResult = {
+interface TestResult {
   personality_traits: string[];
   career_matches: Array<{ title: string; reasoning: string }>;
   major_matches: Array<{ title: string; reasoning: string }>;
   skill_development: string[];
-};
+}
+
+type PersonalityTestResult = {
+  personality_traits: string;
+  career_matches: string;
+  major_matches: string;
+  skill_development: string;
+}
 
 export function ResultsSection({ profileId }: ResultsSectionProps) {
   const navigate = useNavigate();
@@ -32,19 +39,25 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       if (!data) throw new Error('No test results found');
       
-      const parsedResults: TestResult = {
-        personality_traits: JSON.parse(data.personality_traits || '[]'),
-        career_matches: JSON.parse(data.career_matches || '[]'),
-        major_matches: JSON.parse(data.major_matches || '[]'),
-        skill_development: JSON.parse(data.skill_development || '[]')
-      };
+      const result = data as PersonalityTestResult;
       
-      return parsedResults;
+      try {
+        const parsedResults: TestResult = {
+          personality_traits: JSON.parse(result.personality_traits || '[]'),
+          career_matches: JSON.parse(result.career_matches || '[]'),
+          major_matches: JSON.parse(result.major_matches || '[]'),
+          skill_development: JSON.parse(result.skill_development || '[]')
+        };
+        return parsedResults;
+      } catch (e) {
+        console.error('Error parsing test results:', e);
+        throw new Error('Failed to parse test results');
+      }
     },
   });
 

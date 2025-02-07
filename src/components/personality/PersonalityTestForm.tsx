@@ -38,6 +38,14 @@ type QuestionData = {
   order_index: number;
 };
 
+type PersonalityTestQuestion = {
+  id: string;
+  question: string;
+  question_type: 'multiple_choice' | 'likert_scale' | 'open_ended';
+  options?: string[];
+  order_index: number;
+};
+
 export function PersonalityTestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -55,13 +63,16 @@ export function PersonalityTestForm() {
         
         if (error) throw error;
 
+        if (!data) return [];
+
+        const questions = data as PersonalityTestQuestion[];
         const defaultValues: FormValues = {};
-        (data as QuestionData[]).forEach(question => {
+        questions.forEach(question => {
           defaultValues[question.id] = question.question_type === 'likert_scale' ? '3' : '';
         });
         form.reset(defaultValues);
 
-        return data as QuestionData[];
+        return questions;
       } catch (err) {
         console.error('Error fetching questions:', err);
         throw err;
