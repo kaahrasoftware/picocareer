@@ -1,6 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import OpenAI from 'https://esm.sh/openai@4.28.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,55 +11,6 @@ const corsHeaders = {
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const callOpenAI = async (prompt: string, retries = 3, backoff = 1000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      console.log(`Making OpenAI API call attempt ${i + 1}/${retries}`);
-      
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "gpt-4", // Using the standard GPT-4 model
-          messages: [
-            { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.7
-        })
-      });
-
-      if (response.status === 429) { // Rate limit error
-        console.log(`Rate limited, attempt ${i + 1}/${retries}. Waiting ${backoff}ms before retry...`);
-        await delay(backoff);
-        backoff *= 2; // Exponential backoff
-        continue;
-      }
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error(`OpenAI API error (${response.status}):`, errorBody);
-        throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
-      }
-
-      const data = await response.json();
-      console.log('Successfully received OpenAI API response');
-      return data;
-    } catch (error) {
-      console.error(`Attempt ${i + 1}/${retries} failed:`, error);
-      if (i === retries - 1) {
-        throw new Error(`Failed after ${retries} attempts: ${error.message}`);
-      }
-      await delay(backoff);
-      backoff *= 2;
-    }
-  }
-  throw new Error('Max retries reached for OpenAI API call');
-};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -101,17 +53,54 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured')
     }
 
-    // Call OpenAI API with retry logic
-    const analysis = await callOpenAI(prompt);
-    
-    if (!analysis?.choices?.[0]?.message?.content) {
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: OPENAI_API_KEY,
+    });
+
+    let analysis;
+    let retries = 3;
+    let backoff = 1000;
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        console.log(`Making OpenAI API call attempt ${i + 1}/${retries}`);
+        
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7,
+        });
+
+        analysis = completion.choices[0].message;
+        break;
+      } catch (error) {
+        console.error(`Attempt ${i + 1}/${retries} failed:`, error);
+        if (error.status === 429) { // Rate limit error
+          console.log(`Rate limited, attempt ${i + 1}/${retries}. Waiting ${backoff}ms before retry...`);
+          await delay(backoff);
+          backoff *= 2; // Exponential backoff
+          continue;
+        }
+        if (i === retries - 1) {
+          throw new Error(`Failed after ${retries} attempts: ${error.message}`);
+        }
+        await delay(backoff);
+        backoff *= 2;
+      }
+    }
+
+    if (!analysis?.content) {
       throw new Error('Invalid response from OpenAI API')
     }
 
     // Parse the response to extract structured data
-    let parsedAnalysis
+    let parsedAnalysis;
     try {
-      parsedAnalysis = JSON.parse(analysis.choices[0].message.content)
+      parsedAnalysis = JSON.parse(analysis.content)
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError)
       throw new Error('Failed to parse analysis results')
@@ -138,7 +127,7 @@ serve(async (req) => {
         career_matches: JSON.stringify(parsedAnalysis.careerRecommendations),
         major_matches: JSON.stringify(parsedAnalysis.majorRecommendations),
         skill_development: JSON.stringify(parsedAnalysis.skillDevelopment),
-        raw_analysis: analysis.choices[0].message.content
+        raw_analysis: analysis.content
       })
 
     if (resultError) throw resultError
@@ -167,4 +156,3 @@ serve(async (req) => {
     )
   }
 })
-
