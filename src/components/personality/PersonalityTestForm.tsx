@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   FormField,
   FormItem,
@@ -32,33 +33,39 @@ interface FormValues {
 export function PersonalityTestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const form = useForm<FormValues>({
     defaultValues: {} // This will be populated when questions are loaded
   });
 
   // Fetch questions from the database
-  const { data: questions = [], isLoading } = useQuery({
+  const { data: questions = [], isLoading, error } = useQuery({
     queryKey: ['personality-test-questions'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('personality_test_questions')
-        .select('*')
-        .order('order_index');
-      
-      if (error) throw error;
+      try {
+        const { data, error } = await supabase
+          .from('personality_test_questions')
+          .select('*')
+          .order('order_index');
+        
+        if (error) throw error;
 
-      // Set default values for each question
-      const defaultValues: FormValues = {};
-      data.forEach(question => {
-        if (question.question_type === 'likert_scale') {
-          defaultValues[question.id] = 3; // Default to middle value for likert scale
-        } else {
-          defaultValues[question.id] = ''; // Empty string for other types
-        }
-      });
-      form.reset(defaultValues);
+        // Set default values for each question
+        const defaultValues: FormValues = {};
+        data.forEach(question => {
+          if (question.question_type === 'likert_scale') {
+            defaultValues[question.id] = 3; // Default to middle value for likert scale
+          } else {
+            defaultValues[question.id] = ''; // Empty string for other types
+          }
+        });
+        form.reset(defaultValues);
 
-      return data;
+        return data;
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+        throw err;
+      }
     }
   });
 
@@ -67,13 +74,20 @@ export function PersonalityTestForm() {
       setIsSubmitting(true);
 
       // Get the current user's session
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication error. Please sign in again.');
+      }
+
       if (!session) {
         toast({
           title: "Authentication Required",
           description: "Please sign in to take the personality test.",
           variant: "destructive",
         });
+        navigate('/auth');
         return;
       }
 
@@ -107,10 +121,22 @@ export function PersonalityTestForm() {
       });
 
       // Redirect to results page
-      window.location.href = '/personality-test?tab=results';
+      navigate('/personality-test?tab=results');
 
     } catch (error: any) {
       console.error('Error submitting test:', error);
+      
+      // Handle session expiration specifically
+      if (error.message?.includes('session expired') || error.message?.includes('sign in')) {
+        toast({
+          title: "Session Expired",
+          description: "Please sign in again to continue.",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
+
       toast({
         title: "Error",
         description: error.message || "Failed to submit test. Please try again.",
@@ -121,11 +147,24 @@ export function PersonalityTestForm() {
     }
   };
 
+  // Handle loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-red-500">
+          <p>Failed to load personality test questions.</p>
+          <p>Please try refreshing the page.</p>
+        </div>
+      </Card>
     );
   }
 
