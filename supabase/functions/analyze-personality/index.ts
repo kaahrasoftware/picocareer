@@ -67,7 +67,7 @@ serve(async (req) => {
         console.log(`Making OpenAI API call attempt ${i + 1}/${retries}`);
         
         const completion = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: "gpt-4o-mini", // Changed to use the correct model name
           messages: [
             { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
             { role: "user", content: prompt }
