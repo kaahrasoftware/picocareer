@@ -1,11 +1,10 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { corsHeaders } from './cors.ts'
+import { processAnswers } from './scoring.ts'
+import { getRecommendations } from './recommendations.ts'
+import type { TestResults } from './types.ts'
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -36,57 +35,8 @@ serve(async (req) => {
 
     if (mappingsError) throw mappingsError
 
-    // Initialize scoring objects
-    const careerScores: { [key: string]: { score: number; reasons: Set<string> } } = {}
-    const majorScores: { [key: string]: { score: number; reasons: Set<string> } } = {}
-    const traitEvidence: { [key: string]: Set<string> } = {}
-
-    // Process each response
-    for (const [questionId, answer] of Object.entries(responses)) {
-      const answerStr = String(answer)
-      console.log(`Processing answer for question ${questionId}: ${answerStr}`)
-
-      // Find relevant mappings for this question and answer
-      const relevantMappings = mappings.filter(m => {
-        const answerMatch = m.answer_value === answerStr
-        console.log(`Comparing mapping answer "${m.answer_value}" with response "${answerStr}": ${answerMatch}`)
-        return m.question_id === questionId && answerMatch
-      })
-
-      console.log(`Found ${relevantMappings.length} relevant mappings`)
-
-      // Update scores based on mappings
-      for (const mapping of relevantMappings) {
-        if (!mapping.recommendation_id && mapping.recommendation_type !== 'trait') continue
-
-        const reason = `Based on your response to question ${questionId}`
-        
-        switch (mapping.recommendation_type) {
-          case 'career':
-            if (!careerScores[mapping.recommendation_id]) {
-              careerScores[mapping.recommendation_id] = { score: 0, reasons: new Set() }
-            }
-            careerScores[mapping.recommendation_id].score += mapping.weight
-            careerScores[mapping.recommendation_id].reasons.add(reason)
-            break
-
-          case 'major':
-            if (!majorScores[mapping.recommendation_id]) {
-              majorScores[mapping.recommendation_id] = { score: 0, reasons: new Set() }
-            }
-            majorScores[mapping.recommendation_id].score += mapping.weight
-            majorScores[mapping.recommendation_id].reasons.add(reason)
-            break
-
-          case 'trait':
-            if (!traitEvidence[answerStr]) {
-              traitEvidence[answerStr] = new Set()
-            }
-            traitEvidence[answerStr].add(reason)
-            break
-        }
-      }
-    }
+    // Process answers and calculate scores
+    const { careerScores, majorScores, traitEvidence } = processAnswers(responses, mappings)
 
     console.log('Final scores:', {
       careers: careerScores,
@@ -94,47 +44,14 @@ serve(async (req) => {
       traits: traitEvidence
     })
 
-    // Get career details for recommendations
-    const careerIds = Object.keys(careerScores)
-    const { data: careers, error: careersError } = await supabaseClient
-      .from('careers')
-      .select('id, title, description')
-      .in('id', careerIds)
-
-    if (careersError) throw careersError
-
-    // Get major details for recommendations
-    const majorIds = Object.keys(majorScores)
-    const { data: majors, error: majorsError } = await supabaseClient
-      .from('majors')
-      .select('id, title, description')
-      .in('id', majorIds)
-
-    if (majorsError) throw majorsError
-
-    // Format career recommendations
-    const careerRecommendations = careers
-      .map(career => ({
-        id: career.id,
-        title: career.title,
-        description: career.description,
-        score: careerScores[career.id].score,
-        reasoning: Array.from(careerScores[career.id].reasons).join('. ')
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-
-    // Format major recommendations
-    const majorRecommendations = majors
-      .map(major => ({
-        id: major.id,
-        title: major.title,
-        description: major.description,
-        score: majorScores[major.id].score,
-        reasoning: Array.from(majorScores[major.id].reasons).join('. ')
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
+    // Get recommendations
+    const { careerRecommendations, majorRecommendations } = await getRecommendations(
+      supabaseClient,
+      Object.keys(careerScores),
+      Object.keys(majorScores),
+      careerScores,
+      majorScores
+    )
 
     // Format personality traits (require at least 2 supporting answers)
     const personalityTraits = Object.entries(traitEvidence)
@@ -150,7 +67,7 @@ serve(async (req) => {
       "Time management and organization"
     ]
 
-    const results = {
+    const results: TestResults = {
       personality_traits: JSON.stringify(personalityTraits),
       career_matches: JSON.stringify(careerRecommendations),
       major_matches: JSON.stringify(majorRecommendations),
