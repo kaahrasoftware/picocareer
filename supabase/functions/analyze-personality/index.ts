@@ -103,10 +103,10 @@ serve(async (req) => {
       .from('personality_test_results')
       .insert({
         profile_id: profileId,
-        personality_traits: parsedAnalysis.personalityTraits,
-        career_matches: parsedAnalysis.careerRecommendations,
-        major_matches: parsedAnalysis.majorRecommendations,
-        skill_development: parsedAnalysis.skillDevelopment,
+        personality_traits: JSON.stringify(parsedAnalysis.personalityTraits),
+        career_matches: JSON.stringify(parsedAnalysis.careerRecommendations),
+        major_matches: JSON.stringify(parsedAnalysis.majorRecommendations),
+        skill_development: JSON.stringify(parsedAnalysis.skillDevelopment),
         raw_analysis: analysis.choices[0].message.content
       })
 

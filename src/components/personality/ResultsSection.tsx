@@ -35,7 +35,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
       if (!data) throw new Error('No test results found');
