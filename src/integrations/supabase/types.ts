@@ -917,7 +917,6 @@ export type Database = {
       }
       personality_test_questions: {
         Row: {
-          category: string | null
           created_at: string
           id: string
           options: Json | null
@@ -927,7 +926,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          category?: string | null
           created_at?: string
           id?: string
           options?: Json | null
@@ -937,7 +935,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          category?: string | null
           created_at?: string
           id?: string
           options?: Json | null
