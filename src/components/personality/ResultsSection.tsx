@@ -13,17 +13,19 @@ interface ResultsSectionProps {
 
 type TestResult = {
   personality_traits: string[];
-  career_matches: { title: string; reasoning: string }[];
-  major_matches: { title: string; reasoning: string }[];
+  career_matches: Array<{ title: string; reasoning: string }>;
+  major_matches: Array<{ title: string; reasoning: string }>;
   skill_development: string[];
 };
 
 export function ResultsSection({ profileId }: ResultsSectionProps) {
   const navigate = useNavigate();
 
-  const { data: results, isLoading } = useQuery({
+  const { data: results, isLoading, error } = useQuery({
     queryKey: ['personality-test-results', profileId],
     queryFn: async () => {
+      if (!profileId) throw new Error('Profile ID is required');
+
       const { data, error } = await supabase
         .from('personality_test_results')
         .select('*')
@@ -33,12 +35,13 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error('No test results found');
       
       const parsedResults: TestResult = {
-        personality_traits: JSON.parse(data.personality_traits as string),
-        career_matches: JSON.parse(data.career_matches as string),
-        major_matches: JSON.parse(data.major_matches as string),
-        skill_development: JSON.parse(data.skill_development as string)
+        personality_traits: JSON.parse(data.personality_traits || '[]'),
+        career_matches: JSON.parse(data.career_matches || '[]'),
+        major_matches: JSON.parse(data.major_matches || '[]'),
+        skill_development: JSON.parse(data.skill_development || '[]')
       };
       
       return parsedResults;
@@ -59,7 +62,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     );
   }
 
-  if (!results) {
+  if (error || !results) {
     return (
       <div className="text-center py-8">
         <p>No test results found. Please take the personality test first.</p>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { useQuery } from "@tanstack/react-query";
 
-type FormValues = {
+interface FormValues {
   [key: string]: string;
-};
+}
 
 type QuestionData = {
   id: string;
@@ -43,7 +44,6 @@ export function PersonalityTestForm() {
   const navigate = useNavigate();
   const form = useForm<FormValues>();
 
-  // Fetch questions from the database
   const { data: questions = [], isLoading, error } = useQuery({
     queryKey: ['personality-test-questions'],
     queryFn: async () => {
@@ -55,14 +55,9 @@ export function PersonalityTestForm() {
         
         if (error) throw error;
 
-        // Set default values for each question
         const defaultValues: FormValues = {};
         (data as QuestionData[]).forEach(question => {
-          if (question.question_type === 'likert_scale') {
-            defaultValues[question.id] = '3'; // Default to middle value for likert scale as string
-          } else {
-            defaultValues[question.id] = ''; // Empty string for other types
-          }
+          defaultValues[question.id] = question.question_type === 'likert_scale' ? '3' : '';
         });
         form.reset(defaultValues);
 
@@ -78,7 +73,6 @@ export function PersonalityTestForm() {
     try {
       setIsSubmitting(true);
 
-      // Get the current user's session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
@@ -96,11 +90,10 @@ export function PersonalityTestForm() {
         return;
       }
 
-      // Save responses
       const responses = Object.entries(data).map(([questionId, answer]) => ({
         profile_id: session.user.id,
         question_id: questionId,
-        answer: answer.toString()
+        answer: String(answer)
       }));
 
       const { error: responseError } = await supabase
@@ -109,7 +102,6 @@ export function PersonalityTestForm() {
 
       if (responseError) throw responseError;
 
-      // Call analyze-personality function
       const { data: analysis, error: analysisError } = await supabase.functions
         .invoke('analyze-personality', {
           body: {
@@ -125,13 +117,11 @@ export function PersonalityTestForm() {
         description: "Your personality test has been analyzed successfully.",
       });
 
-      // Redirect to results page
       navigate('/personality-test?tab=results');
 
     } catch (error: any) {
       console.error('Error submitting test:', error);
       
-      // Handle session expiration specifically
       if (error.message?.includes('session expired') || error.message?.includes('sign in')) {
         toast({
           title: "Session Expired",
@@ -152,7 +142,6 @@ export function PersonalityTestForm() {
     }
   };
 
-  // Handle loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -161,7 +150,6 @@ export function PersonalityTestForm() {
     );
   }
 
-  // Handle error state
   if (error) {
     return (
       <Card className="p-6">
@@ -221,7 +209,7 @@ export function PersonalityTestForm() {
                     min={1}
                     max={5}
                     step={1}
-                    value={[Number(field.value)]}
+                    value={[parseInt(field.value || '3', 10)]}
                     onValueChange={(value) => field.onChange(String(value[0]))}
                     className="my-4"
                   />
