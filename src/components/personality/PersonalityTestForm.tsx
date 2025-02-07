@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,28 +27,24 @@ export function PersonalityTestForm() {
   const { data: questions = [], isLoading, error } = useQuery({
     queryKey: ['personality-test-questions'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('personality_test_questions')
-          .select('*')
-          .order('order_index');
-        
-        if (error) throw error;
-
-        if (!data) return [];
-
-        const questions = data as PersonalityTestQuestion[];
-        const defaultValues: FormValues = {};
-        questions.forEach(question => {
-          defaultValues[question.id] = question.question_type === 'likert_scale' ? '3' : '';
-        });
-        form.reset(defaultValues);
-
-        return questions;
-      } catch (err) {
-        console.error('Error fetching questions:', err);
-        throw err;
+      const { data, error } = await supabase
+        .from('personality_test_questions')
+        .select('*')
+        .order('order_index');
+      
+      if (error) {
+        console.error('Error fetching questions:', error);
+        throw error;
       }
+
+      const questions = data as PersonalityTestQuestion[];
+      const defaultValues: FormValues = {};
+      questions.forEach(question => {
+        defaultValues[question.id] = question.question_type === 'likert_scale' ? '3' : '';
+      });
+      form.reset(defaultValues);
+
+      return questions;
     }
   });
 
@@ -72,10 +67,14 @@ export function PersonalityTestForm() {
     );
   }
 
+  const onSubmit = (data: FormValues) => {
+    handleSubmit(data);
+  };
+
   return (
     <Card className="p-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="space-y-4">
             {questions.map((question) => (
               <QuestionField 
