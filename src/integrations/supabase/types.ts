@@ -917,36 +917,30 @@ export type Database = {
       }
       personality_test_questions: {
         Row: {
-          category: string
           created_at: string
           id: string
           options: Json | null
           order_index: number
           question: string
           question_type: Database["public"]["Enums"]["personality_question_type"]
-          section: string
           updated_at: string
         }
         Insert: {
-          category: string
           created_at?: string
           id?: string
           options?: Json | null
           order_index: number
           question: string
           question_type: Database["public"]["Enums"]["personality_question_type"]
-          section: string
           updated_at?: string
         }
         Update: {
-          category?: string
           created_at?: string
           id?: string
           options?: Json | null
           order_index?: number
           question?: string
           question_type?: Database["public"]["Enums"]["personality_question_type"]
-          section?: string
           updated_at?: string
         }
         Relationships: []
@@ -1036,6 +1030,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      personality_types: {
+        Row: {
+          created_at: string
+          dicotomy_description: string[]
+          id: number
+          strengths: string[]
+          title: string
+          traits: string[]
+          type: string
+          weaknesses: string[]
+          who_they_are: string | null
+        }
+        Insert: {
+          created_at?: string
+          dicotomy_description: string[]
+          id?: number
+          strengths: string[]
+          title: string
+          traits: string[]
+          type: string
+          weaknesses: string[]
+          who_they_are?: string | null
+        }
+        Update: {
+          created_at?: string
+          dicotomy_description?: string[]
+          id?: number
+          strengths?: string[]
+          title?: string
+          traits?: string[]
+          type?: string
+          weaknesses?: string[]
+          who_they_are?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1332,38 +1362,6 @@ export type Database = {
             columns: ["to_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subject_major_mappings: {
-        Row: {
-          created_at: string
-          id: string
-          major_id: string
-          relevance_score: number | null
-          subject: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          major_id: string
-          relevance_score?: number | null
-          subject: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          major_id?: string
-          relevance_score?: number | null
-          subject?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subject_major_mappings_major_id_fkey"
-            columns: ["major_id"]
-            isOneToOne: false
-            referencedRelation: "majors"
             referencedColumns: ["id"]
           },
         ]
@@ -2170,6 +2168,15 @@ export type Database = {
         | "Master"
         | "PhD"
         | "MD"
+      dichotomies:
+        | "Introversion (I)"
+        | "Extraversion (E)"
+        | "Sensing (S)"
+        | "Intuition (N)"
+        | "Thinking (T)"
+        | "Feeling (F)"
+        | "Judging (J)"
+        | "Perceiving (P)"
       event_types:
         | "Coffee Time"
         | "Hackathon"
