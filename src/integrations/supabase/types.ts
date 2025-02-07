@@ -1825,6 +1825,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      generate_personality_test_mappings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       gtrgm_compress: {
         Args: {
           "": unknown
@@ -1864,6 +1868,10 @@ export type Database = {
         Returns: undefined
       }
       match_profiles_with_majors: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      refresh_personality_test_mappings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
