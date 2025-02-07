@@ -1336,6 +1336,38 @@ export type Database = {
           },
         ]
       }
+      subject_major_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          major_id: string
+          relevance_score: number | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          major_id: string
+          relevance_score?: number | null
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          major_id?: string
+          relevance_score?: number | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_major_mappings_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       token_packages: {
         Row: {
           created_at: string
