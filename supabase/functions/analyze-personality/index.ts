@@ -14,6 +14,8 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const callOpenAI = async (prompt: string, retries = 3, backoff = 1000) => {
   for (let i = 0; i < retries; i++) {
     try {
+      console.log(`Making OpenAI API call attempt ${i + 1}/${retries}`);
+      
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -21,7 +23,7 @@ const callOpenAI = async (prompt: string, retries = 3, backoff = 1000) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: "gpt-4o", // Using the correct model name
           messages: [
             { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
             { role: "user", content: prompt }
@@ -38,13 +40,19 @@ const callOpenAI = async (prompt: string, retries = 3, backoff = 1000) => {
       }
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        const errorBody = await response.text();
+        console.error(`OpenAI API error (${response.status}):`, errorBody);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('Successfully received OpenAI API response');
+      return data;
     } catch (error) {
-      if (i === retries - 1) throw error;
       console.error(`Attempt ${i + 1}/${retries} failed:`, error);
+      if (i === retries - 1) {
+        throw new Error(`Failed after ${retries} attempts: ${error.message}`);
+      }
       await delay(backoff);
       backoff *= 2;
     }
@@ -159,4 +167,3 @@ serve(async (req) => {
     )
   }
 })
-
