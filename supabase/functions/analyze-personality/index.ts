@@ -21,6 +21,8 @@ serve(async (req) => {
       throw new Error('Missing required parameters: responses or profileId')
     }
 
+    console.log('Analyzing responses:', responses)
+
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -35,100 +37,117 @@ serve(async (req) => {
     if (mappingsError) throw mappingsError
 
     // Initialize scoring objects
-    const careerScores: { [key: string]: number } = {}
-    const majorScores: { [key: string]: number } = {}
-    const traitScores: { [key: string]: Set<string> } = {}
-
-    console.log('Processing responses:', responses)
-    console.log('Found mappings:', mappings)
+    const careerScores: { [key: string]: { score: number; reasons: Set<string> } } = {}
+    const majorScores: { [key: string]: { score: number; reasons: Set<string> } } = {}
+    const traitEvidence: { [key: string]: Set<string> } = {}
 
     // Process each response
     for (const [questionId, answer] of Object.entries(responses)) {
-      // Convert numeric answers to strings for comparison
-      const answerValue = String(answer)
-      
-      const relevantMappings = mappings.filter(m => 
-        m.question_id === questionId && 
-        m.answer_value === answerValue
-      )
+      const answerStr = String(answer)
+      console.log(`Processing answer for question ${questionId}: ${answerStr}`)
 
-      console.log(`Processing question ${questionId} with answer ${answerValue}`)
-      console.log('Relevant mappings:', relevantMappings)
+      // Find relevant mappings for this question and answer
+      const relevantMappings = mappings.filter(m => {
+        const answerMatch = m.answer_value === answerStr
+        console.log(`Comparing mapping answer "${m.answer_value}" with response "${answerStr}": ${answerMatch}`)
+        return m.question_id === questionId && answerMatch
+      })
+
+      console.log(`Found ${relevantMappings.length} relevant mappings`)
 
       // Update scores based on mappings
       for (const mapping of relevantMappings) {
-        if (!mapping.recommendation_id) continue;
+        if (!mapping.recommendation_id) continue
+
+        const reason = `Based on your response to question ${questionId}`
         
         switch (mapping.recommendation_type) {
           case 'career':
-            careerScores[mapping.recommendation_id] = 
-              (careerScores[mapping.recommendation_id] || 0) + mapping.weight
-            break
-          case 'major':
-            majorScores[mapping.recommendation_id] = 
-              (majorScores[mapping.recommendation_id] || 0) + mapping.weight
-            break
-          case 'trait':
-            if (!traitScores[mapping.recommendation_id]) {
-              traitScores[mapping.recommendation_id] = new Set()
+            if (!careerScores[mapping.recommendation_id]) {
+              careerScores[mapping.recommendation_id] = { score: 0, reasons: new Set() }
             }
-            traitScores[mapping.recommendation_id].add(answerValue)
+            careerScores[mapping.recommendation_id].score += mapping.weight
+            careerScores[mapping.recommendation_id].reasons.add(reason)
+            break
+
+          case 'major':
+            if (!majorScores[mapping.recommendation_id]) {
+              majorScores[mapping.recommendation_id] = { score: 0, reasons: new Set() }
+            }
+            majorScores[mapping.recommendation_id].score += mapping.weight
+            majorScores[mapping.recommendation_id].reasons.add(reason)
+            break
+
+          case 'trait':
+            if (!traitEvidence[mapping.recommendation_id]) {
+              traitEvidence[mapping.recommendation_id] = new Set()
+            }
+            traitEvidence[mapping.recommendation_id].add(answerStr)
             break
         }
       }
     }
 
-    // Get career recommendations
-    const { data: careerData, error: careerError } = await supabaseClient
+    console.log('Final scores:', {
+      careers: careerScores,
+      majors: majorScores,
+      traits: traitEvidence
+    })
+
+    // Get career details for recommendations
+    const careerIds = Object.keys(careerScores)
+    const { data: careers, error: careersError } = await supabaseClient
       .from('careers')
       .select('id, title, description')
-      .in('id', Object.keys(careerScores))
+      .in('id', careerIds)
 
-    if (careerError) throw careerError
+    if (careersError) throw careersError
 
-    // Get major recommendations
-    const { data: majorData, error: majorError } = await supabaseClient
+    // Get major details for recommendations
+    const majorIds = Object.keys(majorScores)
+    const { data: majors, error: majorsError } = await supabaseClient
       .from('majors')
       .select('id, title, description')
-      .in('id', Object.keys(majorScores))
+      .in('id', majorIds)
 
-    if (majorError) throw majorError
+    if (majorsError) throw majorsError
 
     // Format career recommendations
-    const careerRecommendations = careerData
+    const careerRecommendations = careers
       .map(career => ({
         id: career.id,
         title: career.title,
         description: career.description,
-        score: careerScores[career.id],
-        reasoning: `Based on your responses, this career aligns with your interests and preferences with a score of ${careerScores[career.id]}.`
+        score: careerScores[career.id].score,
+        reasoning: Array.from(careerScores[career.id].reasons).join('. ')
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
 
     // Format major recommendations
-    const majorRecommendations = majorData
+    const majorRecommendations = majors
       .map(major => ({
         id: major.id,
         title: major.title,
         description: major.description,
-        score: majorScores[major.id],
-        reasoning: `This academic path matches your indicated preferences and aptitudes with a score of ${majorScores[major.id]}.`
+        score: majorScores[major.id].score,
+        reasoning: Array.from(majorScores[major.id].reasons).join('. ')
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
 
-    // Format personality traits
-    const personalityTraits = Object.entries(traitScores)
-      .filter(([_, answers]) => answers.size >= 2) // Require at least 2 answers supporting a trait
+    // Format personality traits (require at least 2 supporting answers)
+    const personalityTraits = Object.entries(traitEvidence)
+      .filter(([_, evidence]) => evidence.size >= 2)
       .map(([trait, _]) => trait)
 
+    // Default skill development suggestions
     const skillDevelopment = [
       "Critical thinking and problem-solving",
       "Communication and interpersonal skills",
       "Technical proficiency",
       "Leadership and teamwork",
-      "Time management"
+      "Time management and organization"
     ]
 
     const results = {
@@ -179,3 +198,4 @@ serve(async (req) => {
     )
   }
 })
+
