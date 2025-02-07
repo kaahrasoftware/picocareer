@@ -9,6 +9,49 @@ const corsHeaders = {
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const callOpenAI = async (prompt: string, retries = 3, backoff = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7
+        })
+      });
+
+      if (response.status === 429) { // Rate limit error
+        console.log(`Rate limited, attempt ${i + 1}/${retries}. Waiting ${backoff}ms before retry...`);
+        await delay(backoff);
+        backoff *= 2; // Exponential backoff
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      console.error(`Attempt ${i + 1}/${retries} failed:`, error);
+      await delay(backoff);
+      backoff *= 2;
+    }
+  }
+  throw new Error('Max retries reached for OpenAI API call');
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -50,28 +93,8 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured')
     }
 
-    // Call OpenAI API for analysis
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7
-      })
-    })
-
-    if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`)
-    }
-
-    const analysis = await openaiResponse.json()
+    // Call OpenAI API with retry logic
+    const analysis = await callOpenAI(prompt);
     
     if (!analysis?.choices?.[0]?.message?.content) {
       throw new Error('Invalid response from OpenAI API')
@@ -136,3 +159,4 @@ serve(async (req) => {
     )
   }
 })
+
