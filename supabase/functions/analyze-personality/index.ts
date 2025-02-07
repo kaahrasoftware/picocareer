@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -46,19 +46,19 @@ serve(async (req) => {
       }
     `
 
-    if (!DEEPSEEK_API_KEY) {
-      throw new Error('DeepSeek API key is not configured')
+    if (!OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured')
     }
 
-    // Call DeepSeek API for analysis
-    const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    // Call OpenAI API for analysis
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
           { role: "user", content: prompt }
@@ -67,14 +67,14 @@ serve(async (req) => {
       })
     })
 
-    if (!deepseekResponse.ok) {
-      throw new Error(`DeepSeek API error: ${deepseekResponse.statusText}`)
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`)
     }
 
-    const analysis = await deepseekResponse.json()
+    const analysis = await openaiResponse.json()
     
     if (!analysis?.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from DeepSeek API')
+      throw new Error('Invalid response from OpenAI API')
     }
 
     // Parse the response to extract structured data
@@ -82,7 +82,7 @@ serve(async (req) => {
     try {
       parsedAnalysis = JSON.parse(analysis.choices[0].message.content)
     } catch (parseError) {
-      console.error('Error parsing DeepSeek response:', parseError)
+      console.error('Error parsing OpenAI response:', parseError)
       throw new Error('Failed to parse analysis results')
     }
 

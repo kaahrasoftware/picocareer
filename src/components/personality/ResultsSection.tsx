@@ -103,7 +103,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           </ScrollArea>
         </Card>
 
-        <Card className="p-6 md:col-span-2">
+        <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Recommended Academic Majors</h3>
           <ScrollArea className="h-[200px] rounded-md">
             <ul className="space-y-4">
@@ -112,6 +112,17 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
                   <span className="font-medium">{major.title}</span>
                   <p className="text-muted-foreground mt-1">{major.reasoning}</p>
                 </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Recommended Skill Development</h3>
+          <ScrollArea className="h-[200px] rounded-md">
+            <ul className="space-y-2">
+              {results.skill_development.map((skill: string, index: number) => (
+                <li key={index} className="text-sm">{skill}</li>
               ))}
             </ul>
           </ScrollArea>

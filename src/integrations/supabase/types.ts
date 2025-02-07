@@ -961,6 +961,7 @@ export type Database = {
           personality_traits: Json
           profile_id: string
           raw_analysis: string | null
+          skill_development: Json | null
           updated_at: string
         }
         Insert: {
@@ -971,6 +972,7 @@ export type Database = {
           personality_traits: Json
           profile_id: string
           raw_analysis?: string | null
+          skill_development?: Json | null
           updated_at?: string
         }
         Update: {
@@ -981,6 +983,7 @@ export type Database = {
           personality_traits?: Json
           profile_id?: string
           raw_analysis?: string | null
+          skill_development?: Json | null
           updated_at?: string
         }
         Relationships: [
