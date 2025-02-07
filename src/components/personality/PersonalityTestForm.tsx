@@ -32,7 +32,9 @@ interface FormValues {
 export function PersonalityTestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const form = useForm<FormValues>();
+  const form = useForm<FormValues>({
+    defaultValues: {} // This will be populated when questions are loaded
+  });
 
   // Fetch questions from the database
   const { data: questions = [], isLoading } = useQuery({
@@ -44,6 +46,18 @@ export function PersonalityTestForm() {
         .order('order_index');
       
       if (error) throw error;
+
+      // Set default values for each question
+      const defaultValues: FormValues = {};
+      data.forEach(question => {
+        if (question.question_type === 'likert_scale') {
+          defaultValues[question.id] = 3; // Default to middle value for likert scale
+        } else {
+          defaultValues[question.id] = ''; // Empty string for other types
+        }
+      });
+      form.reset(defaultValues);
+
       return data;
     }
   });
@@ -93,7 +107,7 @@ export function PersonalityTestForm() {
       });
 
       // Redirect to results page
-      window.location.href = `/profile?tab=results`;
+      window.location.href = '/personality-test?tab=results';
 
     } catch (error: any) {
       console.error('Error submitting test:', error);
@@ -128,6 +142,7 @@ export function PersonalityTestForm() {
                 <FormLabel>{question.question}</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
+                  value={field.value}
                   defaultValue={field.value}
                 >
                   <FormControl>
@@ -162,7 +177,7 @@ export function PersonalityTestForm() {
                     min={1}
                     max={5}
                     step={1}
-                    value={[field.value || 3]}
+                    value={[field.value]}
                     onValueChange={(value) => field.onChange(value[0])}
                     className="my-4"
                   />
