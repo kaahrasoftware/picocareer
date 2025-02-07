@@ -874,6 +874,47 @@ export type Database = {
           },
         ]
       }
+      personality_test_answer_mappings: {
+        Row: {
+          answer_value: string
+          created_at: string
+          id: string
+          question_id: string | null
+          recommendation_id: string | null
+          recommendation_type: Database["public"]["Enums"]["recommendation_type"]
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          answer_value: string
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          recommendation_id?: string | null
+          recommendation_type: Database["public"]["Enums"]["recommendation_type"]
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          answer_value?: string
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          recommendation_id?: string | null
+          recommendation_type?: Database["public"]["Enums"]["recommendation_type"]
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_test_answer_mappings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "personality_test_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personality_test_questions: {
         Row: {
           category: string
@@ -2160,6 +2201,7 @@ export type Database = {
         | "multiple_choice"
         | "likert_scale"
         | "open_ended"
+      recommendation_type: "career" | "major" | "trait"
       school_type: "High School" | "College" | "University" | "Other"
       session_type:
         | "Know About my Career"
