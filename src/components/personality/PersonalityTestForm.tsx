@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -26,17 +25,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { useQuery } from "@tanstack/react-query";
 
-interface FormValues {
-  [key: string]: string | number;
-}
+type FormValues = {
+  [key: string]: string;
+};
+
+type QuestionData = {
+  id: string;
+  question: string;
+  question_type: 'multiple_choice' | 'likert_scale' | 'open_ended';
+  options?: string[];
+  order_index: number;
+};
 
 export function PersonalityTestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const form = useForm<FormValues>({
-    defaultValues: {} // This will be populated when questions are loaded
-  });
+  const form = useForm<FormValues>();
 
   // Fetch questions from the database
   const { data: questions = [], isLoading, error } = useQuery({
@@ -52,16 +57,16 @@ export function PersonalityTestForm() {
 
         // Set default values for each question
         const defaultValues: FormValues = {};
-        data.forEach(question => {
+        (data as QuestionData[]).forEach(question => {
           if (question.question_type === 'likert_scale') {
-            defaultValues[question.id] = 3; // Default to middle value for likert scale
+            defaultValues[question.id] = '3'; // Default to middle value for likert scale as string
           } else {
             defaultValues[question.id] = ''; // Empty string for other types
           }
         });
         form.reset(defaultValues);
 
-        return data;
+        return data as QuestionData[];
       } catch (err) {
         console.error('Error fetching questions:', err);
         throw err;
@@ -168,7 +173,7 @@ export function PersonalityTestForm() {
     );
   }
 
-  const renderQuestionField = (question: any) => {
+  const renderQuestionField = (question: QuestionData) => {
     switch (question.question_type) {
       case 'multiple_choice':
         return (
@@ -179,8 +184,8 @@ export function PersonalityTestForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{question.question}</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   value={field.value}
                   defaultValue={field.value}
                 >
@@ -190,7 +195,7 @@ export function PersonalityTestForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {question.options?.map((option: string) => (
+                    {question.options?.map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
@@ -216,8 +221,8 @@ export function PersonalityTestForm() {
                     min={1}
                     max={5}
                     step={1}
-                    value={[field.value]}
-                    onValueChange={(value) => field.onChange(value[0])}
+                    value={[Number(field.value)]}
+                    onValueChange={(value) => field.onChange(String(value[0]))}
                     className="my-4"
                   />
                 </FormControl>

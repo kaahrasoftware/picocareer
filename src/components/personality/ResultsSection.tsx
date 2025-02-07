@@ -11,6 +11,13 @@ interface ResultsSectionProps {
   profileId: string;
 }
 
+type TestResult = {
+  personality_traits: string[];
+  career_matches: { title: string; reasoning: string }[];
+  major_matches: { title: string; reasoning: string }[];
+  skill_development: string[];
+};
+
 export function ResultsSection({ profileId }: ResultsSectionProps) {
   const navigate = useNavigate();
 
@@ -26,7 +33,15 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      const parsedResults: TestResult = {
+        personality_traits: JSON.parse(data.personality_traits as string),
+        career_matches: JSON.parse(data.career_matches as string),
+        major_matches: JSON.parse(data.major_matches as string),
+        skill_development: JSON.parse(data.skill_development as string)
+      };
+      
+      return parsedResults;
     },
   });
 
@@ -52,10 +67,6 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     );
   }
 
-  const personalityTraits = JSON.parse(results.personality_traits);
-  const careerMatches = JSON.parse(results.career_matches);
-  const majorMatches = JSON.parse(results.major_matches);
-
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">Your Personality Analysis Results</h2>
@@ -65,7 +76,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           <h3 className="text-lg font-semibold mb-4">Key Personality Traits</h3>
           <ScrollArea className="h-[200px] rounded-md">
             <ul className="space-y-2">
-              {personalityTraits.map((trait: string, index: number) => (
+              {results.personality_traits.map((trait: string, index: number) => (
                 <li key={index} className="text-sm">{trait}</li>
               ))}
             </ul>
@@ -76,7 +87,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           <h3 className="text-lg font-semibold mb-4">Recommended Career Paths</h3>
           <ScrollArea className="h-[200px] rounded-md">
             <ul className="space-y-4">
-              {careerMatches.map((career: { title: string; reasoning: string }, index: number) => (
+              {results.career_matches.map((career, index) => (
                 <li key={index} className="text-sm">
                   <span className="font-medium">{career.title}</span>
                   <p className="text-muted-foreground mt-1">{career.reasoning}</p>
@@ -90,7 +101,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           <h3 className="text-lg font-semibold mb-4">Recommended Academic Majors</h3>
           <ScrollArea className="h-[200px] rounded-md">
             <ul className="space-y-4">
-              {majorMatches.map((major: { title: string; reasoning: string }, index: number) => (
+              {results.major_matches.map((major, index) => (
                 <li key={index} className="text-sm">
                   <span className="font-medium">{major.title}</span>
                   <p className="text-muted-foreground mt-1">{major.reasoning}</p>
