@@ -23,7 +23,7 @@ const callOpenAI = async (prompt: string, retries = 3, backoff = 1000) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "gpt-4o", // Using the correct model name
+          model: "gpt-4o-mini", // Updated to use the correct model name
           messages: [
             { role: "system", content: "You are a career counseling expert specializing in personality analysis and career guidance. Always return responses in valid JSON format." },
             { role: "user", content: prompt }
