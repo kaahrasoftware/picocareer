@@ -57,7 +57,7 @@ serve(async (req) => {
 
       // Update scores based on mappings
       for (const mapping of relevantMappings) {
-        if (!mapping.recommendation_id) continue
+        if (!mapping.recommendation_id && mapping.recommendation_type !== 'trait') continue
 
         const reason = `Based on your response to question ${questionId}`
         
@@ -79,10 +79,10 @@ serve(async (req) => {
             break
 
           case 'trait':
-            if (!traitEvidence[mapping.recommendation_id]) {
-              traitEvidence[mapping.recommendation_id] = new Set()
+            if (!traitEvidence[answerStr]) {
+              traitEvidence[answerStr] = new Set()
             }
-            traitEvidence[mapping.recommendation_id].add(answerStr)
+            traitEvidence[answerStr].add(reason)
             break
         }
       }
