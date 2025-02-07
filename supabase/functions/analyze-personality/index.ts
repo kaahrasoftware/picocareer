@@ -44,16 +44,21 @@ serve(async (req) => {
 
     // Process each response
     for (const [questionId, answer] of Object.entries(responses)) {
+      // Convert numeric answers to strings for comparison
+      const answerValue = String(answer)
+      
       const relevantMappings = mappings.filter(m => 
         m.question_id === questionId && 
-        m.answer_value === String(answer)
+        m.answer_value === answerValue
       )
 
-      console.log(`Processing question ${questionId} with answer ${answer}`)
+      console.log(`Processing question ${questionId} with answer ${answerValue}`)
       console.log('Relevant mappings:', relevantMappings)
 
       // Update scores based on mappings
       for (const mapping of relevantMappings) {
+        if (!mapping.recommendation_id) continue;
+        
         switch (mapping.recommendation_type) {
           case 'career':
             careerScores[mapping.recommendation_id] = 
@@ -67,7 +72,7 @@ serve(async (req) => {
             if (!traitScores[mapping.recommendation_id]) {
               traitScores[mapping.recommendation_id] = new Set()
             }
-            traitScores[mapping.recommendation_id].add(answer as string)
+            traitScores[mapping.recommendation_id].add(answerValue)
             break
         }
       }
@@ -92,21 +97,25 @@ serve(async (req) => {
     // Format career recommendations
     const careerRecommendations = careerData
       .map(career => ({
+        id: career.id,
         title: career.title,
-        reasoning: `Based on your responses, this career aligns with your interests and preferences with a score of ${careerScores[career.id]}.`,
-        description: career.description
+        description: career.description,
+        score: careerScores[career.id],
+        reasoning: `Based on your responses, this career aligns with your interests and preferences with a score of ${careerScores[career.id]}.`
       }))
-      .sort((a, b) => careerScores[b.id] - careerScores[a.id])
+      .sort((a, b) => b.score - a.score)
       .slice(0, 5)
 
     // Format major recommendations
     const majorRecommendations = majorData
       .map(major => ({
+        id: major.id,
         title: major.title,
-        reasoning: `This academic path matches your indicated preferences and aptitudes with a score of ${majorScores[major.id]}.`,
-        description: major.description
+        description: major.description,
+        score: majorScores[major.id],
+        reasoning: `This academic path matches your indicated preferences and aptitudes with a score of ${majorScores[major.id]}.`
       }))
-      .sort((a, b) => majorScores[b.id] - majorScores[a.id])
+      .sort((a, b) => b.score - a.score)
       .slice(0, 5)
 
     // Format personality traits
@@ -114,11 +123,19 @@ serve(async (req) => {
       .filter(([_, answers]) => answers.size >= 2) // Require at least 2 answers supporting a trait
       .map(([trait, _]) => trait)
 
+    const skillDevelopment = [
+      "Critical thinking and problem-solving",
+      "Communication and interpersonal skills",
+      "Technical proficiency",
+      "Leadership and teamwork",
+      "Time management"
+    ]
+
     const results = {
       personality_traits: JSON.stringify(personalityTraits),
       career_matches: JSON.stringify(careerRecommendations),
       major_matches: JSON.stringify(majorRecommendations),
-      skill_development: JSON.stringify([]) // This could be enhanced based on the recommendations
+      skill_development: JSON.stringify(skillDevelopment)
     }
 
     console.log('Storing results:', results)
@@ -140,7 +157,7 @@ serve(async (req) => {
           personalityTraits,
           careerRecommendations,
           majorRecommendations,
-          skillDevelopment: []
+          skillDevelopment
         }
       }),
       { 
