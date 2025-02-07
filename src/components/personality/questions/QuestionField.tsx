@@ -9,7 +9,7 @@ type QuestionData = {
   id: string;
   question: string;
   question_type: 'multiple_choice' | 'likert_scale' | 'open_ended';
-  options?: string[];
+  options?: string[] | { [key: string]: any };
   order_index: number;
 };
 
@@ -19,6 +19,13 @@ interface QuestionFieldProps {
 }
 
 export function QuestionField({ question, form }: QuestionFieldProps) {
+  // Convert options to array if it's not already
+  const optionsArray = Array.isArray(question.options) 
+    ? question.options 
+    : question.options 
+      ? Object.values(question.options) 
+      : [];
+
   switch (question.question_type) {
     case 'multiple_choice':
       return (
@@ -40,7 +47,7 @@ export function QuestionField({ question, form }: QuestionFieldProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {question.options?.map((option) => (
+                  {optionsArray.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>

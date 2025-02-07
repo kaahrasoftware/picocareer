@@ -1036,6 +1036,7 @@ export type Database = {
           created_at: string
           dicotomy_description: string[]
           id: number
+          keywords: string[] | null
           strengths: string[]
           title: string
           traits: string[]
@@ -1047,6 +1048,7 @@ export type Database = {
           created_at?: string
           dicotomy_description: string[]
           id?: number
+          keywords?: string[] | null
           strengths: string[]
           title: string
           traits: string[]
@@ -1058,6 +1060,7 @@ export type Database = {
           created_at?: string
           dicotomy_description?: string[]
           id?: number
+          keywords?: string[] | null
           strengths?: string[]
           title?: string
           traits?: string[]
