@@ -49,8 +49,15 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
       const result = data as PersonalityTestResult;
       
       try {
+        // Parse the outer array structure and get the first element
+        const parsedPersonalityTraits = JSON.parse(result.personality_traits);
+        // If it's a nested array, take the first element, otherwise use as is
+        const traits = Array.isArray(parsedPersonalityTraits[0]) ? 
+          parsedPersonalityTraits[0] : 
+          parsedPersonalityTraits;
+
         const parsedResults: TestResult = {
-          personality_traits: JSON.parse(result.personality_traits),
+          personality_traits: traits,
           career_matches: JSON.parse(result.career_matches || '[]'),
           major_matches: JSON.parse(result.major_matches || '[]'),
           skill_development: JSON.parse(result.skill_development || '[]')
@@ -204,4 +211,3 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     </div>
   );
 }
-
