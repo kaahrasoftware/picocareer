@@ -50,7 +50,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
       
       try {
         const parsedResults: TestResult = {
-          personality_traits: JSON.parse(result.personality_traits || '[]'),
+          personality_traits: JSON.parse(result.personality_traits),
           career_matches: JSON.parse(result.career_matches || '[]'),
           major_matches: JSON.parse(result.major_matches || '[]'),
           skill_development: JSON.parse(result.skill_development || '[]')
@@ -204,3 +204,4 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     </div>
   );
 }
+
