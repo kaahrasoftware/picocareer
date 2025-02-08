@@ -1,7 +1,5 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -10,6 +8,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { PersonalityTab } from "./tabs/PersonalityTab";
+import { CareersTab } from "./tabs/CareersTab";
+import { MajorsTab } from "./tabs/MajorsTab";
+import { SkillsTab } from "./tabs/SkillsTab";
 
 interface ResultsSectionProps {
   profileId: string;
@@ -22,14 +24,7 @@ interface TestResult {
   skill_development: string[];
 }
 
-type PersonalityTestResult = {
-  personality_traits: string;
-  career_matches: string;
-  major_matches: string;
-  skill_development: string;
-}
-
-type PersonalityType = {
+export type PersonalityType = {
   type: string;
   title: string;
   traits: string[];
@@ -181,120 +176,22 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         </TabsList>
 
         <TabsContent value="personality">
-          <Card className="p-6">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">{results.typeDetails.title} ({results.typeDetails.type})</h3>
-                <p className="text-sm text-muted-foreground mb-4">{results.typeDetails.who_they_are}</p>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Key Characteristics</h4>
-                <ScrollArea className="h-[100px] rounded-md">
-                  <ul className="space-y-2">
-                    {results.typeDetails.dicotomy_description.map((trait: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="font-medium text-sm mt-0.5">•</span>
-                        <span className="text-sm">{trait}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Strengths</h4>
-                  <ScrollArea className="h-[150px] rounded-md">
-                    <ul className="space-y-2">
-                      {results.typeDetails.strengths.map((strength: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="font-medium text-sm mt-0.5">•</span>
-                          <span className="text-sm">{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </ScrollArea>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">Areas for Growth</h4>
-                  <ScrollArea className="h-[150px] rounded-md">
-                    <ul className="space-y-2">
-                      {results.typeDetails.weaknesses.map((weakness: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="font-medium text-sm mt-0.5">•</span>
-                          <span className="text-sm">{weakness}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </ScrollArea>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Your Personality Traits</h4>
-                <ScrollArea className="h-[150px] rounded-md">
-                  <ul className="space-y-2">
-                    {results.personality_traits.map((trait: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="font-medium text-sm mt-0.5">•</span>
-                        <span className="text-sm">{trait}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              </div>
-            </div>
-          </Card>
+          <PersonalityTab 
+            typeDetails={results.typeDetails}
+            personalityTraits={results.personality_traits}
+          />
         </TabsContent>
 
         <TabsContent value="careers">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Recommended Career Paths</h3>
-            <ScrollArea className="h-[400px] rounded-md">
-              <ul className="space-y-6">
-                {results.career_matches.map((career, index) => (
-                  <li key={index} className="border-b pb-4 last:border-0">
-                    <h4 className="font-semibold text-base">{career.title}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">{career.reasoning}</p>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-          </Card>
+          <CareersTab careers={results.career_matches} />
         </TabsContent>
 
         <TabsContent value="majors">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Recommended Academic Majors</h3>
-            <ScrollArea className="h-[400px] rounded-md">
-              <ul className="space-y-6">
-                {results.major_matches.map((major, index) => (
-                  <li key={index} className="border-b pb-4 last:border-0">
-                    <h4 className="font-semibold text-base">{major.title}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">{major.reasoning}</p>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-          </Card>
+          <MajorsTab majors={results.major_matches} />
         </TabsContent>
 
         <TabsContent value="skills">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Recommended Skill Development</h3>
-            <ScrollArea className="h-[400px] rounded-md">
-              <ul className="space-y-4">
-                {results.skill_development.map((skill: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="font-medium text-sm mt-0.5">•</span>
-                    <span className="text-sm">{skill}</span>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-          </Card>
+          <SkillsTab skills={results.skill_development} />
         </TabsContent>
       </Tabs>
     </div>
