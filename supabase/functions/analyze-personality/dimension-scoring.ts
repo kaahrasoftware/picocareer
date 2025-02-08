@@ -1,4 +1,3 @@
-
 import { DimensionScores } from './types.ts';
 
 export async function calculateDimensionScores(
@@ -94,12 +93,56 @@ export async function calculateDimensionScores(
   return scores;
 }
 
-export function getPersonalityType(scores: DimensionScores): string {
-  console.log('Calculating personality type from scores:', scores);
-  return (
+export function getPersonalityType(scores: DimensionScores): string[] {
+  console.log('Calculating personality types from scores:', scores);
+  
+  const margin = 2; // Threshold for considering alternate types
+  const types: string[] = [];
+  
+  // Calculate primary type
+  const primaryType = 
     (scores.e_i_score >= 0 ? 'E' : 'I') +
     (scores.s_n_score >= 0 ? 'S' : 'N') +
     (scores.t_f_score >= 0 ? 'T' : 'F') +
-    (scores.j_p_score >= 0 ? 'J' : 'P')
-  );
+    (scores.j_p_score >= 0 ? 'J' : 'P');
+  
+  types.push(primaryType);
+  
+  // Calculate alternate types based on close scores
+  const closeToZero = {
+    ei: Math.abs(scores.e_i_score) <= margin,
+    sn: Math.abs(scores.s_n_score) <= margin,
+    tf: Math.abs(scores.t_f_score) <= margin,
+    jp: Math.abs(scores.j_p_score) <= margin
+  };
+  
+  // Generate alternate types for scores close to zero
+  if (closeToZero.ei) {
+    types.push(
+      ('I' + primaryType.slice(1)),
+      ('E' + primaryType.slice(1))
+    );
+  }
+  if (closeToZero.sn) {
+    types.push(
+      (primaryType[0] + 'N' + primaryType.slice(2)),
+      (primaryType[0] + 'S' + primaryType.slice(2))
+    );
+  }
+  if (closeToZero.tf) {
+    types.push(
+      (primaryType.slice(0, 2) + 'F' + primaryType.slice(3)),
+      (primaryType.slice(0, 2) + 'T' + primaryType.slice(3))
+    );
+  }
+  if (closeToZero.jp) {
+    types.push(
+      (primaryType.slice(0, 3) + 'P'),
+      (primaryType.slice(0, 3) + 'J')
+    );
+  }
+  
+  // Remove duplicates and get top 3 unique types
+  const uniqueTypes = Array.from(new Set(types));
+  return uniqueTypes.slice(0, 3);
 }

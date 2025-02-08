@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -93,16 +92,28 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
 
         <TabsContent value="personality">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Key Personality Traits</h3>
+            <h3 className="text-lg font-semibold mb-4">Your Top 3 Personality Types</h3>
             <ScrollArea className="h-[400px] rounded-md">
-              <ul className="space-y-4">
-                {results.personality_traits.map((trait: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="font-medium text-sm mt-0.5">•</span>
-                    <span className="text-sm">{trait}</span>
-                  </li>
+              <div className="space-y-6">
+                {results.personality_traits.map((type: string, index: number) => (
+                  <div key={index} className="border-b pb-4 last:border-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-semibold text-lg">{type}</span>
+                      {index === 0 && (
+                        <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
+                          Primary Match
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {index === 0 
+                        ? "This is your primary personality type based on your responses."
+                        : `This is an alternate personality type that also matches your response pattern${index === 1 ? ", with some traits being closely balanced." : "."}`
+                      }
+                    </p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </ScrollArea>
           </Card>
         </TabsContent>
