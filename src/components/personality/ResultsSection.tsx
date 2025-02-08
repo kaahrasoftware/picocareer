@@ -65,14 +65,20 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         (dimensionScores.t_f_score >= 0 ? 'T' : 'F') +
         (dimensionScores.j_p_score >= 0 ? 'J' : 'P');
 
+      console.log('Calculated personality type:', personalityType); // Debug log
+
       // Get personality type details
       const { data: typeDetails, error: typeError } = await supabase
         .from('personality_types')
         .select('*')
-        .eq('type', personalityType)
+        .eq('type', personalityType.trim())
         .maybeSingle();
 
-      if (typeError) throw typeError;
+      if (typeError) {
+        console.error('Error fetching personality type:', typeError);
+        throw typeError;
+      }
+      
       if (!typeDetails) {
         console.error(`No personality type details found for type ${personalityType}`);
         throw new Error(`Personality type ${personalityType} not found in database`);
@@ -256,4 +262,3 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     </div>
   );
 }
-
