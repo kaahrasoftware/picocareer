@@ -144,7 +144,7 @@ export type Database = {
           id: string
           image_url: string | null
           important_note: string | null
-          industry: string | null
+          industry: string[] | null
           job_outlook: string | null
           keywords: string[] | null
           new_career: boolean | null
@@ -175,7 +175,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           important_note?: string | null
-          industry?: string | null
+          industry?: string[] | null
           job_outlook?: string | null
           keywords?: string[] | null
           new_career?: boolean | null
@@ -206,7 +206,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           important_note?: string | null
-          industry?: string | null
+          industry?: string[] | null
           job_outlook?: string | null
           keywords?: string[] | null
           new_career?: boolean | null

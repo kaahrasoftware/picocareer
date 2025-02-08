@@ -1,9 +1,10 @@
+
 import { Building2, Briefcase, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CareerHeaderProps {
   title: string;
-  industry?: string;
+  industry?: string[] | string | null;
   salary_range?: string;
   image_url?: string;
   profiles_count?: number;
@@ -18,6 +19,13 @@ export function CareerHeader({
   profiles_count = 0,
   onImageClick 
 }: CareerHeaderProps) {
+  // Convert industry to array and handle all possible types
+  const industries = Array.isArray(industry) 
+    ? industry 
+    : typeof industry === 'string' 
+      ? [industry]
+      : [];
+
   return (
     <div className="flex items-start gap-4 mb-4">
       {image_url ? (
@@ -51,10 +59,10 @@ export function CareerHeader({
             {profiles_count}
           </Badge>
         </div>
-        {industry && (
+        {industries.length > 0 && (
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Building2 className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{industry}</span>
+            <span className="truncate">{industries.join(", ")}</span>
           </div>
         )}
         {salary_range && (
