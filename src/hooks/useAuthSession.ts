@@ -19,12 +19,22 @@ export function useAuthSession() {
         if (error) {
           // Handle session expiration error
           if (error.message?.includes('Invalid Refresh Token') || 
-              error.message?.includes('session expired') ||
-              error.message?.includes('JWT expired')) {
+              error.message?.includes('session expired')) {
             console.error('Session expired:', error);
             
-            // Clear auth state
-            await handleSessionExpiration();
+            // Clear auth data
+            await supabase.auth.signOut();
+            queryClient.clear();
+            
+            // Show toast notification
+            toast({
+              title: "Session Expired",
+              description: "Your session has expired. Please sign in again.",
+              variant: "destructive",
+            });
+            
+            // Redirect to auth page
+            navigate("/auth");
             return null;
           }
           throw error;
@@ -40,33 +50,6 @@ export function useAuthSession() {
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Handle session expiration
-  const handleSessionExpiration = async () => {
-    try {
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-      
-      // Clear any auth-related data from localStorage
-      const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-      localStorage.removeItem(key);
-      
-      // Clear all queries from cache
-      queryClient.clear();
-      
-      // Show toast notification
-      toast({
-        title: "Session Expired",
-        description: "Your session has expired. Please sign in again.",
-        variant: "destructive",
-      });
-      
-      // Redirect to auth page
-      navigate("/auth");
-    } catch (error) {
-      console.error('Error handling session expiration:', error);
-    }
-  };
-
   // Set up auth state change listener
   supabase.auth.onAuthStateChange((event, newSession) => {
     if (event === 'SIGNED_IN') {
@@ -76,10 +59,6 @@ export function useAuthSession() {
       queryClient.setQueryData(['auth-session'], null);
       queryClient.removeQueries({ queryKey: ['profile'] });
       queryClient.removeQueries({ queryKey: ['notifications'] });
-    }
-    // Handle token refresh error
-    else if (event === 'TOKEN_REFRESHED' && !newSession) {
-      handleSessionExpiration();
     }
   });
 

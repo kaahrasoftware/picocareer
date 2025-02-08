@@ -29,18 +29,8 @@ type PersonalityTestResult = {
   skill_development: string;
 }
 
-interface PersonalityType {
-  type: string;
-  title: string;
-  dicotomy_description: string[];
-  who_they_are: string;
-  traits: string[];
-  strengths: string[];
-  weaknesses: string[];
-}
-
 export function ResultsSection({ profileId }: ResultsSectionProps) {
-  const { data: results, isLoading: resultsLoading } = useQuery({
+  const { data: results, isLoading, error } = useQuery({
     queryKey: ['personality-test-results', profileId],
     queryFn: async () => {
       if (!profileId) throw new Error('Profile ID is required');
@@ -80,21 +70,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     },
   });
 
-  const { data: personalityTypes, isLoading: typesLoading } = useQuery({
-    queryKey: ['personality-types', results?.personality_traits],
-    enabled: !!results?.personality_traits,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('personality_types')
-        .select('*')
-        .in('type', results.personality_traits);
-
-      if (error) throw error;
-      return data as PersonalityType[];
-    },
-  });
-
-  if (resultsLoading || typesLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -102,7 +78,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     );
   }
 
-  if (!results || !personalityTypes) {
+  if (error || !results) {
     return (
       <div className="text-center py-8">
         <p>No test results found. Please take the personality test first.</p>
@@ -125,12 +101,9 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         <TabsContent value="personality">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Your Personality Types</h3>
-            <ScrollArea className="h-[600px] rounded-md">
-              <div className="grid gap-6">
+            <ScrollArea className="h-[400px] rounded-md">
+              <div className="grid gap-4">
                 {results.personality_traits.map((type: string, index: number) => {
-                  const personalityType = personalityTypes.find(pt => pt.type === type);
-                  if (!personalityType) return null;
-
                   const rankConfig = {
                     0: {
                       icon: Diamond,
@@ -158,63 +131,26 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
                   const IconComponent = rankConfig.icon;
 
                   return (
-                    <Card key={index} className="p-6 relative overflow-hidden">
-                      <div className="space-y-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
-                              <IconComponent className={`h-5 w-5 ${rankConfig.textColor}`} />
-                              <span className="font-semibold text-lg">{type} - {personalityType.title}</span>
-                              <span className={`${rankConfig.bgColor} ${rankConfig.textColor} text-xs px-2 py-1 rounded-full font-medium ml-2`}>
-                                {rankConfig.label}
-                              </span>
-                            </div>
-                            {personalityType.who_they_are && (
-                              <p className="text-sm text-muted-foreground">{personalityType.who_they_are}</p>
-                            )}
+                    <Card key={index} className="p-4 relative overflow-hidden">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <IconComponent className={`h-5 w-5 ${rankConfig.textColor}`} />
+                            <span className="font-semibold text-lg">{type}</span>
+                            <span className={`${rankConfig.bgColor} ${rankConfig.textColor} text-xs px-2 py-1 rounded-full font-medium ml-2`}>
+                              {rankConfig.label}
+                            </span>
                           </div>
-                          <div className={`absolute top-0 right-0 h-full w-1.5 rounded-r-lg ${rankConfig.accentColor}`} />
+                          <p className="text-sm text-muted-foreground">
+                            {index === 0 
+                              ? "This is your primary personality type based on your responses."
+                              : index === 1
+                              ? "This is your secondary personality type, showing significant traits in your profile."
+                              : "This is an alternate personality type that also aligns with some of your response patterns."
+                            }
+                          </p>
                         </div>
-
-                        {personalityType.dicotomy_description && personalityType.dicotomy_description.length > 0 && (
-                          <div className="space-y-2">
-                            <h4 className="font-semibold">Personality Dimensions</h4>
-                            <ul className="list-disc pl-5 space-y-1">
-                              {personalityType.dicotomy_description.map((desc, i) => (
-                                <li key={i} className="text-sm">{desc}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <h4 className="font-semibold">Key Traits</h4>
-                            <ul className="list-disc pl-5 space-y-1">
-                              {personalityType.traits.map((trait, i) => (
-                                <li key={i} className="text-sm">{trait}</li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div className="space-y-2">
-                            <h4 className="font-semibold">Strengths</h4>
-                            <ul className="list-disc pl-5 space-y-1">
-                              {personalityType.strengths.map((strength, i) => (
-                                <li key={i} className="text-sm">{strength}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h4 className="font-semibold">Areas for Growth</h4>
-                          <ul className="list-disc pl-5 space-y-1">
-                            {personalityType.weaknesses.map((weakness, i) => (
-                              <li key={i} className="text-sm">{weakness}</li>
-                            ))}
-                          </ul>
-                        </div>
+                        <div className={`absolute top-0 right-0 h-full w-1.5 rounded-r-lg ${rankConfig.accentColor}`} />
                       </div>
                     </Card>
                   );
@@ -275,4 +211,3 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     </div>
   );
 }
-
