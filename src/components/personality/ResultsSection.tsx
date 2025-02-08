@@ -95,36 +95,43 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Your Personality Types</h3>
             <ScrollArea className="h-[400px] rounded-md">
-              <div className="space-y-6">
+              <div className="grid gap-4 grid-cols-1">
                 {results.personality_traits.map((type: string, index: number) => (
-                  <div key={index} className="border-b pb-4 last:border-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-semibold text-lg">{type}</span>
-                      {index === 0 && (
-                        <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
-                          Primary Match
-                        </span>
-                      )}
-                      {index === 1 && (
-                        <span className="bg-secondary/10 text-secondary text-xs px-2 py-1 rounded">
-                          Secondary Match
-                        </span>
-                      )}
-                      {index === 2 && (
-                        <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded">
-                          Alternate Match
-                        </span>
-                      )}
+                  <Card key={index} className="p-4 relative overflow-hidden">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">{type}</span>
+                          {index === 0 && (
+                            <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-medium">
+                              Primary Match
+                            </span>
+                          )}
+                          {index === 1 && (
+                            <span className="bg-secondary/10 text-secondary text-xs px-2 py-1 rounded-full font-medium">
+                              Secondary Match
+                            </span>
+                          )}
+                          {index === 2 && (
+                            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full font-medium">
+                              Alternate Match
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {index === 0 
+                            ? "This is your primary personality type based on your responses."
+                            : index === 1
+                            ? "This is your secondary personality type, showing significant traits in your profile."
+                            : "This is an alternate personality type that also aligns with some of your response patterns."
+                          }
+                        </p>
+                      </div>
+                      <div className="absolute top-0 right-0 h-full w-1.5 rounded-r-lg
+                        ${index === 0 ? 'bg-primary' : index === 1 ? 'bg-secondary' : 'bg-muted'}"
+                      />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {index === 0 
-                        ? "This is your primary personality type based on your responses."
-                        : index === 1
-                        ? "This is your secondary personality type, showing significant traits in your profile."
-                        : "This is an alternate personality type that also aligns with some of your response patterns."
-                      }
-                    </p>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </ScrollArea>
