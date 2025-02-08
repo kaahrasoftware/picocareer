@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
+import { Loader2, Diamond, Square, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Tabs,
@@ -96,43 +96,58 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
             <h3 className="text-lg font-semibold mb-4">Your Personality Types</h3>
             <ScrollArea className="h-[400px] rounded-md">
               <div className="grid gap-4">
-                {results.personality_traits.map((type: string, index: number) => (
-                  <Card key={index} className="p-4 relative overflow-hidden">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-lg">{type}</span>
-                          {index === 0 && (
-                            <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-medium">
-                              Primary Match
+                {results.personality_traits.map((type: string, index: number) => {
+                  const rankConfig = {
+                    0: {
+                      icon: Diamond,
+                      label: "Primary Match",
+                      bgColor: "bg-primary/10",
+                      textColor: "text-primary",
+                      accentColor: "bg-primary"
+                    },
+                    1: {
+                      icon: Square,
+                      label: "Secondary Match",
+                      bgColor: "bg-secondary/10",
+                      textColor: "text-secondary",
+                      accentColor: "bg-secondary"
+                    },
+                    2: {
+                      icon: Circle,
+                      label: "Alternate Match",
+                      bgColor: "bg-muted",
+                      textColor: "text-muted-foreground",
+                      accentColor: "bg-muted"
+                    }
+                  }[index];
+
+                  const IconComponent = rankConfig.icon;
+
+                  return (
+                    <Card key={index} className="p-4 relative overflow-hidden">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <IconComponent className={`h-5 w-5 ${rankConfig.textColor}`} />
+                            <span className="font-semibold text-lg">{type}</span>
+                            <span className={`${rankConfig.bgColor} ${rankConfig.textColor} text-xs px-2 py-1 rounded-full font-medium ml-2`}>
+                              {rankConfig.label}
                             </span>
-                          )}
-                          {index === 1 && (
-                            <span className="bg-secondary/10 text-secondary text-xs px-2 py-1 rounded-full font-medium">
-                              Secondary Match
-                            </span>
-                          )}
-                          {index === 2 && (
-                            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full font-medium">
-                              Alternate Match
-                            </span>
-                          )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {index === 0 
+                              ? "This is your primary personality type based on your responses."
+                              : index === 1
+                              ? "This is your secondary personality type, showing significant traits in your profile."
+                              : "This is an alternate personality type that also aligns with some of your response patterns."
+                            }
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {index === 0 
-                            ? "This is your primary personality type based on your responses."
-                            : index === 1
-                            ? "This is your secondary personality type, showing significant traits in your profile."
-                            : "This is an alternate personality type that also aligns with some of your response patterns."
-                          }
-                        </p>
+                        <div className={`absolute top-0 right-0 h-full w-1.5 rounded-r-lg ${rankConfig.accentColor}`} />
                       </div>
-                      <div className={`absolute top-0 right-0 h-full w-1.5 rounded-r-lg ${
-                        index === 0 ? 'bg-primary' : index === 1 ? 'bg-secondary' : 'bg-muted'
-                      }`} />
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
             </ScrollArea>
           </Card>
