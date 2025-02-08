@@ -12,6 +12,7 @@ import { PersonalityTab } from "./tabs/PersonalityTab";
 import { CareersTab } from "./tabs/CareersTab";
 import { MajorsTab } from "./tabs/MajorsTab";
 import { SkillsTab } from "./tabs/SkillsTab";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ResultsSectionProps {
   profileId: string;
@@ -36,6 +37,8 @@ export type PersonalityType = {
 }
 
 export function ResultsSection({ profileId }: ResultsSectionProps) {
+  const { toast } = useToast();
+
   const { data: results, isLoading, error } = useQuery({
     queryKey: ['personality-test-results', profileId],
     queryFn: async () => {
@@ -91,7 +94,13 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
       }
 
       if (!typeDetails) {
-        console.error('No personality type details found for type:', personalityType);
+        console.error(`No personality type details found for type: ${personalityType}`);
+        // Show a toast notification for missing personality type
+        toast({
+          title: "Data Issue Detected",
+          description: `Unable to find personality type ${personalityType} in our database. Our team has been notified.`,
+          variant: "destructive",
+        });
         throw new Error(`Personality type ${personalityType} not found in database`);
       }
 
