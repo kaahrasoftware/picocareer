@@ -95,7 +95,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Your Personality Types</h3>
             <ScrollArea className="h-[400px] rounded-md">
-              <div className="grid gap-4 grid-cols-1">
+              <div className="grid gap-4">
                 {results.personality_traits.map((type: string, index: number) => (
                   <Card key={index} className="p-4 relative overflow-hidden">
                     <div className="flex items-start justify-between">
@@ -127,9 +127,9 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
                           }
                         </p>
                       </div>
-                      <div className="absolute top-0 right-0 h-full w-1.5 rounded-r-lg
-                        ${index === 0 ? 'bg-primary' : index === 1 ? 'bg-secondary' : 'bg-muted'}"
-                      />
+                      <div className={`absolute top-0 right-0 h-full w-1.5 rounded-r-lg ${
+                        index === 0 ? 'bg-primary' : index === 1 ? 'bg-secondary' : 'bg-muted'
+                      }`} />
                     </div>
                   </Card>
                 ))}
