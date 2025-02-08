@@ -1,3 +1,4 @@
+
 import { DimensionScores } from './types.ts';
 
 export async function calculateDimensionScores(
@@ -96,7 +97,7 @@ export async function calculateDimensionScores(
 export function getPersonalityType(scores: DimensionScores): string[] {
   console.log('Calculating personality types from scores:', scores);
   
-  const margin = 2; // Threshold for considering alternate types
+  const margin = 3; // Increased margin to catch more potential alternates
   const types: string[] = [];
   
   // Calculate primary type
@@ -140,6 +141,31 @@ export function getPersonalityType(scores: DimensionScores): string[] {
       (primaryType.slice(0, 3) + 'P'),
       (primaryType.slice(0, 3) + 'J')
     );
+  }
+  
+  // If we still don't have enough types, add more variations by combining multiple alternates
+  if (types.length < 3) {
+    // Add combinations of the two most balanced dimensions
+    const scores = [
+      { dim: 'ei', val: Math.abs(scores.e_i_score) },
+      { dim: 'sn', val: Math.abs(scores.s_n_score) },
+      { dim: 'tf', val: Math.abs(scores.t_f_score) },
+      { dim: 'jp', val: Math.abs(scores.j_p_score) }
+    ].sort((a, b) => a.val - b.val);
+
+    const mostBalanced = scores.slice(0, 2).map(s => s.dim);
+    if (mostBalanced.includes('ei') && mostBalanced.includes('sn')) {
+      types.push(
+        ('I' + 'N' + primaryType.slice(2)),
+        ('E' + 'N' + primaryType.slice(2))
+      );
+    }
+    if (mostBalanced.includes('sn') && mostBalanced.includes('tf')) {
+      types.push(
+        (primaryType[0] + 'N' + 'F' + primaryType[3]),
+        (primaryType[0] + 'S' + 'F' + primaryType[3])
+      );
+    }
   }
   
   // Remove duplicates and get top 3 unique types
