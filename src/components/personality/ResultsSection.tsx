@@ -59,7 +59,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (dimensionError) {
         console.error('Error fetching dimension scores:', dimensionError);
@@ -88,7 +88,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .from('personality_types')
         .select('*')
         .eq('type', personalityType)
-        .single();
+        .maybeSingle();
 
       if (typeError) {
         console.error('Error fetching personality type details:', typeError);
@@ -110,7 +110,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (resultsError) {
         console.error('Error fetching test results:', resultsError);
