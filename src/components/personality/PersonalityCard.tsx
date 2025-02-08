@@ -9,34 +9,35 @@ interface PersonalityCardProps {
 }
 
 export function PersonalityCard({ personalityType, index }: PersonalityCardProps) {
+  // Define color configurations for each rank
   const rankConfig = {
     0: {
       icon: Diamond,
       label: "Primary Match",
-      bgColor: "bg-primary/10",
-      textColor: "text-primary",
-      accentColor: "bg-primary"
+      bgColor: "bg-[#9b87f5]/10", // Primary purple background
+      textColor: "text-[#9b87f5]",
+      accentColor: "bg-[#9b87f5]"
     },
     1: {
       icon: Square,
       label: "Secondary Match",
-      bgColor: "bg-secondary/10",
-      textColor: "text-secondary",
-      accentColor: "bg-secondary"
+      bgColor: "bg-[#0EA5E9]/10", // Ocean blue background
+      textColor: "text-[#0EA5E9]",
+      accentColor: "bg-[#0EA5E9]"
     },
     2: {
       icon: Circle,
       label: "Alternate Match",
-      bgColor: "bg-muted",
-      textColor: "text-muted-foreground",
-      accentColor: "bg-muted"
+      bgColor: "bg-[#D946EF]/10", // Magenta pink background
+      textColor: "text-[#D946EF]",
+      accentColor: "bg-[#D946EF]"
     }
   }[index];
 
   const IconComponent = rankConfig.icon;
 
   return (
-    <Card className="p-4 relative overflow-hidden">
+    <Card className={`p-4 relative overflow-hidden ${rankConfig.bgColor}`}>
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
