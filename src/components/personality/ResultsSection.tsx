@@ -44,68 +44,96 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
   const { data: results, isLoading, error } = useQuery({
     queryKey: ['personality-test-results', profileId],
     queryFn: async () => {
-      if (!profileId) throw new Error('Profile ID is required');
+      console.log('Starting personality test results fetch for profile:', profileId);
+      
+      if (!profileId) {
+        console.error('No profile ID provided');
+        throw new Error('Profile ID is required');
+      }
 
       // First get dimension scores to identify personality type
+      console.log('Fetching dimension scores...');
       const { data: dimensionScores, error: dimensionError } = await supabase
         .from('personality_dimension_scores')
         .select('*')
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .single();
 
-      if (dimensionError) throw dimensionError;
-      if (!dimensionScores) throw new Error('No dimension scores found');
+      if (dimensionError) {
+        console.error('Error fetching dimension scores:', dimensionError);
+        throw dimensionError;
+      }
 
-      // Calculate the personality type based on dimension scores
+      if (!dimensionScores) {
+        console.error('No dimension scores found for profile:', profileId);
+        throw new Error('No dimension scores found');
+      }
+
+      console.log('Dimension scores:', dimensionScores);
+
+      // Calculate personality type
       const personalityType = 
         (dimensionScores.e_i_score >= 0 ? 'E' : 'I') +
         (dimensionScores.s_n_score >= 0 ? 'S' : 'N') +
         (dimensionScores.t_f_score >= 0 ? 'T' : 'F') +
         (dimensionScores.j_p_score >= 0 ? 'J' : 'P');
 
-      console.log('Calculated personality type:', personalityType); // Debug log
+      console.log('Calculated personality type:', personalityType);
 
       // Get personality type details
+      console.log('Fetching personality type details...');
       const { data: typeDetails, error: typeError } = await supabase
         .from('personality_types')
         .select('*')
-        .eq('type', personalityType.trim())
-        .maybeSingle();
+        .eq('type', personalityType)
+        .single();
 
       if (typeError) {
-        console.error('Error fetching personality type:', typeError);
+        console.error('Error fetching personality type details:', typeError);
         throw typeError;
       }
-      
+
       if (!typeDetails) {
-        console.error(`No personality type details found for type ${personalityType}`);
+        console.error('No personality type details found for type:', personalityType);
         throw new Error(`Personality type ${personalityType} not found in database`);
       }
 
+      console.log('Found personality type details:', typeDetails);
+
       // Get test results
-      const { data, error } = await supabase
+      console.log('Fetching test results...');
+      const { data: testResults, error: resultsError } = await supabase
         .from('personality_test_results')
         .select('*')
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .single();
 
-      if (error) throw error;
-      if (!data) throw new Error('No test results found');
-      
-      const result = data as PersonalityTestResult;
+      if (resultsError) {
+        console.error('Error fetching test results:', resultsError);
+        throw resultsError;
+      }
+
+      if (!testResults) {
+        console.error('No test results found for profile:', profileId);
+        throw new Error('No test results found');
+      }
+
+      console.log('Found test results:', testResults);
       
       try {
         const parsedResults: TestResult & { typeDetails: PersonalityType } = {
-          personality_traits: JSON.parse(result.personality_traits || '[]'),
-          career_matches: JSON.parse(result.career_matches || '[]'),
-          major_matches: JSON.parse(result.major_matches || '[]'),
-          skill_development: JSON.parse(result.skill_development || '[]'),
+          personality_traits: JSON.parse(testResults.personality_traits || '[]'),
+          career_matches: JSON.parse(testResults.career_matches || '[]'),
+          major_matches: JSON.parse(testResults.major_matches || '[]'),
+          skill_development: JSON.parse(testResults.skill_development || '[]'),
           typeDetails: typeDetails as PersonalityType
         };
+        
+        console.log('Successfully parsed results:', parsedResults);
         return parsedResults;
       } catch (e) {
         console.error('Error parsing test results:', e);
@@ -122,7 +150,17 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     );
   }
 
-  if (error || !results) {
+  if (error) {
+    console.error('Error in ResultsSection:', error);
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">Error loading results: {error.message}</p>
+        <p className="mt-2">Please try taking the personality test again.</p>
+      </div>
+    );
+  }
+
+  if (!results) {
     return (
       <div className="text-center py-8">
         <p>No test results found. Please take the personality test first.</p>
