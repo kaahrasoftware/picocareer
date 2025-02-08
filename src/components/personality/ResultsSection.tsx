@@ -25,7 +25,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     queryFn: async () => {
       if (!profileId) throw new Error('Profile ID is required');
 
-      const { data, error } = await supabase
+      const { data: resultData, error } = await supabase
         .from('personality_test_results')
         .select('*')
         .eq('profile_id', profileId)
@@ -34,18 +34,25 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error('No test results found');
+      if (!resultData) throw new Error('No test results found');
       
-      const result = data as PersonalityTestResult;
+      const result = resultData as PersonalityTestResult;
       
       try {
-        const parsedPersonalityTraits = JSON.parse(result.personality_traits);
-        const traits = Array.isArray(parsedPersonalityTraits[0]) ? 
-          parsedPersonalityTraits[0] : 
-          parsedPersonalityTraits;
+        // Handle both string and array formats for personality_traits
+        let personalityTraits: string[];
+        if (typeof result.personality_traits === 'string') {
+          try {
+            personalityTraits = JSON.parse(result.personality_traits);
+          } catch {
+            personalityTraits = [result.personality_traits];
+          }
+        } else {
+          personalityTraits = result.personality_traits;
+        }
 
         const parsedResults: TestResult = {
-          personality_traits: traits,
+          personality_traits: personalityTraits,
           career_matches: JSON.parse(result.career_matches || '[]'),
           major_matches: JSON.parse(result.major_matches || '[]'),
           skill_development: JSON.parse(result.skill_development || '[]')
