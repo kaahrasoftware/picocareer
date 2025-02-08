@@ -29,3 +29,14 @@ export interface TestResults {
   skill_development: string;
 }
 
+export interface DimensionScores {
+  e_i_score: number;
+  s_n_score: number;
+  t_f_score: number;
+  j_p_score: number;
+  e_i_responses: number;
+  s_n_responses: number;
+  t_f_responses: number;
+  j_p_responses: number;
+  confidence_level: number;
+}
