@@ -10,7 +10,10 @@ export async function calculateDimensionScores(
     .from('personality_answer_weights')
     .select('*');
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error fetching weights:', error);
+    throw error;
+  }
 
   // Initialize scores
   let scores = {
@@ -27,12 +30,18 @@ export async function calculateDimensionScores(
 
   // Process each response
   for (const [questionId, answer] of Object.entries(responses)) {
+    console.log(`Processing answer for question ${questionId}: ${answer}`);
+    
     const answerWeights = weights.filter(w => 
       w.question_id === questionId && 
       w.answer_value === String(answer)
     );
 
+    console.log(`Found ${answerWeights.length} weights for this answer`);
+
     for (const weight of answerWeights) {
+      console.log(`Processing weight for dimension ${weight.dimension}: ${weight.weight}`);
+      
       switch (weight.dimension) {
         case 'E':
           scores.e_i_score += weight.weight;
@@ -72,14 +81,21 @@ export async function calculateDimensionScores(
 
   // Calculate confidence level based on number of responses
   const totalPossibleResponses = 32; // Total number of scored questions
-  const totalResponses = scores.e_i_responses + scores.s_n_responses + 
-                        scores.t_f_responses + scores.j_p_responses;
+  const totalResponses = Math.max(
+    scores.e_i_responses,
+    scores.s_n_responses,
+    scores.t_f_responses,
+    scores.j_p_responses
+  );
   scores.confidence_level = totalResponses / totalPossibleResponses;
+
+  console.log('Final dimension scores:', scores);
 
   return scores;
 }
 
 export function getPersonalityType(scores: DimensionScores): string {
+  console.log('Calculating personality type from scores:', scores);
   return (
     (scores.e_i_score >= 0 ? 'E' : 'I') +
     (scores.s_n_score >= 0 ? 'S' : 'N') +
