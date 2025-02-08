@@ -874,6 +874,107 @@ export type Database = {
           },
         ]
       }
+      personality_answer_weights: {
+        Row: {
+          answer_value: string
+          created_at: string | null
+          dimension: string
+          id: string
+          question_id: string | null
+          updated_at: string | null
+          weight: number
+        }
+        Insert: {
+          answer_value: string
+          created_at?: string | null
+          dimension: string
+          id?: string
+          question_id?: string | null
+          updated_at?: string | null
+          weight?: number
+        }
+        Update: {
+          answer_value?: string
+          created_at?: string | null
+          dimension?: string
+          id?: string
+          question_id?: string | null
+          updated_at?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_answer_weights_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "personality_test_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personality_dimension_scores: {
+        Row: {
+          confidence_level: number
+          created_at: string | null
+          e_i_responses: number
+          e_i_score: number
+          id: string
+          j_p_responses: number
+          j_p_score: number
+          profile_id: string | null
+          s_n_responses: number
+          s_n_score: number
+          t_f_responses: number
+          t_f_score: number
+          test_result_id: string | null
+        }
+        Insert: {
+          confidence_level?: number
+          created_at?: string | null
+          e_i_responses?: number
+          e_i_score?: number
+          id?: string
+          j_p_responses?: number
+          j_p_score?: number
+          profile_id?: string | null
+          s_n_responses?: number
+          s_n_score?: number
+          t_f_responses?: number
+          t_f_score?: number
+          test_result_id?: string | null
+        }
+        Update: {
+          confidence_level?: number
+          created_at?: string | null
+          e_i_responses?: number
+          e_i_score?: number
+          id?: string
+          j_p_responses?: number
+          j_p_score?: number
+          profile_id?: string | null
+          s_n_responses?: number
+          s_n_score?: number
+          t_f_responses?: number
+          t_f_score?: number
+          test_result_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_dimension_scores_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_dimension_scores_test_result_id_fkey"
+            columns: ["test_result_id"]
+            isOneToOne: false
+            referencedRelation: "personality_test_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personality_test_answer_mappings: {
         Row: {
           answer_value: string
