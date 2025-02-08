@@ -39,7 +39,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
       const result = resultData as PersonalityTestResult;
       
       try {
-        // Handle both string and array formats for personality_traits
+        // Handle nested array or string format for personality_traits
         let personalityTraits: string[];
         if (typeof result.personality_traits === 'string') {
           try {
@@ -48,8 +48,14 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
             personalityTraits = [result.personality_traits];
           }
         } else {
-          personalityTraits = result.personality_traits;
+          // Handle nested array case
+          personalityTraits = Array.isArray(result.personality_traits[0]) 
+            ? result.personality_traits[0] 
+            : result.personality_traits;
         }
+
+        // Ensure personality_traits is a flat array of strings
+        personalityTraits = personalityTraits.flat().filter(Boolean);
 
         const parsedResults: TestResult = {
           personality_traits: personalityTraits,
@@ -57,6 +63,8 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
           major_matches: JSON.parse(result.major_matches || '[]'),
           skill_development: JSON.parse(result.skill_development || '[]')
         };
+        
+        console.log('Parsed personality traits:', parsedResults.personality_traits);
         return parsedResults;
       } catch (e) {
         console.error('Error parsing test results:', e);
@@ -67,14 +75,20 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
 
   const { data: personalityTypes, isLoading: typesLoading } = useQuery({
     queryKey: ['personality-types', results?.personality_traits],
-    enabled: !!results?.personality_traits,
+    enabled: !!results?.personality_traits?.length,
     queryFn: async () => {
+      console.log('Fetching personality types for:', results.personality_traits);
       const { data, error } = await supabase
         .from('personality_types')
         .select('*')
         .in('type', results.personality_traits);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching personality types:', error);
+        throw error;
+      }
+      
+      console.log('Fetched personality types:', data);
       return data as PersonalityType[];
     },
   });
@@ -114,7 +128,10 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
               <div className="grid gap-6">
                 {results.personality_traits.map((type: string, index: number) => {
                   const personalityType = personalityTypes?.find(pt => pt.type === type);
-                  if (!personalityType) return null;
+                  if (!personalityType) {
+                    console.log('No matching personality type found for:', type);
+                    return null;
+                  }
                   return (
                     <PersonalityCard 
                       key={type}

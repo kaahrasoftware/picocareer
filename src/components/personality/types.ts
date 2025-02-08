@@ -7,7 +7,7 @@ export interface TestResult {
 }
 
 export type PersonalityTestResult = {
-  personality_traits: string | string[];
+  personality_traits: string | string[] | string[][];
   career_matches: string;
   major_matches: string;
   skill_development: string;
