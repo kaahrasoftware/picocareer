@@ -53,7 +53,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (dimensionError) throw dimensionError;
       if (!dimensionScores) throw new Error('No dimension scores found');
@@ -70,9 +70,13 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .from('personality_types')
         .select('*')
         .eq('type', personalityType)
-        .single();
+        .maybeSingle();
 
       if (typeError) throw typeError;
+      if (!typeDetails) {
+        console.error(`No personality type details found for type ${personalityType}`);
+        throw new Error(`Personality type ${personalityType} not found in database`);
+      }
 
       // Get test results
       const { data, error } = await supabase
@@ -81,7 +85,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
         .eq('profile_id', profileId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       if (!data) throw new Error('No test results found');
@@ -252,3 +256,4 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
     </div>
   );
 }
+
