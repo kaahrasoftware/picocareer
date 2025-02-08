@@ -1,3 +1,4 @@
+import type { ScoringResult } from './types.ts';
 
 interface ScoreData {
   score: number;
@@ -65,4 +66,3 @@ export function processAnswers(responses: { [key: string]: string }, mappings: a
 
   return { careerScores, majorScores, traitEvidence };
 }
-

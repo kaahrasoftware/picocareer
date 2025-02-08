@@ -1,5 +1,5 @@
 
-import { DimensionScores } from './types';
+import { DimensionScores } from './types.ts';
 
 export async function calculateDimensionScores(
   responses: { [key: string]: string },
