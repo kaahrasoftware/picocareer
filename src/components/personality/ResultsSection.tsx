@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -92,7 +93,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
 
         <TabsContent value="personality">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Your Top 3 Personality Types</h3>
+            <h3 className="text-lg font-semibold mb-4">Your Personality Types</h3>
             <ScrollArea className="h-[400px] rounded-md">
               <div className="space-y-6">
                 {results.personality_traits.map((type: string, index: number) => (
@@ -104,11 +105,23 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
                           Primary Match
                         </span>
                       )}
+                      {index === 1 && (
+                        <span className="bg-secondary/10 text-secondary text-xs px-2 py-1 rounded">
+                          Secondary Match
+                        </span>
+                      )}
+                      {index === 2 && (
+                        <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded">
+                          Alternate Match
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {index === 0 
                         ? "This is your primary personality type based on your responses."
-                        : `This is an alternate personality type that also matches your response pattern${index === 1 ? ", with some traits being closely balanced." : "."}`
+                        : index === 1
+                        ? "This is your secondary personality type, showing significant traits in your profile."
+                        : "This is an alternate personality type that also aligns with some of your response patterns."
                       }
                     </p>
                   </div>
