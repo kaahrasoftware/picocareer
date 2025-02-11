@@ -38,29 +38,6 @@ export default function Hub() {
     enabled: !!id && isValidUUID,
   });
 
-  // Check if user is a member
-  const { data: isMember, isLoading: membershipLoading } = useQuery({
-    queryKey: ['hub-membership', id],
-    queryFn: async () => {
-      if (!id) return false;
-
-      const { data, error } = await supabase
-        .from('hub_members')
-        .select('status')
-        .eq('hub_id', id)
-        .eq('status', 'Approved')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking membership:', error);
-        return false;
-      }
-
-      return !!data;
-    },
-    enabled: !!id,
-  });
-
   // Fetch hub statistics
   const { data: hubStats, isLoading: statsLoading } = useQuery({
     queryKey: ['hub-stats', id],
@@ -86,7 +63,7 @@ export default function Hub() {
     enabled: !!id,
   });
 
-  if (hubLoading || membershipLoading || statsLoading) {
+  if (hubLoading || statsLoading) {
     return (
       <div className="container mx-auto py-8 space-y-8">
         <Skeleton className="h-48 w-full" />
@@ -115,14 +92,10 @@ export default function Hub() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          {isMember && (
-            <>
-              <TabsTrigger value="announcements">Announcements</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="departments">Departments</TabsTrigger>
-            </>
-          )}
+          <TabsTrigger value="announcements">Announcements</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="departments">Departments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -238,25 +211,21 @@ export default function Hub() {
           </div>
         </TabsContent>
 
-        {isMember && (
-          <>
-            <TabsContent value="announcements" className="mt-6">
-              <HubAnnouncements hubId={hub.id} />
-            </TabsContent>
+        <TabsContent value="announcements" className="mt-6">
+          <HubAnnouncements hubId={hub.id} />
+        </TabsContent>
 
-            <TabsContent value="resources" className="mt-6">
-              <HubResources hubId={hub.id} />
-            </TabsContent>
+        <TabsContent value="resources" className="mt-6">
+          <HubResources hubId={hub.id} />
+        </TabsContent>
 
-            <TabsContent value="members" className="mt-6">
-              <HubMembers hubId={hub.id} />
-            </TabsContent>
+        <TabsContent value="members" className="mt-6">
+          <HubMembers hubId={hub.id} />
+        </TabsContent>
 
-            <TabsContent value="departments" className="mt-6">
-              <HubDepartments hubId={hub.id} />
-            </TabsContent>
-          </>
-        )}
+        <TabsContent value="departments" className="mt-6">
+          <HubDepartments hubId={hub.id} />
+        </TabsContent>
       </Tabs>
     </div>
   );
