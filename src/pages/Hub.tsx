@@ -16,7 +16,7 @@ export default function Hub() {
   const { id } = useParams<{ id: string }>();
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
 
-  const { data: hub, isLoading } = useQuery({
+  const { data: hub, isLoading: hubLoading } = useQuery({
     queryKey: ['hub', id],
     queryFn: async () => {
       if (!isValidUUID) {
@@ -35,7 +35,30 @@ export default function Hub() {
     enabled: !!id && isValidUUID,
   });
 
-  if (isLoading) {
+  // Check if user is a member
+  const { data: isMember, isLoading: membershipLoading } = useQuery({
+    queryKey: ['hub-membership', id],
+    queryFn: async () => {
+      if (!id) return false;
+
+      const { data, error } = await supabase
+        .from('hub_members')
+        .select('status')
+        .eq('hub_id', id)
+        .eq('status', 'Approved')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking membership:', error);
+        return false;
+      }
+
+      return !!data;
+    },
+    enabled: !!id,
+  });
+
+  if (hubLoading || membershipLoading) {
     return (
       <div className="container mx-auto py-8 space-y-8">
         <Skeleton className="h-48 w-full" />
@@ -65,8 +88,12 @@ export default function Hub() {
         <TabsList className="w-full justify-start">
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
           <TabsTrigger value="resources">Resources</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="departments">Departments</TabsTrigger>
+          {isMember && (
+            <>
+              <TabsTrigger value="members">Members</TabsTrigger>
+              <TabsTrigger value="departments">Departments</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="announcements" className="mt-6">
@@ -77,13 +104,17 @@ export default function Hub() {
           <HubResources hubId={hub.id} />
         </TabsContent>
 
-        <TabsContent value="members" className="mt-6">
-          <HubMembers hubId={hub.id} />
-        </TabsContent>
+        {isMember && (
+          <>
+            <TabsContent value="members" className="mt-6">
+              <HubMembers hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="departments" className="mt-6">
-          <HubDepartments hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="departments" className="mt-6">
+              <HubDepartments hubId={hub.id} />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
