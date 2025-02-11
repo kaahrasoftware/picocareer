@@ -26,6 +26,10 @@ export function useAuthSession() {
             await supabase.auth.signOut();
             queryClient.clear();
             
+            // Clear localStorage
+            const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+            localStorage.removeItem(key);
+            
             // Show toast notification
             toast({
               title: "Session Expired",
@@ -59,6 +63,10 @@ export function useAuthSession() {
       queryClient.setQueryData(['auth-session'], null);
       queryClient.removeQueries({ queryKey: ['profile'] });
       queryClient.removeQueries({ queryKey: ['notifications'] });
+      
+      // Clear localStorage on sign out
+      const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+      localStorage.removeItem(key);
     }
   });
 
