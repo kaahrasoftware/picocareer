@@ -2285,6 +2285,12 @@ export type Database = {
         }
         Returns: unknown
       }
+      is_hub_member: {
+        Args: {
+          hub_id: string
+        }
+        Returns: boolean
+      }
       manually_update_majors_profiles_count: {
         Args: Record<PropertyKey, never>
         Returns: undefined
