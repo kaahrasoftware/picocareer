@@ -10,6 +10,30 @@ export function useAuthSession() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const handleSessionExpiration = async () => {
+    console.log('Handling session expiration...');
+    
+    // First, clear Supabase auth state
+    await supabase.auth.signOut();
+    
+    // Clear all queries from cache
+    queryClient.clear();
+    
+    // Clear auth token from localStorage
+    const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+    localStorage.removeItem(key);
+    
+    // Show user-friendly notification
+    toast({
+      title: "Session Expired",
+      description: "Your session has expired. Please sign in again.",
+      variant: "destructive",
+    });
+    
+    // Redirect to auth page
+    navigate("/auth");
+  };
+
   const { data: session, error: sessionError, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
@@ -17,28 +41,13 @@ export function useAuthSession() {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          // Handle session expiration error
+          // Handle both session expiration and invalid refresh token cases
           if (error.message?.includes('Invalid Refresh Token') || 
-              error.message?.includes('session expired')) {
-            console.error('Session expired:', error);
-            
-            // Clear auth data
-            await supabase.auth.signOut();
-            queryClient.clear();
-            
-            // Clear localStorage
-            const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-            localStorage.removeItem(key);
-            
-            // Show toast notification
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please sign in again.",
-              variant: "destructive",
-            });
-            
-            // Redirect to auth page
-            navigate("/auth");
+              error.message?.includes('session expired') ||
+              error.message?.includes('not authenticated') ||
+              error.status === 400) {
+            console.error('Session error:', error);
+            await handleSessionExpiration();
             return null;
           }
           throw error;
@@ -64,7 +73,7 @@ export function useAuthSession() {
       queryClient.removeQueries({ queryKey: ['profile'] });
       queryClient.removeQueries({ queryKey: ['notifications'] });
       
-      // Clear localStorage on sign out
+      // Clear localStorage
       const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
       localStorage.removeItem(key);
     }
