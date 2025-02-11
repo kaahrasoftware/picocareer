@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,13 +10,29 @@ import { HubAnnouncements } from "@/components/hub/HubAnnouncements";
 import { HubMembers } from "@/components/hub/HubMembers";
 import { HubDepartments } from "@/components/hub/HubDepartments";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Globe, MapPin, Users, FileText, Link2, Twitter, Facebook, Linkedin, Instagram } from "lucide-react";
 import { CardContent, Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
+
+  // Check if user is a hub member
+  const { data: isMember, isLoading: isMemberLoading } = useQuery({
+    queryKey: ['is-hub-member', id],
+    queryFn: async () => {
+      if (!id) return false;
+      const { data, error } = await supabase.rpc('is_hub_member', { hub_id: id });
+      if (error) {
+        console.error('Error checking hub membership:', error);
+        return false;
+      }
+      return data;
+    },
+    enabled: !!id && isValidUUID,
+  });
 
   const { data: hub, isLoading: hubLoading } = useQuery({
     queryKey: ['hub', id],
@@ -38,7 +53,6 @@ export default function Hub() {
     enabled: !!id && isValidUUID,
   });
 
-  // Fetch hub statistics
   const { data: hubStats, isLoading: statsLoading } = useQuery({
     queryKey: ['hub-stats', id],
     queryFn: async () => {
@@ -75,7 +89,7 @@ export default function Hub() {
     );
   }
 
-  if (hubLoading || statsLoading) {
+  if (hubLoading || statsLoading || isMemberLoading) {
     return (
       <div className="container mx-auto py-8 space-y-8">
         <Skeleton className="h-48 w-full" />
@@ -104,10 +118,14 @@ export default function Hub() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="announcements">Announcements</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="departments">Departments</TabsTrigger>
+          {isMember && (
+            <>
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
+              <TabsTrigger value="resources">Resources</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
+              <TabsTrigger value="departments">Departments</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -221,23 +239,36 @@ export default function Hub() {
               </Card>
             )}
           </div>
+
+          {!isMember && (
+            <Alert className="mt-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Join this hub to access announcements, resources, members list, and departments.
+              </AlertDescription>
+            </Alert>
+          )}
         </TabsContent>
 
-        <TabsContent value="announcements" className="mt-6">
-          <HubAnnouncements hubId={hub.id} />
-        </TabsContent>
+        {isMember && (
+          <>
+            <TabsContent value="announcements" className="mt-6">
+              <HubAnnouncements hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="resources" className="mt-6">
-          <HubResources hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="resources" className="mt-6">
+              <HubResources hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="members" className="mt-6">
-          <HubMembers hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="members" className="mt-6">
+              <HubMembers hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="departments" className="mt-6">
-          <HubDepartments hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="departments" className="mt-6">
+              <HubDepartments hubId={hub.id} />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
