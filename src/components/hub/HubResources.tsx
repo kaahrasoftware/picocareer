@@ -20,12 +20,18 @@ export function HubResources({ hubId }: HubResourcesProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hub_resources')
-        .select('*')
+        .select(`
+          *,
+          created_by_profile:created_by(
+            first_name,
+            last_name
+          )
+        `)
         .eq('hub_id', hubId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as HubResource[];
+      return data;
     },
   });
 
@@ -64,6 +70,23 @@ export function HubResources({ hubId }: HubResourcesProps) {
               <p className="text-sm text-muted-foreground">
                 {resource.description}
               </p>
+              {resource.category && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Category: {resource.category}
+                </p>
+              )}
+              {resource.created_by_profile && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Added by: {resource.created_by_profile.first_name} {resource.created_by_profile.last_name}
+                </p>
+              )}
+              <div className="mt-4">
+                <Button variant="outline" asChild>
+                  <a href={resource.file_url} target="_blank" rel="noopener noreferrer">
+                    View Resource
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}

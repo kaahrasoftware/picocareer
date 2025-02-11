@@ -17,13 +17,22 @@ export function HubMembers({ hubId }: HubMembersProps) {
         .from('hub_members')
         .select(`
           *,
-          profile:profile_id(*)
+          profile:profile_id(
+            id,
+            first_name,
+            last_name,
+            avatar_url
+          ),
+          department:department_id(
+            id,
+            name
+          )
         `)
         .eq('hub_id', hubId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as (HubMember & { profile: any })[];
+      return data;
     },
   });
 
@@ -41,15 +50,15 @@ export function HubMembers({ hubId }: HubMembersProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-4">
                 <Avatar>
-                  <AvatarImage src={member.profile.avatar_url} />
+                  <AvatarImage src={member.profile?.avatar_url} />
                   <AvatarFallback>
-                    {member.profile.first_name?.[0]}
-                    {member.profile.last_name?.[0]}
+                    {member.profile?.first_name?.[0]}
+                    {member.profile?.last_name?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="font-semibold">
-                    {member.profile.first_name} {member.profile.last_name}
+                    {member.profile?.first_name} {member.profile?.last_name}
                   </div>
                   <div className="text-sm text-muted-foreground capitalize">
                     {member.role}
@@ -58,9 +67,9 @@ export function HubMembers({ hubId }: HubMembersProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {member.department_id && (
+              {member.department && (
                 <div className="text-sm text-muted-foreground">
-                  Department: {member.department_id}
+                  Department: {member.department.name}
                 </div>
               )}
             </CardContent>

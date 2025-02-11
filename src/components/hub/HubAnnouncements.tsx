@@ -21,12 +21,18 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hub_announcements')
-        .select('*')
+        .select(`
+          *,
+          created_by_profile:created_by(
+            first_name,
+            last_name
+          )
+        `)
         .eq('hub_id', hubId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as HubAnnouncement[];
+      return data;
     },
   });
 
@@ -68,6 +74,11 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap">{announcement.content}</p>
+              {announcement.created_by_profile && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Posted by: {announcement.created_by_profile.first_name} {announcement.created_by_profile.last_name}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}

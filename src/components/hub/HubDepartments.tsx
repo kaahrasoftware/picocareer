@@ -20,12 +20,18 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hub_departments')
-        .select('*')
+        .select(`
+          *,
+          parent:parent_department_id(
+            id,
+            name
+          )
+        `)
         .eq('hub_id', hubId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as HubDepartment[];
+      return data;
     },
   });
 
@@ -60,11 +66,18 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
                 {department.name}
               </CardTitle>
             </CardHeader>
-            {department.description && (
+            {(department.description || department.parent) && (
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {department.description}
-                </p>
+                {department.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {department.description}
+                  </p>
+                )}
+                {department.parent && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Parent Department: {department.parent.name}
+                  </p>
+                )}
               </CardContent>
             )}
           </Card>
