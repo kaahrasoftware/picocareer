@@ -17,7 +17,7 @@ import { CardContent, Card } from "@/components/ui/card";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
-  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+  const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
   const { data: hub, isLoading: hubLoading } = useQuery({
     queryKey: ['hub', id],
@@ -62,6 +62,18 @@ export default function Hub() {
     },
     enabled: !!id,
   });
+
+  if (!id || !isValidUUID) {
+    return (
+      <div className="container mx-auto py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Invalid Hub ID</h1>
+        <p className="text-muted-foreground mb-4">
+          The hub ID provided is not valid.
+        </p>
+        <Button onClick={() => window.history.back()}>Go Back</Button>
+      </div>
+    );
+  }
 
   if (hubLoading || statsLoading) {
     return (
