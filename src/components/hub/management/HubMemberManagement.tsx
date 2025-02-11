@@ -34,7 +34,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
         .from('hub_members')
         .select(`
           *,
-          profiles!hub_members_profile_id_fkey (
+          profiles (
             id,
             first_name,
             last_name,
