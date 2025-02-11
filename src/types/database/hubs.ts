@@ -28,7 +28,7 @@ export interface Hub {
     linkedin?: string;
     instagram?: string;
   };
-  status: Status;
+  status: 'Approved' | 'Pending' | 'Rejected';
   created_at: string;
   updated_at: string;
 }
@@ -67,7 +67,7 @@ export interface HubMember {
   profile_id: string;
   department_id?: string;
   role: MemberRole;
-  status: Status;
+  status: 'Approved' | 'Pending' | 'Rejected';
   join_date: string;
   created_at: string;
   updated_at: string;
