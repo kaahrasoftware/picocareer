@@ -14,11 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Globe, MapPin, Users, FileText, Link2, Twitter, Facebook, Linkedin, Instagram } from "lucide-react";
 import { CardContent, Card } from "@/components/ui/card";
-import { useAuthSession } from "@/hooks/useAuthSession";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
-  const { session } = useAuthSession();
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
 
   const { data: hub, isLoading: hubLoading } = useQuery({
@@ -38,32 +36,6 @@ export default function Hub() {
       return data as Hub;
     },
     enabled: !!id && isValidUUID,
-  });
-
-  // Check if user is a member - now using the user's profile id
-  const { data: isMember } = useQuery({
-    queryKey: ['hub-membership', id, session?.user?.id],
-    queryFn: async () => {
-      if (!id || !session?.user?.id) return false;
-      console.log('Checking membership for user:', session.user.id, 'in hub:', id);
-
-      const { data: hubMember, error } = await supabase
-        .from('hub_members')
-        .select('id')
-        .eq('hub_id', id)
-        .eq('profile_id', session.user.id)
-        .eq('status', 'Approved')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking membership:', error);
-        return false;
-      }
-
-      console.log('Membership check result:', !!hubMember);
-      return !!hubMember;
-    },
-    enabled: !!id && !!session?.user?.id,
   });
 
   // Fetch hub statistics
@@ -120,14 +92,10 @@ export default function Hub() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          {isMember && (
-            <>
-              <TabsTrigger value="announcements">Announcements</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="departments">Departments</TabsTrigger>
-            </>
-          )}
+          <TabsTrigger value="announcements">Announcements</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="departments">Departments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -243,25 +211,21 @@ export default function Hub() {
           </div>
         </TabsContent>
 
-        {isMember && (
-          <>
-            <TabsContent value="announcements" className="mt-6">
-              <HubAnnouncements hubId={hub.id} />
-            </TabsContent>
+        <TabsContent value="announcements" className="mt-6">
+          <HubAnnouncements hubId={hub.id} />
+        </TabsContent>
 
-            <TabsContent value="resources" className="mt-6">
-              <HubResources hubId={hub.id} />
-            </TabsContent>
+        <TabsContent value="resources" className="mt-6">
+          <HubResources hubId={hub.id} />
+        </TabsContent>
 
-            <TabsContent value="members" className="mt-6">
-              <HubMembers hubId={hub.id} />
-            </TabsContent>
+        <TabsContent value="members" className="mt-6">
+          <HubMembers hubId={hub.id} />
+        </TabsContent>
 
-            <TabsContent value="departments" className="mt-6">
-              <HubDepartments hubId={hub.id} />
-            </TabsContent>
-          </>
-        )}
+        <TabsContent value="departments" className="mt-6">
+          <HubDepartments hubId={hub.id} />
+        </TabsContent>
       </Tabs>
     </div>
   );
