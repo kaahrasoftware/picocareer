@@ -38,6 +38,24 @@ export default function Hub() {
     enabled: !!id && isValidUUID,
   });
 
+  // Check if user is a member
+  const { data: isMember } = useQuery({
+    queryKey: ['hub-membership', id],
+    queryFn: async () => {
+      if (!id) return false;
+
+      const { data: hubMember } = await supabase
+        .from('hub_members')
+        .select('status')
+        .eq('hub_id', id)
+        .eq('status', 'Approved')
+        .maybeSingle();
+
+      return !!hubMember;
+    },
+    enabled: !!id,
+  });
+
   // Fetch hub statistics
   const { data: hubStats, isLoading: statsLoading } = useQuery({
     queryKey: ['hub-stats', id],
@@ -92,10 +110,14 @@ export default function Hub() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="announcements">Announcements</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="departments">Departments</TabsTrigger>
+          {isMember && (
+            <>
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
+              <TabsTrigger value="resources">Resources</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
+              <TabsTrigger value="departments">Departments</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -211,21 +233,25 @@ export default function Hub() {
           </div>
         </TabsContent>
 
-        <TabsContent value="announcements" className="mt-6">
-          <HubAnnouncements hubId={hub.id} />
-        </TabsContent>
+        {isMember && (
+          <>
+            <TabsContent value="announcements" className="mt-6">
+              <HubAnnouncements hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="resources" className="mt-6">
-          <HubResources hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="resources" className="mt-6">
+              <HubResources hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="members" className="mt-6">
-          <HubMembers hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="members" className="mt-6">
+              <HubMembers hubId={hub.id} />
+            </TabsContent>
 
-        <TabsContent value="departments" className="mt-6">
-          <HubDepartments hubId={hub.id} />
-        </TabsContent>
+            <TabsContent value="departments" className="mt-6">
+              <HubDepartments hubId={hub.id} />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
