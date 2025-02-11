@@ -24,6 +24,8 @@ import Event from "@/pages/Event";
 import EventUpload from "@/pages/EventUpload";
 import Funding from "@/pages/Funding";
 import Index from "@/pages/Index";
+import Institution from "@/pages/Institution";
+import Institutions from "@/pages/Institutions";
 import MajorUpload from "@/pages/MajorUpload";
 import Mentor from "@/pages/Mentor";
 import MentorRegistration from "@/pages/MentorRegistration";
@@ -126,6 +128,16 @@ const router = createBrowserRouter([
   {
     path: "/funding",
     element: <MainLayout><Funding /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/institutions",
+    element: <MainLayout><Institutions /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/institutions/:id",
+    element: <MainLayout><Institution /></MainLayout>,
     errorElement: <Error />,
   },
   {
