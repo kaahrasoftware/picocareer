@@ -9,9 +9,10 @@ import { HubResources } from "@/components/hub/HubResources";
 import { HubAnnouncements } from "@/components/hub/HubAnnouncements";
 import { HubMembers } from "@/components/hub/HubMembers";
 import { HubDepartments } from "@/components/hub/HubDepartments";
+import { HubManagement } from "@/components/hub/management/HubManagement";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Globe, MapPin, Users, FileText, Link2, Twitter, Facebook, Linkedin, Instagram } from "lucide-react";
-import { CardContent, Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
@@ -19,20 +20,30 @@ export default function Hub() {
   const { id } = useParams<{ id: string }>();
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
-  // Check if user is a hub member
-  const { data: isMember, isLoading: isMemberLoading } = useQuery({
-    queryKey: ['is-hub-member', id],
+  // Check if user is a hub member and their role
+  const { data: memberData, isLoading: isMemberLoading } = useQuery({
+    queryKey: ['hub-member-role', id],
     queryFn: async () => {
-      if (!id) return false;
-      const { data, error } = await supabase.rpc('is_hub_member', { hub_id: id });
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('hub_members')
+        .select('role, status')
+        .eq('hub_id', id)
+        .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
       if (error) {
         console.error('Error checking hub membership:', error);
-        return false;
+        return null;
       }
       return data;
     },
     enabled: !!id && isValidUUID,
   });
+
+  const isAdmin = memberData?.role === 'admin';
+  const isModerator = memberData?.role === 'moderator';
+  const isMember = memberData?.status === 'Approved';
 
   const { data: hub, isLoading: hubLoading } = useQuery({
     queryKey: ['hub', id],
@@ -126,11 +137,13 @@ export default function Hub() {
               <TabsTrigger value="departments">Departments</TabsTrigger>
             </>
           )}
+          {(isAdmin || isModerator) && (
+            <TabsTrigger value="manage">Manage</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Stats */}
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-4">
@@ -165,7 +178,6 @@ export default function Hub() {
               </CardContent>
             </Card>
 
-            {/* Contact & Social */}
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-4">
@@ -228,7 +240,6 @@ export default function Hub() {
               </CardContent>
             </Card>
 
-            {/* Important Links */}
             {hub.important_links && hub.important_links.length > 0 && (
               <Card className="md:col-span-2">
                 <CardHeader>
@@ -253,7 +264,6 @@ export default function Hub() {
               </Card>
             )}
 
-            {/* Description */}
             {hub.description && (
               <Card className="md:col-span-2">
                 <CardContent className="pt-6">
@@ -293,6 +303,12 @@ export default function Hub() {
               <HubDepartments hubId={hub.id} />
             </TabsContent>
           </>
+        )}
+
+        {(isAdmin || isModerator) && (
+          <TabsContent value="manage" className="mt-6">
+            <HubManagement hub={hub} />
+          </TabsContent>
         )}
       </Tabs>
     </div>

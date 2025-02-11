@@ -1,0 +1,40 @@
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HubGeneralSettings } from "./HubGeneralSettings";
+import { HubMemberManagement } from "./HubMemberManagement";
+import { HubContentManagement } from "./HubContentManagement";
+import { HubActivityLogs } from "./HubActivityLogs";
+import type { Hub } from "@/types/database/hubs";
+
+interface HubManagementProps {
+  hub: Hub;
+}
+
+export function HubManagement({ hub }: HubManagementProps) {
+  return (
+    <Tabs defaultValue="general" className="w-full">
+      <TabsList className="w-full justify-start">
+        <TabsTrigger value="general">General Settings</TabsTrigger>
+        <TabsTrigger value="members">Members</TabsTrigger>
+        <TabsTrigger value="content">Content</TabsTrigger>
+        <TabsTrigger value="activity">Activity Logs</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="general" className="space-y-4 mt-6">
+        <HubGeneralSettings hub={hub} />
+      </TabsContent>
+
+      <TabsContent value="members" className="space-y-4 mt-6">
+        <HubMemberManagement hubId={hub.id} />
+      </TabsContent>
+
+      <TabsContent value="content" className="space-y-4 mt-6">
+        <HubContentManagement hubId={hub.id} />
+      </TabsContent>
+
+      <TabsContent value="activity" className="space-y-4 mt-6">
+        <HubActivityLogs hubId={hub.id} />
+      </TabsContent>
+    </Tabs>
+  );
+}

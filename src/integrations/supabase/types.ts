@@ -524,6 +524,48 @@ export type Database = {
           },
         ]
       }
+      hub_audit_logs: {
+        Row: {
+          action: Database["public"]["Enums"]["audit_action"]
+          created_at: string
+          details: Json | null
+          hub_id: string
+          id: string
+          performed_by: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          details?: Json | null
+          hub_id: string
+          id?: string
+          performed_by: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          details?: Json | null
+          hub_id?: string
+          id?: string
+          performed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_audit_logs_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_audit_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_departments: {
         Row: {
           created_at: string | null
@@ -565,6 +607,57 @@ export type Database = {
             columns: ["parent_department_id"]
             isOneToOne: false
             referencedRelation: "hub_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_member_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          hub_id: string
+          id: string
+          invited_by: string
+          invited_email: string
+          role: Database["public"]["Enums"]["hub_member_role"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          hub_id: string
+          id?: string
+          invited_by: string
+          invited_email: string
+          role?: Database["public"]["Enums"]["hub_member_role"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          hub_id?: string
+          id?: string
+          invited_by?: string
+          invited_email?: string
+          role?: Database["public"]["Enums"]["hub_member_role"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_member_invites_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_member_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2294,6 +2387,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_hub_audit_event: {
+        Args: {
+          _hub_id: string
+          _action: Database["public"]["Enums"]["audit_action"]
+          _details?: Json
+        }
+        Returns: undefined
+      }
       manually_update_majors_profiles_count: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2344,6 +2445,19 @@ export type Database = {
     }
     Enums: {
       announcement_category: "event" | "news" | "alert" | "general"
+      audit_action:
+        | "member_added"
+        | "member_removed"
+        | "member_role_changed"
+        | "hub_settings_updated"
+        | "announcement_created"
+        | "announcement_updated"
+        | "announcement_deleted"
+        | "resource_added"
+        | "resource_removed"
+        | "department_created"
+        | "department_updated"
+        | "department_deleted"
       categories:
         | "Technology"
         | "Digital Tools"
