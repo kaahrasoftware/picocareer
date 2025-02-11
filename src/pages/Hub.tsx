@@ -72,7 +72,7 @@ export default function Hub() {
           .from('hub_members')
           .select('id', { count: 'exact', head: true })
           .eq('hub_id', id)
-          .eq('status', 'Approved'),
+          .eq('status', 'Approved'), // Only count approved members, but of all roles
         supabase
           .from('hub_resources')
           .select('id', { count: 'exact', head: true })
