@@ -14,9 +14,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Globe, MapPin, Users, FileText, Link2, Twitter, Facebook, Linkedin, Instagram } from "lucide-react";
 import { CardContent, Card } from "@/components/ui/card";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
+  const { session } = useAuthSession();
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
 
   const { data: hub, isLoading: hubLoading } = useQuery({
@@ -38,22 +40,23 @@ export default function Hub() {
     enabled: !!id && isValidUUID,
   });
 
-  // Check if user is a member
+  // Check if user is a member - now using the user's ID from the session
   const { data: isMember } = useQuery({
-    queryKey: ['hub-membership', id],
+    queryKey: ['hub-membership', id, session?.user?.id],
     queryFn: async () => {
-      if (!id) return false;
+      if (!id || !session?.user?.id) return false;
 
       const { data: hubMember } = await supabase
         .from('hub_members')
         .select('status')
         .eq('hub_id', id)
+        .eq('profile_id', session.user.id)
         .eq('status', 'Approved')
         .maybeSingle();
 
       return !!hubMember;
     },
-    enabled: !!id,
+    enabled: !!id && !!session?.user?.id,
   });
 
   // Fetch hub statistics
