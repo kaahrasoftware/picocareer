@@ -3,35 +3,40 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { HubMember } from "@/types/database/hubs";
 
 interface HubMembersProps {
   hubId: string;
 }
 
 export function HubMembers({ hubId }: HubMembersProps) {
-  const { data: members, isLoading } = useQuery({
+  const { data: members, isLoading, error } = useQuery({
     queryKey: ['hub-members', hubId],
     queryFn: async () => {
+      console.log('Fetching members for hub:', hubId);
+      
       const { data, error } = await supabase
         .from('hub_members')
         .select(`
           *,
-          profile:profile_id(
+          profile:profiles(
             id,
             first_name,
             last_name,
             avatar_url
           ),
-          department:department_id(
+          department:hub_departments(
             id,
             name
           )
         `)
-        .eq('hub_id', hubId)
-        .order('created_at', { ascending: false });
+        .eq('hub_id', hubId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching members:', error);
+        throw error;
+      }
+      
+      console.log('Fetched members:', data);
       return data;
     },
   });
@@ -40,12 +45,21 @@ export function HubMembers({ hubId }: HubMembersProps) {
     return <div>Loading members...</div>;
   }
 
+  if (error) {
+    console.error('Error in HubMembers:', error);
+    return <div>Error loading members</div>;
+  }
+
+  if (!members || members.length === 0) {
+    return <div>No members found</div>;
+  }
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Members</h2>
+      <h2 className="text-xl font-semibold">Members ({members.length})</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {members?.map((member) => (
+        {members.map((member) => (
           <Card key={member.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-4">
