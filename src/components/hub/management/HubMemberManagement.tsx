@@ -1,30 +1,16 @@
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, UserPlus, X } from "lucide-react";
+import { InviteMemberForm } from "./InviteMemberForm";
+import { PendingInvites } from "./PendingInvites";
+import { MembersList } from "./MembersList";
 
 interface HubMemberManagementProps {
   hubId: string;
 }
 
 export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
-  const { toast } = useToast();
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState("member");
-  const [isInviting, setIsInviting] = useState(false);
-
   // Fetch pending invites
   const { data: pendingInvites, isLoading: isLoadingInvites } = useQuery({
     queryKey: ['hub-pending-invites', hubId],
@@ -63,140 +49,6 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
     },
   });
 
-  const handleInvite = async () => {
-    try {
-      setIsInviting(true);
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      const { error } = await supabase
-        .from('hub_member_invites')
-        .insert({
-          hub_id: hubId,
-          invited_email: inviteEmail,
-          role: selectedRole,
-          invited_by: user.id
-        });
-
-      if (error) throw error;
-
-      // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hubId,
-        _action: 'member_invitation_sent',
-        _details: { email: inviteEmail, role: selectedRole }
-      });
-
-      toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${inviteEmail}`,
-      });
-
-      setInviteEmail("");
-      setSelectedRole("member");
-    } catch (error) {
-      console.error('Error sending invite:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send invitation. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsInviting(false);
-    }
-  };
-
-  const handleRoleChange = async (memberId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('hub_members')
-        .update({ role: newRole })
-        .eq('id', memberId);
-
-      if (error) throw error;
-
-      // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hubId,
-        _action: 'member_role_updated',
-        _details: { member_id: memberId, new_role: newRole }
-      });
-
-      toast({
-        title: "Role updated",
-        description: "Member role has been updated successfully",
-      });
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update member role. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRemoveMember = async (memberId: string) => {
-    try {
-      const { error } = await supabase
-        .from('hub_members')
-        .delete()
-        .eq('id', memberId);
-
-      if (error) throw error;
-
-      // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hubId,
-        _action: 'member_removed',
-        _details: { member_id: memberId }
-      });
-
-      toast({
-        title: "Member removed",
-        description: "Member has been removed from the hub",
-      });
-    } catch (error) {
-      console.error('Error removing member:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove member. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancelInvite = async (inviteId: string) => {
-    try {
-      const { error } = await supabase
-        .from('hub_member_invites')
-        .delete()
-        .eq('id', inviteId);
-
-      if (error) throw error;
-
-      // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hubId,
-        _action: 'member_invitation_cancelled',
-        _details: { invite_id: inviteId }
-      });
-
-      toast({
-        title: "Invitation cancelled",
-        description: "The invitation has been cancelled",
-      });
-    } catch (error) {
-      console.error('Error cancelling invite:', error);
-      toast({
-        title: "Error",
-        description: "Failed to cancel invitation. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (isLoadingMembers || isLoadingInvites) {
     return <div className="flex items-center justify-center p-4">
       <Loader2 className="h-6 w-6 animate-spin" />
@@ -205,108 +57,9 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Invite Members</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <Input
-              type="email"
-              placeholder="Enter email address"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-            />
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              onClick={handleInvite} 
-              disabled={isInviting || !inviteEmail}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              {isInviting ? "Sending..." : "Invite"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {pendingInvites && pendingInvites.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Invites</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {pendingInvites.map((invite) => (
-                <div key={invite.id} className="flex items-center justify-between p-2 border rounded">
-                  <div>
-                    <p className="font-medium">{invite.invited_email}</p>
-                    <p className="text-sm text-muted-foreground">Role: {invite.role}</p>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleCancelInvite(invite.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Members</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {members?.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-2 border rounded">
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {member.profiles?.first_name} {member.profiles?.last_name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{member.profiles?.email}</p>
-                  </div>
-                  <Select 
-                    defaultValue={member.role}
-                    onValueChange={(value) => handleRoleChange(member.id, value)}
-                  >
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="moderator">Moderator</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => handleRemoveMember(member.id)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <InviteMemberForm hubId={hubId} />
+      <PendingInvites hubId={hubId} pendingInvites={pendingInvites} />
+      <MembersList hubId={hubId} members={members} />
     </div>
   );
 }
-
