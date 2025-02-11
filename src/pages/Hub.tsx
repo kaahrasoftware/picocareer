@@ -40,20 +40,27 @@ export default function Hub() {
     enabled: !!id && isValidUUID,
   });
 
-  // Check if user is a member - now using the user's ID from the session
+  // Check if user is a member - now using the user's profile id
   const { data: isMember } = useQuery({
     queryKey: ['hub-membership', id, session?.user?.id],
     queryFn: async () => {
       if (!id || !session?.user?.id) return false;
+      console.log('Checking membership for user:', session.user.id, 'in hub:', id);
 
-      const { data: hubMember } = await supabase
+      const { data: hubMember, error } = await supabase
         .from('hub_members')
-        .select('status')
+        .select('id')
         .eq('hub_id', id)
         .eq('profile_id', session.user.id)
         .eq('status', 'Approved')
         .maybeSingle();
 
+      if (error) {
+        console.error('Error checking membership:', error);
+        return false;
+      }
+
+      console.log('Membership check result:', !!hubMember);
       return !!hubMember;
     },
     enabled: !!id && !!session?.user?.id,
