@@ -573,10 +573,10 @@ export type Database = {
         Row: {
           created_at: string | null
           department_id: string | null
-          hub_id: string | null
+          hub_id: string
           id: string
           join_date: string | null
-          profile_id: string | null
+          profile_id: string
           role: Database["public"]["Enums"]["hub_member_role"] | null
           status: Database["public"]["Enums"]["status"] | null
           updated_at: string | null
@@ -584,10 +584,10 @@ export type Database = {
         Insert: {
           created_at?: string | null
           department_id?: string | null
-          hub_id?: string | null
+          hub_id: string
           id?: string
           join_date?: string | null
-          profile_id?: string | null
+          profile_id: string
           role?: Database["public"]["Enums"]["hub_member_role"] | null
           status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string | null
@@ -595,10 +595,10 @@ export type Database = {
         Update: {
           created_at?: string | null
           department_id?: string | null
-          hub_id?: string | null
+          hub_id?: string
           id?: string
           join_date?: string | null
-          profile_id?: string | null
+          profile_id?: string
           role?: Database["public"]["Enums"]["hub_member_role"] | null
           status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string | null
