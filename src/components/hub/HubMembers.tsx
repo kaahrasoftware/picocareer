@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,7 +20,7 @@ export function HubMembers({ hubId }: HubMembersProps) {
         .select(`
           id,
           role,
-          profile:profiles!hub_members_profile_id_fkey (
+          profile:profiles (
             id,
             first_name,
             last_name,
