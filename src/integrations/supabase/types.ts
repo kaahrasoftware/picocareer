@@ -467,15 +467,15 @@ export type Database = {
           },
         ]
       }
-      institution_announcements: {
+      hub_announcements: {
         Row: {
           category: Database["public"]["Enums"]["announcement_category"] | null
           content: string
           created_at: string | null
           created_by: string | null
           expires_at: string | null
+          hub_id: string | null
           id: string
-          institution_id: string | null
           scheduled_for: string | null
           target_audience: string[] | null
           title: string
@@ -487,8 +487,8 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           scheduled_for?: string | null
           target_audience?: string[] | null
           title: string
@@ -500,8 +500,8 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           scheduled_for?: string | null
           target_audience?: string[] | null
           title?: string
@@ -517,19 +517,19 @@ export type Database = {
           },
           {
             foreignKeyName: "institution_announcements_institution_id_fkey"
-            columns: ["institution_id"]
+            columns: ["hub_id"]
             isOneToOne: false
-            referencedRelation: "institutions"
+            referencedRelation: "hubs"
             referencedColumns: ["id"]
           },
         ]
       }
-      institution_departments: {
+      hub_departments: {
         Row: {
           created_at: string | null
           description: string | null
+          hub_id: string | null
           id: string
-          institution_id: string | null
           name: string
           parent_department_id: string | null
           updated_at: string | null
@@ -537,8 +537,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description?: string | null
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           name: string
           parent_department_id?: string | null
           updated_at?: string | null
@@ -546,8 +546,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string | null
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           name?: string
           parent_department_id?: string | null
           updated_at?: string | null
@@ -555,51 +555,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "institution_departments_institution_id_fkey"
-            columns: ["institution_id"]
+            columns: ["hub_id"]
             isOneToOne: false
-            referencedRelation: "institutions"
+            referencedRelation: "hubs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "institution_departments_parent_department_id_fkey"
             columns: ["parent_department_id"]
             isOneToOne: false
-            referencedRelation: "institution_departments"
+            referencedRelation: "hub_departments"
             referencedColumns: ["id"]
           },
         ]
       }
-      institution_members: {
+      hub_members: {
         Row: {
           created_at: string | null
           department_id: string | null
+          hub_id: string | null
           id: string
-          institution_id: string | null
           join_date: string | null
           profile_id: string | null
-          role: Database["public"]["Enums"]["institution_member_role"] | null
+          role: Database["public"]["Enums"]["hub_member_role"] | null
           status: Database["public"]["Enums"]["status"] | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           department_id?: string | null
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           join_date?: string | null
           profile_id?: string | null
-          role?: Database["public"]["Enums"]["institution_member_role"] | null
+          role?: Database["public"]["Enums"]["hub_member_role"] | null
           status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           department_id?: string | null
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           join_date?: string | null
           profile_id?: string | null
-          role?: Database["public"]["Enums"]["institution_member_role"] | null
+          role?: Database["public"]["Enums"]["hub_member_role"] | null
           status?: Database["public"]["Enums"]["status"] | null
           updated_at?: string | null
         }
@@ -608,14 +608,14 @@ export type Database = {
             foreignKeyName: "institution_members_department_id_fkey"
             columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: "institution_departments"
+            referencedRelation: "hub_departments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "institution_members_institution_id_fkey"
-            columns: ["institution_id"]
+            columns: ["hub_id"]
             isOneToOne: false
-            referencedRelation: "institutions"
+            referencedRelation: "hubs"
             referencedColumns: ["id"]
           },
           {
@@ -627,7 +627,7 @@ export type Database = {
           },
         ]
       }
-      institution_resources: {
+      hub_resources: {
         Row: {
           access_level:
             | Database["public"]["Enums"]["resource_access_level"]
@@ -637,8 +637,8 @@ export type Database = {
           created_by: string | null
           description: string | null
           file_url: string
+          hub_id: string | null
           id: string
-          institution_id: string | null
           title: string
           updated_at: string | null
           version: number | null
@@ -652,8 +652,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           file_url: string
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           title: string
           updated_at?: string | null
           version?: number | null
@@ -667,8 +667,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           file_url?: string
+          hub_id?: string | null
           id?: string
-          institution_id?: string | null
           title?: string
           updated_at?: string | null
           version?: number | null
@@ -683,14 +683,14 @@ export type Database = {
           },
           {
             foreignKeyName: "institution_resources_institution_id_fkey"
-            columns: ["institution_id"]
+            columns: ["hub_id"]
             isOneToOne: false
-            referencedRelation: "institutions"
+            referencedRelation: "hubs"
             referencedColumns: ["id"]
           },
         ]
       }
-      institutions: {
+      hubs: {
         Row: {
           banner_url: string | null
           brand_colors: Json | null
@@ -702,7 +702,7 @@ export type Database = {
           name: string
           social_links: Json | null
           status: Database["public"]["Enums"]["status"] | null
-          type: Database["public"]["Enums"]["institution_type"]
+          type: Database["public"]["Enums"]["hub_type"]
           updated_at: string | null
           website: string | null
         }
@@ -717,7 +717,7 @@ export type Database = {
           name: string
           social_links?: Json | null
           status?: Database["public"]["Enums"]["status"] | null
-          type: Database["public"]["Enums"]["institution_type"]
+          type: Database["public"]["Enums"]["hub_type"]
           updated_at?: string | null
           website?: string | null
         }
@@ -732,7 +732,7 @@ export type Database = {
           name?: string
           social_links?: Json | null
           status?: Database["public"]["Enums"]["status"] | null
-          type?: Database["public"]["Enums"]["institution_type"]
+          type?: Database["public"]["Enums"]["hub_type"]
           updated_at?: string | null
           website?: string | null
         }
@@ -2560,13 +2560,8 @@ export type Database = {
         | "Webinar"
         | "Workshop"
       feedback_type: "mentor_feedback" | "mentee_feedback"
-      institution_member_role:
-        | "admin"
-        | "moderator"
-        | "member"
-        | "faculty"
-        | "student"
-      institution_type: "University" | "NGO" | "Organization" | "High School"
+      hub_member_role: "admin" | "moderator" | "member" | "faculty" | "student"
+      hub_type: "University" | "NGO" | "Organization" | "High School"
       interaction_type:
         | "page_view"
         | "click"

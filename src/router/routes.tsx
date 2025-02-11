@@ -16,8 +16,8 @@ import Event from "@/pages/Event";
 import EventUpload from "@/pages/EventUpload";
 import Funding from "@/pages/Funding";
 import Index from "@/pages/Index";
-import Institution from "@/pages/Institution";
-import Institutions from "@/pages/Institutions";
+import Hub from "@/pages/Hub";
+import Hubs from "@/pages/Hubs";
 import MajorUpload from "@/pages/MajorUpload";
 import Mentor from "@/pages/Mentor";
 import MentorRegistration from "@/pages/MentorRegistration";
@@ -87,13 +87,13 @@ export const routes: RouteObject[] = [
     errorElement: <Error />,
   },
   {
-    path: "/institutions",
-    element: <MainLayout><Institutions /></MainLayout>,
+    path: "/hubs",
+    element: <MainLayout><Hubs /></MainLayout>,
     errorElement: <Error />,
   },
   {
-    path: "/institutions/:id",
-    element: <MainLayout><Institution /></MainLayout>,
+    path: "/hubs/:id",
+    element: <MainLayout><Hub /></MainLayout>,
     errorElement: <Error />,
   },
   {
