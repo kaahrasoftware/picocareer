@@ -605,6 +605,27 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "hub_members_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "hub_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_members_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "institution_members_department_id_fkey"
             columns: ["department_id"]
             isOneToOne: false
