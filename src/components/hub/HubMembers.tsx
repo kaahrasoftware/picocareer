@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface HubMembersProps {
   hubId: string;
@@ -32,6 +34,10 @@ export function HubMembers({ hubId }: HubMembersProps) {
 
       if (error) {
         console.error('Error fetching members:', error);
+        // Check if the error is due to RLS policy
+        if (error.code === 'PGRST301' || error.message?.includes('permission denied')) {
+          throw new Error('access_denied');
+        }
         throw error;
       }
       
@@ -64,11 +70,25 @@ export function HubMembers({ hubId }: HubMembersProps) {
   }
 
   if (error) {
-    console.error('Error in HubMembers:', error);
+    // Show special message for access denied
+    if (error.message === 'access_denied') {
+      return (
+        <Alert variant="destructive" className="my-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            You need to be a member of this hub to view its members.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
     return (
-      <div className="p-4 text-center">
-        <p className="text-red-500">Error loading members. Please try again later.</p>
-      </div>
+      <Alert variant="destructive" className="my-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Error loading members. Please try again later.
+        </AlertDescription>
+      </Alert>
     );
   }
 
