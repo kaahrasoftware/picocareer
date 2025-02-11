@@ -20,13 +20,13 @@ export function HubMembers({ hubId }: HubMembersProps) {
         .select(`
           id,
           role,
-          profile:profiles(
+          profile:profiles!hub_members_profile_id_fkey (
             id,
             first_name,
             last_name,
             avatar_url
           ),
-          department:hub_departments(
+          department:hub_departments!hub_members_department_id_fkey (
             id,
             name
           )
