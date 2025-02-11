@@ -467,6 +467,277 @@ export type Database = {
           },
         ]
       }
+      institution_announcements: {
+        Row: {
+          category: Database["public"]["Enums"]["announcement_category"] | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          institution_id: string | null
+          scheduled_for: string | null
+          target_audience: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["announcement_category"] | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          institution_id?: string | null
+          scheduled_for?: string | null
+          target_audience?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["announcement_category"] | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          institution_id?: string | null
+          scheduled_for?: string | null
+          target_audience?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_announcements_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_departments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          institution_id: string | null
+          name: string
+          parent_department_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          institution_id?: string | null
+          name: string
+          parent_department_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          institution_id?: string | null
+          name?: string
+          parent_department_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_departments_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            isOneToOne: false
+            referencedRelation: "institution_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_members: {
+        Row: {
+          created_at: string | null
+          department_id: string | null
+          id: string
+          institution_id: string | null
+          join_date: string | null
+          profile_id: string | null
+          role: Database["public"]["Enums"]["institution_member_role"] | null
+          status: Database["public"]["Enums"]["status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department_id?: string | null
+          id?: string
+          institution_id?: string | null
+          join_date?: string | null
+          profile_id?: string | null
+          role?: Database["public"]["Enums"]["institution_member_role"] | null
+          status?: Database["public"]["Enums"]["status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string | null
+          id?: string
+          institution_id?: string | null
+          join_date?: string | null
+          profile_id?: string | null
+          role?: Database["public"]["Enums"]["institution_member_role"] | null
+          status?: Database["public"]["Enums"]["status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_members_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "institution_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_members_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_resources: {
+        Row: {
+          access_level:
+            | Database["public"]["Enums"]["resource_access_level"]
+            | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_url: string
+          id: string
+          institution_id: string | null
+          title: string
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          access_level?:
+            | Database["public"]["Enums"]["resource_access_level"]
+            | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url: string
+          id?: string
+          institution_id?: string | null
+          title: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          access_level?:
+            | Database["public"]["Enums"]["resource_access_level"]
+            | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string
+          id?: string
+          institution_id?: string | null
+          title?: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_resources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_resources_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institutions: {
+        Row: {
+          banner_url: string | null
+          brand_colors: Json | null
+          contact_info: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          social_links: Json | null
+          status: Database["public"]["Enums"]["status"] | null
+          type: Database["public"]["Enums"]["institution_type"]
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          brand_colors?: Json | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          social_links?: Json | null
+          status?: Database["public"]["Enums"]["status"] | null
+          type: Database["public"]["Enums"]["institution_type"]
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          brand_colors?: Json | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          social_links?: Json | null
+          status?: Database["public"]["Enums"]["status"] | null
+          type?: Database["public"]["Enums"]["institution_type"]
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       majors: {
         Row: {
           affiliated_programs: string[] | null
@@ -2042,6 +2313,7 @@ export type Database = {
       }
     }
     Enums: {
+      announcement_category: "event" | "news" | "alert" | "general"
       categories:
         | "Technology"
         | "Digital Tools"
@@ -2288,6 +2560,13 @@ export type Database = {
         | "Webinar"
         | "Workshop"
       feedback_type: "mentor_feedback" | "mentee_feedback"
+      institution_member_role:
+        | "admin"
+        | "moderator"
+        | "member"
+        | "faculty"
+        | "student"
+      institution_type: "University" | "NGO" | "Organization" | "High School"
       interaction_type:
         | "page_view"
         | "click"
@@ -2353,6 +2632,7 @@ export type Database = {
         | "likert_scale"
         | "open_ended"
       recommendation_type: "career" | "major" | "trait"
+      resource_access_level: "public" | "members" | "faculty" | "admin"
       school_type: "High School" | "College" | "University" | "Other"
       session_type:
         | "Know About my Career"
