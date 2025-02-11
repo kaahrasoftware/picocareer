@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, List, History, User, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface HubActivityLogsProps {
@@ -37,6 +37,18 @@ export function HubActivityLogs({ hubId }: HubActivityLogsProps) {
     </div>;
   }
 
+  const formatActionText = (action: string) => {
+    return action.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  const getActionIcon = (action: string) => {
+    if (action.includes('member')) return <User className="h-4 w-4" />;
+    if (action.includes('resource')) return <List className="h-4 w-4" />;
+    return <History className="h-4 w-4" />;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -45,25 +57,39 @@ export function HubActivityLogs({ hubId }: HubActivityLogsProps) {
       <CardContent>
         <div className="space-y-4">
           {auditLogs?.map((log) => (
-            <div key={log.id} className="flex items-start gap-4 p-2 border rounded">
-              <div className="flex-1">
-                <p className="font-medium">
-                  {log.performed_by?.first_name} {log.performed_by?.last_name}
-                </p>
+            <div key={log.id} className="flex items-start gap-4 p-4 border rounded bg-card hover:bg-accent/50 transition-colors">
+              <div className="p-2 rounded-full bg-muted">
+                {getActionIcon(log.action)}
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">
+                    {log.performed_by?.first_name} {log.performed_by?.last_name}
+                  </p>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <p className="text-xs">
+                      {new Date(log.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  {log.action.replace(/_/g, ' ')}
+                  {formatActionText(log.action)}
                 </p>
                 {log.details && (
-                  <pre className="mt-2 text-xs bg-muted p-2 rounded">
+                  <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-x-auto">
                     {JSON.stringify(log.details, null, 2)}
                   </pre>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {new Date(log.created_at).toLocaleString()}
-              </p>
             </div>
           ))}
+
+          {auditLogs?.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground">
+              No activity logs found
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
