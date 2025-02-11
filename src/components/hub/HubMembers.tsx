@@ -25,10 +25,6 @@ export function HubMembers({ hubId }: HubMembersProps) {
             first_name,
             last_name,
             avatar_url
-          ),
-          department:hub_departments!hub_members_department_id_fkey (
-            id,
-            name
           )
         `)
         .eq('hub_id', hubId);
@@ -59,9 +55,6 @@ export function HubMembers({ hubId }: HubMembersProps) {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Skeleton className="h-3 w-40" />
-              </CardContent>
             </Card>
           ))}
         </div>
@@ -113,13 +106,6 @@ export function HubMembers({ hubId }: HubMembersProps) {
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {member.department && (
-                <div className="text-sm text-muted-foreground">
-                  Department: {member.department.name}
-                </div>
-              )}
-            </CardContent>
           </Card>
         ))}
       </div>
