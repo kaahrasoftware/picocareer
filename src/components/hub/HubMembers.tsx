@@ -22,22 +22,18 @@ export function HubMembers({ hubId }: HubMembersProps) {
         .select(`
           id,
           role,
-          profile_id,
-          profile:profiles!hub_members_profile_id_fkey (
+          profile:profiles (
             id,
             first_name,
             last_name,
             avatar_url
           )
         `)
-        .eq('hub_id', hubId);
+        .eq('hub_id', hubId)
+        .eq('status', 'Approved');
 
       if (error) {
         console.error('Error fetching members:', error);
-        // Check if the error is due to RLS policy
-        if (error.code === 'PGRST301' || error.message?.includes('permission denied')) {
-          throw new Error('access_denied');
-        }
         throw error;
       }
       
@@ -70,18 +66,6 @@ export function HubMembers({ hubId }: HubMembersProps) {
   }
 
   if (error) {
-    // Show special message for access denied
-    if (error.message === 'access_denied') {
-      return (
-        <Alert variant="destructive" className="my-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            You need to be a member of this hub to view its members.
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
     return (
       <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
