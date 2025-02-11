@@ -19,20 +19,31 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
   const { data: announcements, isLoading } = useQuery({
     queryKey: ['hub-announcements', hubId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First fetch announcements
+      const { data: announcementsData, error: announcementsError } = await supabase
         .from('hub_announcements')
-        .select(`
-          *,
-          created_by_profile:created_by(
-            first_name,
-            last_name
-          )
-        `)
+        .select('*')
         .eq('hub_id', hubId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (announcementsError) throw announcementsError;
+
+      // Then fetch creator profiles separately
+      const creatorIds = announcementsData.map(a => a.created_by).filter(Boolean);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', creatorIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const profileMap = new Map(profilesData?.map(p => [p.id, p]));
+      
+      return announcementsData.map(announcement => ({
+        ...announcement,
+        created_by_profile: profileMap.get(announcement.created_by) || null
+      }));
     },
   });
 
