@@ -12,6 +12,23 @@ interface HubMembersProps {
 }
 
 export function HubMembers({ hubId }: HubMembersProps) {
+  // Fetch hub stats for member count
+  const { data: stats } = useQuery({
+    queryKey: ['hub-stats', hubId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('get_hub_stats', { hub_id: hubId });
+
+      if (error) {
+        console.error('Error fetching hub stats:', error);
+        throw error;
+      }
+
+      return data?.[0] || { members_count: 0 };
+    },
+  });
+
+  // Fetch hub members
   const { data: members, isLoading, error } = useQuery({
     queryKey: ['hub-members', hubId],
     queryFn: async () => {
@@ -87,7 +104,9 @@ export function HubMembers({ hubId }: HubMembersProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Members ({members.length})</h2>
+      <h2 className="text-xl font-semibold">
+        Members ({stats?.members_count || members.length})
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {members.map((member) => (
