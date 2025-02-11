@@ -67,17 +67,16 @@ export default function Hub() {
     queryFn: async () => {
       if (!id) return null;
 
-      const [membersCount, resourcesCount] = await Promise.all([
-        supabase
-          .from('hub_members')
-          .select('id', { count: 'exact', head: true })
-          .eq('hub_id', id)
-          .eq('status', 'Approved'), // Only count approved members, but of all roles
-        supabase
-          .from('hub_resources')
-          .select('id', { count: 'exact', head: true })
-          .eq('hub_id', id)
-      ]);
+      const membersCount = await supabase
+        .from('hub_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('hub_id', id)
+        .eq('status', 'Approved');
+
+      const resourcesCount = await supabase
+        .from('hub_resources')
+        .select('id', { count: 'exact', head: true })
+        .eq('hub_id', id);
 
       return {
         membersCount: membersCount.count || 0,
