@@ -228,6 +228,31 @@ export default function Hub() {
               </CardContent>
             </Card>
 
+            {/* Important Links */}
+            {hub.important_links && hub.important_links.length > 0 && (
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Important Links</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {hub.important_links.map((link: { title: string; url: string }, index: number) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-3 rounded-lg border hover:bg-accent transition-colors"
+                      >
+                        <Link2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{link.title}</span>
+                      </a>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Description */}
             {hub.description && (
               <Card className="md:col-span-2">

@@ -719,6 +719,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          important_links: Json | null
           logo_url: string | null
           name: string
           social_links: Json | null
@@ -734,6 +735,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          important_links?: Json | null
           logo_url?: string | null
           name: string
           social_links?: Json | null
@@ -749,6 +751,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          important_links?: Json | null
           logo_url?: string | null
           name?: string
           social_links?: Json | null
