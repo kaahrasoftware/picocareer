@@ -24,7 +24,7 @@ export function HubMembers({ hubId }: HubMembersProps) {
           id,
           role,
           profile_id,
-          profiles:profile_id (
+          profiles!hub_members_profile_id_fkey (
             id,
             first_name,
             last_name,
