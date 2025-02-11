@@ -67,7 +67,6 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
     try {
       setIsInviting(true);
 
-      // Get the current user's profile ID
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
@@ -77,7 +76,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
           hub_id: hubId,
           invited_email: inviteEmail,
           role: selectedRole,
-          invited_by: user.id // Set the invited_by field to current user's ID
+          invited_by: user.id
         });
 
       if (error) throw error;
@@ -85,7 +84,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
       // Log the audit event
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
-        _action: 'member_added',
+        _action: 'member_invitation_sent',
         _details: { email: inviteEmail, role: selectedRole }
       });
 
@@ -105,6 +104,96 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
       });
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  const handleRoleChange = async (memberId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('hub_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: hubId,
+        _action: 'member_role_updated',
+        _details: { member_id: memberId, new_role: newRole }
+      });
+
+      toast({
+        title: "Role updated",
+        description: "Member role has been updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update member role. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      const { error } = await supabase
+        .from('hub_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: hubId,
+        _action: 'member_removed',
+        _details: { member_id: memberId }
+      });
+
+      toast({
+        title: "Member removed",
+        description: "Member has been removed from the hub",
+      });
+    } catch (error) {
+      console.error('Error removing member:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove member. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelInvite = async (inviteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('hub_member_invites')
+        .delete()
+        .eq('id', inviteId);
+
+      if (error) throw error;
+
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: hubId,
+        _action: 'member_invitation_cancelled',
+        _details: { invite_id: inviteId }
+      });
+
+      toast({
+        title: "Invitation cancelled",
+        description: "The invitation has been cancelled",
+      });
+    } catch (error) {
+      console.error('Error cancelling invite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel invitation. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -162,7 +251,11 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
                     <p className="font-medium">{invite.invited_email}</p>
                     <p className="text-sm text-muted-foreground">Role: {invite.role}</p>
                   </div>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleCancelInvite(invite.id)}
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -187,7 +280,10 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
                     </p>
                     <p className="text-sm text-muted-foreground">{member.profiles?.email}</p>
                   </div>
-                  <Select defaultValue={member.role}>
+                  <Select 
+                    defaultValue={member.role}
+                    onValueChange={(value) => handleRoleChange(member.id, value)}
+                  >
                     <SelectTrigger className="w-[150px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -198,7 +294,11 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button variant="ghost" size="icon">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleRemoveMember(member.id)}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -209,3 +309,4 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
     </div>
   );
 }
+
