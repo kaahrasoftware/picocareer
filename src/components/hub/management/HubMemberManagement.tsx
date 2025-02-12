@@ -26,7 +26,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
     },
   });
 
-  // Fetch members with the correct foreign key relationship
+  // Fetch members with the explicit foreign key relationship
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ['hub-members-management', hubId],
     queryFn: async () => {
@@ -34,7 +34,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
         .from('hub_members')
         .select(`
           *,
-          profiles (
+          profiles!hub_members_profile_id_fkey (
             id,
             first_name,
             last_name,
