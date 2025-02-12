@@ -8,6 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Megaphone, Plus } from "lucide-react";
 import { HubAnnouncement } from "@/types/database/hubs";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface HubAnnouncementsProps {
   hubId: string;
@@ -51,6 +58,10 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
     return <div>Loading announcements...</div>;
   }
 
+  // Calculate the number of slides needed (4 cards per slide)
+  const itemsPerSlide = 4;
+  const slides = announcements ? Math.ceil(announcements.length / itemsPerSlide) : 0;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -69,31 +80,52 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
         />
       )}
 
-      <div className="space-y-4">
-        {announcements?.map((announcement) => (
-          <Card key={announcement.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Megaphone className="h-5 w-5" />
-                  {announcement.title}
-                </CardTitle>
-                <span className="text-sm text-muted-foreground">
-                  {format(new Date(announcement.created_at), 'MMM d, yyyy')}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap">{announcement.content}</p>
-              {announcement.created_by_profile && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Posted by: {announcement.created_by_profile.first_name} {announcement.created_by_profile.last_name}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {announcements && announcements.length > 0 && (
+        <Carousel
+          opts={{
+            align: "start",
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {Array.from({ length: slides }).map((_, slideIndex) => (
+              <CarouselItem key={slideIndex} className="pl-4 basis-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {announcements
+                    .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
+                    .map((announcement) => (
+                      <Card key={announcement.id}>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="flex items-center gap-2">
+                              <Megaphone className="h-5 w-5" />
+                              {announcement.title}
+                            </CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="whitespace-pre-wrap line-clamp-3">{announcement.content}</p>
+                          <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+                            <time>
+                              {format(new Date(announcement.created_at), 'MMM d, yyyy')}
+                            </time>
+                            {announcement.created_by_profile && (
+                              <p>
+                                Posted by: {announcement.created_by_profile.first_name} {announcement.created_by_profile.last_name}
+                              </p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      )}
     </div>
   );
 }
