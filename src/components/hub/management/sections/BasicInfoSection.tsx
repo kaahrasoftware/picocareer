@@ -2,8 +2,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
 import type { FormData } from "../HubGeneralSettings";
 import { UseFormRegister } from "react-hook-form";
 
@@ -47,6 +45,19 @@ export function BasicInfoSection({ register, errors }: BasicInfoSectionProps) {
             {...register("website")}
             placeholder="https://..."
           />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="apply_now_URL" className="text-sm font-medium">Apply Now URL</label>
+          <Input
+            id="apply_now_URL"
+            type="url"
+            {...register("apply_now_URL")}
+            placeholder="https://..."
+          />
+          <p className="text-sm text-muted-foreground">
+            Add a direct link to your application form or process
+          </p>
         </div>
 
         <div className="space-y-2">

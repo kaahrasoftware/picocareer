@@ -1098,6 +1098,7 @@ export type Database = {
       }
       hubs: {
         Row: {
+          apply_now_url: string | null
           apply_now_URL: string | null
           banner_url: string | null
           brand_colors: Json | null
@@ -1115,6 +1116,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          apply_now_url?: string | null
           apply_now_URL?: string | null
           banner_url?: string | null
           brand_colors?: Json | null
@@ -1132,6 +1134,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          apply_now_url?: string | null
           apply_now_URL?: string | null
           banner_url?: string | null
           brand_colors?: Json | null
