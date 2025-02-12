@@ -1,10 +1,11 @@
-
 export type HubType = 'University' | 'NGO' | 'Organization' | 'High School';
 export type MemberRole = 'admin' | 'moderator' | 'member' | 'faculty' | 'student';
 export type ResourceAccessLevel = 'public' | 'members' | 'faculty' | 'admin';
 export type AnnouncementCategory = 'event' | 'news' | 'alert' | 'general';
 export type HubMemberRole = 'admin' | 'moderator' | 'member';
 export type InviteStatus = 'pending' | 'accepted' | 'rejected';
+export type ResourceType = 'document' | 'image' | 'video' | 'audio' | 'external_link';
+export type DocumentType = 'pdf' | 'word' | 'powerpoint' | 'excel' | 'other';
 
 export interface ImportantLink {
   title: string;
@@ -68,6 +69,11 @@ export interface HubResource {
   version: number;
   created_at: string;
   updated_at: string;
+  resource_type: ResourceType;
+  document_type?: DocumentType;
+  external_url?: string;
+  content_type?: string;
+  original_filename?: string;
 }
 
 export interface HubDepartment {

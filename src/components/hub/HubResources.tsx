@@ -5,12 +5,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { ResourceForm } from "./forms/ResourceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Image, Video, Music, Link2, File } from "lucide-react";
 import { HubResource } from "@/types/database/hubs";
 
 interface HubResourcesProps {
   hubId: string;
 }
+
+const getResourceIcon = (resource: HubResource) => {
+  switch (resource.resource_type) {
+    case 'document':
+      return <FileText className="h-5 w-5" />;
+    case 'image':
+      return <Image className="h-5 w-5" />;
+    case 'video':
+      return <Video className="h-5 w-5" />;
+    case 'audio':
+      return <Music className="h-5 w-5" />;
+    case 'external_link':
+      return <Link2 className="h-5 w-5" />;
+    default:
+      return <File className="h-5 w-5" />;
+  }
+};
 
 export function HubResources({ hubId }: HubResourcesProps) {
   const [showForm, setShowForm] = useState(false);
@@ -39,6 +56,10 @@ export function HubResources({ hubId }: HubResourcesProps) {
     return <div>Loading resources...</div>;
   }
 
+  const getResourceUrl = (resource: HubResource) => {
+    return resource.resource_type === 'external_link' ? resource.external_url : resource.file_url;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -62,7 +83,7 @@ export function HubResources({ hubId }: HubResourcesProps) {
           <Card key={resource.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+                {getResourceIcon(resource)}
                 {resource.title}
               </CardTitle>
             </CardHeader>
@@ -75,6 +96,11 @@ export function HubResources({ hubId }: HubResourcesProps) {
                   Category: {resource.category}
                 </p>
               )}
+              {resource.document_type && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Type: {resource.document_type}
+                </p>
+              )}
               {resource.created_by_profile && (
                 <p className="text-sm text-muted-foreground mt-2">
                   Added by: {resource.created_by_profile.first_name} {resource.created_by_profile.last_name}
@@ -82,8 +108,8 @@ export function HubResources({ hubId }: HubResourcesProps) {
               )}
               <div className="mt-4">
                 <Button variant="outline" asChild>
-                  <a href={resource.file_url} target="_blank" rel="noopener noreferrer">
-                    View Resource
+                  <a href={getResourceUrl(resource)} target="_blank" rel="noopener noreferrer">
+                    {resource.resource_type === 'external_link' ? 'Visit Link' : 'View Resource'}
                   </a>
                 </Button>
               </div>
