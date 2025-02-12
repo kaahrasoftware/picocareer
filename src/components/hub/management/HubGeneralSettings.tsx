@@ -9,40 +9,45 @@ import { BrandingSection } from "./sections/BrandingSection";
 import { BasicInfoSection } from "./sections/BasicInfoSection";
 import { ContactInfoSection } from "./sections/ContactInfoSection";
 import { SocialLinksSection } from "./sections/SocialLinksSection";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface HubGeneralSettingsProps {
   hub: Hub;
 }
 
-export interface FormData {
-  name: string;
-  description: string;
-  website?: string;
-  logo_url?: string;
-  banner_url?: string;
-  brand_colors?: {
-    primary?: string;
-    secondary?: string;
-    accent?: string;
-  };
-  contact_info?: {
-    email?: string;
-    phone?: string;
-    address?: string;
-  };
-  social_links?: {
-    facebook?: string;
-    twitter?: string;
-    linkedin?: string;
-    instagram?: string;
-  };
-}
+const formSchema = z.object({
+  name: z.string().min(1, "Hub name is required"),
+  description: z.string().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  logo_url: z.string().optional(),
+  banner_url: z.string().optional(),
+  brand_colors: z.object({
+    primary: z.string().optional(),
+    secondary: z.string().optional(),
+    accent: z.string().optional(),
+  }).optional(),
+  contact_info: z.object({
+    email: z.string().email().optional().or(z.literal("")),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+  }).optional(),
+  social_links: z.object({
+    facebook: z.string().url().optional().or(z.literal("")),
+    twitter: z.string().url().optional().or(z.literal("")),
+    linkedin: z.string().url().optional().or(z.literal("")),
+    instagram: z.string().url().optional().or(z.literal("")),
+  }).optional(),
+});
+
+export type FormData = z.infer<typeof formSchema>;
 
 export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const methods = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: hub.name,
       description: hub.description || "",
@@ -62,6 +67,9 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
+      
+      // First, validate the data
+      formSchema.parse(data);
       
       const { error } = await supabase
         .from('hubs')
@@ -95,7 +103,9 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       console.error('Error updating hub settings:', error);
       toast({
         title: "Error",
-        description: "Failed to update hub settings. Please try again.",
+        description: error instanceof z.ZodError 
+          ? "Please check the form for errors."
+          : "Failed to update hub settings. Please try again.",
         variant: "destructive",
       });
     } finally {
