@@ -6,7 +6,7 @@ import { AnnouncementForm } from "./forms/AnnouncementForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, SortDesc } from "lucide-react";
 import { HubAnnouncement } from "@/types/database/hubs";
 import {
   Carousel,
@@ -15,6 +15,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface HubAnnouncementsProps {
   hubId: string;
@@ -22,6 +29,8 @@ interface HubAnnouncementsProps {
 
 export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
   const [showForm, setShowForm] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [sortByRecent, setSortByRecent] = useState(true);
 
   const { data: announcements, isLoading } = useQuery({
     queryKey: ['hub-announcements', hubId],
@@ -31,7 +40,7 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
         .from('hub_announcements')
         .select('*')
         .eq('hub_id', hubId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: !sortByRecent });
 
       if (announcementsError) throw announcementsError;
 
@@ -58,9 +67,16 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
     return <div>Loading announcements...</div>;
   }
 
+  const filteredAnnouncements = announcements?.filter(announcement => 
+    selectedCategory === "all" || announcement.category === selectedCategory
+  );
+
+  // Get unique categories from announcements
+  const categories = [...new Set(announcements?.map(a => a.category).filter(Boolean))];
+
   // Calculate the number of slides needed (4 cards per slide)
   const itemsPerSlide = 4;
-  const slides = announcements ? Math.ceil(announcements.length / itemsPerSlide) : 0;
+  const slides = filteredAnnouncements ? Math.ceil(filteredAnnouncements.length / itemsPerSlide) : 0;
 
   return (
     <div className="space-y-6">
@@ -72,6 +88,31 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
         </Button>
       </div>
 
+      <div className="flex gap-4 items-center">
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setSortByRecent(!sortByRecent)}
+          className={sortByRecent ? "bg-secondary" : ""}
+        >
+          <SortDesc className="h-4 w-4" />
+        </Button>
+      </div>
+
       {showForm && (
         <AnnouncementForm 
           hubId={hubId} 
@@ -80,7 +121,7 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
         />
       )}
 
-      {announcements && announcements.length > 0 && (
+      {filteredAnnouncements && filteredAnnouncements.length > 0 ? (
         <Carousel
           opts={{
             align: "start",
@@ -91,7 +132,7 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
             {Array.from({ length: slides }).map((_, slideIndex) => (
               <CarouselItem key={slideIndex} className="pl-4 basis-full">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {announcements
+                  {filteredAnnouncements
                     .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
                     .map((announcement) => (
                       <Card key={announcement.id}>
@@ -101,6 +142,11 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
                         <CardContent>
                           <p className="whitespace-pre-wrap line-clamp-3">{announcement.content}</p>
                           <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+                            {announcement.category && (
+                              <span className="inline-flex items-center rounded-full bg-secondary px-2 py-1 text-xs">
+                                {announcement.category}
+                              </span>
+                            )}
                             <time>
                               {format(new Date(announcement.created_at), 'MMM d, yyyy')}
                             </time>
@@ -120,6 +166,10 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
           <CarouselPrevious />
           <CarouselNext />
         </Carousel>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          No announcements found
+        </div>
       )}
     </div>
   );
