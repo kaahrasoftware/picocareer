@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,21 +16,23 @@ import { Globe, MapPin, Users, FileText, Link2, Twitter, Facebook, Linkedin, Ins
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
+  const { session } = useAuthSession();
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
   // Check if user is a hub member and their role
   const { data: memberData, isLoading: isMemberLoading } = useQuery({
-    queryKey: ['hub-member-role', id],
+    queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
-      if (!id) return null;
+      if (!id || !session?.user?.id) return null;
       const { data, error } = await supabase
         .from('hub_members')
         .select('role, status')
         .eq('hub_id', id)
-        .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('profile_id', session.user.id)
         .single();
 
       if (error) {
@@ -38,7 +41,7 @@ export default function Hub() {
       }
       return data;
     },
-    enabled: !!id && isValidUUID,
+    enabled: !!id && !!session?.user?.id && isValidUUID,
   });
 
   const isAdmin = memberData?.role === 'admin';
