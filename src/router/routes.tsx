@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import { MainLayout, AuthLayout } from "./layouts";
 import PersonalityTest from "@/pages/PersonalityTest";
@@ -29,6 +28,7 @@ import School from "@/pages/School";
 import Terms from "@/pages/Terms";
 import TokenShop from "@/pages/TokenShop";
 import Video from "@/pages/Video";
+import HubInviteResponse from "@/pages/HubInviteResponse";
 
 export const routes: RouteObject[] = [
   {
@@ -164,6 +164,11 @@ export const routes: RouteObject[] = [
   {
     path: "/personality-test",
     element: <MainLayout><PersonalityTest /></MainLayout>,
+    errorElement: <Error />,
+  },
+  {
+    path: "/hub-invite",
+    element: <MainLayout><HubInviteResponse /></MainLayout>,
     errorElement: <Error />,
   },
   {
