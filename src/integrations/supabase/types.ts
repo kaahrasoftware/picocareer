@@ -467,6 +467,44 @@ export type Database = {
           },
         ]
       }
+      hub_analytics: {
+        Row: {
+          created_at: string | null
+          hub_id: string
+          id: string
+          measured_at: string | null
+          metric_type: string
+          metric_value: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hub_id: string
+          id?: string
+          measured_at?: string | null
+          metric_type: string
+          metric_value: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hub_id?: string
+          id?: string
+          measured_at?: string | null
+          metric_type?: string
+          metric_value?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_analytics_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_announcements: {
         Row: {
           category: Database["public"]["Enums"]["announcement_category"] | null
@@ -2336,7 +2374,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      hub_member_growth: {
+        Row: {
+          hub_id: string | null
+          month: string | null
+          new_members: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_members_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_members_institution_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       add_tokens_to_wallet: {
