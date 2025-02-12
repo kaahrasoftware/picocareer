@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ResourceForm } from "./forms/ResourceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { FileText, Plus, Image, Video, Music, Link2, File } from "lucide-react";
 import { HubResource } from "@/types/database/hubs";
@@ -96,6 +97,16 @@ export function HubResources({ hubId }: HubResourcesProps) {
         </Button>
       </div>
 
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-2xl">
+          <ResourceForm 
+            hubId={hubId} 
+            onSuccess={() => setShowForm(false)}
+            onCancel={() => setShowForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
       <div className="flex gap-4">
         <div className="flex-1">
           <Input
@@ -128,14 +139,6 @@ export function HubResources({ hubId }: HubResourcesProps) {
           </SelectContent>
         </Select>
       </div>
-
-      {showForm && (
-        <ResourceForm 
-          hubId={hubId} 
-          onSuccess={() => setShowForm(false)}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
 
       <ScrollArea className="h-[500px] rounded-md border p-4">
         <div className="flex flex-col space-y-4">
