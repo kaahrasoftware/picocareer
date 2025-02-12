@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +42,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
+  const methods = useForm<FormData>({
     defaultValues: {
       name: hub.name,
       description: hub.description || "",
@@ -104,17 +104,19 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <BrandingSection control={control} register={register} />
-      <BasicInfoSection register={register} errors={errors} />
-      <ContactInfoSection register={register} />
-      <SocialLinksSection register={register} />
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        <BrandingSection control={methods.control} register={methods.register} />
+        <BasicInfoSection register={methods.register} errors={methods.formState.errors} />
+        <ContactInfoSection register={methods.register} />
+        <SocialLinksSection register={methods.register} />
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 }
