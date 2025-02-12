@@ -4,6 +4,7 @@ import { HubGeneralSettings } from "./HubGeneralSettings";
 import { HubMemberManagement } from "./HubMemberManagement";
 import { HubContentManagement } from "./HubContentManagement";
 import { HubActivityLogs } from "./HubActivityLogs";
+import { HubAnalytics } from "./analytics/HubAnalytics";
 import type { Hub } from "@/types/database/hubs";
 
 interface HubManagementProps {
@@ -17,6 +18,7 @@ export function HubManagement({ hub }: HubManagementProps) {
         <TabsTrigger value="general">General Settings</TabsTrigger>
         <TabsTrigger value="members">Members</TabsTrigger>
         <TabsTrigger value="content">Content</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
         <TabsTrigger value="activity">Activity Logs</TabsTrigger>
       </TabsList>
 
@@ -30,6 +32,10 @@ export function HubManagement({ hub }: HubManagementProps) {
 
       <TabsContent value="content" className="space-y-4 mt-6">
         <HubContentManagement hubId={hub.id} />
+      </TabsContent>
+
+      <TabsContent value="analytics" className="space-y-4 mt-6">
+        <HubAnalytics hubId={hub.id} />
       </TabsContent>
 
       <TabsContent value="activity" className="space-y-4 mt-6">
