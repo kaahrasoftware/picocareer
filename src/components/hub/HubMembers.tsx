@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +13,7 @@ interface HubMembersProps {
   hubId: string;
 }
 
-const memberRoles = ["admin", "moderator", "member"];
+const memberRoles = ["admin", "moderator", "member", "faculty", "student"];
 
 export function HubMembers({ hubId }: HubMembersProps) {
   const [searchQuery, setSearchQuery] = useState("");
