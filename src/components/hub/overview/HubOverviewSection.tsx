@@ -26,12 +26,6 @@ export function HubOverviewSection({ hub, hubStats }: HubOverviewSectionProps) {
               <FileText className="h-5 w-5 text-muted-foreground" />
               <span className="font-medium">{hubStats?.resourcesCount || 0} Resources</span>
             </div>
-            {hub.contact_info?.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <span>{hub.contact_info.phone}</span>
-              </div>
-            )}
             {hub.contact_info?.address && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
@@ -80,6 +74,12 @@ export function HubOverviewSection({ hub, hubStats }: HubOverviewSectionProps) {
                 >
                   {hub.contact_info.email}
                 </a>
+              </div>
+            )}
+            {hub.contact_info?.phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-muted-foreground" />
+                <span>{hub.contact_info.phone}</span>
               </div>
             )}
             {hub.social_links && <HubSocialLinks socialLinks={hub.social_links} />}
