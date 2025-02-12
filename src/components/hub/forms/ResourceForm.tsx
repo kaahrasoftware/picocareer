@@ -55,6 +55,21 @@ const DOCUMENT_TYPES = [
   { value: 'other', label: 'Other' }
 ];
 
+const getAcceptedFileTypes = (resourceType: ResourceType) => {
+  switch (resourceType) {
+    case 'document':
+      return '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+    case 'image':
+      return 'image/*';
+    case 'video':
+      return 'video/*';
+    case 'audio':
+      return 'audio/*';
+    default:
+      return undefined;
+  }
+};
+
 export function ResourceForm({ 
   hubId, 
   onSuccess,
@@ -238,8 +253,9 @@ export function ResourceForm({
             <ImageUpload
               control={form.control}
               name="file_url"
-              label="Resource File"
+              label={`${resourceType.charAt(0).toUpperCase() + resourceType.slice(1)} File`}
               bucket={hubId}
+              accept={getAcceptedFileTypes(resourceType)}
             />
           </div>
         )}
