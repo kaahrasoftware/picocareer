@@ -5,13 +5,27 @@ import { CallToActionSection } from "@/components/sections/CallToActionSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 const Index = () => {
+  const { session } = useAuthSession();
+  const [isLoading, setIsLoading] = useState(true);
+
   // Set dark theme by default
   useEffect(() => {
-    document.documentElement.classList.add("dark");
+    try {
+      document.documentElement.classList.add("dark");
+    } catch (error) {
+      console.error("Error setting dark theme:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="app-layout">
