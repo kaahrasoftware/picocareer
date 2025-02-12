@@ -808,6 +808,7 @@ export type Database = {
         Row: {
           apply_now_URL: string | null
           banner_url: string | null
+          brand_colors: Json | null
           contact_info: Json | null
           created_at: string | null
           description: string | null
@@ -824,6 +825,7 @@ export type Database = {
         Insert: {
           apply_now_URL?: string | null
           banner_url?: string | null
+          brand_colors?: Json | null
           contact_info?: Json | null
           created_at?: string | null
           description?: string | null
@@ -840,6 +842,7 @@ export type Database = {
         Update: {
           apply_now_URL?: string | null
           banner_url?: string | null
+          brand_colors?: Json | null
           contact_info?: Json | null
           created_at?: string | null
           description?: string | null
