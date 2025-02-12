@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import { FileText, Plus, Image, Video, Music, Link2, File } from "lucide-react";
 import { HubResource } from "@/types/database/hubs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface HubResourcesProps {
   hubId: string;
@@ -65,10 +65,8 @@ export function HubResources({ hubId }: HubResourcesProps) {
     return resource.resource_type === 'external_link' ? resource.external_url : resource.file_url;
   };
 
-  // Get unique categories from resources
   const categories = Array.from(new Set(resources?.map(r => r.category).filter(Boolean) || []));
 
-  // Filter resources based on search query and category
   const filteredResources = resources?.filter(resource => {
     const matchesSearch = searchQuery.toLowerCase() === '' || 
       resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -124,44 +122,46 @@ export function HubResources({ hubId }: HubResourcesProps) {
         />
       )}
 
-      <div className="flex flex-col space-y-4">
-        {filteredResources?.map((resource) => (
-          <Card 
-            key={resource.id}
-            className="transition-colors hover:bg-accent cursor-pointer"
-            onClick={() => window.open(getResourceUrl(resource), '_blank')}
-          >
-            <CardHeader className="flex flex-row items-center gap-4 p-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                {getResourceIcon(resource)}
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-lg">{resource.title}</CardTitle>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {resource.description}
-                </p>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {resource.category && (
-                  <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs mb-2">
-                    {resource.category}
-                  </span>
-                )}
-                <div className="flex flex-col items-end gap-1">
-                  <time>
-                    {format(new Date(resource.created_at), 'MMM d, yyyy')}
-                  </time>
+      <ScrollArea className="h-[500px] rounded-md border p-4">
+        <div className="flex flex-col space-y-4">
+          {filteredResources?.map((resource) => (
+            <Card 
+              key={resource.id}
+              className="transition-colors hover:bg-accent cursor-pointer"
+              onClick={() => window.open(getResourceUrl(resource), '_blank')}
+            >
+              <CardHeader className="flex flex-row items-center gap-4 p-4">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                  {getResourceIcon(resource)}
                 </div>
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
-        {(!filteredResources || filteredResources.length === 0) && (
-          <div className="text-center py-8 text-muted-foreground">
-            No resources found
-          </div>
-        )}
-      </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{resource.title}</CardTitle>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {resource.description}
+                  </p>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {resource.category && (
+                    <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs mb-2">
+                      {resource.category}
+                    </span>
+                  )}
+                  <div className="flex flex-col items-end gap-1">
+                    <time>
+                      {format(new Date(resource.created_at), 'MMM d, yyyy')}
+                    </time>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+          {(!filteredResources || filteredResources.length === 0) && (
+            <div className="text-center py-8 text-muted-foreground">
+              No resources found
+            </div>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
