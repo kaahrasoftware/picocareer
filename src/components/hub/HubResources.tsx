@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ResourceForm } from "./forms/ResourceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from "date-fns";
 import { FileText, Plus, Image, Video, Music, Link2, File } from "lucide-react";
 import { HubResource } from "@/types/database/hubs";
 
@@ -78,44 +79,48 @@ export function HubResources({ hubId }: HubResourcesProps) {
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col space-y-4">
         {resources?.map((resource) => (
-          <Card key={resource.id}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card 
+            key={resource.id}
+            className="transition-colors hover:bg-accent cursor-pointer"
+            onClick={() => window.open(getResourceUrl(resource), '_blank')}
+          >
+            <CardHeader className="flex flex-row items-center gap-4 p-4">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
                 {getResourceIcon(resource)}
-                {resource.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {resource.description}
-              </p>
-              {resource.category && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Category: {resource.category}
-                </p>
-              )}
-              {resource.document_type && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Type: {resource.document_type}
-                </p>
-              )}
-              {resource.created_by_profile && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Added by: {resource.created_by_profile.first_name} {resource.created_by_profile.last_name}
-                </p>
-              )}
-              <div className="mt-4">
-                <Button variant="outline" asChild>
-                  <a href={getResourceUrl(resource)} target="_blank" rel="noopener noreferrer">
-                    {resource.resource_type === 'external_link' ? 'Visit Link' : 'View Resource'}
-                  </a>
-                </Button>
               </div>
-            </CardContent>
+              <div className="flex-1">
+                <CardTitle className="text-lg">{resource.title}</CardTitle>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {resource.description}
+                </p>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {resource.category && (
+                  <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs mb-2">
+                    {resource.category}
+                  </span>
+                )}
+                <div className="flex flex-col items-end gap-1">
+                  <time>
+                    {format(new Date(resource.created_at), 'MMM d, yyyy')}
+                  </time>
+                  {resource.created_by_profile && (
+                    <p className="text-xs">
+                      Added by: {resource.created_by_profile.first_name} {resource.created_by_profile.last_name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
           </Card>
         ))}
+        {(!resources || resources.length === 0) && (
+          <div className="text-center py-8 text-muted-foreground">
+            No resources found
+          </div>
+        )}
       </div>
     </div>
   );
