@@ -104,16 +104,6 @@ export function HubOverviewSection({ hub, hubStats }: HubOverviewSectionProps) {
           </CardContent>
         </Card>
       )}
-
-      {hub.description && (
-        <Card className="md:col-span-2">
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground whitespace-pre-wrap">
-              {hub.description}
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
