@@ -2461,6 +2461,8 @@ export type Database = {
         | "department_created"
         | "department_updated"
         | "department_deleted"
+        | "member_invitation_sent"
+        | "member_invitation_cancelled"
       categories:
         | "Technology"
         | "Digital Tools"
