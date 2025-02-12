@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { FileText, Plus, Image, Video, Music, Link2, File } from "lucide-react";
 import { HubResource } from "@/types/database/hubs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface HubResourcesProps {
   hubId: string;
@@ -32,6 +34,8 @@ const getResourceIcon = (resource: HubResource) => {
 
 export function HubResources({ hubId }: HubResourcesProps) {
   const [showForm, setShowForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { data: resources, isLoading } = useQuery({
     queryKey: ['hub-resources', hubId],
@@ -61,6 +65,20 @@ export function HubResources({ hubId }: HubResourcesProps) {
     return resource.resource_type === 'external_link' ? resource.external_url : resource.file_url;
   };
 
+  // Get unique categories from resources
+  const categories = Array.from(new Set(resources?.map(r => r.category).filter(Boolean) || []));
+
+  // Filter resources based on search query and category
+  const filteredResources = resources?.filter(resource => {
+    const matchesSearch = searchQuery.toLowerCase() === '' || 
+      resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (resource.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+
+    const matchesCategory = !selectedCategory || resource.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -69,6 +87,33 @@ export function HubResources({ hubId }: HubResourcesProps) {
           <Plus className="h-4 w-4 mr-2" />
           Add Resource
         </Button>
+      </div>
+
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Search resources by title or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <Select
+          value={selectedCategory || ""}
+          onValueChange={(value) => setSelectedCategory(value || null)}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {showForm && (
@@ -80,7 +125,7 @@ export function HubResources({ hubId }: HubResourcesProps) {
       )}
 
       <div className="flex flex-col space-y-4">
-        {resources?.map((resource) => (
+        {filteredResources?.map((resource) => (
           <Card 
             key={resource.id}
             className="transition-colors hover:bg-accent cursor-pointer"
@@ -111,7 +156,7 @@ export function HubResources({ hubId }: HubResourcesProps) {
             </CardHeader>
           </Card>
         ))}
-        {(!resources || resources.length === 0) && (
+        {(!filteredResources || filteredResources.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
             No resources found
           </div>
