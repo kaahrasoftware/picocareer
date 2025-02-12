@@ -12,6 +12,16 @@ interface HubDepartmentsProps {
   hubId: string;
 }
 
+const departmentColors = [
+  "bg-[#F2FCE2] hover:bg-[#F2FCE2]/90 border-green-200",
+  "bg-[#FEF7CD] hover:bg-[#FEF7CD]/90 border-yellow-200",
+  "bg-[#FEC6A1] hover:bg-[#FEC6A1]/90 border-orange-200",
+  "bg-[#E5DEFF] hover:bg-[#E5DEFF]/90 border-purple-200",
+  "bg-[#FFDEE2] hover:bg-[#FFDEE2]/90 border-pink-200",
+  "bg-[#FDE1D3] hover:bg-[#FDE1D3]/90 border-peach-200",
+  "bg-[#D3E4FD] hover:bg-[#D3E4FD]/90 border-blue-200"
+];
+
 export function HubDepartments({ hubId }: HubDepartmentsProps) {
   const [showForm, setShowForm] = useState(false);
 
@@ -58,10 +68,13 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {departments?.map((department) => (
-          <Card key={department.id}>
+        {departments?.map((department, index) => (
+          <Card 
+            key={department.id}
+            className={`transition-all duration-200 ${departmentColors[index % departmentColors.length]}`}
+          >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-gray-800">
                 <Building className="h-5 w-5" />
                 {department.name}
               </CardTitle>
@@ -69,12 +82,12 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
             {(department.description || department.parent) && (
               <CardContent>
                 {department.description && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-600">
                     {department.description}
                   </p>
                 )}
                 {department.parent && (
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-sm text-gray-600 mt-2">
                     Parent Department: {department.parent.name}
                   </p>
                 )}
@@ -83,6 +96,13 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
           </Card>
         ))}
       </div>
+
+      {departments?.length === 0 && (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-semibold mb-2">No departments yet</h3>
+          <p className="text-muted-foreground">Create departments to organize your institution.</p>
+        </div>
+      )}
     </div>
   );
 }
