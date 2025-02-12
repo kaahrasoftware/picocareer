@@ -55,10 +55,21 @@ const DOCUMENT_TYPES = [
   { value: 'other', label: 'Other' }
 ];
 
-const getAcceptedFileTypes = (resourceType: ResourceType) => {
+const getAcceptedFileTypes = (resourceType: ResourceType, documentType?: DocumentType) => {
   switch (resourceType) {
     case 'document':
-      return '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+      switch (documentType) {
+        case 'pdf':
+          return '.pdf';
+        case 'word':
+          return '.doc,.docx';
+        case 'powerpoint':
+          return '.ppt,.pptx';
+        case 'excel':
+          return '.xls,.xlsx';
+        default:
+          return '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+      }
     case 'image':
       return 'image/*';
     case 'video':
@@ -68,6 +79,11 @@ const getAcceptedFileTypes = (resourceType: ResourceType) => {
     default:
       return undefined;
   }
+};
+
+const getUploadLabel = (resourceType: ResourceType) => {
+  const type = resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
+  return `${type} File`;
 };
 
 export function ResourceForm({ 
@@ -92,6 +108,7 @@ export function ResourceForm({
   });
 
   const resourceType = form.watch('resource_type');
+  const documentType = form.watch('document_type');
 
   const onSubmit = async (data: FormFields) => {
     try {
@@ -253,9 +270,9 @@ export function ResourceForm({
             <ImageUpload
               control={form.control}
               name="file_url"
-              label={`${resourceType.charAt(0).toUpperCase() + resourceType.slice(1)} File`}
+              label={getUploadLabel(resourceType)}
               bucket={hubId}
-              accept={getAcceptedFileTypes(resourceType)}
+              accept={getAcceptedFileTypes(resourceType, documentType)}
             />
           </div>
         )}
