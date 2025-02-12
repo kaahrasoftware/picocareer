@@ -58,7 +58,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           </TabsContent>
 
           <TabsContent value="resources" className="mt-6">
-            <HubResources hubId={hub.id} />
+            <HubResources hubId={hub.id} isAdmin={isAdmin} />
           </TabsContent>
 
           <TabsContent value="members" className="mt-6">

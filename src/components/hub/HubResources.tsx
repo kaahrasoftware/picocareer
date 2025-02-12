@@ -14,16 +14,17 @@ import { ResourcePagination } from "./resources/ResourcePagination";
 
 interface HubResourcesProps {
   hubId: string;
+  isAdmin?: boolean;
 }
 
-export function HubResources({ hubId }: HubResourcesProps) {
+export function HubResources({ hubId, isAdmin }: HubResourcesProps) {
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const resourcesPerPage = 100;
 
-  const { data: resources, isLoading } = useQuery({
+  const { data: resources, isLoading, refetch } = useQuery({
     queryKey: ['hub-resources', hubId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -78,6 +79,10 @@ export function HubResources({ hubId }: HubResourcesProps) {
     setCurrentPage(1);
   };
 
+  const handleResourceDeleted = () => {
+    refetch();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -93,7 +98,10 @@ export function HubResources({ hubId }: HubResourcesProps) {
           <ScrollArea className="h-full max-h-[80vh] pr-4">
             <ResourceForm 
               hubId={hubId} 
-              onSuccess={() => setShowForm(false)}
+              onSuccess={() => {
+                setShowForm(false);
+                refetch();
+              }}
               onCancel={() => setShowForm(false)}
             />
           </ScrollArea>
@@ -115,6 +123,8 @@ export function HubResources({ hubId }: HubResourcesProps) {
               key={resource.id}
               resource={resource}
               onClick={() => window.open(getResourceUrl(resource), '_blank')}
+              isAdmin={isAdmin}
+              onDeleted={handleResourceDeleted}
             />
           ))}
           {(!currentResources || currentResources.length === 0) && (
