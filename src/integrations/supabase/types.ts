@@ -2777,6 +2777,7 @@ export type Database = {
         | "department_deleted"
         | "member_invitation_sent"
         | "member_invitation_cancelled"
+        | "member_role_updated"
       categories:
         | "Technology"
         | "Digital Tools"

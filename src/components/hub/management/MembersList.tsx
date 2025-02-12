@@ -29,11 +29,11 @@ export function MembersList({ hubId, members }: MembersListProps) {
 
       if (error) throw error;
 
-      // Log the audit event
+      // Log the audit event with the correct enum value
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'member_role_updated',
-        _details: { member_id: memberId, new_role: newRole }
+        _details: JSON.stringify({ member_id: memberId, new_role: newRole })
       });
 
       toast({
@@ -63,7 +63,7 @@ export function MembersList({ hubId, members }: MembersListProps) {
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'member_removed',
-        _details: { member_id: memberId }
+        _details: JSON.stringify({ member_id: memberId })
       });
 
       toast({
