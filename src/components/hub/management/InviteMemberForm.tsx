@@ -31,16 +31,16 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
-      // Check for existing pending invitation
+      // Check for existing pending invitation - using maybeSingle() instead of single()
       const { data: existingInvite, error: checkError } = await supabase
         .from('hub_member_invites')
         .select('status')
         .eq('hub_id', hubId)
         .eq('invited_email', inviteEmail)
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
 
-      if (!checkError && existingInvite) {
+      if (existingInvite) {
         toast({
           title: "Invitation already exists",
           description: "This person has already been invited and hasn't responded yet.",
@@ -49,15 +49,15 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
         return;
       }
 
-      // Check if already a member
+      // Check if already a member - using maybeSingle() instead of single()
       const { data: existingMember, error: memberCheckError } = await supabase
         .from('hub_members')
         .select('id')
         .eq('hub_id', hubId)
         .eq('profile_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!memberCheckError && existingMember) {
+      if (existingMember) {
         toast({
           title: "Already a member",
           description: "This person is already a member of this hub.",
