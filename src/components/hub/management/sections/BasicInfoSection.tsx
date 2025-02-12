@@ -2,6 +2,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Plus, X } from "lucide-react";
 import type { FormData } from "../HubGeneralSettings";
 import { UseFormRegister } from "react-hook-form";
 
@@ -45,6 +47,28 @@ export function BasicInfoSection({ register, errors }: BasicInfoSectionProps) {
             {...register("website")}
             placeholder="https://..."
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Important Links</label>
+          <div className="space-y-2" data-important-links>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Link Title"
+                  {...register(`important_links.${index}.title`)}
+                />
+                <Input
+                  placeholder="URL"
+                  type="url"
+                  {...register(`important_links.${index}.url`)}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Add up to 5 important links that members should know about
+          </p>
         </div>
       </CardContent>
     </Card>

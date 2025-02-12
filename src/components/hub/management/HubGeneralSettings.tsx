@@ -22,6 +22,10 @@ const formSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   logo_url: z.string().optional(),
   banner_url: z.string().optional(),
+  important_links: z.array(z.object({
+    title: z.string().optional(),
+    url: z.string().url().optional().or(z.literal(""))
+  })).optional(),
   brand_colors: z.object({
     primary: z.string().optional(),
     secondary: z.string().optional(),
@@ -54,6 +58,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       website: hub.website || "",
       logo_url: hub.logo_url || "",
       banner_url: hub.banner_url || "",
+      important_links: hub.important_links || [],
       brand_colors: hub.brand_colors || {
         primary: "#9b87f5",
         secondary: "#7E69AB",
@@ -70,6 +75,11 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       
       // First, validate the data
       formSchema.parse(data);
+
+      // Filter out empty important links
+      const filteredImportantLinks = data.important_links?.filter(
+        link => link.title && link.url
+      ) || [];
       
       const { error } = await supabase
         .from('hubs')
@@ -79,6 +89,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
           website: data.website,
           logo_url: data.logo_url,
           banner_url: data.banner_url,
+          important_links: filteredImportantLinks,
           brand_colors: data.brand_colors,
           contact_info: data.contact_info,
           social_links: data.social_links,
@@ -92,7 +103,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hub.id,
         _action: 'hub_settings_updated',
-        _details: { changes: data }
+        _details: JSON.stringify({ changes: data })
       });
 
       toast({
