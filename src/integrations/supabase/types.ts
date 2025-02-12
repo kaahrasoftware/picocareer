@@ -1039,12 +1039,17 @@ export type Database = {
             | Database["public"]["Enums"]["resource_access_level"]
             | null
           category: string | null
+          content_type: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
+          document_type: Database["public"]["Enums"]["document_type"] | null
+          external_url: string | null
           file_url: string
           hub_id: string | null
           id: string
+          original_filename: string | null
+          resource_type: Database["public"]["Enums"]["resource_type"]
           title: string
           updated_at: string | null
           version: number | null
@@ -1054,12 +1059,17 @@ export type Database = {
             | Database["public"]["Enums"]["resource_access_level"]
             | null
           category?: string | null
+          content_type?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          external_url?: string | null
           file_url: string
           hub_id?: string | null
           id?: string
+          original_filename?: string | null
+          resource_type?: Database["public"]["Enums"]["resource_type"]
           title: string
           updated_at?: string | null
           version?: number | null
@@ -1069,12 +1079,17 @@ export type Database = {
             | Database["public"]["Enums"]["resource_access_level"]
             | null
           category?: string | null
+          content_type?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          external_url?: string | null
           file_url?: string
           hub_id?: string | null
           id?: string
+          original_filename?: string | null
+          resource_type?: Database["public"]["Enums"]["resource_type"]
           title?: string
           updated_at?: string | null
           version?: number | null
@@ -3020,6 +3035,7 @@ export type Database = {
         | "Feeling (F)"
         | "Judging (J)"
         | "Perceiving (P)"
+      document_type: "pdf" | "word" | "powerpoint" | "excel" | "other"
       event_types:
         | "Coffee Time"
         | "Hackathon"
@@ -3095,6 +3111,7 @@ export type Database = {
         | "open_ended"
       recommendation_type: "career" | "major" | "trait"
       resource_access_level: "public" | "members" | "faculty" | "admin"
+      resource_type: "document" | "image" | "video" | "audio" | "external_link"
       school_type: "High School" | "College" | "University" | "Other"
       session_type:
         | "Know About my Career"
