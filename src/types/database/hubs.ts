@@ -3,6 +3,8 @@ export type HubType = 'University' | 'NGO' | 'Organization' | 'High School';
 export type MemberRole = 'admin' | 'moderator' | 'member' | 'faculty' | 'student';
 export type ResourceAccessLevel = 'public' | 'members' | 'faculty' | 'admin';
 export type AnnouncementCategory = 'event' | 'news' | 'alert' | 'general';
+export type HubMemberRole = 'admin' | 'moderator' | 'member';
+export type InviteStatus = 'pending' | 'accepted' | 'rejected';
 
 export interface Hub {
   id: string;
@@ -81,4 +83,28 @@ export interface HubDepartment {
   parent_department_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface HubMemberInvite {
+  id: string;
+  hub_id: string;
+  invited_email: string;
+  invited_by: string;
+  role: HubMemberRole;
+  status: InviteStatus;
+  token: string;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  accepted_at?: string;
+  rejected_at?: string;
+}
+
+export interface HubAuditLog {
+  id: string;
+  hub_id: string;
+  performed_by: string;
+  action: string;
+  details?: Record<string, any>;
+  created_at: string;
 }
