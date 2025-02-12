@@ -1,17 +1,25 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Users } from "lucide-react";
+import { SearchInput } from "@/components/search/SearchInput";
+import { SelectFilter } from "@/components/community/filters/SelectFilter";
 
 interface HubMembersProps {
   hubId: string;
 }
 
+const memberRoles = ["admin", "moderator", "member"];
+
 export function HubMembers({ hubId }: HubMembersProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
   // Fetch hub members
   const { data: members, isLoading, error } = useQuery({
     queryKey: ['hub-members', hubId],
@@ -87,6 +95,14 @@ export function HubMembers({ hubId }: HubMembersProps) {
     );
   }
 
+  // Filter members based on search query and selected role
+  const filteredMembers = members.filter((member) => {
+    const fullName = `${member.profiles?.first_name} ${member.profiles?.last_name}`.toLowerCase();
+    const matchesSearch = searchQuery === "" || fullName.includes(searchQuery.toLowerCase());
+    const matchesRole = !selectedRole || member.role === selectedRole;
+    return matchesSearch && matchesRole;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -96,8 +112,24 @@ export function HubMembers({ hubId }: HubMembersProps) {
         </h2>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-4">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          className="flex-1"
+          placeholder="Search members by name..."
+        />
+        <SelectFilter
+          value={selectedRole}
+          onValueChange={setSelectedRole}
+          placeholder="Role"
+          options={memberRoles}
+          className="w-full sm:w-[200px]"
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {members.map((member) => (
+        {filteredMembers.map((member) => (
           <Card key={member.id} className="transition-colors hover:bg-accent">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
@@ -121,6 +153,12 @@ export function HubMembers({ hubId }: HubMembersProps) {
           </Card>
         ))}
       </div>
+
+      {filteredMembers.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No members found matching your search criteria.</p>
+        </div>
+      )}
     </div>
   );
 }
