@@ -99,14 +99,14 @@ export function HubResources({ hubId }: HubResourcesProps) {
           />
         </div>
         <Select
-          value={selectedCategory || ""}
-          onValueChange={(value) => setSelectedCategory(value || null)}
+          value={selectedCategory || "all"}
+          onValueChange={(value) => setSelectedCategory(value === "all" ? null : value)}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
