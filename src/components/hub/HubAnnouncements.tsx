@@ -6,7 +6,7 @@ import { AnnouncementForm } from "./forms/AnnouncementForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Megaphone, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { HubAnnouncement } from "@/types/database/hubs";
 import {
   Carousel,
@@ -96,12 +96,7 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
                     .map((announcement) => (
                       <Card key={announcement.id}>
                         <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="flex items-center gap-2">
-                              <Megaphone className="h-5 w-5" />
-                              {announcement.title}
-                            </CardTitle>
-                          </div>
+                          <CardTitle>{announcement.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="whitespace-pre-wrap line-clamp-3">{announcement.content}</p>
