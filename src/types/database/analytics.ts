@@ -43,4 +43,3 @@ export interface DepartmentMetrics {
   metric_value: number;
   measured_at: string;
 }
-
