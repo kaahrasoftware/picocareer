@@ -20,6 +20,7 @@ const formSchema = z.object({
   name: z.string().min(1, "Hub name is required"),
   description: z.string().optional(),
   website: z.string().url().optional().or(z.literal("")),
+  apply_now_URL: z.string().url().optional().or(z.literal("")),
   logo_url: z.string().optional(),
   banner_url: z.string().optional(),
   important_links: z.array(z.object({
@@ -56,6 +57,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       name: hub.name,
       description: hub.description || "",
       website: hub.website || "",
+      apply_now_URL: hub.apply_now_URL || "",
       logo_url: hub.logo_url || "",
       banner_url: hub.banner_url || "",
       important_links: hub.important_links || [],
@@ -87,6 +89,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
           name: data.name,
           description: data.description,
           website: data.website,
+          apply_now_URL: data.apply_now_URL,
           logo_url: data.logo_url,
           banner_url: data.banner_url,
           important_links: filteredImportantLinks,
