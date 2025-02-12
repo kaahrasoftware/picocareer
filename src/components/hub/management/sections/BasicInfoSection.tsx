@@ -26,13 +26,25 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
   const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const handleFieldSave = async (fieldName: string, value: string) => {
+  
+  const handleFieldSave = async (fieldName: string) => {
     setIsLoading(prev => ({ ...prev, [fieldName]: true }));
+
     try {
+      const fieldValue = (document.getElementById(fieldName) as HTMLInputElement | HTMLTextAreaElement)?.value;
+      
+      if (!fieldValue && fieldName === 'name') {
+        toast({
+          title: "Error",
+          description: "Hub name is required",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('hubs')
-        .update({ [fieldName]: value })
+        .update({ [fieldName]: fieldValue })
         .eq('id', hubId);
 
       if (error) throw error;
@@ -41,14 +53,14 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
-        _details: JSON.stringify({ [fieldName]: value })
+        _details: JSON.stringify({ [fieldName]: fieldValue })
       });
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
 
       toast({
         title: "Field updated",
-        description: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} has been updated successfully.`,
+        description: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ')} has been updated successfully.`,
       });
     } catch (error) {
       console.error('Error updating field:', error);
@@ -77,7 +89,7 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
               defaultValue={defaultValues.name}
             />
             <Button 
-              onClick={() => handleFieldSave("name", defaultValues.name)}
+              onClick={() => handleFieldSave("name")}
               disabled={isLoading.name}
             >
               {isLoading.name ? "Saving..." : "Save"}
@@ -98,7 +110,7 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
               rows={4}
             />
             <Button 
-              onClick={() => handleFieldSave("description", defaultValues.description)}
+              onClick={() => handleFieldSave("description")}
               disabled={isLoading.description}
             >
               {isLoading.description ? "Saving..." : "Save"}
@@ -117,7 +129,7 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
               placeholder="https://..."
             />
             <Button 
-              onClick={() => handleFieldSave("website", defaultValues.website)}
+              onClick={() => handleFieldSave("website")}
               disabled={isLoading.website}
             >
               {isLoading.website ? "Saving..." : "Save"}
@@ -136,7 +148,7 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
               placeholder="https://..."
             />
             <Button 
-              onClick={() => handleFieldSave("apply_now_URL", defaultValues.apply_now_URL)}
+              onClick={() => handleFieldSave("apply_now_URL")}
               disabled={isLoading.apply_now_URL}
             >
               {isLoading.apply_now_URL ? "Saving..." : "Save"}
