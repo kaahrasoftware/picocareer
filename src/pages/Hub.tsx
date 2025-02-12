@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +22,6 @@ export default function Hub() {
   const { session } = useAuthSession();
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
-  // Check if user is a hub member and their role
   const { data: memberData, isLoading: isMemberLoading } = useQuery({
     queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
@@ -174,6 +172,19 @@ export default function Hub() {
                         className="text-primary hover:underline"
                       >
                         {hub.website}
+                      </a>
+                    </div>
+                  )}
+                  {hub.apply_now_URL && (
+                    <div className="flex items-center gap-2">
+                      <Link2 className="h-5 w-5 text-muted-foreground" />
+                      <a 
+                        href={hub.apply_now_URL} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Apply Now
                       </a>
                     </div>
                   )}
