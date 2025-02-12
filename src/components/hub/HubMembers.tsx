@@ -1,11 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Users } from "lucide-react";
 
 interface HubMembersProps {
   hubId: string;
@@ -48,18 +48,18 @@ export function HubMembers({ hubId }: HubMembersProps) {
     return (
       <div className="space-y-6">
         <h2 className="text-xl font-semibold">Members</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-full" />
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-24" />
                   </div>
-                </CardTitle>
-              </CardHeader>
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -89,16 +89,19 @@ export function HubMembers({ hubId }: HubMembersProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">
-        Members ({members.length})
-      </h2>
+      <div className="flex items-center gap-2">
+        <Users className="h-5 w-5" />
+        <h2 className="text-xl font-semibold">
+          Members ({members.length})
+        </h2>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-3">
         {members.map((member) => (
-          <Card key={member.id}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-4">
-                <Avatar>
+          <Card key={member.id} className="transition-colors hover:bg-accent">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12 border-2 border-primary/10">
                   <AvatarImage src={member.profiles?.avatar_url} />
                   <AvatarFallback>
                     {member.profiles?.first_name?.[0]}
@@ -106,15 +109,15 @@ export function HubMembers({ hubId }: HubMembersProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold">
+                  <div className="font-medium">
                     {member.profiles?.first_name} {member.profiles?.last_name}
                   </div>
                   <div className="text-sm text-muted-foreground capitalize">
                     {member.role}
                   </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
+              </div>
+            </CardContent>
           </Card>
         ))}
       </div>
