@@ -538,13 +538,6 @@ export type Database = {
             foreignKeyName: "hub_announcement_analytics_announcement_id_fkey"
             columns: ["announcement_id"]
             isOneToOne: false
-            referencedRelation: "hub_announcement_engagement"
-            referencedColumns: ["announcement_id"]
-          },
-          {
-            foreignKeyName: "hub_announcement_analytics_announcement_id_fkey"
-            columns: ["announcement_id"]
-            isOneToOne: false
             referencedRelation: "hub_announcements"
             referencedColumns: ["id"]
           },
@@ -560,6 +553,54 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_announcement_engagement: {
+        Row: {
+          announcement_id: string
+          created_at: string | null
+          hub_id: string
+          id: string
+          reaction_count: number | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string | null
+          hub_id: string
+          id?: string
+          reaction_count?: number | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string | null
+          hub_id?: string
+          id?: string
+          reaction_count?: number | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_announcement_engagement_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "hub_announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_announcement_engagement_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
             referencedColumns: ["id"]
           },
         ]
@@ -936,11 +977,55 @@ export type Database = {
             foreignKeyName: "hub_resource_analytics_resource_id_fkey"
             columns: ["resource_id"]
             isOneToOne: false
-            referencedRelation: "hub_resource_engagement"
-            referencedColumns: ["resource_id"]
+            referencedRelation: "hub_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_resource_engagement: {
+        Row: {
+          created_at: string | null
+          download_count: number | null
+          hub_id: string
+          id: string
+          resource_id: string
+          share_count: number | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          download_count?: number | null
+          hub_id: string
+          id?: string
+          resource_id: string
+          share_count?: number | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          download_count?: number | null
+          hub_id?: string
+          id?: string
+          resource_id?: string
+          share_count?: number | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_resource_engagement_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hub_resource_analytics_resource_id_fkey"
+            foreignKeyName: "hub_resource_engagement_resource_id_fkey"
             columns: ["resource_id"]
             isOneToOne: false
             referencedRelation: "hub_resources"
@@ -2534,24 +2619,6 @@ export type Database = {
       }
     }
     Views: {
-      hub_announcement_engagement: {
-        Row: {
-          announcement_id: string | null
-          hub_id: string | null
-          reaction_count: number | null
-          title: string | null
-          view_count: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "institution_announcements_institution_id_fkey"
-            columns: ["hub_id"]
-            isOneToOne: false
-            referencedRelation: "hubs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       hub_member_growth: {
         Row: {
           hub_id: string | null
@@ -2568,25 +2635,6 @@ export type Database = {
           },
           {
             foreignKeyName: "institution_members_institution_id_fkey"
-            columns: ["hub_id"]
-            isOneToOne: false
-            referencedRelation: "hubs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hub_resource_engagement: {
-        Row: {
-          download_count: number | null
-          hub_id: string | null
-          resource_id: string | null
-          share_count: number | null
-          title: string | null
-          view_count: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "institution_resources_institution_id_fkey"
             columns: ["hub_id"]
             isOneToOne: false
             referencedRelation: "hubs"

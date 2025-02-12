@@ -30,10 +30,17 @@ export function EngagementMetrics({ hubId }: EngagementMetricsProps) {
   const { data: resourceEngagement } = useQuery({
     queryKey: ['hub-resource-engagement', hubId, timeRange],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('hub_resource_engagement')
         .select('*')
         .eq('hub_id', hubId);
+
+      if (timeRange !== 'all') {
+        const days = parseInt(timeRange);
+        query = query.gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         toast({
@@ -51,10 +58,17 @@ export function EngagementMetrics({ hubId }: EngagementMetricsProps) {
   const { data: announcementEngagement } = useQuery({
     queryKey: ['hub-announcement-engagement', hubId, timeRange],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('hub_announcement_engagement')
         .select('*')
         .eq('hub_id', hubId);
+
+      if (timeRange !== 'all') {
+        const days = parseInt(timeRange);
+        query = query.gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         toast({
