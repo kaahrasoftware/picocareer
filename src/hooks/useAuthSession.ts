@@ -38,9 +38,11 @@ export function useAuthSession() {
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
+        console.log('Fetching auth session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
+          console.error('Session error:', error);
           // Handle session expiration and invalid refresh token cases
           if (error.message?.includes('Invalid Refresh Token') || 
               error.message?.includes('session expired') ||
