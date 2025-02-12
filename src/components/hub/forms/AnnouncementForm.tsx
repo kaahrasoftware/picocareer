@@ -47,11 +47,18 @@ export function AnnouncementForm({
 
   const onSubmit = async (data: FormFields) => {
     try {
+      // Clean timestamp fields - convert empty strings to null
+      const cleanedData = {
+        ...data,
+        scheduled_for: data.scheduled_for?.trim() || null,
+        expires_at: data.expires_at?.trim() || null
+      };
+
       if (existingAnnouncement) {
         const { error } = await supabase
           .from('hub_announcements')
           .update({
-            ...data,
+            ...cleanedData,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingAnnouncement.id);
@@ -61,7 +68,7 @@ export function AnnouncementForm({
         const { error } = await supabase
           .from('hub_announcements')
           .insert({
-            ...data,
+            ...cleanedData,
             hub_id: hubId,
             created_by: (await supabase.auth.getUser()).data.user?.id
           });
