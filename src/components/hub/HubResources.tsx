@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,8 @@ export function HubResources({ hubId }: HubResourcesProps) {
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const resourcesPerPage = 100;
 
   const { data: resources, isLoading } = useQuery({
     queryKey: ['hub-resources', hubId],
@@ -77,6 +80,12 @@ export function HubResources({ hubId }: HubResourcesProps) {
     return matchesSearch && matchesCategory;
   });
 
+  // Calculate pagination
+  const totalPages = Math.ceil((filteredResources?.length || 0) / resourcesPerPage);
+  const startIndex = (currentPage - 1) * resourcesPerPage;
+  const endIndex = startIndex + resourcesPerPage;
+  const currentResources = filteredResources?.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -92,13 +101,19 @@ export function HubResources({ hubId }: HubResourcesProps) {
           <Input
             placeholder="Search resources by title or description..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
             className="w-full"
           />
         </div>
         <Select
           value={selectedCategory || "all"}
-          onValueChange={(value) => setSelectedCategory(value === "all" ? null : value)}
+          onValueChange={(value) => {
+            setSelectedCategory(value === "all" ? null : value);
+            setCurrentPage(1); // Reset to first page on category change
+          }}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Filter by category" />
@@ -124,7 +139,7 @@ export function HubResources({ hubId }: HubResourcesProps) {
 
       <ScrollArea className="h-[500px] rounded-md border p-4">
         <div className="flex flex-col space-y-4">
-          {filteredResources?.map((resource) => (
+          {currentResources?.map((resource) => (
             <Card 
               key={resource.id}
               className="transition-colors hover:bg-accent cursor-pointer"
@@ -155,13 +170,35 @@ export function HubResources({ hubId }: HubResourcesProps) {
               </CardHeader>
             </Card>
           ))}
-          {(!filteredResources || filteredResources.length === 0) && (
+          {(!currentResources || currentResources.length === 0) && (
             <div className="text-center py-8 text-muted-foreground">
               No resources found
             </div>
           )}
         </div>
       </ScrollArea>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
