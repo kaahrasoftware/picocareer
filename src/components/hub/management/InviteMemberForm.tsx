@@ -31,16 +31,38 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
-      const { error } = await supabase
+      // Create the invitation record
+      const { data: invite, error } = await supabase
         .from('hub_member_invites')
         .insert({
           hub_id: hubId,
           invited_email: inviteEmail,
           role: selectedRole,
           invited_by: user.id
-        });
+        })
+        .select('id, token')
+        .single();
 
       if (error) throw error;
+
+      // Send invitation email
+      const response = await fetch('/api/send-hub-invitation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          inviteId: invite.id,
+          hubId: hubId,
+          invitedEmail: inviteEmail,
+          role: selectedRole
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send invitation email');
+      }
 
       // Log the audit event
       await supabase.rpc('log_hub_audit_event', {

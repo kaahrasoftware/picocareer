@@ -613,36 +613,45 @@ export type Database = {
       }
       hub_member_invites: {
         Row: {
+          accepted_at: string | null
           created_at: string
           expires_at: string
           hub_id: string
           id: string
           invited_by: string
           invited_email: string
+          rejected_at: string | null
           role: Database["public"]["Enums"]["hub_member_role"]
           status: string
+          token: string | null
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           created_at?: string
           expires_at?: string
           hub_id: string
           id?: string
           invited_by: string
           invited_email: string
+          rejected_at?: string | null
           role?: Database["public"]["Enums"]["hub_member_role"]
           status?: string
+          token?: string | null
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           created_at?: string
           expires_at?: string
           hub_id?: string
           id?: string
           invited_by?: string
           invited_email?: string
+          rejected_at?: string | null
           role?: Database["public"]["Enums"]["hub_member_role"]
           status?: string
+          token?: string | null
           updated_at?: string
         }
         Relationships: [
