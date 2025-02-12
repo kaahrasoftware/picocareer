@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -12,9 +13,10 @@ interface ImageUploadProps {
   label: string;
   description?: string;
   bucket: string;
+  accept?: string;
 }
 
-export function ImageUpload({ control, name, label, description, bucket }: ImageUploadProps) {
+export function ImageUpload({ control, name, label, description, bucket, accept }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
+        throw new Error('You must select a file to upload.');
       }
 
       const file = event.target.files[0];
@@ -58,7 +60,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
 
       toast({
         title: "Success",
-        description: "Image uploaded successfully",
+        description: "File uploaded successfully",
       });
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -92,7 +94,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
       setPreview(null);
       toast({
         title: "Success",
-        description: "Image removed successfully",
+        description: "File removed successfully",
       });
     } catch (error: any) {
       console.error('Remove error:', error);
@@ -125,7 +127,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                   <label className="flex items-center gap-2 cursor-pointer w-full justify-center">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={accept}
                       className="hidden"
                       onChange={(e) => handleUpload(e, field.onChange)}
                       disabled={uploading}
@@ -138,7 +140,7 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        <span>{preview ? 'Change Image' : 'Upload Image'}</span>
+                        <span>{preview ? 'Change File' : 'Upload File'}</span>
                       </>
                     )}
                   </label>
@@ -146,7 +148,9 @@ export function ImageUpload({ control, name, label, description, bucket }: Image
                 {preview && (
                   <div className="relative group">
                     <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-secondary/10 transition-all duration-200 group-hover:shadow-md">
-                      <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                      </div>
                       <Button
                         type="button"
                         variant="destructive"
