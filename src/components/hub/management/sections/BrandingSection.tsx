@@ -26,7 +26,7 @@ export function BrandingSection({ control, register, hubId }: BrandingSectionPro
 
   const handleImageUploadSuccess = () => {
     // Invalidate the hub query to trigger a refresh
-    queryClient.invalidateQueries(['hub', hubId]);
+    queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
   };
 
   return (
