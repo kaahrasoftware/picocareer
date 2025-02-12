@@ -4,7 +4,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Hub } from "@/types/database/hubs";
+import type { Hub, ImportantLink } from "@/types/database/hubs";
 import { BrandingSection } from "./sections/BrandingSection";
 import { BasicInfoSection } from "./sections/BasicInfoSection";
 import { ContactInfoSection } from "./sections/ContactInfoSection";
@@ -24,7 +24,7 @@ const formSchema = z.object({
   logo_url: z.string().optional(),
   banner_url: z.string().optional(),
   important_links: z.array(z.object({
-    title: z.string().optional(),
+    title: z.string(),
     url: z.string().url().optional().or(z.literal(""))
   })).optional(),
   brand_colors: z.object({
@@ -60,7 +60,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       apply_now_URL: hub.apply_now_URL || "",
       logo_url: hub.logo_url || "",
       banner_url: hub.banner_url || "",
-      important_links: hub.important_links || [],
+      important_links: (hub.important_links || []) as ImportantLink[],
       brand_colors: hub.brand_colors || {
         primary: "#9b87f5",
         secondary: "#7E69AB",
@@ -74,47 +74,63 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-      
+      console.log('Submitting hub update with data:', data);
+
       // First, validate the data
       formSchema.parse(data);
 
       // Filter out empty important links
-      const filteredImportantLinks = data.important_links?.filter(
+      const filteredImportantLinks = (data.important_links || []).filter(
         link => link.title && link.url
-      ) || [];
+      );
       
-      const { error } = await supabase
-        .from('hubs')
-        .update({
-          name: data.name,
-          description: data.description,
-          website: data.website,
-          apply_now_URL: data.apply_now_URL,
-          logo_url: data.logo_url,
-          banner_url: data.banner_url,
-          important_links: filteredImportantLinks,
-          brand_colors: data.brand_colors,
-          contact_info: data.contact_info,
-          social_links: data.social_links,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', hub.id);
+      const updateData = {
+        name: data.name,
+        description: data.description,
+        website: data.website,
+        apply_now_URL: data.apply_now_URL,
+        logo_url: data.logo_url,
+        banner_url: data.banner_url,
+        important_links: filteredImportantLinks,
+        brand_colors: data.brand_colors,
+        contact_info: data.contact_info,
+        social_links: data.social_links,
+        updated_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
+      console.log('Sending update to Supabase:', updateData);
+
+      const { data: updatedHub, error } = await supabase
+        .from('hubs')
+        .update(updateData)
+        .eq('id', hub.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating hub:', error);
+        throw error;
+      }
+
+      console.log('Hub updated successfully:', updatedHub);
 
       // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
+      const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
         _hub_id: hub.id,
         _action: 'hub_settings_updated',
         _details: JSON.stringify({ changes: data })
       });
+
+      if (auditError) {
+        console.error('Error logging audit event:', auditError);
+      }
 
       toast({
         title: "Settings updated",
         description: "Hub settings have been successfully updated.",
       });
     } catch (error) {
-      console.error('Error updating hub settings:', error);
+      console.error('Error in onSubmit:', error);
       toast({
         title: "Error",
         description: error instanceof z.ZodError 

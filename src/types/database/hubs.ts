@@ -6,6 +6,11 @@ export type AnnouncementCategory = 'event' | 'news' | 'alert' | 'general';
 export type HubMemberRole = 'admin' | 'moderator' | 'member';
 export type InviteStatus = 'pending' | 'accepted' | 'rejected';
 
+export interface ImportantLink {
+  title: string;
+  url: string;
+}
+
 export interface Hub {
   id: string;
   name: string;
@@ -31,8 +36,8 @@ export interface Hub {
     linkedin?: string;
     instagram?: string;
   };
+  important_links?: ImportantLink[];
   status: 'Approved' | 'Pending' | 'Rejected';
   created_at: string;
   updated_at: string;
 }
-
