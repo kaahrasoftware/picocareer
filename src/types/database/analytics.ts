@@ -21,3 +21,26 @@ export interface AnalyticsSummary {
   resourceCount: number;
   announcementCount: number;
 }
+
+export interface ResourceEngagement {
+  resource_id: string;
+  title: string;
+  view_count: number;
+  download_count: number;
+  share_count: number;
+}
+
+export interface AnnouncementEngagement {
+  announcement_id: string;
+  title: string;
+  view_count: number;
+  reaction_count: number;
+}
+
+export interface DepartmentMetrics {
+  department_id: string;
+  metric_type: string;
+  metric_value: number;
+  measured_at: string;
+}
+

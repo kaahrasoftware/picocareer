@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { MemberActivityList } from './MemberActivityList';
+import { EngagementMetrics } from './EngagementMetrics';
 
 interface HubAnalyticsProps {
   hubId: string;
@@ -81,6 +82,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
       <Tabs defaultValue="growth" className="w-full">
         <TabsList>
           <TabsTrigger value="growth">Member Growth</TabsTrigger>
+          <TabsTrigger value="engagement">Engagement</TabsTrigger>
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
         </TabsList>
 
@@ -112,6 +114,10 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="engagement">
+          <EngagementMetrics hubId={hubId} />
         </TabsContent>
 
         <TabsContent value="activity">
