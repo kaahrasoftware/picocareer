@@ -62,7 +62,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       apply_now_URL: hub.apply_now_URL || "",
       logo_url: hub.logo_url || "",
       banner_url: hub.banner_url || "",
-      important_links: (hub.important_links || []) as ImportantLink[],
+      important_links: Array.isArray(hub.important_links) ? hub.important_links : [],
       brand_colors: hub.brand_colors || {
         primary: "#9b87f5",
         secondary: "#7E69AB",
@@ -112,27 +112,11 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
         throw updateError;
       }
 
-      // Fetch the updated hub data
-      const { data: updatedHub, error: fetchError } = await supabase
-        .from('hubs')
-        .select('*')
-        .eq('id', hub.id)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Error fetching updated hub:', fetchError);
-        throw fetchError;
-      }
-
-      if (!updatedHub) {
-        throw new Error('Failed to fetch updated hub data');
-      }
-
       // Log the audit event
       const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
         _hub_id: hub.id,
         _action: 'hub_settings_updated',
-        _details: JSON.stringify({ changes: data })
+        _details: JSON.stringify(updateData)
       });
 
       if (auditError) {
@@ -140,7 +124,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       }
 
       // Invalidate and refetch hub data
-      queryClient.invalidateQueries({ queryKey: ['hub', hub.id] });
+      await queryClient.invalidateQueries({ queryKey: ['hub', hub.id] });
 
       toast({
         title: "Settings updated",
