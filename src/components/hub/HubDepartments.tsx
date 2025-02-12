@@ -28,6 +28,10 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
   const { data: departments, isLoading } = useQuery({
     queryKey: ['hub-departments', hubId],
     queryFn: async () => {
+      if (!hubId) {
+        throw new Error('Hub ID is required');
+      }
+
       const { data, error } = await supabase
         .from('hub_departments')
         .select(`
@@ -43,7 +47,12 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
       if (error) throw error;
       return data;
     },
+    enabled: !!hubId, // Only run the query if hubId exists and is not empty
   });
+
+  if (!hubId) {
+    return <div>Invalid hub ID</div>;
+  }
 
   if (isLoading) {
     return <div>Loading departments...</div>;
