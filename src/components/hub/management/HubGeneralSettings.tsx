@@ -11,6 +11,7 @@ import { ContactInfoSection } from "./sections/ContactInfoSection";
 import { SocialLinksSection } from "./sections/SocialLinksSection";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface HubGeneralSettingsProps {
   hub: Hub;
@@ -50,6 +51,7 @@ export type FormData = z.infer<typeof formSchema>;
 export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const methods = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -100,19 +102,31 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
 
       console.log('Sending update to Supabase:', updateData);
 
-      const { data: updatedHub, error } = await supabase
+      const { error: updateError } = await supabase
         .from('hubs')
         .update(updateData)
-        .eq('id', hub.id)
-        .select()
-        .single();
+        .eq('id', hub.id);
 
-      if (error) {
-        console.error('Error updating hub:', error);
-        throw error;
+      if (updateError) {
+        console.error('Error updating hub:', updateError);
+        throw updateError;
       }
 
-      console.log('Hub updated successfully:', updatedHub);
+      // Fetch the updated hub data
+      const { data: updatedHub, error: fetchError } = await supabase
+        .from('hubs')
+        .select('*')
+        .eq('id', hub.id)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching updated hub:', fetchError);
+        throw fetchError;
+      }
+
+      if (!updatedHub) {
+        throw new Error('Failed to fetch updated hub data');
+      }
 
       // Log the audit event
       const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
@@ -124,6 +138,9 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       if (auditError) {
         console.error('Error logging audit event:', auditError);
       }
+
+      // Invalidate and refetch hub data
+      queryClient.invalidateQueries({ queryKey: ['hub', hub.id] });
 
       toast({
         title: "Settings updated",
