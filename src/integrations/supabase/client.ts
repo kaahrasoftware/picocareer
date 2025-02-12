@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
@@ -23,46 +24,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       eventsPerSecond: 2,
     },
   },
-  // Add retry configuration
+  // Add timeout settings
   db: {
     schema: 'public',
-  },
-  fetch: (url, options = {}) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Cache-Control': 'no-cache',
-      },
-    }).then(async (response) => {
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Supabase request failed:', error);
-        throw new Error(error.message || 'Failed to fetch data');
-      }
-      return response;
-    }).catch(async (error) => {
-      console.error('Network error:', error);
-      // Retry the request up to 3 times with exponential backoff
-      for (let i = 0; i < 3; i++) {
-        try {
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-          const retryResponse = await fetch(url, {
-            ...options,
-            headers: {
-              ...options.headers,
-              'Cache-Control': 'no-cache',
-            },
-          });
-          if (retryResponse.ok) {
-            return retryResponse;
-          }
-        } catch (retryError) {
-          console.error(`Retry ${i + 1} failed:`, retryError);
-        }
-      }
-      throw error;
-    });
   },
 });
 

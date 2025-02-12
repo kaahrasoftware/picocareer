@@ -19,9 +19,9 @@ export function useAuthSession() {
     // Clear all queries from cache
     queryClient.clear();
     
-    // Clear auth token from localStorage
-    const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-    localStorage.removeItem(key);
+    // Remove specific items from localStorage
+    localStorage.removeItem('picocareer_auth_token');
+    localStorage.removeItem('supabase.auth.token');
     
     // Show user-friendly notification
     toast({
@@ -41,7 +41,7 @@ export function useAuthSession() {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          // Handle both session expiration and invalid refresh token cases
+          // Handle session expiration and invalid refresh token cases
           if (error.message?.includes('Invalid Refresh Token') || 
               error.message?.includes('session expired') ||
               error.message?.includes('not authenticated') ||
@@ -52,6 +52,14 @@ export function useAuthSession() {
           }
           throw error;
         }
+
+        // If session exists but access token is expired
+        if (session?.expires_at && session.expires_at * 1000 < Date.now()) {
+          console.log('Session expired, handling expiration...');
+          await handleSessionExpiration();
+          return null;
+        }
+
         return session;
       } catch (error) {
         console.error('Auth session error:', error);
@@ -64,18 +72,18 @@ export function useAuthSession() {
   });
 
   // Set up auth state change listener
-  supabase.auth.onAuthStateChange((event, newSession) => {
+  supabase.auth.onAuthStateChange(async (event, newSession) => {
     if (event === 'SIGNED_IN') {
       queryClient.setQueryData(['auth-session'], newSession);
     } 
-    else if (event === 'SIGNED_OUT') {
+    else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
       queryClient.setQueryData(['auth-session'], null);
       queryClient.removeQueries({ queryKey: ['profile'] });
       queryClient.removeQueries({ queryKey: ['notifications'] });
       
-      // Clear localStorage
-      const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
-      localStorage.removeItem(key);
+      if (event === 'TOKEN_REFRESHED' && !newSession) {
+        await handleSessionExpiration();
+      }
     }
   });
 
