@@ -106,11 +106,6 @@ export function HubResources({ hubId }: HubResourcesProps) {
                   <time>
                     {format(new Date(resource.created_at), 'MMM d, yyyy')}
                   </time>
-                  {resource.created_by_profile && (
-                    <p className="text-xs">
-                      Added by: {resource.created_by_profile.first_name} {resource.created_by_profile.last_name}
-                    </p>
-                  )}
                 </div>
               </div>
             </CardHeader>
