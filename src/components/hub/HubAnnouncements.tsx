@@ -107,7 +107,6 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
           variant="outline"
           size="icon"
           onClick={() => setSortByRecent(!sortByRecent)}
-          className={sortByRecent ? "bg-secondary" : ""}
         >
           <SortDesc className="h-4 w-4" />
         </Button>
@@ -143,7 +142,7 @@ export function HubAnnouncements({ hubId }: HubAnnouncementsProps) {
                           <p className="whitespace-pre-wrap line-clamp-3">{announcement.content}</p>
                           <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
                             {announcement.category && (
-                              <span className="inline-flex items-center rounded-full bg-secondary px-2 py-1 text-xs">
+                              <span className="inline-flex items-center rounded-full border px-2 py-1 text-xs">
                                 {announcement.category}
                               </span>
                             )}
