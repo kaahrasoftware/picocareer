@@ -4,13 +4,31 @@ import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FormData } from "../HubGeneralSettings";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BrandingSectionProps {
   control: Control<FormData>;
   register: any;
+  hubId: string;
+  defaultValues: {
+    logo_url: string;
+    banner_url: string;
+    brand_colors: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+    };
+  };
 }
 
-export function BrandingSection({ control, register }: BrandingSectionProps) {
+export function BrandingSection({ control, register, hubId }: BrandingSectionProps) {
+  const queryClient = useQueryClient();
+
+  const handleImageUploadSuccess = () => {
+    // Invalidate the hub query to trigger a refresh
+    queryClient.invalidateQueries(['hub', hubId]);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -24,6 +42,7 @@ export function BrandingSection({ control, register }: BrandingSectionProps) {
             label="Logo"
             description="Upload your hub logo (recommended size: 200x200px)"
             bucket="hub-logos"
+            onUploadSuccess={handleImageUploadSuccess}
           />
           <ImageUpload
             control={control}
@@ -31,6 +50,7 @@ export function BrandingSection({ control, register }: BrandingSectionProps) {
             label="Banner"
             description="Upload your hub banner (recommended size: 1200x300px)"
             bucket="hub-banners"
+            onUploadSuccess={handleImageUploadSuccess}
           />
         </div>
         

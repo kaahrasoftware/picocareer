@@ -14,9 +14,10 @@ interface ImageUploadProps {
   description?: string;
   bucket: string;
   accept?: string;
+  onUploadSuccess?: () => void;
 }
 
-export function ImageUpload({ control, name, label, description, bucket, accept }: ImageUploadProps) {
+export function ImageUpload({ control, name, label, description, bucket, accept, onUploadSuccess }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>(null);
@@ -62,6 +63,10 @@ export function ImageUpload({ control, name, label, description, bucket, accept 
         title: "Success",
         description: "File uploaded successfully",
       });
+
+      // Call the onUploadSuccess callback if provided
+      onUploadSuccess?.();
+      
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -96,6 +101,10 @@ export function ImageUpload({ control, name, label, description, bucket, accept 
         title: "Success",
         description: "File removed successfully",
       });
+      
+      // Call the onUploadSuccess callback if provided
+      onUploadSuccess?.();
+      
     } catch (error: any) {
       console.error('Remove error:', error);
       toast({
