@@ -23,11 +23,10 @@ export default function Hub() {
         .select('role, status')
         .eq('hub_id', id)
         .eq('profile_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error checking hub membership:', error);
-        return null;
       }
       return data;
     },
@@ -38,7 +37,7 @@ export default function Hub() {
   const isModerator = memberData?.role === 'moderator';
   const isMember = memberData?.status === 'Approved';
 
-  const { data: hub, isLoading: hubLoading } = useQuery({
+  const { data: hub, isLoading: hubLoading, error: hubError } = useQuery({
     queryKey: ['hub', id],
     queryFn: async () => {
       if (!isValidUUID) {
@@ -49,12 +48,21 @@ export default function Hub() {
         .from('hubs')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hub:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error('Hub not found');
+      }
+
       return data as Hub;
     },
     enabled: !!id && isValidUUID,
+    retry: 1, // Only retry once for not found errors
   });
 
   const { data: hubStats, isLoading: statsLoading } = useQuery({
@@ -78,7 +86,7 @@ export default function Hub() {
         resourcesCount: resourcesCount.count || 0
       };
     },
-    enabled: !!id,
+    enabled: !!id && !hubError, // Only fetch stats if hub exists
   });
 
   if (!id || !isValidUUID) {
@@ -103,12 +111,12 @@ export default function Hub() {
     );
   }
 
-  if (!hub) {
+  if (hubError || !hub) {
     return (
       <div className="container mx-auto py-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Hub not found</h1>
         <p className="text-muted-foreground mb-4">
-          The hub you're looking for doesn't exist or you don't have access to it.
+          The hub you're looking for doesn't exist or has been removed.
         </p>
         <Button onClick={() => window.history.back()}>Go Back</Button>
       </div>
