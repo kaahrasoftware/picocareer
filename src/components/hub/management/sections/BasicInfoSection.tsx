@@ -2,15 +2,66 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import type { FormData } from "../HubGeneralSettings";
 import { UseFormRegister } from "react-hook-form";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BasicInfoSectionProps {
   register: UseFormRegister<FormData>;
   errors: any;
+  hubId: string;
+  defaultValues: {
+    name: string;
+    description: string;
+    website: string;
+    apply_now_URL: string;
+  };
 }
 
-export function BasicInfoSection({ register, errors }: BasicInfoSectionProps) {
+export function BasicInfoSection({ register, errors, hubId, defaultValues }: BasicInfoSectionProps) {
+  const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleFieldSave = async (fieldName: string, value: string) => {
+    setIsLoading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const { error } = await supabase
+        .from('hubs')
+        .update({ [fieldName]: value })
+        .eq('id', hubId);
+
+      if (error) throw error;
+
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: hubId,
+        _action: 'hub_settings_updated',
+        _details: JSON.stringify({ [fieldName]: value })
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
+
+      toast({
+        title: "Field updated",
+        description: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} has been updated successfully.`,
+      });
+    } catch (error) {
+      console.error('Error updating field:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update field. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -19,10 +70,19 @@ export function BasicInfoSection({ register, errors }: BasicInfoSectionProps) {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="name" className="text-sm font-medium">Hub Name</label>
-          <Input
-            id="name"
-            {...register("name", { required: "Hub name is required" })}
-          />
+          <div className="flex gap-2">
+            <Input
+              id="name"
+              {...register("name", { required: "Hub name is required" })}
+              defaultValue={defaultValues.name}
+            />
+            <Button 
+              onClick={() => handleFieldSave("name", defaultValues.name)}
+              disabled={isLoading.name}
+            >
+              {isLoading.name ? "Saving..." : "Save"}
+            </Button>
+          </div>
           {errors.name && (
             <p className="text-sm text-destructive">{errors.name.message}</p>
           )}
@@ -30,55 +90,60 @@ export function BasicInfoSection({ register, errors }: BasicInfoSectionProps) {
 
         <div className="space-y-2">
           <label htmlFor="description" className="text-sm font-medium">Description</label>
-          <Textarea
-            id="description"
-            {...register("description")}
-            rows={4}
-          />
+          <div className="flex gap-2">
+            <Textarea
+              id="description"
+              {...register("description")}
+              defaultValue={defaultValues.description}
+              rows={4}
+            />
+            <Button 
+              onClick={() => handleFieldSave("description", defaultValues.description)}
+              disabled={isLoading.description}
+            >
+              {isLoading.description ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
           <label htmlFor="website" className="text-sm font-medium">Website</label>
-          <Input
-            id="website"
-            type="url"
-            {...register("website")}
-            placeholder="https://..."
-          />
+          <div className="flex gap-2">
+            <Input
+              id="website"
+              type="url"
+              {...register("website")}
+              defaultValue={defaultValues.website}
+              placeholder="https://..."
+            />
+            <Button 
+              onClick={() => handleFieldSave("website", defaultValues.website)}
+              disabled={isLoading.website}
+            >
+              {isLoading.website ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
           <label htmlFor="apply_now_URL" className="text-sm font-medium">Apply Now URL</label>
-          <Input
-            id="apply_now_URL"
-            type="url"
-            {...register("apply_now_URL")}
-            placeholder="https://..."
-          />
-          <p className="text-sm text-muted-foreground">
-            Add a direct link to your application form or process
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Important Links</label>
-          <div className="space-y-2" data-important-links>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="grid grid-cols-2 gap-2">
-                <Input
-                  placeholder="Link Title"
-                  {...register(`important_links.${index}.title`)}
-                />
-                <Input
-                  placeholder="URL"
-                  type="url"
-                  {...register(`important_links.${index}.url`)}
-                />
-              </div>
-            ))}
+          <div className="flex gap-2">
+            <Input
+              id="apply_now_URL"
+              type="url"
+              {...register("apply_now_URL")}
+              defaultValue={defaultValues.apply_now_URL}
+              placeholder="https://..."
+            />
+            <Button 
+              onClick={() => handleFieldSave("apply_now_URL", defaultValues.apply_now_URL)}
+              disabled={isLoading.apply_now_URL}
+            >
+              {isLoading.apply_now_URL ? "Saving..." : "Save"}
+            </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            Add up to 5 important links that members should know about
+            Add a direct link to your application form or process
           </p>
         </div>
       </CardContent>

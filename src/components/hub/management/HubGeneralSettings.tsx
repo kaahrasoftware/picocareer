@@ -1,7 +1,5 @@
 
-import { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Hub, ImportantLink } from "@/types/database/hubs";
@@ -11,7 +9,6 @@ import { ContactInfoSection } from "./sections/ContactInfoSection";
 import { SocialLinksSection } from "./sections/SocialLinksSection";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface HubGeneralSettingsProps {
   hub: Hub;
@@ -50,8 +47,6 @@ export type FormData = z.infer<typeof formSchema>;
 
 export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const queryClient = useQueryClient();
 
   const methods = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -73,91 +68,45 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
     }
   });
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      setIsLoading(true);
-      console.log('Submitting hub update with data:', data);
-
-      // First, validate the data
-      formSchema.parse(data);
-
-      // Filter out empty important links
-      const filteredImportantLinks = (data.important_links || []).filter(
-        link => link.title && link.url
-      );
-      
-      const updateData = {
-        name: data.name,
-        description: data.description,
-        website: data.website,
-        apply_now_URL: data.apply_now_URL,
-        logo_url: data.logo_url,
-        banner_url: data.banner_url,
-        important_links: filteredImportantLinks,
-        brand_colors: data.brand_colors,
-        contact_info: data.contact_info,
-        social_links: data.social_links,
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('Sending update to Supabase:', updateData);
-
-      const { error: updateError } = await supabase
-        .from('hubs')
-        .update(updateData)
-        .eq('id', hub.id);
-
-      if (updateError) {
-        console.error('Error updating hub:', updateError);
-        throw updateError;
-      }
-
-      // Log the audit event
-      const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hub.id,
-        _action: 'hub_settings_updated',
-        _details: JSON.stringify(updateData)
-      });
-
-      if (auditError) {
-        console.error('Error logging audit event:', auditError);
-      }
-
-      // Invalidate and refetch hub data
-      await queryClient.invalidateQueries({ queryKey: ['hub', hub.id] });
-
-      toast({
-        title: "Settings updated",
-        description: "Hub settings have been successfully updated.",
-      });
-    } catch (error) {
-      console.error('Error in onSubmit:', error);
-      toast({
-        title: "Error",
-        description: error instanceof z.ZodError 
-          ? "Please check the form for errors."
-          : "Failed to update hub settings. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-        <BrandingSection control={methods.control} register={methods.register} />
-        <BasicInfoSection register={methods.register} errors={methods.formState.errors} />
-        <ContactInfoSection register={methods.register} />
-        <SocialLinksSection register={methods.register} />
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </form>
+      <div className="space-y-6">
+        <BrandingSection 
+          control={methods.control} 
+          register={methods.register} 
+          hubId={hub.id}
+          defaultValues={{
+            logo_url: hub.logo_url || "",
+            banner_url: hub.banner_url || "",
+            brand_colors: hub.brand_colors || {
+              primary: "#9b87f5",
+              secondary: "#7E69AB",
+              accent: "#8B5CF6"
+            }
+          }}
+        />
+        <BasicInfoSection 
+          register={methods.register} 
+          errors={methods.formState.errors} 
+          hubId={hub.id}
+          defaultValues={{
+            name: hub.name,
+            description: hub.description || "",
+            website: hub.website || "",
+            apply_now_URL: hub.apply_now_URL || ""
+          }}
+        />
+        <ContactInfoSection 
+          register={methods.register} 
+          hubId={hub.id}
+          defaultValues={hub.contact_info || {}}
+        />
+        <SocialLinksSection 
+          register={methods.register} 
+          hubId={hub.id}
+          defaultValues={hub.social_links || {}}
+        />
+      </div>
     </FormProvider>
   );
 }
