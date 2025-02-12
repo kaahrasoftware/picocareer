@@ -1,5 +1,5 @@
 
-import { Control } from "react-hook-form";
+import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,7 @@ interface BrandingSectionProps {
 
 export function BrandingSection({ control, register, hubId }: BrandingSectionProps) {
   const queryClient = useQueryClient();
+  const { getValues } = useFormContext<FormData>();
 
   const handleImageUploadSuccess = async () => {
     // Invalidate both the specific hub query and the hubs list
@@ -34,8 +35,8 @@ export function BrandingSection({ control, register, hubId }: BrandingSectionPro
     if (currentData) {
       queryClient.setQueryData(['hub', hubId], {
         ...currentData,
-        logo_url: control.getValues('logo_url'),
-        banner_url: control.getValues('banner_url'),
+        logo_url: getValues('logo_url'),
+        banner_url: getValues('banner_url'),
       });
     }
   };
