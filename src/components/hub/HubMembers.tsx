@@ -48,7 +48,7 @@ export function HubMembers({ hubId }: HubMembersProps) {
     return (
       <div className="space-y-6">
         <h2 className="text-xl font-semibold">Members</h2>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
               <CardContent className="p-4">
@@ -96,7 +96,7 @@ export function HubMembers({ hubId }: HubMembersProps) {
         </h2>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {members.map((member) => (
           <Card key={member.id} className="transition-colors hover:bg-accent">
             <CardContent className="p-4">
