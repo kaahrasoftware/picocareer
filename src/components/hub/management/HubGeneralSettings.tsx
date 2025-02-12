@@ -7,6 +7,7 @@ import { BrandingSection } from "./sections/BrandingSection";
 import { BasicInfoSection } from "./sections/BasicInfoSection";
 import { ContactInfoSection } from "./sections/ContactInfoSection";
 import { SocialLinksSection } from "./sections/SocialLinksSection";
+import { ImportantLinksSection } from "./sections/ImportantLinksSection";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -95,6 +96,11 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
             website: hub.website || "",
             apply_now_URL: hub.apply_now_URL || ""
           }}
+        />
+        <ImportantLinksSection 
+          register={methods.register}
+          hubId={hub.id}
+          defaultValues={Array.isArray(hub.important_links) ? hub.important_links : []}
         />
         <ContactInfoSection 
           register={methods.register} 
