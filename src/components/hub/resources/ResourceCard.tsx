@@ -24,26 +24,16 @@ export function ResourceCard({ resource, onClick, isAdmin, onDeleted }: Resource
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const { error, count } = await supabase
+      const { error } = await supabase
         .from('hub_resources')
         .delete()
-        .eq('id', resource.id)
-        .select('count');
+        .eq('id', resource.id);
 
       if (error) {
         console.error('Delete error:', error);
         toast({
           title: "Error",
           description: "Failed to delete resource. You may not have permission.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (count === 0) {
-        toast({
-          title: "Error",
-          description: "Resource not found or you don't have permission to delete it.",
           variant: "destructive"
         });
         return;
