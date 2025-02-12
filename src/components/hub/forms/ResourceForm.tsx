@@ -1,6 +1,6 @@
 
 import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
+import { Form, FormField } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/forms/ImageUpload";
