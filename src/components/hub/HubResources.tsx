@@ -98,12 +98,14 @@ export function HubResources({ hubId }: HubResourcesProps) {
       </div>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl">
-          <ResourceForm 
-            hubId={hubId} 
-            onSuccess={() => setShowForm(false)}
-            onCancel={() => setShowForm(false)}
-          />
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <ScrollArea className="h-full max-h-[80vh] pr-4">
+            <ResourceForm 
+              hubId={hubId} 
+              onSuccess={() => setShowForm(false)}
+              onCancel={() => setShowForm(false)}
+            />
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
