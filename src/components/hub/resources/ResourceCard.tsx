@@ -8,6 +8,7 @@ import { HubResource } from "@/types/database/hubs";
 import { getResourceIcon } from "./ResourceIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface ResourceCardProps {
   resource: HubResource;
@@ -18,29 +19,53 @@ interface ResourceCardProps {
 
 export function ResourceCard({ resource, onClick, isAdmin, onDeleted }: ResourceCardProps) {
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    const { error } = await supabase
-      .from('hub_resources')
-      .delete()
-      .eq('id', resource.id);
+    try {
+      setIsDeleting(true);
+      const { error, count } = await supabase
+        .from('hub_resources')
+        .delete()
+        .eq('id', resource.id)
+        .select('count');
 
-    if (error) {
+      if (error) {
+        console.error('Delete error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete resource. You may not have permission.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (count === 0) {
+        toast({
+          title: "Error",
+          description: "Resource not found or you don't have permission to delete it.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Resource deleted successfully"
+      });
+
+      if (onDeleted) {
+        onDeleted();
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
       toast({
         title: "Error",
-        description: "Failed to delete resource. You may not have permission.",
+        description: "An unexpected error occurred while deleting the resource.",
         variant: "destructive"
       });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Resource deleted successfully"
-    });
-
-    if (onDeleted) {
-      onDeleted();
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -97,8 +122,9 @@ export function ResourceCard({ resource, onClick, isAdmin, onDeleted }: Resource
                 <AlertDialogAction 
                   onClick={handleDelete}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={isDeleting}
                 >
-                  Delete
+                  {isDeleting ? "Deleting..." : "Delete"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
