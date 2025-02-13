@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UserPlus, Loader2 } from "lucide-react";
+import { MemberRole } from "@/types/database/hubs";
 
 interface InviteMemberFormProps {
   hubId: string;
@@ -26,7 +27,7 @@ interface EmailValidationResult {
 export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
   const { toast } = useToast();
   const [emailInput, setEmailInput] = useState("");
-  const [selectedRole, setSelectedRole] = useState("member");
+  const [selectedRole, setSelectedRole] = useState<MemberRole>("member");
   const [isInviting, setIsInviting] = useState(false);
   const [validatedEmails, setValidatedEmails] = useState<EmailValidationResult[]>([]);
   const [isValidating, setIsValidating] = useState(false);
@@ -193,6 +194,8 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
                   <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="moderator">Moderator</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="faculty">Faculty</SelectItem>
+                  <SelectItem value="student">Student</SelectItem>
                 </SelectContent>
               </Select>
               <Button 
