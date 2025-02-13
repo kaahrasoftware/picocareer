@@ -34,7 +34,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
             <TabsTrigger value="departments">Departments</TabsTrigger>
           </>
         )}
-        {(isAdmin || isModerator) && (
+        {isAdmin && ( // Changed from (isAdmin || isModerator) to just isAdmin
           <TabsTrigger value="manage">Manage</TabsTrigger>
         )}
       </TabsList>
@@ -71,7 +71,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
         </>
       )}
 
-      {(isAdmin || isModerator) && (
+      {isAdmin && ( // Changed from (isAdmin || isModerator) to just isAdmin
         <TabsContent value="manage" className="mt-6">
           <HubManagement hub={hub} />
         </TabsContent>
