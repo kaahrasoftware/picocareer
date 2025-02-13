@@ -1,14 +1,26 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useEmailValidation } from "@/hooks/useEmailValidation";
-import { EmailValidationList } from "./EmailValidationList";
-import { InviteFormControls } from "./InviteFormControls";
+import { UserPlus, Loader2 } from "lucide-react";
 
 interface InviteMemberFormProps {
   hubId: string;
+}
+
+interface EmailValidationResult {
+  email: string;
+  exists: boolean;
 }
 
 export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
@@ -16,7 +28,36 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
   const [emailInput, setEmailInput] = useState("");
   const [selectedRole, setSelectedRole] = useState("member");
   const [isInviting, setIsInviting] = useState(false);
-  const { validatedEmails, isValidating, validateEmails, setValidatedEmails } = useEmailValidation();
+  const [validatedEmails, setValidatedEmails] = useState<EmailValidationResult[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
+
+  const validateEmails = async (emails: string[]) => {
+    setIsValidating(true);
+    try {
+      const results: EmailValidationResult[] = [];
+      
+      for (const email of emails) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('email', email.trim())
+          .maybeSingle();
+          
+        results.push({
+          email: email.trim(),
+          exists: !!data
+        });
+      }
+      
+      setValidatedEmails(results);
+      return results;
+    } catch (error) {
+      console.error('Error validating emails:', error);
+      return [];
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   const handleEmailChange = async (value: string) => {
     setEmailInput(value);
@@ -134,17 +175,63 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
       <CardContent>
         <div className="space-y-4">
           <div className="flex flex-col gap-4">
-            <InviteFormControls
-              emailInput={emailInput}
-              selectedRole={selectedRole}
-              isInviting={isInviting}
-              isValidating={isValidating}
-              disabled={!emailInput || validatedEmails.every(e => !e.exists)}
-              onEmailChange={handleEmailChange}
-              onRoleChange={setSelectedRole}
-              onInvite={handleInvite}
-            />
-            <EmailValidationList validatedEmails={validatedEmails} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  placeholder="Enter email addresses (comma-separated)"
+                  value={emailInput}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="moderator">Moderator</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={handleInvite} 
+                disabled={isInviting || isValidating || !emailInput || validatedEmails.every(e => !e.exists)}
+                className="w-[120px]"
+              >
+                {isInviting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Invite
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {validatedEmails.length > 0 && (
+              <div className="text-sm space-y-1">
+                {validatedEmails.map((result, index) => (
+                  <div 
+                    key={index}
+                    className={`flex items-center gap-2 ${
+                      result.exists ? 'text-green-500' : 'text-red-500'
+                    }`}
+                  >
+                    <span>•</span>
+                    <span>{result.email}</span>
+                    <span className="text-xs">
+                      {result.exists ? '(valid)' : '(not registered)'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
