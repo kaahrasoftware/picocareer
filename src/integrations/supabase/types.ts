@@ -2716,6 +2716,12 @@ export type Database = {
         }
         Returns: unknown
       }
+      is_hub_admin: {
+        Args: {
+          hub_id: string
+        }
+        Returns: boolean
+      }
       is_hub_member: {
         Args: {
           hub_id: string
