@@ -42,10 +42,11 @@ export default function Hub() {
     enabled: !!id && !!session?.user?.id && isValidUUID,
   });
 
-  // Add logging to see computed roles
+  // Update member status checks
   const isAdmin = memberData?.role === 'admin';
   const isModerator = memberData?.role === 'moderator';
-  const isMember = memberData?.status === 'Approved';
+  // Changed: consider any member record as a member, regardless of status
+  const isMember = !!memberData;
 
   console.log('Membership status:', {
     memberData,
