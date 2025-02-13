@@ -18,12 +18,6 @@ export default function Hub() {
     queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
       if (!id || !session?.user?.id) return null;
-      
-      console.log('Fetching member data for:', {
-        hubId: id,
-        userId: session.user.id
-      });
-
       const { data, error } = await supabase
         .from('hub_members')
         .select('role, status')
@@ -31,29 +25,17 @@ export default function Hub() {
         .eq('profile_id', session.user.id)
         .maybeSingle();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error checking hub membership:', error);
-        throw error;
       }
-
-      console.log('Member data result:', data);
       return data;
     },
     enabled: !!id && !!session?.user?.id && isValidUUID,
   });
 
-  // Update member status checks
   const isAdmin = memberData?.role === 'admin';
   const isModerator = memberData?.role === 'moderator';
-  // Only consider approved members as members
   const isMember = memberData?.status === 'Approved';
-
-  console.log('Membership status:', {
-    memberData,
-    isAdmin,
-    isModerator,
-    isMember
-  });
 
   const { data: hub, isLoading: hubLoading, error: hubError } = useQuery({
     queryKey: ['hub', id],
@@ -80,7 +62,7 @@ export default function Hub() {
       return data as Hub;
     },
     enabled: !!id && isValidUUID,
-    retry: 1,
+    retry: 1, // Only retry once for not found errors
   });
 
   const { data: hubStats, isLoading: statsLoading } = useQuery({
@@ -88,23 +70,23 @@ export default function Hub() {
     queryFn: async () => {
       if (!id) return null;
 
-      const { count: membersCount } = await supabase
+      const membersCount = await supabase
         .from('hub_members')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('hub_id', id)
         .eq('status', 'Approved');
 
-      const { count: resourcesCount } = await supabase
+      const resourcesCount = await supabase
         .from('hub_resources')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('hub_id', id);
 
       return {
-        membersCount: membersCount || 0,
-        resourcesCount: resourcesCount || 0
+        membersCount: membersCount.count || 0,
+        resourcesCount: resourcesCount.count || 0
       };
     },
-    enabled: !!id && !hubError,
+    enabled: !!id && !hubError, // Only fetch stats if hub exists
   });
 
   if (!id || !isValidUUID) {
