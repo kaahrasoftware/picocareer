@@ -45,8 +45,8 @@ export default function Hub() {
   // Update member status checks
   const isAdmin = memberData?.role === 'admin';
   const isModerator = memberData?.role === 'moderator';
-  // Changed: consider any member record as a member, regardless of status
-  const isMember = !!memberData;
+  // Only consider approved members as members
+  const isMember = memberData?.status === 'Approved';
 
   console.log('Membership status:', {
     memberData,
