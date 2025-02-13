@@ -2802,6 +2802,7 @@ export type Database = {
         | "member_invitation_sent"
         | "member_invitation_cancelled"
         | "member_role_updated"
+        | "branding_updated"
       categories:
         | "Technology"
         | "Digital Tools"
