@@ -36,6 +36,7 @@ export default function HubInviteResponse() {
           .single();
 
         if (inviteError || !invite) {
+          console.error('Invite error:', inviteError);
           setError("Invitation not found");
           setIsLoading(false);
           return;
@@ -61,6 +62,7 @@ export default function HubInviteResponse() {
           .single();
 
         if (hubError || !hubData) {
+          console.error('Hub error:', hubError);
           setError("Hub not found");
           setIsLoading(false);
           return;
@@ -99,7 +101,10 @@ export default function HubInviteResponse() {
             status: 'Approved',
           });
 
-        if (memberError) throw memberError;
+        if (memberError) {
+          console.error('Member error:', memberError);
+          throw memberError;
+        }
       }
 
       // Update invitation status
