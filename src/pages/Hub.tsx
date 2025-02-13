@@ -88,20 +88,20 @@ export default function Hub() {
     queryFn: async () => {
       if (!id) return null;
 
-      const membersCount = await supabase
+      const { count: membersCount } = await supabase
         .from('hub_members')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('hub_id', id)
         .eq('status', 'Approved');
 
-      const resourcesCount = await supabase
+      const { count: resourcesCount } = await supabase
         .from('hub_resources')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('hub_id', id);
 
       return {
-        membersCount: membersCount.count || 0,
-        resourcesCount: resourcesCount.count || 0
+        membersCount: membersCount || 0,
+        resourcesCount: resourcesCount || 0
       };
     },
     enabled: !!id && !hubError,
