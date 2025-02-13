@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationData } from "./hooks/useNotificationData";
 import { NotificationDialogs } from "./NotificationDialogs";
 import { SessionNotificationContent } from "./SessionNotificationContent";
+import { useNavigate } from "react-router-dom";
 import type { MentorSession } from "@/types/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -24,6 +26,7 @@ export function NotificationContent({
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
@@ -76,6 +79,32 @@ export function NotificationContent({
   const renderActionButton = () => {
     // Don't show View Detail button for session-related notifications
     if (!action_url || type?.includes('session')) return null;
+
+    // For hub invitations, show Accept/Reject buttons
+    if (type === 'hub_invitation_sent' && action_url) {
+      return (
+        <div className="flex gap-2 mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-green-500 hover:text-green-400 hover:bg-green-400/10"
+            onClick={() => navigate(action_url)}
+          >
+            <Check className="w-4 h-4 mr-2" />
+            Accept
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-500 hover:text-red-400 hover:bg-red-400/10"
+            onClick={() => navigate(action_url)}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Reject
+          </Button>
+        </div>
+      );
+    }
 
     return (
       <Button
