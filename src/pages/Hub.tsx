@@ -18,6 +18,12 @@ export default function Hub() {
     queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
       if (!id || !session?.user?.id) return null;
+      
+      console.log('Fetching member data for:', {
+        hubId: id,
+        userId: session.user.id
+      });
+
       const { data, error } = await supabase
         .from('hub_members')
         .select('role, status')
@@ -25,17 +31,28 @@ export default function Hub() {
         .eq('profile_id', session.user.id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error checking hub membership:', error);
+        throw error;
       }
+
+      console.log('Member data result:', data);
       return data;
     },
     enabled: !!id && !!session?.user?.id && isValidUUID,
   });
 
+  // Add logging to see computed roles
   const isAdmin = memberData?.role === 'admin';
   const isModerator = memberData?.role === 'moderator';
   const isMember = memberData?.status === 'Approved';
+
+  console.log('Membership status:', {
+    memberData,
+    isAdmin,
+    isModerator,
+    isMember
+  });
 
   const { data: hub, isLoading: hubLoading, error: hubError } = useQuery({
     queryKey: ['hub', id],
@@ -62,7 +79,7 @@ export default function Hub() {
       return data as Hub;
     },
     enabled: !!id && isValidUUID,
-    retry: 1, // Only retry once for not found errors
+    retry: 1,
   });
 
   const { data: hubStats, isLoading: statsLoading } = useQuery({
@@ -86,7 +103,7 @@ export default function Hub() {
         resourcesCount: resourcesCount.count || 0
       };
     },
-    enabled: !!id && !hubError, // Only fetch stats if hub exists
+    enabled: !!id && !hubError,
   });
 
   if (!id || !isValidUUID) {
