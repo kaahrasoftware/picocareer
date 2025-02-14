@@ -28,8 +28,8 @@ export default function Hubs() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-[400px]" />
           ))}
         </div>
@@ -46,7 +46,7 @@ export default function Hubs() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {hubs?.map((hub) => (
           <Card
             key={hub.id}
