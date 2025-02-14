@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, SmilePlus, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, Clock, SmilePlus, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
@@ -36,7 +37,6 @@ const REACTION_EMOJIS = {
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
@@ -63,15 +63,22 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         supabase
           .from('hub_chat_reactions')
           .select('*')
-          .eq('message_id', room.id)
+          .eq('room_id', room.id)
       ]);
 
       if (messagesResponse.error) throw messagesResponse.error;
       if (reactionsResponse.error) throw reactionsResponse.error;
 
+      // Group reactions by message
+      const messageReactions = new Map();
+      reactionsResponse.data.forEach(reaction => {
+        const existing = messageReactions.get(reaction.message_id) || [];
+        messageReactions.set(reaction.message_id, [...existing, reaction]);
+      });
+
       const messagesWithReactions = messagesResponse.data.map(message => ({
         ...message,
-        reactions: reactionsResponse.data.filter(r => r.message_id === message.id)
+        reactions: messageReactions.get(message.id) || []
       }));
 
       return messagesWithReactions as ChatMessageWithSender[];
@@ -94,36 +101,26 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events
           schema: 'public',
           table: 'hub_chat_messages',
           filter: `room_id=eq.${room.id}`,
         },
         async (payload) => {
-          console.log('New message received:', payload);
-          
-          const { data: newMessage, error } = await supabase
-            .from('hub_chat_messages')
-            .select(`
-              *,
-              sender:profiles!hub_chat_messages_sender_id_fkey (
-                id,
-                full_name,
-                avatar_url
-              )
-            `)
-            .eq('id', payload.new.id)
-            .single();
-
-          if (error) {
-            console.error('Error fetching new message:', error);
-            return;
-          }
-
-          queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
-            if (!oldMessages) return [newMessage];
-            return [...oldMessages, newMessage];
-          });
+          console.log('Message change received:', payload);
+          await queryClient.invalidateQueries({ queryKey });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hub_chat_reactions'
+        },
+        async (payload) => {
+          console.log('Reaction change received:', payload);
+          await queryClient.invalidateQueries({ queryKey });
         }
       )
       .subscribe();
@@ -147,6 +144,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       if (error) {
         if (error.code === '23505') { // Unique violation
+          // If the reaction already exists, remove it
           await supabase
             .from('hub_chat_reactions')
             .delete()
@@ -160,9 +158,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         }
       }
 
-      // Automatically hide reactions after selection
-      setExpandedMessageId(null);
-      
       // Refresh messages to update reactions
       await queryClient.invalidateQueries({ queryKey });
     } catch (error) {
@@ -180,38 +175,20 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     setShowEmojiPicker(false);
   };
 
-  const toggleReactions = (messageId: string) => {
-    setExpandedMessageId(expandedMessageId === messageId ? null : messageId);
-  };
-
   const handleSendMessage = async () => {
     if (!message.trim() || !session?.user) return;
 
     try {
-      const { data: newMessage, error } = await supabase
+      const { error } = await supabase
         .from('hub_chat_messages')
         .insert({
           room_id: room.id,
           sender_id: session.user.id,
           content: message.trim(),
           type: 'text'
-        })
-        .select(`
-          *,
-          sender:profiles!hub_chat_messages_sender_id_fkey (
-            id,
-            full_name,
-            avatar_url
-          )
-        `)
-        .single();
+        });
 
       if (error) throw error;
-
-      queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
-        if (!oldMessages) return [newMessage];
-        return [...oldMessages, newMessage];
-      });
 
       setMessage("");
     } catch (error) {
@@ -241,7 +218,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
               acc[reaction.reaction_type] = (acc[reaction.reaction_type] || 0) + 1;
               return acc;
             }, {} as Record<string, number>) || {};
-            const isExpanded = expandedMessageId === msg.id;
 
             return (
               <div
@@ -306,20 +282,22 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                     <div className="break-words text-sm">
                       {msg.content}
                     </div>
-                    <div className="mt-2">
-                      <div className="flex flex-wrap gap-1">
-                        {Object.entries(reactionCounts)
-                          .filter(([_, count]) => count > 0)
-                          .map(([type, count]) => (
-                            <span
-                              key={type}
-                              className="text-sm px-2 py-0.5 rounded-full bg-primary/20"
-                            >
-                              {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
-                            </span>
-                          ))}
+                    {Object.keys(reactionCounts).length > 0 && (
+                      <div className="mt-2">
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(reactionCounts)
+                            .filter(([_, count]) => count > 0)
+                            .map(([type, count]) => (
+                              <span
+                                key={type}
+                                className="text-sm px-2 py-0.5 rounded-full bg-primary/20"
+                              >
+                                {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
+                              </span>
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
