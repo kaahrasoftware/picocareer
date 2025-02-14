@@ -235,8 +235,8 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
             return (
               <div
                 key={msg.id}
-                className={`flex ${
-                  isCurrentUser ? "justify-end" : "justify-start"
+                className={`flex flex-col ${
+                  isCurrentUser ? "items-end" : "items-start"
                 }`}
               >
                 <div className="relative max-w-[80%]">
@@ -295,24 +295,25 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                     <div className="break-words text-sm">
                       {msg.content}
                     </div>
-                    {Object.keys(reactionCounts).length > 0 && (
-                      <div className="mt-2">
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(reactionCounts)
-                            .filter(([_, count]) => count > 0)
-                            .map(([type, count]) => (
-                              <span
-                                key={type}
-                                className="text-sm px-2 py-0.5 rounded-full bg-primary/20"
-                              >
-                                {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
-                              </span>
-                            ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
+                {Object.keys(reactionCounts).length > 0 && (
+                  <div className={`mt-1 flex flex-wrap gap-1 ${
+                    isCurrentUser ? "pr-8" : "pl-8"
+                  }`}>
+                    {Object.entries(reactionCounts)
+                      .filter(([_, count]) => count > 0)
+                      .map(([type, count]) => (
+                        <button
+                          key={type}
+                          onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
+                          className="text-sm px-2 py-0.5 rounded-full bg-primary/20 hover:bg-primary/30 transition-colors"
+                        >
+                          {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
+                        </button>
+                      ))}
+                  </div>
+                )}
               </div>
             );
           })}
