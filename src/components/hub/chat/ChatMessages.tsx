@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +44,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
   const queryKey = ['chat-messages', room.id];
 
-  const { data: messages, isLoading } = useQuery({
+  const { data: messages = [], isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
       const messagesResponse = await supabase
@@ -77,18 +78,16 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           messageReactions.set(reaction.message_id, [...existing, reaction]);
         });
 
-        const messagesWithReactions = messagesResponse.data.map(message => ({
+        return messagesResponse.data.map(message => ({
           ...message,
           reactions: messageReactions.get(message.id) || []
         }));
-
-        return messagesWithReactions as ChatMessageWithSender[];
       }
 
       return messagesResponse.data.map(message => ({
         ...message,
         reactions: []
-      })) as ChatMessageWithSender[];
+      }));
     },
   });
 
@@ -102,20 +101,54 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     scrollToBottom();
   }, [messages]);
 
+  // Set up real-time subscriptions
   useEffect(() => {
-    const channel = supabase
-      .channel(`room-${room.id}`)
+    // Create a channel for this specific room
+    const channel = supabase.channel(`room-${room.id}`);
+
+    // Subscribe to message inserts
+    channel
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'hub_chat_messages',
           filter: `room_id=eq.${room.id}`,
         },
-        async (payload) => {
-          console.log('Message change received:', payload);
-          await queryClient.invalidateQueries({ queryKey });
+        async (payload: any) => {
+          console.log('New message received:', payload);
+          
+          // Fetch the complete message with sender info
+          const { data: messageWithSender, error } = await supabase
+            .from('hub_chat_messages')
+            .select(`
+              *,
+              sender:profiles!hub_chat_messages_sender_id_fkey (
+                id,
+                full_name,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching message details:', error);
+            return;
+          }
+
+          // Update the query cache with the new message
+          queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+            const newMessage: ChatMessageWithSender = {
+              ...messageWithSender,
+              reactions: []
+            };
+            return [...(old || []), newMessage];
+          });
+
+          // Scroll to bottom when new message arrives
+          scrollToBottom();
         }
       )
       .on(
@@ -123,19 +156,21 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         {
           event: '*',
           schema: 'public',
-          table: 'hub_chat_reactions'
+          table: 'hub_chat_reactions',
+          filter: `message_id=in.(${messages?.map(m => m.id).join(',')})`,
         },
-        async (payload) => {
-          console.log('Reaction change received:', payload);
+        async () => {
           await queryClient.invalidateQueries({ queryKey });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
-  }, [room.id, queryClient, queryKey]);
+  }, [room.id, queryClient, queryKey, messages]);
 
   const handleAddReaction = async (messageId: string, reactionType: keyof typeof REACTION_EMOJIS) => {
     if (!session?.user) return;
@@ -163,8 +198,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           throw error;
         }
       }
-
-      await queryClient.invalidateQueries({ queryKey });
     } catch (error) {
       console.error('Error handling reaction:', error);
       toast({
@@ -184,40 +217,18 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     if (!message.trim() || !session?.user) return;
 
     try {
-      const optimisticMessage: ChatMessageWithSender = {
-        id: crypto.randomUUID(),
-        room_id: room.id,
-        sender_id: session.user.id,
-        content: message.trim(),
-        type: 'text',
-        created_at: new Date().toISOString(),
-        sender: {
-          id: session.user.id,
-          full_name: session.user.user_metadata?.full_name || 'Unknown User',
-          avatar_url: session.user.user_metadata?.avatar_url || null
-        },
-        reactions: []
-      };
-
-      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-        return [...(old || []), optimisticMessage];
-      });
-
-      setMessage("");
-      
-      scrollToBottom();
-
       const { error } = await supabase
         .from('hub_chat_messages')
         .insert({
           room_id: room.id,
           sender_id: session.user.id,
-          content: optimisticMessage.content,
+          content: message.trim(),
           type: 'text'
         });
 
       if (error) throw error;
 
+      setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -225,7 +236,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
-      queryClient.invalidateQueries({ queryKey });
     }
   };
 
