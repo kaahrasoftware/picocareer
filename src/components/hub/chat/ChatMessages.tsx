@@ -46,7 +46,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const { data: messages, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      // First fetch all messages for the room
       const messagesResponse = await supabase
         .from('hub_chat_messages')
         .select(`
@@ -62,7 +61,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       if (messagesResponse.error) throw messagesResponse.error;
 
-      // If there are messages, fetch their reactions
       if (messagesResponse.data.length > 0) {
         const messageIds = messagesResponse.data.map(msg => msg.id);
         
@@ -73,14 +71,12 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
         if (reactionsResponse.error) throw reactionsResponse.error;
 
-        // Group reactions by message
         const messageReactions = new Map();
         reactionsResponse.data.forEach(reaction => {
           const existing = messageReactions.get(reaction.message_id) || [];
           messageReactions.set(reaction.message_id, [...existing, reaction]);
         });
 
-        // Add reactions to their corresponding messages
         const messagesWithReactions = messagesResponse.data.map(message => ({
           ...message,
           reactions: messageReactions.get(message.id) || []
@@ -89,7 +85,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         return messagesWithReactions as ChatMessageWithSender[];
       }
 
-      // If no messages, return empty array with reactions
       return messagesResponse.data.map(message => ({
         ...message,
         reactions: []
@@ -156,7 +151,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       if (error) {
         if (error.code === '23505') { // Unique violation
-          // If the reaction already exists, remove it
           await supabase
             .from('hub_chat_reactions')
             .delete()
@@ -170,7 +164,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         }
       }
 
-      // Refresh messages to update reactions
       await queryClient.invalidateQueries({ queryKey });
     } catch (error) {
       console.error('Error handling reaction:', error);
@@ -191,18 +184,40 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     if (!message.trim() || !session?.user) return;
 
     try {
+      const optimisticMessage: ChatMessageWithSender = {
+        id: crypto.randomUUID(),
+        room_id: room.id,
+        sender_id: session.user.id,
+        content: message.trim(),
+        type: 'text',
+        created_at: new Date().toISOString(),
+        sender: {
+          id: session.user.id,
+          full_name: session.user.user_metadata?.full_name || 'Unknown User',
+          avatar_url: session.user.user_metadata?.avatar_url || null
+        },
+        reactions: []
+      };
+
+      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+        return [...(old || []), optimisticMessage];
+      });
+
+      setMessage("");
+      
+      scrollToBottom();
+
       const { error } = await supabase
         .from('hub_chat_messages')
         .insert({
           room_id: room.id,
           sender_id: session.user.id,
-          content: message.trim(),
+          content: optimisticMessage.content,
           type: 'text'
         });
 
       if (error) throw error;
 
-      setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -210,6 +225,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
+      queryClient.invalidateQueries({ queryKey });
     }
   };
 
