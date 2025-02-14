@@ -9,6 +9,13 @@ import {
   AnnouncementCategory,
   HubAnnouncement 
 } from "@/types/database/hubs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface AnnouncementFormProps {
   hubId: string;
@@ -25,6 +32,8 @@ interface FormFields {
   expires_at?: string;
   target_audience?: string[];
 }
+
+const CATEGORY_OPTIONS: AnnouncementCategory[] = ['event', 'news', 'alert', 'general'];
 
 export function AnnouncementForm({ 
   hubId, 
@@ -109,12 +118,24 @@ export function AnnouncementForm({
           required
         />
 
-        <BasicInputField
-          field={form.register("category")}
-          label="Category"
-          placeholder="Select category"
-          required
-        />
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none">Category</label>
+          <Select
+            value={form.getValues("category")}
+            onValueChange={(value: AnnouncementCategory) => form.setValue("category", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORY_OPTIONS.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <BasicInputField
           field={form.register("scheduled_for")}
