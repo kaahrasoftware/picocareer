@@ -1,4 +1,3 @@
-
 import { Hub } from "@/types/database/hubs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HubResources } from "./HubResources";
@@ -9,6 +8,7 @@ import { HubManagement } from "./management/HubManagement";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { HubOverviewSection } from "./overview/HubOverviewSection";
+import { HubChat } from "./chat/HubChat";
 
 interface HubTabsProps {
   hub: Hub;
@@ -32,9 +32,10 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
           </>
         )}
-        {isAdmin && ( // Changed from (isAdmin || isModerator) to just isAdmin
+        {isAdmin && (
           <TabsTrigger value="manage">Manage</TabsTrigger>
         )}
       </TabsList>
@@ -45,7 +46,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           <Alert className="mt-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Join this hub to access announcements, resources, members list, and departments.
+              Join this hub to access announcements, resources, members list, departments, and chat rooms.
             </AlertDescription>
           </Alert>
         )}
@@ -68,10 +69,14 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           <TabsContent value="departments" className="mt-6">
             <HubDepartments hubId={hub.id} />
           </TabsContent>
+
+          <TabsContent value="chat" className="mt-6">
+            <HubChat hubId={hub.id} isAdmin={isAdmin} />
+          </TabsContent>
         </>
       )}
 
-      {isAdmin && ( // Changed from (isAdmin || isModerator) to just isAdmin
+      {isAdmin && (
         <TabsContent value="manage" className="mt-6">
           <HubManagement hub={hub} />
         </TabsContent>

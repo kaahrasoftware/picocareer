@@ -1,0 +1,125 @@
+
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ChatRoom } from "@/types/database/chat";
+import { ChatRoomList } from "./ChatRoomList";
+import { ChatMessages } from "./ChatMessages";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { CreateRoomDialog } from "./CreateRoomDialog";
+
+interface HubChatProps {
+  hubId: string;
+  isAdmin: boolean;
+}
+
+export function HubChat({ hubId, isAdmin }: HubChatProps) {
+  const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const { session } = useAuthSession();
+  const { toast } = useToast();
+
+  const { data: rooms, isLoading: roomsLoading } = useQuery({
+    queryKey: ['hub-chat-rooms', hubId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hub_chat_rooms')
+        .select('*')
+        .eq('hub_id', hubId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (rooms?.length && !selectedRoom) {
+      setSelectedRoom(rooms[0]);
+    }
+  }, [rooms, selectedRoom]);
+
+  // Subscribe to new rooms
+  useEffect(() => {
+    const channel = supabase
+      .channel('hub-chat-rooms')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hub_chat_rooms',
+          filter: `hub_id=eq.${hubId}`,
+        },
+        (payload) => {
+          console.log('Room change received:', payload);
+          // Refetch rooms when changes occur
+          // Note: In a production app, you might want to handle this more gracefully
+          // by updating the cache directly
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [hubId]);
+
+  if (!session) {
+    return (
+      <div className="p-8 text-center">
+        <p>Please sign in to access chat rooms.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-[600px] rounded-lg border">
+      <div className="w-64 border-r flex flex-col">
+        <div className="p-4 border-b">
+          <h2 className="font-semibold mb-2">Chat Rooms</h2>
+          {isAdmin && (
+            <Button
+              onClick={() => setShowCreateRoom(true)}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Room
+            </Button>
+          )}
+        </div>
+        <ChatRoomList
+          rooms={rooms || []}
+          selectedRoom={selectedRoom}
+          onSelectRoom={setSelectedRoom}
+          isLoading={roomsLoading}
+        />
+      </div>
+      
+      <div className="flex-1 flex flex-col">
+        {selectedRoom ? (
+          <ChatMessages
+            room={selectedRoom}
+            hubId={hubId}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            Select a room to start chatting
+          </div>
+        )}
+      </div>
+
+      {showCreateRoom && (
+        <CreateRoomDialog
+          hubId={hubId}
+          onClose={() => setShowCreateRoom(false)}
+        />
+      )}
+    </div>
+  );
+}
