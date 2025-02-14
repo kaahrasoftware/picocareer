@@ -114,26 +114,86 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events
+          event: 'INSERT',
           schema: 'public',
           table: 'hub_chat_messages',
           filter: `room_id=eq.${room.id}`,
         },
         async (payload) => {
-          console.log('Message change received:', payload);
-          await queryClient.invalidateQueries({ queryKey });
+          console.log('New message received:', payload);
+          
+          // Fetch the complete message with sender details
+          const { data: newMessage, error } = await supabase
+            .from('hub_chat_messages')
+            .select(`
+              *,
+              sender:profiles!hub_chat_messages_sender_id_fkey (
+                id,
+                full_name,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching new message:', error);
+            return;
+          }
+
+          // Update the messages cache optimistically
+          queryClient.setQueryData(queryKey, (oldData: ChatMessageWithSender[] | undefined) => {
+            if (!oldData) return [{ ...newMessage, reactions: [] }];
+            return [...oldData, { ...newMessage, reactions: [] }];
+          });
         }
       )
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
-          table: 'hub_chat_reactions'
+          table: 'hub_chat_reactions',
         },
         async (payload) => {
-          console.log('Reaction change received:', payload);
-          await queryClient.invalidateQueries({ queryKey });
+          console.log('New reaction received:', payload);
+          queryClient.setQueryData(queryKey, (oldData: ChatMessageWithSender[] | undefined) => {
+            if (!oldData) return oldData;
+            return oldData.map(message => {
+              if (message.id === payload.new.message_id) {
+                return {
+                  ...message,
+                  reactions: [...(message.reactions || []), payload.new]
+                };
+              }
+              return message;
+            });
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'hub_chat_reactions',
+        },
+        async (payload) => {
+          console.log('Reaction removed:', payload);
+          queryClient.setQueryData(queryKey, (oldData: ChatMessageWithSender[] | undefined) => {
+            if (!oldData) return oldData;
+            return oldData.map(message => {
+              if (message.id === payload.old.message_id) {
+                return {
+                  ...message,
+                  reactions: (message.reactions || []).filter(
+                    reaction => reaction.id !== payload.old.id
+                  )
+                };
+              }
+              return message;
+            });
+          });
         }
       )
       .subscribe();
