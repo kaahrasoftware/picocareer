@@ -1,4 +1,3 @@
-
 import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Input } from "@/components/ui/input";
@@ -75,8 +74,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
     }
   };
 
-  const handleImageUploadSuccess = async () => {
-    // Invalidate both the specific hub query and the hubs list to reflect new image URLs
+  const handleImageUploadSuccess = async (newUrl: string) => {
     await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
     await queryClient.invalidateQueries({ queryKey: ['hubs'] });
   };

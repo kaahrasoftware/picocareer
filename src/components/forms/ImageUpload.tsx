@@ -1,35 +1,39 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Control } from "react-hook-form";
 
 interface ImageUploadProps {
-  control: any;
+  control: Control<any>;
   name: string;
   label: string;
   description?: string;
   bucket: string;
   accept?: string;
-  onUploadSuccess?: () => void;
+  onUploadSuccess?: (url: string) => void;
 }
 
-export function ImageUpload({ control, name, label, description, bucket, accept, onUploadSuccess }: ImageUploadProps) {
+export function ImageUpload({
+  control,
+  name,
+  label,
+  description,
+  bucket,
+  accept = "image/*",
+  onUploadSuccess
+}: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
-  const [preview, setPreview] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fieldValue = control.getFieldState(name)?.value;
-    if (fieldValue) {
-      setPreview(fieldValue);
-    }
-  }, [control, name]);
-
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+  const handleUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    field: { onChange: (value: string) => void; value: string }
+  ) => {
     try {
       setUploading(true);
       
@@ -39,11 +43,12 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
+      // Upload file to storage bucket
       const { error: uploadError, data } = await supabase.storage
         .from(bucket)
-        .upload(fileName, file, { 
+        .upload(filePath, file, { 
           upsert: true,
           contentType: file.type
         });
@@ -52,20 +57,21 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
         throw uploadError;
       }
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
-      onChange(publicUrl);
-      setPreview(publicUrl);
+      // Update form field
+      field.onChange(publicUrl);
+      
+      // Call success callback if provided
+      onUploadSuccess?.(publicUrl);
 
       toast({
         title: "Success",
         description: "File uploaded successfully",
       });
-
-      // Call the onUploadSuccess callback if provided
-      onUploadSuccess?.();
       
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -79,11 +85,13 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
     }
   };
 
-  const handleRemove = async (onChange: (value: string) => void) => {
+  const handleRemove = async (
+    field: { onChange: (value: string) => void; value: string }
+  ) => {
     try {
-      if (preview) {
+      if (field.value) {
         // Extract the file name from the URL
-        const urlParts = preview.split('/');
+        const urlParts = field.value.split('/');
         const fileName = urlParts[urlParts.length - 1];
 
         const { error } = await supabase.storage
@@ -95,15 +103,14 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
         }
       }
 
-      onChange('');
-      setPreview(null);
+      field.onChange('');
       toast({
         title: "Success",
         description: "File removed successfully",
       });
       
-      // Call the onUploadSuccess callback if provided
-      onUploadSuccess?.();
+      // Call success callback if provided with empty string
+      onUploadSuccess?.('');
       
     } catch (error: any) {
       console.error('Remove error:', error);
@@ -127,7 +134,7 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
               <div className="flex items-center gap-4">
                 <Button
                   type="button"
-                  variant={preview ? "secondary" : "outline"}
+                  variant={field.value ? "secondary" : "outline"}
                   className={`relative min-w-[200px] transition-all duration-200 ${
                     uploading ? 'cursor-not-allowed opacity-70' : ''
                   }`}
@@ -138,7 +145,7 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
                       type="file"
                       accept={accept}
                       className="hidden"
-                      onChange={(e) => handleUpload(e, field.onChange)}
+                      onChange={(e) => handleUpload(e, field)}
                       disabled={uploading}
                     />
                     {uploading ? (
@@ -149,23 +156,29 @@ export function ImageUpload({ control, name, label, description, bucket, accept,
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        <span>{preview ? 'Change File' : 'Upload File'}</span>
+                        <span>{field.value ? 'Change File' : 'Upload File'}</span>
                       </>
                     )}
                   </label>
                 </Button>
-                {preview && (
+                {field.value && (
                   <div className="relative group">
                     <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-secondary/10 transition-all duration-200 group-hover:shadow-md">
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                      </div>
+                      <img 
+                        src={field.value} 
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiPjwvY2lyY2xlPjxwb2x5bGluZSBwb2ludHM9IjIxIDE1IDE2IDEwIDUgMjEiPjwvcG9seWxpbmU+PC9zdmc+';
+                        }}
+                      />
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
                         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        onClick={() => handleRemove(field.onChange)}
+                        onClick={() => handleRemove(field)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
