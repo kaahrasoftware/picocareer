@@ -1,3 +1,4 @@
+
 export type HubType = 'University' | 'NGO' | 'Organization' | 'High School';
 export type MemberRole = 'admin' | 'moderator' | 'member' | 'faculty' | 'student';
 export type ResourceAccessLevel = 'public' | 'members' | 'faculty' | 'admin';
@@ -39,49 +40,6 @@ export interface Hub {
   };
   important_links?: ImportantLink[];
   status: 'Approved' | 'Pending' | 'Rejected';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface HubAnnouncement {
-  id: string;
-  hub_id: string;
-  title: string;
-  content: string;
-  category: AnnouncementCategory;
-  created_by: string;
-  scheduled_for?: string;
-  expires_at?: string;
-  target_audience?: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface HubResource {
-  id: string;
-  hub_id: string;
-  title: string;
-  description?: string;
-  file_url: string;
-  category?: string;
-  access_level: ResourceAccessLevel;
-  created_by: string;
-  version: number;
-  created_at: string;
-  updated_at: string;
-  resource_type: ResourceType;
-  document_type?: DocumentType;
-  external_url?: string;
-  content_type?: string;
-  original_filename?: string;
-}
-
-export interface HubDepartment {
-  id: string;
-  hub_id: string;
-  name: string;
-  description?: string;
-  parent_department_id?: string;
   created_at: string;
   updated_at: string;
 }

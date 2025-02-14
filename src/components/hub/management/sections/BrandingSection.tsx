@@ -49,7 +49,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       // Log the audit event
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
-        _action: 'branding_updated',
+        _action: 'hub_settings_updated',
         _details: {
           logo_url,
           banner_url,
