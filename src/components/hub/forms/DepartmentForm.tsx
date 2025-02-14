@@ -38,11 +38,17 @@ export function DepartmentForm({
 
   const onSubmit = async (data: FormFields) => {
     try {
+      // Clean the data - convert empty strings to null for UUID fields
+      const cleanedData = {
+        ...data,
+        parent_department_id: data.parent_department_id?.trim() || null
+      };
+
       if (existingDepartment) {
         const { error } = await supabase
           .from('hub_departments')
           .update({
-            ...data,
+            ...cleanedData,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingDepartment.id);
@@ -52,7 +58,7 @@ export function DepartmentForm({
         const { error } = await supabase
           .from('hub_departments')
           .insert({
-            ...data,
+            ...cleanedData,
             hub_id: hubId
           });
 
