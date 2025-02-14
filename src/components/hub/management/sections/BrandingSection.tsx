@@ -75,6 +75,12 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
     }
   };
 
+  const handleImageUploadSuccess = async () => {
+    // Invalidate both the specific hub query and the hubs list to reflect new image URLs
+    await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
+    await queryClient.invalidateQueries({ queryKey: ['hubs'] });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
