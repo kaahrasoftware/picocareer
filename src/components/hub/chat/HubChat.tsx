@@ -14,9 +14,10 @@ import { CreateRoomDialog } from "./CreateRoomDialog";
 interface HubChatProps {
   hubId: string;
   isAdmin: boolean;
+  isModerator: boolean;
 }
 
-export function HubChat({ hubId, isAdmin }: HubChatProps) {
+export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const { session } = useAuthSession();
@@ -57,8 +58,6 @@ export function HubChat({ hubId, isAdmin }: HubChatProps) {
         (payload) => {
           console.log('Room change received:', payload);
           // Refetch rooms when changes occur
-          // Note: In a production app, you might want to handle this more gracefully
-          // by updating the cache directly
         }
       )
       .subscribe();
@@ -81,7 +80,7 @@ export function HubChat({ hubId, isAdmin }: HubChatProps) {
       <div className="w-64 border-r flex flex-col">
         <div className="p-4 border-b">
           <h2 className="font-semibold mb-2">Chat Rooms</h2>
-          {isAdmin && (
+          {(isAdmin || isModerator) && (
             <Button
               onClick={() => setShowCreateRoom(true)}
               variant="outline"

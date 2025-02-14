@@ -1,3 +1,4 @@
+
 import { Hub } from "@/types/database/hubs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HubResources } from "./HubResources";
@@ -71,7 +72,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           </TabsContent>
 
           <TabsContent value="chat" className="mt-6">
-            <HubChat hubId={hub.id} isAdmin={isAdmin} />
+            <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
           </TabsContent>
         </>
       )}
