@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatRoom, ChatMessageWithSender } from "@/types/database/chat";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,9 +21,12 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const queryKey = ['chat-messages', room.id];
 
   const { data: messages, isLoading } = useQuery({
-    queryKey: ['chat-messages', room.id],
+    queryKey,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hub_chat_messages')
@@ -58,7 +61,8 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         },
         (payload) => {
           console.log('New message received:', payload);
-          // Refetch messages when a new one arrives
+          // Invalidate and refetch messages when a new one arrives
+          queryClient.invalidateQueries({ queryKey });
         }
       )
       .subscribe();
@@ -66,7 +70,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room.id]);
+  }, [room.id, queryClient, queryKey]);
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
