@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, SmilePlus } from "lucide-react";
+import { Send, Clock, SmilePlus, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
@@ -36,6 +36,7 @@ const REACTION_EMOJIS = {
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
@@ -159,7 +160,11 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         }
       }
 
-      queryClient.invalidateQueries(queryKey);
+      // Automatically hide reactions after selection
+      setExpandedMessageId(null);
+      
+      // Refresh messages to update reactions
+      await queryClient.invalidateQueries({ queryKey });
     } catch (error) {
       console.error('Error handling reaction:', error);
       toast({
@@ -173,6 +178,10 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const handleEmojiSelect = (emoji: any) => {
     setMessage(prev => prev + emoji.native);
     setShowEmojiPicker(false);
+  };
+
+  const toggleReactions = (messageId: string) => {
+    setExpandedMessageId(expandedMessageId === messageId ? null : messageId);
   };
 
   const handleSendMessage = async () => {
@@ -232,6 +241,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
               acc[reaction.reaction_type] = (acc[reaction.reaction_type] || 0) + 1;
               return acc;
             }, {} as Record<string, number>) || {};
+            const isExpanded = expandedMessageId === msg.id;
 
             return (
               <div
@@ -261,20 +271,49 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                   <div className="break-words text-sm">
                     {msg.content}
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
-                      <button
-                        key={type}
-                        onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
-                        className={`text-sm px-2 py-0.5 rounded-full ${
-                          reactionCounts[type]
-                            ? 'bg-primary/20'
-                            : 'hover:bg-primary/10'
-                        }`}
-                      >
-                        {emoji} {reactionCounts[type] || ''}
-                      </button>
-                    ))}
+                  <div className="mt-2 space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(reactionCounts)
+                        .filter(([_, count]) => count > 0)
+                        .map(([type, count]) => (
+                          <span
+                            key={type}
+                            className="text-sm px-2 py-0.5 rounded-full bg-primary/20"
+                          >
+                            {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
+                          </span>
+                        ))}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2"
+                      onClick={() => toggleReactions(msg.id)}
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 mr-1" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 mr-1" />
+                      )}
+                      {isExpanded ? "Hide reactions" : "Add reaction"}
+                    </Button>
+                    {isExpanded && (
+                      <div className="flex flex-wrap gap-1 py-1">
+                        {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
+                          <button
+                            key={type}
+                            onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
+                            className={`text-sm px-2 py-0.5 rounded-full ${
+                              reactionCounts[type]
+                                ? 'bg-primary/20'
+                                : 'hover:bg-primary/10'
+                            }`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
