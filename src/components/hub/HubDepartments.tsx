@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface HubDepartmentsProps {
   hubId: string;
+  isAdmin?: boolean;
 }
 
 const departmentColors = [
@@ -34,7 +34,7 @@ const departmentColors = [
   "bg-[#D3E4FD] hover:bg-[#D3E4FD]/90 border-blue-200"
 ];
 
-export function HubDepartments({ hubId }: HubDepartmentsProps) {
+export function HubDepartments({ hubId, isAdmin = false }: HubDepartmentsProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<HubDepartment | null>(null);
   const { toast } = useToast();
@@ -111,10 +111,12 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Departments</h2>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Department
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Department
+          </Button>
+        )}
       </div>
 
       {showForm && (
@@ -141,56 +143,51 @@ export function HubDepartments({ hubId }: HubDepartmentsProps) {
                   <Building className="h-5 w-5" />
                   {department.name}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(department)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the department.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(department.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                {isAdmin && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(department)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the department.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(department.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </CardTitle>
             </CardHeader>
-            {(department.description || department.parent) && (
+            {department.description && (
               <CardContent>
-                {department.description && (
-                  <p className="text-sm text-gray-600">
-                    {department.description}
-                  </p>
-                )}
-                {department.parent && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    Parent Department: {department.parent.name}
-                  </p>
-                )}
+                <p className="text-sm text-gray-600">
+                  {department.description}
+                </p>
               </CardContent>
             )}
           </Card>
