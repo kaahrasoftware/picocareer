@@ -47,7 +47,7 @@ export function ContactInfoSection({ register, hubId, defaultValues }: ContactIn
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
-        _details: JSON.stringify({ [`contact_info.${fieldName}`]: fieldValue })
+        _details: { [`contact_info.${fieldName}`]: fieldValue }
       });
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });

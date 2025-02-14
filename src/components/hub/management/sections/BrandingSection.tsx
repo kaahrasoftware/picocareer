@@ -75,22 +75,6 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
     }
   };
 
-  const handleImageUploadSuccess = async () => {
-    // Invalidate both the specific hub query and the hubs list
-    await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
-    await queryClient.invalidateQueries({ queryKey: ['hubs'] });
-    
-    // Optimistically update the cache with the new values
-    const currentData = queryClient.getQueryData(['hub', hubId]);
-    if (currentData) {
-      queryClient.setQueryData(['hub', hubId], {
-        ...currentData,
-        logo_url: getValues('logo_url'),
-        banner_url: getValues('banner_url'),
-      });
-    }
-  };
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">

@@ -53,7 +53,7 @@ export function BasicInfoSection({ register, errors, hubId, defaultValues }: Bas
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
-        _details: JSON.stringify({ [fieldName]: fieldValue })
+        _details: { [fieldName]: fieldValue }
       });
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });

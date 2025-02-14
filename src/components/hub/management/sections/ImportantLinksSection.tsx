@@ -53,7 +53,7 @@ export function ImportantLinksSection({ register, hubId, defaultValues }: Import
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
-        _details: JSON.stringify({ important_links: links })
+        _details: { important_links: links }
       });
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });

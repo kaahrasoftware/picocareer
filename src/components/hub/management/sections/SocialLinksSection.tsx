@@ -47,7 +47,7 @@ export function SocialLinksSection({ register, hubId, defaultValues }: SocialLin
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
-        _details: JSON.stringify({ [`social_links.${fieldName}`]: fieldValue })
+        _details: { [`social_links.${fieldName}`]: fieldValue }
       });
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
