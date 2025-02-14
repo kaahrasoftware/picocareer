@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,11 +102,8 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
   // Set up real-time subscriptions
   useEffect(() => {
-    // Create a channel for this specific room
-    const channel = supabase.channel(`room-${room.id}`);
-
-    // Subscribe to message inserts
-    channel
+    // Enable real-time on the hub_chat_messages table
+    const channel = supabase.channel('chat_messages')
       .on(
         'postgres_changes',
         {
@@ -116,10 +112,10 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           table: 'hub_chat_messages',
           filter: `room_id=eq.${room.id}`,
         },
-        async (payload: any) => {
+        async (payload) => {
           console.log('New message received:', payload);
           
-          // Fetch the complete message with sender info
+          // Fetch complete message data including sender info
           const { data: messageWithSender, error } = await supabase
             .from('hub_chat_messages')
             .select(`
@@ -140,14 +136,10 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
           // Update the query cache with the new message
           queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-            const newMessage: ChatMessageWithSender = {
-              ...messageWithSender,
-              reactions: []
-            };
-            return [...(old || []), newMessage];
+            if (!old) return [messageWithSender];
+            return [...old, { ...messageWithSender, reactions: [] }];
           });
 
-          // Scroll to bottom when new message arrives
           scrollToBottom();
         }
       )
@@ -157,10 +149,9 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           event: '*',
           schema: 'public',
           table: 'hub_chat_reactions',
-          filter: `message_id=in.(${messages?.map(m => m.id).join(',')})`,
         },
-        async () => {
-          await queryClient.invalidateQueries({ queryKey });
+        () => {
+          queryClient.invalidateQueries({ queryKey });
         }
       )
       .subscribe((status) => {
@@ -168,9 +159,9 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       });
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [room.id, queryClient, queryKey, messages]);
+  }, [room.id, queryClient, queryKey]);
 
   const handleAddReaction = async (messageId: string, reactionType: keyof typeof REACTION_EMOJIS) => {
     if (!session?.user) return;
