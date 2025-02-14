@@ -43,7 +43,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
   const queryKey = ['chat-messages', room.id];
 
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
       const messagesResponse = await supabase
@@ -82,13 +82,13 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           reactions: messageReactions.get(message.id) || []
         }));
 
-        return messagesWithReactions;
+        return messagesWithReactions as ChatMessageWithSender[];
       }
 
       return messagesResponse.data.map(message => ({
         ...message,
         reactions: []
-      }));
+      })) as ChatMessageWithSender[];
     },
   });
 
@@ -108,36 +108,14 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'hub_chat_messages',
           filter: `room_id=eq.${room.id}`,
         },
         async (payload) => {
-          console.log('New message received:', payload);
-          const newMessage = payload.new;
-          
-          // Fetch the sender details
-          const { data: senderData, error: senderError } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .eq('id', newMessage.sender_id)
-            .single();
-            
-          if (!senderError && senderData) {
-            // Add the new message to the cache
-            queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-              const newMessageWithSender = {
-                ...newMessage,
-                sender: senderData,
-                reactions: [],
-                metadata: {},
-                updated_at: new Date().toISOString()
-              };
-              return [...(old || []), newMessageWithSender];
-            });
-            scrollToBottom();
-          }
+          console.log('Message change received:', payload);
+          await queryClient.invalidateQueries({ queryKey });
         }
       )
       .on(
@@ -145,7 +123,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         {
           event: '*',
           schema: 'public',
-          table: 'hub_chat_reactions',
+          table: 'hub_chat_reactions'
         },
         async (payload) => {
           console.log('Reaction change received:', payload);
@@ -206,18 +184,40 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     if (!message.trim() || !session?.user) return;
 
     try {
+      const optimisticMessage: ChatMessageWithSender = {
+        id: crypto.randomUUID(),
+        room_id: room.id,
+        sender_id: session.user.id,
+        content: message.trim(),
+        type: 'text',
+        created_at: new Date().toISOString(),
+        sender: {
+          id: session.user.id,
+          full_name: session.user.user_metadata?.full_name || 'Unknown User',
+          avatar_url: session.user.user_metadata?.avatar_url || null
+        },
+        reactions: []
+      };
+
+      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+        return [...(old || []), optimisticMessage];
+      });
+
+      setMessage("");
+      
+      scrollToBottom();
+
       const { error } = await supabase
         .from('hub_chat_messages')
         .insert({
           room_id: room.id,
           sender_id: session.user.id,
-          content: message.trim(),
+          content: optimisticMessage.content,
           type: 'text'
         });
 
       if (error) throw error;
 
-      setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -225,6 +225,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
+      queryClient.invalidateQueries({ queryKey });
     }
   };
 
