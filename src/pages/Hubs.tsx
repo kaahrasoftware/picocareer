@@ -28,9 +28,9 @@ export default function Hubs() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-[400px]" />
           ))}
         </div>
       </div>
@@ -46,36 +46,87 @@ export default function Hubs() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {hubs?.map((hub) => (
           <Card
             key={hub.id}
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden"
             onClick={() => navigate(`/hubs/${hub.id}`)}
+            style={{
+              borderColor: hub.brand_colors?.primary || '#9b87f5',
+              borderWidth: '1px',
+            }}
           >
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                {hub.logo_url ? (
-                  <img
-                    src={hub.logo_url}
-                    alt={`${hub.name} logo`}
-                    className="h-12 w-12 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-                    <Globe className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                )}
+            {hub.banner_url ? (
+              <div className="h-48 w-full overflow-hidden">
+                <img
+                  src={hub.banner_url}
+                  alt={`${hub.name} banner`}
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            ) : (
+              <div 
+                className="h-48 w-full bg-gradient-to-r flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(to right, ${hub.brand_colors?.primary || '#9b87f5'}, ${hub.brand_colors?.secondary || '#7E69AB'})`
+                }}
+              >
+                <Globe className="h-12 w-12 text-white" />
+              </div>
+            )}
+
+            <CardHeader className="relative pb-4">
+              <div className="flex items-start gap-4">
+                <div className="relative -mt-12">
+                  {hub.logo_url ? (
+                    <img
+                      src={hub.logo_url}
+                      alt={`${hub.name} logo`}
+                      className="h-16 w-16 rounded-lg border-4 border-background bg-background object-cover shadow-md"
+                    />
+                  ) : (
+                    <div 
+                      className="h-16 w-16 rounded-lg border-4 border-background bg-background flex items-center justify-center shadow-md"
+                      style={{ backgroundColor: hub.brand_colors?.accent || '#8B5CF6' }}
+                    >
+                      <span className="text-2xl font-bold text-white">
+                        {hub.name[0]}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div>
-                  <CardTitle className="text-lg">{hub.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{hub.type}</p>
+                  <CardTitle className="text-xl font-bold">{hub.name}</CardTitle>
+                  <div 
+                    className="text-sm px-2 py-1 rounded-full inline-block mt-1"
+                    style={{ 
+                      backgroundColor: `${hub.brand_colors?.secondary || '#7E69AB'}20`,
+                      color: hub.brand_colors?.secondary || '#7E69AB'
+                    }}
+                  >
+                    {hub.type}
+                  </div>
                 </div>
               </div>
             </CardHeader>
+
             <CardContent>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {hub.description}
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {hub.description || 'No description available'}
               </p>
+              
+              <div className="mt-4 flex gap-2">
+                {Object.entries(hub.brand_colors || {}).map(([key, color]) => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="text-xs text-muted-foreground capitalize">{key}</span>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         ))}
