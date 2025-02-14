@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { HubOverviewSection } from "./overview/HubOverviewSection";
 import { HubChat } from "./chat/HubChat";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface HubTabsProps {
   hub: Hub;
@@ -23,6 +24,8 @@ interface HubTabsProps {
 }
 
 export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTabsProps) {
+  const { session } = useAuthSession();
+
   return (
     <Tabs defaultValue="overview" className="w-full">
       <TabsList className="w-full justify-start">
@@ -33,9 +36,9 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
           </>
         )}
+        {session && <TabsTrigger value="chat">Chat</TabsTrigger>}
         {isAdmin && (
           <TabsTrigger value="manage">Manage</TabsTrigger>
         )}
@@ -47,7 +50,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           <Alert className="mt-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Join this hub to access announcements, resources, members list, departments, and chat rooms.
+              Join this hub to access announcements, resources, members list, and departments.
             </AlertDescription>
           </Alert>
         )}
@@ -70,11 +73,21 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           <TabsContent value="departments" className="mt-6">
             <HubDepartments hubId={hub.id} />
           </TabsContent>
-
-          <TabsContent value="chat" className="mt-6">
-            <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
-          </TabsContent>
         </>
+      )}
+
+      {session && (
+        <TabsContent value="chat" className="mt-6">
+          {!isMember && (
+            <Alert className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Join this hub to participate in chat rooms.
+              </AlertDescription>
+            </Alert>
+          )}
+          <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
+        </TabsContent>
       )}
 
       {isAdmin && (
