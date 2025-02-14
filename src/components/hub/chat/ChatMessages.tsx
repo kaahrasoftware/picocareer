@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send } from "lucide-react";
+import { Send, Clock } from "lucide-react";
+import { format } from "date-fns";
 
 interface ChatMessagesProps {
   room: ChatRoom;
@@ -131,8 +132,8 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
   return (
     <>
-      <div className="p-4 border-b">
-        <h3 className="font-semibold">{room.name}</h3>
+      <div className="p-4 border-b bg-card">
+        <h3 className="font-semibold text-lg">{room.name}</h3>
         {room.description && (
           <p className="text-sm text-muted-foreground">{room.description}</p>
         )}
@@ -140,38 +141,51 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages?.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${
-                msg.sender_id === session?.user?.id ? "justify-end" : "justify-start"
-              }`}
-            >
+          {messages?.map((msg) => {
+            const isCurrentUser = msg.sender_id === session?.user?.id;
+            return (
               <div
-                className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                  msg.sender_id === session?.user?.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                key={msg.id}
+                className={`flex ${
+                  isCurrentUser ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="text-sm font-medium mb-1">
-                  {msg.sender.full_name || "Unknown User"}
+                <div
+                  className={`max-w-[80%] rounded-lg px-4 py-2 shadow-sm ${
+                    isCurrentUser
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background border"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-sm font-medium ${
+                      isCurrentUser ? "text-primary-foreground" : "text-indigo-600"
+                    }`}>
+                      {msg.sender.full_name || "Unknown User"}
+                    </span>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(msg.created_at), 'HH:mm')}
+                    </span>
+                  </div>
+                  <div className="break-words text-sm">
+                    {msg.content}
+                  </div>
                 </div>
-                <div className="break-words">{msg.content}</div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t bg-card">
         <div className="flex gap-2">
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
-            className="min-h-[60px]"
+            className="min-h-[60px] bg-background"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
