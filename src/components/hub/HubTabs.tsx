@@ -82,7 +82,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
             <Alert className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Join this hub to participate in chat rooms.
+                You can participate in public chat rooms. Join this hub to access private chat rooms as well.
               </AlertDescription>
             </Alert>
           )}

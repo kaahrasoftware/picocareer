@@ -47,7 +47,10 @@ export function ChatRoomList({
             ) : (
               <Hash className="h-4 w-4 mr-2 opacity-70" />
             )}
-            <span className="truncate">{room.name}</span>
+            <span className="truncate">
+              {room.name}
+              {room.type === 'public' && " (Public)"}
+            </span>
           </Button>
         ))}
       </div>

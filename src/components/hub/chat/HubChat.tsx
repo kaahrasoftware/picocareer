@@ -39,7 +39,9 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
 
   useEffect(() => {
     if (rooms?.length && !selectedRoom) {
-      setSelectedRoom(rooms[0]);
+      // Select the first public room by default for non-members
+      const defaultRoom = rooms.find(room => room.type === 'public') || rooms[0];
+      setSelectedRoom(defaultRoom);
     }
   }, [rooms, selectedRoom]);
 
