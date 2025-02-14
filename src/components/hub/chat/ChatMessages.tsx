@@ -109,16 +109,32 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     if (!message.trim() || !session?.user) return;
 
     try {
-      const { error } = await supabase
+      const { data: newMessage, error } = await supabase
         .from('hub_chat_messages')
         .insert({
           room_id: room.id,
           sender_id: session.user.id,
           content: message.trim(),
           type: 'text'
-        });
+        })
+        .select(`
+          *,
+          sender:profiles!hub_chat_messages_sender_id_fkey (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .single();
 
       if (error) throw error;
+
+      // Immediately update the cache with the new message
+      queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
+        if (!oldMessages) return [newMessage];
+        return [...oldMessages, newMessage];
+      });
+
       setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
