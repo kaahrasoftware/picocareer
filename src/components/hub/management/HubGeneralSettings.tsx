@@ -58,7 +58,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
       apply_now_URL: hub.apply_now_URL || "",
       logo_url: hub.logo_url || "",
       banner_url: hub.banner_url || "",
-      important_links: Array.isArray(hub.important_links) ? hub.important_links : [],
+      important_links: hub.important_links || [],
       brand_colors: hub.brand_colors || {
         primary: "#9b87f5",
         secondary: "#7E69AB",
@@ -100,7 +100,7 @@ export function HubGeneralSettings({ hub }: HubGeneralSettingsProps) {
         <ImportantLinksSection 
           register={methods.register}
           hubId={hub.id}
-          defaultValues={Array.isArray(hub.important_links) ? hub.important_links : []}
+          defaultValues={hub.important_links || []}
         />
         <ContactInfoSection 
           register={methods.register} 

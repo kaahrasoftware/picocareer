@@ -13,6 +13,25 @@ export interface ImportantLink {
   url: string;
 }
 
+export interface ContactInfo {
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface SocialLinks {
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  instagram?: string;
+}
+
+export interface BrandColors {
+  primary?: string;
+  secondary?: string;
+  accent?: string;
+}
+
 export interface Hub {
   id: string;
   name: string;
@@ -20,26 +39,56 @@ export interface Hub {
   description?: string;
   logo_url?: string;
   banner_url?: string;
-  brand_colors?: {
-    primary?: string;
-    secondary?: string;
-    accent?: string;
-  };
+  brand_colors?: BrandColors;
   website?: string;
   apply_now_URL?: string;
-  contact_info?: {
-    email?: string;
-    phone?: string;
-    address?: string;
-  };
-  social_links?: {
-    facebook?: string;
-    twitter?: string;
-    linkedin?: string;
-    instagram?: string;
-  };
+  contact_info?: ContactInfo;
+  social_links?: SocialLinks;
   important_links?: ImportantLink[];
   status: 'Approved' | 'Pending' | 'Rejected';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HubAnnouncement {
+  id: string;
+  hub_id: string;
+  title: string;
+  content: string;
+  category: AnnouncementCategory;
+  created_by: string;
+  scheduled_for?: string;
+  expires_at?: string;
+  target_audience?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HubResource {
+  id: string;
+  hub_id: string;
+  title: string;
+  description?: string;
+  file_url: string;
+  category?: string;
+  access_level: ResourceAccessLevel;
+  created_by: string;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  resource_type: ResourceType;
+  document_type?: DocumentType;
+  external_url?: string;
+  content_type?: string;
+  original_filename?: string;
+}
+
+export interface HubDepartment {
+  id: string;
+  hub_id: string;
+  name: string;
+  description?: string;
+  parent_department_id?: string;
   created_at: string;
   updated_at: string;
 }
