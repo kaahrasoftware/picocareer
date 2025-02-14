@@ -18,7 +18,7 @@ interface ChatMessagesProps {
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,13 +39,22 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           )
         `)
         .eq('room_id', room.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data as ChatMessageWithSender[];
     },
   });
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     // Subscribe to new messages
@@ -59,10 +68,33 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           table: 'hub_chat_messages',
           filter: `room_id=eq.${room.id}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log('New message received:', payload);
-          // Invalidate and refetch messages when a new one arrives
-          queryClient.invalidateQueries({ queryKey });
+          
+          // Fetch the complete message with sender information
+          const { data: newMessage, error } = await supabase
+            .from('hub_chat_messages')
+            .select(`
+              *,
+              sender:profiles!hub_chat_messages_sender_id_fkey (
+                id,
+                full_name,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching new message:', error);
+            return;
+          }
+
+          // Update the messages in the cache
+          queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
+            if (!oldMessages) return [newMessage];
+            return [...oldMessages, newMessage];
+          });
         }
       )
       .subscribe();
@@ -71,13 +103,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       supabase.removeChannel(channel);
     };
   }, [room.id, queryClient, queryKey]);
-
-  useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!message.trim() || !session?.user) return;
@@ -113,7 +138,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         )}
       </div>
 
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages?.map((msg) => (
             <div
@@ -136,6 +161,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
