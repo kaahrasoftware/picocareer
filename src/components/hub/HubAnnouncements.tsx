@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +26,13 @@ interface HubAnnouncementsProps {
   hubId: string;
 }
 
+const categoryColors: Record<string, string> = {
+  event: "bg-[#F2FCE2] hover:bg-[#F2FCE2]/90 border-green-200",
+  news: "bg-[#FEF7CD] hover:bg-[#FEF7CD]/90 border-yellow-200",
+  alert: "bg-[#FFDEE2] hover:bg-[#FFDEE2]/90 border-pink-200",
+  general: "bg-[#D3E4FD] hover:bg-[#D3E4FD]/90 border-blue-200"
+};
+
 export function HubAnnouncements({
   hubId
 }: HubAnnouncementsProps) {
@@ -43,7 +49,6 @@ export function HubAnnouncements({
   } = useQuery({
     queryKey: ['hub-announcements', hubId],
     queryFn: async () => {
-      // First fetch announcements
       const {
         data: announcementsData,
         error: announcementsError
@@ -52,7 +57,6 @@ export function HubAnnouncements({
       });
       if (announcementsError) throw announcementsError;
 
-      // Then fetch creator profiles separately
       const creatorIds = announcementsData.map(a => a.created_by).filter(Boolean);
       const {
         data: profilesData,
@@ -60,7 +64,6 @@ export function HubAnnouncements({
       } = await supabase.from('profiles').select('id, first_name, last_name').in('id', creatorIds);
       if (profilesError) throw profilesError;
 
-      // Combine the data
       const profileMap = new Map(profilesData?.map(p => [p.id, p]));
       return announcementsData.map(announcement => ({
         ...announcement,
@@ -104,16 +107,18 @@ export function HubAnnouncements({
     setEditingAnnouncement(null);
   };
 
+  const getCardColor = (category: string) => {
+    return categoryColors[category] || "bg-card hover:bg-card/90";
+  };
+
   if (isLoading) {
     return <div>Loading announcements...</div>;
   }
 
   const filteredAnnouncements = announcements?.filter(announcement => selectedCategory === "all" || announcement.category === selectedCategory);
 
-  // Get unique categories from announcements
   const categories = [...new Set(announcements?.map(a => a.category).filter(Boolean))];
 
-  // Calculate the number of slides needed (4 cards per slide)
   const itemsPerSlide = 4;
   const slides = filteredAnnouncements ? Math.ceil(filteredAnnouncements.length / itemsPerSlide) : 0;
 
@@ -134,9 +139,9 @@ export function HubAnnouncements({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categories.map(category => (
+            {Object.keys(categoryColors).map(category => (
               <SelectItem key={category} value={category}>
-                {category}
+                {category.charAt(0).toUpperCase() + category.slice(1)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -168,7 +173,10 @@ export function HubAnnouncements({
                   {filteredAnnouncements
                     .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
                     .map(announcement => (
-                      <Card key={announcement.id}>
+                      <Card 
+                        key={announcement.id} 
+                        className={`transition-all duration-200 border ${getCardColor(announcement.category)}`}
+                      >
                         <CardHeader className="relative">
                           <CardTitle className="text-base font-semibold">
                             {announcement.title}
