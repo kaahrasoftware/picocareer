@@ -47,41 +47,54 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const { data: messages, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const [messagesResponse, reactionsResponse] = await Promise.all([
-        supabase
-          .from('hub_chat_messages')
-          .select(`
-            *,
-            sender:profiles!hub_chat_messages_sender_id_fkey (
-              id,
-              full_name,
-              avatar_url
-            )
-          `)
-          .eq('room_id', room.id)
-          .order('created_at', { ascending: true }),
-        supabase
-          .from('hub_chat_reactions')
-          .select('*')
-          .eq('room_id', room.id)
-      ]);
+      // First fetch all messages for the room
+      const messagesResponse = await supabase
+        .from('hub_chat_messages')
+        .select(`
+          *,
+          sender:profiles!hub_chat_messages_sender_id_fkey (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('room_id', room.id)
+        .order('created_at', { ascending: true });
 
       if (messagesResponse.error) throw messagesResponse.error;
-      if (reactionsResponse.error) throw reactionsResponse.error;
 
-      // Group reactions by message
-      const messageReactions = new Map();
-      reactionsResponse.data.forEach(reaction => {
-        const existing = messageReactions.get(reaction.message_id) || [];
-        messageReactions.set(reaction.message_id, [...existing, reaction]);
-      });
+      // If there are messages, fetch their reactions
+      if (messagesResponse.data.length > 0) {
+        const messageIds = messagesResponse.data.map(msg => msg.id);
+        
+        const reactionsResponse = await supabase
+          .from('hub_chat_reactions')
+          .select('*')
+          .in('message_id', messageIds);
 
-      const messagesWithReactions = messagesResponse.data.map(message => ({
+        if (reactionsResponse.error) throw reactionsResponse.error;
+
+        // Group reactions by message
+        const messageReactions = new Map();
+        reactionsResponse.data.forEach(reaction => {
+          const existing = messageReactions.get(reaction.message_id) || [];
+          messageReactions.set(reaction.message_id, [...existing, reaction]);
+        });
+
+        // Add reactions to their corresponding messages
+        const messagesWithReactions = messagesResponse.data.map(message => ({
+          ...message,
+          reactions: messageReactions.get(message.id) || []
+        }));
+
+        return messagesWithReactions as ChatMessageWithSender[];
+      }
+
+      // If no messages, return empty array with reactions
+      return messagesResponse.data.map(message => ({
         ...message,
-        reactions: messageReactions.get(message.id) || []
-      }));
-
-      return messagesWithReactions as ChatMessageWithSender[];
+        reactions: []
+      })) as ChatMessageWithSender[];
     },
   });
 
