@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  PopoverProvider,
 } from "@/components/ui/popover";
 
 interface ChatMessagesProps {
@@ -287,24 +289,26 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       <div className="p-4 border-t bg-card">
         <div className="flex gap-2">
           <div className="flex-1 flex gap-2">
-            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                >
-                  <SmilePlus className="h-5 w-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Picker 
-                  data={data} 
-                  onEmojiSelect={handleEmojiSelect}
-                  theme="light"
-                />
-              </PopoverContent>
-            </Popover>
+            <PopoverProvider>
+              <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                  >
+                    <SmilePlus className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Picker 
+                    data={data} 
+                    onEmojiSelect={handleEmojiSelect}
+                    theme="light"
+                  />
+                </PopoverContent>
+              </Popover>
+            </PopoverProvider>
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
