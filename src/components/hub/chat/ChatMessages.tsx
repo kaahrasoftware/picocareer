@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -250,70 +251,73 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                   isCurrentUser ? "justify-end" : "justify-start"
                 }`}
               >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 shadow-sm ${
-                    isCurrentUser
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background border"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-sm font-medium ${
-                      isCurrentUser ? "text-primary-foreground" : "text-indigo-600"
-                    }`}>
-                      {msg.sender.full_name || "Unknown User"}
-                    </span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {format(new Date(msg.created_at), 'HH:mm')}
-                    </span>
-                  </div>
-                  <div className="break-words text-sm">
-                    {msg.content}
-                  </div>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(reactionCounts)
-                        .filter(([_, count]) => count > 0)
-                        .map(([type, count]) => (
-                          <span
-                            key={type}
-                            className="text-sm px-2 py-0.5 rounded-full bg-primary/20"
-                          >
-                            {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
-                          </span>
-                        ))}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2"
-                      onClick={() => toggleReactions(msg.id)}
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 mr-1" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 mr-1" />
-                      )}
-                      {isExpanded ? "Hide reactions" : "Add reaction"}
-                    </Button>
-                    {isExpanded && (
-                      <div className="flex flex-wrap gap-1 py-1">
-                        {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
-                          <button
-                            key={type}
-                            onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
-                            className={`text-sm px-2 py-0.5 rounded-full ${
-                              reactionCounts[type]
-                                ? 'bg-primary/20'
-                                : 'hover:bg-primary/10'
-                            }`}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
+                <div className="relative max-w-[80%]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-6 w-6 p-0 absolute top-1/2 -translate-y-1/2 ${
+                      isCurrentUser ? "-left-8" : "-right-8"
+                    }`}
+                    onClick={() => toggleReactions(msg.id)}
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
                     )}
+                  </Button>
+                  <div
+                    className={`rounded-lg px-4 py-2 shadow-sm ${
+                      isCurrentUser
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background border"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-sm font-medium ${
+                        isCurrentUser ? "text-primary-foreground" : "text-indigo-600"
+                      }`}>
+                        {msg.sender.full_name || "Unknown User"}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(msg.created_at), 'HH:mm')}
+                      </span>
+                    </div>
+                    <div className="break-words text-sm">
+                      {msg.content}
+                    </div>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(reactionCounts)
+                          .filter(([_, count]) => count > 0)
+                          .map(([type, count]) => (
+                            <span
+                              key={type}
+                              className="text-sm px-2 py-0.5 rounded-full bg-primary/20"
+                            >
+                              {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
+                            </span>
+                          ))}
+                      </div>
+                      {isExpanded && (
+                        <div className="flex flex-wrap gap-1 py-1">
+                          {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
+                            <button
+                              key={type}
+                              onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
+                              className={`text-sm px-2 py-0.5 rounded-full ${
+                                reactionCounts[type]
+                                  ? 'bg-primary/20'
+                                  : 'hover:bg-primary/10'
+                              }`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
