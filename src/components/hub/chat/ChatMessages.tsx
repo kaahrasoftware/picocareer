@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -252,20 +251,40 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                 }`}
               >
                 <div className="relative max-w-[80%]">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-6 w-6 p-0 absolute top-1/2 -translate-y-1/2 ${
-                      isCurrentUser ? "-left-8" : "-right-8"
-                    }`}
-                    onClick={() => toggleReactions(msg.id)}
-                  >
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 w-6 p-0 absolute top-1/2 -translate-y-1/2 ${
+                          isCurrentUser ? "-left-8" : "-right-8"
+                        }`}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="w-auto p-2" 
+                      align={isCurrentUser ? "start" : "end"}
+                      side="top"
+                    >
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
+                          <button
+                            key={type}
+                            onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
+                            className={`text-sm px-2 py-0.5 rounded-full ${
+                              reactionCounts[type]
+                                ? 'bg-primary/20'
+                                : 'hover:bg-primary/10'
+                            }`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <div
                     className={`rounded-lg px-4 py-2 shadow-sm ${
                       isCurrentUser
@@ -287,7 +306,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                     <div className="break-words text-sm">
                       {msg.content}
                     </div>
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-2">
                       <div className="flex flex-wrap gap-1">
                         {Object.entries(reactionCounts)
                           .filter(([_, count]) => count > 0)
@@ -300,23 +319,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                             </span>
                           ))}
                       </div>
-                      {isExpanded && (
-                        <div className="flex flex-wrap gap-1 py-1">
-                          {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
-                            <button
-                              key={type}
-                              onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
-                              className={`text-sm px-2 py-0.5 rounded-full ${
-                                reactionCounts[type]
-                                  ? 'bg-primary/20'
-                                  : 'hover:bg-primary/10'
-                              }`}
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
