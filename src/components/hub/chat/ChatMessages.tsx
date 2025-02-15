@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, Smile, Paperclip, FileIcon, ImageIcon, VideoIcon } from "lucide-react";
+import { Send, Clock, Smile, Paperclip, FileIcon, ImageIcon, VideoIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -24,6 +24,7 @@ interface ChatMessagesProps {
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
@@ -108,90 +109,83 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     };
   }, [room.id, queryClient, queryKey]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !session?.user) return;
-
-    try {
-      const { data: newMessage, error } = await supabase
-        .from('hub_chat_messages')
-        .insert({
-          room_id: room.id,
-          sender_id: session.user.id,
-          content: message.trim(),
-          type: 'text'
-        })
-        .select(`
-          *,
-          sender:profiles!hub_chat_messages_sender_id_fkey (
-            id,
-            full_name,
-            avatar_url
-          )
-        `)
-        .single();
-
-      if (error) throw error;
-
-      queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
-        if (!oldMessages) return [newMessage];
-        return [...oldMessages, newMessage];
-      });
-
-      setMessage("");
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+    setMessage(`[File: ${file.name}] `);
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (!session?.user) return;
-    
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${room.id}/${crypto.randomUUID()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('chat_attachments')
-        .upload(filePath, file);
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setMessage("");
+  };
 
-      if (uploadError) throw uploadError;
+  const handleSendMessage = async () => {
+    if ((!message.trim() && !selectedFile) || !session?.user) return;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat_attachments')
-        .getPublicUrl(filePath);
+    if (selectedFile) {
+      setIsUploading(true);
+      try {
+        const fileExt = selectedFile.name.split('.').pop();
+        const filePath = `${room.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('chat_attachments')
+          .upload(filePath, selectedFile);
 
-      const { error } = await supabase
-        .from('hub_chat_messages')
-        .insert({
-          room_id: room.id,
-          sender_id: session.user.id,
-          content: file.name,
-          type: 'attachment',
-          file_url: publicUrl,
-          file_type: file.type
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat_attachments')
+          .getPublicUrl(filePath);
+
+        const messageText = message.replace(`[File: ${selectedFile.name}] `, '').trim();
+
+        const { error } = await supabase
+          .from('hub_chat_messages')
+          .insert({
+            room_id: room.id,
+            sender_id: session.user.id,
+            content: messageText || selectedFile.name,
+            type: 'attachment',
+            file_url: publicUrl,
+            file_type: selectedFile.type
+          });
+
+        if (error) throw error;
+
+        setSelectedFile(null);
+        setMessage("");
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to upload file. Please try again.",
+          variant: "destructive",
         });
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      try {
+        const { error } = await supabase
+          .from('hub_chat_messages')
+          .insert({
+            room_id: room.id,
+            sender_id: session.user.id,
+            content: message.trim(),
+            type: 'text'
+          });
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "File uploaded successfully",
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload file. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
+        if (error) throw error;
+        setMessage("");
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -286,7 +280,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleFileUpload(file);
+          if (file) handleFileSelect(file);
           e.target.value = ''; // Reset input
         }}
         accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -323,22 +317,34 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
             >
               <Paperclip className="h-5 w-5" />
             </Button>
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="min-h-[60px] bg-background"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
+            <div className="relative flex-1">
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type a message..."
+                className="min-h-[60px] bg-background pr-8"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              {selectedFile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-2 h-6 w-6 rounded-full p-0 text-muted-foreground hover:text-foreground"
+                  onClick={clearSelectedFile}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
           <Button
             onClick={handleSendMessage}
-            disabled={!message.trim() || isUploading}
+            disabled={(!message.trim() && !selectedFile) || isUploading}
             className="px-8 h-[60px]"
           >
             <Send className="h-4 w-4" />
