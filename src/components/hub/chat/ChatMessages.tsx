@@ -3,18 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatRoom, ChatMessageWithSender } from "@/types/database/chat";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, Smile, Paperclip, FileIcon, ImageIcon, VideoIcon, X } from "lucide-react";
-import { format } from "date-fns";
-import EmojiPicker from "emoji-picker-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { MessageItem } from "./components/MessageItem";
+import { ChatInput } from "./components/ChatInput";
 
 interface ChatMessagesProps {
   room: ChatRoom;
@@ -137,51 +129,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     }
   };
 
-  const getFilePreviewContent = () => {
-    if (!selectedFile) return null;
-
-    if (selectedFile.type.startsWith('image/')) {
-      return (
-        <div className="mt-2 relative inline-block">
-          <img 
-            src={filePreview!} 
-            alt="Preview" 
-            className="max-h-32 rounded-lg"
-          />
-        </div>
-      );
-    }
-
-    if (selectedFile.type.startsWith('video/')) {
-      return (
-        <div className="mt-2 relative inline-block">
-          <video 
-            src={filePreview!} 
-            className="max-h-32 rounded-lg" 
-            controls
-          >
-            Your browser doesn't support video preview.
-          </video>
-        </div>
-      );
-    }
-
-    const getFileIcon = () => {
-      if (selectedFile.type.includes('pdf')) return <FileIcon className="h-6 w-6 text-red-500" />;
-      if (selectedFile.type.includes('word')) return <FileIcon className="h-6 w-6 text-blue-500" />;
-      if (selectedFile.type.includes('sheet') || selectedFile.type.includes('excel')) return <FileIcon className="h-6 w-6 text-green-500" />;
-      if (selectedFile.type.includes('presentation')) return <FileIcon className="h-6 w-6 text-orange-500" />;
-      return <FileIcon className="h-6 w-6" />;
-    };
-
-    return (
-      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-        {getFileIcon()}
-        <span>{selectedFile.name}</span>
-      </div>
-    );
-  };
-
   const onEmojiClick = (emojiData: { emoji: string }) => {
     setMessage(prev => prev + emojiData.emoji);
   };
@@ -256,38 +203,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     }
   };
 
-  const renderAttachment = (msg: ChatMessageWithSender) => {
-    if (!msg.file_url) return msg.content;
-
-    if (msg.file_type?.startsWith('image/')) {
-      return <img src={msg.file_url} alt={msg.content} className="max-w-full h-auto rounded-lg" />;
-    }
-    
-    if (msg.file_type?.startsWith('video/')) {
-      return <video src={msg.file_url} controls className="max-w-full rounded-lg">Your browser doesn't support video playback.</video>;
-    }
-
-    const getFileIcon = () => {
-      if (msg.file_type?.includes('pdf')) return <FileIcon className="h-6 w-6 text-red-500" />;
-      if (msg.file_type?.includes('word')) return <FileIcon className="h-6 w-6 text-blue-500" />;
-      if (msg.file_type?.includes('sheet') || msg.file_type?.includes('excel')) return <FileIcon className="h-6 w-6 text-green-500" />;
-      if (msg.file_type?.includes('presentation')) return <FileIcon className="h-6 w-6 text-orange-500" />;
-      return <FileIcon className="h-6 w-6" />;
-    };
-
-    return (
-      <a 
-        href={msg.file_url} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="flex items-center gap-2 hover:underline"
-      >
-        {getFileIcon()}
-        <span>{msg.content}</span>
-      </a>
-    );
-  };
-
   useEffect(() => {
     return () => {
       if (filePreview?.startsWith('blob:')) {
@@ -307,40 +222,13 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages?.map((msg) => {
-            const isCurrentUser = msg.sender_id === session?.user?.id;
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${
-                  isCurrentUser ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 shadow-sm ${
-                    isCurrentUser
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background border"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-sm font-medium ${
-                      isCurrentUser ? "text-primary-foreground" : "text-indigo-600"
-                    }`}>
-                      {msg.sender.full_name || "Unknown User"}
-                    </span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {format(new Date(msg.created_at), 'HH:mm')}
-                    </span>
-                  </div>
-                  <div className="break-words text-sm whitespace-pre-wrap">
-                    {renderAttachment(msg)}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {messages?.map((msg) => (
+            <MessageItem
+              key={msg.id}
+              msg={msg}
+              isCurrentUser={msg.sender_id === session?.user?.id}
+            />
+          ))}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
@@ -358,70 +246,17 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       />
 
       <div className="p-4 border-t bg-card">
-        <div className="flex gap-2">
-          <div className="flex-1 flex gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-[60px]"
-                  type="button"
-                >
-                  <Smile className="h-5 w-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" side="top" align="start">
-                <EmojiPicker
-                  onEmojiClick={onEmojiClick}
-                  width="100%"
-                  height={400}
-                />
-              </PopoverContent>
-            </Popover>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-[60px]"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-            <div className="relative flex-1">
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="min-h-[60px] bg-background pr-8"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-              {selectedFile && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-2 h-6 w-6 rounded-full p-0 text-muted-foreground hover:text-foreground"
-                  onClick={clearSelectedFile}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-              {getFilePreviewContent()}
-            </div>
-          </div>
-          <Button
-            onClick={handleSendMessage}
-            disabled={(!message.trim() && !selectedFile) || isUploading}
-            className="px-8 h-[60px]"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        <ChatInput
+          message={message}
+          setMessage={setMessage}
+          selectedFile={selectedFile}
+          filePreview={filePreview}
+          isUploading={isUploading}
+          onEmojiClick={onEmojiClick}
+          onFileSelect={() => fileInputRef.current?.click()}
+          onClearFile={clearSelectedFile}
+          onSendMessage={handleSendMessage}
+        />
       </div>
     </>
   );
