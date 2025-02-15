@@ -203,18 +203,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       <div className="p-4 border-t bg-card">
         <div className="flex gap-2">
           <div className="flex-1 flex gap-2">
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="min-h-[60px] bg-background"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
             <Popover>
               <PopoverTrigger asChild>
                 <Button 
@@ -234,6 +222,18 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                 />
               </PopoverContent>
             </Popover>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="min-h-[60px] bg-background"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
           </div>
           <Button
             onClick={handleSendMessage}
