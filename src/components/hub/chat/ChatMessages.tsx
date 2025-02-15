@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +72,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         async (payload) => {
           console.log('New message received:', payload);
           
+          // Fetch the complete message with sender information
           const { data: newMessage, error } = await supabase
             .from('hub_chat_messages')
             .select(`
@@ -89,8 +91,13 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
             return;
           }
 
+          // Update the query cache with the new message
           queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
             if (!oldMessages) return [newMessage];
+            // Make sure we don't add duplicate messages
+            if (oldMessages.some(msg => msg.id === newMessage.id)) {
+              return oldMessages;
+            }
             return [...oldMessages, newMessage];
           });
         }
@@ -98,7 +105,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [room.id, queryClient, queryKey]);
 
