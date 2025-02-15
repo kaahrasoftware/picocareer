@@ -1,17 +1,11 @@
+
 import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout } from './layouts';
-import { Index } from '@/pages/Index';
-import { Auth } from '@/pages/Auth';
-import { Hub } from '@/pages/Hub';
-import { Profile } from '@/pages/Profile';
-import { Pricing } from '@/pages/Pricing';
-import { CheckoutSuccess } from '@/pages/CheckoutSuccess';
-import { CheckoutCancel } from '@/pages/CheckoutCancel';
-import { Mentors } from '@/pages/Mentors';
-import { MentorProfile } from '@/pages/MentorProfile';
-import { Community } from '@/pages/Community';
-import { NotFound } from '@/pages/NotFound';
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import Hub from '@/pages/Hub';
+import Profile from '@/pages/Profile';
 
 export const router = createBrowserRouter([
   {
@@ -47,58 +41,13 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/pricing',
-    element: (
-      <MainLayout>
-        <Pricing />
-      </MainLayout>
-    ),
-  },
-  {
-    path: '/checkout/success',
-    element: (
-      <MainLayout>
-        <CheckoutSuccess />
-      </MainLayout>
-    ),
-  },
-  {
-    path: '/checkout/cancel',
-    element: (
-      <MainLayout>
-        <CheckoutCancel />
-      </MainLayout>
-    ),
-  },
-  {
-    path: '/mentors',
-    element: (
-      <MainLayout>
-        <Mentors />
-      </MainLayout>
-    ),
-  },
-  {
-    path: '/mentors/:mentorId',
-    element: (
-      <MainLayout>
-        <MentorProfile />
-      </MainLayout>
-    ),
-  },
-  {
-    path: '/community',
-    element: (
-      <MainLayout>
-        <Community />
-      </MainLayout>
-    ),
-  },
-  {
     path: '*',
     element: (
       <MainLayout>
-        <NotFound />
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <h1 className="text-2xl font-bold">404 - Page Not Found</h1>
+          <p className="text-muted-foreground">The page you are looking for does not exist.</p>
+        </div>
       </MainLayout>
     ),
   },
