@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, Smile } from "lucide-react";
+import { Send, Clock, Smile, Paperclip, FileIcon, ImageIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -24,6 +23,8 @@ interface ChatMessagesProps {
 
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
@@ -147,6 +148,85 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     }
   };
 
+  const handleFileUpload = async (file: File) => {
+    if (!session?.user) return;
+    
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${room.id}/${crypto.randomUUID()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('chat_attachments')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat_attachments')
+        .getPublicUrl(filePath);
+
+      const { error } = await supabase
+        .from('hub_chat_messages')
+        .insert({
+          room_id: room.id,
+          sender_id: session.user.id,
+          content: file.name,
+          type: 'attachment',
+          file_url: publicUrl,
+          file_type: file.type
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "File uploaded successfully",
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const renderAttachment = (msg: ChatMessageWithSender) => {
+    if (!msg.file_url) return msg.content;
+
+    if (msg.file_type?.startsWith('image/')) {
+      return <img src={msg.file_url} alt={msg.content} className="max-w-full h-auto rounded-lg" />;
+    }
+    
+    if (msg.file_type?.startsWith('video/')) {
+      return <video src={msg.file_url} controls className="max-w-full rounded-lg">Your browser doesn't support video playback.</video>;
+    }
+
+    const getFileIcon = () => {
+      if (msg.file_type?.includes('pdf')) return <FileIcon className="h-6 w-6 text-red-500" />;
+      if (msg.file_type?.includes('word')) return <FileIcon className="h-6 w-6 text-blue-500" />;
+      if (msg.file_type?.includes('sheet') || msg.file_type?.includes('excel')) return <FileIcon className="h-6 w-6 text-green-500" />;
+      if (msg.file_type?.includes('presentation')) return <FileIcon className="h-6 w-6 text-orange-500" />;
+      return <FileIcon className="h-6 w-6" />;
+    };
+
+    return (
+      <a 
+        href={msg.file_url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="flex items-center gap-2 hover:underline"
+      >
+        {getFileIcon()}
+        <span>{msg.content}</span>
+      </a>
+    );
+  };
+
   const onEmojiClick = (emojiData: { emoji: string }) => {
     setMessage(prev => prev + emojiData.emoji);
   };
@@ -190,7 +270,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                     </span>
                   </div>
                   <div className="break-words text-sm whitespace-pre-wrap">
-                    {msg.content}
+                    {renderAttachment(msg)}
                   </div>
                 </div>
               </div>
@@ -199,6 +279,18 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileUpload(file);
+          e.target.value = ''; // Reset input
+        }}
+        accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      />
 
       <div className="p-4 border-t bg-card">
         <div className="flex gap-2">
@@ -222,6 +314,15 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                 />
               </PopoverContent>
             </Popover>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-[60px]"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              <Paperclip className="h-5 w-5" />
+            </Button>
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -237,7 +338,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           </div>
           <Button
             onClick={handleSendMessage}
-            disabled={!message.trim()}
+            disabled={!message.trim() || isUploading}
             className="px-8 h-[60px]"
           >
             <Send className="h-4 w-4" />
