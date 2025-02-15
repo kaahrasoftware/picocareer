@@ -25,6 +25,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
@@ -112,11 +113,77 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     setMessage(`[File: ${file.name}] `);
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+      const url = URL.createObjectURL(file);
+      setFilePreview(url);
+    } else {
+      setFilePreview(null);
+    }
   };
 
   const clearSelectedFile = () => {
     setSelectedFile(null);
     setMessage("");
+    setFilePreview(null);
+    if (filePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(filePreview);
+    }
+  };
+
+  const getFilePreviewContent = () => {
+    if (!selectedFile) return null;
+
+    if (selectedFile.type.startsWith('image/')) {
+      return (
+        <div className="mt-2 relative inline-block">
+          <img 
+            src={filePreview!} 
+            alt="Preview" 
+            className="max-h-32 rounded-lg"
+          />
+        </div>
+      );
+    }
+
+    if (selectedFile.type.startsWith('video/')) {
+      return (
+        <div className="mt-2 relative inline-block">
+          <video 
+            src={filePreview!} 
+            className="max-h-32 rounded-lg" 
+            controls
+          >
+            Your browser doesn't support video preview.
+          </video>
+        </div>
+      );
+    }
+
+    const getFileIcon = () => {
+      if (selectedFile.type.includes('pdf')) return <FileIcon className="h-6 w-6 text-red-500" />;
+      if (selectedFile.type.includes('word')) return <FileIcon className="h-6 w-6 text-blue-500" />;
+      if (selectedFile.type.includes('sheet') || selectedFile.type.includes('excel')) return <FileIcon className="h-6 w-6 text-green-500" />;
+      if (selectedFile.type.includes('presentation')) return <FileIcon className="h-6 w-6 text-orange-500" />;
+      return <FileIcon className="h-6 w-6" />;
+    };
+
+    return (
+      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+        {getFileIcon()}
+        <span>{selectedFile.name}</span>
+      </div>
+    );
+  };
+
+  const onEmojiClick = (emojiData: { emoji: string }) => {
+    setMessage(prev => prev + emojiData.emoji);
   };
 
   const handleSendMessage = async () => {
@@ -221,9 +288,13 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     );
   };
 
-  const onEmojiClick = (emojiData: { emoji: string }) => {
-    setMessage(prev => prev + emojiData.emoji);
-  };
+  useEffect(() => {
+    return () => {
+      if (filePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(filePreview);
+      }
+    };
+  }, [filePreview]);
 
   return (
     <>
@@ -340,6 +411,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                   <X className="h-4 w-4" />
                 </Button>
               )}
+              {getFilePreviewContent()}
             </div>
           </div>
           <Button
