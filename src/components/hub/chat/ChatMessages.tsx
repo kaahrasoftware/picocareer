@@ -8,14 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, Smile } from "lucide-react";
+import { Send, Clock } from "lucide-react";
 import { format } from "date-fns";
-import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 interface ChatMessagesProps {
   room: ChatRoom;
@@ -152,10 +146,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     }
   };
 
-  const onEmojiClick = (emojiData: EmojiClickData) => {
-    setMessage(prev => prev + emojiData.emoji);
-  };
-
   return (
     <>
       <div className="p-4 border-b bg-card">
@@ -207,38 +197,22 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       <div className="p-4 border-t bg-card">
         <div className="flex gap-2">
-          <div className="flex-1 flex gap-2">
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="min-h-[60px] bg-background"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-[60px]">
-                  <Smile className="h-5 w-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" side="top" align="start">
-                <EmojiPicker
-                  onEmojiClick={onEmojiClick}
-                  width="100%"
-                  height={400}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type a message..."
+            className="min-h-[60px] bg-background"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+          />
           <Button
             onClick={handleSendMessage}
             disabled={!message.trim()}
-            className="px-8 h-[60px]"
+            className="px-8"
           >
             <Send className="h-4 w-4" />
           </Button>

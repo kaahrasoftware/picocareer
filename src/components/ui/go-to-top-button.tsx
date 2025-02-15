@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { useState, useEffect } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { Button } from './button';
