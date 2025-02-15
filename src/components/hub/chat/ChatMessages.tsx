@@ -8,32 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock, ChevronDown } from "lucide-react";
+import { Send, Clock } from "lucide-react";
 import { format } from "date-fns";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 interface ChatMessagesProps {
   room: ChatRoom;
   hubId: string;
 }
 
-const REACTION_EMOJIS = {
-  'thumbs-up': '👍',
-  'thumbs-down': '👎',
-  'heart': '❤️',
-  'smile': '😊',
-  'laugh': '😂',
-  'angry': '😠',
-  'frown': '😞',
-  'meh': '😐'
-} as const;
-
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
@@ -41,10 +26,10 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
   const queryKey = ['chat-messages', room.id];
 
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const messagesResponse = await supabase
+      const { data, error } = await supabase
         .from('hub_chat_messages')
         .select(`
           *,
@@ -57,34 +42,8 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         .eq('room_id', room.id)
         .order('created_at', { ascending: true });
 
-      if (messagesResponse.error) throw messagesResponse.error;
-
-      if (messagesResponse.data.length > 0) {
-        const messageIds = messagesResponse.data.map(msg => msg.id);
-        
-        const reactionsResponse = await supabase
-          .from('hub_chat_reactions')
-          .select('*')
-          .in('message_id', messageIds);
-
-        if (reactionsResponse.error) throw reactionsResponse.error;
-
-        const messageReactions = new Map();
-        reactionsResponse.data.forEach(reaction => {
-          const existing = messageReactions.get(reaction.message_id) || [];
-          messageReactions.set(reaction.message_id, [...existing, reaction]);
-        });
-
-        return messagesResponse.data.map(message => ({
-          ...message,
-          reactions: messageReactions.get(message.id) || []
-        }));
-      }
-
-      return messagesResponse.data.map(message => ({
-        ...message,
-        reactions: []
-      }));
+      if (error) throw error;
+      return data as ChatMessageWithSender[];
     },
   });
 
@@ -99,6 +58,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   }, [messages]);
 
   useEffect(() => {
+    // Subscribe to new messages
     const channel = supabase
       .channel(`room-${room.id}`)
       .on(
@@ -112,72 +72,29 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         async (payload) => {
           console.log('New message received:', payload);
           
-          // Only fetch sender details if the message is from another user
-          if (payload.new.sender_id !== session?.user?.id) {
-            const { data: messageWithSender, error } = await supabase
-              .from('hub_chat_messages')
-              .select(`
-                *,
-                sender:profiles!hub_chat_messages_sender_id_fkey (
-                  id,
-                  full_name,
-                  avatar_url
-                )
-              `)
-              .eq('id', payload.new.id)
-              .single();
-
-            if (error) {
-              console.error('Error fetching message details:', error);
-              return;
-            }
-
-            queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-              if (!old) return [messageWithSender];
-              return [...old, { ...messageWithSender, reactions: [] }];
-            });
-
-            scrollToBottom();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'hub_chat_reactions',
-          filter: `message_id=in.(${messages?.map(m => m.id).join(',')})`,
-        },
-        async () => {
-          // Only fetch reactions, not the entire messages query
-          const messageIds = messages?.map(m => m.id) || [];
-          if (messageIds.length === 0) return;
-
-          const { data: reactions, error } = await supabase
-            .from('hub_chat_reactions')
-            .select('*')
-            .in('message_id', messageIds);
+          // Fetch the complete message with sender information
+          const { data: newMessage, error } = await supabase
+            .from('hub_chat_messages')
+            .select(`
+              *,
+              sender:profiles!hub_chat_messages_sender_id_fkey (
+                id,
+                full_name,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
 
           if (error) {
-            console.error('Error fetching reactions:', error);
+            console.error('Error fetching new message:', error);
             return;
           }
 
-          // Update only the reactions in the cached messages
-          queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-            if (!old) return [];
-            
-            const messageReactions = new Map();
-            reactions.forEach(reaction => {
-              const existing = messageReactions.get(reaction.message_id) || [];
-              messageReactions.set(reaction.message_id, [...existing, reaction]);
-            });
-
-            return old.map(message => ({
-              ...message,
-              reactions: messageReactions.get(message.id) || []
-            }));
+          // Update the messages in the cache
+          queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
+            if (!oldMessages) return [newMessage];
+            return [...oldMessages, newMessage];
           });
         }
       )
@@ -186,135 +103,45 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room.id, queryClient, queryKey, messages, session?.user?.id]);
-
-  const handleAddReaction = async (messageId: string, reactionType: keyof typeof REACTION_EMOJIS) => {
-    if (!session?.user) return;
-
-    try {
-      // Optimistically update the UI
-      const existingReaction = messages
-        ?.find(m => m.id === messageId)
-        ?.reactions?.find(r => 
-          r.user_id === session.user?.id && 
-          r.reaction_type === reactionType
-        );
-
-      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-        if (!old) return [];
-        return old.map(message => {
-          if (message.id !== messageId) return message;
-
-          const reactions = [...(message.reactions || [])];
-          if (existingReaction) {
-            // Remove reaction
-            return {
-              ...message,
-              reactions: reactions.filter(r => 
-                !(r.user_id === session.user?.id && r.reaction_type === reactionType)
-              )
-            };
-          } else {
-            // Add reaction
-            return {
-              ...message,
-              reactions: [...reactions, {
-                id: 'temp',
-                message_id: messageId,
-                user_id: session.user.id,
-                reaction_type: reactionType,
-                created_at: new Date().toISOString()
-              }]
-            };
-          }
-        });
-      });
-
-      if (existingReaction) {
-        // Remove reaction
-        const { error } = await supabase
-          .from('hub_chat_reactions')
-          .delete()
-          .match({
-            message_id: messageId,
-            user_id: session.user.id,
-            reaction_type: reactionType
-          });
-
-        if (error) throw error;
-      } else {
-        // Add reaction
-        const { error } = await supabase
-          .from('hub_chat_reactions')
-          .insert({
-            message_id: messageId,
-            user_id: session.user.id,
-            reaction_type: reactionType
-          });
-
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error('Error handling reaction:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add reaction. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  }, [room.id, queryClient, queryKey]);
 
   const handleSendMessage = async () => {
     if (!message.trim() || !session?.user) return;
 
-    const newMessage = {
-      id: crypto.randomUUID(),
-      room_id: room.id,
-      sender_id: session.user.id,
-      content: message.trim(),
-      type: 'text',
-      created_at: new Date().toISOString(),
-      sender: {
-        id: session.user.id,
-        full_name: session.user.user_metadata.full_name || null,
-        avatar_url: session.user.user_metadata.avatar_url || null,
-      },
-      reactions: []
-    };
-
-    // Optimistically update UI
-    queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-      if (!old) return [newMessage];
-      return [...old, newMessage];
-    });
-
-    setMessage("");
-    scrollToBottom();
-
     try {
-      const { error } = await supabase
+      const { data: newMessage, error } = await supabase
         .from('hub_chat_messages')
         .insert({
-          id: newMessage.id,
           room_id: room.id,
           sender_id: session.user.id,
-          content: newMessage.content,
+          content: message.trim(),
           type: 'text'
-        });
+        })
+        .select(`
+          *,
+          sender:profiles!hub_chat_messages_sender_id_fkey (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .single();
 
       if (error) throw error;
+
+      // Immediately update the cache with the new message
+      queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
+        if (!oldMessages) return [newMessage];
+        return [...oldMessages, newMessage];
+      });
+
+      setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
-      });
-      
-      // Remove the optimistic update on error
-      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-        if (!old) return [];
-        return old.filter(msg => msg.id !== newMessage.id);
       });
     }
   };
@@ -332,94 +159,35 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         <div className="space-y-4">
           {messages?.map((msg) => {
             const isCurrentUser = msg.sender_id === session?.user?.id;
-            const reactionCounts: Record<string, number> = {};
-            
-            msg.reactions?.forEach(reaction => {
-              reactionCounts[reaction.reaction_type] = (reactionCounts[reaction.reaction_type] || 0) + 1;
-            });
-
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${
-                  isCurrentUser ? "items-end" : "items-start"
+                className={`flex ${
+                  isCurrentUser ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="relative max-w-[80%]">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-6 w-6 p-0 absolute top-1/2 -translate-y-1/2 ${
-                          isCurrentUser ? "-left-8" : "-right-8"
-                        }`}
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-auto p-2" 
-                      align={isCurrentUser ? "start" : "end"}
-                      side="top"
-                    >
-                      <div className="flex flex-wrap gap-1">
-                        {Object.entries(REACTION_EMOJIS).map(([type, emoji]) => (
-                          <button
-                            key={type}
-                            onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
-                            className={`text-sm px-2 py-0.5 rounded-full ${
-                              reactionCounts[type]
-                                ? 'bg-primary/20'
-                                : 'hover:bg-primary/10'
-                            }`}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  <div
-                    className={`rounded-lg px-4 py-2 shadow-sm ${
-                      isCurrentUser
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background border"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-sm font-medium ${
-                        isCurrentUser ? "text-primary-foreground" : "text-indigo-600"
-                      }`}>
-                        {msg.sender.full_name || "Unknown User"}
-                      </span>
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(msg.created_at), 'HH:mm')}
-                      </span>
-                    </div>
-                    <div className="break-words text-sm">
-                      {msg.content}
-                    </div>
+                <div
+                  className={`max-w-[80%] rounded-lg px-4 py-2 shadow-sm ${
+                    isCurrentUser
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background border"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-sm font-medium ${
+                      isCurrentUser ? "text-primary-foreground" : "text-indigo-600"
+                    }`}>
+                      {msg.sender.full_name || "Unknown User"}
+                    </span>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(msg.created_at), 'HH:mm')}
+                    </span>
+                  </div>
+                  <div className="break-words text-sm">
+                    {msg.content}
                   </div>
                 </div>
-                {Object.keys(reactionCounts).length > 0 && (
-                  <div className={`mt-1 flex flex-wrap gap-1 ${
-                    isCurrentUser ? "pr-8" : "pl-8"
-                  }`}>
-                    {Object.entries(reactionCounts)
-                      .filter(([_, count]) => count > 0)
-                      .map(([type, count]) => (
-                        <button
-                          key={type}
-                          onClick={() => handleAddReaction(msg.id, type as keyof typeof REACTION_EMOJIS)}
-                          className="text-sm px-2 py-0.5 rounded-full bg-primary/20 hover:bg-primary/30 transition-colors"
-                        >
-                          {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]} {count}
-                        </button>
-                      ))}
-                  </div>
-                )}
               </div>
             );
           })}
