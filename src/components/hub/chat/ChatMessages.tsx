@@ -8,8 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Clock } from "lucide-react";
+import { Send, Clock, Smile } from "lucide-react";
 import { format } from "date-fns";
+import EmojiPicker from "emoji-picker-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ChatMessagesProps {
   room: ChatRoom;
@@ -18,7 +24,6 @@ interface ChatMessagesProps {
 
 export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { session } = useAuthSession();
   const { toast } = useToast();
@@ -58,7 +63,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   }, [messages]);
 
   useEffect(() => {
-    // Subscribe to new messages
     const channel = supabase
       .channel(`room-${room.id}`)
       .on(
@@ -72,7 +76,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         async (payload) => {
           console.log('New message received:', payload);
           
-          // Fetch the complete message with sender information
           const { data: newMessage, error } = await supabase
             .from('hub_chat_messages')
             .select(`
@@ -91,7 +94,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
             return;
           }
 
-          // Update the messages in the cache
           queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
             if (!oldMessages) return [newMessage];
             return [...oldMessages, newMessage];
@@ -129,7 +131,6 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       if (error) throw error;
 
-      // Immediately update the cache with the new message
       queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
         if (!oldMessages) return [newMessage];
         return [...oldMessages, newMessage];
@@ -144,6 +145,10 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         variant: "destructive",
       });
     }
+  };
+
+  const onEmojiClick = (emojiData: { emoji: string }) => {
+    setMessage(prev => prev + emojiData.emoji);
   };
 
   return (
@@ -184,7 +189,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
                       {format(new Date(msg.created_at), 'HH:mm')}
                     </span>
                   </div>
-                  <div className="break-words text-sm">
+                  <div className="break-words text-sm whitespace-pre-wrap">
                     {msg.content}
                   </div>
                 </div>
@@ -197,22 +202,43 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
       <div className="p-4 border-t bg-card">
         <div className="flex gap-2">
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="min-h-[60px] bg-background"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
+          <div className="flex-1 flex gap-2">
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="min-h-[60px] bg-background"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-[60px]"
+                  type="button"
+                >
+                  <Smile className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" side="top" align="start">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width="100%"
+                  height={400}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <Button
             onClick={handleSendMessage}
             disabled={!message.trim()}
-            className="px-8"
+            className="px-8 h-[60px]"
           >
             <Send className="h-4 w-4" />
           </Button>
