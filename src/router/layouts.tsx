@@ -1,31 +1,15 @@
 
-import { MenuSidebar } from "@/components/MenuSidebar";
-import { Footer } from "@/components/Footer";
-import { GoToTopButton } from "@/components/ui/go-to-top-button";
+import React from 'react';
+import { MenuSidebar } from '@/components/MenuSidebar';
+import { GoToTopButton } from '@/components/ui/go-to-top-button';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export function MainLayout({ children }: LayoutProps) {
+export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <MenuSidebar />
-      <main className="pt-16 flex-grow">
+      <main className="flex-1 container mx-auto px-4 py-8">
         {children}
-      </main>
-      <Footer />
-      <GoToTopButton />
-    </div>
-  );
-}
-
-export function AuthLayout({ children }: LayoutProps) {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <MenuSidebar />
-      <main className="pt-16 flex-grow">
-        {children}
+        <GoToTopButton />
       </main>
     </div>
   );
