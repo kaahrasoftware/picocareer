@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +46,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       return data as ChatMessageWithSender[];
     },
     refetchOnWindowFocus: false,
+    staleTime: Infinity, // Prevent automatic refetching
   });
 
   const scrollToBottom = () => {
@@ -56,68 +56,62 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   };
 
   useEffect(() => {
-    const setupSubscription = async () => {
-      try {
-        const channel = supabase.channel('chat-messages')
-          .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'hub_chat_messages',
-            filter: `room_id=eq.${room.id}`,
-          }, async (payload) => {
-            console.log('New message received:', payload);
+    const channel = supabase.channel(`room:${room.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'hub_chat_messages',
+          filter: `room_id=eq.${room.id}`,
+        },
+        async (payload) => {
+          console.log('New message received:', payload);
+          
+          const newMessage = payload.new as ChatMessageWithSender;
+          
+          const { data: senderData, error: senderError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .eq('id', newMessage.sender_id)
+            .single();
+            
+          if (senderError) {
+            console.error('Error fetching sender:', senderError);
+            return;
+          }
 
-            // Fetch the complete message with sender information
-            const { data: newMessage, error } = await supabase
-              .from('hub_chat_messages')
-              .select(`
-                *,
-                sender:profiles!hub_chat_messages_sender_id_fkey (
-                  id,
-                  full_name,
-                  avatar_url
-                )
-              `)
-              .eq('id', payload.new.id)
-              .single();
+          const messageWithSender = {
+            ...newMessage,
+            sender: senderData
+          };
 
-            if (error) {
-              console.error('Error fetching new message:', error);
-              return;
-            }
-
-            console.log('Fetched complete message:', newMessage);
-
-            // Update the query cache with the new message
-            queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
-              if (!oldMessages) return [newMessage];
-              if (oldMessages.some(msg => msg.id === newMessage.id)) {
+          queryClient.setQueryData<ChatMessageWithSender[]>(
+            queryKey,
+            (oldMessages = []) => {
+              if (oldMessages.some(msg => msg.id === messageWithSender.id)) {
                 return oldMessages;
               }
-              return [...oldMessages, newMessage];
-            });
-          })
-          .subscribe((status) => {
-            console.log('Subscription status:', status);
-          });
+              return [...oldMessages, messageWithSender];
+            }
+          );
 
-        return () => {
-          channel.unsubscribe();
-        };
-      } catch (error) {
-        console.error('Error setting up subscription:', error);
-      }
-    };
+          setTimeout(scrollToBottom, 100);
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Subscription status for room ${room.id}:`, status);
+      });
 
-    const cleanup = setupSubscription();
     return () => {
-      cleanup.then(unsubscribe => unsubscribe?.());
+      console.log(`Unsubscribing from room ${room.id}`);
+      supabase.removeChannel(channel);
     };
   }, [room.id, queryClient, queryKey]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages?.length]);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -186,6 +180,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
         setSelectedFile(null);
         setMessage("");
+        setFilePreview(null);
       } catch (error) {
         console.error('Upload error:', error);
         toast({
