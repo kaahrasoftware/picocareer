@@ -56,56 +56,51 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   };
 
   useEffect(() => {
-    const channel = supabase.channel(`room:${room.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'hub_chat_messages',
-          filter: `room_id=eq.${room.id}`,
-        },
-        async (payload) => {
-          console.log('New message received:', payload);
-          
-          const newMessage = payload.new as ChatMessageWithSender;
-          
-          const { data: senderData, error: senderError } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .eq('id', newMessage.sender_id)
-            .single();
-            
-          if (senderError) {
-            console.error('Error fetching sender:', senderError);
-            return;
-          }
+    const channel = supabase.channel('chat-messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'hub_chat_messages',
+        filter: `room_id=eq.${room.id}`,
+      }, async (payload) => {
+        console.log('New message received:', payload);
 
-          const messageWithSender = {
-            ...newMessage,
-            sender: senderData
-          };
+        const { data: newMessage, error } = await supabase
+          .from('hub_chat_messages')
+          .select(`
+            *,
+            sender:profiles!hub_chat_messages_sender_id_fkey (
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('id', payload.new.id)
+          .single();
 
-          queryClient.setQueryData<ChatMessageWithSender[]>(
-            queryKey,
-            (oldMessages = []) => {
-              if (oldMessages.some(msg => msg.id === messageWithSender.id)) {
-                return oldMessages;
-              }
-              return [...oldMessages, messageWithSender];
-            }
-          );
-
-          setTimeout(scrollToBottom, 100);
+        if (error) {
+          console.error('Error fetching new message:', error);
+          return;
         }
-      )
+
+        console.log('Fetched complete message:', newMessage);
+
+        queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
+          if (!oldMessages) return [newMessage];
+          if (oldMessages.some(msg => msg.id === newMessage.id)) {
+            return oldMessages;
+          }
+          return [...oldMessages, newMessage];
+        });
+
+        setTimeout(scrollToBottom, 100);
+      })
       .subscribe((status) => {
-        console.log(`Subscription status for room ${room.id}:`, status);
+        console.log('Subscription status:', status);
       });
 
     return () => {
-      console.log(`Unsubscribing from room ${room.id}`);
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [room.id, queryClient, queryKey]);
 
