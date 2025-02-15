@@ -46,6 +46,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       if (error) throw error;
       return data as ChatMessageWithSender[];
     },
+    refetchOnWindowFocus: false,
   });
 
   const scrollToBottom = () => {
@@ -55,59 +56,68 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const setupSubscription = async () => {
+      try {
+        const channel = supabase.channel('chat-messages')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'hub_chat_messages',
+            filter: `room_id=eq.${room.id}`,
+          }, async (payload) => {
+            console.log('New message received:', payload);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel(`room-${room.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'hub_chat_messages',
-          filter: `room_id=eq.${room.id}`,
-        },
-        async (payload) => {
-          console.log('New message received:', payload);
-          
-          // Fetch the complete message with sender information
-          const { data: newMessage, error } = await supabase
-            .from('hub_chat_messages')
-            .select(`
-              *,
-              sender:profiles!hub_chat_messages_sender_id_fkey (
-                id,
-                full_name,
-                avatar_url
-              )
-            `)
-            .eq('id', payload.new.id)
-            .single();
+            // Fetch the complete message with sender information
+            const { data: newMessage, error } = await supabase
+              .from('hub_chat_messages')
+              .select(`
+                *,
+                sender:profiles!hub_chat_messages_sender_id_fkey (
+                  id,
+                  full_name,
+                  avatar_url
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
 
-          if (error) {
-            console.error('Error fetching new message:', error);
-            return;
-          }
-
-          // Update the query cache with the new message
-          queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
-            if (!oldMessages) return [newMessage];
-            // Make sure we don't add duplicate messages
-            if (oldMessages.some(msg => msg.id === newMessage.id)) {
-              return oldMessages;
+            if (error) {
+              console.error('Error fetching new message:', error);
+              return;
             }
-            return [...oldMessages, newMessage];
-          });
-        }
-      )
-      .subscribe();
 
+            console.log('Fetched complete message:', newMessage);
+
+            // Update the query cache with the new message
+            queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
+              if (!oldMessages) return [newMessage];
+              if (oldMessages.some(msg => msg.id === newMessage.id)) {
+                return oldMessages;
+              }
+              return [...oldMessages, newMessage];
+            });
+          })
+          .subscribe((status) => {
+            console.log('Subscription status:', status);
+          });
+
+        return () => {
+          channel.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Error setting up subscription:', error);
+      }
+    };
+
+    const cleanup = setupSubscription();
     return () => {
-      channel.unsubscribe();
+      cleanup.then(unsubscribe => unsubscribe?.());
     };
   }, [room.id, queryClient, queryKey]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
