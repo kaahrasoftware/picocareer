@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +57,8 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   };
 
   useEffect(() => {
-    const channel = supabase.channel('chat-messages')
+    // Initialize the channel with a unique name per room
+    const channel = supabase.channel(`room-${room.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -65,6 +67,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
       }, async (payload) => {
         console.log('New message received:', payload);
 
+        // Fetch the complete message with sender information
         const { data: newMessage, error } = await supabase
           .from('hub_chat_messages')
           .select(`
@@ -85,21 +88,25 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
 
         console.log('Fetched complete message:', newMessage);
 
+        // Update the React Query cache with the new message
         queryClient.setQueryData<ChatMessageWithSender[]>(queryKey, (oldMessages) => {
           if (!oldMessages) return [newMessage];
+          // Prevent duplicate messages
           if (oldMessages.some(msg => msg.id === newMessage.id)) {
             return oldMessages;
           }
           return [...oldMessages, newMessage];
         });
 
+        // Scroll to the new message
         setTimeout(scrollToBottom, 100);
       })
       .subscribe((status) => {
-        console.log('Subscription status:', status);
+        console.log(`Room ${room.id} subscription status:`, status);
       });
 
     return () => {
+      console.log(`Unsubscribing from room ${room.id}`);
       channel.unsubscribe();
     };
   }, [room.id, queryClient, queryKey]);
