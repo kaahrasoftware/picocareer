@@ -791,6 +791,38 @@ export type Database = {
           },
         ]
       }
+      hub_chat_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          reaction_type: Database["public"]["Enums"]["chat_reaction_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          reaction_type: Database["public"]["Enums"]["chat_reaction_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          reaction_type?: Database["public"]["Enums"]["chat_reaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_chat_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "hub_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_chat_rooms: {
         Row: {
           created_at: string
@@ -2964,6 +2996,15 @@ export type Database = {
         | "Skill Development"
         | "University Admissions"
         | "Career Guidance"
+      chat_reaction_type:
+        | "thumbs-up"
+        | "thumbs-down"
+        | "heart"
+        | "smile"
+        | "laugh"
+        | "angry"
+        | "frown"
+        | "meh"
       chat_room_type: "public" | "private"
       country:
         | "Afghanistan"
