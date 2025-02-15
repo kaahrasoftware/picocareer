@@ -112,30 +112,33 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
         async (payload) => {
           console.log('New message received:', payload);
           
-          const { data: messageWithSender, error } = await supabase
-            .from('hub_chat_messages')
-            .select(`
-              *,
-              sender:profiles!hub_chat_messages_sender_id_fkey (
-                id,
-                full_name,
-                avatar_url
-              )
-            `)
-            .eq('id', payload.new.id)
-            .single();
+          // Only fetch sender details if the message is from another user
+          if (payload.new.sender_id !== session?.user?.id) {
+            const { data: messageWithSender, error } = await supabase
+              .from('hub_chat_messages')
+              .select(`
+                *,
+                sender:profiles!hub_chat_messages_sender_id_fkey (
+                  id,
+                  full_name,
+                  avatar_url
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
 
-          if (error) {
-            console.error('Error fetching message details:', error);
-            return;
+            if (error) {
+              console.error('Error fetching message details:', error);
+              return;
+            }
+
+            queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+              if (!old) return [messageWithSender];
+              return [...old, { ...messageWithSender, reactions: [] }];
+            });
+
+            scrollToBottom();
           }
-
-          queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
-            if (!old) return [messageWithSender];
-            return [...old, { ...messageWithSender, reactions: [] }];
-          });
-
-          scrollToBottom();
         }
       )
       .on(
@@ -183,7 +186,7 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room.id, queryClient, queryKey, messages]);
+  }, [room.id, queryClient, queryKey, messages, session?.user?.id]);
 
   const handleAddReaction = async (messageId: string, reactionType: keyof typeof REACTION_EMOJIS) => {
     if (!session?.user) return;
