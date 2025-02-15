@@ -144,9 +144,38 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
           event: '*',
           schema: 'public',
           table: 'hub_chat_reactions',
+          filter: `message_id=in.(${messages?.map(m => m.id).join(',')})`,
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey });
+        async () => {
+          // Only fetch reactions, not the entire messages query
+          const messageIds = messages?.map(m => m.id) || [];
+          if (messageIds.length === 0) return;
+
+          const { data: reactions, error } = await supabase
+            .from('hub_chat_reactions')
+            .select('*')
+            .in('message_id', messageIds);
+
+          if (error) {
+            console.error('Error fetching reactions:', error);
+            return;
+          }
+
+          // Update only the reactions in the cached messages
+          queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+            if (!old) return [];
+            
+            const messageReactions = new Map();
+            reactions.forEach(reaction => {
+              const existing = messageReactions.get(reaction.message_id) || [];
+              messageReactions.set(reaction.message_id, [...existing, reaction]);
+            });
+
+            return old.map(message => ({
+              ...message,
+              reactions: messageReactions.get(message.id) || []
+            }));
+          });
         }
       )
       .subscribe();
@@ -154,33 +183,73 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room.id, queryClient, queryKey]);
+  }, [room.id, queryClient, queryKey, messages]);
 
   const handleAddReaction = async (messageId: string, reactionType: keyof typeof REACTION_EMOJIS) => {
     if (!session?.user) return;
 
     try {
-      const { error } = await supabase
-        .from('hub_chat_reactions')
-        .insert({
-          message_id: messageId,
-          user_id: session.user.id,
-          reaction_type: reactionType
-        });
+      // Optimistically update the UI
+      const existingReaction = messages
+        ?.find(m => m.id === messageId)
+        ?.reactions?.find(r => 
+          r.user_id === session.user?.id && 
+          r.reaction_type === reactionType
+        );
 
-      if (error) {
-        if (error.code === '23505') { // Unique violation
-          await supabase
-            .from('hub_chat_reactions')
-            .delete()
-            .match({
-              message_id: messageId,
-              user_id: session.user.id,
-              reaction_type: reactionType
-            });
-        } else {
-          throw error;
-        }
+      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+        if (!old) return [];
+        return old.map(message => {
+          if (message.id !== messageId) return message;
+
+          const reactions = [...(message.reactions || [])];
+          if (existingReaction) {
+            // Remove reaction
+            return {
+              ...message,
+              reactions: reactions.filter(r => 
+                !(r.user_id === session.user?.id && r.reaction_type === reactionType)
+              )
+            };
+          } else {
+            // Add reaction
+            return {
+              ...message,
+              reactions: [...reactions, {
+                id: 'temp',
+                message_id: messageId,
+                user_id: session.user.id,
+                reaction_type: reactionType,
+                created_at: new Date().toISOString()
+              }]
+            };
+          }
+        });
+      });
+
+      if (existingReaction) {
+        // Remove reaction
+        const { error } = await supabase
+          .from('hub_chat_reactions')
+          .delete()
+          .match({
+            message_id: messageId,
+            user_id: session.user.id,
+            reaction_type: reactionType
+          });
+
+        if (error) throw error;
+      } else {
+        // Add reaction
+        const { error } = await supabase
+          .from('hub_chat_reactions')
+          .insert({
+            message_id: messageId,
+            user_id: session.user.id,
+            reaction_type: reactionType
+          });
+
+        if (error) throw error;
       }
     } catch (error) {
       console.error('Error handling reaction:', error);
@@ -195,25 +264,54 @@ export function ChatMessages({ room, hubId }: ChatMessagesProps) {
   const handleSendMessage = async () => {
     if (!message.trim() || !session?.user) return;
 
+    const newMessage = {
+      id: crypto.randomUUID(),
+      room_id: room.id,
+      sender_id: session.user.id,
+      content: message.trim(),
+      type: 'text',
+      created_at: new Date().toISOString(),
+      sender: {
+        id: session.user.id,
+        full_name: session.user.user_metadata.full_name || null,
+        avatar_url: session.user.user_metadata.avatar_url || null,
+      },
+      reactions: []
+    };
+
+    // Optimistically update UI
+    queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+      if (!old) return [newMessage];
+      return [...old, newMessage];
+    });
+
+    setMessage("");
+    scrollToBottom();
+
     try {
       const { error } = await supabase
         .from('hub_chat_messages')
         .insert({
+          id: newMessage.id,
           room_id: room.id,
           sender_id: session.user.id,
-          content: message.trim(),
+          content: newMessage.content,
           type: 'text'
         });
 
       if (error) throw error;
-
-      setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
+      });
+      
+      // Remove the optimistic update on error
+      queryClient.setQueryData(queryKey, (old: ChatMessageWithSender[] | undefined) => {
+        if (!old) return [];
+        return old.filter(msg => msg.id !== newMessage.id);
       });
     }
   };
