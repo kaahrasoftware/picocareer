@@ -9,13 +9,18 @@ import { MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { MemberActivityList } from './MemberActivityList';
 import { EngagementMetrics } from './EngagementMetrics';
+import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay } from 'date-fns';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface HubAnalyticsProps {
   hubId: string;
 }
 
+type TimePeriod = 'day' | 'week' | 'month' | 'year';
+
 export function HubAnalytics({ hubId }: HubAnalyticsProps) {
   const [memberGrowth, setMemberGrowth] = useState<MemberGrowth[]>([]);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
   const [summary, setSummary] = useState<AnalyticsSummary>({
     totalMembers: 0,
     activeMembers: 0,
@@ -24,14 +29,50 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
   });
   const { toast } = useToast();
 
+  const getTimeRangeFilter = (period: TimePeriod) => {
+    const now = new Date();
+    switch (period) {
+      case 'day':
+        return subDays(now, 30); // Last 30 days
+      case 'week':
+        return subWeeks(now, 12); // Last 12 weeks
+      case 'month':
+        return subMonths(now, 12); // Last 12 months
+      case 'year':
+        return subYears(now, 5); // Last 5 years
+      default:
+        return subMonths(now, 12);
+    }
+  };
+
+  const formatDate = (date: string, period: TimePeriod) => {
+    switch (period) {
+      case 'day':
+        return format(new Date(date), 'MMM d');
+      case 'week':
+        return format(new Date(date), 'MMM d');
+      case 'month':
+        return format(new Date(date), 'MMM yyyy');
+      case 'year':
+        return format(new Date(date), 'yyyy');
+      default:
+        return format(new Date(date), 'MMM yyyy');
+    }
+  };
+
   useEffect(() => {
     async function fetchAnalytics() {
       try {
+        const startDate = getTimeRangeFilter(timePeriod);
+        
         // Fetch member growth data
         const { data: growthData, error: growthError } = await supabase
           .from('hub_member_growth')
           .select('*')
-          .eq('hub_id', hubId);
+          .eq('hub_id', hubId)
+          .gte('month', startOfDay(startDate).toISOString())
+          .lte('month', endOfDay(new Date()).toISOString())
+          .order('month', { ascending: true });
 
         if (growthError) throw growthError;
         setMemberGrowth(growthData);
@@ -58,7 +99,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
 
         setSummary({
           totalMembers: members?.length || 0,
-          activeMembers: members?.length || 0, // This will be updated with actual active count
+          activeMembers: members?.length || 0,
           resourceCount: resources?.length || 0,
           announcementCount: announcements?.length || 0
         });
@@ -73,7 +114,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     }
 
     fetchAnalytics();
-  }, [hubId, toast]);
+  }, [hubId, timePeriod, toast]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +130,23 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         <TabsContent value="growth">
           <Card>
             <CardHeader>
-              <CardTitle>Member Growth Over Time</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Member Growth Over Time</CardTitle>
+                <ToggleGroup type="single" value={timePeriod} onValueChange={(value: TimePeriod) => setTimePeriod(value)}>
+                  <ToggleGroupItem value="day" aria-label="View daily data">
+                    Daily
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="week" aria-label="View weekly data">
+                    Weekly
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="month" aria-label="View monthly data">
+                    Monthly
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="year" aria-label="View yearly data">
+                    Yearly
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -97,19 +154,19 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="month" 
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                    }}
+                    tickFormatter={(value) => formatDate(value, timePeriod)}
                   />
                   <YAxis />
                   <Tooltip 
-                    labelFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                    }}
+                    labelFormatter={(value) => formatDate(value, timePeriod)}
+                    formatter={(value) => [`${value} new members`]}
                   />
-                  <Bar dataKey="new_members" fill="#8884d8" name="New Members" />
+                  <Bar 
+                    dataKey="new_members" 
+                    fill="#8884d8" 
+                    name="New Members"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
