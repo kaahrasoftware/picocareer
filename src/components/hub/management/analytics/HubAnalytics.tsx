@@ -65,16 +65,33 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
       try {
         const startDate = getTimeRangeFilter(timePeriod);
         
-        // Fetch member growth data
-        const { data: growthData, error: growthError } = await supabase
-          .from('hub_member_growth')
-          .select('*')
+        // Fetch members join dates
+        const { data: memberData, error: memberError } = await supabase
+          .from('hub_members')
+          .select('join_date')
           .eq('hub_id', hubId)
-          .gte('month', startOfDay(startDate).toISOString())
-          .lte('month', endOfDay(new Date()).toISOString())
-          .order('month', { ascending: true });
+          .eq('status', 'Approved')
+          .gte('join_date', startOfDay(startDate).toISOString())
+          .lte('join_date', endOfDay(new Date()).toISOString());
 
-        if (growthError) throw growthError;
+        if (memberError) throw memberError;
+
+        // Process member data into growth data
+        const growthMap = new Map<string, number>();
+        const dateFormat = timePeriod === 'day' ? 'yyyy-MM-dd' : 
+                         timePeriod === 'week' ? 'yyyy-MM-dd' :
+                         timePeriod === 'month' ? 'yyyy-MM' : 'yyyy';
+
+        memberData.forEach(member => {
+          const date = format(new Date(member.join_date), dateFormat);
+          growthMap.set(date, (growthMap.get(date) || 0) + 1);
+        });
+
+        const growthData = Array.from(growthMap.entries()).map(([date, count]) => ({
+          month: date,
+          new_members: count
+        })).sort((a, b) => a.month.localeCompare(b.month));
+
         setMemberGrowth(growthData);
 
         // Fetch summary data
