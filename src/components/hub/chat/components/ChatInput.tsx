@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import EmojiPicker from "emoji-picker-react";
+import { EmojiPicker } from "emoji-picker-react";
 
 interface ChatInputProps {
   message: string;
