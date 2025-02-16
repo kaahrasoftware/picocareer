@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { Button } from './button';
@@ -35,7 +36,7 @@ export function GoToTopButton() {
       variant="secondary"
       size="icon"
       className={cn(
-        'fixed bottom-8 right-8 z-50 rounded-full shadow-lg transition-opacity duration-200',
+        'fixed right-8 top-1/2 -translate-y-1/2 z-50 rounded-full shadow-lg transition-opacity duration-200',
         isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       )}
       onClick={scrollToTop}
