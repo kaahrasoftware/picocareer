@@ -708,8 +708,6 @@ export type Database = {
         Row: {
           content: string
           created_at: string
-          file_type: string | null
-          file_url: string | null
           id: string
           metadata: Json | null
           room_id: string
@@ -720,8 +718,6 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
-          file_type?: string | null
-          file_url?: string | null
           id?: string
           metadata?: Json | null
           room_id: string
@@ -732,8 +728,6 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
-          file_type?: string | null
-          file_url?: string | null
           id?: string
           metadata?: Json | null
           room_id?: string
