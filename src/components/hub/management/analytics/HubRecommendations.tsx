@@ -24,12 +24,25 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
   useEffect(() => {
     async function fetchRecommendations() {
       try {
+        console.log("Fetching recommendations for hub:", hubId);
+        
+        // First, let's directly check the bookmarks table to verify data
+        const { data: bookmarkData, error: bookmarkError } = await supabase
+          .from('user_bookmarks')
+          .select('content_type, content_id')
+          .order('created_at');
+        
+        console.log("Raw bookmark data:", bookmarkData);
+
         const { data, error } = await supabase
           .rpc('get_hub_recommendations', { p_hub_id: hubId });
+
+        console.log("Recommendations data:", data);
 
         if (error) throw error;
         setRecommendations(data || []);
       } catch (error: any) {
+        console.error("Error fetching recommendations:", error);
         toast({
           title: "Error fetching recommendations",
           description: error.message,
