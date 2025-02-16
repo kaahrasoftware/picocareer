@@ -99,6 +99,7 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
           selectedRoom={selectedRoom}
           onSelectRoom={setSelectedRoom}
           isLoading={roomsLoading}
+          isAdmin={isAdmin}
         />
       </div>
       
