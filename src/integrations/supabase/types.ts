@@ -2866,6 +2866,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_hub_recommendations: {
+        Args: {
+          p_hub_id: string
+        }
+        Returns: {
+          content_type: string
+          content_id: string
+          title: string
+          bookmark_count: number
+          search_count: number
+        }[]
+      }
       gtrgm_compress: {
         Args: {
           "": unknown

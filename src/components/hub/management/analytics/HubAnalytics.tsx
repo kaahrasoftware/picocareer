@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { EngagementMetrics } from './EngagementMetrics';
+import { HubRecommendations } from './HubRecommendations';
 import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachYearOfInterval, endOfMonth, endOfWeek, endOfYear } from 'date-fns';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -205,6 +207,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         <TabsList>
           <TabsTrigger value="growth">Member Growth</TabsTrigger>
           <TabsTrigger value="engagement">Engagement</TabsTrigger>
+          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="growth">
@@ -255,6 +258,10 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
 
         <TabsContent value="engagement">
           <EngagementMetrics hubId={hubId} />
+        </TabsContent>
+
+        <TabsContent value="recommendations">
+          <HubRecommendations hubId={hubId} />
         </TabsContent>
       </Tabs>
     </div>
