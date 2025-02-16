@@ -9,7 +9,7 @@ import { MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { MemberActivityList } from './MemberActivityList';
 import { EngagementMetrics } from './EngagementMetrics';
-import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachYearOfInterval } from 'date-fns';
+import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachYearOfInterval, endOfMonth, endOfWeek, endOfYear } from 'date-fns';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface HubAnalyticsProps {
@@ -33,15 +33,15 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     const now = new Date();
     switch (period) {
       case 'day':
-        return subDays(now, 30); // Last 30 days
+        return subDays(now, 29); // Last 30 days including today
       case 'week':
-        return subWeeks(now, 12); // Last 12 weeks
+        return subWeeks(now, 11); // Last 12 weeks including current week
       case 'month':
-        return subMonths(now, 12); // Last 12 months
+        return subMonths(now, 11); // Last 12 months including current month
       case 'year':
-        return subYears(now, 5); // Last 5 years
+        return subYears(now, 4); // Last 5 years including current year
       default:
-        return subMonths(now, 12);
+        return subMonths(now, 11);
     }
   };
 
@@ -62,7 +62,25 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
 
   const generateEmptyDataPoints = (startDate: Date, endDate: Date, period: TimePeriod) => {
     const datePoints = [];
-    const interval = { start: startDate, end: endDate };
+    let interval;
+    
+    // Adjust end date based on period to include current period
+    switch (period) {
+      case 'day':
+        interval = { start: startDate, end: endDate };
+        break;
+      case 'week':
+        interval = { start: startDate, end: endOfWeek(endDate) };
+        break;
+      case 'month':
+        interval = { start: startDate, end: endOfMonth(endDate) };
+        break;
+      case 'year':
+        interval = { start: startDate, end: endOfYear(endDate) };
+        break;
+      default:
+        interval = { start: startDate, end: endDate };
+    }
 
     let dates;
     switch (period) {
@@ -89,7 +107,8 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     dates.forEach(date => {
       datePoints.push({
         month: format(date, dateFormat),
-        new_members: 0
+        new_members: 0,
+        hub_id: hubId
       });
     });
 
@@ -134,12 +153,10 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         });
 
         // Convert the map to array and sort
-        const growthData = Array.from(growthMap.entries())
-          .map(([date, count]) => ({
-            month: date,
-            new_members: count
-          }))
-          .sort((a, b) => a.month.localeCompare(b.month));
+        const growthData = emptyDataPoints.map(point => ({
+          ...point,
+          new_members: growthMap.get(point.month) || 0
+        }));
 
         setMemberGrowth(growthData);
 
