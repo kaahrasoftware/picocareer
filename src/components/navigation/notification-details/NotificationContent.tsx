@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
@@ -7,6 +8,7 @@ import { NotificationDialogs } from "./NotificationDialogs";
 import { SessionNotificationContent } from "./SessionNotificationContent";
 import type { MentorSession } from "@/types/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationContentProps {
   message: string;
@@ -24,6 +26,7 @@ export function NotificationContent({
   const [sessionData, setSessionData] = useState<MentorSession | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
@@ -73,6 +76,17 @@ export function NotificationContent({
     fetchSessionData();
   }, [isExpanded, message]);
 
+  const handleActionClick = () => {
+    if (type === 'hub_invite') {
+      const token = action_url?.split('token=')[1];
+      if (token) {
+        navigate(`/hub-invite?token=${token}`);
+        return;
+      }
+    }
+    setDialogOpen(true);
+  };
+
   const renderActionButton = () => {
     // Don't show View Detail button for session-related notifications
     if (!action_url || type?.includes('session')) return null;
@@ -82,7 +96,7 @@ export function NotificationContent({
         variant="outline"
         size="sm"
         className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={() => setDialogOpen(true)}
+        onClick={handleActionClick}
       >
         View Detail
         <ExternalLink className="w-4 h-4 ml-2" />
