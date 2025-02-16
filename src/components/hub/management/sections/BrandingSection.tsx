@@ -1,3 +1,4 @@
+
 import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Input } from "@/components/ui/input";
@@ -15,22 +16,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-
-interface BrandingSectionProps {
-  control: Control<FormData>;
-  register: any;
-  hubId: string;
-  defaultValues: {
-    logo_url: string;
-    banner_url: string;
-    brand_colors: {
-      primary?: string;
-      secondary?: string;
-      accent?: string;
-    };
-  };
-}
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipTrigger,
+  TooltipProvider 
+} from "@/components/ui/tooltip";
 
 const BRAND_COLORS = {
   brand: [
@@ -69,8 +60,8 @@ interface ColorPickerProps {
 }
 
 function ColorPicker({ value, onChange, label, description }: ColorPickerProps) {
-  const handlePresetColorClick = (colorValue: string) => {
-    onChange(colorValue);
+  const handleColorChange = (newColor: string) => {
+    onChange(newColor);
   };
 
   return (
@@ -114,7 +105,7 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
                 <Input
                   type="color"
                   value={value}
-                  onChange={(e) => onChange(e.target.value)}
+                  onChange={(e) => handleColorChange(e.target.value)}
                   className="w-full h-32"
                 />
               </div>
@@ -131,7 +122,7 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
                           <TooltipTrigger asChild>
                             <button
                               type="button"
-                              onClick={() => handlePresetColorClick(color.value)}
+                              onClick={() => handleColorChange(color.value)}
                               className={cn(
                                 "w-full aspect-square rounded border",
                                 value === color.value && "ring-2 ring-primary"
@@ -178,7 +169,6 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
 
       if (error) throw error;
 
-      // Log the audit event
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
@@ -189,7 +179,6 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         }
       });
 
-      // Invalidate both the specific hub query and the hubs list
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
       await queryClient.invalidateQueries({ queryKey: ['hubs'] });
       
