@@ -9,7 +9,7 @@ import { MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { MemberActivityList } from './MemberActivityList';
 import { EngagementMetrics } from './EngagementMetrics';
-import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachYearOfInterval } from 'date-fns';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface HubAnalyticsProps {
@@ -60,10 +60,50 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     }
   };
 
+  const generateEmptyDataPoints = (startDate: Date, endDate: Date, period: TimePeriod) => {
+    const datePoints = [];
+    const interval = { start: startDate, end: endDate };
+
+    let dates;
+    switch (period) {
+      case 'day':
+        dates = eachDayOfInterval(interval);
+        break;
+      case 'week':
+        dates = eachWeekOfInterval(interval);
+        break;
+      case 'month':
+        dates = eachMonthOfInterval(interval);
+        break;
+      case 'year':
+        dates = eachYearOfInterval(interval);
+        break;
+      default:
+        dates = eachMonthOfInterval(interval);
+    }
+
+    const dateFormat = period === 'day' ? 'yyyy-MM-dd' : 
+                      period === 'week' ? 'yyyy-MM-dd' :
+                      period === 'month' ? 'yyyy-MM' : 'yyyy';
+
+    dates.forEach(date => {
+      datePoints.push({
+        month: format(date, dateFormat),
+        new_members: 0
+      });
+    });
+
+    return datePoints;
+  };
+
   useEffect(() => {
     async function fetchAnalytics() {
       try {
         const startDate = getTimeRangeFilter(timePeriod);
+        const endDate = new Date();
+        
+        // Generate empty data points for all possible dates in the range
+        const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
         
         // Fetch members join dates
         const { data: memberData, error: memberError } = await supabase
@@ -72,7 +112,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
           .eq('hub_id', hubId)
           .eq('status', 'Approved')
           .gte('join_date', startOfDay(startDate).toISOString())
-          .lte('join_date', endOfDay(new Date()).toISOString());
+          .lte('join_date', endOfDay(endDate).toISOString());
 
         if (memberError) throw memberError;
 
@@ -82,15 +122,24 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
                          timePeriod === 'week' ? 'yyyy-MM-dd' :
                          timePeriod === 'month' ? 'yyyy-MM' : 'yyyy';
 
+        // Initialize the map with empty data points
+        emptyDataPoints.forEach(point => {
+          growthMap.set(point.month, 0);
+        });
+
+        // Add the actual member counts
         memberData.forEach(member => {
           const date = format(new Date(member.join_date), dateFormat);
           growthMap.set(date, (growthMap.get(date) || 0) + 1);
         });
 
-        const growthData = Array.from(growthMap.entries()).map(([date, count]) => ({
-          month: date,
-          new_members: count
-        })).sort((a, b) => a.month.localeCompare(b.month));
+        // Convert the map to array and sort
+        const growthData = Array.from(growthMap.entries())
+          .map(([date, count]) => ({
+            month: date,
+            new_members: count
+          }))
+          .sort((a, b) => a.month.localeCompare(b.month));
 
         setMemberGrowth(growthData);
 
