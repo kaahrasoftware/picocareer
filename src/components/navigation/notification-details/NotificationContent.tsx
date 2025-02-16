@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationData } from "./hooks/useNotificationData";
 import { NotificationDialogs } from "./NotificationDialogs";
@@ -9,6 +9,7 @@ import { SessionNotificationContent } from "./SessionNotificationContent";
 import type { MentorSession } from "@/types/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface NotificationContentProps {
   message: string;
@@ -27,6 +28,7 @@ export function NotificationContent({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
@@ -76,45 +78,93 @@ export function NotificationContent({
     fetchSessionData();
   }, [isExpanded, message]);
 
-  const handleActionClick = () => {
+  const handleAccept = () => {
     if (type === 'hub_invite' && action_url) {
       try {
-        // Create a URL object to parse the action_url
         const url = new URL(action_url);
-        // Get the token from the URL parameters
         const token = url.searchParams.get('token');
         if (token) {
-          console.log('Navigating to hub invite with token:', token);
-          navigate(`/hub-invite?token=${token}`);
+          navigate(`/hub-invite?token=${token}&action=accept`);
           return;
         }
       } catch (error) {
         console.error('Error parsing action_url:', error);
-        // If URL parsing fails, try the simple split method as fallback
         const token = action_url.split('token=')[1];
         if (token) {
-          console.log('Navigating to hub invite with fallback token:', token);
-          navigate(`/hub-invite?token=${token}`);
+          navigate(`/hub-invite?token=${token}&action=accept`);
           return;
         }
       }
-      console.error('No token found in action_url:', action_url);
+      toast({
+        title: "Error",
+        description: "Invalid invitation link",
+        variant: "destructive"
+      });
     }
-    setDialogOpen(true);
+  };
+
+  const handleReject = () => {
+    if (type === 'hub_invite' && action_url) {
+      try {
+        const url = new URL(action_url);
+        const token = url.searchParams.get('token');
+        if (token) {
+          navigate(`/hub-invite?token=${token}&action=reject`);
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing action_url:', error);
+        const token = action_url.split('token=')[1];
+        if (token) {
+          navigate(`/hub-invite?token=${token}&action=reject`);
+          return;
+        }
+      }
+      toast({
+        title: "Error",
+        description: "Invalid invitation link",
+        variant: "destructive"
+      });
+    }
   };
 
   const renderActionButton = () => {
-    // Don't show View Detail button for session-related notifications
+    // Don't show buttons for session-related notifications
     if (!action_url || type?.includes('session')) return null;
+
+    if (type === 'hub_invite') {
+      return (
+        <div className="flex gap-2 mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-green-500 hover:text-green-400 hover:bg-green-500/10"
+            onClick={handleAccept}
+          >
+            <Check className="w-4 h-4 mr-2" />
+            Accept
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+            onClick={handleReject}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Reject
+          </Button>
+        </div>
+      );
+    }
 
     return (
       <Button
         variant="outline"
         size="sm"
         className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={handleActionClick}
+        onClick={() => setDialogOpen(true)}
       >
-        {type === 'hub_invite' ? 'View Invitation' : 'View Detail'}
+        View Detail
         <ExternalLink className="w-4 h-4 ml-2" />
       </Button>
     );
