@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatRoom } from "@/types/database/chat";
 import { ChatRoomList } from "./ChatRoomList";
@@ -22,6 +22,7 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const { session } = useAuthSession();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: rooms, isLoading: roomsLoading } = useQuery({
     queryKey: ['hub-chat-rooms', hubId],
@@ -45,6 +46,17 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
     }
   }, [rooms, selectedRoom]);
 
+  const handleRoomDeleted = (deletedRoomId: string) => {
+    // If the deleted room was selected, select another room
+    if (selectedRoom?.id === deletedRoomId) {
+      const remainingRooms = rooms?.filter(room => room.id !== deletedRoomId);
+      const nextRoom = remainingRooms?.find(room => room.type === 'public') || remainingRooms?.[0];
+      setSelectedRoom(nextRoom || null);
+    }
+    // Invalidate the rooms query to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['hub-chat-rooms', hubId] });
+  };
+
   // Subscribe to new rooms
   useEffect(() => {
     const channel = supabase
@@ -60,6 +72,7 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
         (payload) => {
           console.log('Room change received:', payload);
           // Refetch rooms when changes occur
+          queryClient.invalidateQueries({ queryKey: ['hub-chat-rooms', hubId] });
         }
       )
       .subscribe();
@@ -67,7 +80,7 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [hubId]);
+  }, [hubId, queryClient]);
 
   if (!session) {
     return (
@@ -100,6 +113,7 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
           onSelectRoom={setSelectedRoom}
           isLoading={roomsLoading}
           isAdmin={isAdmin}
+          onRoomDeleted={handleRoomDeleted}
         />
       </div>
       

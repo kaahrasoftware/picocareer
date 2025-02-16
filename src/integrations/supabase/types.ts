@@ -743,6 +743,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_room"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "hub_chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "hub_chat_messages_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false

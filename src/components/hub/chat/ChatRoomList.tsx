@@ -23,6 +23,7 @@ interface ChatRoomListProps {
   onSelectRoom: (room: ChatRoom) => void;
   isLoading: boolean;
   isAdmin?: boolean;
+  onRoomDeleted?: (roomId: string) => void;
 }
 
 export function ChatRoomList({
@@ -31,6 +32,7 @@ export function ChatRoomList({
   onSelectRoom,
   isLoading,
   isAdmin = false,
+  onRoomDeleted,
 }: ChatRoomListProps) {
   const { toast } = useToast();
 
@@ -47,6 +49,9 @@ export function ChatRoomList({
         title: "Room deleted",
         description: "The chat room has been deleted successfully.",
       });
+
+      // Notify parent component about the deletion
+      onRoomDeleted?.(roomId);
     } catch (error) {
       console.error('Error deleting room:', error);
       toast({
