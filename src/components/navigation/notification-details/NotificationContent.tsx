@@ -77,11 +77,24 @@ export function NotificationContent({
   }, [isExpanded, message]);
 
   const handleActionClick = () => {
-    if (type === 'hub_invite') {
-      const token = action_url?.split('token=')[1];
-      if (token) {
-        navigate(`/hub-invite?token=${token}`);
-        return;
+    if (type === 'hub_invite' && action_url) {
+      try {
+        // Create a URL object to parse the action_url
+        const url = new URL(action_url);
+        // Get the token from the URL parameters
+        const token = url.searchParams.get('token');
+        if (token) {
+          navigate(`/hub-invite?token=${token}`);
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing action_url:', error);
+        // If URL parsing fails, try the simple split method as fallback
+        const token = action_url.split('token=')[1];
+        if (token) {
+          navigate(`/hub-invite?token=${token}`);
+          return;
+        }
       }
     }
     setDialogOpen(true);
@@ -98,7 +111,7 @@ export function NotificationContent({
         className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
         onClick={handleActionClick}
       >
-        View Detail
+        {type === 'hub_invite' ? 'View Invitation' : 'View Detail'}
         <ExternalLink className="w-4 h-4 ml-2" />
       </Button>
     );
