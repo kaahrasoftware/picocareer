@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PendingInvitesProps {
   hubId: string;
@@ -12,6 +14,33 @@ interface PendingInvitesProps {
 
 export function PendingInvites({ hubId, pendingInvites }: PendingInvitesProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Subscribe to real-time changes for pending invites
+  useEffect(() => {
+    const channel = supabase
+      .channel('hub-invites')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'hub_member_invites',
+          filter: `hub_id=eq.${hubId}`
+        },
+        (payload) => {
+          console.log('Invite change received:', payload);
+          // Invalidate and refetch the pending invites query
+          queryClient.invalidateQueries({ queryKey: ['hub-pending-invites', hubId] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [hubId, queryClient]);
 
   const handleCancelInvite = async (inviteId: string) => {
     try {
