@@ -1,4 +1,3 @@
-
 import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,7 @@ import type { FormData } from "../HubGeneralSettings";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, RefreshCw } from "lucide-react";
+import { Save, RefreshCw, Copy } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -64,6 +63,15 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
     onChange(newColor);
   };
 
+  const handleCopyHex = (hexCode: string) => {
+    navigator.clipboard.writeText(hexCode);
+    toast({
+      title: "Copied!",
+      description: `Color code ${hexCode} copied to clipboard`,
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="space-y-2">
       <TooltipProvider>
@@ -86,11 +94,21 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
               className="w-12 h-10 rounded border cursor-pointer"
               style={{ backgroundColor: value }}
             />
-            <Input
-              value={value}
-              readOnly
-              className="w-[120px] font-mono uppercase"
-            />
+            <div className="relative flex-1">
+              <Input
+                value={value}
+                readOnly
+                className="w-[120px] font-mono uppercase pr-8"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-2"
+                onClick={() => handleCopyHex(value)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-[240px] p-3">
@@ -124,11 +142,23 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
                               type="button"
                               onClick={() => handleColorChange(color.value)}
                               className={cn(
-                                "w-full aspect-square rounded border",
+                                "w-full aspect-square rounded border relative group",
                                 value === color.value && "ring-2 ring-primary"
                               )}
                               style={{ backgroundColor: color.value }}
-                            />
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 p-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyHex(color.value);
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </button>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{color.name}</p>
@@ -146,6 +176,13 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
       </Popover>
     </div>
   );
+}
+
+interface BrandingSectionProps {
+  control: Control<FormData>;
+  register: any;
+  hubId: string;
+  defaultValues: FormData;
 }
 
 export function BrandingSection({ control, register, hubId, defaultValues }: BrandingSectionProps) {
