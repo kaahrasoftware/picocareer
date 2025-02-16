@@ -1,3 +1,4 @@
+
 import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BrandingSectionProps {
   control: Control<FormData>;
@@ -69,24 +70,18 @@ interface ColorPickerProps {
 }
 
 function ColorPicker({ value, onChange, label, description }: ColorPickerProps) {
-  const handlePresetColorClick = (colorValue: string) => {
-    onChange(colorValue);
-  };
-
   return (
     <div className="space-y-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>
-            <div className="text-sm font-medium flex items-center gap-2">
-              {label}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{description}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <div className="text-sm font-medium flex items-center gap-2">
+            {label}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{description}</p>
+        </TooltipContent>
+      </Tooltip>
       
       <Popover>
         <PopoverTrigger asChild>
@@ -97,8 +92,8 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
             />
             <Input
               value={value}
-              readOnly
-              className="w-[120px] font-mono uppercase"
+              onChange={(e) => onChange(e.target.value)}
+              className="w-[120px] font-mono"
             />
           </div>
         </PopoverTrigger>
@@ -126,25 +121,23 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
                   <div className="text-sm font-medium mb-2 capitalize">{category}</div>
                   <div className="grid grid-cols-4 gap-2">
                     {colors.map((color) => (
-                      <TooltipProvider key={color.value}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() => handlePresetColorClick(color.value)}
-                              className={cn(
-                                "w-full aspect-square rounded border",
-                                value === color.value && "ring-2 ring-primary"
-                              )}
-                              style={{ backgroundColor: color.value }}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{color.name}</p>
-                            <p className="font-mono text-xs">{color.value}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Tooltip key={color.value}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => onChange(color.value)}
+                            className={cn(
+                              "w-full aspect-square rounded border",
+                              value === color.value && "ring-2 ring-primary"
+                            )}
+                            style={{ backgroundColor: color.value }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{color.name}</p>
+                          <p className="font-mono text-xs">{color.value}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     ))}
                   </div>
                 </div>
