@@ -47,17 +47,21 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
   }, [rooms, selectedRoom]);
 
   const handleRoomDeleted = (deletedRoomId: string) => {
-    // If the deleted room was selected, select another room
+    // If the deleted room was selected, clear the selection and select another room
     if (selectedRoom?.id === deletedRoomId) {
+      setSelectedRoom(null); // First clear the selection
+      // Then find another room to select
       const remainingRooms = rooms?.filter(room => room.id !== deletedRoomId);
-      const nextRoom = remainingRooms?.find(room => room.type === 'public') || remainingRooms?.[0];
-      setSelectedRoom(nextRoom || null);
+      if (remainingRooms?.length) {
+        const nextRoom = remainingRooms.find(room => room.type === 'public') || remainingRooms[0];
+        setSelectedRoom(nextRoom);
+      }
     }
     // Invalidate the rooms query to refresh the list
     queryClient.invalidateQueries({ queryKey: ['hub-chat-rooms', hubId] });
   };
 
-  // Subscribe to new rooms
+  // Subscribe to room changes (including deletions)
   useEffect(() => {
     const channel = supabase
       .channel('hub-chat-rooms')
@@ -71,6 +75,12 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
         },
         (payload) => {
           console.log('Room change received:', payload);
+          
+          // If a room is deleted, handle it
+          if (payload.eventType === 'DELETE' && payload.old?.id === selectedRoom?.id) {
+            setSelectedRoom(null);
+          }
+          
           // Refetch rooms when changes occur
           queryClient.invalidateQueries({ queryKey: ['hub-chat-rooms', hubId] });
         }
@@ -80,7 +90,7 @@ export function HubChat({ hubId, isAdmin, isModerator }: HubChatProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [hubId, queryClient]);
+  }, [hubId, queryClient, selectedRoom]);
 
   if (!session) {
     return (
