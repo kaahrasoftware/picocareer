@@ -84,6 +84,7 @@ export function NotificationContent({
         // Get the token from the URL parameters
         const token = url.searchParams.get('token');
         if (token) {
+          console.log('Navigating to hub invite with token:', token);
           navigate(`/hub-invite?token=${token}`);
           return;
         }
@@ -92,10 +93,12 @@ export function NotificationContent({
         // If URL parsing fails, try the simple split method as fallback
         const token = action_url.split('token=')[1];
         if (token) {
+          console.log('Navigating to hub invite with fallback token:', token);
           navigate(`/hub-invite?token=${token}`);
           return;
         }
       }
+      console.error('No token found in action_url:', action_url);
     }
     setDialogOpen(true);
   };
