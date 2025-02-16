@@ -78,53 +78,59 @@ export function NotificationContent({
     fetchSessionData();
   }, [isExpanded, message]);
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (type === 'hub_invite' && action_url) {
       try {
         const url = new URL(action_url);
         const token = url.searchParams.get('token');
         if (token) {
+          // First update the invite status to accepted
+          const { error: updateError } = await supabase
+            .from('hub_member_invites')
+            .update({ status: 'accepted' })
+            .eq('token', token);
+            
+          if (updateError) throw updateError;
+          
           navigate(`/hub-invite?token=${token}&action=accept`);
           return;
         }
       } catch (error) {
-        console.error('Error parsing action_url:', error);
-        const token = action_url.split('token=')[1];
-        if (token) {
-          navigate(`/hub-invite?token=${token}&action=accept`);
-          return;
-        }
+        console.error('Error accepting invitation:', error);
+        toast({
+          title: "Error",
+          description: "Failed to accept invitation. Please try again.",
+          variant: "destructive"
+        });
       }
-      toast({
-        title: "Error",
-        description: "Invalid invitation link",
-        variant: "destructive"
-      });
     }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (type === 'hub_invite' && action_url) {
       try {
         const url = new URL(action_url);
         const token = url.searchParams.get('token');
         if (token) {
+          // First update the invite status to rejected
+          const { error: updateError } = await supabase
+            .from('hub_member_invites')
+            .update({ status: 'rejected' })
+            .eq('token', token);
+            
+          if (updateError) throw updateError;
+          
           navigate(`/hub-invite?token=${token}&action=reject`);
           return;
         }
       } catch (error) {
-        console.error('Error parsing action_url:', error);
-        const token = action_url.split('token=')[1];
-        if (token) {
-          navigate(`/hub-invite?token=${token}&action=reject`);
-          return;
-        }
+        console.error('Error rejecting invitation:', error);
+        toast({
+          title: "Error",
+          description: "Failed to reject invitation. Please try again.",
+          variant: "destructive"
+        });
       }
-      toast({
-        title: "Error",
-        description: "Invalid invitation link",
-        variant: "destructive"
-      });
     }
   };
 
