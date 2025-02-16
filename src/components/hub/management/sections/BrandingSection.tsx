@@ -69,6 +69,10 @@ interface ColorPickerProps {
 }
 
 function ColorPicker({ value, onChange, label, description }: ColorPickerProps) {
+  const handlePresetColorClick = (colorValue: string) => {
+    onChange(colorValue);
+  };
+
   return (
     <div className="space-y-2">
       <TooltipProvider>
@@ -94,7 +98,7 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
             <Input
               value={value}
               readOnly
-              className="w-[120px] font-mono"
+              className="w-[120px] font-mono uppercase"
             />
           </div>
         </PopoverTrigger>
@@ -127,7 +131,7 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
                           <TooltipTrigger asChild>
                             <button
                               type="button"
-                              onClick={() => onChange(color.value)}
+                              onClick={() => handlePresetColorClick(color.value)}
                               className={cn(
                                 "w-full aspect-square rounded border",
                                 value === color.value && "ring-2 ring-primary"
