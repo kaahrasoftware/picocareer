@@ -93,7 +93,7 @@ function ColorPicker({ value, onChange, label, description }: ColorPickerProps) 
             />
             <Input
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              readOnly
               className="w-[120px] font-mono"
             />
           </div>
