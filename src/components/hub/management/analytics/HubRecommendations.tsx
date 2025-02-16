@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Bookmark, Search } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
 
 interface PopularContent {
   content_type: string;
@@ -18,41 +19,35 @@ interface HubRecommendationsProps {
 }
 
 export function HubRecommendations({ hubId }: HubRecommendationsProps) {
-  const [recommendations, setRecommendations] = useState<PopularContent[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function fetchRecommendations() {
-      try {
-        console.log("Fetching recommendations for hub:", hubId);
-        
-        // First, let's directly check the bookmarks table to verify data
-        const { data: bookmarkData, error: bookmarkError } = await supabase
-          .from('user_bookmarks')
-          .select('content_type, content_id')
-          .order('created_at');
-        
-        console.log("Raw bookmark data:", bookmarkData);
+  const { data: recommendations = [] } = useQuery({
+    queryKey: ['hub-recommendations', hubId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('get_hub_recommendations', { p_hub_id: hubId });
 
-        const { data, error } = await supabase
-          .rpc('get_hub_recommendations', { p_hub_id: hubId });
-
-        console.log("Recommendations data:", data);
-
-        if (error) throw error;
-        setRecommendations(data || []);
-      } catch (error: any) {
+      if (error) {
         console.error("Error fetching recommendations:", error);
         toast({
           title: "Error fetching recommendations",
           description: error.message,
           variant: "destructive"
         });
+        return [];
       }
-    }
 
-    fetchRecommendations();
-  }, [hubId, toast]);
+      return data as PopularContent[];
+    }
+  });
+
+  const mostBookmarked = [...recommendations]
+    .sort((a, b) => b.bookmark_count - a.bookmark_count)
+    .slice(0, 5);
+
+  const mostSearched = [...recommendations]
+    .sort((a, b) => b.search_count - a.search_count)
+    .slice(0, 5);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -65,10 +60,8 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recommendations
-              .sort((a, b) => b.bookmark_count - a.bookmark_count)
-              .slice(0, 5)
-              .map((item) => (
+            {mostBookmarked.length > 0 ? (
+              mostBookmarked.map((item) => (
                 <div key={item.content_id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{item.title}</p>
@@ -79,7 +72,10 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
                     <span>{item.bookmark_count}</span>
                   </div>
                 </div>
-              ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No bookmarked content yet</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -93,10 +89,8 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recommendations
-              .sort((a, b) => b.search_count - a.search_count)
-              .slice(0, 5)
-              .map((item) => (
+            {mostSearched.length > 0 ? (
+              mostSearched.map((item) => (
                 <div key={item.content_id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{item.title}</p>
@@ -107,7 +101,10 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
                     <span>{item.search_count}</span>
                   </div>
                 </div>
-              ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No searched content yet</p>
+            )}
           </div>
         </CardContent>
       </Card>
