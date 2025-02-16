@@ -134,12 +134,38 @@ export function NotificationContent({
     }
   };
 
-  const renderActionButton = () => {
-    // Don't show buttons for session-related notifications
-    if (!action_url || type?.includes('session')) return null;
+  if (!isExpanded) {
+    return (
+      <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
+        {message.split(/[.!?]/)[0]}
+      </p>
+    );
+  }
 
-    if (type === 'hub_invite') {
-      return (
+  if (isLoading) {
+    return (
+      <div className="space-y-2 mt-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+    );
+  }
+
+  // Render session notification content
+  if (sessionData) {
+    return (
+      <div className="space-y-2 mt-3">
+        <SessionNotificationContent sessionData={sessionData} />
+      </div>
+    );
+  }
+
+  // For hub invites, show accept/reject buttons
+  if (type === 'hub_invite') {
+    return (
+      <div className="space-y-2 mt-3 text-sm text-zinc-400">
+        <p>{message}</p>
         <div className="flex gap-2 mt-2">
           <Button
             variant="outline"
@@ -160,62 +186,34 @@ export function NotificationContent({
             Reject
           </Button>
         </div>
-      );
-    }
-
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={() => setDialogOpen(true)}
-      >
-        View Detail
-        <ExternalLink className="w-4 h-4 ml-2" />
-      </Button>
-    );
-  };
-
-  if (!isExpanded) {
-    return (
-      <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
-        {message.split(/[.!?]/)[0]}
-      </p>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2 mt-3">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-4 w-2/3" />
       </div>
     );
   }
 
-  if (!sessionData) {
-    return (
-      <div className="space-y-2 mt-3 text-sm text-zinc-400">
-        <p>{message}</p>
-        {renderActionButton()}
-        <NotificationDialogs
-          type={type}
-          contentId={contentId!}
-          dialogOpen={dialogOpen}
-          setDialogOpen={setDialogOpen}
-          majorData={majorData}
-          careerData={careerData}
-          blogData={blogData}
-        />
-      </div>
-    );
-  }
-
+  // For other notification types, show the view detail button
   return (
-    <div className="space-y-2 mt-3">
-      <SessionNotificationContent sessionData={sessionData} />
-      {renderActionButton()}
+    <div className="space-y-2 mt-3 text-sm text-zinc-400">
+      <p>{message}</p>
+      {action_url && !type?.includes('session') && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+          onClick={() => setDialogOpen(true)}
+        >
+          View Detail
+          <ExternalLink className="w-4 h-4 ml-2" />
+        </Button>
+      )}
+      <NotificationDialogs
+        type={type}
+        contentId={contentId!}
+        dialogOpen={dialogOpen}
+        setDialogOpen={setDialogOpen}
+        majorData={majorData}
+        careerData={careerData}
+        blogData={blogData}
+      />
     </div>
   );
 }
