@@ -1,4 +1,3 @@
-
 import { formatInTimeZone } from 'date-fns-tz';
 import type { MentorSession } from '@/types/calendar';
 import { useUserSettings } from '@/hooks/useUserSettings';
@@ -45,7 +44,7 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
               {formatInTimeZone(scheduledTime, validMentorTimezone, 'PPP p')}
             </p>
             <p>
-              <span className="text-zinc-300">Mentee's time ({validUserTimezone}):</span>{' '}
+              <span className="text-zinc-300">Your time ({validUserTimezone}):</span>{' '}
               {formatInTimeZone(scheduledTime, validUserTimezone, 'PPP p')}
             </p>
           </div>
