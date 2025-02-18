@@ -1463,6 +1463,7 @@ export type Database = {
       }
       mentor_availability: {
         Row: {
+          booked_session_id: string | null
           created_at: string
           day_of_week: number | null
           end_date_time: string | null
@@ -1475,6 +1476,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          booked_session_id?: string | null
           created_at?: string
           day_of_week?: number | null
           end_date_time?: string | null
@@ -1487,6 +1489,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          booked_session_id?: string | null
           created_at?: string
           day_of_week?: number | null
           end_date_time?: string | null
@@ -1499,6 +1502,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mentor_availability_booked_session_id_fkey"
+            columns: ["booked_session_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mentor_availability_profile_id_fkey"
             columns: ["profile_id"]

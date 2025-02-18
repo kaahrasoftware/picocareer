@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { MeetingPlatform } from "@/types/calendar";
+import { format, parse } from "date-fns";
 
 interface BookSessionParams {
   mentorId: string;
@@ -38,26 +40,26 @@ export function useBookSession() {
     scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
     try {
-      const { data: session, error } = await supabase
-        .from('mentor_sessions')
-        .insert({
-          mentor_id: mentorId,
-          mentee_id: (await supabase.auth.getUser()).data.user?.id,
-          session_type_id: sessionTypeId,
-          scheduled_at: scheduledAt.toISOString(),
-          notes: note,
-          meeting_platform: meetingPlatform,
-          mentee_phone_number: menteePhoneNumber,
-          mentee_telegram_username: menteeTelegramUsername,
-        })
-        .select()
-        .single();
+      // Start a Supabase transaction
+      const { data: sessionData, error: sessionError } = await supabase
+        .rpc('create_session_and_update_availability', {
+          p_mentor_id: mentorId,
+          p_mentee_id: (await supabase.auth.getUser()).data.user?.id,
+          p_session_type_id: sessionTypeId,
+          p_scheduled_at: scheduledAt.toISOString(),
+          p_notes: note,
+          p_meeting_platform: meetingPlatform,
+          p_mentee_phone_number: menteePhoneNumber,
+          p_mentee_telegram_username: menteeTelegramUsername,
+          p_start_time: format(scheduledAt, 'HH:mm'),
+          p_session_date: format(scheduledAt, 'yyyy-MM-dd')
+        });
 
-      if (error) throw error;
+      if (sessionError) throw sessionError;
 
       return { 
         success: true, 
-        sessionId: session.id 
+        sessionId: sessionData.session_id 
       };
     } catch (error: any) {
       console.error('Error booking session:', error);
