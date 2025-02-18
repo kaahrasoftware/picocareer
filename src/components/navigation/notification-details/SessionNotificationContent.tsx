@@ -18,6 +18,15 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
   const menteeTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { data: mentorTimezone, isLoading, error } = useMentorTimezone(sessionData.mentor?.id);
 
+  // Add debug logs for timezone values
+  console.log('Debug timezone values:', {
+    menteeId: profile?.id,
+    mentorId: sessionData.mentor?.id,
+    menteeTimezone,
+    mentorTimezone,
+    browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  });
+
   // Ensure we have a valid date object
   const scheduledTime = new Date(sessionData.scheduled_at);
   if (isNaN(scheduledTime.getTime())) {
