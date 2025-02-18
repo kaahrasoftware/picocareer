@@ -40,24 +40,48 @@ export function useBookSession() {
     scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
     try {
-      console.log('Attempting to book session with params:', {
-        mentorId,
-        date,
-        selectedTime,
-        sessionTypeId,
-        meetingPlatform,
-        menteePhoneNumber,
-        menteeTelegramUsername
-      });
+      // Step 1: Get session type details for duration
+      const { data: sessionType, error: sessionTypeError } = await supabase
+        .from('mentor_session_types')
+        .select('duration')
+        .eq('id', sessionTypeId)
+        .single();
 
-      // First, check if the mentor has any availability for this time
+      if (sessionTypeError) {
+        console.error('Error fetching session type:', sessionTypeError);
+        return { success: false, error: 'Error fetching session type details' };
+      }
+
+      const endTime = new Date(scheduledAt);
+      endTime.setMinutes(endTime.getMinutes() + sessionType.duration);
+
+      // Step 2: Check for existing bookings
+      const { data: existingBookings, error: bookingsError } = await supabase
+        .from('mentor_sessions')
+        .select('scheduled_at, session_type:mentor_session_types(duration)')
+        .eq('mentor_id', mentorId)
+        .eq('status', 'scheduled')
+        .gte('scheduled_at', scheduledAt.toISOString())
+        .lte('scheduled_at', endTime.toISOString());
+
+      if (bookingsError) {
+        console.error('Error checking existing bookings:', bookingsError);
+        return { success: false, error: 'Error checking existing bookings' };
+      }
+
+      if (existingBookings?.length > 0) {
+        console.log('Found overlapping bookings:', existingBookings);
+        return { success: false, error: 'Time slot is already booked' };
+      }
+
+      // Step 3: Check for availability
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
         .is('booked_session_id', null)
-        .or(`and(start_date_time.lte.${scheduledAt.toISOString()},end_date_time.gte.${scheduledAt.toISOString()}),and(recurring.eq.true,day_of_week.eq.${scheduledAt.getDay()})`)
+        .or(`and(start_date_time.lte.${scheduledAt.toISOString()},end_date_time.gte.${endTime.toISOString()}),and(recurring.eq.true,day_of_week.eq.${scheduledAt.getDay()})`)
         .order('start_date_time', { ascending: true });
 
       if (availabilityError) {
@@ -66,7 +90,12 @@ export function useBookSession() {
       }
 
       console.log('Available slots found:', availabilityData);
+      
+      if (!availabilityData || availabilityData.length === 0) {
+        return { success: false, error: 'No available slots found for the selected time' };
+      }
 
+      // Step 4: Book the session
       const { data: sessionData, error: sessionError } = await supabase
         .rpc('create_session_and_update_availability', {
           p_meeting_platform: meetingPlatform,
@@ -90,7 +119,7 @@ export function useBookSession() {
 
       return { 
         success: true, 
-        sessionId: sessionData.session_id 
+        sessionId: sessionData?.session_id 
       };
     } catch (error: any) {
       console.error('Error booking session:', error);
