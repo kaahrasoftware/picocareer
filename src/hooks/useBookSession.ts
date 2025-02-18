@@ -40,22 +40,36 @@ export function useBookSession() {
     scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
     try {
-      // Start a Supabase transaction
+      console.log('Attempting to book session with params:', {
+        mentorId,
+        date,
+        selectedTime,
+        sessionTypeId,
+        meetingPlatform,
+        menteePhoneNumber,
+        menteeTelegramUsername
+      });
+
       const { data: sessionData, error: sessionError } = await supabase
         .rpc('create_session_and_update_availability', {
-          p_mentor_id: mentorId,
-          p_mentee_id: (await supabase.auth.getUser()).data.user?.id,
-          p_session_type_id: sessionTypeId,
-          p_scheduled_at: scheduledAt.toISOString(),
-          p_notes: note,
           p_meeting_platform: meetingPlatform,
-          p_mentee_phone_number: menteePhoneNumber,
-          p_mentee_telegram_username: menteeTelegramUsername,
-          p_start_time: format(scheduledAt, 'HH:mm'),
-          p_session_date: format(scheduledAt, 'yyyy-MM-dd')
+          p_mentee_id: (await supabase.auth.getUser()).data.user?.id,
+          p_mentee_phone_number: menteePhoneNumber || null,
+          p_mentee_telegram_username: menteeTelegramUsername || null,
+          p_mentor_id: mentorId,
+          p_notes: note,
+          p_scheduled_at: scheduledAt.toISOString(),
+          p_session_date: format(scheduledAt, 'yyyy-MM-dd'),
+          p_session_type_id: sessionTypeId,
+          p_start_time: format(scheduledAt, 'HH:mm')
         });
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Session booking error:', sessionError);
+        throw sessionError;
+      }
+
+      console.log('Session booked successfully:', sessionData);
 
       return { 
         success: true, 
