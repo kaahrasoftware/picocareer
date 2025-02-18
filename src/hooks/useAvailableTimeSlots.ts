@@ -56,6 +56,8 @@ export function useAvailableTimeSlots(
         const slots: TimeSlot[] = [];
         const availableSlots = availabilityData || [];
 
+        console.log('Processing availability slots:', availableSlots);
+
         availableSlots.forEach((availability) => {
           if (!availability.start_date_time || !availability.end_date_time) return;
 
@@ -77,23 +79,13 @@ export function useAvailableTimeSlots(
             endTime = new Date(availability.end_date_time);
           }
 
-          // Adjust endTime to account for session duration
-          endTime = subMinutes(endTime, sessionDuration - 15);
-
           let currentTime = new Date(startTime);
-          while (currentTime <= endTime) {
+          // Calculate the last possible slot start time that would allow for a full session
+          const lastPossibleStart = subMinutes(endTime, sessionDuration);
+
+          while (currentTime <= lastPossibleStart) {
             const slotStart = new Date(currentTime);
             const slotEnd = addMinutes(slotStart, sessionDuration);
-
-            // Check if the entire session duration fits within the availability window
-            const isWithinAvailability = isWithinInterval(slotEnd, {
-              start: startTime,
-              end: new Date(availability.end_date_time)
-            });
-
-            if (!isWithinAvailability) {
-              break;
-            }
 
             // Check for overlapping bookings
             const isOverlappingBooking = bookingsData?.some(booking => {
@@ -120,6 +112,7 @@ export function useAvailableTimeSlots(
           }
         });
 
+        console.log('Generated time slots:', slots);
         setAvailableTimeSlots(slots);
       } catch (error) {
         console.error("Error fetching availability:", error);
