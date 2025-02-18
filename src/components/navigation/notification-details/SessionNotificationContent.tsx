@@ -15,7 +15,7 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
   const { data: profile } = useUserProfile(session);
   const { getSetting } = useUserSettings(profile?.id || '');
   const menteeTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const { data: mentorTimezone, isLoading, error } = useMentorTimezone(sessionData.mentor.id);
+  const { data: mentorTimezone, isLoading, error } = useMentorTimezone(sessionData.mentor.profile_id);
 
   // Ensure we have a valid date object
   const scheduledTime = new Date(sessionData.scheduled_at);
@@ -56,12 +56,10 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
         <div className="space-y-1">
           <p><span className="font-medium text-zinc-300">Session Time:</span></p>
           <div className="pl-4 space-y-1">
-            {/* Show mentor's time first */}
             <p>
               <span className="text-zinc-300">Mentor's time ({displayMentorTimezone}):</span>{' '}
               {formatInTimeZone(scheduledTime, displayMentorTimezone, 'PPP p')}
             </p>
-            {/* Then show mentee's time */}
             <p>
               <span className="text-zinc-300">Mentee's time ({displayMenteeTimezone}):</span>{' '}
               {formatInTimeZone(scheduledTime, displayMenteeTimezone, 'PPP p')}

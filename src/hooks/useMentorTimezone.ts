@@ -3,40 +3,40 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export function useMentorTimezone(mentorId: string | undefined) {
+export function useMentorTimezone(profileId: string | undefined) {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['mentor-timezone', mentorId],
+    queryKey: ['profile-timezone', profileId],
     queryFn: async () => {
-      if (!mentorId) {
-        throw new Error('No mentor ID provided');
+      if (!profileId) {
+        throw new Error('No profile ID provided');
       }
 
-      console.log('Fetching timezone for mentor:', mentorId);
+      console.log('Fetching timezone for profile:', profileId);
       
-      const { data: mentorSettings, error } = await supabase
+      const { data: settings, error } = await supabase
         .from('user_settings')
         .select('setting_value')
-        .eq('profile_id', mentorId)
+        .eq('profile_id', profileId)
         .eq('setting_type', 'timezone')
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching mentor timezone:', error);
+        console.error('Error fetching profile timezone:', error);
         toast({
           title: "Error",
-          description: "Failed to load mentor's timezone. Please try again.",
+          description: "Failed to load timezone. Please try again.",
           variant: "destructive",
         });
         throw error;
       }
 
-      const timezone = mentorSettings?.setting_value || 'UTC';
-      console.log('Mentor timezone fetched:', timezone);
+      const timezone = settings?.setting_value || 'UTC';
+      console.log('Profile timezone fetched:', timezone);
       return timezone;
     },
-    enabled: !!mentorId,
+    enabled: !!profileId,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 3,
   });
