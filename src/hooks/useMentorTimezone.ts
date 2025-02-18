@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +14,7 @@ export function useMentorTimezone(mentorId: string | undefined) {
 
       console.log('Fetching timezone for mentor:', mentorId);
       
-      const { data: mentorSettings, error } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('setting_value')
         .eq('profile_id', mentorId)
@@ -32,12 +31,17 @@ export function useMentorTimezone(mentorId: string | undefined) {
         throw error;
       }
 
-      const timezone = mentorSettings?.setting_value || 'UTC';
-      console.log('Mentor timezone fetched:', timezone);
-      return timezone;
+      // If no timezone is set, return a default timezone
+      if (!data?.setting_value) {
+        console.warn('No timezone found for mentor:', mentorId);
+        return 'UTC';
+      }
+
+      console.log('Mentor timezone fetched:', data.setting_value);
+      return data.setting_value;
     },
     enabled: !!mentorId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 3,
   });
 }
