@@ -50,6 +50,23 @@ export function useBookSession() {
         menteeTelegramUsername
       });
 
+      // First, check if the mentor has any availability for this time
+      const { data: availabilityData, error: availabilityError } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', mentorId)
+        .eq('is_available', true)
+        .is('booked_session_id', null)
+        .or(`and(start_date_time.lte.${scheduledAt.toISOString()},end_date_time.gte.${scheduledAt.toISOString()}),and(recurring.eq.true,day_of_week.eq.${scheduledAt.getDay()})`)
+        .order('start_date_time', { ascending: true });
+
+      if (availabilityError) {
+        console.error('Error checking availability:', availabilityError);
+        return { success: false, error: 'Error checking availability' };
+      }
+
+      console.log('Available slots found:', availabilityData);
+
       const { data: sessionData, error: sessionError } = await supabase
         .rpc('create_session_and_update_availability', {
           p_meeting_platform: meetingPlatform,
