@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
+import { format, addMinutes, isWithinInterval, areIntervalsOverlapping, subMinutes } from "date-fns";
 
 interface TimeSlot {
   time: string;
@@ -77,10 +77,23 @@ export function useAvailableTimeSlots(
             endTime = new Date(availability.end_date_time);
           }
 
+          // Adjust endTime to account for session duration
+          endTime = subMinutes(endTime, sessionDuration - 15);
+
           let currentTime = new Date(startTime);
-          while (currentTime < endTime) {
+          while (currentTime <= endTime) {
             const slotStart = new Date(currentTime);
             const slotEnd = addMinutes(slotStart, sessionDuration);
+
+            // Check if the entire session duration fits within the availability window
+            const isWithinAvailability = isWithinInterval(slotEnd, {
+              start: startTime,
+              end: new Date(availability.end_date_time)
+            });
+
+            if (!isWithinAvailability) {
+              break;
+            }
 
             // Check for overlapping bookings
             const isOverlappingBooking = bookingsData?.some(booking => {
