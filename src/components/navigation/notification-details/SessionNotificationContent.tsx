@@ -14,8 +14,8 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { getSetting } = useUserSettings(profile?.id || '');
-  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const { data: mentorTimezone } = useMentorTimezone(sessionData.mentor.id);
+  const menteeTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { data: mentorTimezone, isLoading, error } = useMentorTimezone(sessionData.mentor.id);
 
   // Ensure we have a valid date object
   const scheduledTime = new Date(sessionData.scheduled_at);
@@ -28,9 +28,25 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
     );
   }
 
-  // Ensure we have valid timezones
-  const validMentorTimezone = mentorTimezone || 'UTC';
-  const validUserTimezone = userTimezone || 'UTC';
+  if (isLoading) {
+    return (
+      <div className="space-y-2 mt-3 text-sm text-zinc-400">
+        <p>Loading session details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Error fetching mentor timezone:', error);
+    return (
+      <div className="space-y-2 mt-3 text-sm text-zinc-400">
+        <p className="text-red-500">Error loading session details</p>
+      </div>
+    );
+  }
+
+  const displayMentorTimezone = mentorTimezone || 'UTC';
+  const displayMenteeTimezone = menteeTimezone || 'UTC';
 
   try {
     return (
@@ -40,13 +56,15 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
         <div className="space-y-1">
           <p><span className="font-medium text-zinc-300">Session Time:</span></p>
           <div className="pl-4 space-y-1">
+            {/* Show mentor's time first */}
             <p>
-              <span className="text-zinc-300">Mentor's time ({validMentorTimezone}):</span>{' '}
-              {formatInTimeZone(scheduledTime, validMentorTimezone, 'PPP p')}
+              <span className="text-zinc-300">Mentor's time ({displayMentorTimezone}):</span>{' '}
+              {formatInTimeZone(scheduledTime, displayMentorTimezone, 'PPP p')}
             </p>
+            {/* Then show mentee's time */}
             <p>
-              <span className="text-zinc-300">Mentee's time ({validUserTimezone}):</span>{' '}
-              {formatInTimeZone(scheduledTime, validUserTimezone, 'PPP p')}
+              <span className="text-zinc-300">Mentee's time ({displayMenteeTimezone}):</span>{' '}
+              {formatInTimeZone(scheduledTime, displayMenteeTimezone, 'PPP p')}
             </p>
           </div>
         </div>
