@@ -57,12 +57,12 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
           <p><span className="font-medium text-zinc-300">Session Time:</span></p>
           <div className="pl-4 space-y-1">
             <p>
-              <span className="text-zinc-300">Mentor's time ({displayMentorTimezone}):</span>{' '}
-              {formatInTimeZone(scheduledTime, displayMentorTimezone, 'PPP p')}
+              <span className="text-zinc-300">Your time ({displayUserTimezone}):</span>{' '}
+              {formatInTimeZone(scheduledTime, displayUserTimezone, 'PPP p')}
             </p>
             <p>
-              <span className="text-zinc-300">Mentee's time ({displayUserTimezone}):</span>{' '}
-              {formatInTimeZone(scheduledTime, displayUserTimezone, 'PPP p')}
+              <span className="text-zinc-300">Mentor's time ({displayMentorTimezone}):</span>{' '}
+              {formatInTimeZone(scheduledTime, displayMentorTimezone, 'PPP p')}
             </p>
           </div>
         </div>
