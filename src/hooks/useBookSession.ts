@@ -115,11 +115,17 @@ export function useBookSession() {
         throw sessionError;
       }
 
+      if (!sessionData) {
+        throw new Error('No session data returned');
+      }
+
+      const { session_id } = sessionData as { session_id: string };
+
       console.log('Session booked successfully:', sessionData);
 
       return { 
         success: true, 
-        sessionId: sessionData?.session_id 
+        sessionId: session_id
       };
     } catch (error: any) {
       console.error('Error booking session:', error);

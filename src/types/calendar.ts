@@ -1,3 +1,4 @@
+
 export type NotificationType = 
   | "major_update"
   | "session_booked"
@@ -16,7 +17,11 @@ export type NotificationCategory =
   | "general"
   | "major_update";
 
-export type MeetingPlatform = "Google Meet";
+export type MeetingPlatform = 
+  | "Google Meet"
+  | "WhatsApp"
+  | "Telegram"
+  | "Phone Call";
 
 export interface Availability {
   id: string;
@@ -63,6 +68,8 @@ export interface MentorSession {
     type: string;
     duration: number;
   };
+  calendar_event_id?: string;
+  availability_slot_id?: string;
 }
 
 export const getNotificationCategory = (type: NotificationType): NotificationCategory => {
