@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatInTimeZone } from "npm:date-fns-tz";
@@ -84,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="margin: 20px 0;">
             <p><strong>Session Times:</strong></p>
             <p>Mentor's time (${mentorTimezone}): ${mentorTime}</p>
-            <p>Your time (${menteeTimezone}): ${menteeTime}</p>
+            <p>Mentee's time (${menteeTimezone}): ${menteeTime}</p>
           </div>
           <p><strong>Duration:</strong> ${session.session_type.duration} minutes</p>
           <p><strong>Mentor:</strong> ${session.mentor.full_name}</p>
@@ -112,7 +113,11 @@ const handler = async (req: Request): Promise<Response> => {
         content = `
           <h2>Session Update Notice</h2>
           <p>The following session has been updated:</p>
-          <p><strong>Date:</strong> ${scheduledDate}</p>
+          <div style="margin: 20px 0;">
+            <p><strong>Session Times:</strong></p>
+            <p>Mentor's time (${mentorTimezone}): ${mentorTime}</p>
+            <p>Mentee's time (${menteeTimezone}): ${menteeTime}</p>
+          </div>
           <p><strong>Duration:</strong> ${session.session_type.duration} minutes</p>
           <p><strong>Mentor:</strong> ${session.mentor.full_name}</p>
           <p><strong>Mentee:</strong> ${session.mentee.full_name}</p>
@@ -123,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailPayload = {
-      from: "PicoCareer <info@picocareer.com>", // Updated email address
+      from: "PicoCareer <info@picocareer.com>",
       to: [session.mentor.email, session.mentee.email],
       subject,
       html: content,
@@ -164,10 +169,13 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error("Error in send-session-email function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 };
 
