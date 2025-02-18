@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { MeetingPlatform } from "@/types/calendar";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 
 interface BookSessionParams {
   mentorId: string;

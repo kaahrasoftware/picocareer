@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, parse, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
+import { format, addMinutes, isWithinInterval, areIntervalsOverlapping } from "date-fns";
 
 interface TimeSlot {
   time: string;

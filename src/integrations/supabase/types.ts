@@ -2872,6 +2872,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_session_and_update_availability: {
+        Args: {
+          p_mentor_id: string
+          p_mentee_id: string
+          p_session_type_id: string
+          p_scheduled_at: string
+          p_notes: string
+          p_meeting_platform: string
+          p_mentee_phone_number: string
+          p_mentee_telegram_username: string
+          p_start_time: string
+          p_session_date: string
+        }
+        Returns: Json
+      }
       generate_personality_test_mappings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
