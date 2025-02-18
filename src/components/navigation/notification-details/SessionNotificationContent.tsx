@@ -19,11 +19,13 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
   const { data: mentorTimezone, isLoading, error } = useMentorTimezone(sessionData.mentor?.id);
 
   // Add debug logs for timezone values
-  console.log('Debug timezone values:', {
-    menteeId: profile?.id,
-    mentorId: sessionData.mentor?.id,
-    menteeTimezone,
+  console.log('Session Notification Debug:', {
+    sessionDataMentorId: sessionData.mentor?.id,
     mentorTimezone,
+    sessionDataMenteeId: sessionData.mentee?.id,
+    currentProfileId: profile?.id,
+    menteeTimezone,
+    scheduledTime: sessionData.scheduled_at,
     browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   });
 
