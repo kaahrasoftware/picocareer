@@ -17,8 +17,6 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { data: mentorTimezone, isLoading, error } = useMentorTimezone(sessionData.mentor.id);
 
-  console.log('Mentor timezone data:', { mentorTimezone, isLoading, error });
-  
   // Ensure we have a valid date object
   const scheduledTime = new Date(sessionData.scheduled_at);
   if (isNaN(scheduledTime.getTime())) {
@@ -47,6 +45,9 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
     );
   }
 
+  const displayMentorTimezone = mentorTimezone || 'UTC';
+  const displayUserTimezone = userTimezone || 'UTC';
+
   try {
     return (
       <div className="space-y-2 mt-3 text-sm text-zinc-400">
@@ -56,12 +57,12 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
           <p><span className="font-medium text-zinc-300">Session Time:</span></p>
           <div className="pl-4 space-y-1">
             <p>
-              <span className="text-zinc-300">Mentor's time ({mentorTimezone}):</span>{' '}
-              {formatInTimeZone(scheduledTime, mentorTimezone || 'UTC', 'PPP p')}
+              <span className="text-zinc-300">Mentor's time ({displayMentorTimezone}):</span>{' '}
+              {formatInTimeZone(scheduledTime, displayMentorTimezone, 'PPP p')}
             </p>
             <p>
-              <span className="text-zinc-300">Mentee's time ({userTimezone}):</span>{' '}
-              {formatInTimeZone(scheduledTime, userTimezone, 'PPP p')}
+              <span className="text-zinc-300">Mentee's time ({displayUserTimezone}):</span>{' '}
+              {formatInTimeZone(scheduledTime, displayUserTimezone, 'PPP p')}
             </p>
           </div>
         </div>
