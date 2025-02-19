@@ -62,17 +62,22 @@ export default function Mentor() {
 
       if (hasAvailabilityFilter) {
         const now = new Date();
-        // First, get all mentor IDs with future availabilities
-        const { data: availableMentors } = await supabase
+        
+        // Query for available time slots
+        const { data: availableMentors, error: availabilityError } = await supabase
           .from('mentor_availability')
           .select('profile_id')
           .eq('is_available', true)
           .is('booked_session_id', null)
           .or(
             `and(recurring.eq.true),` +
-            `and(recurring.eq.false,end_date_time.gt.${now.toISOString()})`
-          )
-          .order('start_date_time', { ascending: true });
+            `and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`
+          );
+
+        if (availabilityError) {
+          console.error('Error fetching availabilities:', availabilityError);
+          throw availabilityError;
+        }
 
         // Get unique mentor IDs who have future availability
         const uniqueMentorIds = [...new Set(availableMentors?.map(m => m.profile_id) || [])];
@@ -80,7 +85,8 @@ export default function Mentor() {
         if (uniqueMentorIds.length > 0) {
           query = query.in('id', uniqueMentorIds);
         } else {
-          return []; // Return empty array if no mentors have availability
+          // If no mentors have availability, return empty array
+          return [];
         }
       }
 
