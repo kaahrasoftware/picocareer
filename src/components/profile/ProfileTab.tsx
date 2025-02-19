@@ -107,7 +107,6 @@ export function ProfileTab({ profile }: ProfileTabProps) {
         </div>
       </div>
 
-      {/* Skills and Expertise Section */}
       <div className="bg-muted rounded-lg p-6 shadow-sm">
         <h3 className="text-lg font-semibold mb-4">Skills & Expertise</h3>
         <div className="space-y-4">
