@@ -10,6 +10,7 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MentorGrid } from "@/components/community/MentorGrid";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { addDays } from "date-fns";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,10 +61,13 @@ export default function Mentor() {
         .eq('onboarding_status', 'Approved');
 
       if (hasAvailabilityFilter) {
+        const now = new Date();
         const { data: availableMentors } = await supabase
           .from('mentor_availability')
           .select('profile_id')
-          .eq('is_available', true);
+          .eq('is_available', true)
+          .or(`and(recurring.eq.true),and(recurring.eq.false,end_date_time.gt.${now.toISOString()})`)
+          .not('booked_session_id', 'is', null);
 
         const mentorIds = availableMentors?.map(m => m.profile_id) || [];
         if (mentorIds.length > 0) {
@@ -147,6 +151,7 @@ export default function Mentor() {
                 hasAvailabilityFilter={hasAvailabilityFilter}
                 onHasAvailabilityChange={setHasAvailabilityFilter}
                 showAvailabilityFilter={true}
+                fields={[]}
               />
 
               {error ? (
