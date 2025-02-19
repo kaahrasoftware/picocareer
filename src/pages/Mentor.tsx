@@ -122,13 +122,15 @@ export default function Mentor() {
         throw error;
       }
 
-      return data.map((profile: any) => ({
+      const profilesWithDetails = data.map((profile: any) => ({
         ...profile,
         company_name: profile.company?.name,
         school_name: profile.school?.name,
         academic_major: profile.academic_major?.title,
         career_title: profile.career?.title
       }));
+
+      return profilesWithDetails;
     }
   });
 
@@ -165,6 +167,7 @@ export default function Mentor() {
                 onHasAvailabilityChange={setHasAvailabilityFilter}
                 showAvailabilityFilter={true}
                 fields={[]}
+                availableMentorsCount={profiles.length}
               />
 
               {error ? (

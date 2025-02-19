@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Filter } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 export interface CommunityFiltersProps {
   searchQuery: string;
@@ -34,6 +35,7 @@ export interface CommunityFiltersProps {
   hasAvailabilityFilter?: boolean;
   onHasAvailabilityChange?: (value: boolean) => void;
   showAvailabilityFilter?: boolean;
+  availableMentorsCount?: number;
 }
 
 export function CommunityFilters({
@@ -63,6 +65,7 @@ export function CommunityFilters({
   hasAvailabilityFilter = false,
   onHasAvailabilityChange,
   showAvailabilityFilter = false,
+  availableMentorsCount = 0,
 }: CommunityFiltersProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -123,7 +126,14 @@ export function CommunityFilters({
                 checked={hasAvailabilityFilter}
                 onCheckedChange={onHasAvailabilityChange}
               />
-              <Label htmlFor="has-availability">Show available mentors</Label>
+              <Label htmlFor="has-availability" className="flex items-center gap-2">
+                Show available mentors
+                {hasAvailabilityFilter && (
+                  <Badge variant="secondary" className="ml-2">
+                    {availableMentorsCount} available
+                  </Badge>
+                )}
+              </Label>
             </div>
           )}
         </div>
