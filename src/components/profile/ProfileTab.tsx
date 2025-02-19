@@ -1,3 +1,4 @@
+
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { EditableField } from "@/components/profile/EditableField";
@@ -52,7 +53,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           onClick={handleEditToggle}
           variant={isEditing ? "destructive" : "default"}
         >
-          {isEditing ? "Cancel Editing" : "Edit Profile"}
+          {isEditing ? "Close Editing" : "Edit Profile"}
         </Button>
       </div>
 
