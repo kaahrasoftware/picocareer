@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SelectFilter } from "./filters/SelectFilter";
 import { SearchInput } from "./filters/SearchInput";
@@ -122,7 +123,7 @@ export function CommunityFilters({
                 checked={hasAvailabilityFilter}
                 onCheckedChange={onHasAvailabilityChange}
               />
-              <Label htmlFor="has-availability">Show only mentors with available time slots</Label>
+              <Label htmlFor="has-availability">Show available mentors</Label>
             </div>
           )}
         </div>
