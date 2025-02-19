@@ -1,4 +1,3 @@
-
 import { Home, BookOpen, Users, RefreshCw, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -26,7 +25,6 @@ export default function Mentor() {
   const profileId = searchParams.get('profileId');
   const showDialog = searchParams.get('dialog') === 'true';
 
-  // Effect to handle URL parameters for mentor profile dialog
   useEffect(() => {
     const checkSession = async () => {
       if (profileId && showDialog) {
@@ -63,7 +61,6 @@ export default function Mentor() {
       if (hasAvailabilityFilter) {
         const now = new Date();
         
-        // Query for available time slots
         const { data: availableMentors, error: availabilityError } = await supabase
           .from('mentor_availability')
           .select('profile_id')
@@ -79,13 +76,11 @@ export default function Mentor() {
           throw availabilityError;
         }
 
-        // Get unique mentor IDs who have future availability
         const uniqueMentorIds = [...new Set(availableMentors?.map(m => m.profile_id) || [])];
         
         if (uniqueMentorIds.length > 0) {
           query = query.in('id', uniqueMentorIds);
         } else {
-          // If no mentors have availability, return empty array
           return [];
         }
       }
@@ -122,15 +117,27 @@ export default function Mentor() {
         throw error;
       }
 
-      const profilesWithDetails = data.map((profile: any) => ({
+      const now = new Date();
+      const { data: availabilities } = await supabase
+        .from('mentor_availability')
+        .select('profile_id')
+        .eq('is_available', true)
+        .is('booked_session_id', null)
+        .or(
+          `and(recurring.eq.true),` +
+          `and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`
+        );
+
+      const mentorsWithAvailability = new Set(availabilities?.map(a => a.profile_id) || []);
+
+      return data.map((profile: any) => ({
         ...profile,
         company_name: profile.company?.name,
         school_name: profile.school?.name,
         academic_major: profile.academic_major?.title,
-        career_title: profile.career?.title
+        career_title: profile.career?.title,
+        hasAvailability: mentorsWithAvailability.has(profile.id)
       }));
-
-      return profilesWithDetails;
     }
   });
 
