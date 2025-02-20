@@ -61,11 +61,11 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
 
       // Call the edge function to notify mentor
       const { data: notifyData, error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
-        body: {
+        body: JSON.stringify({
           mentorId,
           menteeId: userId,
           requestId: requestData.id
-        }
+        })
       });
 
       if (notifyError) {
@@ -98,11 +98,11 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
       });
       
       onRequestComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error requesting availability:', error);
       toast({
         title: "Error",
-        description: "Failed to send availability request. Please try again later.",
+        description: error.message || "Failed to send availability request. Please try again later.",
         variant: "destructive",
       });
     } finally {

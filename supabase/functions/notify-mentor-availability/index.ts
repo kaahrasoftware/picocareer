@@ -14,31 +14,35 @@ interface RequestBody {
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
   try {
-    // Validate request body
-    const body = await req.json();
-    if (!body?.mentorId || !body?.menteeId || !body?.requestId) {
-      throw new Error('Missing required fields in request body');
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
     }
-
-    const { mentorId, menteeId, requestId } = body as RequestBody;
-    console.log('Processing notification request:', { mentorId, menteeId, requestId });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    let body: RequestBody;
+    try {
+      body = await req.json();
+      console.log('Received request body:', body);
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      throw new Error('Invalid request body');
+    }
+
+    if (!body?.mentorId || !body?.menteeId || !body?.requestId) {
+      throw new Error('Missing required fields in request body');
+    }
+
     // Get mentor and mentee details
     const { data: mentorData, error: mentorError } = await supabase
       .from('profiles')
       .select('email, full_name')
-      .eq('id', mentorId)
+      .eq('id', body.mentorId)
       .single();
 
     if (mentorError || !mentorData) {
@@ -49,7 +53,7 @@ serve(async (req: Request) => {
     const { data: menteeData, error: menteeError } = await supabase
       .from('profiles')
       .select('full_name')
-      .eq('id', menteeId)
+      .eq('id', body.menteeId)
       .single();
 
     if (menteeError || !menteeData) {
@@ -60,7 +64,7 @@ serve(async (req: Request) => {
     console.log('Found mentor and mentee:', { mentor: mentorData, mentee: menteeData });
 
     // Send email using Brevo
-    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "Accept": "application/json",
@@ -87,20 +91,19 @@ serve(async (req: Request) => {
       })
     });
 
-    const responseData = await response.json();
+    const responseData = await emailResponse.json();
     console.log('Email API response:', responseData);
 
-    if (!response.ok) {
+    if (!emailResponse.ok) {
       console.error('Error sending email:', responseData);
-      throw new Error(`Failed to send email: ${response.statusText}`);
+      throw new Error(`Failed to send email: ${emailResponse.statusText}`);
     }
-
-    console.log('Email sent successfully');
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Notification sent successfully" 
+        message: "Notification sent successfully",
+        data: responseData 
       }),
       { 
         status: 200,
@@ -118,7 +121,7 @@ serve(async (req: Request) => {
         error: error.message || 'Internal server error'
       }),
       { 
-        status: 500,
+        status: error.message?.includes('Invalid request') ? 400 : 500,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json"
