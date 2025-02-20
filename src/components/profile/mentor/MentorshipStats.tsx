@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useMentorStats } from "./hooks/useMentorStats";
-import { Star, Users, CalendarCheck, Clock, Ban } from "lucide-react";
+import { Star, Users, CalendarCheck, Clock, Ban, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MentorshipStatsProps {
@@ -13,8 +13,8 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
 
   if (!stats) {
     return (
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        {[...Array(6)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -70,11 +70,18 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       icon: Star,
       subtitle: `${stats.total_ratings} total ratings`,
       iconColor: "text-yellow-500"
+    },
+    {
+      title: "Reliability Score",
+      value: `${stats.cancellation_score}%`,
+      icon: Shield,
+      subtitle: "Based on cancellations",
+      iconColor: "text-purple-500"
     }
   ];
 
   return (
-    <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
       {cards.map((card, i) => (
         <Card key={i}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

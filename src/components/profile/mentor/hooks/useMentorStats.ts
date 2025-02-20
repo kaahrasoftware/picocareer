@@ -93,6 +93,11 @@ export function useMentorStats(profileId: string | undefined) {
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
+      // Calculate cancellation score (percentage of non-cancelled sessions)
+      const cancellation_score = total_sessions > 0 
+        ? Math.round(((total_sessions - cancelled_sessions) / total_sessions) * 100)
+        : 100;
+
       // Calculate total hours based on session types
       const total_hours = sessions.reduce((acc, session) => {
         if (session.status === 'cancelled') return acc;
@@ -140,6 +145,7 @@ export function useMentorStats(profileId: string | undefined) {
         total_hours,
         total_ratings,
         average_rating: Number(average_rating.toFixed(1)),
+        cancellation_score,
         session_data
       };
     }
