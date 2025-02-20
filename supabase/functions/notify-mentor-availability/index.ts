@@ -87,26 +87,29 @@ serve(async (req: Request) => {
     console.log('Notification created successfully');
 
     // Set up Google OAuth2 client
-    const credentials = {
-      client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+    const serviceAccountCreds = {
+      type: "service_account",
+      project_id: "picocareer",
       private_key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+      token_uri: "https://oauth2.googleapis.com/token",
+      client_id: Deno.env.get('GOOGLE_CLIENT_ID'),
     };
 
-    console.log('Setting up Google OAuth2 client with credentials:', {
-      client_email: credentials.client_email,
-      private_key_length: credentials.private_key?.length
+    console.log('Setting up Google OAuth2 client with service account:', {
+      client_email: serviceAccountCreds.client_email,
+      private_key_length: serviceAccountCreds.private_key?.length,
+      project_id: serviceAccountCreds.project_id
     });
 
-    const oauth2Client = new google.auth.JWT(
-      credentials.client_email,
-      undefined,
-      credentials.private_key,
-      ['https://www.googleapis.com/auth/gmail.send'],
-      'info@picocareer.com'
-    );
+    const auth = new google.auth.GoogleAuth({
+      credentials: serviceAccountCreds,
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      clientOptions: { subject: 'info@picocareer.com' }
+    });
 
     // Create Gmail API client
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const gmail = google.gmail({ version: 'v1', auth });
 
     // Prepare email content
     const emailContent = [
