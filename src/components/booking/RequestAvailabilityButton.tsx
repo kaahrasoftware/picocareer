@@ -36,7 +36,8 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
         .from('availability_requests')
         .insert({
           mentor_id: mentorId,
-          mentee_id: userId
+          mentee_id: userId,
+          status: 'pending'
         })
         .select()
         .single();
@@ -51,12 +52,15 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
         return;
       }
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error creating request:', insertError);
+        throw insertError;
+      }
 
       console.log('Availability request created:', requestData);
 
       // Call the edge function to notify mentor
-      const { error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
+      const { data: notifyData, error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
         body: {
           mentorId,
           menteeId: userId,
@@ -69,7 +73,7 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
         throw notifyError;
       }
 
-      console.log('Mentor notification sent successfully');
+      console.log('Notification response:', notifyData);
 
       // Create a notification in the database
       const { error: notificationError } = await supabase
@@ -78,7 +82,7 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
           profile_id: mentorId,
           title: "New Availability Request",
           message: "A mentee has requested your availability for mentoring sessions.",
-          type: "availability_request",
+          type: "mentor_request",
           action_url: `/profile?tab=calendar`,
           category: "mentorship"
         });
