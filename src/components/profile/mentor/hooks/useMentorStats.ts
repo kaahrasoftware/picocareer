@@ -13,7 +13,7 @@ export function useMentorStats(profileId: string | undefined) {
       
       const { data, error } = await supabase
         .from("mentor_sessions")
-        .select("*, session_type:mentor_session_types(duration)")
+        .select("*, session_type:mentor_session_types(duration), cancellation_details:session_feedback!inner(from_profile_id)")
         .eq("mentor_id", profileId);
 
       if (error) {
@@ -90,12 +90,16 @@ export function useMentorStats(profileId: string | undefined) {
         return new Date(s.scheduled_at) >= now;
       }).length;
       
-      const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
+      // Count only sessions cancelled by the mentor
+      const mentor_cancelled_sessions = sessions.filter(s => 
+        s.status === 'cancelled' && s.cancellation_details?.from_profile_id === profileId
+      ).length;
+
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
-      // Calculate cancellation score (percentage of non-cancelled sessions)
+      // Calculate cancellation score based only on mentor cancellations
       const cancellation_score = total_sessions > 0 
-        ? Math.round(((total_sessions - cancelled_sessions) / total_sessions) * 100)
+        ? Math.round(((total_sessions - mentor_cancelled_sessions) / total_sessions) * 100)
         : 100;
 
       // Calculate total hours based on session types
@@ -140,7 +144,7 @@ export function useMentorStats(profileId: string | undefined) {
         total_sessions,
         completed_sessions,
         upcoming_sessions,
-        cancelled_sessions,
+        cancelled_sessions: mentor_cancelled_sessions, // Update to use mentor cancellations
         unique_mentees,
         total_hours,
         total_ratings,
