@@ -11,7 +11,11 @@ interface RequestAvailabilityButtonProps {
   onRequestComplete: () => void;
 }
 
-export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete }: RequestAvailabilityButtonProps) {
+export function RequestAvailabilityButton({ 
+  mentorId, 
+  userId, 
+  onRequestComplete 
+}: RequestAvailabilityButtonProps) {
   const [isRequestingAvailability, setIsRequestingAvailability] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -36,6 +40,24 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
       
       console.log('Starting availability request process...', { cleanMentorId, cleanUserId });
 
+      // Check for existing pending request
+      const { data: existingRequest, error: checkError } = await supabase
+        .from('availability_requests')
+        .select('*')
+        .eq('mentor_id', cleanMentorId)
+        .eq('mentee_id', cleanUserId)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (existingRequest) {
+        toast({
+          title: "Request Already Sent",
+          description: "You have already requested availability from this mentor.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Insert new request
       const { data: requestData, error: insertError } = await supabase
         .from('availability_requests')
@@ -46,15 +68,6 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
         })
         .select()
         .single();
-
-      if (insertError?.message?.includes('unique_mentor_mentee_request')) {
-        toast({
-          title: "Request Already Sent",
-          description: "You have already requested availability from this mentor.",
-          variant: "destructive",
-        });
-        return;
-      }
 
       if (insertError) {
         console.error('Error creating request:', insertError);

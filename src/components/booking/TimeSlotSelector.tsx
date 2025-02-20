@@ -6,6 +6,7 @@ import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -28,66 +29,25 @@ export function TimeSlotSelector({
 
   const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
 
-  // Fetch mentor's availability for this date
-  const { data: mentorAvailability } = useQuery({
+  // Fetch mentor's availability for this date and future dates
+  const { data: futureMentorAvailability } = useQuery({
     queryKey: ['mentorAvailabilityTimezone', mentorId, date],
     queryFn: async () => {
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-
+      // Fetch both one-time and recurring availabilities
       const { data, error } = await supabase
         .from('mentor_availability')
         .select('*')
         .eq('profile_id', mentorId)
         .eq('is_available', true)
         .gte('start_date_time', startOfDay.toISOString())
-        .lte('start_date_time', endOfDay.toISOString())
-        .maybeSingle();
+        .or('recurring.eq.true');
 
       if (error) {
         console.error('Error fetching mentor availability:', error);
         return null;
-      }
-
-      // If no specific date availability, check for recurring availability
-      if (!data) {
-        const dayOfWeek = date.getDay();
-        const { data: recurringData, error: recurringError } = await supabase
-          .from('mentor_availability')
-          .select('*')
-          .eq('profile_id', mentorId)
-          .eq('recurring', true)
-          .eq('day_of_week', dayOfWeek)
-          .eq('is_available', true)
-          .maybeSingle();
-
-        if (recurringError) {
-          console.error('Error fetching recurring availability:', recurringError);
-          return null;
-        }
-
-        if (recurringData) {
-          // For recurring slots, we need to combine the date with the time
-          const startDate = new Date(date);
-          const endDate = new Date(date);
-          
-          if (recurringData.start_date_time && recurringData.end_date_time) {
-            const startDateTime = new Date(recurringData.start_date_time);
-            const endDateTime = new Date(recurringData.end_date_time);
-            
-            startDate.setHours(startDateTime.getHours(), startDateTime.getMinutes());
-            endDate.setHours(endDateTime.getHours(), endDateTime.getMinutes());
-            
-            return {
-              ...recurringData,
-              start_date_time: startDate.toISOString(),
-              end_date_time: endDate.toISOString()
-            };
-          }
-        }
       }
 
       return data;
@@ -102,8 +62,18 @@ export function TimeSlotSelector({
     mentorTimezone || 'UTC'
   );
 
-  console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
-  console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
+  const hasFutureAvailability = (futureMentorAvailability?.length ?? 0) > 0;
+  console.log("TimeSlotSelector - Has future availability:", hasFutureAvailability);
+
+  // If no future availability at all, show the request button
+  if (!hasFutureAvailability) {
+    return (
+      <RequestAvailabilityButton
+        mentorId={mentorId}
+        onRequestComplete={() => {}}
+      />
+    );
+  }
 
   return (
     <div>
