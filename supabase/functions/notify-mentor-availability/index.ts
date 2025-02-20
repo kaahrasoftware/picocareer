@@ -113,7 +113,10 @@ serve(async (req: Request) => {
       <p>Best regards,<br>The PicoCareer Team</p>`
     ].join('\n');
 
-    const encodedEmail = Buffer.from(emailContent).toString('base64')
+    // Use TextEncoder for base64 encoding
+    const encoder = new TextEncoder();
+    const emailBytes = encoder.encode(emailContent);
+    const encodedEmail = btoa(String.fromCharCode(...emailBytes))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
