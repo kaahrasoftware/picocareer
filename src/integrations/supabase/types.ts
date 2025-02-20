@@ -3373,6 +3373,7 @@ export type Database = {
         | "profile_update"
         | "major_update"
         | "hub_invitation_sent"
+        | "availability_request"
       onboarding_status:
         | "Pending"
         | "Under Review"
