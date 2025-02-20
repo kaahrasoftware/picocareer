@@ -51,17 +51,6 @@ export function SessionFeedbackDialog({
 
     setIsSubmitting(true);
     try {
-      // Start a transaction to update both feedback and session
-      const { error: sessionError } = await supabase
-        .from('mentor_sessions')
-        .update({ 
-          did_not_show_up: didNotShowUp,
-          attendance_confirmed: !didNotShowUp
-        })
-        .eq('id', sessionId);
-
-      if (sessionError) throw sessionError;
-
       const { error: feedbackError } = await supabase
         .from('session_feedback')
         .insert({
@@ -72,9 +61,19 @@ export function SessionFeedbackDialog({
           notes,
           from_profile_id: fromProfileId,
           to_profile_id: toProfileId,
+          did_not_show_up: didNotShowUp
         });
 
       if (feedbackError) throw feedbackError;
+
+      const { error: sessionError } = await supabase
+        .from('mentor_sessions')
+        .update({ 
+          status: didNotShowUp ? 'no_show' : 'completed'
+        })
+        .eq('id', sessionId);
+
+      if (sessionError) throw sessionError;
 
       toast({
         title: "Feedback Submitted",

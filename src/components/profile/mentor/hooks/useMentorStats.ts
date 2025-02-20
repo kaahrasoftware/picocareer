@@ -44,20 +44,20 @@ export function useMentorStats(profileId: string | undefined) {
     enabled: !!profileId
   });
 
-  // Fetch ratings
-  const { data: ratingsResponse } = useQuery({
-    queryKey: ["mentor-ratings", profileId],
+  // Fetch feedback and ratings
+  const { data: feedbackResponse } = useQuery({
+    queryKey: ["mentor-feedback", profileId],
     queryFn: async () => {
       if (!profileId) return null;
 
       const { data, error } = await supabase
         .from("session_feedback")
-        .select("rating")
+        .select("*")
         .eq("to_profile_id", profileId)
         .eq("feedback_type", "mentee_feedback");
 
       if (error) {
-        console.error('Error fetching ratings:', error);
+        console.error('Error fetching feedback:', error);
         throw error;
       }
 
@@ -68,20 +68,21 @@ export function useMentorStats(profileId: string | undefined) {
 
   // Calculate stats
   const stats = (() => {
-    if (sessionsResponse) {
+    if (sessionsResponse && feedbackResponse) {
       const sessions = sessionsResponse;
+      const feedback = feedbackResponse;
       const now = new Date();
       
       const total_sessions = sessions.length;
       
-      // Count completed sessions: sessions that have passed their end time and weren't cancelled or marked as no-show
+      // Count completed sessions based on status
       const completed_sessions = sessions.filter(s => {
-        if (s.status === 'cancelled' || s.did_not_show_up) return false;
+        if (s.status === 'cancelled') return false;
         
         const sessionEndTime = new Date(s.scheduled_at);
         sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
         
-        return sessionEndTime < now;
+        return sessionEndTime < now && s.status === 'completed';
       }).length;
       
       const upcoming_sessions = sessions.filter(s => {
@@ -90,7 +91,7 @@ export function useMentorStats(profileId: string | undefined) {
       }).length;
       
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
-      const no_show_sessions = sessions.filter(s => s.did_not_show_up).length;
+      const no_show_sessions = feedback.filter(f => f.did_not_show_up).length;
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
       // Calculate cancellation score (percentage of non-cancelled and non-no-show sessions)
@@ -101,8 +102,11 @@ export function useMentorStats(profileId: string | undefined) {
 
       // Calculate total hours based on completed sessions only
       const totalMinutes = sessions.reduce((acc, session) => {
-        // Skip if session was cancelled or was a no-show
-        if (session.status === 'cancelled' || session.did_not_show_up) return acc;
+        // Skip if session was cancelled or marked as no-show in feedback
+        if (session.status === 'cancelled' || 
+            feedback.some(f => f.session_id === session.id && f.did_not_show_up)) {
+          return acc;
+        }
         
         const startTime = new Date(session.scheduled_at);
         const endTime = new Date(session.scheduled_at);
@@ -113,7 +117,7 @@ export function useMentorStats(profileId: string | undefined) {
         
         // Calculate actual duration in minutes
         const durationInMs = endTime.getTime() - startTime.getTime();
-        const durationInMinutes = Math.floor(durationInMs / (1000 * 60)); // Convert ms to minutes
+        const durationInMinutes = Math.floor(durationInMs / (1000 * 60));
         
         return acc + durationInMinutes;
       }, 0);
@@ -121,15 +125,13 @@ export function useMentorStats(profileId: string | undefined) {
       // Convert total minutes to hours and remaining minutes
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
-
-      // Format time string
       const timeStr = `${hours}h ${minutes}m`;
 
-      // Calculate rating statistics
-      const ratings = ratingsResponse || [];
-      const total_ratings = ratings.length;
+      // Calculate rating statistics from non-no-show sessions
+      const validRatings = feedback.filter(f => !f.did_not_show_up && f.rating > 0);
+      const total_ratings = validRatings.length;
       const average_rating = total_ratings > 0
-        ? ratings.reduce((acc, curr) => acc + (curr.rating || 0), 0) / total_ratings
+        ? validRatings.reduce((acc, curr) => acc + curr.rating, 0) / total_ratings
         : 0;
 
       // Calculate session data for the last 6 months
@@ -145,7 +147,10 @@ export function useMentorStats(profileId: string | undefined) {
 
       const session_data = last6Months.map(month => {
         const count = sessions.filter(session => {
-          if (session.status === 'cancelled' || session.did_not_show_up) return false;
+          if (session.status === 'cancelled' || 
+              feedback.some(f => f.session_id === session.id && f.did_not_show_up)) {
+            return false;
+          }
           const sessionDate = new Date(session.scheduled_at);
           return sessionDate.getMonth() === month.date.getMonth() &&
                  sessionDate.getFullYear() === month.date.getFullYear();

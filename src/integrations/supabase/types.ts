@@ -1618,12 +1618,10 @@ export type Database = {
       }
       mentor_sessions: {
         Row: {
-          attendance_confirmed: boolean | null
           availability_slot_id: string | null
           calendar_event_etag: string | null
           calendar_event_id: string | null
           created_at: string
-          did_not_show_up: boolean | null
           id: string
           last_calendar_sync: string | null
           meeting_link: string | null
@@ -1641,12 +1639,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          attendance_confirmed?: boolean | null
           availability_slot_id?: string | null
           calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
-          did_not_show_up?: boolean | null
           id?: string
           last_calendar_sync?: string | null
           meeting_link?: string | null
@@ -1664,12 +1660,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          attendance_confirmed?: boolean | null
           availability_slot_id?: string | null
           calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
-          did_not_show_up?: boolean | null
           id?: string
           last_calendar_sync?: string | null
           meeting_link?: string | null
@@ -2348,6 +2342,7 @@ export type Database = {
       session_feedback: {
         Row: {
           created_at: string
+          did_not_show_up: boolean | null
           feedback_type: Database["public"]["Enums"]["feedback_type"]
           from_profile_id: string
           id: string
@@ -2359,6 +2354,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          did_not_show_up?: boolean | null
           feedback_type: Database["public"]["Enums"]["feedback_type"]
           from_profile_id: string
           id?: string
@@ -2370,6 +2366,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          did_not_show_up?: boolean | null
           feedback_type?: Database["public"]["Enums"]["feedback_type"]
           from_profile_id?: string
           id?: string
