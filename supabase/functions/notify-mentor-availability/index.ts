@@ -74,7 +74,7 @@ serve(async (req: Request) => {
         title: "New Availability Request",
         message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
         type: "availability_request",
-        action_url: `/profile?tab=calendar`,
+        action_url: `/profile?tab=mentor`,
         category: "mentorship",
         read: false
       });
@@ -160,7 +160,7 @@ serve(async (req: Request) => {
               <p>To review this request and manage your availability:</p>
               
               <center>
-                <a href="https://picocareer.com/profile?tab=calendar" class="button">
+                <a href="https://picocareer.com/profile?tab=mentor" class="button">
                   Review Request
                 </a>
               </center>
