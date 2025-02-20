@@ -72,9 +72,9 @@ serve(async (req: Request) => {
       .insert({
         profile_id: mentorId,
         title: "New Availability Request",
-        message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
+        message: `${menteeData.full_name} would like to book a mentoring session with you but noticed you don't have any available time slots.`,
         type: "availability_request",
-        action_url: `/profile?tab=calendar`,
+        action_url: `/profile?tab=mentor`,
         category: "mentorship",
         read: false
       });
@@ -94,7 +94,7 @@ serve(async (req: Request) => {
       const emailResponse = await resend.emails.send({
         from: 'PicoCareer <info@picocareer.com>',
         to: [mentorData.email],
-        subject: 'New Availability Request',
+        subject: 'New Session Request - Action Required',
         html: `
           <!DOCTYPE html>
           <html>
@@ -140,26 +140,30 @@ serve(async (req: Request) => {
             <body>
               <div class="container">
                 <div class="header">
-                  <h1>New Availability Request</h1>
+                  <h1>New Session Request</h1>
                 </div>
                 <div class="content">
                   <p>Dear ${mentorData.full_name},</p>
                   
-                  <p>We hope this email finds you well. You have received a new mentoring session request from <strong>${menteeData.full_name}</strong>.</p>
+                  <p><strong>${menteeData.full_name}</strong> would like to book a mentoring session with you but noticed that you don't currently have any available time slots.</p>
                   
-                  <p>To manage your availability and respond to this request, please login to your PicoCareer account:</p>
+                  <p>To accommodate this request, please:</p>
+                  <ol>
+                    <li>Log in to your PicoCareer account</li>
+                    <li>Go to your Profile</li>
+                    <li>Click on the "Mentor" tab</li>
+                    <li>Add your availability in the calendar section</li>
+                  </ol>
                   
                   <center>
                     <a href="https://picocareer.com/auth" class="button" style="color: white;">
-                      Login to PicoCareer
+                      Login to Add Availability
                     </a>
                   </center>
                   
-                  <p>After logging in, you'll be able to set your availability and manage mentoring session requests from your calendar.</p>
+                  <p>Once you've added your availability, the mentee will be able to book a session at a time that works for both of you.</p>
                   
-                  <p>Your dedication to mentoring makes a significant impact on our community. Thank you for being an invaluable part of the PicoCareer platform.</p>
-                  
-                  <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                  <p>Thank you for being an active mentor in our community. Your expertise and guidance make a real difference!</p>
                   
                   <p>Best regards,<br>The PicoCareer Team</p>
                 </div>
