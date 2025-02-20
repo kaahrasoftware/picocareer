@@ -14,27 +14,19 @@ serve(async (req: Request) => {
   }
 
   try {
-    let reqBody;
-    try {
-      reqBody = await req.text();
-      console.log('Raw request body:', reqBody);
-    } catch (error) {
-      console.error('Error reading request body:', error);
-      throw new Error('Failed to read request body');
-    }
+    const body = await req.json();
+    console.log('Received request body:', body);
 
-    let body;
-    try {
-      body = JSON.parse(reqBody);
-      console.log('Parsed request body:', body);
-    } catch (error) {
-      console.error('Error parsing JSON:', error);
-      throw new Error('Invalid JSON in request body');
-    }
+    // Remove dashes from IDs
+    const mentorId = body.mentorId?.replace(/-/g, '');
+    const menteeId = body.menteeId?.replace(/-/g, '');
+    const requestId = body.requestId?.replace(/-/g, '');
 
-    if (!body?.mentorId || !body?.menteeId || !body?.requestId) {
+    if (!mentorId || !menteeId || !requestId) {
       throw new Error('Missing required fields: mentorId, menteeId, or requestId');
     }
+
+    console.log('Processed IDs:', { mentorId, menteeId, requestId });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -45,7 +37,7 @@ serve(async (req: Request) => {
     const { data: mentorData, error: mentorError } = await supabase
       .from('profiles')
       .select('email, full_name')
-      .eq('id', body.mentorId)
+      .eq('id', mentorId)
       .single();
 
     if (mentorError || !mentorData?.email) {
@@ -57,7 +49,7 @@ serve(async (req: Request) => {
     const { data: menteeData, error: menteeError } = await supabase
       .from('profiles')
       .select('full_name')
-      .eq('id', body.menteeId)
+      .eq('id', menteeId)
       .single();
 
     if (menteeError || !menteeData) {
@@ -67,6 +59,25 @@ serve(async (req: Request) => {
 
     console.log('Found profiles:', { mentor: mentorData, mentee: menteeData });
 
+    const emailBody = {
+      sender: {
+        name: "PicoCareer",
+        email: "notification@picocareer.com"
+      },
+      to: [{
+        email: mentorData.email,
+        name: mentorData.full_name
+      }],
+      subject: "New Availability Request",
+      htmlContent: `
+        <h1>New Availability Request</h1>
+        <p>Hello ${mentorData.full_name},</p>
+        <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+        <p>Please log in to your dashboard to review and respond to this request.</p>
+        <p>Best regards,<br>The PicoCareer Team</p>
+      `
+    };
+
     // Send email using Brevo
     const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -75,36 +86,11 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
         "api-key": Deno.env.get("SEND_API") ?? '',
       },
-      body: JSON.stringify({
-        sender: {
-          name: "PicoCareer",
-          email: "notification@picocareer.com"
-        },
-        to: [{
-          email: mentorData.email,
-          name: mentorData.full_name
-        }],
-        subject: "New Availability Request",
-        htmlContent: `
-          <h1>New Availability Request</h1>
-          <p>Hello ${mentorData.full_name},</p>
-          <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-          <p>Please log in to your dashboard to review and respond to this request.</p>
-          <p>Best regards,<br>The PicoCareer Team</p>
-        `
-      })
+      body: JSON.stringify(emailBody)
     });
 
-    const emailResponseData = await emailResponse.text();
-    console.log('Email API response:', emailResponseData);
-
-    let parsedEmailResponse;
-    try {
-      parsedEmailResponse = JSON.parse(emailResponseData);
-    } catch (error) {
-      console.error('Error parsing email response:', error);
-      parsedEmailResponse = { raw: emailResponseData };
-    }
+    const responseText = await emailResponse.text();
+    console.log('Email API response:', responseText);
 
     if (!emailResponse.ok) {
       throw new Error(`Email API error: ${emailResponse.statusText}`);
@@ -113,8 +99,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Notification sent successfully",
-        data: parsedEmailResponse
+        message: "Notification sent successfully"
       }),
       {
         status: 200,
@@ -132,7 +117,7 @@ serve(async (req: Request) => {
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       }),
       {
-        status: 400,
+        status: error instanceof Error && error.message.includes('Missing required fields') ? 400 : 500,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json"

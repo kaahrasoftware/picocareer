@@ -29,14 +29,19 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
 
     try {
       setIsRequestingAvailability(true);
-      console.log('Starting availability request process...', { mentorId, userId });
+      
+      // Remove dashes from IDs before database operations
+      const cleanMentorId = mentorId.replace(/-/g, '');
+      const cleanUserId = userId.replace(/-/g, '');
+      
+      console.log('Starting availability request process...', { cleanMentorId, cleanUserId });
 
       // Insert new request
       const { data: requestData, error: insertError } = await supabase
         .from('availability_requests')
         .insert({
-          mentor_id: mentorId,
-          mentee_id: userId,
+          mentor_id: cleanMentorId,
+          mentee_id: cleanUserId,
           status: 'pending'
         })
         .select()
@@ -59,18 +64,14 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
       console.log('Availability request created:', requestData);
 
       // Call the edge function to notify mentor
-      const requestBody = {
-        mentorId,
-        menteeId: userId,
-        requestId: requestData.id
-      };
-
-      console.log('Sending notification request:', requestBody);
-
       const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
         'notify-mentor-availability',
         {
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify({
+            mentorId: cleanMentorId,
+            menteeId: cleanUserId,
+            requestId: requestData.id
+          })
         }
       );
 
@@ -85,7 +86,7 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
-          profile_id: mentorId,
+          profile_id: cleanMentorId,
           title: "New Availability Request",
           message: "A mentee has requested your availability for mentoring sessions.",
           type: "mentor_request",
