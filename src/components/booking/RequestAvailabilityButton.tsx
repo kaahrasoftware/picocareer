@@ -30,13 +30,23 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
     try {
       setIsRequestingAvailability(true);
 
-      // Insert new request - removed 24h check
+      // Insert new request
       const { error: insertError } = await supabase
         .from('availability_requests')
         .insert({
           mentor_id: mentorId,
           mentee_id: userId
         });
+
+      // Handle duplicate request error
+      if (insertError?.message?.includes('unique_mentor_mentee_request')) {
+        toast({
+          title: "Request Already Sent",
+          description: "You have already requested availability from this mentor.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (insertError) throw insertError;
 
