@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useMentorStats } from "./hooks/useMentorStats";
-import { Star, Users, CalendarCheck, Clock, Ban, Shield } from "lucide-react";
+import { Star, Users, CalendarCheck, Clock, Ban, Shield, CalendarX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MentorshipStatsProps {
@@ -13,8 +13,8 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
 
   if (!stats) {
     return (
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
+        {[...Array(7)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -60,10 +60,17 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       iconColor: "text-orange-500"
     },
     {
-      title: "Session Issues",
+      title: "Cancelled",
       value: stats.cancelled_sessions,
+      icon: CalendarX,
+      subtitle: "By mentor or mentee",
+      iconColor: "text-rose-500"
+    },
+    {
+      title: "No-shows",
+      value: stats.no_show_sessions,
       icon: Ban,
-      subtitle: `${stats.no_show_sessions} no-show${stats.no_show_sessions !== 1 ? 's' : ''}`,
+      subtitle: "Mentee did not show up",
       iconColor: "text-red-500"
     },
     {
@@ -83,7 +90,7 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
   ];
 
   return (
-    <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+    <div className="grid gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
       {cards.map((card, i) => (
         <Card key={i}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
