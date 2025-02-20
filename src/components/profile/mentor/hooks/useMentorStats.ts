@@ -98,12 +98,22 @@ export function useMentorStats(profileId: string | undefined) {
         ? Math.round(((total_sessions - cancelled_sessions) / total_sessions) * 100)
         : 100;
 
-      // Calculate total hours based on session types
+      // Calculate total hours based on completed sessions only
       const total_hours = sessions.reduce((acc, session) => {
+        // Only count completed sessions
         if (session.status === 'cancelled') return acc;
-        const sessionType = sessionTypes?.find(st => st.id === session.session_type_id);
-        return acc + (sessionType?.duration || 60) / 60;
+        
+        const sessionEndTime = new Date(session.scheduled_at);
+        sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (session.session_type?.duration || 60));
+        
+        // Only include sessions that have ended
+        if (sessionEndTime > now) return acc;
+        
+        return acc + (session.session_type?.duration || 60) / 60;
       }, 0);
+
+      // Round total hours to 1 decimal place
+      const rounded_total_hours = Math.round(total_hours * 10) / 10;
 
       // Calculate rating statistics
       const ratings = ratingsResponse || [];
@@ -142,7 +152,7 @@ export function useMentorStats(profileId: string | undefined) {
         upcoming_sessions,
         cancelled_sessions,
         unique_mentees,
-        total_hours,
+        total_hours: rounded_total_hours,
         total_ratings,
         average_rating: Number(average_rating.toFixed(1)),
         cancellation_score,
