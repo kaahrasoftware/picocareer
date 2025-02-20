@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import { google } from "npm:googleapis@128.0.0";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,150 +86,93 @@ serve(async (req: Request) => {
 
     console.log('Notification created successfully');
 
-    // Set up Google OAuth2 client with service account
-    const privateKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n');
-    const serviceAccountEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-
-    if (!privateKey || !serviceAccountEmail) {
-      throw new Error('Missing Google service account credentials');
-    }
-
-    console.log('Setting up Google OAuth2 client with:', {
-      serviceAccountEmail,
-      privateKeyLength: privateKey.length,
-      impersonationEmail: 'info@picocareer.com'
-    });
-
-    const auth = new google.auth.JWT({
-      email: serviceAccountEmail,
-      key: privateKey,
-      subject: 'info@picocareer.com',
-      scopes: [
-        'https://www.googleapis.com/auth/gmail.send',
-        'https://www.googleapis.com/auth/gmail.compose',
-        'https://mail.google.com/'
-      ]
-    });
-
-    try {
-      // Test the credentials by getting an access token
-      const credentials = await auth.authorize();
-      console.log('Successfully obtained access token:', {
-        tokenExists: !!credentials.access_token,
-        expiryDate: credentials.expiry_date
-      });
-    } catch (authError) {
-      console.error('Authorization error:', authError);
-      throw new Error('Failed to authenticate with Google');
-    }
-
-    // Create Gmail API client
-    const gmail = google.gmail({ version: 'v1', auth });
-
-    // Create email content with proper HTML structure
-    const emailContent = [
-      'From: PicoCareer <info@picocareer.com>',
-      `To: ${mentorData.email}`,
-      'Content-Type: text/html; charset=utf-8',
-      'MIME-Version: 1.0',
-      'Subject: New Mentoring Session Request',
-      '',
-      `<!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            .container {
-              font-family: Arial, sans-serif;
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
-              color: #333;
-            }
-            .header {
-              background-color: #002366;
-              color: white;
-              padding: 20px;
-              text-align: center;
-              border-radius: 5px 5px 0 0;
-            }
-            .content {
-              background-color: #f9f9f9;
-              padding: 20px;
-              border-radius: 0 0 5px 5px;
-              line-height: 1.6;
-            }
-            .button {
-              display: inline-block;
-              background-color: #0EA5E9;
-              color: white;
-              padding: 12px 25px;
-              text-decoration: none;
-              border-radius: 5px;
-              margin: 20px 0;
-            }
-            .footer {
-              margin-top: 20px;
-              text-align: center;
-              color: #666;
-              font-size: 14px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>New Mentoring Session Request</h1>
-            </div>
-            <div class="content">
-              <p>Dear ${mentorData.full_name},</p>
-              
-              <p>We hope this email finds you well. You have received a new mentoring session request from <strong>${menteeData.full_name}</strong>.</p>
-              
-              <p>To review this request and manage your availability:</p>
-              
-              <center>
-                <a href="https://picocareer.com/profile?tab=mentor" class="button" style="color: white;">
-                  Review Request
-                </a>
-              </center>
-              
-              <p>Your dedication to mentoring makes a significant impact on our community. Thank you for being an invaluable part of the PicoCareer platform.</p>
-              
-              <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-              
-              <p>Best regards,<br>The PicoCareer Team</p>
-            </div>
-            <div class="footer">
-              <p>© 2024 PicoCareer. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-      </html>`
-    ].join('\n');
-
-    // Encode the email content
-    const encoder = new TextEncoder();
-    const emailBytes = encoder.encode(emailContent);
-    const encodedEmail = btoa(String.fromCharCode(...emailBytes))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
+    // Initialize Resend
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
     try {
       console.log('Attempting to send email to:', mentorData.email);
-      const response = await gmail.users.messages.send({
-        userId: 'me',
-        requestBody: {
-          raw: encodedEmail
-        }
+      const emailResponse = await resend.emails.send({
+        from: 'PicoCareer <info@picocareer.com>',
+        to: [mentorData.email],
+        subject: 'New Mentoring Session Request',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                .container {
+                  font-family: Arial, sans-serif;
+                  max-width: 600px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  color: #333;
+                }
+                .header {
+                  background-color: #002366;
+                  color: white;
+                  padding: 20px;
+                  text-align: center;
+                  border-radius: 5px 5px 0 0;
+                }
+                .content {
+                  background-color: #f9f9f9;
+                  padding: 20px;
+                  border-radius: 0 0 5px 5px;
+                  line-height: 1.6;
+                }
+                .button {
+                  display: inline-block;
+                  background-color: #0EA5E9;
+                  color: white;
+                  padding: 12px 25px;
+                  text-decoration: none;
+                  border-radius: 5px;
+                  margin: 20px 0;
+                }
+                .footer {
+                  margin-top: 20px;
+                  text-align: center;
+                  color: #666;
+                  font-size: 14px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>New Mentoring Session Request</h1>
+                </div>
+                <div class="content">
+                  <p>Dear ${mentorData.full_name},</p>
+                  
+                  <p>We hope this email finds you well. You have received a new mentoring session request from <strong>${menteeData.full_name}</strong>.</p>
+                  
+                  <p>To review this request and manage your availability:</p>
+                  
+                  <center>
+                    <a href="https://picocareer.com/profile?tab=mentor" class="button" style="color: white;">
+                      Review Request
+                    </a>
+                  </center>
+                  
+                  <p>Your dedication to mentoring makes a significant impact on our community. Thank you for being an invaluable part of the PicoCareer platform.</p>
+                  
+                  <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                  
+                  <p>Best regards,<br>The PicoCareer Team</p>
+                </div>
+                <div class="footer">
+                  <p>© 2024 PicoCareer. All rights reserved.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `
       });
-      console.log('Email sent successfully:', response.data);
+
+      console.log('Email sent successfully:', emailResponse);
     } catch (emailError) {
       console.error('Error sending email:', emailError);
-      console.error('Error details:', {
-        message: emailError.message,
-        response: emailError.response?.data
-      });
       throw emailError;
     }
 
