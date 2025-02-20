@@ -54,7 +54,7 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       title: "Hours Mentored",
       value: stats.total_hours,
       icon: Clock,
-      subtitle: "Total mentoring time",
+      subtitle: "Total mentoring hours",
       iconColor: "text-orange-500"
     },
     {
