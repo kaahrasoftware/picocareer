@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookingForm } from "@/components/booking/BookingForm";
-import { BookingConfirmation } from "@/components/booking/BookingConfirmation";
+import { BookingForm } from "./BookingForm";
+import { BookingConfirmation } from "./BookingConfirmation";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,10 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { notifyAdmins } from "@/components/booking/AdminNotification";
+import { notifyAdmins } from "./AdminNotification";
+import type { Database } from "@/types/database/database.types";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -35,10 +39,85 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     meetingPlatform: "Google Meet"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRequestingAvailability, setIsRequestingAvailability] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const bookSession = useBookSession();
+  const navigate = useNavigate();
+
+  const handleRequestAvailability = async () => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to request mentor availability.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      setIsRequestingAvailability(true);
+
+      // Check if user has already requested in the last 24 hours
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      const { data: existingRequest } = await supabase
+        .from('availability_requests')
+        .select('*')
+        .eq('mentor_id', mentor.id)
+        .eq('mentee_id', session.user.id)
+        .gte('created_at', twentyFourHoursAgo.toISOString())
+        .single();
+
+      if (existingRequest) {
+        toast({
+          title: "Request Limit Reached",
+          description: "You can only request availability once every 24 hours.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Insert new request
+      const { error: insertError } = await supabase
+        .from('availability_requests')
+        .insert({
+          mentor_id: mentor.id,
+          mentee_id: session.user.id
+        });
+
+      if (insertError) throw insertError;
+
+      // Notify mentor via edge function
+      const { error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
+        body: {
+          mentorId: mentor.id,
+          menteeId: session.user.id
+        }
+      });
+
+      if (notifyError) throw notifyError;
+
+      toast({
+        title: "Request Sent",
+        description: "The mentor has been notified of your request.",
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error requesting availability:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send availability request. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRequestingAvailability(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.date || !formData.selectedTime || !formData.sessionType || !mentor.id) {
@@ -216,42 +295,51 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full sm:max-w-4xl h-[90vh] overflow-y-auto p-0 sm:p-6">
-        <div className="px-0 sm:px-0">
-          <DialogHeader className="space-y-2 sm:space-y-4 pt-3 sm:pt-0">
-            <div className="flex items-center space-x-2 sm:space-x-4 px-3 sm:px-0">
-              <Avatar className="h-8 w-8 sm:h-12 sm:w-12">
-                <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
-                <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <DialogTitle className="text-lg sm:text-2xl font-bold">
-                  Book a Session with {mentor.name}
-                </DialogTitle>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-                  Fill in the details below to schedule your mentoring session
-                </p>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
+              <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <DialogTitle className="text-2xl font-bold">
+                Book a Session with {mentor.name}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Fill in the details below to schedule your mentoring session
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="mt-6">
+          <div className="bg-muted/30 rounded-lg p-6">
+            <BookingForm 
+              mentorId={mentor.id}
+              onFormChange={setFormData}
+            />
+          </div>
+
+          <div className="mt-6">
+            {!formData.date && (
+              <div className="flex justify-center mb-4">
+                <Button
+                  variant="secondary"
+                  onClick={handleRequestAvailability}
+                  disabled={isRequestingAvailability}
+                >
+                  {isRequestingAvailability ? "Sending Request..." : "Request Availability"}
+                </Button>
               </div>
-            </div>
-          </DialogHeader>
-
-          <div className="flex flex-col space-y-3 sm:space-y-6 mt-3 sm:mt-6">
-            <div className="bg-muted/30 rounded-lg p-3 sm:p-6">
-              <BookingForm 
-                mentorId={mentor.id}
-                onFormChange={setFormData}
-              />
-            </div>
-
-            <div className="px-3 sm:px-0 pb-3 sm:pb-0">
-              <BookingConfirmation
-                isSubmitting={isSubmitting}
-                onCancel={() => onOpenChange(false)}
-                onConfirm={handleSubmit}
-                isValid={isValid}
-                googleAuthError={false}
-              />
-            </div>
+            )}
+            <BookingConfirmation
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              onConfirm={handleSubmit}
+              isValid={isValid}
+              googleAuthError={false}
+            />
           </div>
         </div>
       </DialogContent>
