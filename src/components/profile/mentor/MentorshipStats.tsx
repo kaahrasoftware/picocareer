@@ -40,14 +40,16 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       title: "Total Sessions",
       value: stats.total_sessions,
       icon: Users,
-      subtitle: `${stats.unique_mentees} unique mentees`,
+      subtitle: `${stats.unique_mentees} unique mentee${stats.unique_mentees !== 1 ? 's' : ''}`,
       iconColor: "text-blue-500"
     },
     {
       title: "Completed",
       value: stats.completed_sessions,
       icon: CalendarCheck,
-      subtitle: `${stats.upcoming_sessions} upcoming`,
+      subtitle: stats.upcoming_sessions > 0 
+        ? `${stats.upcoming_sessions} upcoming`
+        : "No upcoming sessions",
       iconColor: "text-green-500"
     },
     {
@@ -58,17 +60,17 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       iconColor: "text-orange-500"
     },
     {
-      title: "Cancelled",
+      title: "Session Issues",
       value: stats.cancelled_sessions,
       icon: Ban,
-      subtitle: `${stats.no_show_sessions} no-shows`,
+      subtitle: `${stats.no_show_sessions} no-show${stats.no_show_sessions !== 1 ? 's' : ''}`,
       iconColor: "text-red-500"
     },
     {
       title: "Average Rating",
-      value: stats.average_rating,
+      value: stats.total_ratings > 0 ? stats.average_rating.toFixed(1) : "N/A",
       icon: Star,
-      subtitle: `${stats.total_ratings} total ratings`,
+      subtitle: `${stats.total_ratings} rating${stats.total_ratings !== 1 ? 's' : ''}`,
       iconColor: "text-yellow-500"
     },
     {
