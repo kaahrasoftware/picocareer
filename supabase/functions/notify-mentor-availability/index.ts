@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { google } from "npm:googleapis@118.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,8 +19,6 @@ serve(async (req) => {
   }
 
   try {
-    const client = new SmtpClient();
-
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -45,29 +43,48 @@ serve(async (req) => {
       throw new Error('Mentor or mentee not found')
     }
 
-    await client.connectTLS({
-      hostname: "smtp.gmail.com",
-      port: 465,
-      username: Deno.env.get("GMAIL_USER"),
-      password: Deno.env.get("GMAIL_APP_PASSWORD")
+    // Set up Gmail API
+    const auth = new google.auth.JWT(
+      Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL"),
+      undefined,
+      Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY")?.replace(/\\n/g, '\n'),
+      ['https://www.googleapis.com/auth/gmail.send'],
+      'info@picocareer.com'
+    );
+
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    // Create email content
+    const emailContent = `
+      <h2>New Availability Request</h2>
+      <p>Hello ${mentor.first_name},</p>
+      <p>${mentee.full_name} has requested availability slots from you.</p>
+      <p>Please check your calendar and add some available time slots if possible.</p>
+      <p>Best regards,<br/>The PicoCareer Team</p>
+    `;
+
+    // Create email message
+    const emailLines = [
+      'Content-Type: text/html; charset=utf-8',
+      'MIME-Version: 1.0',
+      `To: ${mentor.email}`,
+      'From: PicoCareer <info@picocareer.com>',
+      'Subject: New Availability Request',
+      '',
+      emailContent
+    ];
+
+    const email = emailLines.join('\r\n').trim();
+
+    // Send email
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: Buffer.from(email).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      },
     });
 
-    // Send email to mentor
-    await client.send({
-      from: Deno.env.get("GMAIL_USER") || "",
-      to: mentor.email,
-      subject: "New Availability Request",
-      content: `
-        <h2>New Availability Request</h2>
-        <p>Hello ${mentor.first_name},</p>
-        <p>${mentee.full_name} has requested availability slots from you.</p>
-        <p>Please check your calendar and add some available time slots if possible.</p>
-        <p>Best regards,<br/>The PicoCareer Team</p>
-      `,
-      html: true
-    });
-
-    await client.close();
+    console.log('Email sent successfully to:', mentor.email);
 
     // Create notification in the database
     await supabase
