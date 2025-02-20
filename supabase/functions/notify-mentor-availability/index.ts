@@ -1,9 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,21 +47,41 @@ serve(async (req: Request) => {
 
     console.log('Found mentor and mentee:', { mentor: mentorData, mentee: menteeData });
 
-    // Send email to mentor
-    const emailResponse = await resend.emails.send({
-      from: "PicoCareer <notification@picocareer.com>",
-      to: [mentorData.email],
-      subject: "New Availability Request",
-      html: `
-        <h1>New Availability Request</h1>
-        <p>Hello ${mentorData.full_name},</p>
-        <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-        <p>Please log in to your dashboard to review and respond to this request.</p>
-        <p>Best regards,<br>The PicoCareer Team</p>
-      `,
+    // Send email using Brevo
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "api-key": Deno.env.get("SEND_API") ?? '',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "PicoCareer",
+          email: "notification@picocareer.com"
+        },
+        to: [{
+          email: mentorData.email,
+          name: mentorData.full_name
+        }],
+        subject: "New Availability Request",
+        htmlContent: `
+          <h1>New Availability Request</h1>
+          <p>Hello ${mentorData.full_name},</p>
+          <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+          <p>Please log in to your dashboard to review and respond to this request.</p>
+          <p>Best regards,<br>The PicoCareer Team</p>
+        `
+      })
     });
 
-    console.log('Email sent:', emailResponse);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error sending email:', errorData);
+      throw new Error(`Failed to send email: ${response.statusText}`);
+    }
+
+    console.log('Email sent successfully');
 
     return new Response(
       JSON.stringify({ message: "Notification sent successfully" }),
