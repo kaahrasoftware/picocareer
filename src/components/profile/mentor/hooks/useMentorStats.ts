@@ -79,7 +79,6 @@ export function useMentorStats(profileId: string | undefined) {
         if (s.status === 'cancelled') return false;
         
         const sessionEndTime = new Date(s.scheduled_at);
-        // Add session duration to get end time
         sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
         
         return sessionEndTime < now;
@@ -100,16 +99,21 @@ export function useMentorStats(profileId: string | undefined) {
 
       // Calculate total hours based on completed sessions only
       const total_hours = sessions.reduce((acc, session) => {
-        // Only count completed sessions
+        // Skip if session was cancelled
         if (session.status === 'cancelled') return acc;
         
-        const sessionEndTime = new Date(session.scheduled_at);
-        sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (session.session_type?.duration || 60));
+        const startTime = new Date(session.scheduled_at);
+        const endTime = new Date(session.scheduled_at);
+        endTime.setMinutes(endTime.getMinutes() + (session.session_type?.duration || 60));
         
         // Only include sessions that have ended
-        if (sessionEndTime > now) return acc;
+        if (endTime > now) return acc;
         
-        return acc + (session.session_type?.duration || 60) / 60;
+        // Calculate actual duration in hours
+        const durationInMs = endTime.getTime() - startTime.getTime();
+        const durationInHours = durationInMs / (1000 * 60 * 60); // Convert ms to hours
+        
+        return acc + durationInHours;
       }, 0);
 
       // Round total hours to 1 decimal place
