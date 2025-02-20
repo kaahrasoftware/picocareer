@@ -1,3 +1,4 @@
+
 import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,7 +138,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         <p>Days highlighted in green are available for booking</p>
         <p>Days highlighted in red are marked as unavailable</p>
         {availableDates.length === 0 && (
-          <p className="text-yellow-500">No available dates found for this mentor</p>
+          <p className="text-yellow-500">This mentor has no available dates</p>
         )}
       </div>
     </div>
