@@ -26,9 +26,9 @@ export function useMentorStats(profileId: string | undefined): MentorStatsHookRe
       
       const sessionStats = calculateSessionStats(sessions, feedback, now);
       
-      // Count no-shows by mentees (where mentor reported them as no-show)
+      // Count no-shows by mentors (where mentee reported mentor as no-show)
       const no_show_sessions = feedback.filter(f => 
-        f.from_profile_id === profileId && 
+        f.to_profile_id === profileId && 
         f.did_not_show_up
       ).length;
 

@@ -70,7 +70,7 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       title: "No-shows",
       value: stats.no_show_sessions,
       icon: Ban,
-      subtitle: "Mentee did not show up",
+      subtitle: "Mentor did not show up",
       iconColor: "text-red-500"
     },
     {
