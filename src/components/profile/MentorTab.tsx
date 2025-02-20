@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { MentorshipStats } from "./mentor/MentorshipStats";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
@@ -5,7 +6,6 @@ import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import { useMentorStats } from "./mentor/hooks/useMentorStats";
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorTabProps {
@@ -15,7 +15,6 @@ interface MentorTabProps {
 export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
-  const { stats, refetchSessions, refetchSessionTypes, sessionTypes } = useMentorStats(profileId);
 
   useEffect(() => {
     if (!profileId) return;
@@ -63,7 +62,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       </TabsList>
 
       <TabsContent value="stats">
-        {stats && <MentorshipStats stats={stats} />}
+        <MentorshipStats profileId={profileId} />
       </TabsContent>
 
       <TabsContent value="session-types">
