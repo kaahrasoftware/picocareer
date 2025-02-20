@@ -88,46 +88,54 @@ serve(async (req: Request) => {
     // Verify SEND_API key is available
     const sendApiKey = Deno.env.get("SEND_API");
     if (!sendApiKey) {
+      console.error('SEND_API key not found in environment variables');
       throw new Error('SEND_API key not configured');
     }
 
-    // Send email notification
-    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "api-key": sendApiKey,
-      },
-      body: JSON.stringify({
-        sender: {
-          name: "PicoCareer",
-          email: "notification@picocareer.com"
+    console.log('Preparing to send email to:', mentorData.email);
+
+    // Send email notification using Brevo (formerly Sendinblue)
+    try {
+      const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "api-key": sendApiKey,
         },
-        to: [{
-          email: mentorData.email,
-          name: mentorData.full_name
-        }],
-        subject: "New Availability Request",
-        htmlContent: `
-          <h1>New Availability Request</h1>
-          <p>Hello ${mentorData.full_name},</p>
-          <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-          <p>Please log in to your dashboard to review and respond to this request.</p>
-          <p>Best regards,<br>The PicoCareer Team</p>
-        `
-      })
-    });
+        body: JSON.stringify({
+          sender: {
+            name: "PicoCareer",
+            email: "notification@picocareer.com"
+          },
+          to: [{
+            email: mentorData.email,
+            name: mentorData.full_name
+          }],
+          subject: "New Availability Request",
+          htmlContent: `
+            <h1>New Availability Request</h1>
+            <p>Hello ${mentorData.full_name},</p>
+            <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+            <p>Please log in to your dashboard to review and respond to this request.</p>
+            <p>Best regards,<br>The PicoCareer Team</p>
+          `
+        })
+      });
 
-    const emailResponseText = await emailResponse.text();
-    console.log('Email API raw response:', emailResponseText);
+      const emailResponseText = await emailResponse.text();
+      console.log('Email API raw response:', emailResponseText);
 
-    if (!emailResponse.ok) {
-      console.error('Email API error response:', emailResponseText);
-      throw new Error(`Email API error: ${emailResponse.statusText}`);
+      if (!emailResponse.ok) {
+        console.error('Email API error response:', emailResponseText);
+        throw new Error(`Email API error: ${emailResponse.statusText}`);
+      }
+
+      console.log('Email sent successfully');
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      throw emailError;
     }
-
-    console.log('Email sent successfully');
 
     return new Response(
       JSON.stringify({
