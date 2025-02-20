@@ -147,13 +147,15 @@ serve(async (req: Request) => {
                   
                   <p>We hope this email finds you well. You have received a new mentoring session request from <strong>${menteeData.full_name}</strong>.</p>
                   
-                  <p>To review this request and manage your availability:</p>
+                  <p>To manage your availability and respond to this request, please login to your PicoCareer account:</p>
                   
                   <center>
-                    <a href="https://picocareer.com/profile?tab=mentor" class="button" style="color: white;">
-                      Review Request
+                    <a href="https://picocareer.com/auth" class="button" style="color: white;">
+                      Login to PicoCareer
                     </a>
                   </center>
+                  
+                  <p>After logging in, you'll be able to set your availability and manage mentoring session requests from your calendar.</p>
                   
                   <p>Your dedication to mentoring makes a significant impact on our community. Thank you for being an invaluable part of the PicoCareer platform.</p>
                   
