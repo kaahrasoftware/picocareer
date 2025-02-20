@@ -75,14 +75,27 @@ export function useMentorStats(profileId: string | undefined) {
       
       const total_sessions = sessions.length;
       
-      // Count completed sessions based on status
+      // Count completed sessions based on status and no-shows
       const completed_sessions = sessions.filter(s => {
         if (s.status === 'cancelled') return false;
         
         const sessionEndTime = new Date(s.scheduled_at);
         sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
         
-        return sessionEndTime < now && s.status === 'completed';
+        // Only consider past sessions
+        if (sessionEndTime >= now) return false;
+
+        // Check if there's any feedback indicating the mentor didn't show up
+        const mentorNoShow = feedback.some(f => 
+          f.session_id === s.id && 
+          f.to_profile_id === profileId && 
+          f.did_not_show_up
+        );
+
+        // If mentor didn't show up, it's not completed
+        if (mentorNoShow) return false;
+
+        return s.status === 'completed';
       }).length;
       
       const upcoming_sessions = sessions.filter(s => {
@@ -91,7 +104,13 @@ export function useMentorStats(profileId: string | undefined) {
       }).length;
       
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
-      const no_show_sessions = feedback.filter(f => f.did_not_show_up).length;
+      
+      // Count no-shows by mentees (where mentor reported them as no-show)
+      const no_show_sessions = feedback.filter(f => 
+        f.from_profile_id === profileId && 
+        f.did_not_show_up
+      ).length;
+
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
       // Calculate cancellation score (percentage of non-cancelled and non-no-show sessions)
@@ -102,11 +121,16 @@ export function useMentorStats(profileId: string | undefined) {
 
       // Calculate total hours based on completed sessions only
       const totalMinutes = sessions.reduce((acc, session) => {
-        // Skip if session was cancelled or marked as no-show in feedback
-        if (session.status === 'cancelled' || 
-            feedback.some(f => f.session_id === session.id && f.did_not_show_up)) {
-          return acc;
-        }
+        // Skip if session was cancelled
+        if (session.status === 'cancelled') return acc;
+        
+        // Skip if mentor was reported as no-show
+        const mentorNoShow = feedback.some(f => 
+          f.session_id === session.id && 
+          f.to_profile_id === profileId && 
+          f.did_not_show_up
+        );
+        if (mentorNoShow) return acc;
         
         const startTime = new Date(session.scheduled_at);
         const endTime = new Date(session.scheduled_at);
@@ -128,7 +152,11 @@ export function useMentorStats(profileId: string | undefined) {
       const timeStr = `${hours}h ${minutes}m`;
 
       // Calculate rating statistics from non-no-show sessions
-      const validRatings = feedback.filter(f => !f.did_not_show_up && f.rating > 0);
+      const validRatings = feedback.filter(f => 
+        // Only include ratings where mentor showed up (not marked as no-show when they're the to_profile)
+        !(f.to_profile_id === profileId && f.did_not_show_up) && 
+        f.rating > 0
+      );
       const total_ratings = validRatings.length;
       const average_rating = total_ratings > 0
         ? validRatings.reduce((acc, curr) => acc + curr.rating, 0) / total_ratings
@@ -147,10 +175,16 @@ export function useMentorStats(profileId: string | undefined) {
 
       const session_data = last6Months.map(month => {
         const count = sessions.filter(session => {
-          if (session.status === 'cancelled' || 
-              feedback.some(f => f.session_id === session.id && f.did_not_show_up)) {
-            return false;
-          }
+          if (session.status === 'cancelled') return false;
+          
+          // Skip if mentor was reported as no-show
+          const mentorNoShow = feedback.some(f => 
+            f.session_id === session.id && 
+            f.to_profile_id === profileId && 
+            f.did_not_show_up
+          );
+          if (mentorNoShow) return false;
+          
           const sessionDate = new Date(session.scheduled_at);
           return sessionDate.getMonth() === month.date.getMonth() &&
                  sessionDate.getFullYear() === month.date.getFullYear();
