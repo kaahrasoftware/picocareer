@@ -2347,7 +2347,7 @@ export type Database = {
           from_profile_id: string
           id: string
           notes: string | null
-          rating: number
+          rating: number | null
           recommend: boolean | null
           session_id: string
           to_profile_id: string
@@ -2359,7 +2359,7 @@ export type Database = {
           from_profile_id: string
           id?: string
           notes?: string | null
-          rating: number
+          rating?: number | null
           recommend?: boolean | null
           session_id: string
           to_profile_id: string
@@ -2371,7 +2371,7 @@ export type Database = {
           from_profile_id?: string
           id?: string
           notes?: string | null
-          rating?: number
+          rating?: number | null
           recommend?: boolean | null
           session_id?: string
           to_profile_id?: string
