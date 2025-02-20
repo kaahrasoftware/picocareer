@@ -6,25 +6,45 @@ export function calculateSessionStats(sessions: any[], feedback: any[], now: Dat
   const completed_sessions = sessions.filter(s => {
     if (s.status === 'cancelled') return false;
     
-    const sessionEndTime = new Date(s.scheduled_at);
-    sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
-    
-    // Consider a session completed if:
-    // 1. Status is 'completed' OR
-    // 2. Session end time has passed and status is not cancelled
-    if (sessionEndTime < now && s.status !== 'cancelled') {
-      // Check if there's any no-show feedback
-      const sessionFeedback = feedback.find(f => f.session_id === s.id);
-      if (sessionFeedback?.did_not_show_up) return false;
-      return true;
+    try {
+      const sessionEndTime = new Date(s.scheduled_at);
+      if (isNaN(sessionEndTime.getTime())) {
+        console.error('Invalid scheduled_at date:', s.scheduled_at);
+        return false;
+      }
+      
+      sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
+      
+      // Consider a session completed if:
+      // 1. Status is 'completed' OR
+      // 2. Session end time has passed and status is not cancelled
+      if (sessionEndTime < now && s.status !== 'cancelled') {
+        // Check if there's any no-show feedback
+        const sessionFeedback = feedback.find(f => f.session_id === s.id);
+        if (sessionFeedback?.did_not_show_up) return false;
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error processing session:', error);
+      return false;
     }
-    
-    return false;
   }).length;
 
   const upcoming_sessions = sessions.filter(s => {
     if (s.status === 'cancelled') return false;
-    return new Date(s.scheduled_at) >= now;
+    try {
+      const sessionDate = new Date(s.scheduled_at);
+      if (isNaN(sessionDate.getTime())) {
+        console.error('Invalid scheduled_at date:', s.scheduled_at);
+        return false;
+      }
+      return sessionDate >= now;
+    } catch (error) {
+      console.error('Error processing upcoming session:', error);
+      return false;
+    }
   }).length;
 
   const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
@@ -44,16 +64,31 @@ export function calculateTotalHours(sessions: any[], feedback: any[], now: Date)
     const sessionFeedback = feedback.find(f => f.session_id === session.id);
     if (sessionFeedback?.did_not_show_up) return acc;
     
-    const startTime = new Date(session.scheduled_at);
-    const endTime = new Date(session.scheduled_at);
-    endTime.setMinutes(endTime.getMinutes() + (session.session_type?.duration || 60));
-    
-    if (endTime > now) return acc;
-    
-    const durationInMs = endTime.getTime() - startTime.getTime();
-    const durationInMinutes = Math.floor(durationInMs / (1000 * 60));
-    
-    return acc + durationInMinutes;
+    try {
+      const startTime = new Date(session.scheduled_at);
+      if (isNaN(startTime.getTime())) {
+        console.error('Invalid scheduled_at date:', session.scheduled_at);
+        return acc;
+      }
+
+      const endTime = new Date(session.scheduled_at);
+      if (isNaN(endTime.getTime())) {
+        console.error('Invalid scheduled_at date:', session.scheduled_at);
+        return acc;
+      }
+
+      endTime.setMinutes(endTime.getMinutes() + (session.session_type?.duration || 60));
+      
+      if (endTime > now) return acc;
+      
+      const durationInMs = endTime.getTime() - startTime.getTime();
+      const durationInMinutes = Math.floor(durationInMs / (1000 * 60));
+      
+      return acc + durationInMinutes;
+    } catch (error) {
+      console.error('Error calculating session duration:', error);
+      return acc;
+    }
   }, 0);
 
   const hours = Math.floor(totalMinutes / 60);
@@ -64,6 +99,7 @@ export function calculateTotalHours(sessions: any[], feedback: any[], now: Date)
 export function calculateRatingStats(feedback: any[]) {
   const validRatings = feedback.filter(f => 
     !f.did_not_show_up && 
+    typeof f.rating === 'number' &&
     f.rating > 0
   );
   const total_ratings = validRatings.length;
@@ -95,10 +131,21 @@ export function calculateMonthlyStats(sessions: any[], feedback: any[]) {
       const sessionFeedback = feedback.find(f => f.session_id === session.id);
       if (sessionFeedback?.did_not_show_up) return false;
       
-      const sessionDate = new Date(session.scheduled_at);
-      return sessionDate.getMonth() === month.date.getMonth() &&
-             sessionDate.getFullYear() === month.date.getFullYear();
+      try {
+        const sessionDate = new Date(session.scheduled_at);
+        if (isNaN(sessionDate.getTime())) {
+          console.error('Invalid scheduled_at date:', session.scheduled_at);
+          return false;
+        }
+        
+        return sessionDate.getMonth() === month.date.getMonth() &&
+               sessionDate.getFullYear() === month.date.getFullYear();
+      } catch (error) {
+        console.error('Error processing monthly session:', error);
+        return false;
+      }
     }).length;
+    
     return {
       name: month.name,
       sessions: count
