@@ -1,45 +1,37 @@
-import { supabase } from "@/integrations/supabase/client";
-import { NotificationType, NotificationCategory } from "@/types/calendar";
 
-interface AdminNotificationProps {
+interface NotifyParams {
   mentorName: string;
   menteeName: string;
   sessionType: string;
-  scheduledAt: Date;
+  scheduledAt?: Date;
 }
 
-export async function notifyAdmins({
-  mentorName,
-  menteeName,
-  sessionType,
-  scheduledAt
-}: AdminNotificationProps) {
+export async function notifyAdmins({ mentorName, menteeName, sessionType, scheduledAt }: NotifyParams) {
   try {
-    // Get all admin profiles
-    const { data: adminProfiles } = await supabase
+    // Fetch admin users
+    const { data: adminProfiles, error: adminError } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_type', 'admin');
 
-    if (!adminProfiles?.length) return;
+    if (adminError) throw adminError;
 
     // Create notifications for each admin
     const notifications = adminProfiles.map(admin => ({
       profile_id: admin.id,
-      title: "New Session Booked",
-      message: `${menteeName} booked a ${sessionType} session with ${mentorName} for ${scheduledAt.toLocaleString()}`,
-      type: "session_booked" as NotificationType,
-      category: "session" as NotificationCategory,
-      action_url: `/calendar`
+      title: "New Session Booking",
+      message: `${menteeName} booked a ${sessionType} session with ${mentorName}${scheduledAt ? ` scheduled for ${scheduledAt.toLocaleDateString()}` : ''}`,
+      type: "session_booked",
+      category: "general"
     }));
 
-    // Insert notifications one by one to match the table structure
-    for (const notification of notifications) {
-      await supabase
+    if (notifications.length > 0) {
+      const { error: notifyError } = await supabase
         .from('notifications')
-        .insert(notification);
-    }
+        .insert(notifications);
 
+      if (notifyError) throw notifyError;
+    }
   } catch (error) {
     console.error('Error notifying admins:', error);
   }

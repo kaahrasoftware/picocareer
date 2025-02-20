@@ -34,13 +34,17 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-      const { data: existingRequest } = await supabase
+      const { data: existingRequest, error: queryError } = await supabase
         .from('availability_requests')
         .select('*')
         .eq('mentor_id', mentorId)
         .eq('mentee_id', userId)
         .gte('created_at', twentyFourHoursAgo.toISOString())
         .single();
+
+      if (queryError && queryError.code !== 'PGRST116') {
+        throw queryError;
+      }
 
       if (existingRequest) {
         toast({
@@ -92,7 +96,7 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
   return (
     <div className="mt-4 flex flex-col items-center justify-center space-y-3 bg-muted p-4 rounded-lg">
       <p className="text-muted-foreground text-center">
-        No available time slots for the selected date.
+        Want to schedule a session but don't see a suitable time slot?
       </p>
       <Button
         variant="secondary"
