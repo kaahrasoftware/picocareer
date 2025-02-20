@@ -86,47 +86,105 @@ serve(async (req: Request) => {
 
     console.log('Notification created successfully');
 
-    // Set up Google OAuth2 client
-    const serviceAccountCreds = {
-      type: "service_account",
-      project_id: "picocareer",
-      private_key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-      client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
-      token_uri: "https://oauth2.googleapis.com/token",
-      client_id: Deno.env.get('GOOGLE_CLIENT_ID'),
-    };
-
-    console.log('Setting up Google OAuth2 client with service account:', {
-      client_email: serviceAccountCreds.client_email,
-      private_key_length: serviceAccountCreds.private_key?.length,
-      project_id: serviceAccountCreds.project_id
+    // Set up Google OAuth2 client with service account
+    const auth = new google.auth.JWT({
+      email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+      key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      subject: 'info@picocareer.com' // Impersonate this user
     });
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: serviceAccountCreds,
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
-      clientOptions: { subject: 'info@picocareer.com' }
+    console.log('Setting up Google OAuth2 client with service account:', {
+      email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+      keyLength: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.length,
+      subject: 'info@picocareer.com'
     });
 
     // Create Gmail API client
     const gmail = google.gmail({ version: 'v1', auth });
 
-    // Prepare email content
+    // Create email content with proper HTML structure
     const emailContent = [
       'From: PicoCareer <info@picocareer.com>',
       `To: ${mentorData.email}`,
       'Content-Type: text/html; charset=utf-8',
       'MIME-Version: 1.0',
-      'Subject: New Availability Request',
+      'Subject: New Mentoring Session Request',
       '',
-      `<h1>New Availability Request</h1>
-      <p>Hello ${mentorData.full_name},</p>
-      <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-      <p>Please log in to your dashboard to review and respond to this request.</p>
-      <p>Best regards,<br>The PicoCareer Team</p>`
+      `<!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            .container {
+              font-family: Arial, sans-serif;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              color: #333;
+            }
+            .header {
+              background-color: #002366;
+              color: white;
+              padding: 20px;
+              text-align: center;
+              border-radius: 5px 5px 0 0;
+            }
+            .content {
+              background-color: #f9f9f9;
+              padding: 20px;
+              border-radius: 0 0 5px 5px;
+              line-height: 1.6;
+            }
+            .button {
+              display: inline-block;
+              background-color: #0EA5E9;
+              color: white;
+              padding: 12px 25px;
+              text-decoration: none;
+              border-radius: 5px;
+              margin: 20px 0;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              color: #666;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>New Mentoring Session Request</h1>
+            </div>
+            <div class="content">
+              <p>Dear ${mentorData.full_name},</p>
+              
+              <p>We hope this email finds you well. You have received a new mentoring session request from <strong>${menteeData.full_name}</strong>.</p>
+              
+              <p>To review this request and manage your availability:</p>
+              
+              <center>
+                <a href="https://picocareer.com/profile?tab=mentor" class="button">
+                  Review Request
+                </a>
+              </center>
+              
+              <p>Your dedication to mentoring makes a significant impact on our community. Thank you for being an invaluable part of the PicoCareer platform.</p>
+              
+              <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+              
+              <p>Best regards,<br>The PicoCareer Team</p>
+            </div>
+            <div class="footer">
+              <p>© 2024 PicoCareer. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>`
     ].join('\n');
 
-    // Use TextEncoder for base64 encoding
+    // Encode the email content
     const encoder = new TextEncoder();
     const emailBytes = encoder.encode(emailContent);
     const encodedEmail = btoa(String.fromCharCode(...emailBytes))
