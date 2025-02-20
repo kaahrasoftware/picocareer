@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookingForm } from "./BookingForm";
@@ -11,6 +12,7 @@ import { MeetingPlatform } from "@/types/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { notifyAdmins } from "./AdminNotification";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -41,8 +43,19 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const bookSession = useBookSession();
+  const navigate = useNavigate();
 
   const handleRequestAvailability = async () => {
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to request mentor availability.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
     try {
       setIsRequestingAvailability(true);
 
@@ -54,7 +67,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         .from('availability_requests')
         .select('*')
         .eq('mentor_id', mentor.id)
-        .eq('mentee_id', session?.user?.id)
+        .eq('mentee_id', session.user.id)
         .gte('created_at', twentyFourHoursAgo.toISOString())
         .single();
 
@@ -72,7 +85,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         .from('availability_requests')
         .insert({
           mentor_id: mentor.id,
-          mentee_id: session?.user?.id
+          mentee_id: session.user.id
         });
 
       if (insertError) throw insertError;
@@ -81,7 +94,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       const { error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
         body: {
           mentorId: mentor.id,
-          menteeId: session?.user?.id
+          menteeId: session.user.id
         }
       });
 
@@ -91,7 +104,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         title: "Request Sent",
         description: "The mentor has been notified of your request.",
       });
-
+      
       onOpenChange(false);
     } catch (error) {
       console.error('Error requesting availability:', error);
@@ -115,7 +128,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       return;
     }
 
-    if (formData.meetingPlatform === "WhatsApp" && !formData.menteePhoneNumber) {
+    if (formData.meetingPlatform === 'WhatsApp' && !formData.menteePhoneNumber) {
       toast({
         title: "Missing Information",
         description: "Please provide your phone number for WhatsApp sessions.",
@@ -124,7 +137,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       return;
     }
 
-    if (formData.meetingPlatform === "Telegram" && !formData.menteeTelegramUsername) {
+    if (formData.meetingPlatform === 'Telegram' && !formData.menteeTelegramUsername) {
       toast({
         title: "Missing Information",
         description: "Please provide your Telegram username.",
@@ -133,7 +146,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       return;
     }
 
-    if (formData.meetingPlatform === "Phone Call" && !formData.menteePhoneNumber) {
+    if (formData.meetingPlatform === 'Phone Call' && !formData.menteePhoneNumber) {
       toast({
         title: "Missing Information",
         description: "Please provide your phone number for Phone Call sessions.",
@@ -174,16 +187,10 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
       console.log('Session booked successfully:', sessionResult);
 
       // Notify admins about the new session booking
-      const { data: sessionType } = await supabase
-        .from('mentor_session_types')
-        .select('type')
-        .eq('id', formData.sessionType)
-        .single();
-
       await notifyAdmins({
         mentorName: mentor.name,
         menteeName: profile?.full_name || 'Unknown User',
-        sessionType: sessionType?.type || 'Unknown Session Type',
+        sessionType: "Unknown Session Type",
         scheduledAt: formData.date
       });
 
@@ -305,23 +312,25 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
               mentorId={mentor.id}
               onFormChange={setFormData}
             />
-          </div>
 
-          <div className="mt-6">
             {!isValid && formData.date && (
-              <div className="mb-4 text-center">
-                <p className="text-muted-foreground mb-4">
+              <div className="mt-4 flex flex-col items-center justify-center space-y-3 bg-muted p-4 rounded-lg">
+                <p className="text-muted-foreground text-center">
                   No available time slots for the selected date.
                 </p>
                 <Button
                   variant="secondary"
                   onClick={handleRequestAvailability}
                   disabled={isRequestingAvailability}
+                  className="w-full max-w-sm"
                 >
                   {isRequestingAvailability ? "Sending Request..." : "Request Availability"}
                 </Button>
               </div>
             )}
+          </div>
+
+          <div className="mt-6">
             <BookingConfirmation
               isSubmitting={isSubmitting}
               onCancel={() => onOpenChange(false)}
