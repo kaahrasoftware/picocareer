@@ -87,18 +87,41 @@ serve(async (req: Request) => {
     console.log('Notification created successfully');
 
     // Set up Google OAuth2 client with service account
-    const auth = new google.auth.JWT({
-      email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
-      key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
-      subject: 'info@picocareer.com' // Impersonate this user
+    const privateKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+    const serviceAccountEmail = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+
+    if (!privateKey || !serviceAccountEmail) {
+      throw new Error('Missing Google service account credentials');
+    }
+
+    console.log('Setting up Google OAuth2 client with:', {
+      serviceAccountEmail,
+      privateKeyLength: privateKey.length,
+      impersonationEmail: 'info@picocareer.com'
     });
 
-    console.log('Setting up Google OAuth2 client with service account:', {
-      email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
-      keyLength: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.length,
-      subject: 'info@picocareer.com'
+    const auth = new google.auth.JWT({
+      email: serviceAccountEmail,
+      key: privateKey,
+      subject: 'info@picocareer.com',
+      scopes: [
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://mail.google.com/'
+      ]
     });
+
+    try {
+      // Test the credentials by getting an access token
+      const credentials = await auth.authorize();
+      console.log('Successfully obtained access token:', {
+        tokenExists: !!credentials.access_token,
+        expiryDate: credentials.expiry_date
+      });
+    } catch (authError) {
+      console.error('Authorization error:', authError);
+      throw new Error('Failed to authenticate with Google');
+    }
 
     // Create Gmail API client
     const gmail = google.gmail({ version: 'v1', auth });
@@ -165,7 +188,7 @@ serve(async (req: Request) => {
               <p>To review this request and manage your availability:</p>
               
               <center>
-                <a href="https://picocareer.com/profile?tab=mentor" class="button">
+                <a href="https://picocareer.com/profile?tab=mentor" class="button" style="color: white;">
                   Review Request
                 </a>
               </center>
@@ -193,7 +216,7 @@ serve(async (req: Request) => {
       .replace(/=+$/, '');
 
     try {
-      console.log('Sending email to:', mentorData.email);
+      console.log('Attempting to send email to:', mentorData.email);
       const response = await gmail.users.messages.send({
         userId: 'me',
         requestBody: {
@@ -203,6 +226,10 @@ serve(async (req: Request) => {
       console.log('Email sent successfully:', response.data);
     } catch (emailError) {
       console.error('Error sending email:', emailError);
+      console.error('Error details:', {
+        message: emailError.message,
+        response: emailError.response?.data
+      });
       throw emailError;
     }
 
