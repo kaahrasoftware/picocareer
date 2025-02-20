@@ -3,16 +3,13 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookingForm } from "./BookingForm";
 import { BookingConfirmation } from "./BookingConfirmation";
-import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { notifyAdmins } from "./AdminNotification";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
+import { useSessionBooking } from "./SessionBookingHandler";
 
 interface BookSessionDialogProps {
   mentor: {
@@ -38,85 +35,10 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     meetingPlatform: "Google Meet"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRequestingAvailability, setIsRequestingAvailability] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const bookSession = useBookSession();
-  const navigate = useNavigate();
-
-  const handleRequestAvailability = async () => {
-    if (!session) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to request mentor availability.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    try {
-      setIsRequestingAvailability(true);
-
-      // Check if user has already requested in the last 24 hours
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-      const { data: existingRequest } = await supabase
-        .from('availability_requests')
-        .select('*')
-        .eq('mentor_id', mentor.id)
-        .eq('mentee_id', session.user.id)
-        .gte('created_at', twentyFourHoursAgo.toISOString())
-        .single();
-
-      if (existingRequest) {
-        toast({
-          title: "Request Limit Reached",
-          description: "You can only request availability once every 24 hours.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Insert new request
-      const { error: insertError } = await supabase
-        .from('availability_requests')
-        .insert({
-          mentor_id: mentor.id,
-          mentee_id: session.user.id
-        });
-
-      if (insertError) throw insertError;
-
-      // Notify mentor via edge function
-      const { error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
-        body: {
-          mentorId: mentor.id,
-          menteeId: session.user.id
-        }
-      });
-
-      if (notifyError) throw notifyError;
-
-      toast({
-        title: "Request Sent",
-        description: "The mentor has been notified of your request.",
-      });
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error requesting availability:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send availability request. Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRequestingAvailability(false);
-    }
-  };
+  const handleSessionBooking = useSessionBooking();
 
   const handleSubmit = async () => {
     if (!formData.date || !formData.selectedTime || !formData.sessionType || !mentor.id) {
@@ -158,126 +80,21 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     setIsSubmitting(true);
     
     try {
-      console.log('Starting session booking process...', {
+      await handleSessionBooking({
         mentorId: mentor.id,
-        date: formData.date,
-        time: formData.selectedTime,
-        sessionType: formData.sessionType,
-        platform: formData.meetingPlatform,
-        menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername
-      });
-      
-      const sessionResult = await bookSession({
-        mentorId: mentor.id,
-        date: formData.date,
-        selectedTime: formData.selectedTime,
-        sessionTypeId: formData.sessionType,
-        note: formData.note,
-        meetingPlatform: formData.meetingPlatform,
-        menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername,
-      });
-
-      if (!sessionResult.success) {
-        console.error('Session booking failed:', sessionResult.error);
-        throw new Error(sessionResult.error || 'Failed to book session');
-      }
-
-      console.log('Session booked successfully:', sessionResult);
-
-      // Notify admins about the new session booking
-      await notifyAdmins({
         mentorName: mentor.name,
         menteeName: profile?.full_name || 'Unknown User',
-        sessionType: "Unknown Session Type",
-        scheduledAt: formData.date
-      });
-
-      if (formData.meetingPlatform === 'Google Meet') {
-        console.log('Creating Google Meet link for session:', sessionResult.sessionId);
-        
-        try {
-          const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
-            body: { 
-              sessionId: sessionResult.sessionId 
-            }
-          });
-
-          console.log('Meet link creation response:', { data: meetData, error: meetError });
-
-          if (meetError) {
-            console.error('Error creating meet link:', meetError);
-            throw new Error(`Failed to create Google Meet link: ${meetError.message}`);
-          }
-
-          if (!meetData?.meetLink) {
-            console.error('No meet link returned:', meetData);
-            throw new Error('Failed to generate Google Meet link');
-          }
-
-          console.log('Meet link created successfully:', meetData.meetLink);
-
-          // Update session with meet link
-          const { error: updateError } = await supabase
-            .from('mentor_sessions')
-            .update({ meeting_link: meetData.meetLink })
-            .eq('id', sessionResult.sessionId);
-
-          if (updateError) {
-            console.error('Error updating session with meet link:', updateError);
-            throw new Error('Failed to update session with meet link');
-          }
-
-        } catch (meetLinkError: any) {
-          console.error('Detailed meet link error:', meetLinkError);
+        formData,
+        onSuccess: () => {
+          onOpenChange(false);
+        },
+        onError: (error) => {
           toast({
-            title: "Session Booked",
-            description: "Session booked successfully, but there was an issue creating the Google Meet link. The link will be sent to you via email.",
+            title: "Booking Error",
+            description: error.message || "Failed to book session. Please try again.",
             variant: "destructive"
           });
-          // Continue with notifications despite meet link error
         }
-      }
-
-      try {
-        console.log('Setting up notifications...');
-        
-        await Promise.all([
-          supabase.functions.invoke('schedule-session-notifications', {
-            body: { sessionId: sessionResult.sessionId }
-          }),
-          supabase.functions.invoke('send-session-email', {
-            body: { 
-              sessionId: sessionResult.sessionId,
-              type: 'confirmation'
-            }
-          })
-        ]);
-
-        console.log('Notifications set up successfully');
-      } catch (notificationError) {
-        console.error('Error with notifications:', notificationError);
-        toast({
-          title: "Session Booked",
-          description: "Session booked successfully, but there was an issue sending notifications.",
-          variant: "destructive"
-        });
-      }
-
-      toast({
-        title: "Session Booked",
-        description: "Session booked successfully! Check your email for confirmation details.",
-        variant: "default"
-      });
-
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Booking error:', error);
-      toast({
-        title: "Booking Error",
-        description: error.message || "Failed to book session. Please try again.",
-        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -314,19 +131,11 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             />
 
             {!isValid && formData.date && (
-              <div className="mt-4 flex flex-col items-center justify-center space-y-3 bg-muted p-4 rounded-lg">
-                <p className="text-muted-foreground text-center">
-                  No available time slots for the selected date.
-                </p>
-                <Button
-                  variant="secondary"
-                  onClick={handleRequestAvailability}
-                  disabled={isRequestingAvailability}
-                  className="w-full max-w-sm"
-                >
-                  {isRequestingAvailability ? "Sending Request..." : "Request Availability"}
-                </Button>
-              </div>
+              <RequestAvailabilityButton
+                mentorId={mentor.id}
+                userId={session?.user?.id}
+                onRequestComplete={() => onOpenChange(false)}
+              />
             )}
           </div>
 
