@@ -30,32 +30,7 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
     try {
       setIsRequestingAvailability(true);
 
-      // Check if user has already requested in the last 24 hours
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-      const { data: existingRequest, error: queryError } = await supabase
-        .from('availability_requests')
-        .select('*')
-        .eq('mentor_id', mentorId)
-        .eq('mentee_id', userId)
-        .gte('created_at', twentyFourHoursAgo.toISOString())
-        .single();
-
-      if (queryError && queryError.code !== 'PGRST116') {
-        throw queryError;
-      }
-
-      if (existingRequest) {
-        toast({
-          title: "Request Limit Reached",
-          description: "You can only request availability once every 24 hours.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Insert new request
+      // Insert new request - removed 24h check
       const { error: insertError } = await supabase
         .from('availability_requests')
         .insert({
