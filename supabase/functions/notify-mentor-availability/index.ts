@@ -107,7 +107,7 @@ serve(async (req: Request) => {
           profile_id: mentorId,
           title: "New Availability Request",
           message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
-          type: "mentor_request",
+          type: "availability_request",  // Changed from "mentor_request" to "availability_request"
           action_url: `/profile?tab=calendar`,
           category: "mentorship"
         });
