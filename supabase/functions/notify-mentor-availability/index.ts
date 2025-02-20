@@ -40,9 +40,14 @@ serve(async (req: Request) => {
       .eq('id', mentorId)
       .single();
 
-    if (mentorError || !mentorData?.email) {
+    if (mentorError) {
       console.error('Error fetching mentor:', mentorError);
       throw new Error('Could not find mentor profile');
+    }
+
+    if (!mentorData?.email) {
+      console.error('No email found for mentor:', mentorData);
+      throw new Error('Mentor email not found');
     }
 
     // Get mentee details
@@ -59,56 +64,76 @@ serve(async (req: Request) => {
 
     console.log('Found profiles:', { mentor: mentorData, mentee: menteeData });
 
-    const emailBody = {
-      sender: {
-        name: "PicoCareer",
-        email: "notification@picocareer.com"
-      },
-      to: [{
-        email: mentorData.email,
-        name: mentorData.full_name
-      }],
-      subject: "New Availability Request",
-      htmlContent: `
-        <h1>New Availability Request</h1>
-        <p>Hello ${mentorData.full_name},</p>
-        <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-        <p>Please log in to your dashboard to review and respond to this request.</p>
-        <p>Best regards,<br>The PicoCareer Team</p>
-      `
-    };
-
-    // Send email using Brevo
-    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "api-key": Deno.env.get("SEND_API") ?? '',
-      },
-      body: JSON.stringify(emailBody)
-    });
-
-    const responseText = await emailResponse.text();
-    console.log('Email API response:', responseText);
-
-    if (!emailResponse.ok) {
-      throw new Error(`Email API error: ${emailResponse.statusText}`);
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Notification sent successfully"
-      }),
-      {
-        status: 200,
+    try {
+      // Send email using Brevo
+      const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
         headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "api-key": Deno.env.get("SEND_API") ?? '',
+        },
+        body: JSON.stringify({
+          sender: {
+            name: "PicoCareer",
+            email: "notification@picocareer.com"
+          },
+          to: [{
+            email: mentorData.email,
+            name: mentorData.full_name
+          }],
+          subject: "New Availability Request",
+          htmlContent: `
+            <h1>New Availability Request</h1>
+            <p>Hello ${mentorData.full_name},</p>
+            <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+            <p>Please log in to your dashboard to review and respond to this request.</p>
+            <p>Best regards,<br>The PicoCareer Team</p>
+          `
+        })
+      });
+
+      const responseText = await emailResponse.text();
+      console.log('Email API response:', responseText);
+
+      if (!emailResponse.ok) {
+        throw new Error(`Email API error: ${emailResponse.statusText} - ${responseText}`);
       }
-    );
+
+      // Create database notification
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          profile_id: mentorId,
+          title: "New Availability Request",
+          message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
+          type: "mentor_request",
+          action_url: `/profile?tab=calendar`,
+          category: "mentorship"
+        });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        throw notificationError;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Notification sent successfully"
+        }),
+        {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      throw new Error(`Failed to send email notification: ${emailError.message}`);
+    }
   } catch (error) {
     console.error('Edge function error:', error);
     return new Response(

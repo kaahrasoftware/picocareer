@@ -63,48 +63,41 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
 
       console.log('Availability request created:', requestData);
 
-      // Call the edge function to notify mentor
-      const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
-        'notify-mentor-availability',
-        {
-          body: JSON.stringify({
-            mentorId: cleanMentorId,
-            menteeId: cleanUserId,
-            requestId: requestData.id
-          })
+      try {
+        // Call the edge function to notify mentor
+        const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
+          'notify-mentor-availability',
+          {
+            body: JSON.stringify({
+              mentorId: cleanMentorId,
+              menteeId: cleanUserId,
+              requestId: requestData.id
+            })
+          }
+        );
+
+        console.log('Notification response:', notifyData);
+
+        if (notifyError) {
+          console.error('Error notifying mentor:', notifyError);
+          throw notifyError;
         }
-      );
 
-      if (notifyError) {
-        console.error('Error notifying mentor:', notifyError);
-        throw notifyError;
-      }
-
-      console.log('Notification response:', notifyData);
-
-      // Create a notification in the database
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          profile_id: cleanMentorId,
-          title: "New Availability Request",
-          message: "A mentee has requested your availability for mentoring sessions.",
-          type: "mentor_request",
-          action_url: `/profile?tab=calendar`,
-          category: "mentorship"
+        toast({
+          title: "Request Sent",
+          description: "The mentor has been notified of your request.",
         });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-        throw notificationError;
+        
+        onRequestComplete();
+      } catch (notifyError: any) {
+        console.error('Error in notification process:', notifyError);
+        // Don't rethrow the error - we still created the request successfully
+        toast({
+          title: "Request Sent",
+          description: "Request created but there was an issue sending the notification. The mentor will still be notified via the platform.",
+        });
+        onRequestComplete();
       }
-
-      toast({
-        title: "Request Sent",
-        description: "The mentor has been notified of your request.",
-      });
-      
-      onRequestComplete();
     } catch (error: any) {
       console.error('Error requesting availability:', error);
       toast({
