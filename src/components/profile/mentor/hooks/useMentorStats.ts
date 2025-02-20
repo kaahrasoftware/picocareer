@@ -1,70 +1,21 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useSessionQueries } from "./useSessionQueries";
+import {
+  calculateSessionStats,
+  calculateTotalHours,
+  calculateRatingStats,
+  calculateMonthlyStats
+} from "./utils/statsCalculator";
+import type { MentorStatsHookReturn } from "./types";
 
-export function useMentorStats(profileId: string | undefined) {
-  // Fetch mentor sessions
-  const { data: sessionsResponse, refetch: refetchSessions } = useQuery({
-    queryKey: ["mentor-sessions", profileId],
-    queryFn: async () => {
-      if (!profileId) return null;
-      
-      console.log('Fetching sessions for mentor:', profileId);
-      
-      const { data, error } = await supabase
-        .from("mentor_sessions")
-        .select("*, session_type:mentor_session_types(duration)")
-        .eq("mentor_id", profileId);
-
-      if (error) {
-        console.error('Error fetching sessions:', error);
-        throw error;
-      }
-
-      console.log('Fetched sessions:', data);
-      return data;
-    },
-    enabled: !!profileId
-  });
-
-  // Fetch session types
-  const { data: sessionTypes, refetch: refetchSessionTypes } = useQuery({
-    queryKey: ["session-types", profileId],
-    queryFn: async () => {
-      if (!profileId) return null;
-
-      const { data, error } = await supabase
-        .from("mentor_session_types")
-        .select("*")
-        .eq("profile_id", profileId);
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!profileId
-  });
-
-  // Fetch feedback and ratings
-  const { data: feedbackResponse } = useQuery({
-    queryKey: ["mentor-feedback", profileId],
-    queryFn: async () => {
-      if (!profileId) return null;
-
-      const { data, error } = await supabase
-        .from("session_feedback")
-        .select("*")
-        .eq("to_profile_id", profileId)
-        .eq("feedback_type", "mentee_feedback");
-
-      if (error) {
-        console.error('Error fetching feedback:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    enabled: !!profileId
-  });
+export function useMentorStats(profileId: string | undefined): MentorStatsHookReturn {
+  const {
+    sessionsResponse,
+    sessionTypes,
+    feedbackResponse,
+    refetchSessions,
+    refetchSessionTypes
+  } = useSessionQueries(profileId);
 
   // Calculate stats
   const stats = (() => {
@@ -73,36 +24,7 @@ export function useMentorStats(profileId: string | undefined) {
       const feedback = feedbackResponse;
       const now = new Date();
       
-      const total_sessions = sessions.length;
-      
-      // Count completed sessions based on all criteria
-      const completed_sessions = sessions.filter(s => {
-        // 1. First check if session is cancelled
-        if (s.status === 'cancelled') return false;
-        
-        // 2. Calculate session end time
-        const sessionEndTime = new Date(s.scheduled_at);
-        sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
-        
-        // 3. Check if session is in the past
-        if (sessionEndTime >= now) return false;
-        
-        // 4. Find feedback for this session
-        const sessionFeedback = feedback.find(f => f.session_id === s.id);
-        
-        // 5. Check for mentor no-show in feedback
-        if (sessionFeedback?.did_not_show_up) return false;
-        
-        // 6. Session must be marked as completed
-        return s.status === 'completed';
-      }).length;
-      
-      const upcoming_sessions = sessions.filter(s => {
-        if (s.status === 'cancelled') return false;
-        return new Date(s.scheduled_at) >= now;
-      }).length;
-      
-      const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
+      const sessionStats = calculateSessionStats(sessions, feedback, now);
       
       // Count no-shows by mentees (where mentor reported them as no-show)
       const no_show_sessions = feedback.filter(f => 
@@ -112,93 +34,23 @@ export function useMentorStats(profileId: string | undefined) {
 
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
-      // Calculate cancellation score (percentage of non-cancelled and non-no-show sessions)
-      const total_scheduled = total_sessions - cancelled_sessions;
+      // Calculate cancellation score
+      const total_scheduled = sessionStats.total_sessions - sessionStats.cancelled_sessions;
       const cancellation_score = total_scheduled > 0 
         ? Math.round(((total_scheduled - no_show_sessions) / total_scheduled) * 100)
         : 100;
 
-      // Calculate total hours based on completed sessions only
-      const totalMinutes = sessions.reduce((acc, session) => {
-        // Skip if session was cancelled
-        if (session.status === 'cancelled') return acc;
-        
-        // Find feedback for this session
-        const sessionFeedback = feedback.find(f => f.session_id === session.id);
-        
-        // Skip if mentor was reported as no-show
-        if (sessionFeedback?.did_not_show_up) return acc;
-        
-        const startTime = new Date(session.scheduled_at);
-        const endTime = new Date(session.scheduled_at);
-        endTime.setMinutes(endTime.getMinutes() + (session.session_type?.duration || 60));
-        
-        // Only include sessions that have ended
-        if (endTime > now) return acc;
-        
-        // Calculate actual duration in minutes
-        const durationInMs = endTime.getTime() - startTime.getTime();
-        const durationInMinutes = Math.floor(durationInMs / (1000 * 60));
-        
-        return acc + durationInMinutes;
-      }, 0);
-
-      // Convert total minutes to hours and remaining minutes
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      const timeStr = `${hours}h ${minutes}m`;
-
-      // Calculate rating statistics from valid sessions only
-      const validRatings = feedback.filter(f => 
-        !f.did_not_show_up && // Only include sessions where both parties showed up
-        f.rating > 0
-      );
-      const total_ratings = validRatings.length;
-      const average_rating = total_ratings > 0
-        ? validRatings.reduce((acc, curr) => acc + curr.rating, 0) / total_ratings
-        : 0;
-
-      // Calculate session data for the last 6 months
-      const last6Months = Array.from({ length: 6 }, (_, i) => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        return {
-          name: date.toLocaleString('default', { month: 'short' }),
-          date: date,
-          sessions: 0
-        };
-      }).reverse();
-
-      const session_data = last6Months.map(month => {
-        const count = sessions.filter(session => {
-          if (session.status === 'cancelled') return false;
-          
-          // Find feedback for this session
-          const sessionFeedback = feedback.find(f => f.session_id === session.id);
-          
-          // Skip if mentor was reported as no-show
-          if (sessionFeedback?.did_not_show_up) return false;
-          
-          const sessionDate = new Date(session.scheduled_at);
-          return sessionDate.getMonth() === month.date.getMonth() &&
-                 sessionDate.getFullYear() === month.date.getFullYear();
-        }).length;
-        return {
-          name: month.name,
-          sessions: count
-        };
-      });
+      const total_hours = calculateTotalHours(sessions, feedback, now);
+      const { total_ratings, average_rating } = calculateRatingStats(feedback);
+      const session_data = calculateMonthlyStats(sessions, feedback);
 
       return {
-        total_sessions,
-        completed_sessions,
-        upcoming_sessions,
-        cancelled_sessions,
+        ...sessionStats,
         no_show_sessions,
         unique_mentees,
-        total_hours: timeStr,
+        total_hours,
         total_ratings,
-        average_rating: Number(average_rating.toFixed(1)),
+        average_rating,
         cancellation_score,
         session_data
       };
