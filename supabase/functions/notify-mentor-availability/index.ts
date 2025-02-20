@@ -45,6 +45,10 @@ serve(async (req: Request) => {
       throw new Error('Could not find mentor profile');
     }
 
+    if (!mentorData.email) {
+      throw new Error('Mentor email not found');
+    }
+
     console.log('Found mentor:', mentorData);
 
     // Get mentee details
@@ -61,7 +65,7 @@ serve(async (req: Request) => {
 
     console.log('Found mentee:', menteeData);
 
-    // Create notification first
+    // Create notification
     const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
@@ -70,8 +74,8 @@ serve(async (req: Request) => {
         message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
         type: "availability_request",
         action_url: `/profile?tab=calendar`,
-        category: "mentorship", // Ensure this matches the valid enum values
-        read: false // Explicitly set as unread
+        category: "mentorship",
+        read: false
       });
 
     if (notificationError) {
@@ -81,51 +85,54 @@ serve(async (req: Request) => {
 
     console.log('Notification created successfully');
 
-    // Send email notification
-    try {
-      const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "api-key": Deno.env.get("SEND_API") ?? '',
-        },
-        body: JSON.stringify({
-          sender: {
-            name: "PicoCareer",
-            email: "notification@picocareer.com"
-          },
-          to: [{
-            email: mentorData.email,
-            name: mentorData.full_name
-          }],
-          subject: "New Availability Request",
-          htmlContent: `
-            <h1>New Availability Request</h1>
-            <p>Hello ${mentorData.full_name},</p>
-            <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-            <p>Please log in to your dashboard to review and respond to this request.</p>
-            <p>Best regards,<br>The PicoCareer Team</p>
-          `
-        })
-      });
-
-      if (!emailResponse.ok) {
-        const responseText = await emailResponse.text();
-        console.error('Email API error response:', responseText);
-        throw new Error(`Email API error: ${emailResponse.statusText}`);
-      }
-
-      console.log('Email sent successfully');
-    } catch (emailError) {
-      console.error('Error sending email:', emailError);
-      // Don't throw here - we want to return success if at least the notification was created
+    // Verify SEND_API key is available
+    const sendApiKey = Deno.env.get("SEND_API");
+    if (!sendApiKey) {
+      throw new Error('SEND_API key not configured');
     }
+
+    // Send email notification
+    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "api-key": sendApiKey,
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "PicoCareer",
+          email: "notification@picocareer.com"
+        },
+        to: [{
+          email: mentorData.email,
+          name: mentorData.full_name
+        }],
+        subject: "New Availability Request",
+        htmlContent: `
+          <h1>New Availability Request</h1>
+          <p>Hello ${mentorData.full_name},</p>
+          <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+          <p>Please log in to your dashboard to review and respond to this request.</p>
+          <p>Best regards,<br>The PicoCareer Team</p>
+        `
+      })
+    });
+
+    const emailResponseText = await emailResponse.text();
+    console.log('Email API raw response:', emailResponseText);
+
+    if (!emailResponse.ok) {
+      console.error('Email API error response:', emailResponseText);
+      throw new Error(`Email API error: ${emailResponse.statusText}`);
+    }
+
+    console.log('Email sent successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Notification sent successfully"
+        message: "Notification and email sent successfully"
       }),
       {
         status: 200,
