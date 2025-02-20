@@ -4,11 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface RequestBody {
-  mentorId: string;
-  menteeId: string;
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 Deno.serve(async (req) => {
@@ -18,46 +14,41 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed')
+    }
+
     // Get request body
-    const body = await req.json() as RequestBody;
-    const { mentorId, menteeId } = body;
-
-    if (!mentorId || !menteeId) {
-      throw new Error('Missing required fields: mentorId and menteeId are required');
+    const requestBody = await req.json()
+    if (!requestBody?.mentorId || !requestBody?.menteeId) {
+      throw new Error('Missing required fields: mentorId and menteeId')
     }
 
-    console.log('Creating Supabase client...');
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const { mentorId, menteeId } = requestBody
 
-    console.log('Fetching mentor profile...', mentorId);
-    const { data: mentorData, error: mentorError } = await supabaseAdmin
-      .from('profiles')
-      .select('email, full_name')
-      .eq('id', mentorId)
-      .single();
-
-    if (mentorError) {
-      console.error('Error fetching mentor:', mentorError);
-      throw mentorError;
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials')
     }
 
-    console.log('Fetching mentee profile...', menteeId);
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey)
+
+    // Fetch mentee profile
     const { data: menteeData, error: menteeError } = await supabaseAdmin
       .from('profiles')
       .select('full_name')
       .eq('id', menteeId)
-      .single();
+      .single()
 
-    if (menteeError) {
-      console.error('Error fetching mentee:', menteeError);
-      throw menteeError;
+    if (menteeError || !menteeData) {
+      throw new Error(`Error fetching mentee: ${menteeError?.message || 'Mentee not found'}`)
     }
 
-    console.log('Creating notification...');
-    const { error: notifyError } = await supabaseAdmin
+    // Create notification
+    const { error: notificationError } = await supabaseAdmin
       .from('notifications')
       .insert({
         profile_id: mentorId,
@@ -65,42 +56,35 @@ Deno.serve(async (req) => {
         message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
         type: 'availability_request',
         category: 'general'
-      });
+      })
 
-    if (notifyError) {
-      console.error('Error creating notification:', notifyError);
-      throw notifyError;
+    if (notificationError) {
+      throw new Error(`Error creating notification: ${notificationError.message}`)
     }
 
-    console.log('Successfully created notification');
+    // Return success response
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        message: 'Notification sent successfully'
-      }),
+      JSON.stringify({ success: true }),
       {
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
       }
-    );
+    )
 
   } catch (error) {
-    console.error('Error in notify-mentor-availability:', error);
+    // Log the error
+    console.error('Error in notify-mentor-availability:', error)
+
+    // Return error response
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message
       }),
       {
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
       }
-    );
+    )
   }
-});
+})
