@@ -7,17 +7,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface RequestBody {
-  mentorId: string;
-  menteeId: string;
-  requestId: string;
-}
-
 serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
-    // Handle CORS preflight requests
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+    let reqBody;
+    try {
+      reqBody = await req.text();
+      console.log('Raw request body:', reqBody);
+    } catch (error) {
+      console.error('Error reading request body:', error);
+      throw new Error('Failed to read request body');
+    }
+
+    let body;
+    try {
+      body = JSON.parse(reqBody);
+      console.log('Parsed request body:', body);
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      throw new Error('Invalid JSON in request body');
+    }
+
+    if (!body?.mentorId || !body?.menteeId || !body?.requestId) {
+      throw new Error('Missing required fields: mentorId, menteeId, or requestId');
     }
 
     const supabase = createClient(
@@ -25,31 +41,19 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    let body: RequestBody;
-    try {
-      body = await req.json();
-      console.log('Received request body:', body);
-    } catch (error) {
-      console.error('Error parsing request body:', error);
-      throw new Error('Invalid request body');
-    }
-
-    if (!body?.mentorId || !body?.menteeId || !body?.requestId) {
-      throw new Error('Missing required fields in request body');
-    }
-
-    // Get mentor and mentee details
+    // Get mentor details
     const { data: mentorData, error: mentorError } = await supabase
       .from('profiles')
       .select('email, full_name')
       .eq('id', body.mentorId)
       .single();
 
-    if (mentorError || !mentorData) {
-      console.error('Error getting mentor data:', mentorError);
+    if (mentorError || !mentorData?.email) {
+      console.error('Error fetching mentor:', mentorError);
       throw new Error('Could not find mentor profile');
     }
 
+    // Get mentee details
     const { data: menteeData, error: menteeError } = await supabase
       .from('profiles')
       .select('full_name')
@@ -57,11 +61,11 @@ serve(async (req: Request) => {
       .single();
 
     if (menteeError || !menteeData) {
-      console.error('Error getting mentee data:', menteeError);
+      console.error('Error fetching mentee:', menteeError);
       throw new Error('Could not find mentee profile');
     }
 
-    console.log('Found mentor and mentee:', { mentor: mentorData, mentee: menteeData });
+    console.log('Found profiles:', { mentor: mentorData, mentee: menteeData });
 
     // Send email using Brevo
     const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -91,37 +95,44 @@ serve(async (req: Request) => {
       })
     });
 
-    const responseData = await emailResponse.json();
-    console.log('Email API response:', responseData);
+    const emailResponseData = await emailResponse.text();
+    console.log('Email API response:', emailResponseData);
+
+    let parsedEmailResponse;
+    try {
+      parsedEmailResponse = JSON.parse(emailResponseData);
+    } catch (error) {
+      console.error('Error parsing email response:', error);
+      parsedEmailResponse = { raw: emailResponseData };
+    }
 
     if (!emailResponse.ok) {
-      console.error('Error sending email:', responseData);
-      throw new Error(`Failed to send email: ${emailResponse.statusText}`);
+      throw new Error(`Email API error: ${emailResponse.statusText}`);
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: "Notification sent successfully",
-        data: responseData 
+        data: parsedEmailResponse
       }),
-      { 
+      {
         status: 200,
-        headers: { 
+        headers: {
           ...corsHeaders,
           "Content-Type": "application/json"
         }
       }
     );
   } catch (error) {
-    console.error('Error in notify-mentor-availability:', error);
+    console.error('Edge function error:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
-        error: error.message || 'Internal server error'
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       }),
-      { 
-        status: error.message?.includes('Invalid request') ? 400 : 500,
+      {
+        status: 400,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json"

@@ -42,7 +42,6 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
         .select()
         .single();
 
-      // Handle duplicate request error
       if (insertError?.message?.includes('unique_mentor_mentee_request')) {
         toast({
           title: "Request Already Sent",
@@ -60,13 +59,20 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
       console.log('Availability request created:', requestData);
 
       // Call the edge function to notify mentor
-      const { data: notifyData, error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
-        body: JSON.stringify({
-          mentorId,
-          menteeId: userId,
-          requestId: requestData.id
-        })
-      });
+      const requestBody = {
+        mentorId,
+        menteeId: userId,
+        requestId: requestData.id
+      };
+
+      console.log('Sending notification request:', requestBody);
+
+      const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
+        'notify-mentor-availability',
+        {
+          body: JSON.stringify(requestBody)
+        }
+      );
 
       if (notifyError) {
         console.error('Error notifying mentor:', notifyError);
