@@ -9,12 +9,17 @@ export function calculateSessionStats(sessions: any[], feedback: any[], now: Dat
     const sessionEndTime = new Date(s.scheduled_at);
     sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
     
-    if (sessionEndTime >= now) return false;
+    // Consider a session completed if:
+    // 1. Status is 'completed' OR
+    // 2. Session end time has passed and status is not cancelled
+    if (sessionEndTime < now && s.status !== 'cancelled') {
+      // Check if there's any no-show feedback
+      const sessionFeedback = feedback.find(f => f.session_id === s.id);
+      if (sessionFeedback?.did_not_show_up) return false;
+      return true;
+    }
     
-    const sessionFeedback = feedback.find(f => f.session_id === s.id);
-    if (sessionFeedback?.did_not_show_up) return false;
-    
-    return s.status === 'completed';
+    return false;
   }).length;
 
   const upcoming_sessions = sessions.filter(s => {
