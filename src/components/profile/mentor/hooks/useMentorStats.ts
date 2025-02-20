@@ -75,26 +75,25 @@ export function useMentorStats(profileId: string | undefined) {
       
       const total_sessions = sessions.length;
       
-      // Count completed sessions based on status and no-shows
+      // Count completed sessions based on all criteria
       const completed_sessions = sessions.filter(s => {
+        // 1. First check if session is cancelled
         if (s.status === 'cancelled') return false;
         
+        // 2. Calculate session end time
         const sessionEndTime = new Date(s.scheduled_at);
         sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
         
-        // Only consider past sessions
+        // 3. Check if session is in the past
         if (sessionEndTime >= now) return false;
-
-        // Check if there's any feedback indicating the mentor didn't show up
-        const mentorNoShow = feedback.some(f => 
-          f.session_id === s.id && 
-          f.to_profile_id === profileId && 
-          f.did_not_show_up
-        );
-
-        // If mentor didn't show up, it's not completed
-        if (mentorNoShow) return false;
-
+        
+        // 4. Find feedback for this session
+        const sessionFeedback = feedback.find(f => f.session_id === s.id);
+        
+        // 5. Check for mentor no-show in feedback
+        if (sessionFeedback?.did_not_show_up) return false;
+        
+        // 6. Session must be marked as completed
         return s.status === 'completed';
       }).length;
       
@@ -124,13 +123,11 @@ export function useMentorStats(profileId: string | undefined) {
         // Skip if session was cancelled
         if (session.status === 'cancelled') return acc;
         
+        // Find feedback for this session
+        const sessionFeedback = feedback.find(f => f.session_id === session.id);
+        
         // Skip if mentor was reported as no-show
-        const mentorNoShow = feedback.some(f => 
-          f.session_id === session.id && 
-          f.to_profile_id === profileId && 
-          f.did_not_show_up
-        );
-        if (mentorNoShow) return acc;
+        if (sessionFeedback?.did_not_show_up) return acc;
         
         const startTime = new Date(session.scheduled_at);
         const endTime = new Date(session.scheduled_at);
@@ -151,10 +148,9 @@ export function useMentorStats(profileId: string | undefined) {
       const minutes = totalMinutes % 60;
       const timeStr = `${hours}h ${minutes}m`;
 
-      // Calculate rating statistics from non-no-show sessions
+      // Calculate rating statistics from valid sessions only
       const validRatings = feedback.filter(f => 
-        // Only include ratings where mentor showed up (not marked as no-show when they're the to_profile)
-        !(f.to_profile_id === profileId && f.did_not_show_up) && 
+        !f.did_not_show_up && // Only include sessions where both parties showed up
         f.rating > 0
       );
       const total_ratings = validRatings.length;
@@ -177,13 +173,11 @@ export function useMentorStats(profileId: string | undefined) {
         const count = sessions.filter(session => {
           if (session.status === 'cancelled') return false;
           
+          // Find feedback for this session
+          const sessionFeedback = feedback.find(f => f.session_id === session.id);
+          
           // Skip if mentor was reported as no-show
-          const mentorNoShow = feedback.some(f => 
-            f.session_id === session.id && 
-            f.to_profile_id === profileId && 
-            f.did_not_show_up
-          );
-          if (mentorNoShow) return false;
+          if (sessionFeedback?.did_not_show_up) return false;
           
           const sessionDate = new Date(session.scheduled_at);
           return sessionDate.getMonth() === month.date.getMonth() &&
