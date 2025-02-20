@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -85,53 +86,38 @@ serve(async (req: Request) => {
 
     console.log('Notification created successfully');
 
-    // Verify SEND_API key is available
-    const sendApiKey = Deno.env.get("SEND_API");
-    if (!sendApiKey) {
-      console.error('SEND_API key not found in environment variables');
-      throw new Error('SEND_API key not configured');
+    // Verify RESEND_API_KEY is available
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY not found in environment variables');
+      throw new Error('RESEND_API_KEY not configured');
     }
 
     console.log('Preparing to send email to:', mentorData.email);
 
-    // Send email notification using Brevo (formerly Sendinblue)
+    // Initialize Resend
+    const resend = new Resend(resendApiKey);
+
+    // Send email using Resend
     try {
-      const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "api-key": sendApiKey,
-        },
-        body: JSON.stringify({
-          sender: {
-            name: "PicoCareer",
-            email: "notification@picocareer.com"
-          },
-          to: [{
-            email: mentorData.email,
-            name: mentorData.full_name
-          }],
-          subject: "New Availability Request",
-          htmlContent: `
-            <h1>New Availability Request</h1>
-            <p>Hello ${mentorData.full_name},</p>
-            <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-            <p>Please log in to your dashboard to review and respond to this request.</p>
-            <p>Best regards,<br>The PicoCareer Team</p>
-          `
-        })
+      const emailResponse = await resend.emails.send({
+        from: "PicoCareer <info@picocareer.com>",
+        to: [mentorData.email],
+        subject: "New Availability Request",
+        html: `
+          <h1>New Availability Request</h1>
+          <p>Hello ${mentorData.full_name},</p>
+          <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+          <p>Please log in to your dashboard to review and respond to this request.</p>
+          <p>Best regards,<br>The PicoCareer Team</p>
+        `
       });
 
-      const emailResponseText = await emailResponse.text();
-      console.log('Email API raw response:', emailResponseText);
+      console.log('Email sent successfully:', emailResponse);
 
-      if (!emailResponse.ok) {
-        console.error('Email API error response:', emailResponseText);
-        throw new Error(`Email API error: ${emailResponse.statusText}`);
+      if (!emailResponse.data?.id) {
+        throw new Error('Failed to send email: No email ID returned');
       }
-
-      console.log('Email sent successfully');
     } catch (emailError) {
       console.error('Error sending email:', emailError);
       throw emailError;
