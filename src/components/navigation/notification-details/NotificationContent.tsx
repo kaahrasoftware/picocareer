@@ -134,6 +134,15 @@ export function NotificationContent({
     }
   };
 
+  const handleDetailClick = () => {
+    if (type === 'availability_request') {
+      // Redirect to profile page with mentor tab selected
+      navigate('/profile?tab=mentor');
+      return;
+    }
+    setDialogOpen(true);
+  };
+
   const renderActionButton = () => {
     // Don't show buttons for session-related notifications
     if (!action_url || type?.includes('session')) return null;
@@ -168,7 +177,7 @@ export function NotificationContent({
         variant="outline"
         size="sm"
         className="mt-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
-        onClick={() => setDialogOpen(true)}
+        onClick={handleDetailClick}
       >
         View Detail
         <ExternalLink className="w-4 h-4 ml-2" />
