@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useMentorStats(profileId: string | undefined) {
-  // Fetch mentor sessions with cancellation details
+  // Fetch mentor sessions
   const { data: sessionsResponse, refetch: refetchSessions } = useQuery({
     queryKey: ["mentor-sessions", profileId],
     queryFn: async () => {
@@ -13,7 +13,7 @@ export function useMentorStats(profileId: string | undefined) {
       
       const { data, error } = await supabase
         .from("mentor_sessions")
-        .select("*, session_type:mentor_session_types(duration), cancellation:session_feedback(from_profile_id)")
+        .select("*, session_type:mentor_session_types(duration)")
         .eq("mentor_id", profileId);
 
       if (error) {
@@ -72,12 +72,10 @@ export function useMentorStats(profileId: string | undefined) {
       const sessions = sessionsResponse;
       const now = new Date();
       
-      // Total number of sessions (including cancelled ones)
       const total_sessions = sessions.length;
       
       // Count completed sessions: sessions that have passed their end time and weren't cancelled
       const completed_sessions = sessions.filter(s => {
-        // Skip cancelled sessions
         if (s.status === 'cancelled') return false;
         
         const sessionEndTime = new Date(s.scheduled_at);
@@ -87,30 +85,20 @@ export function useMentorStats(profileId: string | undefined) {
         return sessionEndTime < now;
       }).length;
       
-      // Count upcoming sessions: sessions that haven't started yet and aren't cancelled
       const upcoming_sessions = sessions.filter(s => {
         if (s.status === 'cancelled') return false;
         return new Date(s.scheduled_at) >= now;
       }).length;
       
-      // Count only sessions cancelled by the mentor
-      const mentor_cancelled_sessions = sessions.filter(s => {
-        if (s.status !== 'cancelled') return false;
-        // Check if the mentor cancelled the session by looking at the feedback
-        const cancellationArray = s.cancellation || [];
-        const feedbackEntry = Array.isArray(cancellationArray) ? cancellationArray[0] : cancellationArray;
-        return feedbackEntry?.from_profile_id === profileId;
-      }).length;
-
-      // Count unique mentees
+      const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
-      // Calculate cancellation score based only on mentor cancellations
+      // Calculate cancellation score (percentage of non-cancelled sessions)
       const cancellation_score = total_sessions > 0 
-        ? Math.round(((total_sessions - mentor_cancelled_sessions) / total_sessions) * 100)
+        ? Math.round(((total_sessions - cancelled_sessions) / total_sessions) * 100)
         : 100;
 
-      // Calculate total hours of completed and upcoming sessions
+      // Calculate total hours based on session types
       const total_hours = sessions.reduce((acc, session) => {
         if (session.status === 'cancelled') return acc;
         const sessionType = sessionTypes?.find(st => st.id === session.session_type_id);
@@ -152,7 +140,7 @@ export function useMentorStats(profileId: string | undefined) {
         total_sessions,
         completed_sessions,
         upcoming_sessions,
-        cancelled_sessions: mentor_cancelled_sessions,
+        cancelled_sessions,
         unique_mentees,
         total_hours,
         total_ratings,
