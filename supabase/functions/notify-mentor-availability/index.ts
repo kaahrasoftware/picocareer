@@ -26,7 +26,7 @@ serve(async (req: Request) => {
       throw new Error('Missing required fields: mentorId, menteeId, or requestId');
     }
 
-    console.log('Processed IDs:', { mentorId, menteeId, requestId });
+    console.log('Processing request with IDs:', { mentorId, menteeId, requestId });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -40,15 +40,12 @@ serve(async (req: Request) => {
       .eq('id', mentorId)
       .single();
 
-    if (mentorError) {
+    if (mentorError || !mentorData) {
       console.error('Error fetching mentor:', mentorError);
       throw new Error('Could not find mentor profile');
     }
 
-    if (!mentorData?.email) {
-      console.error('No email found for mentor:', mentorData);
-      throw new Error('Mentor email not found');
-    }
+    console.log('Found mentor:', mentorData);
 
     // Get mentee details
     const { data: menteeData, error: menteeError } = await supabase
@@ -62,10 +59,30 @@ serve(async (req: Request) => {
       throw new Error('Could not find mentee profile');
     }
 
-    console.log('Found profiles:', { mentor: mentorData, mentee: menteeData });
+    console.log('Found mentee:', menteeData);
 
+    // Create notification first
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        profile_id: mentorId,
+        title: "New Availability Request",
+        message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
+        type: "availability_request",
+        action_url: `/profile?tab=calendar`,
+        category: "mentorship", // Ensure this matches the valid enum values
+        read: false // Explicitly set as unread
+      });
+
+    if (notificationError) {
+      console.error('Error creating notification:', notificationError);
+      throw notificationError;
+    }
+
+    console.log('Notification created successfully');
+
+    // Send email notification
     try {
-      // Send email using Brevo
       const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
@@ -93,47 +110,31 @@ serve(async (req: Request) => {
         })
       });
 
-      const responseText = await emailResponse.text();
-      console.log('Email API response:', responseText);
-
       if (!emailResponse.ok) {
-        throw new Error(`Email API error: ${emailResponse.statusText} - ${responseText}`);
+        const responseText = await emailResponse.text();
+        console.error('Email API error response:', responseText);
+        throw new Error(`Email API error: ${emailResponse.statusText}`);
       }
 
-      // Create database notification
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          profile_id: mentorId,
-          title: "New Availability Request",
-          message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
-          type: "availability_request",  // Changed from "mentor_request" to "availability_request"
-          action_url: `/profile?tab=calendar`,
-          category: "mentorship"
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-        throw notificationError;
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Notification sent successfully"
-        }),
-        {
-          status: 200,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        }
-      );
+      console.log('Email sent successfully');
     } catch (emailError) {
       console.error('Error sending email:', emailError);
-      throw new Error(`Failed to send email notification: ${emailError.message}`);
+      // Don't throw here - we want to return success if at least the notification was created
     }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Notification sent successfully"
+      }),
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      }
+    );
   } catch (error) {
     console.error('Edge function error:', error);
     return new Response(
