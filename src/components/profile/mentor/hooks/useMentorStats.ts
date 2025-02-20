@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -98,7 +97,7 @@ export function useMentorStats(profileId: string | undefined) {
         : 100;
 
       // Calculate total hours based on completed sessions only
-      const total_hours = sessions.reduce((acc, session) => {
+      const totalMinutes = sessions.reduce((acc, session) => {
         // Skip if session was cancelled
         if (session.status === 'cancelled') return acc;
         
@@ -109,15 +108,19 @@ export function useMentorStats(profileId: string | undefined) {
         // Only include sessions that have ended
         if (endTime > now) return acc;
         
-        // Calculate actual duration in hours
+        // Calculate actual duration in minutes
         const durationInMs = endTime.getTime() - startTime.getTime();
-        const durationInHours = durationInMs / (1000 * 60 * 60); // Convert ms to hours
+        const durationInMinutes = Math.floor(durationInMs / (1000 * 60)); // Convert ms to minutes
         
-        return acc + durationInHours;
+        return acc + durationInMinutes;
       }, 0);
 
-      // Round total hours to 1 decimal place
-      const rounded_total_hours = Math.round(total_hours * 10) / 10;
+      // Convert total minutes to hours and remaining minutes
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      // Format time string
+      const timeStr = `${hours}h ${minutes}m`;
 
       // Calculate rating statistics
       const ratings = ratingsResponse || [];
@@ -156,7 +159,7 @@ export function useMentorStats(profileId: string | undefined) {
         upcoming_sessions,
         cancelled_sessions,
         unique_mentees,
-        total_hours: rounded_total_hours,
+        total_hours: timeStr,
         total_ratings,
         average_rating: Number(average_rating.toFixed(1)),
         cancellation_score,
