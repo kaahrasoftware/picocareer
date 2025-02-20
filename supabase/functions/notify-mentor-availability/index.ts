@@ -179,7 +179,10 @@ serve(async (req: Request) => {
       </html>`
     ].join('\n');
 
-    const encodedEmail = Buffer.from(emailContent).toString('base64')
+    // Use TextEncoder instead of Buffer for Deno
+    const encoder = new TextEncoder();
+    const emailBytes = encoder.encode(emailContent);
+    const encodedEmail = btoa(String.fromCharCode(...emailBytes))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
