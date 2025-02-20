@@ -74,7 +74,7 @@ serve(async (req: Request) => {
         title: "New Availability Request",
         message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
         type: "availability_request",
-        action_url: `/profile?tab=calendar`,
+        action_url: `/profile?tab=mentor`,
         category: "mentorship",
         read: false
       });
@@ -113,7 +113,7 @@ serve(async (req: Request) => {
       <p>Best regards,<br>The PicoCareer Team</p>`
     ].join('\n');
 
-    const encodedEmail = Buffer.from(emailContent).toString('base64')
+    const encodedEmail = btoa(emailContent)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
