@@ -44,6 +44,28 @@ export function useMentorStats(profileId: string | undefined) {
     enabled: !!profileId
   });
 
+  // Fetch ratings
+  const { data: ratingsResponse } = useQuery({
+    queryKey: ["mentor-ratings", profileId],
+    queryFn: async () => {
+      if (!profileId) return null;
+
+      const { data, error } = await supabase
+        .from("session_feedback")
+        .select("rating")
+        .eq("to_profile_id", profileId)
+        .eq("feedback_type", "mentee_feedback");
+
+      if (error) {
+        console.error('Error fetching ratings:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!profileId
+  });
+
   // Calculate stats
   const stats = (() => {
     if (sessionsResponse) {
@@ -78,6 +100,13 @@ export function useMentorStats(profileId: string | undefined) {
         return acc + (sessionType?.duration || 60) / 60;
       }, 0);
 
+      // Calculate rating statistics
+      const ratings = ratingsResponse || [];
+      const total_ratings = ratings.length;
+      const average_rating = total_ratings > 0
+        ? ratings.reduce((acc, curr) => acc + (curr.rating || 0), 0) / total_ratings
+        : 0;
+
       // Calculate session data for the last 6 months
       const last6Months = Array.from({ length: 6 }, (_, i) => {
         const date = new Date();
@@ -109,6 +138,8 @@ export function useMentorStats(profileId: string | undefined) {
         cancelled_sessions,
         unique_mentees,
         total_hours,
+        total_ratings,
+        average_rating: Number(average_rating.toFixed(1)),
         session_data
       };
     }
