@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
@@ -6,8 +7,10 @@ import { SessionTypeSelector } from "./SessionTypeSelector";
 import { SessionNote } from "./SessionNote";
 import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
+import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface BookingFormProps {
   mentorId: string;
@@ -30,6 +33,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [telegramUsername, setTelegramUsername] = useState("");
+  const { session } = useAuthSession();
 
   const sessionTypes = useSessionTypes(mentorId, true);
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
@@ -66,6 +70,14 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
           onDateSelect={setDate}
           mentorId={mentorId}
         />
+        
+        <div className="mt-4">
+          <RequestAvailabilityButton
+            mentorId={mentorId}
+            userId={session?.user?.id}
+            onRequestComplete={() => {}}
+          />
+        </div>
       </div>
 
       {/* Right column - Form elements */}
