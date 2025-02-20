@@ -6,6 +6,7 @@ import { AvailabilityManager } from "./mentor/AvailabilityManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { useMentorStats } from "./mentor/hooks/useMentorStats";
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorTabProps {
@@ -15,6 +16,7 @@ interface MentorTabProps {
 export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
+  const { sessionTypes, refetchSessions, refetchSessionTypes } = useMentorStats(profileId);
 
   useEffect(() => {
     if (!profileId) return;
