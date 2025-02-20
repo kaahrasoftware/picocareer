@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import { Resend } from "npm:resend@2.0.0";
+import { google } from "npm:googleapis@128.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,38 +86,47 @@ serve(async (req: Request) => {
 
     console.log('Notification created successfully');
 
-    // Verify RESEND_API_KEY is available
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      console.error('RESEND_API_KEY not found in environment variables');
-      throw new Error('RESEND_API_KEY not configured');
-    }
+    // Set up Google OAuth2 client
+    const oauth2Client = new google.auth.JWT(
+      Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+      undefined,
+      Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      ['https://www.googleapis.com/auth/gmail.send'],
+      Deno.env.get('GOOGLE_CALENDAR_EMAIL')
+    );
 
-    console.log('Preparing to send email to:', mentorData.email);
+    // Create Gmail API client
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Initialize Resend
-    const resend = new Resend(resendApiKey);
+    // Prepare email content
+    const emailContent = [
+      'From: PicoCareer <info@picocareer.com>',
+      `To: ${mentorData.email}`,
+      'Content-Type: text/html; charset=utf-8',
+      'MIME-Version: 1.0',
+      'Subject: New Availability Request',
+      '',
+      `<h1>New Availability Request</h1>
+      <p>Hello ${mentorData.full_name},</p>
+      <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+      <p>Please log in to your dashboard to review and respond to this request.</p>
+      <p>Best regards,<br>The PicoCareer Team</p>`
+    ].join('\n');
 
-    // Send email using Resend
+    const encodedEmail = Buffer.from(emailContent).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
     try {
-      const emailResponse = await resend.emails.send({
-        from: "PicoCareer <info@picocareer.com>",
-        to: [mentorData.email],
-        subject: "New Availability Request",
-        html: `
-          <h1>New Availability Request</h1>
-          <p>Hello ${mentorData.full_name},</p>
-          <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
-          <p>Please log in to your dashboard to review and respond to this request.</p>
-          <p>Best regards,<br>The PicoCareer Team</p>
-        `
+      console.log('Sending email to:', mentorData.email);
+      const response = await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedEmail
+        }
       });
-
-      console.log('Email sent successfully:', emailResponse);
-
-      if (!emailResponse.data?.id) {
-        throw new Error('Failed to send email: No email ID returned');
-      }
+      console.log('Email sent successfully:', response.data);
     } catch (emailError) {
       console.error('Error sending email:', emailError);
       throw emailError;
