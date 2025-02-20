@@ -6,7 +6,6 @@ import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -105,15 +104,6 @@ export function TimeSlotSelector({
 
   console.log("TimeSlotSelector - Mentor timezone:", mentorTimezone);
   console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
-
-  if (availableTimeSlots.length === 0) {
-    return (
-      <RequestAvailabilityButton
-        mentorId={mentorId}
-        onRequestComplete={() => {}}
-      />
-    );
-  }
 
   return (
     <div>
