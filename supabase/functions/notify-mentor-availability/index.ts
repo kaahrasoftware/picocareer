@@ -94,7 +94,7 @@ serve(async (req: Request) => {
       const emailResponse = await resend.emails.send({
         from: 'PicoCareer <info@picocareer.com>',
         to: [mentorData.email],
-        subject: 'New Mentoring Session Request',
+        subject: 'New Availability Request',
         html: `
           <!DOCTYPE html>
           <html>
@@ -140,7 +140,7 @@ serve(async (req: Request) => {
             <body>
               <div class="container">
                 <div class="header">
-                  <h1>New Mentoring Session Request</h1>
+                  <h1>New Availability Request</h1>
                 </div>
                 <div class="content">
                   <p>Dear ${mentorData.full_name},</p>
