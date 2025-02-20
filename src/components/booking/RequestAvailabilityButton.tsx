@@ -29,14 +29,17 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
 
     try {
       setIsRequestingAvailability(true);
+      console.log('Starting availability request process...', { mentorId, userId });
 
       // Insert new request
-      const { error: insertError } = await supabase
+      const { data: requestData, error: insertError } = await supabase
         .from('availability_requests')
         .insert({
           mentor_id: mentorId,
           mentee_id: userId
-        });
+        })
+        .select()
+        .single();
 
       // Handle duplicate request error
       if (insertError?.message?.includes('unique_mentor_mentee_request')) {
@@ -50,15 +53,40 @@ export function RequestAvailabilityButton({ mentorId, userId, onRequestComplete 
 
       if (insertError) throw insertError;
 
-      // Notify mentor via edge function
+      console.log('Availability request created:', requestData);
+
+      // Call the edge function to notify mentor
       const { error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
         body: {
           mentorId,
-          menteeId: userId
+          menteeId: userId,
+          requestId: requestData.id
         }
       });
 
-      if (notifyError) throw notifyError;
+      if (notifyError) {
+        console.error('Error notifying mentor:', notifyError);
+        throw notifyError;
+      }
+
+      console.log('Mentor notification sent successfully');
+
+      // Create a notification in the database
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          profile_id: mentorId,
+          title: "New Availability Request",
+          message: "A mentee has requested your availability for mentoring sessions.",
+          type: "availability_request",
+          action_url: `/profile?tab=calendar`,
+          category: "mentorship"
+        });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        throw notificationError;
+      }
 
       toast({
         title: "Request Sent",

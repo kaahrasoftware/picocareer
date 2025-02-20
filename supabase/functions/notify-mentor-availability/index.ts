@@ -1,90 +1,91 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface RequestBody {
+  mentorId: string;
+  menteeId: string;
+  requestId: string;
 }
 
-Deno.serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (req.method !== 'POST') {
-      throw new Error('Method not allowed')
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    // Get request body
-    const requestBody = await req.json()
-    if (!requestBody?.mentorId || !requestBody?.menteeId) {
-      throw new Error('Missing required fields: mentorId and menteeId')
-    }
+    const { mentorId, menteeId, requestId } = await req.json() as RequestBody;
+    console.log('Processing notification request:', { mentorId, menteeId, requestId });
 
-    const { mentorId, menteeId } = requestBody
+    // Get mentor and mentee details
+    const { data: mentorData, error: mentorError } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', mentorId)
+      .single();
 
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase credentials')
-    }
+    if (mentorError) throw mentorError;
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseKey)
-
-    // Fetch mentee profile
-    const { data: menteeData, error: menteeError } = await supabaseAdmin
+    const { data: menteeData, error: menteeError } = await supabase
       .from('profiles')
       .select('full_name')
       .eq('id', menteeId)
-      .single()
+      .single();
 
-    if (menteeError || !menteeData) {
-      throw new Error(`Error fetching mentee: ${menteeError?.message || 'Mentee not found'}`)
-    }
+    if (menteeError) throw menteeError;
 
-    // Create notification
-    const { error: notificationError } = await supabaseAdmin
-      .from('notifications')
-      .insert({
-        profile_id: mentorId,
-        title: 'New Availability Request',
-        message: `${menteeData.full_name} has requested your availability for mentoring sessions.`,
-        type: 'availability_request',
-        category: 'general'
-      })
+    console.log('Found mentor and mentee:', { mentor: mentorData, mentee: menteeData });
 
-    if (notificationError) {
-      throw new Error(`Error creating notification: ${notificationError.message}`)
-    }
+    // Send email to mentor
+    const emailResponse = await resend.emails.send({
+      from: "PicoCareer <notification@picocareer.com>",
+      to: [mentorData.email],
+      subject: "New Availability Request",
+      html: `
+        <h1>New Availability Request</h1>
+        <p>Hello ${mentorData.full_name},</p>
+        <p>${menteeData.full_name} has requested your availability for mentoring sessions.</p>
+        <p>Please log in to your dashboard to review and respond to this request.</p>
+        <p>Best regards,<br>The PicoCareer Team</p>
+      `,
+    });
 
-    // Return success response
+    console.log('Email sent:', emailResponse);
+
     return new Response(
-      JSON.stringify({ success: true }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
+      JSON.stringify({ message: "Notification sent successfully" }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
       }
-    )
-
+    );
   } catch (error) {
-    // Log the error
-    console.error('Error in notify-mentor-availability:', error)
-
-    // Return error response
+    console.error('Error in notify-mentor-availability:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
       }
-    )
+    );
   }
-})
+});
