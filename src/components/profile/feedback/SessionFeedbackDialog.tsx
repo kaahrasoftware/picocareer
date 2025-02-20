@@ -40,6 +40,7 @@ export function SessionFeedbackDialog({
   const { toast } = useToast();
 
   const handleSubmit = async () => {
+    // Only validate rating if it's not a no-show report
     if (!didNotShowUp && rating === 0) {
       toast({
         title: "Rating Required",
@@ -56,8 +57,8 @@ export function SessionFeedbackDialog({
         .insert({
           session_id: sessionId,
           feedback_type: feedbackType,
-          rating: didNotShowUp ? 0 : rating,
-          recommend,
+          rating: didNotShowUp ? null : rating,
+          recommend: didNotShowUp ? null : recommend,
           notes,
           from_profile_id: fromProfileId,
           to_profile_id: toProfileId,
@@ -109,6 +110,7 @@ export function SessionFeedbackDialog({
                   setDidNotShowUp(checked);
                   if (checked) {
                     setRating(0);
+                    setRecommend(false);
                   }
                 }}
               />
