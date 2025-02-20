@@ -96,9 +96,10 @@ export function useMentorStats(profileId: string | undefined) {
       // Count only sessions cancelled by the mentor
       const mentor_cancelled_sessions = sessions.filter(s => {
         if (s.status !== 'cancelled') return false;
-        // Check if the mentor cancelled the session
-        const cancellation = Array.isArray(s.cancellation) ? s.cancellation[0] : s.cancellation;
-        return cancellation?.from_profile_id === profileId;
+        // Check if the mentor cancelled the session by looking at the feedback
+        const cancellationArray = s.cancellation || [];
+        const feedbackEntry = Array.isArray(cancellationArray) ? cancellationArray[0] : cancellationArray;
+        return feedbackEntry?.from_profile_id === profileId;
       }).length;
 
       // Count unique mentees
