@@ -1,4 +1,3 @@
-
 export type NotificationType = 
   | "major_update"
   | "session_booked"
@@ -32,6 +31,7 @@ export interface Availability {
   start_date_time: string;
   end_date_time: string;
   timezone_offset: number;
+  booked_session_id?: string;
   created_at?: string;
   updated_at?: string;
 }

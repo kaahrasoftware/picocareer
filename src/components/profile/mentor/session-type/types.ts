@@ -1,44 +1,24 @@
-import { SessionTypeEnum, MeetingPlatform } from "@/types/session";
-import { Control } from "react-hook-form";
+
+import { MeetingPlatform } from "@/types/calendar";
 
 export interface SessionTypeFormData {
-  type: SessionTypeEnum;
+  type: string;
   duration: number;
   price: number;
-  description: string;
+  description?: string;
   meeting_platform: MeetingPlatform[];
-  telegram_username?: string;
   phone_number?: string;
+  telegram_username?: string;
 }
 
-export interface SessionTypeFormProps {
-  profileId: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  existingTypes: {
-    id: string;
-    type: string;
-    duration: number;
-    description: string | null;
-  }[];
-}
+export const SESSION_TYPES = {
+  "Career Guidance": "Career Guidance",
+  "Mock Interview": "Mock Interview",
+  "Resume Review": "Resume Review",
+  "Technical Mentoring": "Technical Mentoring",
+  "Academic Advising": "Academic Advising",
+  "Industry Insights": "Industry Insights",
+  "SAT Exam Prep Advice": "SAT Exam Prep Advice"
+} as const;
 
-export interface FormProps {
-  control: Control<SessionTypeFormData>;
-}
-
-export interface PlatformFieldsProps {
-  form: FormProps;
-  showTelegramField: boolean;
-  showPhoneField: boolean;
-  showWhatsAppField: boolean;
-}
-
-export interface PlatformSelectProps {
-  form: FormProps;
-}
-
-export interface SessionTypeSelectProps {
-  form: FormProps;
-  availableTypes: SessionTypeEnum[];
-}
+export type SessionTypeEnum = keyof typeof SESSION_TYPES;
