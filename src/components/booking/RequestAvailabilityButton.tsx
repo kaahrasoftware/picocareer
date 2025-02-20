@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 interface RequestAvailabilityButtonProps {
   mentorId: string;
@@ -20,6 +21,29 @@ export function RequestAvailabilityButton({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Check if mentor has any future availability
+  const { data: hasFutureAvailability, isLoading } = useQuery({
+    queryKey: ['mentorFutureAvailability', mentorId],
+    queryFn: async () => {
+      const now = new Date();
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('id')
+        .eq('profile_id', mentorId)
+        .eq('is_available', true)
+        .or(`and(recurring.eq.true),and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`)
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking mentor availability:', error);
+        return true; // Return true on error to prevent unnecessary requests
+      }
+
+      return (data?.length ?? 0) > 0;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
   const handleRequestAvailability = async () => {
     if (!userId) {
       toast({
@@ -28,6 +52,15 @@ export function RequestAvailabilityButton({
         variant: "destructive",
       });
       navigate("/auth");
+      return;
+    }
+
+    if (hasFutureAvailability) {
+      toast({
+        title: "Mentor is Available",
+        description: "This mentor already has available time slots. Please check their calendar.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -122,6 +155,16 @@ export function RequestAvailabilityButton({
       setIsRequestingAvailability(false);
     }
   };
+
+  // Don't show the button if the mentor has future availability
+  if (hasFutureAvailability) {
+    return null;
+  }
+
+  // Show loading state while checking availability
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div className="mt-4 flex flex-col items-center justify-center space-y-3 bg-muted p-4 rounded-lg">
