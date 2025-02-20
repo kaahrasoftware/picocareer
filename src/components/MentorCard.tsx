@@ -10,7 +10,6 @@ import { useProfileSession } from "@/hooks/useProfileSession";
 import { useNavigate } from "react-router-dom";
 import { ProfileDetailsDialog } from "./ProfileDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays } from "date-fns";
 
 interface MentorCardProps {
   id: string;
@@ -34,85 +33,9 @@ interface MentorCardProps {
 
 export function MentorCard(props: MentorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isRequestingAvailability, setIsRequestingAvailability] = useState(false);
   const { toast } = useToast();
   const { session } = useProfileSession();
   const navigate = useNavigate();
-
-  // Get the first 3 skills and calculate remaining count
-  const displaySkills = props.skills?.slice(0, 3) || [];
-  const remainingCount = props.skills ? props.skills.length - 3 : 0;
-
-  const handleRequestAvailability = async () => {
-    if (!session) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to request mentor availability.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    try {
-      setIsRequestingAvailability(true);
-
-      // Check if user has already requested in the last 24 hours
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-      const { data: existingRequest } = await supabase
-        .from('availability_requests')
-        .select('*')
-        .eq('mentor_id', props.id)
-        .eq('mentee_id', session.user.id)
-        .gte('created_at', twentyFourHoursAgo.toISOString())
-        .single();
-
-      if (existingRequest) {
-        toast({
-          title: "Request Limit Reached",
-          description: "You can only request availability once every 24 hours.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Insert new request
-      const { error: insertError } = await supabase
-        .from('availability_requests')
-        .insert({
-          mentor_id: props.id,
-          mentee_id: session.user.id
-        });
-
-      if (insertError) throw insertError;
-
-      // Notify mentor via edge function
-      const { error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
-        body: {
-          mentorId: props.id,
-          menteeId: session.user.id
-        }
-      });
-
-      if (notifyError) throw notifyError;
-
-      toast({
-        title: "Request Sent",
-        description: "The mentor has been notified of your request.",
-      });
-    } catch (error) {
-      console.error('Error requesting availability:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send availability request. Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRequestingAvailability(false);
-    }
-  };
 
   const handleViewProfile = () => {
     if (!session) {
@@ -137,6 +60,10 @@ export function MentorCard(props: MentorCardProps) {
     setDialogOpen(true);
   };
 
+  // Get the first 3 skills and calculate remaining count
+  const displaySkills = props.skills?.slice(0, 3) || [];
+  const remainingCount = props.skills ? props.skills.length - 3 : 0;
+
   return (
     <>
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
@@ -146,7 +73,7 @@ export function MentorCard(props: MentorCardProps) {
           <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
               avatarUrl={props.imageUrl || ""}
-              fallback={props.name ? props.name[0] : "?"}
+              imageAlt={props.name}
               size="md"
               editable={false}
             />
@@ -217,7 +144,7 @@ export function MentorCard(props: MentorCardProps) {
           )}
 
           {/* Button Section */}
-          <div className="mt-auto w-full space-y-2">
+          <div className="mt-auto w-full">
             <Button 
               variant="outline" 
               className="w-full bg-background hover:bg-muted/50 transition-colors"
@@ -225,17 +152,6 @@ export function MentorCard(props: MentorCardProps) {
             >
               View Profile
             </Button>
-            
-            {!props.hasAvailability && (
-              <Button
-                variant="secondary"
-                className="w-full"
-                onClick={handleRequestAvailability}
-                disabled={isRequestingAvailability}
-              >
-                {isRequestingAvailability ? "Sending Request..." : "Request Availability"}
-              </Button>
-            )}
           </div>
         </div>
       </Card>
