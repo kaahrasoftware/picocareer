@@ -1,4 +1,6 @@
 
+import type { SessionType } from "@/types/session";
+
 export interface MentorStats {
   total_sessions: number;
   completed_sessions: number;
@@ -18,7 +20,7 @@ export interface MentorStats {
 
 export interface MentorStatsHookReturn {
   stats: MentorStats | null;
-  sessionTypes: any[] | null;
+  sessionTypes: SessionType[] | null;
   refetchSessions: () => void;
   refetchSessionTypes: () => void;
 }

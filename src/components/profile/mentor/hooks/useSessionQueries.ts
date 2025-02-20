@@ -1,6 +1,27 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { SessionType } from "@/types/session";
+
+interface SessionResponse {
+  id: string;
+  mentor_id: string;
+  mentee_id: string;
+  status: string;
+  scheduled_at: string;
+  session_type: {
+    duration: number;
+  };
+}
+
+interface FeedbackResponse {
+  id: string;
+  session_id: string;
+  did_not_show_up: boolean;
+  rating: number;
+  to_profile_id: string;
+  from_profile_id: string;
+}
 
 export function useSessionQueries(profileId: string | undefined) {
   const { data: sessionsResponse, refetch: refetchSessions } = useQuery({
@@ -21,7 +42,7 @@ export function useSessionQueries(profileId: string | undefined) {
       }
 
       console.log('Fetched sessions:', data);
-      return data;
+      return data as SessionResponse[];
     },
     enabled: !!profileId
   });
@@ -37,7 +58,7 @@ export function useSessionQueries(profileId: string | undefined) {
         .eq("profile_id", profileId);
 
       if (error) throw error;
-      return data;
+      return data as SessionType[];
     },
     enabled: !!profileId
   });
@@ -58,7 +79,7 @@ export function useSessionQueries(profileId: string | undefined) {
         throw error;
       }
 
-      return data;
+      return data as FeedbackResponse[];
     },
     enabled: !!profileId
   });
