@@ -179,17 +179,17 @@ serve(async (req: Request) => {
       </html>`
     ].join('\n');
 
-    // Convert email content to base64url format
-    const emailContentBase64 = btoa(emailContent.replace(/([^\u0000-\u007f])/g, (char) => {
-      return '\\u' + ('0000' + char.charCodeAt(0).toString(16)).slice(-4);
-    }));
+    // Convert email content to base64 using TextEncoder
+    const encoder = new TextEncoder();
+    const emailBytes = encoder.encode(emailContent);
+    const emailBase64 = btoa(String.fromCharCode(...emailBytes));
 
     try {
       console.log('Sending email to:', mentorData.email);
       const response = await gmail.users.messages.send({
         userId: 'me',
         requestBody: {
-          raw: emailContentBase64
+          raw: emailBase64
         }
       });
       console.log('Email sent successfully:', response.data);
