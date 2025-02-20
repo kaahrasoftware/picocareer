@@ -1623,6 +1623,7 @@ export type Database = {
           calendar_event_etag: string | null
           calendar_event_id: string | null
           created_at: string
+          did_not_show_up: boolean | null
           id: string
           last_calendar_sync: string | null
           meeting_link: string | null
@@ -1645,6 +1646,7 @@ export type Database = {
           calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
+          did_not_show_up?: boolean | null
           id?: string
           last_calendar_sync?: string | null
           meeting_link?: string | null
@@ -1667,6 +1669,7 @@ export type Database = {
           calendar_event_etag?: string | null
           calendar_event_id?: string | null
           created_at?: string
+          did_not_show_up?: boolean | null
           id?: string
           last_calendar_sync?: string | null
           meeting_link?: string | null
