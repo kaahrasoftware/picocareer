@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 interface SessionFeedbackDialogProps {
   sessionId: string;
@@ -33,14 +35,15 @@ export function SessionFeedbackDialog({
   const [rating, setRating] = useState(0);
   const [recommend, setRecommend] = useState(false);
   const [notes, setNotes] = useState("");
+  const [didNotShowUp, setDidNotShowUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (rating === 0) {
+    if (!didNotShowUp && rating === 0) {
       toast({
         title: "Rating Required",
-        description: "Please provide a rating before submitting feedback.",
+        description: "Please provide a rating or mark as no-show before submitting feedback.",
         variant: "destructive",
       });
       return;
@@ -48,19 +51,30 @@ export function SessionFeedbackDialog({
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      // Start a transaction to update both feedback and session
+      const { error: sessionError } = await supabase
+        .from('mentor_sessions')
+        .update({ 
+          did_not_show_up: didNotShowUp,
+          attendance_confirmed: !didNotShowUp
+        })
+        .eq('id', sessionId);
+
+      if (sessionError) throw sessionError;
+
+      const { error: feedbackError } = await supabase
         .from('session_feedback')
         .insert({
           session_id: sessionId,
           feedback_type: feedbackType,
-          rating,
+          rating: didNotShowUp ? 0 : rating,
           recommend,
           notes,
           from_profile_id: fromProfileId,
           to_profile_id: toProfileId,
         });
 
-      if (error) throw error;
+      if (feedbackError) throw feedbackError;
 
       toast({
         title: "Feedback Submitted",
@@ -88,28 +102,47 @@ export function SessionFeedbackDialog({
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label>Rating</Label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => setRating(value)}
-                  className="focus:outline-none"
-                >
-                  <Star
-                    className={`h-6 w-6 ${
-                      value <= rating
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                </button>
-              ))}
+            <div className="flex items-center space-x-2 pb-4">
+              <Switch
+                id="no-show"
+                checked={didNotShowUp}
+                onCheckedChange={(checked) => {
+                  setDidNotShowUp(checked);
+                  if (checked) {
+                    setRating(0);
+                  }
+                }}
+              />
+              <Label htmlFor="no-show">The person did not show up for the session</Label>
             </div>
+            <Separator className="my-2" />
+            {!didNotShowUp && (
+              <>
+                <Label>Rating</Label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => setRating(value)}
+                      className="focus:outline-none"
+                      disabled={didNotShowUp}
+                    >
+                      <Star
+                        className={`h-6 w-6 ${
+                          value <= rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Only show recommendation question for mentee feedback */}
-          {feedbackType === 'mentee_feedback' && (
+          {/* Only show recommendation question for mentee feedback and when it's not a no-show */}
+          {feedbackType === 'mentee_feedback' && !didNotShowUp && (
             <div className="flex items-center space-x-2">
               <Switch
                 id="recommend"
@@ -123,7 +156,10 @@ export function SessionFeedbackDialog({
           <div className="space-y-2">
             <Label>Additional Notes</Label>
             <Textarea
-              placeholder="Share your thoughts about the session... If the mentor/mentee did not show up or was late, please mention it here."
+              placeholder={didNotShowUp 
+                ? "Please provide any additional context about the no-show..."
+                : "Share your thoughts about the session..."
+              }
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="min-h-[100px]"

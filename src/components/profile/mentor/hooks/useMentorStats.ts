@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,9 +74,9 @@ export function useMentorStats(profileId: string | undefined) {
       
       const total_sessions = sessions.length;
       
-      // Count completed sessions: sessions that have passed their end time and weren't cancelled
+      // Count completed sessions: sessions that have passed their end time and weren't cancelled or marked as no-show
       const completed_sessions = sessions.filter(s => {
-        if (s.status === 'cancelled') return false;
+        if (s.status === 'cancelled' || s.did_not_show_up) return false;
         
         const sessionEndTime = new Date(s.scheduled_at);
         sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
@@ -89,17 +90,19 @@ export function useMentorStats(profileId: string | undefined) {
       }).length;
       
       const cancelled_sessions = sessions.filter(s => s.status === 'cancelled').length;
+      const no_show_sessions = sessions.filter(s => s.did_not_show_up).length;
       const unique_mentees = new Set(sessions.map(s => s.mentee_id)).size;
       
-      // Calculate cancellation score (percentage of non-cancelled sessions)
-      const cancellation_score = total_sessions > 0 
-        ? Math.round(((total_sessions - cancelled_sessions) / total_sessions) * 100)
+      // Calculate cancellation score (percentage of non-cancelled and non-no-show sessions)
+      const total_scheduled = total_sessions - cancelled_sessions;
+      const cancellation_score = total_scheduled > 0 
+        ? Math.round(((total_scheduled - no_show_sessions) / total_scheduled) * 100)
         : 100;
 
       // Calculate total hours based on completed sessions only
       const totalMinutes = sessions.reduce((acc, session) => {
-        // Skip if session was cancelled
-        if (session.status === 'cancelled') return acc;
+        // Skip if session was cancelled or was a no-show
+        if (session.status === 'cancelled' || session.did_not_show_up) return acc;
         
         const startTime = new Date(session.scheduled_at);
         const endTime = new Date(session.scheduled_at);
@@ -142,7 +145,7 @@ export function useMentorStats(profileId: string | undefined) {
 
       const session_data = last6Months.map(month => {
         const count = sessions.filter(session => {
-          if (session.status === 'cancelled') return false;
+          if (session.status === 'cancelled' || session.did_not_show_up) return false;
           const sessionDate = new Date(session.scheduled_at);
           return sessionDate.getMonth() === month.date.getMonth() &&
                  sessionDate.getFullYear() === month.date.getFullYear();
@@ -158,6 +161,7 @@ export function useMentorStats(profileId: string | undefined) {
         completed_sessions,
         upcoming_sessions,
         cancelled_sessions,
+        no_show_sessions,
         unique_mentees,
         total_hours: timeStr,
         total_ratings,

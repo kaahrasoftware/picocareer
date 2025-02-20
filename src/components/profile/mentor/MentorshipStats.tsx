@@ -61,7 +61,7 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       title: "Cancelled",
       value: stats.cancelled_sessions,
       icon: Ban,
-      subtitle: "Total cancelled sessions",
+      subtitle: `${stats.no_show_sessions} no-shows`,
       iconColor: "text-red-500"
     },
     {
@@ -75,7 +75,7 @@ export function MentorshipStats({ profileId }: MentorshipStatsProps) {
       title: "Reliability Score",
       value: `${stats.cancellation_score}%`,
       icon: Shield,
-      subtitle: "Based on cancellations",
+      subtitle: "Based on attendance",
       iconColor: "text-purple-500"
     }
   ];
