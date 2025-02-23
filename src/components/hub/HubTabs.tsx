@@ -30,6 +30,7 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
     <Tabs defaultValue="overview" className="w-full">
       <TabsList className="w-full justify-start">
         <TabsTrigger value="overview">Overview</TabsTrigger>
+        {session && <TabsTrigger value="chat">Channels</TabsTrigger>}
         {isMember && (
           <>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
@@ -38,7 +39,6 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
             <TabsTrigger value="departments">Departments</TabsTrigger>
           </>
         )}
-        {session && <TabsTrigger value="chat">Chat</TabsTrigger>}
         {isAdmin && (
           <TabsTrigger value="manage">Manage</TabsTrigger>
         )}
@@ -55,6 +55,20 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           </Alert>
         )}
       </TabsContent>
+
+      {session && (
+        <TabsContent value="chat" className="mt-6">
+          {!isMember && (
+            <Alert className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                You can participate in public chat rooms. Join this hub to access private chat rooms as well.
+              </AlertDescription>
+            </Alert>
+          )}
+          <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
+        </TabsContent>
+      )}
 
       {isMember && (
         <>
@@ -82,20 +96,6 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
             />
           </TabsContent>
         </>
-      )}
-
-      {session && (
-        <TabsContent value="chat" className="mt-6">
-          {!isMember && (
-            <Alert className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                You can participate in public chat rooms. Join this hub to access private chat rooms as well.
-              </AlertDescription>
-            </Alert>
-          )}
-          <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
-        </TabsContent>
       )}
 
       {isAdmin && (
