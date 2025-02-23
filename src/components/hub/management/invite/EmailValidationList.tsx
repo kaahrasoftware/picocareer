@@ -1,5 +1,5 @@
 
-import { EmailValidationResult } from "./types";
+import { EmailValidationResult } from "./useEmailValidation";
 
 interface EmailValidationListProps {
   validatedEmails: EmailValidationResult[];

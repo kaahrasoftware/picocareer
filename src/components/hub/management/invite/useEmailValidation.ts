@@ -1,7 +1,11 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { EmailValidationResult } from "./types";
+
+export interface EmailValidationResult {
+  email: string;
+  exists: boolean;
+}
 
 export function useEmailValidation() {
   const [validatedEmails, setValidatedEmails] = useState<EmailValidationResult[]>([]);

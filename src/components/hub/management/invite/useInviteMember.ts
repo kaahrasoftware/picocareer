@@ -1,17 +1,19 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { MemberRole } from "@/types/database/hubs";
-import { EmailValidationResult } from "./types";
+import { EmailValidationResult } from "./useEmailValidation";
 
 export function useInviteMember(hubId: string) {
-  const { toast } = useToast();
   const [isInviting, setIsInviting] = useState(false);
+  const { toast } = useToast();
 
   const sendInvites = async (validatedEmails: EmailValidationResult[], selectedRole: MemberRole) => {
     try {
       setIsInviting(true);
+      
+      // Filter only existing users
       const validEmails = validatedEmails.filter(result => result.exists).map(result => result.email);
       
       if (validEmails.length === 0) {
@@ -71,7 +73,8 @@ export function useInviteMember(hubId: string) {
             invited_email: email,
             role: selectedRole,
             invited_by: user.id,
-            status: 'pending'
+            status: 'pending',
+            email_status: 'pending'
           });
 
         if (inviteError) throw inviteError;
