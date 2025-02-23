@@ -59,7 +59,11 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
       {isMember && (
         <>
           <TabsContent value="announcements" className="mt-6">
-            <HubAnnouncements hubId={hub.id} />
+            <HubAnnouncements 
+              hubId={hub.id} 
+              isAdmin={isAdmin} 
+              isModerator={isModerator}
+            />
           </TabsContent>
 
           <TabsContent value="resources" className="mt-6">
@@ -71,7 +75,11 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           </TabsContent>
 
           <TabsContent value="departments" className="mt-6">
-            <HubDepartments hubId={hub.id} />
+            <HubDepartments 
+              hubId={hub.id} 
+              isAdmin={isAdmin} 
+              isModerator={isModerator}
+            />
           </TabsContent>
         </>
       )}

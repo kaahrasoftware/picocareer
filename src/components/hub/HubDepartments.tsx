@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 interface HubDepartmentsProps {
   hubId: string;
   isAdmin?: boolean;
+  isModerator?: boolean;
 }
 
 const departmentColors = [
@@ -34,7 +36,7 @@ const departmentColors = [
   "bg-[#D3E4FD] hover:bg-[#D3E4FD]/90 border-blue-200"
 ];
 
-export function HubDepartments({ hubId, isAdmin = false }: HubDepartmentsProps) {
+export function HubDepartments({ hubId, isAdmin = false, isModerator = false }: HubDepartmentsProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<HubDepartment | null>(null);
   const { toast } = useToast();
@@ -107,11 +109,13 @@ export function HubDepartments({ hubId, isAdmin = false }: HubDepartmentsProps) 
     return <div>Loading departments...</div>;
   }
 
+  const canManage = isAdmin || isModerator;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Departments</h2>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => setShowForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Department
@@ -143,7 +147,7 @@ export function HubDepartments({ hubId, isAdmin = false }: HubDepartmentsProps) 
                   <Building className="h-5 w-5" />
                   {department.name}
                 </div>
-                {isAdmin && (
+                {canManage && (
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"

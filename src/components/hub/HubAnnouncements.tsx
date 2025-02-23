@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 interface HubAnnouncementsProps {
   hubId: string;
   isAdmin?: boolean;
+  isModerator?: boolean;
 }
 
 const categoryColors: Record<string, string> = {
@@ -36,13 +37,16 @@ const categoryColors: Record<string, string> = {
 
 export function HubAnnouncements({
   hubId,
-  isAdmin = false
+  isAdmin = false,
+  isModerator = false
 }: HubAnnouncementsProps) {
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortByRecent, setSortByRecent] = useState(true);
   const [editingAnnouncement, setEditingAnnouncement] = useState<HubAnnouncement | null>(null);
   const { toast } = useToast();
+
+  const canManage = isAdmin || isModerator;
 
   const {
     data: announcements,
@@ -128,7 +132,7 @@ export function HubAnnouncements({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Announcements</h2>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => setShowForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Announcement
