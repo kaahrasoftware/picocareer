@@ -84,9 +84,19 @@ export function AnnouncementCard({
         )}
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="whitespace-pre-wrap line-clamp-3 text-sm font-normal text-gray-600">
-          {announcement.content}
-        </p>
+        <div 
+          className="prose max-w-none text-sm font-normal text-gray-600"
+          dangerouslySetInnerHTML={{ __html: announcement.content }}
+        />
+        {announcement.image_url && (
+          <div className="mt-4">
+            <img 
+              src={announcement.image_url} 
+              alt="Announcement attachment" 
+              className="rounded-md max-h-48 object-cover"
+            />
+          </div>
+        )}
         <div className="mt-4 flex flex-col gap-1 text-sm text-muted-foreground">
           <time className="text-xs">
             {format(new Date(announcement.created_at), 'MMM d, yyyy')}

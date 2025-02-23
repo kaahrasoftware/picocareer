@@ -3,8 +3,9 @@ import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { BasicInputField } from "@/components/forms/fields/BasicInputField";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
 import { supabase } from "@/integrations/supabase/client";
+import { FormField } from "@/components/forms/FormField";
 import { 
   AnnouncementCategory,
   HubAnnouncement 
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { ImageUpload } from "@/components/forms/ImageUpload";
 
 interface AnnouncementFormProps {
   hubId: string;
@@ -31,6 +33,7 @@ interface FormFields {
   scheduled_for?: string;
   expires_at?: string;
   target_audience?: string[];
+  image_url?: string;
 }
 
 const CATEGORY_OPTIONS: AnnouncementCategory[] = ['event', 'news', 'alert', 'general'];
@@ -50,7 +53,8 @@ export function AnnouncementForm({
       category: existingAnnouncement?.category || "general",
       scheduled_for: existingAnnouncement?.scheduled_for || "",
       expires_at: existingAnnouncement?.expires_at || "",
-      target_audience: existingAnnouncement?.target_audience || []
+      target_audience: existingAnnouncement?.target_audience || [],
+      image_url: existingAnnouncement?.image_url || ""
     }
   });
 
@@ -104,18 +108,30 @@ export function AnnouncementForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <BasicInputField
-          field={form.register("title")}
+        <FormField
+          control={form.control}
+          name="title"
           label="Title"
           placeholder="Enter announcement title"
           required
         />
 
-        <BasicInputField
-          field={form.register("content")}
-          label="Content"
-          placeholder="Enter announcement content"
-          required
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none">Content</label>
+          <RichTextEditor
+            value={form.getValues("content")}
+            onChange={(value) => form.setValue("content", value)}
+            placeholder="Enter announcement content"
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="image_url"
+          label="Attachment"
+          type="image"
+          bucket="announcement-images"
+          description="Upload an image to attach to this announcement"
         />
 
         <div className="space-y-2">
@@ -137,14 +153,16 @@ export function AnnouncementForm({
           </Select>
         </div>
 
-        <BasicInputField
-          field={form.register("scheduled_for")}
+        <FormField
+          control={form.control}
+          name="scheduled_for"
           label="Schedule For"
           type="datetime-local"
         />
 
-        <BasicInputField
-          field={form.register("expires_at")}
+        <FormField
+          control={form.control}
+          name="expires_at"
           label="Expires At"
           type="datetime-local"
         />
