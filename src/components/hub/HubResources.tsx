@@ -22,7 +22,7 @@ export function HubResources({ hubId, isAdmin }: HubResourcesProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const resourcesPerPage = 100;
+  const resourcesPerPage = 12;
 
   const { data: resources, isLoading, refetch } = useQuery({
     queryKey: ['hub-resources', hubId],
@@ -116,30 +116,30 @@ export function HubResources({ hubId, isAdmin }: HubResourcesProps) {
         categories={categories}
       />
 
-      <ScrollArea className="h-[500px] rounded-md border p-4">
-        <div className="flex flex-col space-y-4">
-          {currentResources?.map((resource) => (
-            <ResourceCard
-              key={resource.id}
-              resource={resource}
-              onClick={() => window.open(getResourceUrl(resource), '_blank')}
-              isAdmin={isAdmin}
-              onDeleted={handleResourceDeleted}
-            />
-          ))}
-          {(!currentResources || currentResources.length === 0) && (
-            <div className="text-center py-8 text-muted-foreground">
-              No resources found
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {currentResources?.map((resource) => (
+          <ResourceCard
+            key={resource.id}
+            resource={resource}
+            onClick={() => window.open(getResourceUrl(resource), '_blank')}
+            isAdmin={isAdmin}
+            onDeleted={handleResourceDeleted}
+          />
+        ))}
+        {(!currentResources || currentResources.length === 0) && (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+            No resources found
+          </div>
+        )}
+      </div>
 
-      <ResourcePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {totalPages > 1 && (
+        <ResourcePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }
