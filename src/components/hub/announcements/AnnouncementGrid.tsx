@@ -1,7 +1,8 @@
 
 import { HubAnnouncement } from "@/types/database/hubs";
 import { AnnouncementCard } from "./AnnouncementCard";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { BlogPagination } from "@/components/blog/BlogPagination";
+import { useState } from "react";
 
 interface AnnouncementGridProps {
   announcements: HubAnnouncement[];
@@ -18,8 +19,9 @@ export function AnnouncementGrid({
   onDelete,
   isAdmin
 }: AnnouncementGridProps) {
-  const itemsPerSlide = 4;
-  const slides = Math.ceil(announcements.length / itemsPerSlide);
+  const itemsPerPage = 8;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(announcements.length / itemsPerPage);
 
   if (announcements.length === 0) {
     return (
@@ -29,30 +31,31 @@ export function AnnouncementGrid({
     );
   }
 
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentAnnouncements = announcements.slice(startIndex, endIndex);
+
   return (
-    <Carousel opts={{ align: "start" }} className="w-full">
-      <CarouselContent className="-ml-4">
-        {Array.from({ length: slides }).map((_, slideIndex) => (
-          <CarouselItem key={slideIndex} className="pl-4 basis-full">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {announcements
-                .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
-                .map(announcement => (
-                  <AnnouncementCard
-                    key={announcement.id}
-                    announcement={announcement}
-                    categoryColor={getCardColor(announcement.category)}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    isAdmin={isAdmin}
-                  />
-                ))}
-            </div>
-          </CarouselItem>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {currentAnnouncements.map(announcement => (
+          <AnnouncementCard
+            key={announcement.id}
+            announcement={announcement}
+            categoryColor={getCardColor(announcement.category)}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            isAdmin={isAdmin}
+          />
         ))}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+      </div>
+      {totalPages > 1 && (
+        <BlogPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+    </div>
   );
 }
