@@ -50,17 +50,17 @@ export function HubChat({
 
   useEffect(() => {
     if (rooms?.length && !selectedRoom) {
-      // Select the first public room by default for non-members
+      // Select the first public channel by default for non-members
       const defaultRoom = rooms.find(room => room.type === 'public') || rooms[0];
       setSelectedRoom(defaultRoom);
     }
   }, [rooms, selectedRoom]);
 
   const handleRoomDeleted = (deletedRoomId: string) => {
-    // If the deleted room was selected, clear the selection and select another room
+    // If the deleted channel was selected, clear the selection and select another channel
     if (selectedRoom?.id === deletedRoomId) {
       setSelectedRoom(null); // First clear the selection
-      // Then find another room to select
+      // Then find another channel to select
       const remainingRooms = rooms?.filter(room => room.id !== deletedRoomId);
       if (remainingRooms?.length) {
         const nextRoom = remainingRooms.find(room => room.type === 'public') || remainingRooms[0];
@@ -73,7 +73,7 @@ export function HubChat({
     });
   };
 
-  // Subscribe to room changes (including deletions)
+  // Subscribe to channel changes (including deletions)
   useEffect(() => {
     const channel = supabase.channel('hub-chat-rooms').on('postgres_changes', {
       event: '*',
@@ -81,14 +81,14 @@ export function HubChat({
       table: 'hub_chat_rooms',
       filter: `hub_id=eq.${hubId}`
     }, payload => {
-      console.log('Room change received:', payload);
+      console.log('Channel change received:', payload);
 
-      // If a room is deleted, handle it
+      // If a channel is deleted, handle it
       if (payload.eventType === 'DELETE' && payload.old?.id === selectedRoom?.id) {
         setSelectedRoom(null);
       }
 
-      // Refetch rooms when changes occur
+      // Refetch channels when changes occur
       queryClient.invalidateQueries({
         queryKey: ['hub-chat-rooms', hubId]
       });
@@ -100,7 +100,7 @@ export function HubChat({
 
   if (!session) {
     return <div className="p-8 text-center">
-        <p>Please sign in to access chat rooms.</p>
+        <p>Please sign in to access channels.</p>
       </div>;
   }
 
@@ -118,7 +118,7 @@ export function HubChat({
       
       <div className="flex-1 flex flex-col">
         {selectedRoom ? <ChatMessages room={selectedRoom} hubId={hubId} /> : <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Select a room to start chatting
+            Select a channel to start chatting
           </div>}
       </div>
 
