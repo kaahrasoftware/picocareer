@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,11 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CreateRoomDialog } from "./CreateRoomDialog";
+
 interface HubChatProps {
   hubId: string;
   isAdmin: boolean;
   isModerator: boolean;
 }
+
 export function HubChat({
   hubId,
   isAdmin,
@@ -44,6 +47,7 @@ export function HubChat({
       return data;
     }
   });
+
   useEffect(() => {
     if (rooms?.length && !selectedRoom) {
       // Select the first public room by default for non-members
@@ -51,6 +55,7 @@ export function HubChat({
       setSelectedRoom(defaultRoom);
     }
   }, [rooms, selectedRoom]);
+
   const handleRoomDeleted = (deletedRoomId: string) => {
     // If the deleted room was selected, clear the selection and select another room
     if (selectedRoom?.id === deletedRoomId) {
@@ -92,18 +97,20 @@ export function HubChat({
       supabase.removeChannel(channel);
     };
   }, [hubId, queryClient, selectedRoom]);
+
   if (!session) {
     return <div className="p-8 text-center">
         <p>Please sign in to access chat rooms.</p>
       </div>;
   }
+
   return <div className="flex h-[600px] rounded-lg border">
       <div className="w-64 border-r flex flex-col">
         <div className="p-4 border-b">
           <h2 className="font-semibold mb-2">Channels</h2>
           {(isAdmin || isModerator) && <Button onClick={() => setShowCreateRoom(true)} variant="outline" size="sm" className="w-full">
               <Plus className="h-4 w-4 mr-2" />
-              New Room
+              New Channel
             </Button>}
         </div>
         <ChatRoomList rooms={rooms || []} selectedRoom={selectedRoom} onSelectRoom={setSelectedRoom} isLoading={roomsLoading} isAdmin={isAdmin} onRoomDeleted={handleRoomDeleted} />
