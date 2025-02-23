@@ -1,9 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { google } from "npm:googleapis@126.0.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,31 +48,66 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (inviteError) throw inviteError;
 
+    // Configure Gmail API
+    const oauth2Client = new google.auth.OAuth2(
+      Deno.env.get('GOOGLE_CLIENT_ID'),
+      Deno.env.get('GOOGLE_CLIENT_SECRET'),
+      'https://developers.google.com/oauthplayground'
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: Deno.env.get('GOOGLE_REFRESH_TOKEN')
+    });
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
     // Generate invitation URL
     const inviteUrl = `${Deno.env.get('PUBLIC_SITE_URL')}/hub-invite?token=${invite.token}`;
 
-    // Send email
-    const emailResponse = await resend.emails.send({
-      from: "Lovable <hub-invites@resend.dev>",
-      to: [invitedEmail],
-      subject: `You've been invited to join ${hub.name}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1>You've Been Invited!</h1>
-          <p>You've been invited to join <strong>${hub.name}</strong> as a <strong>${role}</strong>.</p>
-          ${hub.description ? `<p>${hub.description}</p>` : ''}
-          <p>Click the button below to accept or decline this invitation:</p>
-          <a href="${inviteUrl}" style="display: inline-block; background-color: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">
-            View Invitation
-          </a>
-          <p style="color: #666; font-size: 14px;">This invitation will expire in 7 days.</p>
-        </div>
-      `,
+    // Create email content
+    const emailContent = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1>You've Been Invited!</h1>
+        <p>You've been invited to join <strong>${hub.name}</strong> as a <strong>${role}</strong>.</p>
+        ${hub.description ? `<p>${hub.description}</p>` : ''}
+        <p>Click the button below to accept or decline this invitation:</p>
+        <a href="${inviteUrl}" style="display: inline-block; background-color: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+          View Invitation
+        </a>
+        <p style="color: #666; font-size: 14px;">This invitation will expire in 7 days.</p>
+      </div>
+    `;
+
+    // Create the email message
+    const str = [
+      'Content-Type: text/html; charset=utf-8',
+      'MIME-Version: 1.0',
+      `To: ${invitedEmail}`,
+      'From: PicoCareer <info@picocareer.com>',
+      `Subject: You've been invited to join ${hub.name}`,
+      '',
+      emailContent
+    ].join('\n');
+
+    const encodedMessage = btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    // Send the email
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage,
+      },
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Email sent successfully:", res.data);
 
-    return new Response(JSON.stringify(emailResponse), {
+    // Update email status
+    await supabaseClient
+      .from('hub_member_invites')
+      .update({ email_status: 'sent' })
+      .eq('id', inviteId);
+
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
