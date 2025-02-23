@@ -53,6 +53,7 @@ export function useInviteMember(hubId: string) {
           .from('hub_members')
           .select('id')
           .eq('hub_id', hubId)
+          .eq('profile_id', user.id)
           .eq('status', 'Approved')
           .maybeSingle();
 
@@ -66,7 +67,7 @@ export function useInviteMember(hubId: string) {
         }
 
         // Create the invitation
-        const { error: inviteError } = await supabase
+        const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
           .insert({
             hub_id: hubId,
@@ -75,9 +76,31 @@ export function useInviteMember(hubId: string) {
             invited_by: user.id,
             status: 'pending',
             email_status: 'pending'
-          });
+          })
+          .select()
+          .single();
 
         if (inviteError) throw inviteError;
+
+        // Call the edge function to send the email
+        const { error: emailError } = await supabase.functions.invoke('send-hub-invitation', {
+          body: {
+            inviteId: invite.id,
+            hubId: hubId,
+            invitedEmail: email,
+            role: selectedRole
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending invitation email:', emailError);
+          toast({
+            title: "Email Error",
+            description: `Failed to send invitation email to ${email}. Please try again.`,
+            variant: "destructive",
+          });
+          continue;
+        }
 
         // Log the audit event
         await supabase.rpc('log_hub_audit_event', {
