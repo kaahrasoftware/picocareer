@@ -28,6 +28,13 @@ export function useInviteMember(hubId: string) {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
+      // Get the admin's email
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+
       // Process each valid email
       for (const email of validEmails) {
         // Check for existing pending invitation
@@ -53,6 +60,7 @@ export function useInviteMember(hubId: string) {
           .from('hub_members')
           .select('id')
           .eq('hub_id', hubId)
+          .eq('profile_id', user.id)
           .eq('status', 'Approved')
           .maybeSingle();
 
@@ -65,8 +73,8 @@ export function useInviteMember(hubId: string) {
           continue;
         }
 
-        // Create the invitation
-        const { error: inviteError } = await supabase
+        // Create the invitation with all required fields
+        const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
           .insert({
             hub_id: hubId,
@@ -74,10 +82,36 @@ export function useInviteMember(hubId: string) {
             role: selectedRole,
             invited_by: user.id,
             status: 'pending',
-            email_status: 'pending'
-          });
+            email_status: 'pending',
+            admin_email: adminProfile?.email,
+            email_sent_at: null,
+            last_email_attempt: null,
+            custom_message: null // Can be added if you want to support custom messages
+          })
+          .select()
+          .single();
 
         if (inviteError) throw inviteError;
+
+        // Call the edge function to send the email
+        const { error: emailError } = await supabase.functions.invoke('send-hub-invitation', {
+          body: {
+            inviteId: invite.id,
+            hubId: hubId,
+            invitedEmail: email,
+            role: selectedRole
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending invitation email:', emailError);
+          toast({
+            title: "Email Error",
+            description: `Failed to send invitation email to ${email}. Please try again.`,
+            variant: "destructive",
+          });
+          continue;
+        }
 
         // Log the audit event
         await supabase.rpc('log_hub_audit_event', {
