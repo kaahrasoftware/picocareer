@@ -9,6 +9,12 @@ import { AnnouncementGrid } from "./announcements/AnnouncementGrid";
 import { useAnnouncements } from "./announcements/useAnnouncements";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface HubAnnouncementsProps {
   hubId: string;
@@ -103,17 +109,24 @@ export function HubAnnouncements({
         categoryColors={categoryColors}
       />
 
-      {showForm && (
-        <AnnouncementForm 
-          hubId={hubId} 
-          onSuccess={() => {
-            handleFormClose();
-            refetch();
-          }} 
-          onCancel={handleFormClose}
-          existingAnnouncement={editingAnnouncement || undefined}
-        />
-      )}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingAnnouncement ? "Edit Announcement" : "Create Announcement"}
+            </DialogTitle>
+          </DialogHeader>
+          <AnnouncementForm 
+            hubId={hubId} 
+            onSuccess={() => {
+              handleFormClose();
+              refetch();
+            }} 
+            onCancel={handleFormClose}
+            existingAnnouncement={editingAnnouncement || undefined}
+          />
+        </DialogContent>
+      </Dialog>
 
       {filteredAnnouncements && (
         <AnnouncementGrid
