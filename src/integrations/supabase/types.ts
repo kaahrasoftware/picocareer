@@ -3392,6 +3392,7 @@ export type Database = {
         | "major_update"
         | "hub_invitation_sent"
         | "availability_request"
+        | "hub_invite"
       onboarding_status:
         | "Pending"
         | "Under Review"
