@@ -48,18 +48,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (inviteError) throw inviteError;
 
-    // Configure Gmail API
-    const oauth2Client = new google.auth.OAuth2(
-      Deno.env.get('GOOGLE_CLIENT_ID'),
-      Deno.env.get('GOOGLE_CLIENT_SECRET'),
-      'https://developers.google.com/oauthplayground'
-    );
-
-    oauth2Client.setCredentials({
-      refresh_token: Deno.env.get('GOOGLE_REFRESH_TOKEN')
+    // Configure Gmail API with existing credentials
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+        private_key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
     });
 
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    // Impersonate the info@picocareer.com account
+    await auth.actAs(Deno.env.get('GOOGLE_CALENDAR_EMAIL'));
 
     // Generate invitation URL
     const inviteUrl = `${Deno.env.get('PUBLIC_SITE_URL')}/hub-invite?token=${invite.token}`;
