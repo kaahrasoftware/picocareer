@@ -1,5 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { HubAnnouncement } from "@/types/database/hubs";
 import { Bell } from "lucide-react";
 import { format } from "date-fns";
@@ -19,7 +20,7 @@ export function AnnouncementDialog({
 }: AnnouncementDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         {announcement.image_url && (
           <div className="relative -mt-6 -mx-6 mb-6">
             <img 
@@ -45,21 +46,23 @@ export function AnnouncementDialog({
           )}
         </DialogHeader>
         
-        <div className="mt-4">
-          <div 
-            className="prose max-w-none text-base text-gray-600"
-            dangerouslySetInnerHTML={{ __html: announcement.content }}
-          />
+        <ScrollArea className="h-[calc(90vh-300px)] pr-4">
+          <div className="mt-4">
+            <div 
+              className="prose max-w-none text-base text-gray-600"
+              dangerouslySetInnerHTML={{ __html: announcement.content }}
+            />
 
-          <div className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground border-t pt-4">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Posted on:</span>
-              <time>
-                {format(new Date(announcement.created_at), 'MMMM d, yyyy')}
-              </time>
+            <div className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground border-t pt-4">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Posted on:</span>
+                <time>
+                  {format(new Date(announcement.created_at), 'MMMM d, yyyy')}
+                </time>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
