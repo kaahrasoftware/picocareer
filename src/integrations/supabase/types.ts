@@ -1016,12 +1016,17 @@ export type Database = {
       hub_member_invites: {
         Row: {
           accepted_at: string | null
+          admin_email: string | null
           created_at: string
+          custom_message: string | null
+          email_sent_at: string | null
+          email_status: string | null
           expires_at: string
           hub_id: string
           id: string
           invited_by: string
           invited_email: string
+          last_email_attempt: string | null
           rejected_at: string | null
           role: Database["public"]["Enums"]["hub_member_role"]
           status: string
@@ -1030,12 +1035,17 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          admin_email?: string | null
           created_at?: string
+          custom_message?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
           expires_at?: string
           hub_id: string
           id?: string
           invited_by: string
           invited_email: string
+          last_email_attempt?: string | null
           rejected_at?: string | null
           role?: Database["public"]["Enums"]["hub_member_role"]
           status?: string
@@ -1044,12 +1054,17 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          admin_email?: string | null
           created_at?: string
+          custom_message?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
           expires_at?: string
           hub_id?: string
           id?: string
           invited_by?: string
           invited_email?: string
+          last_email_attempt?: string | null
           rejected_at?: string | null
           role?: Database["public"]["Enums"]["hub_member_role"]
           status?: string
