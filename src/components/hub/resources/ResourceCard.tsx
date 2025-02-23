@@ -73,7 +73,7 @@ export function ResourceCard({
               {resource.category}
             </span>}
           <div className="flex flex-col items-end gap-1">
-            <time className="rounded bg-cyan-400 hover:bg-cyan-300 px-[7px]">
+            <time className="rounded px-[7px] bg-slate-300 hover:bg-slate-200">
               {format(new Date(resource.created_at), 'MMM d, yyyy')}
             </time>
           </div>
