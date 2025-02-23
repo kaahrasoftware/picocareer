@@ -40,14 +40,14 @@ export function CreateRoomDialog({ hubId, onClose }: CreateRoomDialogProps) {
 
       toast({
         title: "Success",
-        description: "Chat room created successfully",
+        description: "Channel created successfully",
       });
       onClose();
     } catch (error) {
-      console.error('Error creating chat room:', error);
+      console.error('Error creating channel:', error);
       toast({
         title: "Error",
-        description: "Failed to create chat room. Please try again.",
+        description: "Failed to create channel. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -59,17 +59,17 @@ export function CreateRoomDialog({ hubId, onClose }: CreateRoomDialogProps) {
     <Dialog open onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Chat Room</DialogTitle>
+          <DialogTitle>Create New Channel</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Room Name</Label>
+            <Label htmlFor="name">Channel Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter room name"
+              placeholder="Enter channel name"
               required
             />
           </div>
@@ -80,13 +80,13 @@ export function CreateRoomDialog({ hubId, onClose }: CreateRoomDialogProps) {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter room description"
+              placeholder="Enter channel description"
               rows={3}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="private">Private Room</Label>
+            <Label htmlFor="private">Private Channel</Label>
             <Switch
               id="private"
               checked={isPrivate}
@@ -106,7 +106,7 @@ export function CreateRoomDialog({ hubId, onClose }: CreateRoomDialogProps) {
               type="submit"
               disabled={isSubmitting || !name.trim()}
             >
-              Create Room
+              Create Channel
             </Button>
           </div>
         </form>
