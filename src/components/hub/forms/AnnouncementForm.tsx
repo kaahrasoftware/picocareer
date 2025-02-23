@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { FormField } from "@/components/forms/FormField";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   AnnouncementCategory,
   HubAnnouncement 
@@ -107,67 +108,71 @@ export function AnnouncementForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          label="Title"
-          placeholder="Enter announcement title"
-          required
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <ScrollArea className="h-[calc(100vh-200px)] pr-4">
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="title"
+              label="Title"
+              placeholder="Enter announcement title"
+              required
+            />
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none">Content</label>
-          <RichTextEditor
-            value={form.getValues("content")}
-            onChange={(value) => form.setValue("content", value)}
-            placeholder="Enter announcement content"
-          />
-        </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">Content</label>
+              <RichTextEditor
+                value={form.getValues("content")}
+                onChange={(value) => form.setValue("content", value)}
+                placeholder="Enter announcement content"
+              />
+            </div>
 
-        <FormField
-          control={form.control}
-          name="image_url"
-          label="Attachment"
-          type="image"
-          bucket="announcement-images"
-          description="Upload an image to attach to this announcement"
-        />
+            <FormField
+              control={form.control}
+              name="image_url"
+              label="Attachment"
+              type="image"
+              bucket="announcement-images"
+              description="Upload an image to attach to this announcement"
+            />
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none">Category</label>
-          <Select
-            value={form.getValues("category")}
-            onValueChange={(value: AnnouncementCategory) => form.setValue("category", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORY_OPTIONS.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">Category</label>
+              <Select
+                value={form.getValues("category")}
+                onValueChange={(value: AnnouncementCategory) => form.setValue("category", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_OPTIONS.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <FormField
-          control={form.control}
-          name="scheduled_for"
-          label="Schedule For"
-          type="datetime-local"
-        />
+            <FormField
+              control={form.control}
+              name="scheduled_for"
+              label="Schedule For"
+              type="datetime-local"
+            />
 
-        <FormField
-          control={form.control}
-          name="expires_at"
-          label="Expires At"
-          type="datetime-local"
-        />
+            <FormField
+              control={form.control}
+              name="expires_at"
+              label="Expires At"
+              type="datetime-local"
+            />
+          </div>
+        </ScrollArea>
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 mt-6">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
