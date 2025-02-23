@@ -653,6 +653,7 @@ export type Database = {
           expires_at: string | null
           hub_id: string | null
           id: string
+          image_url: string | null
           scheduled_for: string | null
           target_audience: string[] | null
           title: string
@@ -666,6 +667,7 @@ export type Database = {
           expires_at?: string | null
           hub_id?: string | null
           id?: string
+          image_url?: string | null
           scheduled_for?: string | null
           target_audience?: string[] | null
           title: string
@@ -679,6 +681,7 @@ export type Database = {
           expires_at?: string | null
           hub_id?: string | null
           id?: string
+          image_url?: string | null
           scheduled_for?: string | null
           target_audience?: string[] | null
           title?: string
