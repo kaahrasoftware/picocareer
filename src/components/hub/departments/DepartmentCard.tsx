@@ -60,7 +60,7 @@ export function DepartmentCard({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the department.
+                      This action cannot be undone. This will permanently delete the community.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

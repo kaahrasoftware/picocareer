@@ -67,15 +67,15 @@ export function DepartmentForm({
 
       toast({
         title: "Success",
-        description: `Department ${existingDepartment ? 'updated' : 'created'} successfully.`
+        description: `Community ${existingDepartment ? 'updated' : 'created'} successfully.`
       });
 
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error saving department:', error);
+      console.error('Error saving community:', error);
       toast({
         title: "Error",
-        description: "Failed to save department. Please try again.",
+        description: "Failed to save community. Please try again.",
         variant: "destructive"
       });
     }
@@ -87,14 +87,14 @@ export function DepartmentForm({
         <BasicInputField
           field={form.register("name")}
           label="Name"
-          placeholder="Enter department name"
+          placeholder="Enter community name"
           required
         />
 
         <BasicInputField
           field={form.register("description")}
           label="Description"
-          placeholder="Enter department description"
+          placeholder="Enter community description"
         />
 
         <div className="flex justify-end gap-4">
@@ -104,7 +104,7 @@ export function DepartmentForm({
             </Button>
           )}
           <Button type="submit">
-            {form.formState.isSubmitting ? "Saving..." : "Save Department"}
+            {form.formState.isSubmitting ? "Saving..." : "Save Community"}
           </Button>
         </div>
       </form>

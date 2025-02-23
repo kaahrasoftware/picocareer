@@ -20,8 +20,8 @@ export function DepartmentGrid({
   if (departments?.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-semibold mb-2">No departments yet</h3>
-        <p className="text-muted-foreground">Create departments to organize your institution.</p>
+        <h3 className="text-lg font-semibold mb-2">No communities yet</h3>
+        <p className="text-muted-foreground">Create communities to organize your institution.</p>
       </div>
     );
   }
