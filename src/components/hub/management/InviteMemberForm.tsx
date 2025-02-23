@@ -135,7 +135,8 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
             invited_email: email,
             role: selectedRole,
             invited_by: user.id,
-            status: 'pending'
+            status: 'pending',
+            email_status: 'pending'
           });
 
         if (inviteError) throw inviteError;
@@ -241,3 +242,4 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
     </Card>
   );
 }
+
