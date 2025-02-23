@@ -207,24 +207,6 @@ export function AnnouncementCard({
                   {format(new Date(announcement.created_at), 'MMMM d, yyyy')}
                 </time>
               </div>
-              
-              {announcement.scheduled_for && (
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">Scheduled for:</span>
-                  <time>
-                    {format(new Date(announcement.scheduled_for), 'MMMM d, yyyy HH:mm')}
-                  </time>
-                </div>
-              )}
-              
-              {announcement.expires_at && (
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">Expires on:</span>
-                  <time>
-                    {format(new Date(announcement.expires_at), 'MMMM d, yyyy HH:mm')}
-                  </time>
-                </div>
-              )}
             </div>
           </div>
         </DialogContent>
