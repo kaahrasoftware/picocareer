@@ -1,4 +1,3 @@
-
 import { Hub } from "@/types/database/hubs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HubResources } from "./HubResources";
@@ -11,7 +10,6 @@ import { AlertCircle } from "lucide-react";
 import { HubOverviewSection } from "./overview/HubOverviewSection";
 import { HubChat } from "./chat/HubChat";
 import { useAuthSession } from "@/hooks/useAuthSession";
-
 interface HubTabsProps {
   hub: Hub;
   isMember: boolean;
@@ -22,62 +20,52 @@ interface HubTabsProps {
     resourcesCount: number;
   } | null;
 }
-
-export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTabsProps) {
-  const { session } = useAuthSession();
-
-  return (
-    <Tabs defaultValue="overview" className="w-full">
+export function HubTabs({
+  hub,
+  isMember,
+  isAdmin,
+  isModerator,
+  hubStats
+}: HubTabsProps) {
+  const {
+    session
+  } = useAuthSession();
+  return <Tabs defaultValue="overview" className="w-full">
       <TabsList className="w-full justify-start">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         {session && <TabsTrigger value="chat">Channels</TabsTrigger>}
-        {isMember && (
-          <>
+        {isMember && <>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="departments">Departments</TabsTrigger>
-          </>
-        )}
-        {isAdmin && (
-          <TabsTrigger value="manage">Manage</TabsTrigger>
-        )}
+            <TabsTrigger value="departments">Communities</TabsTrigger>
+          </>}
+        {isAdmin && <TabsTrigger value="manage">Manage</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
         <HubOverviewSection hub={hub} hubStats={hubStats} />
-        {!isMember && (
-          <Alert className="mt-6">
+        {!isMember && <Alert className="mt-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Join this hub to access announcements, resources, members list, and departments.
             </AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
       </TabsContent>
 
-      {session && (
-        <TabsContent value="chat" className="mt-6">
-          {!isMember && (
-            <Alert className="mb-6">
+      {session && <TabsContent value="chat" className="mt-6">
+          {!isMember && <Alert className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 You can participate in public chat rooms. Join this hub to access private chat rooms as well.
               </AlertDescription>
-            </Alert>
-          )}
+            </Alert>}
           <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
-        </TabsContent>
-      )}
+        </TabsContent>}
 
-      {isMember && (
-        <>
+      {isMember && <>
           <TabsContent value="announcements" className="mt-6">
-            <HubAnnouncements 
-              hubId={hub.id} 
-              isAdmin={isAdmin} 
-              isModerator={isModerator}
-            />
+            <HubAnnouncements hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
           </TabsContent>
 
           <TabsContent value="resources" className="mt-6">
@@ -89,20 +77,12 @@ export function HubTabs({ hub, isMember, isAdmin, isModerator, hubStats }: HubTa
           </TabsContent>
 
           <TabsContent value="departments" className="mt-6">
-            <HubDepartments 
-              hubId={hub.id} 
-              isAdmin={isAdmin} 
-              isModerator={isModerator}
-            />
+            <HubDepartments hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
           </TabsContent>
-        </>
-      )}
+        </>}
 
-      {isAdmin && (
-        <TabsContent value="manage" className="mt-6">
+      {isAdmin && <TabsContent value="manage" className="mt-6">
           <HubManagement hub={hub} />
-        </TabsContent>
-      )}
-    </Tabs>
-  );
+        </TabsContent>}
+    </Tabs>;
 }
