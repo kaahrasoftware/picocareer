@@ -116,27 +116,6 @@ export function ResourceForm({
       let content_type = '';
       let original_filename = '';
 
-      // Handle file upload if a file is selected and it's not an external link
-      if (data.resource_type !== 'external_link' && data.file_url && data.file_url.startsWith('data:')) {
-        const file = await fetch(data.file_url).then(r => r.blob());
-        const fileExt = file.type.split('/')[1];
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from(hubId)
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from(hubId)
-          .getPublicUrl(fileName);
-
-        file_url = publicUrl;
-        content_type = file.type;
-        original_filename = fileName;
-      }
-
       if (existingResource) {
         const { error } = await supabase
           .from('hub_resources')
@@ -273,6 +252,7 @@ export function ResourceForm({
               label={getUploadLabel(resourceType)}
               bucket={hubId}
               accept={getAcceptedFileTypes(resourceType, documentType)}
+              hubId={hubId}
             />
           </div>
         )}
