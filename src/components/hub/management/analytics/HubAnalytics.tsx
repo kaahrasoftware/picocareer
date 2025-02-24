@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -127,13 +128,13 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
         
         // Fetch member metrics
-        const { data: memberMetrics, error: memberError } = await supabase
+        const { data: memberMetrics, error: memberMetricsError } = await supabase
           .from('hub_member_metrics')
           .select('*')
           .eq('hub_id', hubId)
           .single();
 
-        if (memberError) throw memberError;
+        if (memberMetricsError) throw memberMetricsError;
 
         // Fetch storage metrics
         const { data: storageMetrics, error: storageError } = await supabase
@@ -171,7 +172,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         });
 
         // Fetch members join dates
-        const { data: memberData, error: memberError } = await supabase
+        const { data: memberData, error: memberGrowthError } = await supabase
           .from('hub_members')
           .select('join_date')
           .eq('hub_id', hubId)
@@ -179,7 +180,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
           .gte('join_date', startOfDay(startDate).toISOString())
           .lte('join_date', endOfDay(endDate).toISOString());
 
-        if (memberError) throw memberError;
+        if (memberGrowthError) throw memberGrowthError;
 
         // Process member data into growth data
         const growthMap = new Map<string, number>();
