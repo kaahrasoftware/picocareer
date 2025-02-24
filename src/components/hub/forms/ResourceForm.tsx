@@ -1,25 +1,14 @@
 
 import { useForm } from "react-hook-form";
-import { Form, FormField } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ImageUpload } from "@/components/forms/ImageUpload";
-import { BasicInputField } from "@/components/forms/fields/BasicInputField";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  ResourceAccessLevel, 
-  HubResource,
-  ResourceType,
-  DocumentType 
-} from "@/types/database/hubs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { ResourceAccessLevel, HubResource, ResourceType } from "@/types/database/hubs";
+import { ResourceBasicInfo } from "./forms/ResourceBasicInfo";
+import { ResourceTypeSelect } from "./forms/ResourceTypeSelect";
+import { ResourceUpload } from "./forms/ResourceUpload";
+import { AccessLevelSelect } from "./forms/AccessLevelSelect";
 
 interface ResourceFormProps {
   hubId: string;
@@ -33,58 +22,11 @@ interface FormFields {
   description?: string;
   category?: string;
   resource_type: ResourceType;
-  document_type?: DocumentType;
+  document_type?: string;
   external_url?: string;
   file_url?: string;
   access_level: ResourceAccessLevel;
 }
-
-const RESOURCE_TYPES = [
-  { value: 'document', label: 'Document' },
-  { value: 'image', label: 'Image' },
-  { value: 'video', label: 'Video' },
-  { value: 'audio', label: 'Audio' },
-  { value: 'external_link', label: 'External Link' }
-];
-
-const DOCUMENT_TYPES = [
-  { value: 'pdf', label: 'PDF' },
-  { value: 'word', label: 'Word Document' },
-  { value: 'powerpoint', label: 'PowerPoint' },
-  { value: 'excel', label: 'Excel' },
-  { value: 'other', label: 'Other' }
-];
-
-const getAcceptedFileTypes = (resourceType: ResourceType, documentType?: DocumentType) => {
-  switch (resourceType) {
-    case 'document':
-      switch (documentType) {
-        case 'pdf':
-          return '.pdf';
-        case 'word':
-          return '.doc,.docx';
-        case 'powerpoint':
-          return '.ppt,.pptx';
-        case 'excel':
-          return '.xls,.xlsx';
-        default:
-          return '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
-      }
-    case 'image':
-      return 'image/*';
-    case 'video':
-      return 'video/*';
-    case 'audio':
-      return 'audio/*';
-    default:
-      return undefined;
-  }
-};
-
-const getUploadLabel = (resourceType: ResourceType) => {
-  const type = resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
-  return `${type} File`;
-};
 
 export function ResourceForm({ 
   hubId, 
@@ -163,123 +105,23 @@ export function ResourceForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <BasicInputField
-          field={form.register("title")}
-          label="Title"
-          placeholder="Enter resource title"
-          required
-        />
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Description</label>
-          <Textarea
-            {...form.register("description")}
-            placeholder="Enter resource description"
-            className="min-h-[100px]"
-          />
-        </div>
-
-        <BasicInputField
-          field={form.register("category")}
-          label="Category"
-          placeholder="Enter resource category"
-        />
-
-        <FormField
+        <ResourceBasicInfo register={form.register} />
+        
+        <ResourceTypeSelect 
           control={form.control}
-          name="resource_type"
-          render={({ field }) => (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Resource Type</label>
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select resource type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RESOURCE_TYPES.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          resourceType={resourceType}
+          documentType={documentType}
         />
 
-        {resourceType === 'document' && (
-          <FormField
-            control={form.control}
-            name="document_type"
-            render={({ field }) => (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Document Type</label>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select document type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DOCUMENT_TYPES.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          />
-        )}
-
-        {resourceType === 'external_link' ? (
-          <BasicInputField
-            field={form.register("external_url")}
-            label="External URL"
-            placeholder="Enter external URL"
-            required
-          />
-        ) : (
-          <div className="space-y-2">
-            <ImageUpload
-              control={form.control}
-              name="file_url"
-              label={getUploadLabel(resourceType)}
-              bucket={hubId}
-              accept={getAcceptedFileTypes(resourceType, documentType)}
-              hubId={hubId}
-            />
-          </div>
-        )}
-
-        <FormField
+        <ResourceUpload
+          resourceType={resourceType}
+          documentType={documentType}
+          register={form.register}
           control={form.control}
-          name="access_level"
-          render={({ field }) => (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Access Level</label>
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select access level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="members">Members Only</SelectItem>
-                  <SelectItem value="faculty">Faculty Only</SelectItem>
-                  <SelectItem value="admin">Admin Only</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          hubId={hubId}
         />
+
+        <AccessLevelSelect control={form.control} />
 
         <div className="flex justify-end gap-4">
           {onCancel && (
