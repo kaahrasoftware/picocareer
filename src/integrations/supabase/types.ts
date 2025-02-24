@@ -1088,6 +1088,41 @@ export type Database = {
           },
         ]
       }
+      hub_member_metrics: {
+        Row: {
+          active_members: number | null
+          hub_id: string | null
+          id: string
+          member_limit: number | null
+          total_members: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_members?: number | null
+          hub_id?: string | null
+          id?: string
+          member_limit?: number | null
+          total_members?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_members?: number | null
+          hub_id?: string | null
+          id?: string
+          member_limit?: number | null
+          total_members?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_member_metrics_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: true
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_members: {
         Row: {
           created_at: string | null
@@ -1348,6 +1383,44 @@ export type Database = {
           },
         ]
       }
+      hub_storage_metrics: {
+        Row: {
+          bucket_id: string
+          file_count: number | null
+          hub_id: string | null
+          id: string
+          storage_limit_bytes: number | null
+          total_storage_bytes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bucket_id: string
+          file_count?: number | null
+          hub_id?: string | null
+          id?: string
+          storage_limit_bytes?: number | null
+          total_storage_bytes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bucket_id?: string
+          file_count?: number | null
+          hub_id?: string | null
+          id?: string
+          storage_limit_bytes?: number | null
+          total_storage_bytes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_storage_metrics_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: true
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hubs: {
         Row: {
           apply_now_url: string | null
@@ -1356,13 +1429,17 @@ export type Database = {
           brand_colors: Json | null
           contact_info: Json | null
           created_at: string | null
+          current_member_count: number | null
+          current_storage_usage: number | null
           description: string | null
           id: string
           important_links: Json | null
           logo_url: string | null
+          member_limit: number | null
           name: string
           social_links: Json | null
           status: Database["public"]["Enums"]["status"] | null
+          storage_limit_bytes: number | null
           type: Database["public"]["Enums"]["hub_type"]
           updated_at: string | null
           website: string | null
@@ -1374,13 +1451,17 @@ export type Database = {
           brand_colors?: Json | null
           contact_info?: Json | null
           created_at?: string | null
+          current_member_count?: number | null
+          current_storage_usage?: number | null
           description?: string | null
           id?: string
           important_links?: Json | null
           logo_url?: string | null
+          member_limit?: number | null
           name: string
           social_links?: Json | null
           status?: Database["public"]["Enums"]["status"] | null
+          storage_limit_bytes?: number | null
           type: Database["public"]["Enums"]["hub_type"]
           updated_at?: string | null
           website?: string | null
@@ -1392,13 +1473,17 @@ export type Database = {
           brand_colors?: Json | null
           contact_info?: Json | null
           created_at?: string | null
+          current_member_count?: number | null
+          current_storage_usage?: number | null
           description?: string | null
           id?: string
           important_links?: Json | null
           logo_url?: string | null
+          member_limit?: number | null
           name?: string
           social_links?: Json | null
           status?: Database["public"]["Enums"]["status"] | null
+          storage_limit_bytes?: number | null
           type?: Database["public"]["Enums"]["hub_type"]
           updated_at?: string | null
           website?: string | null
