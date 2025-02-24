@@ -16,6 +16,7 @@ interface ImageUploadProps {
   bucket: string;
   accept?: string;
   onUploadSuccess?: (url: string) => void;
+  hubId?: string; // Added hubId prop for hub-specific storage
 }
 
 export function ImageUpload({
@@ -25,7 +26,8 @@ export function ImageUpload({
   description,
   bucket,
   accept = "image/*",
-  onUploadSuccess
+  onUploadSuccess,
+  hubId
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -43,12 +45,15 @@ export function ImageUpload({
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      // If hubId is provided, use the hub's bucket
+      const storageBucket = hubId ? `hub-${hubId}` : bucket;
 
       // Upload file to storage bucket
       const { error: uploadError, data } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, { 
+        .from(storageBucket)
+        .upload(fileName, file, { 
           upsert: true,
           contentType: file.type
         });
@@ -59,8 +64,8 @@ export function ImageUpload({
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+        .from(storageBucket)
+        .getPublicUrl(fileName);
 
       // Update form field
       field.onChange(publicUrl);
@@ -93,9 +98,12 @@ export function ImageUpload({
         // Extract the file name from the URL
         const urlParts = field.value.split('/');
         const fileName = urlParts[urlParts.length - 1];
+        
+        // Determine the correct bucket
+        const storageBucket = hubId ? `hub-${hubId}` : bucket;
 
         const { error } = await supabase.storage
-          .from(bucket)
+          .from(storageBucket)
           .remove([fileName]);
 
         if (error) {
