@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,9 +22,12 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
   const [summary, setSummary] = useState<AnalyticsSummary>({
     totalMembers: 0,
+    memberLimit: 100,
     activeMembers: 0,
     resourceCount: 0,
-    announcementCount: 0
+    announcementCount: 0,
+    storageUsed: 0,
+    storageLimit: 5368709120 // 5GB default
   });
   const { toast } = useToast();
 
@@ -124,6 +126,50 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         // Generate empty data points for all possible dates in the range
         const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
         
+        // Fetch member metrics
+        const { data: memberMetrics, error: memberError } = await supabase
+          .from('hub_member_metrics')
+          .select('*')
+          .eq('hub_id', hubId)
+          .single();
+
+        if (memberError) throw memberError;
+
+        // Fetch storage metrics
+        const { data: storageMetrics, error: storageError } = await supabase
+          .from('hub_storage_metrics')
+          .select('*')
+          .eq('hub_id', hubId)
+          .single();
+
+        if (storageError) throw storageError;
+
+        // Fetch resource count
+        const { count: resourceCount, error: resourceError } = await supabase
+          .from('hub_resources')
+          .select('*', { count: 'exact', head: true })
+          .eq('hub_id', hubId);
+
+        if (resourceError) throw resourceError;
+
+        // Fetch announcement count
+        const { count: announcementCount, error: announcementError } = await supabase
+          .from('hub_announcements')
+          .select('*', { count: 'exact', head: true })
+          .eq('hub_id', hubId);
+
+        if (announcementError) throw announcementError;
+
+        setSummary({
+          totalMembers: memberMetrics?.total_members || 0,
+          memberLimit: memberMetrics?.member_limit || 100,
+          activeMembers: memberMetrics?.active_members || 0,
+          resourceCount: resourceCount || 0,
+          announcementCount: announcementCount || 0,
+          storageUsed: storageMetrics?.total_storage_bytes || 0,
+          storageLimit: storageMetrics?.storage_limit_bytes || 5368709120
+        });
+
         // Fetch members join dates
         const { data: memberData, error: memberError } = await supabase
           .from('hub_members')
@@ -159,33 +205,6 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         }));
 
         setMemberGrowth(growthData);
-
-        // Fetch summary data
-        const { data: members, error: membersError } = await supabase
-          .from('hub_members')
-          .select('id', { count: 'exact' })
-          .eq('hub_id', hubId)
-          .eq('status', 'Approved');
-
-        const { data: resources, error: resourcesError } = await supabase
-          .from('hub_resources')
-          .select('id', { count: 'exact' })
-          .eq('hub_id', hubId);
-
-        const { data: announcements, error: announcementsError } = await supabase
-          .from('hub_announcements')
-          .select('id', { count: 'exact' })
-          .eq('hub_id', hubId);
-
-        if (membersError || resourcesError || announcementsError) 
-          throw membersError || resourcesError || announcementsError;
-
-        setSummary({
-          totalMembers: members?.length || 0,
-          activeMembers: members?.length || 0,
-          resourceCount: resources?.length || 0,
-          announcementCount: announcements?.length || 0
-        });
 
       } catch (error: any) {
         toast({
