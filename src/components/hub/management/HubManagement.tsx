@@ -16,7 +16,7 @@ export function HubManagement({ hub }: HubManagementProps) {
       <TabsList className="w-full justify-start">
         <TabsTrigger value="general">General Settings</TabsTrigger>
         <TabsTrigger value="members">Members</TabsTrigger>
-        <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <TabsTrigger value="analytics">Insights</TabsTrigger>
         <TabsTrigger value="activity">Activity Logs</TabsTrigger>
       </TabsList>
 
