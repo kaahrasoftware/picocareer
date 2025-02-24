@@ -36,13 +36,13 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     const now = new Date();
     switch (period) {
       case 'day':
-        return subDays(now, 29); // Last 30 days including today
+        return subDays(now, 29);
       case 'week':
-        return subWeeks(now, 11); // Last 12 weeks including current week
+        return subWeeks(now, 11);
       case 'month':
-        return subMonths(now, 11); // Last 12 months including current month
+        return subMonths(now, 11);
       case 'year':
-        return subYears(now, 4); // Last 5 years including current year
+        return subYears(now, 4);
       default:
         return subMonths(now, 11);
     }
@@ -67,7 +67,6 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     const datePoints = [];
     let interval;
     
-    // Adjust end date based on period to include current period
     switch (period) {
       case 'day':
         interval = { start: startDate, end: endDate };
@@ -194,7 +193,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         });
 
         // Add the actual member counts
-        memberData.forEach(member => {
+        memberData?.forEach(member => {
           const date = format(new Date(member.join_date), dateFormat);
           growthMap.set(date, (growthMap.get(date) || 0) + 1);
         });
