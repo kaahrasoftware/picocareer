@@ -49,27 +49,26 @@ export function ResourceUpload({
   control,
   hubId
 }: ResourceUploadProps) {
-  if (resourceType === 'external_link') {
-    return (
-      <BasicInputField
-        field={register("external_url")}
-        label="External URL"
-        placeholder="Enter external URL"
-        required
-      />
-    );
-  }
-
+  // Instead of early return with condition, use conditional rendering
   return (
     <div className="space-y-2">
-      <ImageUpload
-        control={control}
-        name="file_url"
-        label={getUploadLabel(resourceType)}
-        bucket={hubId}
-        accept={getAcceptedFileTypes(resourceType, documentType)}
-        hubId={hubId}
-      />
+      {resourceType === 'external_link' ? (
+        <BasicInputField
+          field={register("external_url")}
+          label="External URL"
+          placeholder="Enter external URL"
+          required
+        />
+      ) : (
+        <ImageUpload
+          control={control}
+          name="file_url"
+          label={getUploadLabel(resourceType)}
+          bucket={hubId}
+          accept={getAcceptedFileTypes(resourceType, documentType)}
+          hubId={hubId}
+        />
+      )}
     </div>
   );
 }
