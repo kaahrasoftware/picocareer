@@ -15,7 +15,7 @@ interface ImageUploadProps {
   bucket: string;
   accept?: string;
   onUploadSuccess?: (url: string) => void;
-  hubId?: string;
+  folderPath?: string;
 }
 
 export function ImageUpload({
@@ -26,11 +26,11 @@ export function ImageUpload({
   bucket,
   accept = "image/*",
   onUploadSuccess,
-  hubId
+  folderPath
 }: ImageUploadProps) {
   const { uploading, handleUpload, handleRemove } = useImageUpload({
     bucket,
-    hubId,
+    folderPath,
     onUploadSuccess
   });
 

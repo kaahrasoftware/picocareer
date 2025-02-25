@@ -39,8 +39,8 @@ export function AnnouncementForm({
               name="cover_image_url"
               label="Cover Image"
               bucket="hub_resources"
-              accept="image/*"
               folderPath={`hubs/${hubId}/announcements`}
+              accept="image/*"
               description="Upload a cover image for this announcement"
             />
 
