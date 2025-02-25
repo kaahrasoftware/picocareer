@@ -59,6 +59,7 @@ export function ResourceForm({
       let original_filename = '';
 
       if (existingResource) {
+        // Handle existing resource update
         const { error } = await supabase
           .from('hub_resources')
           .update({
@@ -72,6 +73,7 @@ export function ResourceForm({
 
         if (error) throw error;
       } else {
+        // Create new resource
         const { error } = await supabase
           .from('hub_resources')
           .insert({
@@ -137,3 +139,4 @@ export function ResourceForm({
     </Form>
   );
 }
+
