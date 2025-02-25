@@ -64,7 +64,7 @@ export function ResourceUpload({
           control={control}
           name="file_url"
           label={getUploadLabel(resourceType)}
-          bucket={`hub-${hubId}`} // Properly format the bucket name
+          bucket={`hub-${hubId.replace(/-/g, '')}`} // Remove hyphens from hubId
           accept={getAcceptedFileTypes(resourceType, documentType)}
           hubId={hubId}
         />
