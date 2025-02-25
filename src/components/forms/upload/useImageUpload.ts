@@ -31,15 +31,12 @@ export function useImageUpload({
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      
-      // Use the bucket name directly without modification
-      const storageBucket = bucket;
 
-      console.log('Uploading to bucket:', storageBucket); // Debug log
+      console.log('Starting upload to bucket:', bucket); // Debug log
 
       // Upload file to storage bucket
-      const { error: uploadError, data } = await supabase.storage
-        .from(storageBucket)
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
         .upload(fileName, file, { 
           upsert: true,
           contentType: file.type
@@ -52,7 +49,7 @@ export function useImageUpload({
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from(storageBucket)
+        .from(bucket)
         .getPublicUrl(fileName);
 
       console.log('File uploaded successfully:', publicUrl); // Debug log
@@ -88,12 +85,9 @@ export function useImageUpload({
         // Extract the file name from the URL
         const urlParts = field.value.split('/');
         const fileName = urlParts[urlParts.length - 1];
-        
-        // Use the bucket name directly without modification
-        const storageBucket = bucket;
 
         const { error } = await supabase.storage
-          .from(storageBucket)
+          .from(bucket)
           .remove([fileName]);
 
         if (error) {

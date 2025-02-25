@@ -49,9 +49,9 @@ export function ResourceUpload({
   control,
   hubId
 }: ResourceUploadProps) {
-  // Format the bucket name here
+  // Ensure bucket name includes full UUID
   const bucketName = `hub-${hubId}`;
-  console.log('Bucket name:', bucketName); // Debug log
+  console.log('Using bucket:', bucketName); // Debug log
 
   return (
     <div className="space-y-2">
@@ -69,7 +69,6 @@ export function ResourceUpload({
           label={getUploadLabel(resourceType)}
           bucket={bucketName}
           accept={getAcceptedFileTypes(resourceType, documentType)}
-          hubId={hubId}
         />
       )}
     </div>
