@@ -32,8 +32,8 @@ export function useImageUpload({
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       
-      // Always use the hubId format for bucket name
-      const storageBucket = `hub-${hubId}`;
+      // Use the bucket name directly without modification
+      const storageBucket = bucket;
 
       console.log('Uploading to bucket:', storageBucket); // Debug log
 
@@ -89,8 +89,8 @@ export function useImageUpload({
         const urlParts = field.value.split('/');
         const fileName = urlParts[urlParts.length - 1];
         
-        // Use the same bucket format
-        const storageBucket = `hub-${hubId}`;
+        // Use the bucket name directly without modification
+        const storageBucket = bucket;
 
         const { error } = await supabase.storage
           .from(storageBucket)
