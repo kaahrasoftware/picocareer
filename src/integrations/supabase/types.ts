@@ -3029,6 +3029,10 @@ export type Database = {
         }
         Returns: Json
       }
+      ensure_complete_hub_storage_structure: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_personality_test_mappings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
