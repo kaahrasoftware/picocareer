@@ -1202,6 +1202,41 @@ export type Database = {
           },
         ]
       }
+      hub_metrics: {
+        Row: {
+          created_at: string | null
+          hub_id: string | null
+          id: string
+          storage_used: number | null
+          total_files: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hub_id?: string | null
+          id?: string
+          storage_used?: number | null
+          total_files?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hub_id?: string | null
+          id?: string
+          storage_used?: number | null
+          total_files?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_metrics_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: true
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_resource_analytics: {
         Row: {
           created_at: string | null
