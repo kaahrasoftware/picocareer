@@ -648,12 +648,12 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["announcement_category"] | null
           content: string
+          cover_image_url: string | null
           created_at: string | null
           created_by: string | null
           expires_at: string | null
           hub_id: string | null
           id: string
-          image_url: string | null
           scheduled_for: string | null
           target_audience: string[] | null
           title: string
@@ -662,12 +662,12 @@ export type Database = {
         Insert: {
           category?: Database["public"]["Enums"]["announcement_category"] | null
           content: string
+          cover_image_url?: string | null
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
           hub_id?: string | null
           id?: string
-          image_url?: string | null
           scheduled_for?: string | null
           target_audience?: string[] | null
           title: string
@@ -676,12 +676,12 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["announcement_category"] | null
           content?: string
+          cover_image_url?: string | null
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
           hub_id?: string | null
           id?: string
-          image_url?: string | null
           scheduled_for?: string | null
           target_audience?: string[] | null
           title?: string
