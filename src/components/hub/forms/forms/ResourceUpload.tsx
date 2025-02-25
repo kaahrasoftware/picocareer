@@ -49,9 +49,9 @@ export function ResourceUpload({
   control,
   hubId
 }: ResourceUploadProps) {
-  // Ensure bucket name includes full UUID
+  // Format bucket name using full UUID
   const bucketName = `hub-${hubId}`;
-  console.log('Using bucket:', bucketName); // Debug log
+  console.log('Bucket name:', bucketName); // Debug log
 
   return (
     <div className="space-y-2">
