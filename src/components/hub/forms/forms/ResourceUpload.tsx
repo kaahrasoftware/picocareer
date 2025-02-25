@@ -64,7 +64,7 @@ export function ResourceUpload({
           control={control}
           name="file_url"
           label={getUploadLabel(resourceType)}
-          bucket={`hub-${hubId.split('-')[0]}`} // Only use the first part of the UUID
+          bucket={`hub-${hubId}`} // Use the full hub ID
           accept={getAcceptedFileTypes(resourceType, documentType)}
           hubId={hubId}
         />
