@@ -32,8 +32,10 @@ export function useImageUpload({
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       
-      // If hubId is provided, use the hub's bucket
-      const storageBucket = hubId ? `hub-${hubId}` : bucket;
+      // Always use the hubId format for bucket name
+      const storageBucket = `hub-${hubId}`;
+
+      console.log('Uploading to bucket:', storageBucket); // Debug log
 
       // Upload file to storage bucket
       const { error: uploadError, data } = await supabase.storage
@@ -44,6 +46,7 @@ export function useImageUpload({
         });
 
       if (uploadError) {
+        console.error('Upload error:', uploadError); // Debug log
         throw uploadError;
       }
 
@@ -51,6 +54,8 @@ export function useImageUpload({
       const { data: { publicUrl } } = supabase.storage
         .from(storageBucket)
         .getPublicUrl(fileName);
+
+      console.log('File uploaded successfully:', publicUrl); // Debug log
 
       // Update form field
       field.onChange(publicUrl);
@@ -84,8 +89,8 @@ export function useImageUpload({
         const urlParts = field.value.split('/');
         const fileName = urlParts[urlParts.length - 1];
         
-        // Determine the correct bucket
-        const storageBucket = hubId ? `hub-${hubId}` : bucket;
+        // Use the same bucket format
+        const storageBucket = `hub-${hubId}`;
 
         const { error } = await supabase.storage
           .from(storageBucket)

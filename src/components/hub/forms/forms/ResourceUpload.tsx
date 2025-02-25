@@ -1,4 +1,3 @@
-
 import { BasicInputField } from "@/components/forms/fields/BasicInputField";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { ResourceType, DocumentType } from "@/types/database/hubs";
@@ -49,7 +48,6 @@ export function ResourceUpload({
   control,
   hubId
 }: ResourceUploadProps) {
-  // Instead of early return with condition, use conditional rendering
   return (
     <div className="space-y-2">
       {resourceType === 'external_link' ? (
@@ -64,7 +62,7 @@ export function ResourceUpload({
           control={control}
           name="file_url"
           label={getUploadLabel(resourceType)}
-          bucket={`hub-${hubId}`} // Use the full hub ID
+          bucket={`hub-${hubId}`}
           accept={getAcceptedFileTypes(resourceType, documentType)}
           hubId={hubId}
         />
