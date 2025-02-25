@@ -13,7 +13,7 @@ export function ContentEditor({ value, onChange, hubId }: ContentEditorProps) {
       <label className="text-sm font-medium leading-none">Content</label>
       <div className="w-full">
         <RichTextEditor
-          value={value}
+          value={value || ''}
           onChange={onChange}
           placeholder="Enter announcement content"
           uploadConfig={{

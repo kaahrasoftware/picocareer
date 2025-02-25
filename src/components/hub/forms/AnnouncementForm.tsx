@@ -45,7 +45,7 @@ export function AnnouncementForm({
             />
 
             <ContentEditor
-              value={form.getValues("content")}
+              value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}
               hubId={hubId}
             />
