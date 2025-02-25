@@ -49,9 +49,15 @@ export function ResourceUpload({
   control,
   hubId
 }: ResourceUploadProps) {
-  // Use the shared hub_resources bucket with hub-specific folder
   const bucketName = 'hub_resources';
-  console.log('Using bucket:', bucketName, 'for hub:', hubId); // Debug log
+  // Ensure the folder path starts with 'hubs/'
+  const folderPath = `hubs/${hubId}/resources`;
+  
+  console.log('Upload configuration:', {
+    bucket: bucketName,
+    folder: folderPath,
+    hubId
+  });
 
   return (
     <div className="space-y-2">
@@ -69,7 +75,8 @@ export function ResourceUpload({
           label={getUploadLabel(resourceType)}
           bucket={bucketName}
           accept={getAcceptedFileTypes(resourceType, documentType)}
-          folderPath={`hubs/${hubId}`}
+          folderPath={folderPath}
+          description="Upload your file. Folders will be automatically organized."
         />
       )}
     </div>
