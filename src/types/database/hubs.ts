@@ -1,4 +1,3 @@
-
 export type HubType = 'University' | 'NGO' | 'Organization' | 'High School';
 export type MemberRole = 'admin' | 'moderator' | 'member' | 'faculty' | 'student';
 export type ResourceAccessLevel = 'public' | 'members' | 'faculty' | 'admin';
@@ -60,6 +59,7 @@ export interface HubAnnouncement {
   scheduled_for?: string | null;
   expires_at?: string | null;
   target_audience?: string[];
+  cover_image_url?: string;
   created_at: string;
   updated_at: string;
 }

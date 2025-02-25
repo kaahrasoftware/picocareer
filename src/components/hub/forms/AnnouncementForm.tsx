@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { ImageUpload } from "@/components/forms/ImageUpload";
 
 interface AnnouncementFormProps {
   hubId: string;
@@ -33,6 +34,7 @@ interface FormFields {
   scheduled_for?: string;
   expires_at?: string;
   target_audience?: string[];
+  cover_image_url?: string;
 }
 
 const CATEGORY_OPTIONS: AnnouncementCategory[] = ['event', 'news', 'alert', 'general'];
@@ -52,7 +54,8 @@ export function AnnouncementForm({
       category: existingAnnouncement?.category || "general",
       scheduled_for: existingAnnouncement?.scheduled_for || "",
       expires_at: existingAnnouncement?.expires_at || "",
-      target_audience: existingAnnouncement?.target_audience || []
+      target_audience: existingAnnouncement?.target_audience || [],
+      cover_image_url: existingAnnouncement?.cover_image_url || ""
     }
   });
 
@@ -116,12 +119,26 @@ export function AnnouncementForm({
               required
             />
 
+            <ImageUpload
+              control={form.control}
+              name="cover_image_url"
+              label="Cover Image"
+              bucket="hub_resources"
+              accept="image/*"
+              folderPath={`hubs/${hubId}/announcements`}
+              description="Upload a cover image for this announcement"
+            />
+
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">Content</label>
               <RichTextEditor
                 value={form.getValues("content")}
                 onChange={(value) => form.setValue("content", value)}
                 placeholder="Enter announcement content"
+                uploadConfig={{
+                  bucket: "hub_resources",
+                  folderPath: `hubs/${hubId}/announcements`,
+                }}
               />
             </div>
 
