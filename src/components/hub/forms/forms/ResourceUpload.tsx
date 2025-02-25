@@ -64,7 +64,7 @@ export function ResourceUpload({
           control={control}
           name="file_url"
           label={getUploadLabel(resourceType)}
-          bucket={hubId}
+          bucket={`hub-${hubId}`} // Properly format the bucket name
           accept={getAcceptedFileTypes(resourceType, documentType)}
           hubId={hubId}
         />
