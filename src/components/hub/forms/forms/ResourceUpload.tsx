@@ -1,3 +1,4 @@
+
 import { BasicInputField } from "@/components/forms/fields/BasicInputField";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { ResourceType, DocumentType } from "@/types/database/hubs";
@@ -48,6 +49,10 @@ export function ResourceUpload({
   control,
   hubId
 }: ResourceUploadProps) {
+  // Format the bucket name here
+  const bucketName = `hub-${hubId}`;
+  console.log('Bucket name:', bucketName); // Debug log
+
   return (
     <div className="space-y-2">
       {resourceType === 'external_link' ? (
@@ -62,7 +67,7 @@ export function ResourceUpload({
           control={control}
           name="file_url"
           label={getUploadLabel(resourceType)}
-          bucket={`hub-${hubId}`}
+          bucket={bucketName}
           accept={getAcceptedFileTypes(resourceType, documentType)}
           hubId={hubId}
         />

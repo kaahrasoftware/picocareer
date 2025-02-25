@@ -29,7 +29,7 @@ interface FormFields {
 }
 
 export function ResourceForm({ 
-  hubId, 
+  hubId,
   onSuccess,
   onCancel,
   existingResource 
