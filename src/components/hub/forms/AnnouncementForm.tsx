@@ -61,6 +61,8 @@ export function AnnouncementForm({
 
   const onSubmit = async (data: FormFields) => {
     try {
+      console.log("Submitting announcement form with data:", data);
+      
       const cleanedData = {
         ...data,
         scheduled_for: data.scheduled_for?.trim() || null,
@@ -68,7 +70,15 @@ export function AnnouncementForm({
         hub_id: hubId,
       };
 
+      console.log("Cleaned data for submission:", cleanedData);
+
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        throw new Error("No authenticated user found");
+      }
+
       if (existingAnnouncement) {
+        console.log("Updating existing announcement:", existingAnnouncement.id);
         const { error } = await supabase
           .from('hub_announcements')
           .update({
@@ -79,15 +89,19 @@ export function AnnouncementForm({
 
         if (error) throw error;
       } else {
+        console.log("Creating new announcement for hub:", hubId);
         const { error } = await supabase
           .from('hub_announcements')
           .insert({
             ...cleanedData,
             hub_id: hubId,
-            created_by: (await supabase.auth.getUser()).data.user?.id
+            created_by: user.id
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
       }
 
       toast({
