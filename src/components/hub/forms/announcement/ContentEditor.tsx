@@ -17,7 +17,7 @@ export function ContentEditor({ value, onChange, hubId }: ContentEditorProps) {
         placeholder="Enter announcement content"
         uploadConfig={{
           bucket: "hub_resources",
-          folderPath: `hubs/${hubId}/announcements`,
+          folderPath: `hubs/${hubId}/announcements`
         }}
       />
     </div>
