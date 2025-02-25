@@ -30,10 +30,10 @@ export function AnnouncementCard({
         className="bg-[#f3f3f3] hover:bg-[#eee] transition-all duration-200 border-gray-200 cursor-pointer overflow-hidden"
         onClick={() => setShowDetails(true)}
       >
-        {announcement.image_url && (
+        {announcement.cover_image_url && (
           <div className="w-full h-48 relative">
             <img 
-              src={announcement.image_url} 
+              src={announcement.cover_image_url} 
               alt="Announcement cover" 
               className="w-full h-full object-cover"
             />
@@ -53,8 +53,8 @@ export function AnnouncementCard({
             )}
           </div>
         )}
-        <div className={announcement.image_url ? "p-4" : ""}>
-          <CardHeader className={`relative pb-3 ${announcement.image_url ? "p-0" : ""}`}>
+        <div className={announcement.cover_image_url ? "p-4" : ""}>
+          <CardHeader className={`relative pb-3 ${announcement.cover_image_url ? "p-0" : ""}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-gray-500" />
@@ -62,7 +62,7 @@ export function AnnouncementCard({
                   {announcement.title}
                 </CardTitle>
               </div>
-              {isAdmin && !announcement.image_url && (
+              {isAdmin && !announcement.cover_image_url && (
                 <AdminActions
                   announcement={announcement}
                   onEdit={onEdit}
@@ -70,13 +70,13 @@ export function AnnouncementCard({
                 />
               )}
             </div>
-            {!announcement.image_url && announcement.category && (
+            {!announcement.cover_image_url && announcement.category && (
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${categoryColor} mt-2`}>
                 {announcement.category}
               </span>
             )}
           </CardHeader>
-          <CardContent className={`${announcement.image_url ? "p-0" : "pt-0"}`}>
+          <CardContent className={`${announcement.cover_image_url ? "p-0" : "pt-0"}`}>
             <div 
               className="prose max-w-none text-sm font-normal text-gray-600 line-clamp-3"
               dangerouslySetInnerHTML={{ __html: announcement.content }}

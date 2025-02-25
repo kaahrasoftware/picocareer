@@ -23,10 +23,10 @@ export function AnnouncementDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] p-0">
         <ScrollArea className="h-[90vh]">
           <div className="p-6">
-            {announcement.image_url && (
+            {announcement.cover_image_url && (
               <div className="relative -mt-6 -mx-6 mb-6">
                 <img 
-                  src={announcement.image_url} 
+                  src={announcement.cover_image_url} 
                   alt="Announcement cover" 
                   className="w-full h-[300px] object-cover"
                 />
@@ -42,7 +42,7 @@ export function AnnouncementDialog({
               {announcement.title}
             </div>
 
-            {!announcement.image_url && announcement.category && (
+            {!announcement.cover_image_url && announcement.category && (
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${categoryColor} mt-2`}>
                 {announcement.category}
               </span>
