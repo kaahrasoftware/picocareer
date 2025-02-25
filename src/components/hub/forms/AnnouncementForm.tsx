@@ -23,7 +23,7 @@ export function AnnouncementForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <ScrollArea className="h-[calc(100vh-200px)] pr-4">
           <div className="space-y-6">
             <FormField
@@ -44,10 +44,16 @@ export function AnnouncementForm({
               description="Upload a cover image for this announcement"
             />
 
-            <ContentEditor
-              value={form.watch("content")}
-              onChange={(value) => form.setValue("content", value)}
-              hubId={hubId}
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <ContentEditor
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  hubId={hubId}
+                />
+              )}
             />
 
             <CategorySelect
