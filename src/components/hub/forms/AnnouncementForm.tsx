@@ -61,7 +61,6 @@ export function AnnouncementForm({
 
   const onSubmit = async (data: FormFields) => {
     try {
-      // Clean timestamp fields - convert empty strings to null
       const cleanedData = {
         ...data,
         scheduled_for: data.scheduled_for?.trim() || null,
