@@ -57,8 +57,8 @@ export interface HubAnnouncement {
   content: string;
   category: AnnouncementCategory;
   created_by: string;
-  scheduled_for?: string;
-  expires_at?: string;
+  scheduled_for?: string | null;
+  expires_at?: string | null;
   target_audience?: string[];
   created_at: string;
   updated_at: string;

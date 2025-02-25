@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { ImageUpload } from "@/components/forms/ImageUpload";
 
 interface AnnouncementFormProps {
   hubId: string;
@@ -34,7 +33,6 @@ interface FormFields {
   scheduled_for?: string;
   expires_at?: string;
   target_audience?: string[];
-  image_url?: string;
 }
 
 const CATEGORY_OPTIONS: AnnouncementCategory[] = ['event', 'news', 'alert', 'general'];
@@ -54,8 +52,7 @@ export function AnnouncementForm({
       category: existingAnnouncement?.category || "general",
       scheduled_for: existingAnnouncement?.scheduled_for || "",
       expires_at: existingAnnouncement?.expires_at || "",
-      target_audience: existingAnnouncement?.target_audience || [],
-      image_url: existingAnnouncement?.image_url || ""
+      target_audience: existingAnnouncement?.target_audience || []
     }
   });
 
@@ -64,7 +61,8 @@ export function AnnouncementForm({
       const cleanedData = {
         ...data,
         scheduled_for: data.scheduled_for?.trim() || null,
-        expires_at: data.expires_at?.trim() || null
+        expires_at: data.expires_at?.trim() || null,
+        hub_id: hubId,
       };
 
       if (existingAnnouncement) {
@@ -126,15 +124,6 @@ export function AnnouncementForm({
                 placeholder="Enter announcement content"
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="image_url"
-              label="Attachment"
-              type="image"
-              bucket="announcement-images"
-              description="Upload an image to attach to this announcement"
-            />
 
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">Category</label>
