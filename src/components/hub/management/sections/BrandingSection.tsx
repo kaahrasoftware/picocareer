@@ -104,7 +104,8 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
             name="logo_url"
             label="Logo"
             description="Upload your hub logo (recommended size: 200x200px)"
-            bucket="hub-logos"
+            bucket="hub_resources"
+            folderPath={`hubs/${hubId}/logo`}
             onUploadSuccess={handleImageUploadSuccess}
           />
           <ImageUpload
@@ -112,7 +113,8 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
             name="banner_url"
             label="Banner"
             description="Upload your hub banner (recommended size: 1200x300px)"
-            bucket="hub-banners"
+            bucket="hub_resources"
+            folderPath={`hubs/${hubId}/banner`}
             onUploadSuccess={handleImageUploadSuccess}
           />
         </div>
