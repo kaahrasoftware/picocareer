@@ -5,13 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface UseImageUploadProps {
   bucket: string;
-  hubId?: string;
+  folderPath?: string;
   onUploadSuccess?: (url: string) => void;
 }
 
 export function useImageUpload({
   bucket,
-  hubId,
+  folderPath,
   onUploadSuccess
 }: UseImageUploadProps) {
   const [uploading, setUploading] = useState(false);
@@ -31,13 +31,14 @@ export function useImageUpload({
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
-      console.log('Starting upload to bucket:', bucket); // Debug log
+      console.log('Starting upload to bucket:', bucket, 'path:', filePath); // Debug log
 
       // Upload file to storage bucket
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(fileName, file, { 
+        .upload(filePath, file, { 
           upsert: true,
           contentType: file.type
         });
@@ -50,7 +51,7 @@ export function useImageUpload({
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       console.log('File uploaded successfully:', publicUrl); // Debug log
 
@@ -82,13 +83,13 @@ export function useImageUpload({
   ) => {
     try {
       if (field.value) {
-        // Extract the file name from the URL
+        // Extract the file path from the URL
         const urlParts = field.value.split('/');
-        const fileName = urlParts[urlParts.length - 1];
+        const filePath = urlParts.slice(-2).join('/'); // Get the last two parts (folder/file)
 
         const { error } = await supabase.storage
           .from(bucket)
-          .remove([fileName]);
+          .remove([filePath]);
 
         if (error) {
           throw error;
