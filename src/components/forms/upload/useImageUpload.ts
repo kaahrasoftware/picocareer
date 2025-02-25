@@ -31,8 +31,8 @@ export function useImageUpload({
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      // Ensure folder path is properly formatted
-      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      // Ensure folder path starts with 'hubs/'
+      const filePath = folderPath ? `${folderPath}/${fileName}` : `hubs/${fileName}`;
 
       console.log('Upload details:', {
         bucket,
@@ -88,7 +88,7 @@ export function useImageUpload({
       if (field.value) {
         // Extract the file path from the URL
         const urlParts = field.value.split('/');
-        // Get everything after the bucket name in the URL
+        // Get everything after the bucket name in the URL, ensuring it starts with 'hubs/'
         const filePath = urlParts.slice(urlParts.indexOf(bucket) + 1).join('/');
 
         console.log('Removing file:', {

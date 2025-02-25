@@ -50,7 +50,7 @@ export function ResourceUpload({
   hubId
 }: ResourceUploadProps) {
   const bucketName = 'hub_resources';
-  // Ensure the folder path starts with 'hubs/'
+  // Use hubs as the outer folder
   const folderPath = `hubs/${hubId}/resources`;
   
   console.log('Upload configuration:', {
@@ -76,7 +76,7 @@ export function ResourceUpload({
           bucket={bucketName}
           accept={getAcceptedFileTypes(resourceType, documentType)}
           folderPath={folderPath}
-          description="Upload your file. Folders will be automatically organized."
+          description="Upload your file. Files will be organized in the hubs folder."
         />
       )}
     </div>
