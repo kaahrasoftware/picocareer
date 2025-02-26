@@ -26,6 +26,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
 
   const handleSave = async () => {
     try {
+      console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors } = getValues();
       
       const { error } = await supabase
@@ -38,9 +39,13 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         })
         .eq('id', hubId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating hub:', error);
+        throw error;
+      }
 
-      await supabase.rpc('log_hub_audit_event', {
+      // Log the update in hub audit logs
+      const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'hub_settings_updated',
         _details: {
@@ -49,6 +54,10 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
           brand_colors
         }
       });
+
+      if (auditError) {
+        console.error('Error logging audit event:', auditError);
+      }
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
       await queryClient.invalidateQueries({ queryKey: ['hubs'] });
