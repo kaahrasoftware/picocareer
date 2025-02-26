@@ -50,7 +50,7 @@ export function ResourceUpload({
   hubId
 }: ResourceUploadProps) {
   const bucketName = 'hub_resources';
-  const folderPath = `hubs/${hubId}/${resourceType === 'external_link' ? 'resources' : resourceType}`;
+  const folderPath = `hubs/${hubId}/resources/`;
   
   console.log('Upload configuration:', {
     bucket: bucketName,
