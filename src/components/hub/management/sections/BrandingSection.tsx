@@ -45,16 +45,16 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         throw updateError;
       }
 
-      // Log the audit event with properly formatted details
+      // Log the audit event
       const { error: auditError } = await supabase
         .rpc('log_hub_audit_event', {
           _hub_id: hubId,
           _action: 'branding_updated',
-          _details: {
+          _details: JSON.stringify({
             logo_url,
             banner_url,
             brand_colors
-          }
+          })
         });
 
       if (auditError) {
