@@ -39,11 +39,11 @@ const modules = {
 
           try {
             const fileExt = file.name.split('.').pop();
-            const filePath = `hubs/${(this as any).quill.options.uploadConfig?.hubId || ''}/announcements/${crypto.randomUUID()}.${fileExt}`;
+            const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
             const { error: uploadError, data } = await supabase.storage
               .from('hub_resources')
-              .upload(filePath, file, {
+              .upload('hubs/announcements/' + filePath, file, {
                 contentType: file.type,
                 upsert: false
               });
@@ -52,7 +52,7 @@ const modules = {
 
             const { data: { publicUrl } } = supabase.storage
               .from('hub_resources')
-              .getPublicUrl(filePath);
+              .getPublicUrl('hubs/announcements/' + filePath);
 
             const quill = (this as any).quill;
             const range = quill.getSelection(true);
@@ -87,18 +87,7 @@ const formats = [
   'link', 'image'
 ];
 
-export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: RichTextEditorProps) {
-  const editorModules = React.useMemo(() => ({
-    ...modules,
-    toolbar: {
-      ...modules.toolbar,
-      handlers: {
-        ...modules.toolbar.handlers,
-        image: modules.toolbar.handlers.image.bind({ quill: null, options: { uploadConfig } })
-      }
-    }
-  }), [uploadConfig]);
-
+export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
     <>
       <style>
@@ -126,7 +115,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: R
         theme="snow"
         value={value}
         onChange={onChange}
-        modules={editorModules}
+        modules={modules}
         formats={formats}
         placeholder={placeholder}
         className="min-h-[200px] bg-gray-50 rounded-md"
