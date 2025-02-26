@@ -29,15 +29,18 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors } = getValues();
       
+      // Update without triggering any cascading updates
       const { error: updateError } = await supabase
         .from('hubs')
-        .update({
+        .upsert({
+          id: hubId,
           logo_url,
           banner_url,
           brand_colors,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', hubId);
+        }, {
+          onConflict: 'id'
+        });
 
       if (updateError) {
         console.error('Error updating hub branding:', updateError);
