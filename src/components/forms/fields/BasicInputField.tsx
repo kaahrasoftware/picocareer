@@ -1,65 +1,53 @@
-
+import {
+  FormControl,
+  FormDescription,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { RichTextEditor } from "@/components/forms/RichTextEditor";
 
 interface BasicInputFieldProps {
-  name: string;
+  field: any;
+  label: string;
   placeholder?: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: "text" | "number" | "textarea" | "richtext";
+  description?: string;
+  type?: "text" | "number" | "datetime-local";
   required?: boolean;
-  disabled?: boolean;
 }
 
 export function BasicInputField({
-  name,
+  field,
+  label,
   placeholder,
-  value,
-  onChange,
+  description,
   type = "text",
   required = false,
-  disabled = false,
 }: BasicInputFieldProps) {
-  if (type === "textarea") {
-    return (
-      <Textarea
-        name={name}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        disabled={disabled}
-        className="min-h-[100px]"
-      />
-    );
-  }
-
-  if (type === "richtext") {
-    return (
-      <RichTextEditor
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        uploadConfig={{
-          bucket: "hub_resources",
-          folderPath: "content"
-        }}
-      />
-    );
-  }
-
   return (
-    <Input
-      type={type}
-      name={name}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      required={required}
-      disabled={disabled}
-      className="placeholder:text-gray-400"
-    />
+    <FormItem>
+      <FormLabel>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </FormLabel>
+      <FormControl>
+        <Input
+          {...field}
+          type={type}
+          placeholder={placeholder}
+          onChange={type === "number" 
+            ? (e) => field.onChange(parseFloat(e.target.value))
+            : field.onChange
+          }
+          className="placeholder:text-gray-400"
+        />
+      </FormControl>
+      {description && (
+        <FormDescription className="text-sky-600/70">
+          {description}
+        </FormDescription>
+      )}
+      <FormMessage />
+    </FormItem>
   );
 }

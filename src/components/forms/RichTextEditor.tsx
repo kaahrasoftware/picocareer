@@ -15,7 +15,7 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: RichTextEditorProps) {
-  const imageHandler = async function(this: any) {
+  const imageHandler = async () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
@@ -45,7 +45,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: R
           .from(uploadConfig?.bucket || 'announcement-images')
           .getPublicUrl(filePath);
 
-        const quill = this.quill;
+        const quill = (this as any).quill;
         const range = quill.getSelection(true);
         quill.insertEmbed(range.index, 'image', publicUrl);
         
@@ -97,26 +97,6 @@ export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: R
     <>
       <style>
         {`
-          .ql-container {
-            min-height: 200px;
-            border-bottom-left-radius: 0.5rem;
-            border-bottom-right-radius: 0.5rem;
-            background: white;
-          }
-          
-          .ql-toolbar {
-            border-top-left-radius: 0.5rem;
-            border-top-right-radius: 0.5rem;
-            background: white;
-            border-color: #e2e8f0;
-          }
-          
-          .ql-editor {
-            min-height: 200px;
-            font-size: 1rem;
-            line-height: 1.5;
-          }
-
           .resizable-image {
             resize: both;
             overflow: hidden;
@@ -124,41 +104,15 @@ export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: R
             min-height: 100px;
             border-radius: 4px;
           }
-          
           .resizable-image:hover {
             border: 2px solid #0ea5e9 !important;
           }
-          
           .resizable-image:active {
             border: 2px solid #0284c7 !important;
           }
-          
           .ql-editor img {
             display: block;
             margin: 0.5rem 0;
-            max-width: 100%;
-          }
-
-          .ql-editor p {
-            margin-bottom: 1rem;
-          }
-
-          .ql-snow .ql-toolbar button:hover,
-          .ql-snow .ql-toolbar button:focus,
-          .ql-snow .ql-toolbar button.ql-active {
-            color: #0ea5e9;
-          }
-
-          .ql-snow .ql-toolbar button:hover .ql-stroke,
-          .ql-snow .ql-toolbar button:focus .ql-stroke,
-          .ql-snow .ql-toolbar button.ql-active .ql-stroke {
-            stroke: #0ea5e9;
-          }
-
-          .ql-snow .ql-toolbar button:hover .ql-fill,
-          .ql-snow .ql-toolbar button:focus .ql-fill,
-          .ql-snow .ql-toolbar button.ql-active .ql-fill {
-            fill: #0ea5e9;
           }
         `}
       </style>
@@ -169,7 +123,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: R
         modules={modules}
         formats={formats}
         placeholder={placeholder}
-        className="rounded-md border border-input"
+        className="min-h-[200px] bg-gray-50 rounded-md"
       />
     </>
   );
