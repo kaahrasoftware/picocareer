@@ -29,7 +29,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors } = getValues();
       
-      // Update the hub record
+      // First update the hub record
       const { error: updateError } = await supabase
         .from('hubs')
         .update({
@@ -45,16 +45,19 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         throw updateError;
       }
 
-      // Log the audit event
-      const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hubId,
-        _action: 'branding_updated',
-        _details: JSON.stringify({
-          logo_url,
-          banner_url,
-          brand_colors
-        })
-      });
+      // Then log the audit event with properly formatted details
+      const auditDetails = {
+        logo_url,
+        banner_url,
+        brand_colors
+      };
+
+      const { error: auditError } = await supabase
+        .rpc('log_hub_audit_event', {
+          _hub_id: hubId,
+          _action: 'branding_updated',
+          _details: JSON.stringify(auditDetails)
+        });
 
       if (auditError) {
         console.error('Error logging audit event:', auditError);
