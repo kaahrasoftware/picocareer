@@ -54,29 +54,41 @@ export function ResourceForm({
 
   const onSubmit = async (data: FormFields) => {
     try {
+      const user = await supabase.auth.getUser();
+      const insertData = {
+        ...data,
+        hub_id: hubId,
+        created_by: user.data.user?.id,
+      };
+
+      // For updates, we only want to update specific fields
       if (existingResource) {
         const { error } = await supabase
           .from('hub_resources')
           .update({
-            ...data,
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            resource_type: data.resource_type,
+            document_type: data.document_type,
+            external_url: data.external_url,
+            file_url: data.file_url,
+            access_level: data.access_level,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingResource.id);
 
         if (error) throw error;
       } else {
-        console.log('Creating new resource:', {
-          ...data,
-          hub_id: hubId,
-          file_url: data.file_url,
-        });
+        console.log('Creating new resource:', insertData);
 
         const { error } = await supabase
           .from('hub_resources')
           .insert({
-            ...data,
-            hub_id: hubId,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
+            ...insertData,
+            content_type: data.file_url ? 'application/pdf' : undefined,
+            original_filename: data.file_url ? data.file_url.split('/').pop() : undefined,
+            version: 1
           });
 
         if (error) throw error;
