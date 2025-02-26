@@ -29,8 +29,8 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors } = getValues();
       
-      // Simplified update query
-      const { error } = await supabase
+      // Match the schema exactly
+      const { data, error } = await supabase
         .from('hubs')
         .update({
           logo_url,
@@ -38,18 +38,17 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
           brand_colors,
           updated_at: new Date().toISOString()
         })
-        .eq('id', hubId)
-        .select();  // Add select() to force row-level-security check
+        .eq('id', hubId);
 
       if (error) {
-        console.error('Error updating hub:', error);
+        console.error('Error updating hub branding:', error);
         throw error;
       }
 
       // Log the update in hub audit logs
       const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
-        _action: 'hub_settings_updated',
+        _action: 'branding_updated',
         _details: {
           logo_url,
           banner_url,
@@ -72,7 +71,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.error('Error saving branding settings:', error);
       toast({
         title: "Error",
-        description: "Failed to save branding settings. Please try again.",
+        description: error.message || "Failed to save branding settings. Please try again.",
         variant: "destructive",
       });
     }
