@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { BRAND_COLORS } from "./constants";
+import { useState } from "react";
 
 interface ColorPickerProps {
   value: string;
@@ -27,8 +28,36 @@ interface ColorPickerProps {
 
 export function ColorPicker({ value, onChange, label, description }: ColorPickerProps) {
   const { toast } = useToast();
+  const [hexInput, setHexInput] = useState(value);
+  const [isValidHex, setIsValidHex] = useState(true);
+
+  const validateHex = (hex: string) => {
+    const hexRegex = /^#([A-Fa-f0-9]{3}){1,2}$/;
+    return hexRegex.test(hex);
+  };
+
+  const formatHex = (hex: string) => {
+    if (!hex.startsWith('#')) {
+      hex = '#' + hex;
+    }
+    return hex.toUpperCase();
+  };
+
+  const handleHexChange = (input: string) => {
+    const formattedHex = formatHex(input.replace(/[^A-Fa-f0-9#]/g, '').slice(0, 7));
+    setHexInput(formattedHex);
+    
+    if (validateHex(formattedHex)) {
+      setIsValidHex(true);
+      onChange(formattedHex);
+    } else {
+      setIsValidHex(false);
+    }
+  };
 
   const handleColorChange = (newColor: string) => {
+    setHexInput(newColor);
+    setIsValidHex(true);
     onChange(newColor);
   };
 
@@ -39,6 +68,19 @@ export function ColorPicker({ value, onChange, label, description }: ColorPicker
       description: `Color code ${hexCode} copied to clipboard`,
       duration: 2000,
     });
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      handleHexChange(text);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to paste from clipboard",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -88,7 +130,7 @@ export function ColorPicker({ value, onChange, label, description }: ColorPicker
               <TabsTrigger value="custom">Custom</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="custom" className="mt-0">
+            <TabsContent value="custom" className="mt-0 space-y-4">
               <div className="space-y-4">
                 <Input
                   type="color"
@@ -96,6 +138,34 @@ export function ColorPicker({ value, onChange, label, description }: ColorPicker
                   onChange={(e) => handleColorChange(e.target.value)}
                   className="w-full h-40 cursor-pointer"
                 />
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Hex Color Code</label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={hexInput}
+                      onChange={(e) => handleHexChange(e.target.value)}
+                      placeholder="#FFFFFF"
+                      className={cn(
+                        "font-mono uppercase",
+                        !isValidHex && "border-red-500 focus-visible:ring-red-500"
+                      )}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePaste}
+                      className="shrink-0"
+                    >
+                      Paste
+                    </Button>
+                  </div>
+                  {!isValidHex && (
+                    <p className="text-xs text-red-500">
+                      Please enter a valid hex color code (e.g., #FF0000)
+                    </p>
+                  )}
+                </div>
               </div>
             </TabsContent>
             
