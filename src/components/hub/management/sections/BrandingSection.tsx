@@ -29,17 +29,18 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors, name, type } = getValues();
       
-      // Update only branding related fields while preserving required fields
+      const hubData = {
+        logo_url,
+        banner_url,
+        brand_colors,
+        name: name || defaultValues.name, // Preserve the existing name
+        type: type || defaultValues.type, // Preserve the existing type
+        updated_at: new Date().toISOString()
+      };
+
       const { error: updateError } = await supabase
         .from('hubs')
-        .update({
-          logo_url,
-          banner_url,
-          brand_colors,
-          name: name || defaultValues.name, // Preserve the existing name
-          type: type || defaultValues.type, // Preserve the existing type
-          updated_at: new Date().toISOString()
-        })
+        .update(hubData)
         .eq('id', hubId);
 
       if (updateError) {
