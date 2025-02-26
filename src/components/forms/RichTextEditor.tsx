@@ -8,13 +8,9 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  uploadConfig?: {
-    bucket: string;
-    folderPath: string;
-  };
 }
 
-const createModules = (uploadConfig?: RichTextEditorProps['uploadConfig']) => ({
+const modules = {
   toolbar: {
     container: [
       [{ 'header': [1, 2, 3, false] }],
@@ -39,10 +35,10 @@ const createModules = (uploadConfig?: RichTextEditorProps['uploadConfig']) => ({
 
           try {
             const fileExt = file.name.split('.').pop();
-            const filePath = `${uploadConfig?.folderPath || ''}${crypto.randomUUID()}.${fileExt}`;
+            const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
             const { error: uploadError, data } = await supabase.storage
-              .from(uploadConfig?.bucket || 'hub_resources')
+              .from('announcement-images')
               .upload(filePath, file, {
                 contentType: file.type,
                 upsert: false
@@ -51,7 +47,7 @@ const createModules = (uploadConfig?: RichTextEditorProps['uploadConfig']) => ({
             if (uploadError) throw uploadError;
 
             const { data: { publicUrl } } = supabase.storage
-              .from(uploadConfig?.bucket || 'hub_resources')
+              .from('announcement-images')
               .getPublicUrl(filePath);
 
             const quill = (this as any).quill;
@@ -75,7 +71,7 @@ const createModules = (uploadConfig?: RichTextEditorProps['uploadConfig']) => ({
       }
     }
   }
-});
+};
 
 const formats = [
   'header',
@@ -87,9 +83,7 @@ const formats = [
   'link', 'image'
 ];
 
-export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: RichTextEditorProps) {
-  const modules = React.useMemo(() => createModules(uploadConfig), [uploadConfig]);
-
+export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
     <>
       <style>
