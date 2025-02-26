@@ -14,7 +14,7 @@ interface RichTextEditorProps {
   };
 }
 
-const modules = {
+const createModules = (uploadConfig?: RichTextEditorProps['uploadConfig']) => ({
   toolbar: {
     container: [
       [{ 'header': [1, 2, 3, false] }],
@@ -27,7 +27,7 @@ const modules = {
       ['clean']
     ],
     handlers: {
-      image: function() {
+      image: async function() {
         const input = document.createElement('input');
         input.setAttribute('type', 'file');
         input.setAttribute('accept', 'image/*');
@@ -39,11 +39,11 @@ const modules = {
 
           try {
             const fileExt = file.name.split('.').pop();
-            const filePath = `${crypto.randomUUID()}.${fileExt}`;
+            const filePath = `${uploadConfig?.folderPath || 'hubs/announcements/'}${crypto.randomUUID()}.${fileExt}`;
 
             const { error: uploadError, data } = await supabase.storage
-              .from('hub_resources')
-              .upload('hubs/announcements/' + filePath, file, {
+              .from(uploadConfig?.bucket || 'hub_resources')
+              .upload(filePath, file, {
                 contentType: file.type,
                 upsert: false
               });
@@ -51,8 +51,8 @@ const modules = {
             if (uploadError) throw uploadError;
 
             const { data: { publicUrl } } = supabase.storage
-              .from('hub_resources')
-              .getPublicUrl('hubs/announcements/' + filePath);
+              .from(uploadConfig?.bucket || 'hub_resources')
+              .getPublicUrl(filePath);
 
             const quill = (this as any).quill;
             const range = quill.getSelection(true);
@@ -75,7 +75,7 @@ const modules = {
       }
     }
   }
-};
+});
 
 const formats = [
   'header',
@@ -87,7 +87,9 @@ const formats = [
   'link', 'image'
 ];
 
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: RichTextEditorProps) {
+  const modules = React.useMemo(() => createModules(uploadConfig), [uploadConfig]);
+
   return (
     <>
       <style>
