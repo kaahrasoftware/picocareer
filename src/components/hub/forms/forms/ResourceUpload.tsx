@@ -55,7 +55,8 @@ export function ResourceUpload({
   console.log('Upload configuration:', {
     bucket: bucketName,
     folder: folderPath,
-    hubId
+    resourceType,
+    documentType
   });
 
   return (
