@@ -1,3 +1,4 @@
+
 import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +45,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         throw updateError;
       }
 
-      // Log the audit event using direct jsonb parameter
+      // Log the audit event with properly formatted details
       const { error: auditError } = await supabase
         .rpc('log_hub_audit_event', {
           _hub_id: hubId,
@@ -58,6 +59,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
 
       if (auditError) {
         console.error('Error logging audit event:', auditError);
+        throw auditError;
       }
 
       await queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
