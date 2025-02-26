@@ -41,7 +41,7 @@ export function useImageUpload({
 
       // First try to remove any existing file if there is one
       if (field.value) {
-        const existingFilePath = field.value.split('/').slice(-3).join('/'); // Get last 3 segments
+        const existingFilePath = field.value.split('/').slice(-4).join('/'); // Get last 4 segments (e.g., hubs/[hubId]/logos/[filename])
         try {
           await supabase.storage
             .from(bucket)
@@ -98,9 +98,9 @@ export function useImageUpload({
   ) => {
     try {
       if (field.value) {
-        // Extract just the filename and its direct parent folder
+        // Extract path segments for hub resources (hubs/[hubId]/[type]/[filename])
         const pathParts = field.value.split('/');
-        const filePath = pathParts.slice(-3).join('/'); // Get last 3 segments: hub_id/type/filename
+        const filePath = pathParts.slice(-4).join('/');
 
         console.log('Removing file:', {
           bucket,
