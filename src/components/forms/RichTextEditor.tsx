@@ -43,7 +43,7 @@ const modules = {
 
             const { error: uploadError, data } = await supabase.storage
               .from('hub_resources')
-              .upload('hubs/announcements/' + filePath, file, {
+              .upload(this.uploadPath + filePath, file, {
                 contentType: file.type,
                 upsert: false
               });
@@ -52,7 +52,7 @@ const modules = {
 
             const { data: { publicUrl } } = supabase.storage
               .from('hub_resources')
-              .getPublicUrl('hubs/announcements/' + filePath);
+              .getPublicUrl(this.uploadPath + filePath);
 
             const quill = (this as any).quill;
             const range = quill.getSelection(true);
@@ -87,7 +87,18 @@ const formats = [
   'link', 'image'
 ];
 
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: RichTextEditorProps) {
+  const editorModules = React.useMemo(() => {
+    const customModules = { ...modules };
+    if (uploadConfig?.folderPath) {
+      customModules.toolbar.handlers.image = customModules.toolbar.handlers.image.bind({
+        uploadPath: uploadConfig.folderPath,
+        quill: null
+      });
+    }
+    return customModules;
+  }, [uploadConfig]);
+
   return (
     <>
       <style>
@@ -115,7 +126,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         theme="snow"
         value={value}
         onChange={onChange}
-        modules={modules}
+        modules={editorModules}
         formats={formats}
         placeholder={placeholder}
         className="min-h-[200px] bg-gray-50 rounded-md"
