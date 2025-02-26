@@ -8,91 +8,82 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  uploadConfig?: {
-    bucket: string;
-    folderPath: string;
-  };
 }
 
-export function RichTextEditor({ value, onChange, placeholder, uploadConfig }: RichTextEditorProps) {
-  const imageHandler = async () => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
+const modules = {
+  toolbar: {
+    container: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['blockquote', 'code-block'],
+      ['link', 'image'],
+      ['clean']
+    ],
+    handlers: {
+      image: function() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
 
-    input.onchange = async () => {
-      if (!input.files?.length) return;
-      const file = input.files[0];
+        input.onchange = async () => {
+          if (!input.files?.length) return;
+          const file = input.files[0];
 
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = uploadConfig ? `${uploadConfig.folderPath}/${fileName}` : fileName;
+          try {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
-        console.log('Uploading image to path:', filePath);
+            const { error: uploadError, data } = await supabase.storage
+              .from('announcement-images')
+              .upload(filePath, file, {
+                contentType: file.type,
+                upsert: false
+              });
 
-        const { error: uploadError, data } = await supabase.storage
-          .from(uploadConfig?.bucket || 'announcement-images')
-          .upload(filePath, file, {
-            contentType: file.type,
-            upsert: false
-          });
+            if (uploadError) throw uploadError;
 
-        if (uploadError) throw uploadError;
+            const { data: { publicUrl } } = supabase.storage
+              .from('announcement-images')
+              .getPublicUrl(filePath);
 
-        const { data: { publicUrl } } = supabase.storage
-          .from(uploadConfig?.bucket || 'announcement-images')
-          .getPublicUrl(filePath);
-
-        const quill = (this as any).quill;
-        const range = quill.getSelection(true);
-        quill.insertEmbed(range.index, 'image', publicUrl);
-        
-        // Add custom class to make the image resizable
-        const img = quill.root.querySelector(`img[src="${publicUrl}"]`);
-        if (img) {
-          img.className = 'resizable-image';
-          img.style.border = '1px solid #ccc';
-          img.style.padding = '2px';
-          img.style.cursor = 'pointer';
-          img.style.maxWidth = '100%';
-          img.setAttribute('data-resize', 'true');
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-      }
-    };
-  };
-
-  const modules = {
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'align': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['blockquote', 'code-block'],
-        ['link', 'image'],
-        ['clean']
-      ],
-      handlers: {
-        image: imageHandler
+            const quill = (this as any).quill;
+            const range = quill.getSelection(true);
+            quill.insertEmbed(range.index, 'image', publicUrl);
+            
+            // Add custom class to make the image resizable
+            const img = quill.root.querySelector(`img[src="${publicUrl}"]`);
+            if (img) {
+              img.className = 'resizable-image';
+              img.style.border = '1px solid #ccc';
+              img.style.padding = '2px';
+              img.style.cursor = 'pointer';
+              img.style.maxWidth = '100%';
+              img.setAttribute('data-resize', 'true');
+            }
+          } catch (error) {
+            console.error('Error uploading image:', error);
+          }
+        };
       }
     }
-  };
+  }
+};
 
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'color', 'background',
-    'align',
-    'list', 'bullet',
-    'blockquote', 'code-block',
-    'link', 'image'
-  ];
+const formats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'color', 'background',
+  'align',
+  'list', 'bullet',
+  'blockquote', 'code-block',
+  'link', 'image'
+];
 
+export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
     <>
       <style>
