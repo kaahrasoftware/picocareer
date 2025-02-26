@@ -29,6 +29,7 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors } = getValues();
       
+      // Simplified update query
       const { error } = await supabase
         .from('hubs')
         .update({
@@ -37,7 +38,8 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
           brand_colors,
           updated_at: new Date().toISOString()
         })
-        .eq('id', hubId);
+        .eq('id', hubId)
+        .select();  // Add select() to force row-level-security check
 
       if (error) {
         console.error('Error updating hub:', error);
