@@ -8,6 +8,10 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  uploadConfig?: {
+    bucket: string;
+    folderPath: string;
+  };
 }
 
 const modules = {
@@ -38,8 +42,8 @@ const modules = {
             const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
             const { error: uploadError, data } = await supabase.storage
-              .from('announcement-images')
-              .upload(filePath, file, {
+              .from('hub_resources')
+              .upload('hubs/announcements/' + filePath, file, {
                 contentType: file.type,
                 upsert: false
               });
@@ -47,8 +51,8 @@ const modules = {
             if (uploadError) throw uploadError;
 
             const { data: { publicUrl } } = supabase.storage
-              .from('announcement-images')
-              .getPublicUrl(filePath);
+              .from('hub_resources')
+              .getPublicUrl('hubs/announcements/' + filePath);
 
             const quill = (this as any).quill;
             const range = quill.getSelection(true);
