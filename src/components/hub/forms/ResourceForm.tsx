@@ -4,7 +4,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ResourceAccessLevel, HubResource, ResourceType } from "@/types/database/hubs";
+import { ResourceAccessLevel, HubResource, ResourceType, DocumentType } from "@/types/database/hubs";
 import { ResourceBasicInfo } from "./forms/ResourceBasicInfo";
 import { ResourceTypeSelect } from "./forms/ResourceTypeSelect";
 import { ResourceUpload } from "./forms/ResourceUpload";
@@ -22,7 +22,7 @@ interface FormFields {
   description?: string;
   category?: string;
   resource_type: ResourceType;
-  document_type?: string;
+  document_type?: DocumentType;
   external_url?: string;
   file_url?: string;
   access_level: ResourceAccessLevel;
@@ -54,35 +54,29 @@ export function ResourceForm({
 
   const onSubmit = async (data: FormFields) => {
     try {
-      let file_url = data.file_url;
-      let content_type = '';
-      let original_filename = '';
-
       if (existingResource) {
-        // Handle existing resource update
         const { error } = await supabase
           .from('hub_resources')
           .update({
             ...data,
-            file_url,
-            content_type,
-            original_filename,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingResource.id);
 
         if (error) throw error;
       } else {
-        // Create new resource
+        console.log('Creating new resource:', {
+          ...data,
+          hub_id: hubId,
+          file_url: data.file_url,
+        });
+
         const { error } = await supabase
           .from('hub_resources')
           .insert({
             ...data,
-            file_url,
-            content_type,
-            original_filename,
             hub_id: hubId,
-            created_by: (await supabase.auth.getUser()).data.user?.id
+            created_by: (await supabase.auth.getUser()).data.user?.id,
           });
 
         if (error) throw error;
@@ -139,4 +133,3 @@ export function ResourceForm({
     </Form>
   );
 }
-
