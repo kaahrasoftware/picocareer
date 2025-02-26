@@ -1,4 +1,3 @@
-
 import { Control, useFormContext } from "react-hook-form";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,18 +44,16 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         throw updateError;
       }
 
-      // Then log the audit event with properly formatted details
-      const auditDetails = {
-        logo_url,
-        banner_url,
-        brand_colors
-      };
-
+      // Log the audit event using direct jsonb parameter
       const { error: auditError } = await supabase
         .rpc('log_hub_audit_event', {
           _hub_id: hubId,
           _action: 'branding_updated',
-          _details: JSON.stringify(auditDetails)
+          _details: {
+            logo_url,
+            banner_url,
+            brand_colors
+          }
         });
 
       if (auditError) {
