@@ -29,8 +29,8 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
       console.log('Saving branding settings...');
       const { logo_url, banner_url, brand_colors } = getValues();
       
-      // Match the schema exactly
-      const { data, error } = await supabase
+      // Update the hub record
+      const { error: updateError } = await supabase
         .from('hubs')
         .update({
           logo_url,
@@ -40,20 +40,20 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         })
         .eq('id', hubId);
 
-      if (error) {
-        console.error('Error updating hub branding:', error);
-        throw error;
+      if (updateError) {
+        console.error('Error updating hub branding:', updateError);
+        throw updateError;
       }
 
-      // Log the update in hub audit logs
+      // Log the audit event
       const { error: auditError } = await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: 'branding_updated',
-        _details: {
+        _details: JSON.stringify({
           logo_url,
           banner_url,
           brand_colors
-        }
+        })
       });
 
       if (auditError) {
