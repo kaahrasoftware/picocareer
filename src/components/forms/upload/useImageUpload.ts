@@ -31,14 +31,26 @@ export function useImageUpload({
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      // Ensure folder path starts with 'hubs/'
-      const filePath = folderPath ? `${folderPath}/${fileName}` : `hubs/${fileName}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
-      console.log('Upload details:', {
+      console.log('Uploading file:', {
         bucket,
         filePath,
         contentType: file.type
       });
+
+      // First try to remove any existing file if there is one
+      if (field.value) {
+        const existingFilePath = field.value.split('/').slice(-3).join('/'); // Get last 3 segments
+        try {
+          await supabase.storage
+            .from(bucket)
+            .remove([existingFilePath]);
+        } catch (removeError) {
+          console.warn('Could not remove existing file:', removeError);
+          // Continue with upload even if remove fails
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
@@ -86,10 +98,9 @@ export function useImageUpload({
   ) => {
     try {
       if (field.value) {
-        // Extract the file path from the URL
-        const urlParts = field.value.split('/');
-        // Get everything after the bucket name in the URL, ensuring it starts with 'hubs/'
-        const filePath = urlParts.slice(urlParts.indexOf(bucket) + 1).join('/');
+        // Extract just the filename and its direct parent folder
+        const pathParts = field.value.split('/');
+        const filePath = pathParts.slice(-3).join('/'); // Get last 3 segments: hub_id/type/filename
 
         console.log('Removing file:', {
           bucket,
