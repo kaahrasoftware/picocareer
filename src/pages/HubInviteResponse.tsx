@@ -33,7 +33,7 @@ export default function HubInviteResponse() {
           .from('hub_member_invites')
           .select('*')
           .eq('token', token)
-          .single();
+          .maybeSingle();
 
         if (inviteError || !invite) {
           setError("Invitation not found");
@@ -58,7 +58,7 @@ export default function HubInviteResponse() {
           .from('hubs')
           .select('*')
           .eq('id', invite.hub_id)
-          .single();
+          .maybeSingle();
 
         if (hubError || !hubData) {
           setError("Hub not found");
@@ -117,7 +117,7 @@ export default function HubInviteResponse() {
       // Log the audit event
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: invitation.hub_id,
-        _action: accept ? 'member_invitation_accepted' : 'member_invitation_rejected',
+        _action: accept ? 'member_added' : 'member_invitation_cancelled',
         _details: { role: invitation.role }
       });
 
