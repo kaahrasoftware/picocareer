@@ -1013,6 +1013,30 @@ export type Database = {
           },
         ]
       }
+      hub_invite_verification_attempts: {
+        Row: {
+          attempted_at: string | null
+          id: string
+          ip_address: string | null
+          success: boolean | null
+          token: string
+        }
+        Insert: {
+          attempted_at?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          token: string
+        }
+        Update: {
+          attempted_at?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          token?: string
+        }
+        Relationships: []
+      }
       hub_member_invites: {
         Row: {
           accepted_at: string | null
@@ -3044,6 +3068,13 @@ export type Database = {
           major_data: Json
         }
         Returns: Json
+      }
+      check_verification_rate_limit: {
+        Args: {
+          _token: string
+          _ip_address: string
+        }
+        Returns: boolean
       }
       clean_old_notifications: {
         Args: Record<PropertyKey, never>

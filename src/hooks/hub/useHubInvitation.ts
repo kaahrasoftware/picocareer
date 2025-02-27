@@ -41,6 +41,22 @@ export function useHubInvitation(token: string | null) {
         const cleanToken = decodeURIComponent(token.replace(/['"]/g, '').trim());
         console.log('Using cleaned token:', cleanToken);
 
+        // Check rate limit first
+        const { data: rateCheckData, error: rateCheckError } = await supabase
+          .rpc('check_verification_rate_limit', {
+            _token: cleanToken,
+            _ip_address: null // IP is handled server-side for security
+          });
+
+        if (rateCheckError) {
+          console.error('Rate check error:', rateCheckError);
+          throw new Error("Unable to verify token at this time");
+        }
+
+        if (!rateCheckData) {
+          throw new Error("Too many verification attempts. Please try again later.");
+        }
+
         // First check if invitation exists at all
         const { data: invites, error: inviteError } = await supabase
           .from('hub_member_invites')
@@ -101,6 +117,14 @@ export function useHubInvitation(token: string | null) {
         }
 
         console.log('Found hub:', hubData);
+
+        // Log the verification attempt
+        await supabase
+          .from('hub_invite_verification_attempts')
+          .insert({
+            token: cleanToken,
+            success: true
+          });
 
         setInvitation(invite);
         setHub(hubData);
