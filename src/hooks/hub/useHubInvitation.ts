@@ -32,13 +32,11 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        console.log('Fetching invitation with token:', token);
-
+        // First check if invitation exists at all
         const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
           .eq('token', token)
-          .eq('invited_email', user.email) // Fixed: Changed 'email' to 'invited_email'
           .maybeSingle();
 
         if (inviteError) {
@@ -49,7 +47,14 @@ export function useHubInvitation(token: string | null) {
         }
 
         if (!invite) {
-          setError("Invitation not found");
+          setError("Invitation not found. The link may be invalid or expired.");
+          setIsLoading(false);
+          return;
+        }
+
+        // Now check if the invitation is for the current user
+        if (invite.invited_email !== user.email) {
+          setError(`This invitation was sent to ${invite.invited_email}. Please sign in with that email address.`);
           setIsLoading(false);
           return;
         }
@@ -107,7 +112,7 @@ export function useHubInvitation(token: string | null) {
         .from('hub_member_invites')
         .select('*')
         .eq('token', token)
-        .eq('invited_email', user.email) // Fixed: Changed 'email' to 'invited_email'
+        .eq('invited_email', user.email)
         .maybeSingle();
 
       if (inviteError || !invite) {
@@ -147,7 +152,7 @@ export function useHubInvitation(token: string | null) {
           rejected_at: accept ? null : timestamp,
         })
         .eq('token', token)
-        .eq('invited_email', user.email); // Fixed: Changed 'email' to 'invited_email'
+        .eq('invited_email', user.email);
 
       if (updateError) throw updateError;
 
