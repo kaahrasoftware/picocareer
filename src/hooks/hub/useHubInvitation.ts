@@ -4,6 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import type { HubMemberRole } from "@/types/database/hubs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -57,6 +65,7 @@ export function useHubInvitation(token: string | null) {
   const [invitation, setInvitation] = useState<HubInvite | null>(null);
   const [hub, setHub] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -124,7 +133,8 @@ export function useHubInvitation(token: string | null) {
               logo_url
             )
           `)
-          .eq('token', cleanToken);
+          .eq('token', cleanToken)
+          .eq('status', 'pending');
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
@@ -181,6 +191,7 @@ export function useHubInvitation(token: string | null) {
 
         setInvitation(invite);
         setHub(hubData);
+        setShowSuccessDialog(true); // Show success dialog when invitation is found
         setIsLoading(false);
       } catch (error: any) {
         console.error('Error in fetchInvitation:', error);
@@ -303,12 +314,39 @@ export function useHubInvitation(token: string | null) {
     }
   };
 
+  const SuccessDialog = () => (
+    <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invitation Found!</DialogTitle>
+          <DialogDescription>
+            You have been invited to join {hub?.name}. Would you like to visit the hub?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 flex justify-end space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowSuccessDialog(false)}
+          >
+            Close
+          </Button>
+          <Button 
+            onClick={() => navigate(`/hubs/${hub?.id}`)}
+          >
+            Visit Hub
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return {
     isLoading,
     isProcessing,
     invitation,
     hub,
     error,
+    SuccessDialog,
     handleAccept: () => handleResponse(true),
     handleDecline: () => handleResponse(false)
   };

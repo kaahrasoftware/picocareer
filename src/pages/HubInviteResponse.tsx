@@ -19,6 +19,7 @@ export default function HubInviteResponse() {
     invitation,
     hub,
     error,
+    SuccessDialog,
     handleAccept,
     handleDecline,
   } = useHubInvitation(token);
@@ -52,6 +53,7 @@ export default function HubInviteResponse() {
         isProcessing={isProcessing}
         onAccept={handleAccept}
         onDecline={handleDecline}
+        SuccessDialog={SuccessDialog}
       />
     </div>
   );

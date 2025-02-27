@@ -1,57 +1,58 @@
 
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import type { HubMemberRole } from "@/types/database/hubs";
 
 interface InvitationCardProps {
   hubName: string;
-  role: string;
+  role: HubMemberRole;
   description?: string;
   isProcessing: boolean;
   onAccept: () => void;
   onDecline: () => void;
+  SuccessDialog: () => JSX.Element;
 }
 
-export function InvitationCard({ 
-  hubName, 
-  role, 
-  description, 
-  isProcessing, 
-  onAccept, 
-  onDecline 
+export function InvitationCard({
+  hubName,
+  role,
+  description,
+  isProcessing,
+  onAccept,
+  onDecline,
+  SuccessDialog
 }: InvitationCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Hub Invitation</CardTitle>
-        <CardDescription>
-          You've been invited to join {hubName} as a {role}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Invitation to Join {hubName}</CardTitle>
+          <CardDescription>
+            You have been invited to join as a {role}
+          </CardDescription>
+        </CardHeader>
         {description && (
-          <p className="mb-6 text-sm text-muted-foreground">{description}</p>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">{description}</p>
+          </CardContent>
         )}
-        <div className="flex justify-end gap-4">
+        <CardFooter className="flex justify-end space-x-2">
           <Button
             variant="outline"
             onClick={onDecline}
             disabled={isProcessing}
-            className="flex items-center gap-2"
           >
-            <X className="h-4 w-4" />
-            Decline
+            {isProcessing ? "Processing..." : "Decline"}
           </Button>
           <Button
             onClick={onAccept}
             disabled={isProcessing}
-            className="flex items-center gap-2"
           >
-            <Check className="h-4 w-4" />
-            Accept
+            {isProcessing ? "Processing..." : "Accept"}
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardFooter>
+      </Card>
+      <SuccessDialog />
+    </>
   );
 }
