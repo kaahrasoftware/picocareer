@@ -38,7 +38,8 @@ export function useHubInvitation(token: string | null) {
         }
 
         // Clean token - remove quotes, whitespace, and URL encoding
-        const cleanToken = decodeURIComponent(token.replace(/['"]/g, '').trim());
+        // Also remove any UUID formatting (hyphens)
+        const cleanToken = decodeURIComponent(token.replace(/['"]/g, '').trim().replace(/-/g, ''));
         console.log('Using cleaned token:', cleanToken);
 
         // Check rate limit first
@@ -61,7 +62,7 @@ export function useHubInvitation(token: string | null) {
         const { data: invites, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
-          .eq('token', cleanToken);
+          .filter('token', 'ilike', `%${cleanToken}%`);
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
@@ -153,13 +154,14 @@ export function useHubInvitation(token: string | null) {
         throw new Error("Please sign in to accept/decline the invitation");
       }
 
-      const cleanToken = token?.replace(/['"]/g, '').trim();
+      // Clean token the same way as in fetchInvitation
+      const cleanToken = token?.replace(/['"]/g, '').trim().replace(/-/g, '');
 
       // Validate invitation status again before processing
       const { data: invites, error: inviteError } = await supabase
         .from('hub_member_invites')
         .select('*')
-        .eq('token', cleanToken)
+        .filter('token', 'ilike', `%${cleanToken}%`)
         .eq('invited_email', user.email);
 
       if (inviteError || !invites || invites.length === 0) {
@@ -201,7 +203,7 @@ export function useHubInvitation(token: string | null) {
 
       console.log('Updating invitation status to:', accept ? 'accepted' : 'rejected');
 
-      // Update invitation status
+      // Update invitation status using the same token format
       const { error: updateError } = await supabase
         .from('hub_member_invites')
         .update({
@@ -209,7 +211,7 @@ export function useHubInvitation(token: string | null) {
           accepted_at: accept ? timestamp : null,
           rejected_at: accept ? null : timestamp,
         })
-        .eq('token', cleanToken)
+        .filter('token', 'ilike', `%${cleanToken}%`)
         .eq('invited_email', user.email);
 
       if (updateError) {
