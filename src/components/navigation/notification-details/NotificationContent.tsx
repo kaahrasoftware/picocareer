@@ -31,19 +31,13 @@ export function NotificationContent({
   // Extract token from action URL safely
   let token = null;
   try {
-    if (action_url) {
-      if (type === 'hub_invite') {
-        // For hub invites, parse /hub-invite?token=<value>
-        const tokenMatch = action_url.match(/token=([^&]+)/);
-        if (tokenMatch && tokenMatch[1]) {
-          token = tokenMatch[1];
-        }
-      } else {
-        // For other URLs, try standard URL parsing
-        const url = action_url.startsWith('http') 
-          ? new URL(action_url)
-          : new URL(action_url, window.location.origin);
-        token = url.searchParams.get('token');
+    if (action_url && type === 'hub_invite') {
+      // For hub invites, parse /hub-invite?token=<value>
+      const tokenMatch = action_url.match(/token=([^&]+)/);
+      if (tokenMatch && tokenMatch[1]) {
+        // Make sure to decode the token
+        token = decodeURIComponent(tokenMatch[1]);
+        console.log('Extracted token:', token);
       }
     }
   } catch (error) {
