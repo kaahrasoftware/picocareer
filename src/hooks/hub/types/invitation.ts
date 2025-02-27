@@ -23,3 +23,15 @@ export interface HubInvite {
   accepted_at?: string | null;
   rejected_at?: string | null;
 }
+
+export interface UseHubInvitationReturn {
+  isLoading: boolean;
+  isProcessing: boolean;
+  invitation: HubInvite | null;
+  hub: Hub | null;
+  error: string | null;
+  showSuccessDialog: boolean;
+  setShowSuccessDialog: (show: boolean) => void;
+  handleAccept: () => Promise<void>;
+  handleDecline: () => Promise<void>;
+}
