@@ -10,10 +10,19 @@ export function useHubInvite(token: string | null) {
   const { toast } = useToast();
 
   const handleAccept = async () => {
-    if (!token) return;
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Invalid invitation token",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       setIsLoading(true);
+      console.log('Accepting invitation with token:', token);
+      
       // First get the invitation details to check status
       const { data: invite, error: inviteError } = await supabase
         .from('hub_member_invites')
@@ -59,6 +68,13 @@ export function useHubInvite(token: string | null) {
 
       if (memberError) throw memberError;
 
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: invite.hub_id,
+        _action: 'member_added',
+        _details: { role: invite.role }
+      });
+
       toast({
         title: "Success",
         description: "You have successfully joined the hub.",
@@ -69,7 +85,7 @@ export function useHubInvite(token: string | null) {
       console.error('Error accepting invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to accept invitation. Please try again.",
+        description: error.message || "Failed to accept invitation. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -78,14 +94,23 @@ export function useHubInvite(token: string | null) {
   };
 
   const handleReject = async () => {
-    if (!token) return;
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Invalid invitation token",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       setIsLoading(true);
+      console.log('Rejecting invitation with token:', token);
+      
       // First check if invitation is still valid
       const { data: invite, error: inviteError } = await supabase
         .from('hub_member_invites')
-        .select('status')
+        .select('*')
         .eq('token', token)
         .single();
         
@@ -110,6 +135,13 @@ export function useHubInvite(token: string | null) {
         .eq('token', token);
           
       if (updateError) throw updateError;
+
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: invite.hub_id,
+        _action: 'member_invitation_cancelled',
+        _details: { role: invite.role }
+      });
       
       toast({
         title: "Invitation Declined",
@@ -121,7 +153,7 @@ export function useHubInvite(token: string | null) {
       console.error('Error rejecting invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to reject invitation. Please try again.",
+        description: error.message || "Failed to reject invitation. Please try again.",
         variant: "destructive"
       });
     } finally {
