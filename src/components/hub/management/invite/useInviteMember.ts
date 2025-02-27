@@ -32,6 +32,22 @@ export function useInviteMember(hubId: string) {
       // Process each valid email
       for (const email of validEmails) {
         try {
+          // Get profile ID for the invited email
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+          if (!profileData?.id) {
+            toast({
+              title: "User not found",
+              description: `No user found with email ${email}.`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
           // Check for existing pending invitation
           const { data: existingInvite } = await supabase
             .from('hub_member_invites')
@@ -55,7 +71,7 @@ export function useInviteMember(hubId: string) {
             .from('hub_members')
             .select('id')
             .eq('hub_id', hubId)
-            .eq('status', 'Approved')
+            .eq('profile_id', profileData.id)
             .maybeSingle();
 
           if (existingMember) {
@@ -77,8 +93,8 @@ export function useInviteMember(hubId: string) {
               invited_by: user.id,
               status: 'pending',
               email_status: 'pending',
-              token: crypto.randomUUID(), // Generate a unique token for each invitation
-              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+              token: crypto.randomUUID(),
+              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             });
 
           if (inviteError) {
