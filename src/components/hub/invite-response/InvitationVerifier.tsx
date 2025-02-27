@@ -113,9 +113,23 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
         
         // Extract hub data and store invitation
         const hubData = invite.hub;
-        delete invite.hub;
         
-        setInvitation(invite);
+        // Convert database role to HubMemberRole type
+        const typedInvite: HubInvite = {
+          id: invite.id,
+          hub_id: invite.hub_id,
+          invited_email: invite.invited_email,
+          token: invite.token,
+          role: invite.role,
+          status: invite.status,
+          expires_at: invite.expires_at,
+          created_at: invite.created_at,
+          updated_at: invite.updated_at,
+          accepted_at: invite.accepted_at,
+          rejected_at: invite.rejected_at
+        };
+        
+        setInvitation(typedInvite);
         setHub(hubData);
         setShowDetailsDialog(true);
         

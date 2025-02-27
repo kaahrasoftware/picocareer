@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Info } from "lucide-react";
+import { Info, ArrowLeft } from "lucide-react";
 
 interface TokenVerificationFormProps {
   onVerify: (token: string) => void;
