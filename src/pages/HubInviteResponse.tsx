@@ -9,8 +9,12 @@ import { ErrorState } from "@/components/hub/invite-response/ErrorState";
 export default function HubInviteResponse() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get('token');
+  const rawToken = searchParams.get('token');
   const action = searchParams.get('action');
+
+  // Clean and decode token before using it
+  const token = rawToken ? decodeURIComponent(rawToken.replace(/['"]/g, '').trim()) : null;
+  console.log('Cleaned token:', token); // Debug log
 
   const {
     isLoading,
@@ -31,18 +35,18 @@ export default function HubInviteResponse() {
         handleDecline();
       }
     }
-  }, [isLoading, error, action, isProcessing]);
+  }, [isLoading, error, action, isProcessing, handleAccept, handleDecline]);
 
   if (isLoading) {
     return <LoadingState />;
   }
 
   if (error) {
-    return <ErrorState message={error} />;
+    return <ErrorState error={error} />;
   }
 
   if (!invitation || !hub) {
-    return <ErrorState message="Invalid invitation" />;
+    return <ErrorState error="Invalid invitation" />;
   }
 
   return (
@@ -58,4 +62,3 @@ export default function HubInviteResponse() {
     </div>
   );
 }
-
