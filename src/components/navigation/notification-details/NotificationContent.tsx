@@ -29,11 +29,34 @@ export function NotificationContent({
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
-  // Extract token from action URL
-  const token = action_url ? new URL(action_url).searchParams.get('token') : null;
+  // Extract token from action URL safely
+  let token = null;
+  try {
+    if (action_url) {
+      // Handle both absolute and relative URLs
+      if (action_url.startsWith('http')) {
+        token = new URL(action_url).searchParams.get('token');
+      } else {
+        // For relative URLs, create a full URL using the current origin
+        const fullUrl = new URL(action_url, window.location.origin);
+        token = fullUrl.searchParams.get('token');
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing action URL:', error);
+  }
 
-  // Extract ID from action URL
-  const contentId = action_url?.split('/').pop();
+  // Extract ID from action URL safely
+  let contentId = null;
+  try {
+    if (action_url) {
+      // Remove any query parameters and get the last segment
+      const urlPath = action_url.split('?')[0];
+      contentId = urlPath.split('/').filter(Boolean).pop();
+    }
+  } catch (error) {
+    console.error('Error extracting content ID:', error);
+  }
 
   // Fetch data using custom hook
   const { majorData, careerData, blogData } = useNotificationData(contentId, type, dialogOpen);
