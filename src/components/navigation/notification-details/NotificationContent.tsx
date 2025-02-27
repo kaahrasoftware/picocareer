@@ -32,13 +32,9 @@ export function NotificationContent({
   let token = null;
   try {
     if (action_url && type === 'hub_invite') {
-      // For hub invites, parse /hub-invite?token=<value>
-      const tokenMatch = action_url.match(/token=([^&]+)/);
-      if (tokenMatch && tokenMatch[1]) {
-        // Make sure to decode the token
-        token = decodeURIComponent(tokenMatch[1]);
-        console.log('Extracted token:', token);
-      }
+      const url = new URL(action_url, window.location.origin);
+      token = url.searchParams.get('token');
+      console.log('Extracted token:', token);
     }
   } catch (error) {
     console.error('Error parsing action URL:', error, { action_url });

@@ -37,7 +37,7 @@ export function useHubInvitation(token: string | null) {
           .from('hub_member_invites')
           .select('*')
           .eq('token', token)
-          .maybeSingle();
+          .single();
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
@@ -78,7 +78,7 @@ export function useHubInvitation(token: string | null) {
           .from('hubs')
           .select('*')
           .eq('id', invite.hub_id)
-          .maybeSingle();
+          .single();
 
         if (hubError || !hubData) {
           console.error('Error fetching hub:', hubError);
@@ -92,7 +92,7 @@ export function useHubInvitation(token: string | null) {
         setIsLoading(false);
       } catch (error: any) {
         console.error('Error in fetchInvitation:', error);
-        setError("Failed to load invitation");
+        setError(error.message || "Failed to load invitation");
         setIsLoading(false);
       }
     };
@@ -113,7 +113,7 @@ export function useHubInvitation(token: string | null) {
         .select('*')
         .eq('token', token)
         .eq('invited_email', user.email)
-        .maybeSingle();
+        .single();
 
       if (inviteError || !invite) {
         throw new Error("Invitation not found");
