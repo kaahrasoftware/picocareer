@@ -22,17 +22,39 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
+        // First check if user is authenticated
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        
+        if (!user) {
+          setError("Please sign in to view this invitation");
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Fetching invitation with token:', token);
+
         const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
           .eq('token', token)
+          .eq('email', user.email) // Make sure invitation matches user's email
           .maybeSingle();
 
-        if (inviteError || !invite) {
+        if (inviteError) {
+          console.error('Error fetching invitation:', inviteError);
+          setError("Failed to load invitation");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!invite) {
           setError("Invitation not found");
           setIsLoading(false);
           return;
         }
+
+        console.log('Found invitation:', invite);
 
         if (invite.status !== 'pending') {
           setError("This invitation has already been processed");
@@ -46,6 +68,7 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
+        // Get hub details
         const { data: hubData, error: hubError } = await supabase
           .from('hubs')
           .select('*')
@@ -53,6 +76,7 @@ export function useHubInvitation(token: string | null) {
           .maybeSingle();
 
         if (hubError || !hubData) {
+          console.error('Error fetching hub:', hubError);
           setError("Hub not found");
           setIsLoading(false);
           return;
@@ -62,7 +86,7 @@ export function useHubInvitation(token: string | null) {
         setHub(hubData);
         setIsLoading(false);
       } catch (error: any) {
-        console.error('Error fetching invitation:', error);
+        console.error('Error in fetchInvitation:', error);
         setError("Failed to load invitation");
         setIsLoading(false);
       }
@@ -77,6 +101,26 @@ export function useHubInvitation(token: string | null) {
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
+
+      // Validate invitation status again before processing
+      const { data: invite, error: inviteError } = await supabase
+        .from('hub_member_invites')
+        .select('*')
+        .eq('token', token)
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (inviteError || !invite) {
+        throw new Error("Invitation not found");
+      }
+
+      if (invite.status !== 'pending') {
+        throw new Error("This invitation has already been processed");
+      }
+
+      if (new Date(invite.expires_at) < new Date()) {
+        throw new Error("This invitation has expired");
+      }
 
       const timestamp = new Date().toISOString();
       
@@ -102,7 +146,8 @@ export function useHubInvitation(token: string | null) {
           accepted_at: accept ? timestamp : null,
           rejected_at: accept ? null : timestamp,
         })
-        .eq('token', token);
+        .eq('token', token)
+        .eq('email', user.email);
 
       if (updateError) throw updateError;
 
@@ -130,7 +175,7 @@ export function useHubInvitation(token: string | null) {
       console.error('Error processing invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to process invitation. Please try again.",
+        description: error.message || "Failed to process invitation. Please try again.",
         variant: "destructive",
       });
     } finally {
