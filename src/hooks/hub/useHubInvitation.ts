@@ -37,29 +37,31 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        console.log('Fetching invitation with token:', token);
+        // Clean token if needed (remove any URL encoding)
+        const cleanToken = token.replace(/['"]/g, '').trim();
+        console.log('Using cleaned token:', cleanToken);
 
         // First check if invitation exists at all
-        const { data: invite, error: inviteError } = await supabase
+        const { data: invites, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
-          .eq('token', token)
-          .maybeSingle();
+          .eq('token', cleanToken);
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
-          setError(inviteError.message);
+          setError("Error loading invitation");
           setIsLoading(false);
           return;
         }
 
-        if (!invite) {
-          console.log('No invitation found for token:', token);
+        if (!invites || invites.length === 0) {
+          console.log('No invitation found for token:', cleanToken);
           setError("Invitation not found. The link may be invalid or expired.");
           setIsLoading(false);
           return;
         }
 
+        const invite = invites[0];
         console.log('Found invitation:', invite);
 
         // Now check if the invitation is for the current user
@@ -127,23 +129,21 @@ export function useHubInvitation(token: string | null) {
         throw new Error("Please sign in to accept/decline the invitation");
       }
 
+      const cleanToken = token?.replace(/['"]/g, '').trim();
+
       // Validate invitation status again before processing
-      const { data: invite, error: inviteError } = await supabase
+      const { data: invites, error: inviteError } = await supabase
         .from('hub_member_invites')
         .select('*')
-        .eq('token', token)
-        .eq('invited_email', user.email)
-        .maybeSingle();
+        .eq('token', cleanToken)
+        .eq('invited_email', user.email);
 
-      if (inviteError) {
-        console.error('Error fetching invitation in handleResponse:', inviteError);
-        throw inviteError;
-      }
-
-      if (!invite) {
-        console.log('No invitation found for token in handleResponse:', token);
+      if (inviteError || !invites || invites.length === 0) {
+        console.log('No invitation found for token in handleResponse:', cleanToken);
         throw new Error("Invitation not found");
       }
+
+      const invite = invites[0];
 
       if (invite.status !== 'pending') {
         console.log('Invalid status in handleResponse:', invite.status);
@@ -185,7 +185,7 @@ export function useHubInvitation(token: string | null) {
           accepted_at: accept ? timestamp : null,
           rejected_at: accept ? null : timestamp,
         })
-        .eq('token', token)
+        .eq('token', cleanToken)
         .eq('invited_email', user.email);
 
       if (updateError) {
