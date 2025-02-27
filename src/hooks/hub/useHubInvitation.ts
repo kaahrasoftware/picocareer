@@ -4,6 +4,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function formatToken(token: string): string {
+  // Remove quotes and whitespace
+  let cleaned = token.replace(/['"]/g, '').trim();
+  
+  // If the token has no hyphens, add them to make it a valid UUID
+  if (cleaned.length === 32) {
+    cleaned = `${cleaned.slice(0, 8)}-${cleaned.slice(8, 12)}-${cleaned.slice(12, 16)}-${cleaned.slice(16, 20)}-${cleaned.slice(20)}`;
+  }
+  
+  // Validate UUID format
+  if (!UUID_REGEX.test(cleaned)) {
+    console.error('Invalid UUID format:', cleaned);
+    throw new Error("Invalid invitation token format");
+  }
+  
+  return cleaned;
+}
+
 export function useHubInvitation(token: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -37,10 +58,17 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        // Clean token - remove quotes, whitespace, and URL encoding
-        // Also remove any UUID formatting (hyphens)
-        const cleanToken = decodeURIComponent(token.replace(/['"]/g, '').trim().replace(/-/g, ''));
-        console.log('Using cleaned token:', cleanToken);
+        // Format and validate token
+        let cleanToken;
+        try {
+          cleanToken = formatToken(decodeURIComponent(token));
+          console.log('Formatted token:', cleanToken);
+        } catch (e) {
+          console.error('Token formatting error:', e);
+          setError("Invalid invitation token format");
+          setIsLoading(false);
+          return;
+        }
 
         // Check rate limit first
         const { data: rateCheckData, error: rateCheckError } = await supabase
@@ -58,11 +86,11 @@ export function useHubInvitation(token: string | null) {
           throw new Error("Too many verification attempts. Please try again later.");
         }
 
-        // First check if invitation exists at all
-        const { data: invites, error: inviteError } = await supabase
+        // Fetch invitation using exact UUID match
+        const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
-          .or(`token.eq.${cleanToken},token.ilike.%${cleanToken}%`)
+          .eq('token', cleanToken)
           .single();
 
         if (inviteError) {
@@ -72,14 +100,13 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        if (!invites) {
+        if (!invite) {
           console.log('No invitation found for token:', cleanToken);
           setError("Invitation not found. The link may be invalid or expired.");
           setIsLoading(false);
           return;
         }
 
-        const invite = invites;
         console.log('Found invitation:', invite);
 
         // Now check if the invitation is for the current user
@@ -155,23 +182,19 @@ export function useHubInvitation(token: string | null) {
         throw new Error("Please sign in to accept/decline the invitation");
       }
 
-      // Clean token the same way as in fetchInvitation
-      const cleanToken = token?.replace(/['"]/g, '').trim().replace(/-/g, '');
-
-      // Validate invitation status again before processing
-      const { data: invites, error: inviteError } = await supabase
+      // Verify invitation again with exact UUID match
+      const cleanToken = formatToken(token || '');
+      const { data: invite, error: inviteError } = await supabase
         .from('hub_member_invites')
         .select('*')
-        .or(`token.eq.${cleanToken},token.ilike.%${cleanToken}%`)
+        .eq('token', cleanToken)
         .eq('invited_email', user.email)
         .single();
 
-      if (inviteError || !invites) {
+      if (inviteError || !invite) {
         console.log('No invitation found for token in handleResponse:', cleanToken);
         throw new Error("Invitation not found");
       }
-
-      const invite = invites;
 
       if (invite.status !== 'pending') {
         console.log('Invalid status in handleResponse:', invite.status);
@@ -205,7 +228,7 @@ export function useHubInvitation(token: string | null) {
 
       console.log('Updating invitation status to:', accept ? 'accepted' : 'rejected');
 
-      // Update invitation status using the same token format
+      // Update invitation status using exact token match
       const { error: updateError } = await supabase
         .from('hub_member_invites')
         .update({
