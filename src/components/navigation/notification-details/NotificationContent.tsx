@@ -8,7 +8,6 @@ import { SessionNotificationContent } from "./SessionNotificationContent";
 import { ActionButton } from "./ActionButton";
 import { LoadingState } from "./LoadingState";
 import { HubInviteButtons } from "./hub-invite/HubInviteButtons";
-import { useHubInvite } from "./hub-invite/useHubInvite";
 import type { MentorSession } from "@/types/calendar";
 
 interface NotificationContentProps {
@@ -60,9 +59,6 @@ export function NotificationContent({
 
   // Fetch data using custom hook
   const { majorData, careerData, blogData } = useNotificationData(contentId, type, dialogOpen);
-
-  // Hub invite handling
-  const { isLoading: isInviteLoading, handleAccept, handleReject } = useHubInvite(token);
 
   useEffect(() => {
     const fetchSessionData = async () => {
@@ -118,14 +114,8 @@ export function NotificationContent({
     // Don't show buttons for session-related notifications
     if (!action_url || type?.includes('session')) return null;
 
-    if (type === 'hub_invite') {
-      return (
-        <HubInviteButtons 
-          onAccept={handleAccept}
-          onReject={handleReject}
-          isLoading={isInviteLoading}
-        />
-      );
+    if (type === 'hub_invite' && token) {
+      return <HubInviteButtons token={token} />;
     }
 
     return <ActionButton onClick={handleDetailClick} />;
