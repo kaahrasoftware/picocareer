@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useNotificationData } from "./hooks/useNotificationData";
+import { useToast } from "@/hooks/use-toast";
+import { NotificationHeader } from "./NotificationHeader";
 import { NotificationDialogs } from "./NotificationDialogs";
 import { SessionNotificationContent } from "./SessionNotificationContent";
 import { ActionButton } from "./ActionButton";
 import { LoadingState } from "./LoadingState";
-import { HubInviteButtons } from "./hub-invite/HubInviteButtons";
-import type { MentorSession } from "@/types/calendar";
+import { Button } from "@/components/ui/button";
+import { Copy, Check } from "lucide-react";
 
 interface NotificationContentProps {
   message: string;
@@ -23,98 +23,46 @@ export function NotificationContent({
   type, 
   action_url 
 }: NotificationContentProps) {
-  const [sessionData, setSessionData] = useState<MentorSession | null>(null);
+  const [sessionData, setSessionData] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
-  
+  const { toast } = useToast();
+
   // Extract token from action URL safely
   let token = null;
   try {
     if (action_url && type === 'hub_invite') {
       const url = new URL(action_url, window.location.origin);
       token = url.searchParams.get('token');
-      console.log('Extracted token:', token);
     }
   } catch (error) {
-    console.error('Error parsing action URL:', error, { action_url });
+    console.error('Error parsing action URL:', error);
   }
 
-  // Extract ID from action URL safely
-  let contentId = null;
-  try {
-    if (action_url) {
-      // Remove any query parameters and get the last segment
-      const urlPath = action_url.split('?')[0];
-      contentId = urlPath.split('/').filter(Boolean).pop();
-    }
-  } catch (error) {
-    console.error('Error extracting content ID:', error);
-  }
-
-  // Fetch data using custom hook
-  const { majorData, careerData, blogData } = useNotificationData(contentId, type, dialogOpen);
-
-  useEffect(() => {
-    const fetchSessionData = async () => {
-      if (!isExpanded) return;
-      setIsLoading(true);
-      
+  const copyToken = async () => {
+    if (token) {
       try {
-        const meetingLinkMatch = message.match(/href="([^"]+)"/);
-        if (meetingLinkMatch) {
-          const { data, error } = await supabase
-            .from('mentor_sessions')
-            .select(`
-              id,
-              scheduled_at,
-              notes,
-              meeting_platform,
-              meeting_link,
-              session_type:mentor_session_types(type, duration),
-              mentor:profiles!mentor_sessions_mentor_id_fkey(full_name),
-              mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
-            `)
-            .eq('meeting_link', meetingLinkMatch[1])
-            .maybeSingle();
-
-          if (error) {
-            console.error('Error fetching session data:', error);
-            throw error;
-          }
-
-          if (data) {
-            setSessionData(data as MentorSession);
-          }
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setIsLoading(false);
+        await navigator.clipboard.writeText(token);
+        setCopied(true);
+        toast({
+          title: "Token copied",
+          description: "Verification token has been copied to clipboard",
+        });
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        toast({
+          title: "Failed to copy",
+          description: "Please try copying the token manually",
+          variant: "destructive",
+        });
       }
-    };
-
-    fetchSessionData();
-  }, [isExpanded, message]);
-
-  const handleDetailClick = () => {
-    if (type === 'availability_request') {
-      navigate('/profile?tab=mentor');
-      return;
     }
-    setDialogOpen(true);
   };
 
-  const renderActionButton = () => {
-    // Don't show buttons for session-related notifications
-    if (!action_url || type?.includes('session')) return null;
-
-    if (type === 'hub_invite' && token) {
-      console.log('Rendering hub invite buttons with token:', token);
-      return <HubInviteButtons token={token} />;
-    }
-
-    return <ActionButton onClick={handleDetailClick} />;
+  const handleAccept = () => {
+    navigate(`/hub-invite?action=accept`);
   };
 
   if (!isExpanded) {
@@ -133,15 +81,39 @@ export function NotificationContent({
     return (
       <div className="space-y-2 mt-3 text-sm text-zinc-400">
         <p>{message}</p>
-        {renderActionButton()}
+        {type === 'hub_invite' && token && (
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center gap-2 p-2 bg-zinc-800 rounded">
+              <code className="flex-1 font-mono text-xs">{token}</code>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copyToken}
+                className="h-8 px-2"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <Button 
+              onClick={handleAccept}
+              className="w-full"
+            >
+              Verify Invitation
+            </Button>
+          </div>
+        )}
         <NotificationDialogs
           type={type}
-          contentId={contentId!}
+          contentId={token!}
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
-          majorData={majorData}
-          careerData={careerData}
-          blogData={blogData}
+          majorData={null}
+          careerData={null}
+          blogData={null}
         />
       </div>
     );
@@ -150,7 +122,6 @@ export function NotificationContent({
   return (
     <div className="space-y-2 mt-3">
       <SessionNotificationContent sessionData={sessionData} />
-      {renderActionButton()}
     </div>
   );
 }

@@ -1,20 +1,17 @@
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useHubInvitation } from "@/hooks/hub/useHubInvitation";
 import { InvitationCard } from "@/components/hub/invite-response/InvitationCard";
 import { LoadingState } from "@/components/hub/invite-response/LoadingState";
 import { ErrorState } from "@/components/hub/invite-response/ErrorState";
+import { TokenVerificationForm } from "@/components/hub/invite-response/TokenVerificationForm";
 
 export default function HubInviteResponse() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const rawToken = searchParams.get('token');
   const action = searchParams.get('action');
-
-  // Clean and decode token before using it
-  const token = rawToken ? decodeURIComponent(rawToken.replace(/['"]/g, '').trim()) : null;
-  console.log('Cleaned token:', token); // Debug log
+  const [token, setToken] = useState<string | null>(null);
 
   const {
     isLoading,
@@ -26,16 +23,13 @@ export default function HubInviteResponse() {
     handleDecline,
   } = useHubInvitation(token);
 
-  // Automatically trigger the intended action if provided in URL
-  useEffect(() => {
-    if (!isLoading && !error && action && !isProcessing) {
-      if (action === 'accept') {
-        handleAccept();
-      } else if (action === 'reject') {
-        handleDecline();
-      }
-    }
-  }, [isLoading, error, action, isProcessing, handleAccept, handleDecline]);
+  if (!action) {
+    return <ErrorState error="Invalid request" />;
+  }
+
+  if (!token) {
+    return <TokenVerificationForm onVerify={setToken} />;
+  }
 
   if (isLoading) {
     return <LoadingState />;

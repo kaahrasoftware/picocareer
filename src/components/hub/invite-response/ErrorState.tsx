@@ -15,7 +15,7 @@ export function ErrorState({ error }: ErrorStateProps) {
     <div className="container max-w-2xl py-8">
       <Card className="border-destructive">
         <CardHeader>
-          <CardTitle className="text-destructive">Invalid Invitation</CardTitle>
+          <CardTitle className="text-destructive">Invitation Error</CardTitle>
           <CardDescription>{error}</CardDescription>
         </CardHeader>
         <CardContent>

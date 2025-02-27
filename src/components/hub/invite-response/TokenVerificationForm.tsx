@@ -1,0 +1,73 @@
+
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+interface TokenVerificationFormProps {
+  onVerify: (token: string) => void;
+}
+
+export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) {
+  const [tokenInput, setTokenInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tokenInput.trim()) {
+      toast({
+        title: "Verification Failed",
+        description: "Please enter a verification token",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      // Clean the token input
+      const cleanToken = tokenInput.trim();
+      onVerify(cleanToken);
+    } catch (error) {
+      toast({
+        title: "Verification Failed",
+        description: "Invalid verification token",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-md">
+      <Card>
+        <CardHeader>
+          <CardTitle>Verify Invitation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Enter verification token"
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isVerifying}
+            >
+              {isVerifying ? "Verifying..." : "Verify Token"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
