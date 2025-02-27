@@ -30,6 +30,9 @@ export function NotificationContent({
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Extract token from action URL
+  const token = action_url ? new URL(action_url).searchParams.get('token') : null;
+
   // Extract ID from action URL
   const contentId = action_url?.split('/').pop();
 
@@ -79,57 +82,121 @@ export function NotificationContent({
   }, [isExpanded, message]);
 
   const handleAccept = async () => {
-    if (type === 'hub_invite' && action_url) {
+    if (type === 'hub_invite' && token) {
       try {
-        const url = new URL(action_url);
-        const token = url.searchParams.get('token');
-        if (token) {
-          // First update the invite status to accepted
-          const { error: updateError } = await supabase
-            .from('hub_member_invites')
-            .update({ status: 'accepted' })
-            .eq('token', token);
-            
-          if (updateError) throw updateError;
+        setIsLoading(true);
+        // First get the invitation details to check status
+        const { data: invite, error: inviteError } = await supabase
+          .from('hub_member_invites')
+          .select('*')
+          .eq('token', token)
+          .single();
           
-          navigate(`/hub-invite?token=${token}&action=accept`);
+        if (inviteError) throw inviteError;
+        
+        if (!invite || invite.status !== 'pending') {
+          toast({
+            title: "Invalid invitation",
+            description: "This invitation is no longer valid.",
+            variant: "destructive"
+          });
           return;
         }
-      } catch (error) {
+
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+
+        // First update the invite status
+        const { error: updateError } = await supabase
+          .from('hub_member_invites')
+          .update({ 
+            status: 'accepted',
+            accepted_at: new Date().toISOString()
+          })
+          .eq('token', token);
+            
+        if (updateError) throw updateError;
+
+        // Then create the hub member record
+        const { error: memberError } = await supabase
+          .from('hub_members')
+          .insert({
+            hub_id: invite.hub_id,
+            profile_id: user.id,
+            role: invite.role,
+            status: 'Approved'
+          });
+
+        if (memberError) throw memberError;
+
+        toast({
+          title: "Success",
+          description: "You have successfully joined the hub.",
+        });
+
+        navigate(`/hubs/${invite.hub_id}`);
+      } catch (error: any) {
         console.error('Error accepting invitation:', error);
         toast({
           title: "Error",
           description: "Failed to accept invitation. Please try again.",
           variant: "destructive"
         });
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
   const handleReject = async () => {
-    if (type === 'hub_invite' && action_url) {
+    if (type === 'hub_invite' && token) {
       try {
-        const url = new URL(action_url);
-        const token = url.searchParams.get('token');
-        if (token) {
-          // First update the invite status to rejected
-          const { error: updateError } = await supabase
-            .from('hub_member_invites')
-            .update({ status: 'rejected' })
-            .eq('token', token);
-            
-          if (updateError) throw updateError;
+        setIsLoading(true);
+        // First check if invitation is still valid
+        const { data: invite, error: inviteError } = await supabase
+          .from('hub_member_invites')
+          .select('status')
+          .eq('token', token)
+          .single();
           
-          navigate(`/hub-invite?token=${token}&action=reject`);
+        if (inviteError) throw inviteError;
+        
+        if (!invite || invite.status !== 'pending') {
+          toast({
+            title: "Invalid invitation",
+            description: "This invitation is no longer valid.",
+            variant: "destructive"
+          });
           return;
         }
-      } catch (error) {
+
+        // Update the invite status
+        const { error: updateError } = await supabase
+          .from('hub_member_invites')
+          .update({ 
+            status: 'rejected',
+            rejected_at: new Date().toISOString()
+          })
+          .eq('token', token);
+            
+        if (updateError) throw updateError;
+        
+        toast({
+          title: "Invitation Declined",
+          description: "You have declined the hub invitation.",
+        });
+
+        navigate("/hubs");
+      } catch (error: any) {
         console.error('Error rejecting invitation:', error);
         toast({
           title: "Error",
           description: "Failed to reject invitation. Please try again.",
           variant: "destructive"
         });
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -155,6 +222,7 @@ export function NotificationContent({
             size="sm"
             className="text-green-500 hover:text-green-400 hover:bg-green-500/10"
             onClick={handleAccept}
+            disabled={isLoading}
           >
             <Check className="w-4 h-4 mr-2" />
             Accept
@@ -164,6 +232,7 @@ export function NotificationContent({
             size="sm"
             className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
             onClick={handleReject}
+            disabled={isLoading}
           >
             <X className="w-4 h-4 mr-2" />
             Reject
