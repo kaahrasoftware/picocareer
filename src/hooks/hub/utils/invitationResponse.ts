@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { HubInvite, Hub } from "../types/invitation";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export async function handleInvitationResponse(
   accept: boolean,
@@ -84,8 +84,6 @@ export async function handleInvitationResponse(
     _details: { role: invitation.role }
   });
 
-  const { toast } = useToast();
-  
   toast({
     title: accept ? "Invitation Accepted" : "Invitation Declined",
     description: accept 

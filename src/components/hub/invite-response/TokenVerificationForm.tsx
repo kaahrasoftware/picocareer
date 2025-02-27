@@ -1,9 +1,10 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface TokenVerificationFormProps {
   onVerify: (token: string) => void;
@@ -48,6 +49,9 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
       <Card>
         <CardHeader>
           <CardTitle>Verify Invitation</CardTitle>
+          <CardDescription>
+            Enter the verification token you received in your invitation link.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,6 +71,11 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
             >
               {isVerifying ? "Verifying..." : "Verify Token"}
             </Button>
+            <div className="text-sm text-muted-foreground text-center pt-2">
+              <Link to="/hubs" className="text-primary hover:underline">
+                Return to Hubs
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

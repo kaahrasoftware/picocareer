@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useHubInvitation } from "@/hooks/hub/useHubInvitation";
 import { InvitationCard } from "@/components/hub/invite-response/InvitationCard";
@@ -15,6 +15,15 @@ export default function HubInviteResponse() {
   const paramToken = searchParams.get('token');
   const [token, setToken] = useState<string | null>(paramToken);
 
+  // Debug
+  useEffect(() => {
+    console.log("URL Parameters:", {
+      action,
+      paramToken,
+      currentToken: token
+    });
+  }, [action, paramToken, token]);
+
   const {
     isLoading,
     isProcessing,
@@ -27,26 +36,32 @@ export default function HubInviteResponse() {
     handleDecline,
   } = useHubInvitation(token);
 
+  // If no action is specified
   if (!action) {
-    return <ErrorState error="Invalid request" />;
+    return <ErrorState error="Invalid request: Missing action parameter" />;
   }
 
+  // If no token is provided
   if (!token) {
     return <TokenVerificationForm onVerify={setToken} />;
   }
 
+  // While loading
   if (isLoading) {
     return <LoadingState />;
   }
 
+  // If there's an error
   if (error) {
     return <ErrorState error={error} />;
   }
 
+  // If invitation or hub is missing
   if (!invitation || !hub) {
-    return <ErrorState error="Invalid invitation" />;
+    return <ErrorState error="Invalid invitation: Could not find invitation details" />;
   }
 
+  // Success case
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <InvitationCard

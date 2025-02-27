@@ -3,6 +3,11 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 export function formatToken(token: string): string {
   try {
+    if (!token || token.trim() === '') {
+      console.error('Empty token provided');
+      throw new Error("Invalid token: Empty token provided");
+    }
+    
     // First decode URI component if needed
     const decodedToken = decodeURIComponent(token);
     console.log('Decoded token:', decodedToken);
