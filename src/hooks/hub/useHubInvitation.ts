@@ -62,7 +62,8 @@ export function useHubInvitation(token: string | null) {
         const { data: invites, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
-          .filter('token', 'ilike', `%${cleanToken}%`);
+          .or(`token.eq.${cleanToken},token.ilike.%${cleanToken}%`)
+          .single();
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
@@ -71,14 +72,14 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        if (!invites || invites.length === 0) {
+        if (!invites) {
           console.log('No invitation found for token:', cleanToken);
           setError("Invitation not found. The link may be invalid or expired.");
           setIsLoading(false);
           return;
         }
 
-        const invite = invites[0];
+        const invite = invites;
         console.log('Found invitation:', invite);
 
         // Now check if the invitation is for the current user
@@ -161,15 +162,16 @@ export function useHubInvitation(token: string | null) {
       const { data: invites, error: inviteError } = await supabase
         .from('hub_member_invites')
         .select('*')
-        .filter('token', 'ilike', `%${cleanToken}%`)
-        .eq('invited_email', user.email);
+        .or(`token.eq.${cleanToken},token.ilike.%${cleanToken}%`)
+        .eq('invited_email', user.email)
+        .single();
 
-      if (inviteError || !invites || invites.length === 0) {
+      if (inviteError || !invites) {
         console.log('No invitation found for token in handleResponse:', cleanToken);
         throw new Error("Invitation not found");
       }
 
-      const invite = invites[0];
+      const invite = invites;
 
       if (invite.status !== 'pending') {
         console.log('Invalid status in handleResponse:', invite.status);
@@ -211,7 +213,7 @@ export function useHubInvitation(token: string | null) {
           accepted_at: accept ? timestamp : null,
           rejected_at: accept ? null : timestamp,
         })
-        .filter('token', 'ilike', `%${cleanToken}%`)
+        .eq('token', invite.token)
         .eq('invited_email', user.email);
 
       if (updateError) {
