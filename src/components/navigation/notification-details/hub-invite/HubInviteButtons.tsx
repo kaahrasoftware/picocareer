@@ -1,14 +1,19 @@
 
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
-import { useHubInvitation } from "@/hooks/hub/useHubInvitation";
+import { useNavigate } from "react-router-dom";
 
 interface HubInviteButtonsProps {
   token: string;
 }
 
 export function HubInviteButtons({ token }: HubInviteButtonsProps) {
-  const { isProcessing, handleAccept, handleDecline } = useHubInvitation(token);
+  const navigate = useNavigate();
+
+  const handleResponse = (action: 'accept' | 'reject') => {
+    // Navigate to the hub invite page with the token and intended action
+    navigate(`/hub-invite?token=${token}&action=${action}`);
+  };
 
   return (
     <div className="flex gap-2 mt-2">
@@ -16,8 +21,7 @@ export function HubInviteButtons({ token }: HubInviteButtonsProps) {
         variant="outline"
         size="sm"
         className="text-green-500 hover:text-green-400 hover:bg-green-500/10"
-        onClick={handleAccept}
-        disabled={isProcessing}
+        onClick={() => handleResponse('accept')}
       >
         <Check className="w-4 h-4 mr-2" />
         Accept
@@ -26,8 +30,7 @@ export function HubInviteButtons({ token }: HubInviteButtonsProps) {
         variant="outline"
         size="sm"
         className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
-        onClick={handleDecline}
-        disabled={isProcessing}
+        onClick={() => handleResponse('reject')}
       >
         <X className="w-4 h-4 mr-2" />
         Reject
@@ -35,3 +38,4 @@ export function HubInviteButtons({ token }: HubInviteButtonsProps) {
     </div>
   );
 }
+
