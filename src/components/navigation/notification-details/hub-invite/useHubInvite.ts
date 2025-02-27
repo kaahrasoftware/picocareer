@@ -28,7 +28,7 @@ export function useHubInvite(token: string | null) {
         .from('hub_member_invites')
         .select('*')
         .eq('token', token)
-        .single();
+        .maybeSingle();
         
       if (inviteError) throw inviteError;
       
@@ -112,7 +112,7 @@ export function useHubInvite(token: string | null) {
         .from('hub_member_invites')
         .select('*')
         .eq('token', token)
-        .single();
+        .maybeSingle();
         
       if (inviteError) throw inviteError;
       
