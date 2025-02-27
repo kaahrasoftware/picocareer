@@ -17,6 +17,7 @@ export function useHubInvitation(token: string | null) {
     const fetchInvitation = async () => {
       try {
         if (!token) {
+          console.log('No token provided');
           setError("Invalid invitation link");
           setIsLoading(false);
           return;
@@ -24,50 +25,60 @@ export function useHubInvitation(token: string | null) {
 
         // First check if user is authenticated
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError) throw authError;
+        if (authError) {
+          console.error('Auth error:', authError);
+          throw authError;
+        }
         
         if (!user) {
+          console.log('No authenticated user found');
           setError("Please sign in to view this invitation");
           setIsLoading(false);
           return;
         }
+
+        console.log('Fetching invitation with token:', token);
 
         // First check if invitation exists at all
         const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*')
           .eq('token', token)
-          .single();
+          .maybeSingle();
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
-          setError("Failed to load invitation");
+          setError(inviteError.message);
           setIsLoading(false);
           return;
         }
 
         if (!invite) {
+          console.log('No invitation found for token:', token);
           setError("Invitation not found. The link may be invalid or expired.");
-          setIsLoading(false);
-          return;
-        }
-
-        // Now check if the invitation is for the current user
-        if (invite.invited_email !== user.email) {
-          setError(`This invitation was sent to ${invite.invited_email}. Please sign in with that email address.`);
           setIsLoading(false);
           return;
         }
 
         console.log('Found invitation:', invite);
 
+        // Now check if the invitation is for the current user
+        if (invite.invited_email !== user.email) {
+          console.log('Email mismatch:', { inviteEmail: invite.invited_email, userEmail: user.email });
+          setError(`This invitation was sent to ${invite.invited_email}. Please sign in with that email address.`);
+          setIsLoading(false);
+          return;
+        }
+
         if (invite.status !== 'pending') {
+          console.log('Invalid invitation status:', invite.status);
           setError("This invitation has already been processed");
           setIsLoading(false);
           return;
         }
 
         if (new Date(invite.expires_at) < new Date()) {
+          console.log('Invitation expired:', invite.expires_at);
           setError("This invitation has expired");
           setIsLoading(false);
           return;
@@ -82,10 +93,12 @@ export function useHubInvitation(token: string | null) {
 
         if (hubError || !hubData) {
           console.error('Error fetching hub:', hubError);
-          setError("Hub not found");
+          setError(hubError?.message || "Hub not found");
           setIsLoading(false);
           return;
         }
+
+        console.log('Found hub:', hubData);
 
         setInvitation(invite);
         setHub(hubData);
@@ -105,7 +118,14 @@ export function useHubInvitation(token: string | null) {
       setIsProcessing(true);
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Auth error in handleResponse:', userError);
+        throw userError;
+      }
+
+      if (!user) {
+        throw new Error("Please sign in to accept/decline the invitation");
+      }
 
       // Validate invitation status again before processing
       const { data: invite, error: inviteError } = await supabase
@@ -113,23 +133,32 @@ export function useHubInvitation(token: string | null) {
         .select('*')
         .eq('token', token)
         .eq('invited_email', user.email)
-        .single();
+        .maybeSingle();
 
-      if (inviteError || !invite) {
+      if (inviteError) {
+        console.error('Error fetching invitation in handleResponse:', inviteError);
+        throw inviteError;
+      }
+
+      if (!invite) {
+        console.log('No invitation found for token in handleResponse:', token);
         throw new Error("Invitation not found");
       }
 
       if (invite.status !== 'pending') {
+        console.log('Invalid status in handleResponse:', invite.status);
         throw new Error("This invitation has already been processed");
       }
 
       if (new Date(invite.expires_at) < new Date()) {
+        console.log('Invitation expired in handleResponse:', invite.expires_at);
         throw new Error("This invitation has expired");
       }
 
       const timestamp = new Date().toISOString();
       
       if (accept) {
+        console.log('Creating hub member record');
         // Create hub member record
         const { error: memberError } = await supabase
           .from('hub_members')
@@ -140,8 +169,13 @@ export function useHubInvitation(token: string | null) {
             status: 'Approved',
           });
 
-        if (memberError) throw memberError;
+        if (memberError) {
+          console.error('Error creating member record:', memberError);
+          throw memberError;
+        }
       }
+
+      console.log('Updating invitation status to:', accept ? 'accepted' : 'rejected');
 
       // Update invitation status
       const { error: updateError } = await supabase
@@ -154,9 +188,13 @@ export function useHubInvitation(token: string | null) {
         .eq('token', token)
         .eq('invited_email', user.email);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating invitation status:', updateError);
+        throw updateError;
+      }
 
       // Log the audit event
+      console.log('Logging audit event');
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: invitation.hub_id,
         _action: accept ? 'member_added' : 'member_invitation_cancelled',
