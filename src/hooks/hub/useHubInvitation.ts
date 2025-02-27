@@ -23,21 +23,32 @@ interface HubInvite {
 }
 
 function formatToken(token: string): string {
-  // Remove quotes and whitespace
-  let cleaned = token.replace(/['"]/g, '').trim();
-  
-  // If the token has no hyphens, add them to make it a valid UUID
-  if (cleaned.length === 32) {
-    cleaned = `${cleaned.slice(0, 8)}-${cleaned.slice(8, 12)}-${cleaned.slice(12, 16)}-${cleaned.slice(16, 20)}-${cleaned.slice(20)}`;
-  }
-  
-  // Validate UUID format
-  if (!UUID_REGEX.test(cleaned)) {
-    console.error('Invalid UUID format:', cleaned);
+  try {
+    // First decode URI component if needed
+    const decodedToken = decodeURIComponent(token);
+    console.log('Decoded token:', decodedToken);
+
+    // Remove quotes and whitespace
+    let cleaned = decodedToken.replace(/['"]/g, '').trim();
+    console.log('Cleaned token:', cleaned);
+    
+    // If the token has no hyphens but is 32 characters, add them
+    if (cleaned.length === 32 && !cleaned.includes('-')) {
+      cleaned = `${cleaned.slice(0, 8)}-${cleaned.slice(8, 12)}-${cleaned.slice(12, 16)}-${cleaned.slice(16, 20)}-${cleaned.slice(20)}`;
+      console.log('Formatted token with hyphens:', cleaned);
+    }
+    
+    // Validate UUID format
+    if (!UUID_REGEX.test(cleaned)) {
+      console.error('Invalid UUID format:', cleaned);
+      throw new Error("Invalid invitation token format");
+    }
+    
+    return cleaned.toLowerCase(); // Ensure consistent case
+  } catch (e) {
+    console.error('Token formatting error:', e);
     throw new Error("Invalid invitation token format");
   }
-  
-  return cleaned;
 }
 
 export function useHubInvitation(token: string | null) {
@@ -76,7 +87,7 @@ export function useHubInvitation(token: string | null) {
         // Format and validate token
         let cleanToken;
         try {
-          cleanToken = formatToken(decodeURIComponent(token));
+          cleanToken = formatToken(token);
           console.log('Using cleaned token:', cleanToken);
         } catch (e) {
           console.error('Token formatting error:', e);
@@ -102,7 +113,7 @@ export function useHubInvitation(token: string | null) {
         }
 
         // Fetch invitation with exact token match
-        const { data: invite, error: inviteError } = await supabase
+        const { data: invites, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select(`
             *,
@@ -113,23 +124,23 @@ export function useHubInvitation(token: string | null) {
               logo_url
             )
           `)
-          .eq('token', cleanToken)
-          .maybeSingle();
+          .eq('token', cleanToken);
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
-          setError("Error loading invitation");
-          setIsLoading(false);
-          return;
+          throw new Error("Error loading invitation");
         }
 
-        if (!invite) {
+        console.log('Fetched invites:', invites);
+
+        if (!invites || invites.length === 0) {
           console.log('No invitation found for token:', cleanToken);
           setError("Invitation not found. The link may be invalid or expired.");
           setIsLoading(false);
           return;
         }
 
+        const invite = invites[0];
         console.log('Found invitation:', invite);
 
         // Now check if the invitation is for the current user
