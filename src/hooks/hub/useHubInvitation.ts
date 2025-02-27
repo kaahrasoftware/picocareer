@@ -37,8 +37,8 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        // Clean token if needed (remove any URL encoding)
-        const cleanToken = token.replace(/['"]/g, '').trim();
+        // Clean token - remove quotes, whitespace, and URL encoding
+        const cleanToken = decodeURIComponent(token.replace(/['"]/g, '').trim());
         console.log('Using cleaned token:', cleanToken);
 
         // First check if invitation exists at all
