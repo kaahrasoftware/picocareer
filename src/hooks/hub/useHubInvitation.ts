@@ -3,9 +3,24 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import type { HubMemberRole } from "@/types/database/hubs";
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+interface HubInvite {
+  id: string;
+  hub_id: string;
+  invited_email: string;
+  token: string;
+  role: HubMemberRole;
+  status: 'pending' | 'accepted' | 'rejected';
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+  accepted_at?: string | null;
+  rejected_at?: string | null;
+}
 
 function formatToken(token: string): string {
   // Remove quotes and whitespace
@@ -28,7 +43,7 @@ function formatToken(token: string): string {
 export function useHubInvitation(token: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [invitation, setInvitation] = useState<any>(null);
+  const [invitation, setInvitation] = useState<HubInvite | null>(null);
   const [hub, setHub] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -62,7 +77,7 @@ export function useHubInvitation(token: string | null) {
         let cleanToken;
         try {
           cleanToken = formatToken(decodeURIComponent(token));
-          console.log('Formatted token:', cleanToken);
+          console.log('Using cleaned token:', cleanToken);
         } catch (e) {
           console.error('Token formatting error:', e);
           setError("Invalid invitation token format");
@@ -86,12 +101,20 @@ export function useHubInvitation(token: string | null) {
           throw new Error("Too many verification attempts. Please try again later.");
         }
 
-        // Fetch invitation using exact UUID match
+        // Fetch invitation with exact token match
         const { data: invite, error: inviteError } = await supabase
           .from('hub_member_invites')
-          .select('*')
+          .select(`
+            *,
+            hub:hubs (
+              id,
+              name,
+              description,
+              logo_url
+            )
+          `)
           .eq('token', cleanToken)
-          .single();
+          .maybeSingle();
 
         if (inviteError) {
           console.error('Error fetching invitation:', inviteError);
@@ -131,19 +154,9 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        // Get hub details
-        const { data: hubData, error: hubError } = await supabase
-          .from('hubs')
-          .select('*')
-          .eq('id', invite.hub_id)
-          .single();
-
-        if (hubError || !hubData) {
-          console.error('Error fetching hub:', hubError);
-          setError(hubError?.message || "Hub not found");
-          setIsLoading(false);
-          return;
-        }
+        // Extract hub data from the nested join
+        const hubData = invite.hub;
+        delete invite.hub; // Remove nested data before setting invitation
 
         console.log('Found hub:', hubData);
 
@@ -182,27 +195,30 @@ export function useHubInvitation(token: string | null) {
         throw new Error("Please sign in to accept/decline the invitation");
       }
 
-      // Verify invitation again with exact UUID match
-      const cleanToken = formatToken(token || '');
-      const { data: invite, error: inviteError } = await supabase
+      if (!invitation) {
+        throw new Error("Invalid invitation");
+      }
+
+      // Verify invitation again before processing
+      const { data: currentInvite, error: inviteError } = await supabase
         .from('hub_member_invites')
         .select('*')
-        .eq('token', cleanToken)
+        .eq('token', invitation.token)
         .eq('invited_email', user.email)
         .single();
 
-      if (inviteError || !invite) {
-        console.log('No invitation found for token in handleResponse:', cleanToken);
+      if (inviteError || !currentInvite) {
+        console.log('No invitation found for token in handleResponse:', invitation.token);
         throw new Error("Invitation not found");
       }
 
-      if (invite.status !== 'pending') {
-        console.log('Invalid status in handleResponse:', invite.status);
+      if (currentInvite.status !== 'pending') {
+        console.log('Invalid status in handleResponse:', currentInvite.status);
         throw new Error("This invitation has already been processed");
       }
 
-      if (new Date(invite.expires_at) < new Date()) {
-        console.log('Invitation expired in handleResponse:', invite.expires_at);
+      if (new Date(currentInvite.expires_at) < new Date()) {
+        console.log('Invitation expired in handleResponse:', currentInvite.expires_at);
         throw new Error("This invitation has expired");
       }
 
@@ -228,7 +244,7 @@ export function useHubInvitation(token: string | null) {
 
       console.log('Updating invitation status to:', accept ? 'accepted' : 'rejected');
 
-      // Update invitation status using exact token match
+      // Update invitation status
       const { error: updateError } = await supabase
         .from('hub_member_invites')
         .update({
@@ -236,7 +252,7 @@ export function useHubInvitation(token: string | null) {
           accepted_at: accept ? timestamp : null,
           rejected_at: accept ? null : timestamp,
         })
-        .eq('token', invite.token)
+        .eq('token', invitation.token)
         .eq('invited_email', user.email);
 
       if (updateError) {
@@ -245,7 +261,6 @@ export function useHubInvitation(token: string | null) {
       }
 
       // Log the audit event
-      console.log('Logging audit event');
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: invitation.hub_id,
         _action: accept ? 'member_added' : 'member_invitation_cancelled',
@@ -255,13 +270,13 @@ export function useHubInvitation(token: string | null) {
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Declined",
         description: accept 
-          ? `You are now a member of ${hub.name}`
-          : `You have declined the invitation to join ${hub.name}`,
+          ? `You are now a member of ${hub?.name}`
+          : `You have declined the invitation to join ${hub?.name}`,
       });
 
       // Redirect to hub page if accepted
       if (accept) {
-        navigate(`/hubs/${hub.id}`);
+        navigate(`/hubs/${hub?.id}`);
       } else {
         navigate("/hubs");
       }
