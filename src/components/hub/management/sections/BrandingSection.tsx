@@ -7,7 +7,7 @@ import type { FormData } from "../HubGeneralSettings";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Save, RefreshCw } from "lucide-react";
+import { Save } from "lucide-react";
 import { DEFAULT_COLORS } from "./branding/constants";
 import { ColorPicker } from "./branding/ColorPicker";
 import { ColorPreview } from "./branding/ColorPreview";
@@ -33,8 +33,8 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
         logo_url,
         banner_url,
         brand_colors,
-        name: name || defaultValues.name, // Preserve the existing name
-        type: type || defaultValues.type, // Preserve the existing type
+        name: name || defaultValues.name,
+        type: type || defaultValues.type,
         updated_at: new Date().toISOString()
       };
 
@@ -70,12 +70,6 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
     await queryClient.invalidateQueries({ queryKey: ['hubs'] });
   };
 
-  const resetColors = () => {
-    setValue('brand_colors.primary', DEFAULT_COLORS.primary);
-    setValue('brand_colors.secondary', DEFAULT_COLORS.secondary);
-    setValue('brand_colors.accent', DEFAULT_COLORS.accent);
-  };
-
   const primaryColor = getValues("brand_colors.primary") || DEFAULT_COLORS.primary;
   const secondaryColor = getValues("brand_colors.secondary") || DEFAULT_COLORS.secondary;
   const accentColor = getValues("brand_colors.accent") || DEFAULT_COLORS.accent;
@@ -84,16 +78,10 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Branding</CardTitle>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={resetColors}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Reset Colors
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
+        <Button onClick={handleSave}>
+          <Save className="h-4 w-4 mr-2" />
+          Save Changes
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
