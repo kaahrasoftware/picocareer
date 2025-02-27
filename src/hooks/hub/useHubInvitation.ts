@@ -38,7 +38,7 @@ export function useHubInvitation(token: string | null) {
           .from('hub_member_invites')
           .select('*')
           .eq('token', token)
-          .eq('email', user.email) // Make sure invitation matches user's email
+          .eq('invited_email', user.email) // Fixed: Changed 'email' to 'invited_email'
           .maybeSingle();
 
         if (inviteError) {
@@ -107,7 +107,7 @@ export function useHubInvitation(token: string | null) {
         .from('hub_member_invites')
         .select('*')
         .eq('token', token)
-        .eq('email', user.email)
+        .eq('invited_email', user.email) // Fixed: Changed 'email' to 'invited_email'
         .maybeSingle();
 
       if (inviteError || !invite) {
@@ -147,7 +147,7 @@ export function useHubInvitation(token: string | null) {
           rejected_at: accept ? null : timestamp,
         })
         .eq('token', token)
-        .eq('email', user.email);
+        .eq('invited_email', user.email); // Fixed: Changed 'email' to 'invited_email'
 
       if (updateError) throw updateError;
 
