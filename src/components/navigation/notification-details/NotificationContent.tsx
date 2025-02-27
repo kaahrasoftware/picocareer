@@ -32,17 +32,22 @@ export function NotificationContent({
   let token = null;
   try {
     if (action_url) {
-      // Handle both absolute and relative URLs
-      if (action_url.startsWith('http')) {
-        token = new URL(action_url).searchParams.get('token');
+      if (type === 'hub_invite') {
+        // For hub invites, parse /hub-invite?token=<value>
+        const tokenMatch = action_url.match(/token=([^&]+)/);
+        if (tokenMatch && tokenMatch[1]) {
+          token = tokenMatch[1];
+        }
       } else {
-        // For relative URLs, create a full URL using the current origin
-        const fullUrl = new URL(action_url, window.location.origin);
-        token = fullUrl.searchParams.get('token');
+        // For other URLs, try standard URL parsing
+        const url = action_url.startsWith('http') 
+          ? new URL(action_url)
+          : new URL(action_url, window.location.origin);
+        token = url.searchParams.get('token');
       }
     }
   } catch (error) {
-    console.error('Error parsing action URL:', error);
+    console.error('Error parsing action URL:', error, { action_url });
   }
 
   // Extract ID from action URL safely
@@ -115,6 +120,7 @@ export function NotificationContent({
     if (!action_url || type?.includes('session')) return null;
 
     if (type === 'hub_invite' && token) {
+      console.log('Rendering hub invite buttons with token:', token);
       return <HubInviteButtons token={token} />;
     }
 
