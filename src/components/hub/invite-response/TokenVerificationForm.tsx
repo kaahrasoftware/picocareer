@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { Info } from "lucide-react";
 
 interface TokenVerificationFormProps {
   onVerify: (token: string) => void;
@@ -39,7 +40,6 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
         description: "Invalid verification token",
         variant: "destructive",
       });
-    } finally {
       setIsVerifying(false);
     }
   };
@@ -48,9 +48,9 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
     <div className="container mx-auto px-4 py-8 max-w-md">
       <Card>
         <CardHeader>
-          <CardTitle>Verify Invitation</CardTitle>
+          <CardTitle>Verify Hub Invitation</CardTitle>
           <CardDescription>
-            Enter the verification token you received in your invitation link.
+            Enter the verification token from your invitation link or email.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -62,7 +62,18 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
                 className="w-full"
+                autoFocus
               />
+              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <p>
+                  The token is a unique identifier that looks like:
+                  <br />
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                    123e4567-e89b-12d3-a456-426614174000
+                  </code>
+                </p>
+              </div>
             </div>
             <Button 
               type="submit" 
@@ -71,13 +82,14 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
             >
               {isVerifying ? "Verifying..." : "Verify Token"}
             </Button>
-            <div className="text-sm text-muted-foreground text-center pt-2">
-              <Link to="/hubs" className="text-primary hover:underline">
-                Return to Hubs
-              </Link>
-            </div>
           </form>
         </CardContent>
+        <CardFooter className="flex justify-center border-t pt-4">
+          <Link to="/hubs" className="text-sm text-primary hover:underline flex items-center gap-1">
+            <ArrowLeft className="h-4 w-4" />
+            Return to Hubs
+          </Link>
+        </CardFooter>
       </Card>
     </div>
   );

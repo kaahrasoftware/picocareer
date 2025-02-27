@@ -1,20 +1,19 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 export function LoadingState() {
   return (
-    <div className="container max-w-2xl py-8">
+    <div className="container max-w-md mx-auto px-4 py-8">
       <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
+        <CardHeader className="text-center">
+          <h2 className="text-xl font-semibold">Verifying Invitation</h2>
+          <p className="text-sm text-muted-foreground">Please wait while we verify your invitation...</p>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-20 w-full" />
-          <div className="flex justify-end gap-4">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
+        <CardContent className="flex justify-center py-8">
+          <div className="flex items-center gap-3">
+            <LoadingSpinner />
+            <span>Verifying token...</span>
           </div>
         </CardContent>
       </Card>
