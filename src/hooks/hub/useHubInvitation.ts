@@ -1,73 +1,20 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import type { HubMemberRole } from "@/types/database/hubs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import type { UseHubInvitationReturn, HubInvite, Hub } from "./types/invitation";
+import { formatToken } from "./utils/tokenUtils";
+import { handleInvitationResponse } from "./utils/invitationResponse";
+import { SuccessDialog } from "./components/SuccessDialog";
 
-// UUID validation regex
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-interface HubInvite {
-  id: string;
-  hub_id: string;
-  invited_email: string;
-  token: string;
-  role: HubMemberRole;
-  status: 'pending' | 'accepted' | 'rejected';
-  expires_at: string;
-  created_at: string;
-  updated_at: string;
-  accepted_at?: string | null;
-  rejected_at?: string | null;
-}
-
-function formatToken(token: string): string {
-  try {
-    // First decode URI component if needed
-    const decodedToken = decodeURIComponent(token);
-    console.log('Decoded token:', decodedToken);
-
-    // Remove quotes and whitespace
-    let cleaned = decodedToken.replace(/['"]/g, '').trim();
-    console.log('Cleaned token:', cleaned);
-    
-    // If the token has no hyphens but is 32 characters, add them
-    if (cleaned.length === 32 && !cleaned.includes('-')) {
-      cleaned = `${cleaned.slice(0, 8)}-${cleaned.slice(8, 12)}-${cleaned.slice(12, 16)}-${cleaned.slice(16, 20)}-${cleaned.slice(20)}`;
-      console.log('Formatted token with hyphens:', cleaned);
-    }
-    
-    // Validate UUID format
-    if (!UUID_REGEX.test(cleaned)) {
-      console.error('Invalid UUID format:', cleaned);
-      throw new Error("Invalid invitation token format");
-    }
-    
-    return cleaned.toLowerCase(); // Ensure consistent case
-  } catch (e) {
-    console.error('Token formatting error:', e);
-    throw new Error("Invalid invitation token format");
-  }
-}
-
-export function useHubInvitation(token: string | null) {
+export function useHubInvitation(token: string | null): UseHubInvitationReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [invitation, setInvitation] = useState<HubInvite | null>(null);
-  const [hub, setHub] = useState<any>(null);
+  const [hub, setHub] = useState<Hub | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchInvitation = async () => {
@@ -141,8 +88,6 @@ export function useHubInvitation(token: string | null) {
           throw new Error("Error loading invitation");
         }
 
-        console.log('Fetched invites:', invites);
-
         if (!invites || invites.length === 0) {
           console.log('No invitation found for token:', cleanToken);
           setError("Invitation not found. The link may be invalid or expired.");
@@ -161,25 +106,9 @@ export function useHubInvitation(token: string | null) {
           return;
         }
 
-        if (invite.status !== 'pending') {
-          console.log('Invalid invitation status:', invite.status);
-          setError("This invitation has already been processed");
-          setIsLoading(false);
-          return;
-        }
-
-        if (new Date(invite.expires_at) < new Date()) {
-          console.log('Invitation expired:', invite.expires_at);
-          setError("This invitation has expired");
-          setIsLoading(false);
-          return;
-        }
-
         // Extract hub data from the nested join
         const hubData = invite.hub;
         delete invite.hub; // Remove nested data before setting invitation
-
-        console.log('Found hub:', hubData);
 
         // Log the verification attempt
         await supabase
@@ -191,7 +120,7 @@ export function useHubInvitation(token: string | null) {
 
         setInvitation(invite);
         setHub(hubData);
-        setShowSuccessDialog(true); // Show success dialog when invitation is found
+        setShowSuccessDialog(true);
         setIsLoading(false);
       } catch (error: any) {
         console.error('Error in fetchInvitation:', error);
@@ -206,99 +135,12 @@ export function useHubInvitation(token: string | null) {
   const handleResponse = async (accept: boolean) => {
     try {
       setIsProcessing(true);
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        console.error('Auth error in handleResponse:', userError);
-        throw userError;
+      if (!invitation || !hub) {
+        throw new Error("Invalid invitation state");
       }
-
-      if (!user) {
-        throw new Error("Please sign in to accept/decline the invitation");
-      }
-
-      if (!invitation) {
-        throw new Error("Invalid invitation");
-      }
-
-      // Verify invitation again before processing
-      const { data: currentInvite, error: inviteError } = await supabase
-        .from('hub_member_invites')
-        .select('*')
-        .eq('token', invitation.token)
-        .eq('invited_email', user.email)
-        .single();
-
-      if (inviteError || !currentInvite) {
-        console.log('No invitation found for token in handleResponse:', invitation.token);
-        throw new Error("Invitation not found");
-      }
-
-      if (currentInvite.status !== 'pending') {
-        console.log('Invalid status in handleResponse:', currentInvite.status);
-        throw new Error("This invitation has already been processed");
-      }
-
-      if (new Date(currentInvite.expires_at) < new Date()) {
-        console.log('Invitation expired in handleResponse:', currentInvite.expires_at);
-        throw new Error("This invitation has expired");
-      }
-
-      const timestamp = new Date().toISOString();
-      
+      await handleInvitationResponse(accept, invitation, hub);
       if (accept) {
-        console.log('Creating hub member record');
-        // Create hub member record
-        const { error: memberError } = await supabase
-          .from('hub_members')
-          .insert({
-            hub_id: invitation.hub_id,
-            profile_id: user.id,
-            role: invitation.role,
-            status: 'Approved',
-          });
-
-        if (memberError) {
-          console.error('Error creating member record:', memberError);
-          throw memberError;
-        }
-      }
-
-      console.log('Updating invitation status to:', accept ? 'accepted' : 'rejected');
-
-      // Update invitation status
-      const { error: updateError } = await supabase
-        .from('hub_member_invites')
-        .update({
-          status: accept ? 'accepted' : 'rejected',
-          accepted_at: accept ? timestamp : null,
-          rejected_at: accept ? null : timestamp,
-        })
-        .eq('token', invitation.token)
-        .eq('invited_email', user.email);
-
-      if (updateError) {
-        console.error('Error updating invitation status:', updateError);
-        throw updateError;
-      }
-
-      // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
-        _hub_id: invitation.hub_id,
-        _action: accept ? 'member_added' : 'member_invitation_cancelled',
-        _details: { role: invitation.role }
-      });
-
-      toast({
-        title: accept ? "Invitation Accepted" : "Invitation Declined",
-        description: accept 
-          ? `You are now a member of ${hub?.name}`
-          : `You have declined the invitation to join ${hub?.name}`,
-      });
-
-      // Redirect to hub page if accepted
-      if (accept) {
-        navigate(`/hubs/${hub?.id}`);
+        navigate(`/hubs/${hub.id}`);
       } else {
         navigate("/hubs");
       }
@@ -314,39 +156,19 @@ export function useHubInvitation(token: string | null) {
     }
   };
 
-  const SuccessDialog = () => (
-    <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Invitation Found!</DialogTitle>
-          <DialogDescription>
-            You have been invited to join {hub?.name}. Would you like to visit the hub?
-          </DialogDescription>
-        </DialogHeader>
-        <div className="mt-4 flex justify-end space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowSuccessDialog(false)}
-          >
-            Close
-          </Button>
-          <Button 
-            onClick={() => navigate(`/hubs/${hub?.id}`)}
-          >
-            Visit Hub
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-
   return {
     isLoading,
     isProcessing,
     invitation,
     hub,
     error,
-    SuccessDialog,
+    SuccessDialog: () => (
+      <SuccessDialog
+        isOpen={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+        hub={hub}
+      />
+    ),
     handleAccept: () => handleResponse(true),
     handleDecline: () => handleResponse(false)
   };
