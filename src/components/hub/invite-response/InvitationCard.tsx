@@ -10,7 +10,6 @@ interface InvitationCardProps {
   isProcessing: boolean;
   onAccept: () => void;
   onDecline: () => void;
-  SuccessDialog: () => JSX.Element;
 }
 
 export function InvitationCard({
@@ -19,40 +18,36 @@ export function InvitationCard({
   description,
   isProcessing,
   onAccept,
-  onDecline,
-  SuccessDialog
+  onDecline
 }: InvitationCardProps) {
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Invitation to Join {hubName}</CardTitle>
-          <CardDescription>
-            You have been invited to join as a {role}
-          </CardDescription>
-        </CardHeader>
-        {description && (
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </CardContent>
-        )}
-        <CardFooter className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={onDecline}
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Processing..." : "Decline"}
-          </Button>
-          <Button
-            onClick={onAccept}
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Processing..." : "Accept"}
-          </Button>
-        </CardFooter>
-      </Card>
-      <SuccessDialog />
-    </>
+    <Card>
+      <CardHeader>
+        <CardTitle>Invitation to Join {hubName}</CardTitle>
+        <CardDescription>
+          You have been invited to join as a {role}
+        </CardDescription>
+      </CardHeader>
+      {description && (
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </CardContent>
+      )}
+      <CardFooter className="flex justify-end space-x-2">
+        <Button
+          variant="outline"
+          onClick={onDecline}
+          disabled={isProcessing}
+        >
+          {isProcessing ? "Processing..." : "Decline"}
+        </Button>
+        <Button
+          onClick={onAccept}
+          disabled={isProcessing}
+        >
+          {isProcessing ? "Processing..." : "Accept"}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

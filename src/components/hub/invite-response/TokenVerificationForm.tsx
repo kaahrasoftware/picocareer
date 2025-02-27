@@ -29,8 +29,10 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
     try {
       // Clean the token input
       const cleanToken = tokenInput.trim();
+      console.log("Submitting token for verification:", cleanToken);
       onVerify(cleanToken);
     } catch (error) {
+      console.error("Token verification error:", error);
       toast({
         title: "Verification Failed",
         description: "Invalid verification token",

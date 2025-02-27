@@ -12,7 +12,8 @@ export default function HubInviteResponse() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const action = searchParams.get('action');
-  const [token, setToken] = useState<string | null>(null);
+  const paramToken = searchParams.get('token');
+  const [token, setToken] = useState<string | null>(paramToken);
 
   const {
     isLoading,
