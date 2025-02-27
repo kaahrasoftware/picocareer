@@ -28,7 +28,8 @@ export interface UseHubInvitationReturn {
   invitation: HubInvite | null;
   hub: Hub | null;
   error: string | null;
-  SuccessDialog: () => JSX.Element;
+  showSuccessDialog: boolean;
+  setShowSuccessDialog: (show: boolean) => void;
   handleAccept: () => Promise<void>;
   handleDecline: () => Promise<void>;
 }

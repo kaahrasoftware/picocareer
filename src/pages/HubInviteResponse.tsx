@@ -6,6 +6,7 @@ import { InvitationCard } from "@/components/hub/invite-response/InvitationCard"
 import { LoadingState } from "@/components/hub/invite-response/LoadingState";
 import { ErrorState } from "@/components/hub/invite-response/ErrorState";
 import { TokenVerificationForm } from "@/components/hub/invite-response/TokenVerificationForm";
+import { SuccessDialog } from "@/hooks/hub/components/SuccessDialog";
 
 export default function HubInviteResponse() {
   const location = useLocation();
@@ -19,7 +20,8 @@ export default function HubInviteResponse() {
     invitation,
     hub,
     error,
-    SuccessDialog,
+    showSuccessDialog,
+    setShowSuccessDialog,
     handleAccept,
     handleDecline,
   } = useHubInvitation(token);
@@ -53,7 +55,11 @@ export default function HubInviteResponse() {
         isProcessing={isProcessing}
         onAccept={handleAccept}
         onDecline={handleDecline}
-        SuccessDialog={SuccessDialog}
+      />
+      <SuccessDialog 
+        isOpen={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+        hub={hub}
       />
     </div>
   );

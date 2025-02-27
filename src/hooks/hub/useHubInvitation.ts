@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import type { UseHubInvitationReturn, HubInvite, Hub } from "./types/invitation";
 import { formatToken } from "./utils/tokenUtils";
 import { handleInvitationResponse } from "./utils/invitationResponse";
-import { SuccessDialog } from "./components/SuccessDialog";
 
 export function useHubInvitation(token: string | null): UseHubInvitationReturn {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,6 +15,7 @@ export function useHubInvitation(token: string | null): UseHubInvitationReturn {
   const [error, setError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchInvitation = async () => {
@@ -162,13 +163,8 @@ export function useHubInvitation(token: string | null): UseHubInvitationReturn {
     invitation,
     hub,
     error,
-    SuccessDialog: () => (
-      <SuccessDialog
-        isOpen={showSuccessDialog}
-        onOpenChange={setShowSuccessDialog}
-        hub={hub}
-      />
-    ),
+    showSuccessDialog,
+    setShowSuccessDialog,
     handleAccept: () => handleResponse(true),
     handleDecline: () => handleResponse(false)
   };
