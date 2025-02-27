@@ -33,15 +33,6 @@ export function TokenVerificationForm({ onVerify }: TokenVerificationFormProps) 
       const rawToken = tokenInput.trim();
       console.log("Submitting raw token for verification:", rawToken);
       
-      // Check if token is roughly the right format before submission
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      const noHyphenRegex = /^[0-9a-f]{32}$/i;
-      
-      if (!uuidRegex.test(rawToken) && !noHyphenRegex.test(rawToken)) {
-        console.warn("Token format doesn't match expected pattern:", rawToken);
-        // Continue anyway as formatToken will handle this
-      }
-      
       onVerify(rawToken);
     } catch (error) {
       console.error("Token verification error:", error);

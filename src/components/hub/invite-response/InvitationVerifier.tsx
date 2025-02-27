@@ -56,45 +56,24 @@ export function InvitationVerifier() {
         throw new Error("Invalid invitation token format. Please check the token and try again.");
       }
       
-      // First, simply check if the token exists in the database
-      const { data: tokenExists, error: tokenCheckError } = await supabase
+      // First, do a simple existence check for the token
+      console.log("Performing basic token existence check for:", cleanToken);
+      const { data: tokenCheck, error: tokenCheckError } = await supabase
         .from('hub_member_invites')
         .select('id')
         .eq('token', cleanToken)
-        .maybeSingle();
-        
+        .single();
+      
       if (tokenCheckError) {
         console.error("Token existence check error:", tokenCheckError);
-      }
-      
-      console.log("Token existence check:", tokenExists ? "Found" : "Not found");
-      
-      if (!tokenExists) {
-        console.error("Token not found in database:", cleanToken);
         throw new Error("Invitation not found. The token may be invalid or expired.");
       }
       
-      // Verify rate limit
-      const { data: rateCheck, error: rateError } = await supabase
-        .rpc('check_verification_rate_limit', {
-          _token: cleanToken,
-          _ip_address: null
-        });
-        
-      if (rateError) {
-        console.error("Rate limit check error:", rateError);
-        throw new Error("Verification limit reached. Please try again later.");
-      }
+      console.log("Basic token check passed, token exists:", tokenCheck);
       
-      if (!rateCheck) {
-        console.error("Rate limit exceeded for token:", cleanToken);
-        throw new Error("Too many verification attempts. Please try again later.");
-      }
-
-      console.log("Rate limit check passed");
-      
-      // Now run the full verification query with all conditions
-      const { data: invites, error: inviteError } = await supabase
+      // Now fetch the full invitation with hub details
+      console.log("Fetching complete invitation data");
+      const { data: invitation, error: inviteError } = await supabase
         .from('hub_member_invites')
         .select(`
           *,
@@ -105,73 +84,72 @@ export function InvitationVerifier() {
             logo_url
           )
         `)
-        .eq('token', cleanToken);
-        
-      if (inviteError) {
-        console.error("Error fetching invitation:", inviteError);
-        throw new Error("Could not verify invitation token");
+        .eq('token', cleanToken)
+        .single();
+      
+      if (inviteError || !invitation) {
+        console.error("Invitation fetch error:", inviteError);
+        throw new Error("Could not retrieve invitation details.");
       }
       
-      if (!invites || invites.length === 0) {
-        console.error("No invitation found for token:", cleanToken);
-        throw new Error("Invitation not found. The link may be invalid or expired.");
-      }
+      console.log("Full invitation data retrieved:", invitation);
       
-      const invite = invites[0];
-      console.log("Found invitation:", invite);
-      
-      // Now check specific conditions after finding the token
+      // Now check specific conditions
       // 1. Check status
-      if (invite.status !== 'pending') {
-        console.error("Invitation status is not pending:", invite.status);
-        throw new Error(`This invitation has already been ${invite.status}. No further action is needed.`);
+      if (invitation.status !== 'pending') {
+        console.error("Invitation status is not pending:", invitation.status);
+        throw new Error(`This invitation has already been ${invitation.status}. No further action is needed.`);
       }
       
       // 2. Check if invitation is for the current user
-      if (invite.invited_email !== user.email) {
-        console.error("Email mismatch:", { inviteEmail: invite.invited_email, userEmail: user.email });
-        throw new Error(`This invitation was sent to ${invite.invited_email}. Please sign in with that email address.`);
+      if (invitation.invited_email !== user.email) {
+        console.error("Email mismatch:", { inviteEmail: invitation.invited_email, userEmail: user.email });
+        throw new Error(`This invitation was sent to ${invitation.invited_email}. Please sign in with that email address.`);
       }
       
       // 3. Check if invitation is expired
       const now = new Date();
-      const expiryDate = new Date(invite.expires_at);
+      const expiryDate = new Date(invitation.expires_at);
       
       console.log("Checking expiry:", { 
         now: now.toISOString(), 
-        expires: invite.expires_at,
+        expires: invitation.expires_at,
         isExpired: expiryDate < now
       });
       
       if (expiryDate < now) {
-        console.error("Invitation expired:", invite.expires_at);
+        console.error("Invitation expired:", invitation.expires_at);
         throw new Error("This invitation has expired. Please request a new invitation.");
       }
       
-      // Log verification attempt
-      await supabase.from('hub_invite_verification_attempts').insert({
-        token: cleanToken,
-        success: true
-      });
-      
-      console.log("Verification successful, logging attempt");
+      // Log verification attempt (don't let this block the main flow)
+      try {
+        await supabase.from('hub_invite_verification_attempts').insert({
+          token: cleanToken,
+          success: true
+        });
+        console.log("Verification attempt logged successfully");
+      } catch (logError) {
+        console.error("Failed to log verification attempt:", logError);
+        // Continue anyway, this is not critical
+      }
       
       // Extract hub data and store invitation
-      const hubData = invite.hub;
+      const hubData = invitation.hub as Hub;
       
       // Convert database role to HubMemberRole type
       const typedInvite: HubInvite = {
-        id: invite.id,
-        hub_id: invite.hub_id,
-        invited_email: invite.invited_email,
-        token: invite.token,
-        role: invite.role,
-        status: invite.status,
-        expires_at: invite.expires_at,
-        created_at: invite.created_at,
-        updated_at: invite.updated_at,
-        accepted_at: invite.accepted_at,
-        rejected_at: invite.rejected_at
+        id: invitation.id,
+        hub_id: invitation.hub_id,
+        invited_email: invitation.invited_email,
+        token: invitation.token,
+        role: invitation.role as any, // Cast to handle all possible role types
+        status: invitation.status as any, // Cast to handle status
+        expires_at: invitation.expires_at,
+        created_at: invitation.created_at,
+        updated_at: invitation.updated_at,
+        accepted_at: invitation.accepted_at,
+        rejected_at: invitation.rejected_at
       };
       
       setInvitation(typedInvite);
