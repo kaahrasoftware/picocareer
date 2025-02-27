@@ -24,13 +24,22 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Enhanced logging when component mounts with initial token
+  useEffect(() => {
+    console.log("InvitationVerifier mounted with initial token:", initialToken);
+  }, [initialToken]);
+
   // Token verification
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token) return;
+      if (!token) {
+        console.log("No token provided, showing manual entry form");
+        return;
+      }
       
       setIsLoading(true);
       setError(null);
+      console.log("Starting verification for token:", token);
       
       try {
         // Check user authentication
@@ -42,12 +51,40 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
         }
         
         if (!user) {
+          console.error("No authenticated user found");
           throw new Error("Please sign in to view this invitation");
         }
         
+        console.log("Authenticated user:", user.email);
+        
         // Format and validate token
-        const cleanToken = formatToken(token);
-        console.log("Using cleaned token:", cleanToken);
+        let cleanToken;
+        try {
+          cleanToken = formatToken(token);
+          console.log("Using cleaned token:", cleanToken);
+        } catch (tokenErr) {
+          console.error("Token format error:", tokenErr);
+          throw new Error("Invalid invitation token format. Please check the link or enter the token manually.");
+        }
+        
+        // First, simply check if the token exists in the database
+        // This helps debug if the token is valid but other conditions fail
+        const { data: tokenExists, error: tokenCheckError } = await supabase
+          .from('hub_member_invites')
+          .select('id')
+          .eq('token', cleanToken)
+          .maybeSingle();
+          
+        if (tokenCheckError) {
+          console.error("Token existence check error:", tokenCheckError);
+        }
+        
+        console.log("Token existence check:", tokenExists ? "Found" : "Not found");
+        
+        if (!tokenExists) {
+          console.error("Token not found in database:", cleanToken);
+          throw new Error("Invitation not found. The token may be invalid or improperly formatted.");
+        }
         
         // Verify rate limit
         const { data: rateCheck, error: rateError } = await supabase
@@ -62,10 +99,13 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
         }
         
         if (!rateCheck) {
+          console.error("Rate limit exceeded for token:", cleanToken);
           throw new Error("Too many verification attempts. Please try again later.");
         }
+
+        console.log("Rate limit check passed");
         
-        // Fetch the invitation
+        // Now run the full verification query with all conditions
         const { data: invites, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select(`
@@ -77,8 +117,7 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
               logo_url
             )
           `)
-          .eq('token', cleanToken)
-          .eq('status', 'pending');
+          .eq('token', cleanToken);
           
         if (inviteError) {
           console.error("Error fetching invitation:", inviteError);
@@ -86,23 +125,39 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
         }
         
         if (!invites || invites.length === 0) {
-          console.log("No invitation found for token:", cleanToken);
+          console.error("No invitation found for token:", cleanToken);
           throw new Error("Invitation not found. The link may be invalid or expired.");
         }
         
         const invite = invites[0];
         console.log("Found invitation:", invite);
         
-        // Check if invitation is for the current user
+        // Now check specific conditions after finding the token
+        // 1. Check status
+        if (invite.status !== 'pending') {
+          console.error("Invitation status is not pending:", invite.status);
+          throw new Error(`This invitation has already been ${invite.status}. No further action is needed.`);
+        }
+        
+        // 2. Check if invitation is for the current user
         if (invite.invited_email !== user.email) {
           console.error("Email mismatch:", { inviteEmail: invite.invited_email, userEmail: user.email });
           throw new Error(`This invitation was sent to ${invite.invited_email}. Please sign in with that email address.`);
         }
         
-        // Check if invitation is expired
-        if (new Date(invite.expires_at) < new Date()) {
+        // 3. Check if invitation is expired
+        const now = new Date();
+        const expiryDate = new Date(invite.expires_at);
+        
+        console.log("Checking expiry:", { 
+          now: now.toISOString(), 
+          expires: invite.expires_at,
+          isExpired: expiryDate < now
+        });
+        
+        if (expiryDate < now) {
           console.error("Invitation expired:", invite.expires_at);
-          throw new Error("This invitation has expired");
+          throw new Error("This invitation has expired. Please request a new invitation.");
         }
         
         // Log verification attempt
@@ -110,6 +165,8 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
           token: cleanToken,
           success: true
         });
+        
+        console.log("Verification successful, logging attempt");
         
         // Extract hub data and store invitation
         const hubData = invite.hub;
@@ -132,6 +189,7 @@ export function InvitationVerifier({ token: initialToken }: InvitationVerifierPr
         setInvitation(typedInvite);
         setHub(hubData);
         setShowDetailsDialog(true);
+        console.log("Setting invitation details and showing dialog");
         
       } catch (err: any) {
         console.error("Token verification error:", err);

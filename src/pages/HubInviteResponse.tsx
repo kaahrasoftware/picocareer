@@ -9,8 +9,13 @@ export default function HubInviteResponse() {
   const action = searchParams.get('action');
   const token = searchParams.get('token');
 
-  // Log parameters for debugging
-  console.log("URL Parameters:", { action, token });
+  // Enhanced logging for debugging token extraction
+  console.log("URL Parameters:", { 
+    action, 
+    token, 
+    rawUrl: location.search,
+    pathname: location.pathname
+  });
 
   // Validate action parameter
   if (!action) {

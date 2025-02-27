@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, RefreshCw } from "lucide-react";
 
 interface ErrorStateProps {
   error: string;
@@ -10,6 +10,9 @@ interface ErrorStateProps {
 
 export function ErrorState({ error }: ErrorStateProps) {
   const navigate = useNavigate();
+
+  // Log the error for debugging
+  console.error("Displaying invitation error:", error);
 
   return (
     <div className="container max-w-md mx-auto px-4 py-8">
@@ -29,6 +32,15 @@ export function ErrorState({ error }: ErrorStateProps) {
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Hubs
+          </Button>
+          
+          <Button
+            variant="default"
+            onClick={() => window.location.reload()}
+            className="text-sm flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
           </Button>
           
           <Button
