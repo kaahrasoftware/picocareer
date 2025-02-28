@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { formatToken } from "@/hooks/hub/utils/tokenUtils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import type { HubInvite, Hub } from "@/hooks/hub/types/invitation";
 import { TokenVerificationForm } from "./TokenVerificationForm";
 import { LoadingState } from "./LoadingState";
@@ -16,9 +17,11 @@ export function InvitationVerifier() {
   const [invitation, setInvitation] = useState<HubInvite | null>(null);
   const [hub, setHub] = useState<Hub | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState<boolean>(false);
+  const [needsAuth, setNeedsAuth] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { session } = useAuthSession();
 
   // Check for token in URL parameters on component mount
   useEffect(() => {
@@ -30,6 +33,20 @@ export function InvitationVerifier() {
       handleVerify(tokenFromUrl);
     }
   }, [location.search]);
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (needsAuth && session) {
+      setNeedsAuth(false);
+      // If we had a previous auth error but now we're authenticated, try again with the token from URL
+      const params = new URLSearchParams(location.search);
+      const tokenFromUrl = params.get('token');
+      if (tokenFromUrl) {
+        console.log("Re-attempting verification with token after authentication:", tokenFromUrl);
+        handleVerify(tokenFromUrl);
+      }
+    }
+  }, [session, needsAuth]);
 
   // Handle token verification when submitted from the form or URL
   const handleVerify = async (inputToken: string) => {
@@ -43,19 +60,17 @@ export function InvitationVerifier() {
     console.log("Starting verification for token:", inputToken);
     
     try {
-      // Check user authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        console.error("Auth error:", authError);
-        throw new Error("Authentication error. Please sign in to verify this invitation.");
+      // Check user authentication using the session from useAuthSession
+      if (!session || !session.user) {
+        console.log("No authenticated session found, redirecting to auth");
+        setNeedsAuth(true);
+        
+        // Store the token in the URL for when the user returns after authentication
+        navigate(`/auth?redirect=/hub-invite?token=${inputToken}`);
+        throw new Error("Please sign in to verify this invitation.");
       }
       
-      if (!user) {
-        console.error("No authenticated user found");
-        throw new Error("Please sign in to view this invitation");
-      }
-      
+      const user = session.user;
       console.log("Authenticated user:", user.email);
       
       // Format and validate token
@@ -171,28 +186,39 @@ export function InvitationVerifier() {
       
     } catch (err: any) {
       console.error("Token verification error:", err);
-      setError(err.message || "Failed to verify invitation token");
       
-      // Log failed verification attempt
-      try {
-        await supabase.from('hub_invite_verification_attempts').insert({
-          token: inputToken,
-          success: false,
-          error_message: err.message
+      // If auth error, don't log the attempt since user will be redirected
+      if (!needsAuth) {
+        // Log failed verification attempt
+        try {
+          await supabase.from('hub_invite_verification_attempts').insert({
+            token: inputToken,
+            success: false,
+            error_message: err.message
+          });
+        } catch (logError) {
+          console.error("Failed to log verification attempt:", logError);
+        }
+        
+        toast({
+          title: "Verification Failed",
+          description: err.message || "Invalid invitation token",
+          variant: "destructive",
         });
-      } catch (logError) {
-        console.error("Failed to log verification attempt:", logError);
       }
       
-      toast({
-        title: "Verification Failed",
-        description: err.message || "Invalid invitation token",
-        variant: "destructive",
-      });
+      setError(err.message || "Failed to verify invitation token");
     } finally {
-      setIsLoading(false);
+      if (!needsAuth) {
+        setIsLoading(false);
+      }
     }
   };
+
+  // If we need auth and are not authenticated, show auth-required error
+  if (needsAuth) {
+    return <ErrorState error="Please sign in to verify this invitation. Redirecting to authentication page..." />;
+  }
 
   // Show loading state while verifying
   if (isLoading) {
