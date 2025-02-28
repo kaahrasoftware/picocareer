@@ -56,20 +56,44 @@ export function InvitationVerifier() {
         throw new Error("Invalid invitation token format. Please check the token and try again.");
       }
       
-      // First, do a simple existence check for the token
-      console.log("Performing basic token existence check for:", cleanToken);
+      // First, do a simple existence check for the token and validate it matches the current user
+      console.log("Performing token validation check for:", cleanToken);
       const { data: tokenCheck, error: tokenCheckError } = await supabase
         .from('hub_member_invites')
-        .select('id')
+        .select('id, status, invited_email, expires_at')
         .eq('token', cleanToken)
         .single();
       
       if (tokenCheckError) {
-        console.error("Token existence check error:", tokenCheckError);
+        console.error("Token validation check error:", tokenCheckError);
         throw new Error("Invitation not found. The token may be invalid or expired.");
       }
       
-      console.log("Basic token check passed, token exists:", tokenCheck);
+      console.log("Token validation passed:", tokenCheck);
+      
+      // Additional validations
+      if (tokenCheck.status !== 'pending') {
+        console.error("Invitation status is not pending:", tokenCheck.status);
+        throw new Error(`This invitation has already been ${tokenCheck.status}. No further action is needed.`);
+      }
+      
+      if (tokenCheck.invited_email !== user.email) {
+        console.error("Email mismatch:", { inviteEmail: tokenCheck.invited_email, userEmail: user.email });
+        throw new Error(`This invitation was sent to ${tokenCheck.invited_email}. Please sign in with that email address.`);
+      }
+      
+      const expiryDate = new Date(tokenCheck.expires_at);
+      const now = new Date();
+      console.log("Checking expiry:", { 
+        now: now.toISOString(), 
+        expires: tokenCheck.expires_at,
+        isExpired: expiryDate < now
+      });
+      
+      if (expiryDate < now) {
+        console.error("Invitation expired:", tokenCheck.expires_at);
+        throw new Error("This invitation has expired. Please request a new invitation.");
+      }
       
       // Now fetch the full invitation with hub details
       console.log("Fetching complete invitation data");
@@ -94,35 +118,7 @@ export function InvitationVerifier() {
       
       console.log("Full invitation data retrieved:", invitation);
       
-      // Now check specific conditions
-      // 1. Check status
-      if (invitation.status !== 'pending') {
-        console.error("Invitation status is not pending:", invitation.status);
-        throw new Error(`This invitation has already been ${invitation.status}. No further action is needed.`);
-      }
-      
-      // 2. Check if invitation is for the current user
-      if (invitation.invited_email !== user.email) {
-        console.error("Email mismatch:", { inviteEmail: invitation.invited_email, userEmail: user.email });
-        throw new Error(`This invitation was sent to ${invitation.invited_email}. Please sign in with that email address.`);
-      }
-      
-      // 3. Check if invitation is expired
-      const now = new Date();
-      const expiryDate = new Date(invitation.expires_at);
-      
-      console.log("Checking expiry:", { 
-        now: now.toISOString(), 
-        expires: invitation.expires_at,
-        isExpired: expiryDate < now
-      });
-      
-      if (expiryDate < now) {
-        console.error("Invitation expired:", invitation.expires_at);
-        throw new Error("This invitation has expired. Please request a new invitation.");
-      }
-      
-      // Log verification attempt (don't let this block the main flow)
+      // Log verification attempt 
       try {
         await supabase.from('hub_invite_verification_attempts').insert({
           token: cleanToken,

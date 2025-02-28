@@ -29,6 +29,7 @@ export function InvitationDetailsDialog({
   onOpenChange,
 }: InvitationDetailsDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasRejected, setHasRejected] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -76,6 +77,9 @@ export function InvitationDetailsDialog({
           console.error("Error creating member record:", memberError);
           throw memberError;
         }
+      } else {
+        // If rejecting, mark as rejected
+        setHasRejected(true);
       }
       
       // Update invitation status
@@ -126,7 +130,6 @@ export function InvitationDetailsDialog({
       });
     } finally {
       setIsProcessing(false);
-      onOpenChange(false);
     }
   };
 
@@ -165,7 +168,7 @@ export function InvitationDetailsDialog({
             <Button
               type="button"
               onClick={() => handleInvitationResponse(true)}
-              disabled={isProcessing}
+              disabled={isProcessing || hasRejected}
             >
               Accept &amp; Join
             </Button>
