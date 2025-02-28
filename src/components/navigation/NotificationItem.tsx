@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { NotificationHeader } from "./notification-details/NotificationHeader";
 import { NotificationContent } from "./notification-details/NotificationContent";
@@ -49,6 +50,7 @@ export function NotificationItem({
             isExpanded={isExpanded}
             type={notification.type}
             action_url={notification.action_url}
+            notification_id={notification.id}
           />
         </div>
       </div>
