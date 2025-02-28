@@ -35,12 +35,25 @@ export function NotificationContent({
     setIsProcessing(true);
     
     try {
-      // Extract the hub_id from the action_url (which contains the token)
-      const params = new URLSearchParams(action_url.split('?')[1]);
-      const token = params.get('token');
+      // Extract the token from the action_url (improved extraction logic)
+      let token = null;
+      
+      // Try to extract token using URL parsing
+      try {
+        const url = new URL(action_url);
+        token = url.searchParams.get('token');
+      } catch (parseError) {
+        // If URL parsing fails, try regex extraction as fallback
+        const tokenMatch = action_url.match(/token=([^&]+)/);
+        if (tokenMatch && tokenMatch[1]) {
+          token = tokenMatch[1];
+        }
+      }
+      
+      console.log("Extracted token:", token);
       
       if (!token) {
-        throw new Error("Invalid invitation link");
+        throw new Error("Invalid invitation link: no token found");
       }
       
       // Get the hub invitation details using the token
@@ -48,10 +61,17 @@ export function NotificationContent({
         .from('hub_member_invites')
         .select('*, hub:hubs(id, name)')
         .eq('token', token)
-        .single();
+        .maybeSingle();
       
-      if (inviteError || !inviteData) {
-        throw new Error("Could not find invitation details");
+      console.log("Invite data:", inviteData);
+      console.log("Invite error:", inviteError);
+      
+      if (inviteError) {
+        throw new Error(`Database error: ${inviteError.message}`);
+      }
+      
+      if (!inviteData) {
+        throw new Error("Could not find invitation details for the provided token");
       }
       
       const hubId = inviteData.hub_id;
