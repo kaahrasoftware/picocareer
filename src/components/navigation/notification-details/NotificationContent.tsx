@@ -30,26 +30,33 @@ export function NotificationContent({
   const isHubInvite = type === 'hub_invite';
   
   const handleInvitationResponse = async (accept: boolean) => {
-    if (!notification_id) return;
+    if (!notification_id || !action_url) return;
     
     setIsProcessing(true);
     
     try {
-      // Get the notification details to extract hub_id and invitation_id
-      const { data: notificationData, error: notificationError } = await supabase
-        .from('notifications')
-        .select('metadata')
-        .eq('id', notification_id)
+      // Extract the hub_id from the action_url (which contains the token)
+      const params = new URLSearchParams(action_url.split('?')[1]);
+      const token = params.get('token');
+      
+      if (!token) {
+        throw new Error("Invalid invitation link");
+      }
+      
+      // Get the hub invitation details using the token
+      const { data: inviteData, error: inviteError } = await supabase
+        .from('hub_member_invites')
+        .select('*, hub:hubs(id, name)')
+        .eq('token', token)
         .single();
       
-      if (notificationError) throw notificationError;
-      
-      const hubId = notificationData?.metadata?.hub_id;
-      const invitationId = notificationData?.metadata?.invitation_id;
-      
-      if (!hubId || !invitationId) {
-        throw new Error("Invalid invitation data");
+      if (inviteError || !inviteData) {
+        throw new Error("Could not find invitation details");
       }
+      
+      const hubId = inviteData.hub_id;
+      const invitationId = inviteData.id;
+      const hubName = inviteData.hub?.name || "the hub";
       
       // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -67,7 +74,7 @@ export function NotificationContent({
           .insert({
             hub_id: hubId,
             profile_id: user.id,
-            role: notificationData?.metadata?.role || 'member',
+            role: inviteData.role || 'member',
             status: 'Approved',
           });
           
@@ -102,15 +109,15 @@ export function NotificationContent({
       await supabase.rpc('log_hub_audit_event', {
         _hub_id: hubId,
         _action: accept ? 'member_added' : 'member_invitation_cancelled',
-        _details: { role: notificationData?.metadata?.role || 'member' }
+        _details: { role: inviteData.role || 'member' }
       });
       
       // Show success message
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Declined",
         description: accept 
-          ? `You have successfully joined the hub` 
-          : `You have declined the hub invitation`,
+          ? `You have successfully joined ${hubName}` 
+          : `You have declined the invitation to join ${hubName}`,
       });
       
       // Invalidate queries to refresh data
