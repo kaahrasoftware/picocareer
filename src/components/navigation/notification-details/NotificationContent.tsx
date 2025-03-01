@@ -29,17 +29,34 @@ export function NotificationContent({
   // Helper function to determine if this is a hub invitation
   const isHubInvite = type === 'hub_invite';
   
+  const extractInviteToken = (url?: string): string | null => {
+    if (!url) return null;
+    
+    // Try to extract token from query parameter (hub-invite?token=xxx)
+    const queryMatch = url.match(/token=([^&]+)/);
+    if (queryMatch && queryMatch[1]) return queryMatch[1];
+    
+    // Try to extract token from path (hub-invite/xxx)
+    const pathMatch = url.match(/hub-invite\/([^/?&]+)/);
+    if (pathMatch && pathMatch[1]) return pathMatch[1];
+    
+    // Try to parse as a URL if it's a full URL
+    try {
+      const parsedUrl = new URL(url, window.location.origin);
+      const token = parsedUrl.searchParams.get('token');
+      if (token) return token;
+    } catch (error) {
+      console.log("URL parsing failed:", error);
+    }
+    
+    return null;
+  };
+  
   const handleInvitationResponse = async (accept: boolean) => {
     try {
       setIsProcessing(true);
       
       console.log("Starting invitation response process", { accept, notification_id, action_url });
-      
-      let hubId = null;
-      let invitationId = null;
-      let hubName = "the hub";
-      let inviteToken = null;
-      let inviteData = null;
       
       // Get the current user first to validate authentication
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -62,33 +79,16 @@ export function NotificationContent({
       
       console.log("User email:", userProfile.email);
       
+      let hubId = null;
+      let invitationId = null;
+      let hubName = "the hub";
+      let inviteData = null;
+      let inviteToken = null;
+      
       // APPROACH 1: Try to extract token from action_url if we have a notification
-      if (notification_id && action_url) {
-        console.log("Extracting token from notification action_url:", action_url);
-        
-        // Extract invitation token from the action_url
-        if (action_url.includes('token=')) {
-          // URL format: /hub-invite?token=xxx
-          const tokenMatch = action_url.match(/token=([^&]+)/);
-          if (tokenMatch && tokenMatch[1]) {
-            inviteToken = tokenMatch[1];
-          }
-        } else if (action_url.includes('/hub-invite/')) {
-          // URL format: /hub-invite/xxx
-          const pathParts = action_url.split('/');
-          inviteToken = pathParts[pathParts.length - 1];
-        }
-        
-        // Try parsing as a URL if it's a full URL
-        if (!inviteToken && action_url) {
-          try {
-            const url = new URL(action_url, window.location.origin);
-            inviteToken = url.searchParams.get('token');
-          } catch (parseError) {
-            console.log("URL parsing failed, not a valid URL:", parseError);
-          }
-        }
-        
+      if (action_url) {
+        console.log("Parsing action_url:", action_url);
+        inviteToken = extractInviteToken(action_url);
         console.log("Extracted invitation token:", inviteToken);
       }
       
