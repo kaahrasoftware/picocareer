@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
-import { HubMember } from "@/types/database/hubs";
+import { Hub as HubType } from "@/types/database/hubs";
 
 export default function Hub() {
   const { hubId } = useParams<{ hubId: string }>();
@@ -27,7 +27,7 @@ export default function Hub() {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as HubType;
     },
     enabled: !!hubId && !!session,
   });
@@ -36,6 +36,8 @@ export default function Hub() {
   const { data: memberStatus } = useQuery({
     queryKey: ['hub-member-status', hubId, session?.user?.id],
     queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
       const { data, error } = await supabase
         .from('hub_members')
         .select('role, status, confirmed')

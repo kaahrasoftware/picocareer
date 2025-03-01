@@ -44,7 +44,7 @@ export function HubTabs({
     enabled: !!hub.id && !!session?.user?.id,
   });
   
-  const isMember = !!memberStatus && memberStatus.status === 'Approved';
+  const isMember = !!memberStatus && memberStatus.status === 'Approved' && memberStatus.confirmed;
   const isModerator = isMember && memberStatus.role === 'moderator';
   
   // Get hub statistics

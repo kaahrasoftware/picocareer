@@ -66,4 +66,49 @@ export interface Hub {
   important_links?: ImportantLink[];
   created_at: string;
   updated_at: string;
+  apply_now_url?: string;
+}
+
+export interface HubAnnouncement {
+  id: string;
+  hub_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  category: AnnouncementCategory;
+  expires_at?: string;
+  scheduled_for?: string;
+  target_audience?: string[];
+  cover_image_url?: string;
+}
+
+export interface HubResource {
+  id: string;
+  hub_id: string;
+  title: string;
+  description?: string;
+  file_url: string;
+  external_url?: string;
+  resource_type: ResourceType;
+  document_type?: DocumentType;
+  access_level: ResourceAccessLevel;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  category?: string;
+  content_type?: string;
+  original_filename?: string;
+  version?: number;
+}
+
+export interface HubDepartment {
+  id: string;
+  hub_id: string;
+  name: string;
+  description?: string;
+  parent_department_id?: string;
+  created_at: string;
+  updated_at: string;
 }
