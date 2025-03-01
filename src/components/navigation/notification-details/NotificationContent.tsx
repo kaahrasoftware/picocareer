@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Calendar, Clock, UserCheck, Tag, Link, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -172,6 +171,25 @@ export function NotificationContent({
     return { __html: content };
   };
   
+  // Helper function to extract meeting link from message or action URL
+  const extractMeetingLink = (message: string): string | null => {
+    // Look for meeting link in the message
+    const meetingLinkMatch = message.match(/(?:meeting|meet) link[:\s]+([^\s<]+)/i);
+    if (meetingLinkMatch && meetingLinkMatch[1]) {
+      return meetingLinkMatch[1];
+    }
+    
+    // If no direct link found but HTML contains href
+    if (message.includes('href="')) {
+      const hrefMatch = message.match(/href="([^"]+)"/);
+      if (hrefMatch && hrefMatch[1]) {
+        return hrefMatch[1];
+      }
+    }
+    
+    return null;
+  };
+  
   // Session notification formatter that highlights key details
   const formatSessionMessage = (message: string) => {
     // Check if contains HTML-like content
@@ -189,38 +207,60 @@ export function NotificationContent({
     const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
     const mentorMatch = message.match(/with ([^\.]+)/);
     const sessionTypeMatch = message.match(/for a ([^\.]+) session/);
+    const durationMatch = message.match(/(\d+) minute/);
+    const meetingPlatformMatch = message.match(/via ([^\s\.]+)/);
     
     if (dateMatch || timeMatch || mentorMatch || sessionTypeMatch) {
       return (
         <div className="space-y-2">
           <p className="text-sm text-gray-600">{message}</p>
           
-          <div className="grid grid-cols-1 gap-1 bg-gray-50 p-3 rounded-md border border-gray-200 mt-2">
+          <div className="grid grid-cols-1 gap-2 bg-gray-50 p-4 rounded-md border border-gray-200 mt-2">
             {dateMatch && (
               <div className="flex gap-2 items-center">
+                <Calendar className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium text-gray-500">Date:</span>
-                <span className="text-xs text-gray-700">{dateMatch[1]}</span>
+                <span className="text-xs text-gray-700 font-semibold">{dateMatch[1]}</span>
               </div>
             )}
             
             {timeMatch && (
               <div className="flex gap-2 items-center">
+                <Clock className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium text-gray-500">Time:</span>
-                <span className="text-xs text-gray-700">{timeMatch[1]}</span>
+                <span className="text-xs text-gray-700 font-semibold">{timeMatch[1]}</span>
+              </div>
+            )}
+            
+            {durationMatch && (
+              <div className="flex gap-2 items-center">
+                <Clock className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-gray-500">Duration:</span>
+                <span className="text-xs text-gray-700 font-semibold">{durationMatch[1]} minutes</span>
               </div>
             )}
             
             {sessionTypeMatch && (
               <div className="flex gap-2 items-center">
+                <Tag className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium text-gray-500">Type:</span>
-                <span className="text-xs text-gray-700">{sessionTypeMatch[1]}</span>
+                <span className="text-xs text-gray-700 font-semibold">{sessionTypeMatch[1]}</span>
               </div>
             )}
             
             {mentorMatch && (
               <div className="flex gap-2 items-center">
+                <UserCheck className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium text-gray-500">With:</span>
-                <span className="text-xs text-gray-700">{mentorMatch[1]}</span>
+                <span className="text-xs text-gray-700 font-semibold">{mentorMatch[1]}</span>
+              </div>
+            )}
+            
+            {meetingPlatformMatch && (
+              <div className="flex gap-2 items-center">
+                <Link className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-gray-500">Platform:</span>
+                <span className="text-xs text-gray-700 font-semibold">{meetingPlatformMatch[1]}</span>
               </div>
             )}
           </div>
@@ -299,12 +339,14 @@ export function NotificationContent({
 
   // Session notifications with enhanced formatting
   if (isSessionNotification) {
+    const meetingLink = extractMeetingLink(message);
+    
     return (
       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
         {formatSessionMessage(message)}
         
-        {action_url && (
-          <div className="flex items-center space-x-2 mt-2">
+        <div className="flex items-center space-x-2 mt-3">
+          {action_url && (
             <Button 
               size="sm"
               onClick={() => {
@@ -319,11 +361,33 @@ export function NotificationContent({
               }}
               className="flex items-center"
             >
-              <CheckCircle className="h-4 w-4 mr-1" />
+              <Calendar className="h-4 w-4 mr-1" />
               View Session
             </Button>
-          </div>
-        )}
+          )}
+          
+          {meetingLink && (
+            <Button 
+              size="sm"
+              variant="default"
+              onClick={() => {
+                // Mark notification as read
+                if (notification_id) {
+                  supabase
+                    .from('notifications')
+                    .update({ read: true })
+                    .eq('id', notification_id);
+                }
+                // Open meeting link in a new tab
+                window.open(meetingLink, '_blank', 'noopener,noreferrer');
+              }}
+              className="flex items-center bg-green-600 hover:bg-green-700"
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Join Meeting
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
