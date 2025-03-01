@@ -9,22 +9,21 @@ import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 const Index = () => {
-  const { session } = useAuthSession();
   const [isLoading, setIsLoading] = useState(true);
 
   // Set dark theme by default
   useEffect(() => {
     try {
       document.documentElement.classList.add("dark");
+      setIsLoading(false);
     } catch (error) {
       console.error("Error setting dark theme:", error);
-    } finally {
       setIsLoading(false);
     }
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
   return (

@@ -31,15 +31,20 @@ export function HubTabs({
     queryFn: async () => {
       if (!session?.user?.id) return null;
       
-      const { data, error } = await supabase
-        .from('hub_members')
-        .select('role, status, confirmed')
-        .eq('hub_id', hub.id)
-        .eq('profile_id', session?.user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('hub_members')
+          .select('role, status, confirmed')
+          .eq('hub_id', hub.id)
+          .eq('profile_id', session?.user.id)
+          .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
+        if (error && error.code !== 'PGRST116') throw error;
+        return data;
+      } catch (error) {
+        console.error("Error fetching member status in HubTabs:", error);
+        return null;
+      }
     },
     enabled: !!hub.id && !!session?.user?.id,
   });
@@ -55,23 +60,28 @@ export function HubTabs({
   const { data: hubStats } = useQuery({
     queryKey: ['hub-stats', hub.id],
     queryFn: async () => {
-      const { data: members, error: membersError } = await supabase
-        .from('hub_members')
-        .select('id')
-        .eq('hub_id', hub.id)
-        .eq('status', 'Approved');
+      try {
+        const { data: members, error: membersError } = await supabase
+          .from('hub_members')
+          .select('id')
+          .eq('hub_id', hub.id)
+          .eq('status', 'Approved');
+          
+        const { data: resources, error: resourcesError } = await supabase
+          .from('hub_resources')
+          .select('id')
+          .eq('hub_id', hub.id);
         
-      const { data: resources, error: resourcesError } = await supabase
-        .from('hub_resources')
-        .select('id')
-        .eq('hub_id', hub.id);
-      
-      if (membersError || resourcesError) return null;
-      
-      return {
-        membersCount: members?.length || 0,
-        resourcesCount: resources?.length || 0
-      };
+        if (membersError || resourcesError) return null;
+        
+        return {
+          membersCount: members?.length || 0,
+          resourcesCount: resources?.length || 0
+        };
+      } catch (error) {
+        console.error("Error fetching hub stats:", error);
+        return { membersCount: 0, resourcesCount: 0 };
+      }
     },
     enabled: !!hub.id,
   });

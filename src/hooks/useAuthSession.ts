@@ -65,7 +65,8 @@ export function useAuthSession() {
         return session;
       } catch (error) {
         console.error('Auth session error:', error);
-        throw error;
+        // Return null instead of throwing to prevent app crash
+        return null;
       }
     },
     retry: false,

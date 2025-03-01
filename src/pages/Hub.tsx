@@ -22,14 +22,19 @@ export default function Hub() {
   const { data: hub, isLoading: isLoadingHub, error: hubError } = useQuery({
     queryKey: ['hub', hubId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hubs')
-        .select('*')
-        .eq('id', hubId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('hubs')
+          .select('*')
+          .eq('id', hubId)
+          .single();
 
-      if (error) throw error;
-      return data as HubType;
+        if (error) throw error;
+        return data as HubType;
+      } catch (error) {
+        console.error("Error fetching hub:", error);
+        return null;
+      }
     },
     enabled: !!hubId,
   });
@@ -40,15 +45,20 @@ export default function Hub() {
     queryFn: async () => {
       if (!session?.user?.id) return null;
       
-      const { data, error } = await supabase
-        .from('hub_members')
-        .select('role, status, confirmed')
-        .eq('hub_id', hubId)
-        .eq('profile_id', session?.user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('hub_members')
+          .select('role, status, confirmed')
+          .eq('hub_id', hubId)
+          .eq('profile_id', session?.user.id)
+          .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
+        if (error && error.code !== 'PGRST116') throw error;
+        return data;
+      } catch (error) {
+        console.error("Error fetching member status:", error);
+        return null;
+      }
     },
     enabled: !!hubId && !!session?.user?.id,
   });
@@ -118,7 +128,7 @@ export default function Hub() {
       <MembershipConfirmationDialog
         hubId={hubId!}
         hubName={hub.name}
-        description={hub.description}
+        description={hub.description || ''}
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
       />
