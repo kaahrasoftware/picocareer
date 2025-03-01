@@ -16,6 +16,14 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 
 interface HubTabsProps {
   hub: Hub;
@@ -41,6 +49,7 @@ export function HubTabs({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isConfirming, setIsConfirming] = useState(false);
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
   const handleConfirmMembership = async () => {
     try {
@@ -64,6 +73,9 @@ export function HubTabs({
         queryClient.invalidateQueries({ queryKey: ['hub', hub.id] });
         queryClient.invalidateQueries({ queryKey: ['hub-member-role', hub.id] });
         queryClient.invalidateQueries({ queryKey: ['hub-pending-members', hub.id] });
+        
+        // Show welcome dialog
+        setShowWelcomeDialog(true);
       } else {
         toast({
           title: "Error",
@@ -83,7 +95,8 @@ export function HubTabs({
     }
   };
 
-  return <Tabs defaultValue="overview" className="w-full">
+  return <>
+    <Tabs defaultValue="overview" className="w-full">
       <TabsList className="w-full justify-start">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         {session && <TabsTrigger value="chat">Channels</TabsTrigger>}
@@ -160,5 +173,31 @@ export function HubTabs({
             </div>
           </div>
         </TabsContent>}
-    </Tabs>;
+    </Tabs>
+
+    {/* Welcome Dialog */}
+    <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Welcome to {hub.name}!</DialogTitle>
+          <DialogDescription>
+            Your membership has been confirmed. You now have access to all hub features and content.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-6">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <CheckCircle className="h-16 w-16 text-emerald-500" />
+            <p className="text-sm text-muted-foreground">
+              You can now access announcements, resources, member directories, and participate in community discussions. Explore the different tabs to get started.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => setShowWelcomeDialog(false)} className="w-full">
+            Get Started
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </>;
 }
