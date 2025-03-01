@@ -8,19 +8,22 @@ import { HubHeader } from "@/components/hub/HubHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { HubTabs } from "@/components/hub/HubTabs";
+import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
+import { useEffect, useState } from "react";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
   const { session } = useAuthSession();
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
-  const { data: memberData, isLoading: isMemberLoading } = useQuery({
+  const { data: memberData, isLoading: isMemberLoading, refetch: refetchMember } = useQuery({
     queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
       if (!id || !session?.user?.id) return null;
       const { data, error } = await supabase
         .from('hub_members')
-        .select('role, status')
+        .select('role, status, confirmed')
         .eq('hub_id', id)
         .eq('profile_id', session.user.id)
         .maybeSingle();
@@ -36,6 +39,14 @@ export default function Hub() {
   const isAdmin = memberData?.role === 'admin';
   const isModerator = memberData?.role === 'moderator';
   const isMember = memberData?.status === 'Approved';
+  const isConfirmed = memberData?.confirmed === true;
+
+  useEffect(() => {
+    // Show confirmation dialog if user is a member but not confirmed
+    if (memberData && isMember && !isConfirmed) {
+      setShowConfirmation(true);
+    }
+  }, [memberData, isMember, isConfirmed]);
 
   const { data: hub, isLoading: hubLoading, error: hubError } = useQuery({
     queryKey: ['hub', id],
@@ -74,7 +85,7 @@ export default function Hub() {
         .from('hub_members')
         .select('id', { count: 'exact', head: true })
         .eq('hub_id', id)
-        .eq('status', 'Approved');
+        .eq('confirmed', true);
 
       const resourcesCount = await supabase
         .from('hub_resources')
@@ -88,6 +99,12 @@ export default function Hub() {
     },
     enabled: !!id && !hubError, // Only fetch stats if hub exists
   });
+
+  const handleConfirmation = () => {
+    // Refetch member data to update confirmation status
+    refetchMember();
+    setShowConfirmation(false);
+  };
 
   if (!id || !isValidUUID) {
     return (
@@ -125,10 +142,19 @@ export default function Hub() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
+      {showConfirmation && (
+        <MembershipConfirmationDialog 
+          hubId={hub.id}
+          hubName={hub.name}
+          hubDescription={hub.description}
+          onConfirmed={handleConfirmation}
+        />
+      )}
+      
       <HubHeader hub={hub} />
       <HubTabs 
         hub={hub}
-        isMember={isMember}
+        isMember={isMember && isConfirmed}
         isAdmin={isAdmin}
         isModerator={isModerator}
         hubStats={hubStats}

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
+import { X, AlertCircle, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface MembersListProps {
   hubId: string;
@@ -114,6 +115,17 @@ export function MembersList({ hubId, members }: MembersListProps) {
                       {member.profiles?.first_name} {member.profiles?.last_name}
                     </p>
                     <p className="text-sm text-muted-foreground">{member.profiles?.email}</p>
+                    {member.confirmed ? (
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Confirmed
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Pending Confirmation
+                      </Badge>
+                    )}
                   </div>
                   <Select 
                     defaultValue={member.role}
@@ -126,6 +138,8 @@ export function MembersList({ hubId, members }: MembersListProps) {
                       <SelectItem value="member">Member</SelectItem>
                       <SelectItem value="moderator">Moderator</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="faculty">Faculty</SelectItem>
+                      <SelectItem value="student">Student</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -14,14 +14,14 @@ import { UserPlus, Loader2 } from "lucide-react";
 import { MemberRole } from "@/types/database/hubs";
 import { InviteMemberFormProps } from "./invite/types";
 import { useEmailValidation } from "./invite/useEmailValidation";
-import { useInviteMember } from "./invite/useInviteMember";
+import { useAddMembers } from "./members/useAddMembers";
 import { EmailValidationList } from "./invite/EmailValidationList";
 
 export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
   const [emailInput, setEmailInput] = useState("");
   const [selectedRole, setSelectedRole] = useState<MemberRole>("member");
   const { validatedEmails, isValidating, validateEmails, setValidatedEmails } = useEmailValidation();
-  const { isInviting, sendInvites } = useInviteMember(hubId);
+  const { isAdding, addMembers } = useAddMembers(hubId);
 
   const handleEmailChange = async (value: string) => {
     setEmailInput(value);
@@ -33,8 +33,8 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
     }
   };
 
-  const handleInvite = async () => {
-    const success = await sendInvites(validatedEmails, selectedRole);
+  const handleAddMembers = async () => {
+    const success = await addMembers(validatedEmails, selectedRole);
     if (success) {
       setEmailInput("");
       setValidatedEmails([]);
@@ -45,7 +45,7 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite Members</CardTitle>
+        <CardTitle>Add Members</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -73,19 +73,19 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
                 </SelectContent>
               </Select>
               <Button 
-                onClick={handleInvite} 
-                disabled={isInviting || isValidating || !emailInput || validatedEmails.every(e => !e.exists)}
+                onClick={handleAddMembers} 
+                disabled={isAdding || isValidating || !emailInput || validatedEmails.every(e => !e.exists)}
                 className="w-[120px]"
               >
-                {isInviting ? (
+                {isAdding ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
+                    Adding...
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Invite
+                    Add
                   </>
                 )}
               </Button>
