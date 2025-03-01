@@ -33,7 +33,7 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
     }
   };
 
-  const handleInvite = async () => {
+  const handleAddMembers = async () => {
     const success = await sendInvites(validatedEmails, selectedRole);
     if (success) {
       setEmailInput("");
@@ -45,7 +45,7 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite Members</CardTitle>
+        <CardTitle>Add Members</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -73,19 +73,19 @@ export function InviteMemberForm({ hubId }: InviteMemberFormProps) {
                 </SelectContent>
               </Select>
               <Button 
-                onClick={handleInvite} 
+                onClick={handleAddMembers} 
                 disabled={isInviting || isValidating || !emailInput || validatedEmails.every(e => !e.exists)}
                 className="w-[120px]"
               >
                 {isInviting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
+                    Adding...
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Invite
+                    Add
                   </>
                 )}
               </Button>

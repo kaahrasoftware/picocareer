@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +20,7 @@ export function HubMembers({ hubId }: HubMembersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
-  // Fetch hub members
+  // Fetch hub members - only confirmed members
   const { data: members, isLoading, error } = useQuery({
     queryKey: ['hub-members', hubId],
     queryFn: async () => {
@@ -39,7 +40,8 @@ export function HubMembers({ hubId }: HubMembersProps) {
           )
         `)
         .eq('hub_id', hubId)
-        .eq('status', 'Approved');
+        .eq('status', 'Approved')
+        .eq('confirmed', true);
 
       if (error) {
         console.error('Error fetching members:', error);

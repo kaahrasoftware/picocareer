@@ -32,89 +32,31 @@ export function useInviteMember(hubId: string) {
       // Process each valid email
       for (const email of validEmails) {
         try {
-          // Get profile ID for the invited email
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('email', email)
-            .single();
-
-          if (!profileData?.id) {
-            toast({
-              title: "User not found",
-              description: `No user found with email ${email}.`,
-              variant: "destructive",
-            });
-            continue;
-          }
-
-          // Check for existing pending invitation
-          const { data: existingInvite } = await supabase
-            .from('hub_member_invites')
-            .select('status')
-            .eq('hub_id', hubId)
-            .eq('invited_email', email)
-            .eq('status', 'pending')
-            .maybeSingle();
-
-          if (existingInvite) {
-            toast({
-              title: "Duplicate invitation",
-              description: `${email} has already been invited and hasn't responded yet.`,
-              variant: "destructive",
-            });
-            continue;
-          }
-
-          // Check if already a member
-          const { data: existingMember } = await supabase
-            .from('hub_members')
-            .select('id')
-            .eq('hub_id', hubId)
-            .eq('profile_id', profileData.id)
-            .maybeSingle();
-
-          if (existingMember) {
-            toast({
-              title: "Already a member",
-              description: `${email} is already a member of this hub.`,
-              variant: "destructive",
-            });
-            continue;
-          }
-
-          // Create the invitation
-          const { error: inviteError } = await supabase
-            .from('hub_member_invites')
-            .insert({
-              hub_id: hubId,
-              invited_email: email,
-              role: selectedRole,
-              invited_by: user.id,
-              status: 'pending',
-              email_status: 'pending',
-              token: crypto.randomUUID(),
-              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-            });
-
-          if (inviteError) {
-            console.error('Error creating invitation:', inviteError);
-            toast({
-              title: "Error",
-              description: `Failed to invite ${email}. Please try again.`,
-              variant: "destructive",
-            });
-            continue;
-          }
-
-          // Log the audit event
-          await supabase.rpc('log_hub_audit_event', {
+          // Use the new add_hub_member function
+          const { data, error } = await supabase.rpc('add_hub_member', {
             _hub_id: hubId,
-            _action: 'member_invitation_sent',
-            _details: { email, role: selectedRole }
+            _email: email,
+            _role: selectedRole
           });
 
-          successCount++;
+          if (error) {
+            console.error('Error adding member:', error);
+            toast({
+              title: "Error",
+              description: `Failed to add ${email}. ${error.message}`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
+          if (data && data.success) {
+            successCount++;
+          } else if (data) {
+            toast({
+              title: "Info",
+              description: data.message || `Could not add ${email}.`,
+            });
+          }
         } catch (error) {
           console.error('Error processing invitation for', email, ':', error);
         }
@@ -122,23 +64,23 @@ export function useInviteMember(hubId: string) {
 
       if (successCount > 0) {
         toast({
-          title: "Invitations sent",
-          description: `Successfully sent ${successCount} invitation${successCount > 1 ? 's' : ''}.`,
+          title: "Members added",
+          description: `Successfully added ${successCount} member${successCount > 1 ? 's' : ''}.`,
         });
         return true;
       } else {
         toast({
-          title: "No invitations sent",
-          description: "Failed to send any invitations. Please try again.",
+          title: "No members added",
+          description: "Failed to add any members. Please try again.",
           variant: "destructive",
         });
         return false;
       }
     } catch (error: any) {
-      console.error('Error sending invites:', error);
+      console.error('Error adding members:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send invitations. Please try again.",
+        description: error.message || "Failed to add members. Please try again.",
         variant: "destructive",
       });
       return false;

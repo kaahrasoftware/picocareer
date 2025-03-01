@@ -26,30 +26,33 @@ export function NotificationContent({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Helper function to determine if this is a hub invitation
+  // Helper function to determine notification type
   const isHubInvite = type === 'hub_invite';
+  const isHubMembership = type === 'hub_membership';
   
-  const extractInviteToken = (url?: string): string | null => {
+  const extractHubId = (url?: string): string | null => {
     if (!url) return null;
     
-    // Try to extract token from query parameter (hub-invite?token=xxx)
-    const queryMatch = url.match(/token=([^&]+)/);
-    if (queryMatch && queryMatch[1]) return queryMatch[1];
-    
-    // Try to extract token from path (hub-invite/xxx)
-    const pathMatch = url.match(/hub-invite\/([^/?&]+)/);
+    // Extract hub ID from URL (e.g. /hubs/[uuid])
+    const pathMatch = url.match(/\/hubs\/([^/?&]+)/);
     if (pathMatch && pathMatch[1]) return pathMatch[1];
     
-    // Try to parse as a URL if it's a full URL
-    try {
-      const parsedUrl = new URL(url, window.location.origin);
-      const token = parsedUrl.searchParams.get('token');
-      if (token) return token;
-    } catch (error) {
-      console.log("URL parsing failed:", error);
-    }
-    
     return null;
+  };
+  
+  const handleHubMembershipClick = () => {
+    if (action_url) {
+      // Mark notification as read
+      if (notification_id) {
+        supabase
+          .from('notifications')
+          .update({ read: true })
+          .eq('id', notification_id);
+      }
+      
+      // Navigate to the hub page
+      navigate(action_url);
+    }
   };
   
   const handleInvitationResponse = async (accept: boolean) => {
@@ -86,98 +89,15 @@ export function NotificationContent({
       let inviteData = null;
       let inviteToken = null;
       
-      // APPROACH 1: Try to extract token from action_url if we have a notification
+      // Extract hubId from action_url if present
       if (action_url) {
-        console.log("Parsing action_url:", action_url);
-        inviteToken = extractInviteToken(action_url);
-        console.log("Extracted invitation token:", inviteToken);
+        hubId = extractHubId(action_url);
+        console.log("Extracted hub ID:", hubId);
       }
       
-      // If we have a token, use it to find the invitation
-      if (inviteToken) {
-        console.log("Finding invitation by token:", inviteToken);
-        const { data, error: inviteError } = await supabase
-          .from('hub_member_invites')
-          .select('*, hub:hubs(id, name), invited_email')
-          .eq('token', inviteToken)
-          .eq('status', 'pending')
-          .maybeSingle();
-          
-        if (inviteError) {
-          console.error("Error fetching invitation by token:", inviteError);
-        } else if (data) {
-          // Validate the invitation is for the current user's email
-          if (data.invited_email.toLowerCase() !== userProfile.email.toLowerCase()) {
-            throw new Error(`This invitation was sent to ${data.invited_email}, but you're signed in as ${userProfile.email}. Please sign in with the correct account.`);
-          }
-          
-          inviteData = data;
-          console.log("Found invitation by token:", inviteData);
-        }
+      if (!hubId) {
+        throw new Error("Could not determine which hub this invitation is for");
       }
-      
-      // APPROACH 2: If token approach failed, try to find by user email
-      if (!inviteData) {
-        console.log("Token-based lookup failed, trying email-based lookup");
-        
-        // Find pending invitation for this user's email
-        const { data: userInvites, error: userInvitesError } = await supabase
-          .from('hub_member_invites')
-          .select('*, hub:hubs(id, name)')
-          .eq('invited_email', userProfile.email)
-          .eq('status', 'pending');
-        
-        console.log("User's pending invites:", userInvites);
-        
-        if (userInvitesError) {
-          console.error("Error fetching user invitations:", userInvitesError);
-          throw new Error(`Error fetching your invitations: ${userInvitesError.message}`);
-        }
-        
-        if (!userInvites || userInvites.length === 0) {
-          // Check if there are any invitations for other emails
-          const { data: allInvites, error: allInvitesError } = await supabase
-            .from('hub_member_invites')
-            .select('invited_email')
-            .eq('status', 'pending')
-            .limit(5);
-            
-          if (!allInvitesError && allInvites && allInvites.length > 0) {
-            const otherEmails = allInvites
-              .map(invite => invite.invited_email)
-              .filter(email => email.toLowerCase() !== userProfile.email.toLowerCase());
-              
-            if (otherEmails.length > 0) {
-              throw new Error(`No invitations found for ${userProfile.email}. There are pending invitations for other email addresses. Please sign in with the correct account.`);
-            }
-          }
-          
-          throw new Error("No pending invitations found for your account. Please contact the hub administrator.");
-        }
-        
-        // Use the most recent invitation if multiple are found
-        const mostRecentInvite = userInvites.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )[0];
-        
-        console.log("Using most recent invite:", mostRecentInvite);
-        inviteData = mostRecentInvite;
-      }
-      
-      if (!inviteData) {
-        throw new Error("Could not find invitation details. Please contact hub administrator.");
-      }
-      
-      hubId = inviteData.hub_id;
-      invitationId = inviteData.id;
-      hubName = inviteData.hub?.name || "the hub";
-      
-      console.log("Processing invitation response", { 
-        hubId, 
-        invitationId, 
-        hubName, 
-        accept
-      });
       
       const timestamp = new Date().toISOString();
       
@@ -188,7 +108,7 @@ export function NotificationContent({
           .insert({
             hub_id: hubId,
             profile_id: user.id,
-            role: inviteData.role || 'member',
+            role: 'member',
             status: 'Approved',
           });
           
@@ -196,21 +116,6 @@ export function NotificationContent({
           console.error("Error creating member record:", memberError);
           throw memberError;
         }
-      }
-      
-      // Update invitation status
-      const { error: updateError } = await supabase
-        .from('hub_member_invites')
-        .update({
-          status: accept ? 'accepted' : 'rejected',
-          accepted_at: accept ? timestamp : null,
-          rejected_at: accept ? null : timestamp,
-        })
-        .eq('id', invitationId);
-        
-      if (updateError) {
-        console.error("Error updating invitation status:", updateError);
-        throw updateError;
       }
       
       // If there's a notification, mark it as read
@@ -221,12 +126,14 @@ export function NotificationContent({
           .eq('id', notification_id);
       }
       
-      // Log the audit event
-      await supabase.rpc('log_hub_audit_event', {
-        _hub_id: hubId,
-        _action: accept ? 'member_added' : 'member_invitation_cancelled',
-        _details: { role: inviteData.role || 'member' }
-      });
+      // Get hub name
+      const { data: hubData } = await supabase
+        .from('hubs')
+        .select('name')
+        .eq('id', hubId)
+        .single();
+        
+      hubName = hubData?.name || "the hub";
       
       // Show success message
       toast({
@@ -297,6 +204,28 @@ export function NotificationContent({
               </Button>
             </>
           )}
+        </div>
+      </div>
+    );
+  }
+  
+  // Hub membership notification
+  if (isHubMembership) {
+    return (
+      <div className="mt-1 text-sm text-muted-foreground">
+        <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
+          {message}
+        </p>
+        
+        <div className="flex items-center space-x-2 mt-3">
+          <Button 
+            size="sm"
+            onClick={handleHubMembershipClick}
+            className="flex items-center"
+          >
+            <CheckCircle className="h-4 w-4 mr-1" />
+            View Hub
+          </Button>
         </div>
       </div>
     );

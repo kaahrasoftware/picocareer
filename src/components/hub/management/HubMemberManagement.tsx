@@ -11,22 +11,7 @@ interface HubMemberManagementProps {
 }
 
 export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
-  // Fetch pending invites
-  const { data: pendingInvites, isLoading: isLoadingInvites } = useQuery({
-    queryKey: ['hub-pending-invites', hubId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hub_member_invites')
-        .select('*')
-        .eq('hub_id', hubId)
-        .eq('status', 'pending');
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch members with the explicit foreign key relationship
+  // Fetch members with the explicit foreign key relationship - only confirmed members
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ['hub-members-management', hubId],
     queryFn: async () => {
@@ -42,14 +27,15 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
             avatar_url
           )
         `)
-        .eq('hub_id', hubId);
+        .eq('hub_id', hubId)
+        .eq('confirmed', true);
 
       if (error) throw error;
       return data;
     },
   });
 
-  if (isLoadingMembers || isLoadingInvites) {
+  if (isLoadingMembers) {
     return <div className="flex items-center justify-center p-4">
       <Loader2 className="h-6 w-6 animate-spin" />
     </div>;
@@ -58,7 +44,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
   return (
     <div className="space-y-6">
       <InviteMemberForm hubId={hubId} />
-      <PendingInvites hubId={hubId} pendingInvites={pendingInvites} />
+      <PendingInvites hubId={hubId} />
       <MembersList hubId={hubId} members={members} />
     </div>
   );

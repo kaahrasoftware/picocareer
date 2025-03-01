@@ -1,6 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Hub } from "@/types/database/hubs";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,12 @@ import { HubHeader } from "@/components/hub/HubHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { HubTabs } from "@/components/hub/HubTabs";
+import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
   const { session } = useAuthSession();
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
   const { data: memberData, isLoading: isMemberLoading } = useQuery({
@@ -20,7 +23,7 @@ export default function Hub() {
       if (!id || !session?.user?.id) return null;
       const { data, error } = await supabase
         .from('hub_members')
-        .select('role, status')
+        .select('role, status, confirmed')
         .eq('hub_id', id)
         .eq('profile_id', session.user.id)
         .maybeSingle();
@@ -33,9 +36,10 @@ export default function Hub() {
     enabled: !!id && !!session?.user?.id && isValidUUID,
   });
 
-  const isAdmin = memberData?.role === 'admin';
-  const isModerator = memberData?.role === 'moderator';
-  const isMember = memberData?.status === 'Approved';
+  const isAdmin = memberData?.role === 'admin' && memberData?.confirmed;
+  const isModerator = memberData?.role === 'moderator' && memberData?.confirmed;
+  const isMember = memberData?.status === 'Approved' && memberData?.confirmed;
+  const isUnconfirmedMember = memberData?.status === 'Approved' && !memberData?.confirmed;
 
   const { data: hub, isLoading: hubLoading, error: hubError } = useQuery({
     queryKey: ['hub', id],
@@ -65,6 +69,13 @@ export default function Hub() {
     retry: 1, // Only retry once for not found errors
   });
 
+  // Check for unconfirmed membership and show dialog
+  useEffect(() => {
+    if (isUnconfirmedMember && hub) {
+      setShowConfirmationDialog(true);
+    }
+  }, [isUnconfirmedMember, hub]);
+
   const { data: hubStats, isLoading: statsLoading } = useQuery({
     queryKey: ['hub-stats', id],
     queryFn: async () => {
@@ -74,7 +85,8 @@ export default function Hub() {
         .from('hub_members')
         .select('id', { count: 'exact', head: true })
         .eq('hub_id', id)
-        .eq('status', 'Approved');
+        .eq('status', 'Approved')
+        .eq('confirmed', true);
 
       const resourcesCount = await supabase
         .from('hub_resources')
@@ -133,6 +145,15 @@ export default function Hub() {
         isModerator={isModerator}
         hubStats={hubStats}
       />
+      
+      {hub && (
+        <MembershipConfirmationDialog 
+          isOpen={showConfirmationDialog}
+          onClose={() => setShowConfirmationDialog(false)}
+          hubId={hub.id}
+          hubName={hub.name}
+        />
+      )}
     </div>
   );
 }
