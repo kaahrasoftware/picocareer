@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Calendar, Clock, UserCheck, Tag, Link, ExternalLink } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ export function NotificationContent({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
+  // Helper function to determine notification type
   const isHubInvite = type === 'hub_invite';
   const isHubMembership = type === 'hub_membership';
   const isSessionNotification = type === 'session_booked' || type === 'session_reminder' || type === 'session_cancelled';
@@ -33,6 +34,7 @@ export function NotificationContent({
   const extractHubId = (url?: string): string | null => {
     if (!url) return null;
     
+    // Extract hub ID from URL (e.g. /hubs/[uuid])
     const pathMatch = url.match(/\/hubs\/([^/?&]+)/);
     if (pathMatch && pathMatch[1]) return pathMatch[1];
     
@@ -41,6 +43,7 @@ export function NotificationContent({
   
   const handleHubMembershipClick = () => {
     if (action_url) {
+      // Mark notification as read
       if (notification_id) {
         supabase
           .from('notifications')
@@ -48,6 +51,7 @@ export function NotificationContent({
           .eq('id', notification_id);
       }
       
+      // Navigate to the hub page
       navigate(action_url);
     }
   };
@@ -59,12 +63,14 @@ export function NotificationContent({
       
       console.log("Starting invitation response process", { accept, notification_id, action_url });
       
+      // Get the current user first to validate authentication
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
         throw new Error("Please sign in to respond to this invitation");
       }
 
+      // Get user's email
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('email')
@@ -84,6 +90,7 @@ export function NotificationContent({
       let inviteData = null;
       let inviteToken = null;
       
+      // Extract hubId from action_url if present
       if (action_url) {
         hubId = extractHubId(action_url);
         console.log("Extracted hub ID:", hubId);
@@ -95,6 +102,7 @@ export function NotificationContent({
       
       const timestamp = new Date().toISOString();
       
+      // If accepting, create hub member record
       if (accept) {
         const { error: memberError } = await supabase
           .from('hub_members')
@@ -111,6 +119,7 @@ export function NotificationContent({
         }
       }
       
+      // If there's a notification, mark it as read
       if (notification_id) {
         await supabase
           .from('notifications')
@@ -118,6 +127,7 @@ export function NotificationContent({
           .eq('id', notification_id);
       }
       
+      // Get hub name
       const { data: hubData } = await supabase
         .from('hubs')
         .select('name')
@@ -126,6 +136,7 @@ export function NotificationContent({
         
       hubName = hubData?.name || "the hub";
       
+      // Show success message
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Declined",
         description: accept 
@@ -133,12 +144,15 @@ export function NotificationContent({
           : `You have declined the invitation to join ${hubName}`,
       });
       
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['hub-members', hubId] });
       
+      // Navigate to appropriate page
       if (accept) {
         navigate(`/hubs/${hubId}`);
       }
+      
     } catch (error: any) {
       console.error("Error processing invitation response:", error);
       setErrorMessage(error.message || "Failed to process invitation");
@@ -153,33 +167,14 @@ export function NotificationContent({
     }
   };
 
+  // Helper function to render HTML content safely
   const renderHTML = (content: string) => {
     return { __html: content };
   };
   
-  const extractSessionDetails = (message: string) => {
-    const dateMatch = message.match(/scheduled for ([^,]+),/);
-    const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
-    const mentorMatch = message.match(/with ([^\.]+)/);
-    const menteeMatch = message.match(/for ([^\.]+) \(mentee\)/); 
-    const sessionTypeMatch = message.match(/for a ([^\.]+) session/);
-    const durationMatch = message.match(/(\d+) minute/);
-    const meetingPlatformMatch = message.match(/via ([^\s\.]+)/);
-    const meetingLinkMatch = message.match(/(?:meeting|meet) link[:\s]+([^\s<]+)/i);
-    
-    return {
-      date: dateMatch ? dateMatch[1] : null,
-      time: timeMatch ? timeMatch[1] : null,
-      mentor: mentorMatch ? mentorMatch[1] : null,
-      mentee: menteeMatch ? menteeMatch[1] : null,
-      sessionType: sessionTypeMatch ? sessionTypeMatch[1] : null,
-      duration: durationMatch ? durationMatch[1] : null,
-      platform: meetingPlatformMatch ? meetingPlatformMatch[1] : null,
-      meetingLink: meetingLinkMatch ? meetingLinkMatch[1] : null,
-    };
-  };
-  
+  // Session notification formatter that highlights key details
   const formatSessionMessage = (message: string) => {
+    // Check if contains HTML-like content
     if (message.includes('<') && message.includes('>')) {
       return (
         <div 
@@ -189,73 +184,55 @@ export function NotificationContent({
       );
     }
     
-    const sessionDetails = extractSessionDetails(message);
+    // For plain text session notifications, try to extract and format key details
+    const dateMatch = message.match(/scheduled for ([^,]+),/);
+    const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
+    const mentorMatch = message.match(/with ([^\.]+)/);
+    const sessionTypeMatch = message.match(/for a ([^\.]+) session/);
     
-    return (
-      <div className="space-y-2">
-        <p className="text-sm text-gray-600">{message}</p>
-        
-        <div className="grid grid-cols-1 gap-2 bg-gray-50 p-4 rounded-md border border-gray-200 mt-2">
-          {sessionDetails.date && (
-            <div className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Date:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.date}</span>
-            </div>
-          )}
+    if (dateMatch || timeMatch || mentorMatch || sessionTypeMatch) {
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-gray-600">{message}</p>
           
-          {sessionDetails.time && (
-            <div className="flex gap-2 items-center">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Time:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.time}</span>
-            </div>
-          )}
-          
-          {sessionDetails.duration && (
-            <div className="flex gap-2 items-center">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Duration:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.duration} minutes</span>
-            </div>
-          )}
-          
-          {sessionDetails.sessionType && (
-            <div className="flex gap-2 items-center">
-              <Tag className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Type:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.sessionType}</span>
-            </div>
-          )}
-          
-          {sessionDetails.mentor && (
-            <div className="flex gap-2 items-center">
-              <UserCheck className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Mentor:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.mentor}</span>
-            </div>
-          )}
-          
-          {sessionDetails.mentee && (
-            <div className="flex gap-2 items-center">
-              <UserCheck className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Mentee:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.mentee}</span>
-            </div>
-          )}
-          
-          {sessionDetails.platform && (
-            <div className="flex gap-2 items-center">
-              <Link className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-gray-500">Platform:</span>
-              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.platform}</span>
-            </div>
-          )}
+          <div className="grid grid-cols-1 gap-1 bg-gray-50 p-3 rounded-md border border-gray-200 mt-2">
+            {dateMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">Date:</span>
+                <span className="text-xs text-gray-700">{dateMatch[1]}</span>
+              </div>
+            )}
+            
+            {timeMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">Time:</span>
+                <span className="text-xs text-gray-700">{timeMatch[1]}</span>
+              </div>
+            )}
+            
+            {sessionTypeMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">Type:</span>
+                <span className="text-xs text-gray-700">{sessionTypeMatch[1]}</span>
+              </div>
+            )}
+            
+            {mentorMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">With:</span>
+                <span className="text-xs text-gray-700">{mentorMatch[1]}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    
+    // Default fallback
+    return <p className="text-sm text-gray-600">{message}</p>;
   };
   
+  // Render appropriate content based on notification type
   if (isHubInvite) {
     return (
       <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
@@ -298,6 +275,7 @@ export function NotificationContent({
     );
   }
   
+  // Hub membership notification
   if (isHubMembership) {
     return (
       <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
@@ -319,18 +297,18 @@ export function NotificationContent({
     );
   }
 
+  // Session notifications with enhanced formatting
   if (isSessionNotification) {
-    const sessionDetails = extractSessionDetails(message);
-    
     return (
       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
         {formatSessionMessage(message)}
         
-        <div className="flex items-center space-x-2 mt-3">
-          {action_url && (
+        {action_url && (
+          <div className="flex items-center space-x-2 mt-2">
             <Button 
               size="sm"
               onClick={() => {
+                // Mark notification as read
                 if (notification_id) {
                   supabase
                     .from('notifications')
@@ -341,35 +319,16 @@ export function NotificationContent({
               }}
               className="flex items-center"
             >
-              <Calendar className="h-4 w-4 mr-1" />
+              <CheckCircle className="h-4 w-4 mr-1" />
               View Session
             </Button>
-          )}
-          
-          {sessionDetails.meetingLink && (
-            <Button 
-              size="sm"
-              variant="default"
-              onClick={() => {
-                if (notification_id) {
-                  supabase
-                    .from('notifications')
-                    .update({ read: true })
-                    .eq('id', notification_id);
-                }
-                window.open(sessionDetails.meetingLink, '_blank', 'noopener,noreferrer');
-              }}
-              className="flex items-center bg-green-600 hover:bg-green-700"
-            >
-              <ExternalLink className="h-4 w-4 mr-1" />
-              Join Meeting
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
   
+  // Default content for other notification types
   return (
     <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
       <div 
