@@ -1,7 +1,6 @@
-
-import { formatDistanceToNow } from "date-fns";
-import { Check, CheckCheck } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { CircleCheck, CircleDot } from "lucide-react";
 
 interface NotificationHeaderProps {
   title: string;
@@ -10,35 +9,27 @@ interface NotificationHeaderProps {
   onToggleRead: () => void;
 }
 
-export function NotificationHeader({ 
-  title, 
-  createdAt, 
-  read, 
-  onToggleRead 
-}: NotificationHeaderProps) {
+export function NotificationHeader({ title, createdAt, read, onToggleRead }: NotificationHeaderProps) {
   return (
-    <div className="flex justify-between items-center">
-      <h4 className={`font-medium text-sm ${!read ? 'text-white' : 'text-zinc-300'}`}>
+    <div className="flex items-center justify-between">
+      <h4 className="font-medium text-zinc-50 flex items-center gap-2">
         {title}
-      </h4>
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-zinc-500">
-          {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
-        </span>
         <Button
           variant="ghost"
           size="sm"
-          className="p-1 h-auto"
+          className="h-4 w-4 p-0 hover:bg-transparent"
           onClick={onToggleRead}
-          title={read ? "Mark as unread" : "Mark as read"}
         >
           {read ? (
-            <CheckCheck className="h-3.5 w-3.5 text-zinc-500" />
+            <CircleCheck className="h-4 w-4 text-emerald-500" />
           ) : (
-            <Check className="h-3.5 w-3.5 text-zinc-500" />
+            <CircleDot className="h-4 w-4 text-sky-500" />
           )}
         </Button>
-      </div>
+      </h4>
+      <span className="text-xs text-zinc-400">
+        {format(new Date(createdAt), 'MMM d, h:mm a')}
+      </span>
     </div>
   );
 }

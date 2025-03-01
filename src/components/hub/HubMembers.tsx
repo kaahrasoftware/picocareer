@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,10 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Users, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Users } from "lucide-react";
 import { SearchInput } from "@/components/search/SearchInput";
 import { SelectFilter } from "@/components/community/filters/SelectFilter";
-import { Badge } from "@/components/ui/badge";
 
 interface HubMembersProps {
   hubId: string;
@@ -32,7 +30,6 @@ export function HubMembers({ hubId }: HubMembersProps) {
         .select(`
           id,
           role,
-          confirmed,
           profile_id,
           profiles!hub_members_profile_id_fkey (
             id,
@@ -97,9 +94,6 @@ export function HubMembers({ hubId }: HubMembersProps) {
     );
   }
 
-  // Get confirmed members only for display in the count
-  const confirmedMembers = members.filter(m => m.confirmed);
-
   // Filter members based on search query and selected role
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.profiles?.first_name} ${member.profiles?.last_name}`.toLowerCase();
@@ -113,7 +107,7 @@ export function HubMembers({ hubId }: HubMembersProps) {
       <div className="flex items-center gap-2">
         <Users className="h-5 w-5" />
         <h2 className="text-xl font-semibold">
-          Members ({confirmedMembers.length})
+          Members ({members.length})
         </h2>
       </div>
 
@@ -149,14 +143,8 @@ export function HubMembers({ hubId }: HubMembersProps) {
                   <div className="font-medium">
                     {member.profiles?.first_name} {member.profiles?.last_name}
                   </div>
-                  <div className="text-sm text-muted-foreground capitalize flex items-center gap-2">
+                  <div className="text-sm text-muted-foreground capitalize">
                     {member.role}
-                    {member.confirmed && (
-                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-xs">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Confirmed
-                      </Badge>
-                    )}
                   </div>
                 </div>
               </div>

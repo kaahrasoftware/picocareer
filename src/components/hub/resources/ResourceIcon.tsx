@@ -1,25 +1,20 @@
 
-import { File, FileImage, FileText, FileVideo, Link } from "lucide-react";
-import { ResourceType } from "@/types/database/hubs";
+import { FileText, Image, Video, Music, Link2, File } from "lucide-react";
+import { HubResource } from "@/types/database/hubs";
 
-interface ResourceIconProps {
-  resourceType: ResourceType;
-  className?: string;
-}
-
-export function ResourceIcon({ resourceType, className = "" }: ResourceIconProps) {
-  switch (resourceType) {
-    case "document":
-      return <FileText className={className} />;
-    case "image":
-      return <FileImage className={className} />;
-    case "video":
-      return <FileVideo className={className} />;
-    case "link":
-      return <Link className={className} />;
-    case "event":
-      return <File className={className} />;
+export const getResourceIcon = (resource: HubResource) => {
+  switch (resource.resource_type) {
+    case 'document':
+      return <FileText className="h-5 w-5" />;
+    case 'image':
+      return <Image className="h-5 w-5" />;
+    case 'video':
+      return <Video className="h-5 w-5" />;
+    case 'audio':
+      return <Music className="h-5 w-5" />;
+    case 'external_link':
+      return <Link2 className="h-5 w-5" />;
     default:
-      return <File className={className} />;
+      return <File className="h-5 w-5" />;
   }
-}
+};

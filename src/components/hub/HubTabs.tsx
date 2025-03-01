@@ -1,4 +1,3 @@
-
 import { Hub } from "@/types/database/hubs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HubResources } from "./HubResources";
@@ -11,128 +10,60 @@ import { AlertCircle } from "lucide-react";
 import { HubOverviewSection } from "./overview/HubOverviewSection";
 import { HubChat } from "./chat/HubChat";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
 interface HubTabsProps {
   hub: Hub;
+  isMember: boolean;
   isAdmin: boolean;
+  isModerator: boolean;
+  hubStats: {
+    membersCount: number;
+    resourcesCount: number;
+  } | null;
 }
-
 export function HubTabs({
   hub,
+  isMember,
   isAdmin,
+  isModerator,
+  hubStats
 }: HubTabsProps) {
-  const { session } = useAuthSession();
-  
-  // Fetch membership status
-  const { data: memberStatus, isLoading: isLoadingMemberStatus } = useQuery({
-    queryKey: ['hub-member-status', hub.id, session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return null;
-      
-      try {
-        const { data, error } = await supabase
-          .from('hub_members')
-          .select('role, status, confirmed')
-          .eq('hub_id', hub.id)
-          .eq('profile_id', session.user.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("Error fetching member status in HubTabs:", error);
-          return null;
-        }
-        return data;
-      } catch (error) {
-        console.error("Error fetching member status in HubTabs:", error);
-        return null;
-      }
-    },
-    enabled: !!hub.id && !!session?.user?.id,
-  });
-  
-  // Determine membership status
-  const isMember = !!memberStatus && 
-                  memberStatus.status === 'Approved' && 
-                  memberStatus.confirmed === true;
-  
-  const isModerator = isMember && memberStatus.role === 'moderator';
-  
-  // Get hub statistics
-  const { data: hubStats } = useQuery({
-    queryKey: ['hub-stats', hub.id],
-    queryFn: async () => {
-      try {
-        const { data: members, error: membersError } = await supabase
-          .from('hub_members')
-          .select('id')
-          .eq('hub_id', hub.id)
-          .eq('status', 'Approved');
-          
-        const { data: resources, error: resourcesError } = await supabase
-          .from('hub_resources')
-          .select('id')
-          .eq('hub_id', hub.id);
-        
-        if (membersError || resourcesError) return null;
-        
-        return {
-          membersCount: members?.length || 0,
-          resourcesCount: resources?.length || 0
-        };
-      } catch (error) {
-        console.error("Error fetching hub stats:", error);
-        return { membersCount: 0, resourcesCount: 0 };
-      }
-    },
-    enabled: !!hub.id,
-  });
-
-  return (
-    <Tabs defaultValue="overview" className="w-full">
+  const {
+    session
+  } = useAuthSession();
+  return <Tabs defaultValue="overview" className="w-full">
       <TabsList className="w-full justify-start">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         {session && <TabsTrigger value="chat">Channels</TabsTrigger>}
-        {isMember && (
-          <>
+        {isMember && <>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="departments">Communities</TabsTrigger>
-          </>
-        )}
+          </>}
         {isAdmin && <TabsTrigger value="manage">Manage</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
         <HubOverviewSection hub={hub} hubStats={hubStats} />
-        {!isMember && session && (
-          <Alert className="mt-6">
+        {!isMember && <Alert className="mt-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Join this hub to access announcements, resources, members list, and departments.
             </AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
       </TabsContent>
 
-      {session && (
-        <TabsContent value="chat" className="mt-6">
-          {!isMember && (
-            <Alert className="mb-6">
+      {session && <TabsContent value="chat" className="mt-6">
+          {!isMember && <Alert className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 You can participate in public chat rooms. Join this hub to access private chat rooms as well.
               </AlertDescription>
-            </Alert>
-          )}
+            </Alert>}
           <HubChat hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
-        </TabsContent>
-      )}
+        </TabsContent>}
 
-      {isMember && (
-        <>
+      {isMember && <>
           <TabsContent value="announcements" className="mt-6">
             <HubAnnouncements hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
           </TabsContent>
@@ -148,14 +79,10 @@ export function HubTabs({
           <TabsContent value="departments" className="mt-6">
             <HubDepartments hubId={hub.id} isAdmin={isAdmin} isModerator={isModerator} />
           </TabsContent>
-        </>
-      )}
+        </>}
 
-      {isAdmin && (
-        <TabsContent value="manage" className="mt-6">
+      {isAdmin && <TabsContent value="manage" className="mt-6">
           <HubManagement hub={hub} />
-        </TabsContent>
-      )}
-    </Tabs>
-  );
+        </TabsContent>}
+    </Tabs>;
 }

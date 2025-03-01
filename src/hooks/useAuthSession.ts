@@ -34,7 +34,7 @@ export function useAuthSession() {
     navigate("/auth");
   };
 
-  const { data: session, error: sessionError, isError, isLoading } = useQuery({
+  const { data: session, error: sessionError, isError } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
@@ -52,9 +52,7 @@ export function useAuthSession() {
             await handleSessionExpiration();
             return null;
           }
-          // Don't throw the error to prevent app from crashing
-          console.warn('Auth error but continuing:', error);
-          return null;
+          throw error;
         }
 
         // If session exists but access token is expired
@@ -67,8 +65,7 @@ export function useAuthSession() {
         return session;
       } catch (error) {
         console.error('Auth session error:', error);
-        // Return null instead of throwing to prevent app crash
-        return null;
+        throw error;
       }
     },
     retry: false,
@@ -78,8 +75,6 @@ export function useAuthSession() {
 
   // Set up auth state change listener
   supabase.auth.onAuthStateChange(async (event, newSession) => {
-    console.log(`Auth state changed: ${event}`);
-    
     if (event === 'SIGNED_IN') {
       queryClient.setQueryData(['auth-session'], newSession);
     } 
@@ -98,7 +93,6 @@ export function useAuthSession() {
     session,
     sessionError,
     isError,
-    isLoading,
     queryClient
   };
 }

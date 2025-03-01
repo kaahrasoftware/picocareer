@@ -1,11 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { HubAnnouncement } from "@/types/database/hubs";
 
 export function useAnnouncements(hubId: string, sortByRecent: boolean) {
   return useQuery({
-    queryKey: ['hub-announcements', hubId, sortByRecent],
+    queryKey: ['hub-announcements', hubId],
     queryFn: async () => {
       const {
         data: announcementsData,
@@ -23,22 +22,10 @@ export function useAnnouncements(hubId: string, sortByRecent: boolean) {
       if (profilesError) throw profilesError;
 
       const profileMap = new Map(profilesData?.map(p => [p.id, p]));
-      
-      // Map category to the correct type before returning
-      return announcementsData.map(announcement => {
-        // Ensure category is one of the valid enum values
-        let category = announcement.category;
-        if (!['general', 'event', 'update', 'resource', 'job', 'academic'].includes(category)) {
-          category = 'general';
-        }
-        
-        return {
-          ...announcement,
-          category: category as HubAnnouncement['category'],
-          created_by_profile: profileMap.get(announcement.created_by) || null
-        };
-      }) as HubAnnouncement[];
-    },
-    enabled: !!hubId
+      return announcementsData.map(announcement => ({
+        ...announcement,
+        created_by_profile: profileMap.get(announcement.created_by) || null
+      }));
+    }
   });
 }

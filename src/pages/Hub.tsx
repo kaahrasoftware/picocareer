@@ -1,151 +1,138 @@
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Hub } from "@/types/database/hubs";
+import { Button } from "@/components/ui/button";
 import { HubHeader } from "@/components/hub/HubHeader";
-import { HubTabs } from "@/components/hub/HubTabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
-import { Hub as HubType } from "@/types/database/hubs";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { HubTabs } from "@/components/hub/HubTabs";
 
 export default function Hub() {
-  const { hubId } = useParams<{ hubId: string }>();
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { session } = useAuthSession();
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
-  // Fetch hub data - enabled even without session to show public info
-  const { data: hub, isLoading: isLoadingHub, error: hubError } = useQuery({
-    queryKey: ['hub', hubId],
+  const { data: memberData, isLoading: isMemberLoading } = useQuery({
+    queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
-      try {
-        if (!hubId) return null;
-        
-        const { data, error } = await supabase
-          .from('hubs')
-          .select('*')
-          .eq('id', hubId)
-          .single();
+      if (!id || !session?.user?.id) return null;
+      const { data, error } = await supabase
+        .from('hub_members')
+        .select('role, status')
+        .eq('hub_id', id)
+        .eq('profile_id', session.user.id)
+        .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching hub:", error);
-          throw error;
-        }
-        
-        return data as HubType;
-      } catch (error) {
-        console.error("Error fetching hub:", error);
-        return null;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking hub membership:', error);
       }
+      return data;
     },
-    enabled: !!hubId,
+    enabled: !!id && !!session?.user?.id && isValidUUID,
   });
 
-  // Fetch member status - only enabled with session
-  const { data: memberStatus, isLoading: isMemberLoading } = useQuery({
-    queryKey: ['hub-member-status', hubId, session?.user?.id],
+  const isAdmin = memberData?.role === 'admin';
+  const isModerator = memberData?.role === 'moderator';
+  const isMember = memberData?.status === 'Approved';
+
+  const { data: hub, isLoading: hubLoading, error: hubError } = useQuery({
+    queryKey: ['hub', id],
     queryFn: async () => {
-      if (!session?.user?.id || !hubId) return null;
+      if (!isValidUUID) {
+        throw new Error('Invalid hub ID');
+      }
+
+      const { data, error } = await supabase
+        .from('hubs')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching hub:', error);
+        throw error;
+      }
       
-      try {
-        const { data, error } = await supabase
-          .from('hub_members')
-          .select('role, status, confirmed')
-          .eq('hub_id', hubId)
-          .eq('profile_id', session.user.id)
-          .single();
-
-        if (error) {
-          if (error.code !== 'PGRST116') { // PGRST116 means no rows returned
-            console.error("Error fetching member status:", error);
-          }
-          return null;
-        }
-        
-        return data;
-      } catch (error) {
-        console.error("Error fetching member status:", error);
-        return null;
+      if (!data) {
+        throw new Error('Hub not found');
       }
+
+      return data as Hub;
     },
-    enabled: !!hubId && !!session?.user?.id,
+    enabled: !!id && isValidUUID,
+    retry: 1, // Only retry once for not found errors
   });
 
-  useEffect(() => {
-    // If the user is a member but hasn't confirmed, show the confirmation dialog
-    if (memberStatus && !memberStatus.confirmed) {
-      setShowConfirmation(true);
-    }
-  }, [memberStatus]);
+  const { data: hubStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['hub-stats', id],
+    queryFn: async () => {
+      if (!id) return null;
 
-  // Show loading state
-  if (isLoadingHub) {
+      const membersCount = await supabase
+        .from('hub_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('hub_id', id)
+        .eq('status', 'Approved');
+
+      const resourcesCount = await supabase
+        .from('hub_resources')
+        .select('id', { count: 'exact', head: true })
+        .eq('hub_id', id);
+
+      return {
+        membersCount: membersCount.count || 0,
+        resourcesCount: resourcesCount.count || 0
+      };
+    },
+    enabled: !!id && !hubError, // Only fetch stats if hub exists
+  });
+
+  if (!id || !isValidUUID) {
     return (
-      <div className="container py-8 space-y-4">
-        <Skeleton className="h-20 w-full" />
+      <div className="container mx-auto py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Invalid Hub ID</h1>
+        <p className="text-muted-foreground mb-4">
+          The hub ID provided is not valid.
+        </p>
+        <Button onClick={() => window.history.back()}>Go Back</Button>
+      </div>
+    );
+  }
+
+  if (hubLoading || statsLoading || isMemberLoading) {
+    return (
+      <div className="container mx-auto py-8 space-y-8">
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-12 w-48" />
         <Skeleton className="h-96 w-full" />
       </div>
     );
   }
 
-  // Hub not found or not approved
-  if (!hub || hub.status !== 'Approved') {
+  if (hubError || !hub) {
     return (
-      <div className="container py-8">
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {hubError ? 'An error occurred when loading this hub.' : 'This hub does not exist or is not yet approved.'}
-          </AlertDescription>
-        </Alert>
-        
-        <button 
-          onClick={() => navigate('/hubs')}
-          className="mt-4 px-4 py-2 rounded bg-primary text-white"
-        >
-          Back to Hubs
-        </button>
+      <div className="container mx-auto py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Hub not found</h1>
+        <p className="text-muted-foreground mb-4">
+          The hub you're looking for doesn't exist or has been removed.
+        </p>
+        <Button onClick={() => window.history.back()}>Go Back</Button>
       </div>
     );
   }
-
-  // If user is not logged in, show public view with login prompt
-  if (!session) {
-    return (
-      <div className="container py-8 space-y-8">
-        <HubHeader hub={hub} />
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Please sign in to interact with this hub and access all features.
-          </AlertDescription>
-        </Alert>
-        <HubTabs hub={hub} isAdmin={false} />
-      </div>
-    );
-  }
-
-  const userIsAdmin = memberStatus?.role === 'admin';
 
   return (
-    <div className="container py-8 space-y-8">
+    <div className="container mx-auto py-8 space-y-8">
       <HubHeader hub={hub} />
-      <HubTabs hub={hub} isAdmin={userIsAdmin} />
-      
-      {/* Membership confirmation dialog */}
-      {showConfirmation && (
-        <MembershipConfirmationDialog
-          hubId={hubId!}
-          hubName={hub.name}
-          description={hub.description || ''}
-          open={showConfirmation}
-          onOpenChange={setShowConfirmation}
-        />
-      )}
+      <HubTabs 
+        hub={hub}
+        isMember={isMember}
+        isAdmin={isAdmin}
+        isModerator={isModerator}
+        hubStats={hubStats}
+      />
     </div>
   );
 }

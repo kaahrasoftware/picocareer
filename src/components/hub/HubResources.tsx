@@ -6,7 +6,7 @@ import { ResourceForm } from "./forms/ResourceForm";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { HubResource, ResourceType } from "@/types/database/hubs";
+import { HubResource } from "@/types/database/hubs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResourceCard } from "./resources/ResourceCard";
 import { ResourceFilters } from "./resources/ResourceFilters";
@@ -40,20 +40,7 @@ export function HubResources({ hubId, isAdmin }: HubResourcesProps) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Map the database response to the HubResource type
-      return (data || []).map(item => {
-        // Ensure resource_type is one of the valid enum values
-        let resourceType = item.resource_type as ResourceType;
-        if (!['document', 'image', 'video', 'link', 'event'].includes(resourceType)) {
-          resourceType = 'document';
-        }
-        
-        return {
-          ...item,
-          resource_type: resourceType
-        } as HubResource;
-      });
+      return data;
     },
   });
 
@@ -62,7 +49,7 @@ export function HubResources({ hubId, isAdmin }: HubResourcesProps) {
   }
 
   const getResourceUrl = (resource: HubResource) => {
-    return resource.resource_type === 'link' ? resource.external_url : resource.file_url;
+    return resource.resource_type === 'external_link' ? resource.external_url : resource.file_url;
   };
 
   const categories = Array.from(new Set(resources?.map(r => r.category).filter(Boolean) || []));
