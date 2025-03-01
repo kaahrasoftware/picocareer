@@ -39,58 +39,15 @@ export function NotificationContent({
       let invitationId = null;
       let hubName = "the hub";
       let inviteToken = null;
-      let foundViaNotification = false;
+      let inviteData = null;
       
-      // First try to get invitation details from notification
-      if (notification_id) {
-        console.log("Getting invitation details from notification");
-        const { data: notificationData, error: notificationError } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('id', notification_id)
-          .single();
-        
-        if (notificationError) {
-          console.error("Failed to fetch notification details:", notificationError);
-          console.log("Will attempt to find invitation by email instead");
-        } else if (notificationData && notificationData.action_url) {
-          console.log("Notification data found:", notificationData);
-          foundViaNotification = true;
-          
-          // Extract invitation token from the action_url
-          if (notificationData.action_url.includes('token=')) {
-            // URL format: /hub-invite?token=xxx
-            const tokenMatch = notificationData.action_url.match(/token=([^&]+)/);
-            if (tokenMatch && tokenMatch[1]) {
-              inviteToken = tokenMatch[1];
-            }
-          } else if (notificationData.action_url.includes('/hub-invite/')) {
-            // URL format: /hub-invite/xxx
-            const pathParts = notificationData.action_url.split('/');
-            inviteToken = pathParts[pathParts.length - 1];
-          }
-          
-          if (!inviteToken) {
-            try {
-              // Parse the URL if it's a full URL
-              const url = new URL(notificationData.action_url, window.location.origin);
-              inviteToken = url.searchParams.get('token');
-            } catch (parseError) {
-              console.error("URL parsing error:", parseError);
-            }
-          }
-          
-          console.log("Extracted invitation token:", inviteToken);
-        }
-      }
-      
-      // Get the current user
+      // Get the current user first to validate authentication
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
         throw new Error("Please sign in to respond to this invitation");
       }
-      
+
       // Get user's email
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
@@ -105,14 +62,44 @@ export function NotificationContent({
       
       console.log("User email:", userProfile.email);
       
+      // APPROACH 1: Try to extract token from action_url if we have a notification
+      if (notification_id && action_url) {
+        console.log("Extracting token from notification action_url:", action_url);
+        
+        // Extract invitation token from the action_url
+        if (action_url.includes('token=')) {
+          // URL format: /hub-invite?token=xxx
+          const tokenMatch = action_url.match(/token=([^&]+)/);
+          if (tokenMatch && tokenMatch[1]) {
+            inviteToken = tokenMatch[1];
+          }
+        } else if (action_url.includes('/hub-invite/')) {
+          // URL format: /hub-invite/xxx
+          const pathParts = action_url.split('/');
+          inviteToken = pathParts[pathParts.length - 1];
+        }
+        
+        // Try parsing as a URL if it's a full URL
+        if (!inviteToken && action_url) {
+          try {
+            const url = new URL(action_url, window.location.origin);
+            inviteToken = url.searchParams.get('token');
+          } catch (parseError) {
+            console.log("URL parsing failed, not a valid URL:", parseError);
+          }
+        }
+        
+        console.log("Extracted invitation token:", inviteToken);
+      }
+      
       // If we have a token, use it to find the invitation
-      let inviteData = null;
       if (inviteToken) {
         console.log("Finding invitation by token:", inviteToken);
         const { data, error: inviteError } = await supabase
           .from('hub_member_invites')
           .select('*, hub:hubs(id, name)')
           .eq('token', inviteToken)
+          .eq('status', 'pending')
           .maybeSingle();
           
         if (inviteError) {
@@ -123,9 +110,9 @@ export function NotificationContent({
         }
       }
       
-      // If we couldn't find the invitation by token, try to find by user email
+      // APPROACH 2: If token approach failed, try to find by user email
       if (!inviteData) {
-        console.log("Token-based lookup failed or wasn't attempted, trying email-based lookup");
+        console.log("Token-based lookup failed, trying email-based lookup");
         
         // Find pending invitation for this user's email
         const { data: userInvites, error: userInvitesError } = await supabase
@@ -142,7 +129,7 @@ export function NotificationContent({
         }
         
         if (!userInvites || userInvites.length === 0) {
-          throw new Error("No pending invitations found for your account");
+          throw new Error("No pending invitations found for your account. Please contact the hub administrator.");
         }
         
         // Use the most recent invitation if multiple are found
@@ -166,8 +153,7 @@ export function NotificationContent({
         hubId, 
         invitationId, 
         hubName, 
-        accept,
-        foundViaNotification
+        accept
       });
       
       const timestamp = new Date().toISOString();
