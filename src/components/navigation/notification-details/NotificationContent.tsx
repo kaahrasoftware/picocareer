@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
@@ -22,6 +21,7 @@ export function NotificationContent({
   notification_id?: string;
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -55,6 +55,7 @@ export function NotificationContent({
   const handleInvitationResponse = async (accept: boolean) => {
     try {
       setIsProcessing(true);
+      setErrorMessage(null);
       
       console.log("Starting invitation response process", { accept, notification_id, action_url });
       
@@ -97,7 +98,7 @@ export function NotificationContent({
         console.log("Finding invitation by token:", inviteToken);
         const { data, error: inviteError } = await supabase
           .from('hub_member_invites')
-          .select('*, hub:hubs(id, name)')
+          .select('*, hub:hubs(id, name), invited_email')
           .eq('token', inviteToken)
           .eq('status', 'pending')
           .maybeSingle();
@@ -105,6 +106,11 @@ export function NotificationContent({
         if (inviteError) {
           console.error("Error fetching invitation by token:", inviteError);
         } else if (data) {
+          // Validate the invitation is for the current user's email
+          if (data.invited_email.toLowerCase() !== userProfile.email.toLowerCase()) {
+            throw new Error(`This invitation was sent to ${data.invited_email}, but you're signed in as ${userProfile.email}. Please sign in with the correct account.`);
+          }
+          
           inviteData = data;
           console.log("Found invitation by token:", inviteData);
         }
@@ -129,6 +135,23 @@ export function NotificationContent({
         }
         
         if (!userInvites || userInvites.length === 0) {
+          // Check if there are any invitations for other emails
+          const { data: allInvites, error: allInvitesError } = await supabase
+            .from('hub_member_invites')
+            .select('invited_email')
+            .eq('status', 'pending')
+            .limit(5);
+            
+          if (!allInvitesError && allInvites && allInvites.length > 0) {
+            const otherEmails = allInvites
+              .map(invite => invite.invited_email)
+              .filter(email => email.toLowerCase() !== userProfile.email.toLowerCase());
+              
+            if (otherEmails.length > 0) {
+              throw new Error(`No invitations found for ${userProfile.email}. There are pending invitations for other email addresses. Please sign in with the correct account.`);
+            }
+          }
+          
           throw new Error("No pending invitations found for your account. Please contact the hub administrator.");
         }
         
@@ -224,6 +247,7 @@ export function NotificationContent({
       
     } catch (error: any) {
       console.error("Error processing invitation response:", error);
+      setErrorMessage(error.message || "Failed to process invitation");
       
       toast({
         title: "Error",
@@ -242,6 +266,13 @@ export function NotificationContent({
         <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
           {message}
         </p>
+        
+        {errorMessage && (
+          <div className="mt-2 p-2 text-xs text-red-500 bg-red-50 rounded-md">
+            {errorMessage}
+          </div>
+        )}
+        
         <div className="flex items-center space-x-2 mt-3">
           {isProcessing ? (
             <div className="text-xs">Processing...</div>
