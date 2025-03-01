@@ -29,6 +29,7 @@ export function NotificationContent({
   // Helper function to determine notification type
   const isHubInvite = type === 'hub_invite';
   const isHubMembership = type === 'hub_membership';
+  const isSessionBooked = type === 'session_booked';
   
   const extractHubId = (url?: string): string | null => {
     if (!url) return null;
@@ -166,13 +167,19 @@ export function NotificationContent({
     }
   };
   
+  // Function to safely render HTML content
+  const renderHtmlContent = (content: string) => {
+    return { __html: content };
+  };
+  
   // Render appropriate content based on notification type
   if (isHubInvite) {
     return (
       <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
-        <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-          {message}
-        </p>
+        <div 
+          className={isExpanded ? "line-clamp-none" : "line-clamp-2"}
+          dangerouslySetInnerHTML={renderHtmlContent(message)}
+        />
         
         {errorMessage && (
           <div className="mt-2 p-2 text-xs text-red-500 bg-red-50 rounded-md">
@@ -213,9 +220,10 @@ export function NotificationContent({
   if (isHubMembership) {
     return (
       <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
-        <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-          {message}
-        </p>
+        <div 
+          className={isExpanded ? "line-clamp-none" : "line-clamp-2"}
+          dangerouslySetInnerHTML={renderHtmlContent(message)}
+        />
         
         <div className="flex items-center space-x-2 mt-3">
           <Button 
@@ -231,10 +239,47 @@ export function NotificationContent({
     );
   }
   
+  // Session booked notification with HTML content
+  if (isSessionBooked) {
+    return (
+      <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
+        <div 
+          className={`prose prose-sm max-w-none ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}
+          dangerouslySetInnerHTML={renderHtmlContent(message)}
+        />
+        
+        {action_url && (
+          <div className="flex items-center space-x-2 mt-3">
+            <Button 
+              size="sm"
+              onClick={() => {
+                if (notification_id) {
+                  supabase
+                    .from('notifications')
+                    .update({ read: true })
+                    .eq('id', notification_id);
+                }
+                navigate(action_url);
+              }}
+              className="flex items-center"
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              View Details
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+  
   // Default content for other notification types
   return (
-    <p className={`mt-1 text-sm text-gray-600 bg-gray-50 p-2 rounded-md ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}>
-      {message}
-    </p>
+    <div className={`mt-1 text-sm text-gray-600 bg-gray-50 p-2 rounded-md ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}>
+      <div 
+        className="prose prose-sm max-w-none"
+        dangerouslySetInnerHTML={renderHtmlContent(message)}
+      />
+    </div>
   );
 }
+
