@@ -39,6 +39,7 @@ export function NotificationContent({
       let invitationId = null;
       let hubName = "the hub";
       let inviteToken = null;
+      let foundViaNotification = false;
       
       // First try to get invitation details from notification
       if (notification_id) {
@@ -51,40 +52,36 @@ export function NotificationContent({
         
         if (notificationError) {
           console.error("Failed to fetch notification details:", notificationError);
-          throw new Error(`Failed to fetch notification: ${notificationError.message}`);
-        }
-        
-        if (!notificationData || !notificationData.action_url) {
-          console.error("Notification doesn't contain needed information", notificationData);
-          throw new Error("Could not find invitation details in this notification");
-        }
-        
-        console.log("Notification data found:", notificationData);
-        
-        // Extract invitation token from the action_url
-        if (notificationData.action_url.includes('token=')) {
-          // URL format: /hub-invite?token=xxx
-          const tokenMatch = notificationData.action_url.match(/token=([^&]+)/);
-          if (tokenMatch && tokenMatch[1]) {
-            inviteToken = tokenMatch[1];
+          console.log("Will attempt to find invitation by email instead");
+        } else if (notificationData && notificationData.action_url) {
+          console.log("Notification data found:", notificationData);
+          foundViaNotification = true;
+          
+          // Extract invitation token from the action_url
+          if (notificationData.action_url.includes('token=')) {
+            // URL format: /hub-invite?token=xxx
+            const tokenMatch = notificationData.action_url.match(/token=([^&]+)/);
+            if (tokenMatch && tokenMatch[1]) {
+              inviteToken = tokenMatch[1];
+            }
+          } else if (notificationData.action_url.includes('/hub-invite/')) {
+            // URL format: /hub-invite/xxx
+            const pathParts = notificationData.action_url.split('/');
+            inviteToken = pathParts[pathParts.length - 1];
           }
-        } else if (notificationData.action_url.includes('/hub-invite/')) {
-          // URL format: /hub-invite/xxx
-          const pathParts = notificationData.action_url.split('/');
-          inviteToken = pathParts[pathParts.length - 1];
-        }
-        
-        if (!inviteToken) {
-          try {
-            // Parse the URL if it's a full URL
-            const url = new URL(notificationData.action_url, window.location.origin);
-            inviteToken = url.searchParams.get('token');
-          } catch (parseError) {
-            console.error("URL parsing error:", parseError);
+          
+          if (!inviteToken) {
+            try {
+              // Parse the URL if it's a full URL
+              const url = new URL(notificationData.action_url, window.location.origin);
+              inviteToken = url.searchParams.get('token');
+            } catch (parseError) {
+              console.error("URL parsing error:", parseError);
+            }
           }
+          
+          console.log("Extracted invitation token:", inviteToken);
         }
-        
-        console.log("Extracted invitation token:", inviteToken);
       }
       
       // Get the current user
@@ -93,6 +90,20 @@ export function NotificationContent({
       if (userError || !user) {
         throw new Error("Please sign in to respond to this invitation");
       }
+      
+      // Get user's email
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError || !userProfile) {
+        console.error("Could not fetch user profile:", profileError);
+        throw new Error("Could not verify your account information");
+      }
+      
+      console.log("User email:", userProfile.email);
       
       // If we have a token, use it to find the invitation
       let inviteData = null;
@@ -114,19 +125,7 @@ export function NotificationContent({
       
       // If we couldn't find the invitation by token, try to find by user email
       if (!inviteData) {
-        console.log("Token-based lookup failed, trying email-based lookup");
-        const { data: userProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('id', user.id)
-          .single();
-        
-        if (profileError || !userProfile) {
-          console.error("Could not fetch user profile:", profileError);
-          throw new Error("Could not verify your account information");
-        }
-        
-        console.log("User email:", userProfile.email);
+        console.log("Token-based lookup failed or wasn't attempted, trying email-based lookup");
         
         // Find pending invitation for this user's email
         const { data: userInvites, error: userInvitesError } = await supabase
@@ -167,7 +166,8 @@ export function NotificationContent({
         hubId, 
         invitationId, 
         hubName, 
-        accept 
+        accept,
+        foundViaNotification
       });
       
       const timestamp = new Date().toISOString();
