@@ -63,7 +63,8 @@ export default function Hub() {
         throw new Error('Hub not found');
       }
 
-      return data as Hub;
+      // Convert data to the expected Hub type
+      return data as unknown as Hub;
     },
     enabled: !!id && isValidUUID,
     retry: 1, // Only retry once for not found errors

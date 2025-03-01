@@ -21,7 +21,8 @@ export default function Hubs() {
         .order('name');
 
       if (error) throw error;
-      return data as Hub[];
+      // Convert the data to the expected Hub type
+      return data as unknown as Hub[];
     },
   });
 

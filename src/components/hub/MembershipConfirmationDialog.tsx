@@ -46,10 +46,12 @@ export function MembershipConfirmationDialog({
         throw error;
       }
 
-      if (data && data.success) {
+      // Convert the data response to a proper object for handling
+      const dataObj = data as any;
+      if (dataObj && dataObj.success) {
         toast({
           title: "Membership Confirmed",
-          description: data.message || `You have confirmed your membership in ${hubName}`,
+          description: dataObj.message || `You have confirmed your membership in ${hubName}`,
         });
         
         // Refresh hub data and member status
@@ -62,7 +64,7 @@ export function MembershipConfirmationDialog({
       } else {
         toast({
           title: "Error",
-          description: data?.message || "Failed to confirm membership",
+          description: dataObj?.message || "Failed to confirm membership",
           variant: "destructive",
         });
         onClose();

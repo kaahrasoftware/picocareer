@@ -17,6 +17,14 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { HubOnboardingGuideDialog } from "./HubOnboardingGuideDialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 
 interface HubTabsProps {
   hub: Hub;
@@ -57,11 +65,12 @@ export function HubTabs({
         throw error;
       }
 
-      // Handle the response - the data can be various types based on the RPC function
-      const successValue = typeof data === 'object' && data !== null ? data.success : false;
+      // Handle the response - convert to proper type for handling
+      const dataObj = data as any;
+      const successValue = typeof dataObj === 'object' && dataObj !== null ? dataObj.success : false;
       
       if (successValue) {
-        const messageValue = typeof data === 'object' && data !== null ? data.message : '';
+        const messageValue = typeof dataObj === 'object' && dataObj !== null ? dataObj.message : '';
         
         toast({
           title: "Membership Confirmed",
@@ -76,7 +85,7 @@ export function HubTabs({
         // Show welcome dialog
         setShowWelcomeDialog(true);
       } else {
-        const messageValue = typeof data === 'object' && data !== null ? data.message : '';
+        const messageValue = typeof dataObj === 'object' && dataObj !== null ? dataObj.message : '';
         
         toast({
           title: "Error",
