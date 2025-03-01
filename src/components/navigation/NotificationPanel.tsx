@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotificationItem } from "./NotificationItem";
@@ -76,12 +77,21 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     }
   };
 
+  // Safely categorize notifications to prevent errors
   const categorizedNotifications = localNotifications.reduce((acc, notification) => {
-    const category = getNotificationCategory(notification.type as any);
-    if (!acc[category]) {
-      acc[category] = [];
+    try {
+      const category = getNotificationCategory(notification.type as any);
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(notification);
+    } catch (error) {
+      // If there's an error categorizing, put in general
+      if (!acc.general) {
+        acc.general = [];
+      }
+      acc.general.push(notification);
     }
-    acc[category].push(notification);
     return acc;
   }, {} as Record<NotificationCategory, Notification[]>);
 
