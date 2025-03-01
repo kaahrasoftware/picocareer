@@ -52,6 +52,7 @@ export function MembershipConfirmationDialog({
         // Refresh hub data and member status
         queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
         queryClient.invalidateQueries({ queryKey: ['hub-member-role', hubId] });
+        queryClient.invalidateQueries({ queryKey: ['hub-pending-members', hubId] });
         
         onClose();
       } else {
