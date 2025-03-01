@@ -1,5 +1,4 @@
-
-export type HubType = 'Educational' | 'Professional' | 'Community' | 'Interest' | 'School' | 'Corporate';
+export type HubType = 'Educational' | 'Professional' | 'Community' | 'Interest' | 'School' | 'Corporate' | 'NGO' | 'Organization';
 
 export type MemberRole = 'admin' | 'moderator' | 'member' | 'faculty' | 'student';
 

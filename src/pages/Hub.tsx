@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
 import { Hub as HubType } from "@/types/database/hubs";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Hub() {
   const { hubId } = useParams<{ hubId: string }>();
@@ -16,8 +18,8 @@ export default function Hub() {
   const { session } = useAuthSession();
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  // Fetch hub data
-  const { data: hub, isLoading: isLoadingHub } = useQuery({
+  // Fetch hub data - enabled even without session to show public info
+  const { data: hub, isLoading: isLoadingHub, error: hubError } = useQuery({
     queryKey: ['hub', hubId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,10 +31,10 @@ export default function Hub() {
       if (error) throw error;
       return data as HubType;
     },
-    enabled: !!hubId && !!session,
+    enabled: !!hubId,
   });
 
-  // Fetch member status
+  // Fetch member status - only enabled with session
   const { data: memberStatus } = useQuery({
     queryKey: ['hub-member-status', hubId, session?.user?.id],
     queryFn: async () => {
@@ -58,6 +60,7 @@ export default function Hub() {
     }
   }, [memberStatus]);
 
+  // Show loading state
   if (isLoadingHub) {
     return (
       <div className="container py-8 space-y-4">
@@ -67,19 +70,39 @@ export default function Hub() {
     );
   }
 
-  if (!hub) {
+  // Hub not found or not approved
+  if (!hub || hub.status !== 'Approved') {
     return (
       <div className="container py-8">
-        <h1 className="text-2xl font-bold">Hub not found</h1>
-        <p className="text-muted-foreground mt-2">
-          The hub you're looking for doesn't exist or you don't have access to it.
-        </p>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {hubError ? 'An error occurred when loading this hub.' : 'This hub does not exist or is not yet approved.'}
+          </AlertDescription>
+        </Alert>
+        
         <button 
           onClick={() => navigate('/hubs')}
           className="mt-4 px-4 py-2 rounded bg-primary text-white"
         >
           Back to Hubs
         </button>
+      </div>
+    );
+  }
+
+  // If user is not logged in, show public view with login prompt
+  if (!session) {
+    return (
+      <div className="container py-8 space-y-8">
+        <HubHeader hub={hub} isAdmin={false} />
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please sign in to interact with this hub and access all features.
+          </AlertDescription>
+        </Alert>
+        <HubTabs hub={hub} isAdmin={false} />
       </div>
     );
   }

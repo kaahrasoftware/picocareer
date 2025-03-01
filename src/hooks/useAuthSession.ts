@@ -34,7 +34,7 @@ export function useAuthSession() {
     navigate("/auth");
   };
 
-  const { data: session, error: sessionError, isError } = useQuery({
+  const { data: session, error: sessionError, isError, isLoading } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       try {
@@ -93,6 +93,7 @@ export function useAuthSession() {
     session,
     sessionError,
     isError,
+    isLoading,
     queryClient
   };
 }

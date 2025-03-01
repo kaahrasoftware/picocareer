@@ -26,7 +26,7 @@ export function HubTabs({
   const { session } = useAuthSession();
   
   // Fetch membership status
-  const { data: memberStatus } = useQuery({
+  const { data: memberStatus, isLoading: isLoadingMemberStatus } = useQuery({
     queryKey: ['hub-member-status', hub.id, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
@@ -44,7 +44,11 @@ export function HubTabs({
     enabled: !!hub.id && !!session?.user?.id,
   });
   
-  const isMember = !!memberStatus && memberStatus.status === 'Approved' && memberStatus.confirmed;
+  // Determine membership status
+  const isMember = !!memberStatus && 
+                  memberStatus.status === 'Approved' && 
+                  memberStatus.confirmed === true;
+  
   const isModerator = isMember && memberStatus.role === 'moderator';
   
   // Get hub statistics
@@ -90,7 +94,7 @@ export function HubTabs({
 
       <TabsContent value="overview" className="mt-6">
         <HubOverviewSection hub={hub} hubStats={hubStats} />
-        {!isMember && (
+        {!isMember && session && (
           <Alert className="mt-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
