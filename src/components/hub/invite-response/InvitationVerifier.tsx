@@ -76,13 +76,17 @@ export function InvitationVerifier() {
             console.log("No invitation found with token:", token);
             throw new Error("No invitation found with this token. It may have expired or already been processed.");
           }
-        }
-        
-        // If no token or token lookup failed, get all pending invitations for the user
-        if (!invitations) {
-          console.log("Looking up all pending invitations for user");
+        } else {
+          // No token provided, get all pending invitations for the user's email
+          console.log("Looking up pending invitations for user email");
           
-          // Fetch pending invitations for the current user
+          const userEmail = session.user.email;
+          console.log("User email:", userEmail);
+          
+          if (!userEmail) {
+            throw new Error("Could not determine your email address. Please update your profile.");
+          }
+          
           const { data: userInvitations, error: inviteError } = await supabase
             .from('hub_member_invites')
             .select(`
@@ -94,7 +98,8 @@ export function InvitationVerifier() {
                 logo_url
               )
             `)
-            .eq('status', 'pending');
+            .eq('status', 'pending')
+            .eq('invited_email', userEmail);
 
           if (inviteError) {
             console.error("Error fetching user invitations:", inviteError);

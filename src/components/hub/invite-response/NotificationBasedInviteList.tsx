@@ -82,8 +82,7 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
       if (accept) {
         navigate(`/hubs/${invitation.hub.id}`);
       } else {
-        // Remove this invitation from the list in the parent component
-        // For simplicity, we'll just refresh the page
+        // Remove this invitation from the UI
         window.location.reload();
       }
       

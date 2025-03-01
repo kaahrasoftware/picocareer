@@ -13,9 +13,10 @@ export function ErrorState({ error }: ErrorStateProps) {
   console.error("Hub invitation error:", error);
   
   // Determine error type to show appropriate guidance
-  const isFormatError = error.includes("format") || error.includes("token") || error.includes("invalid");
+  const isTokenError = error.includes("token") || error.includes("invitation") || error.includes("not found");
   const isExpiredError = error.includes("expired");
   const isProcessedError = error.includes("already been") || error.includes("processed");
+  const isAuthError = error.includes("sign in") || error.includes("authentication");
   const isNoInvitationsError = error.includes("No pending invitations");
 
   return (
@@ -28,7 +29,9 @@ export function ErrorState({ error }: ErrorStateProps) {
           <h2 className="text-xl font-semibold">
             {isNoInvitationsError
               ? "No Invitations Found"
-              : "Verification Failed"}
+              : isAuthError
+                ? "Authentication Required"
+                : "Verification Failed"}
           </h2>
         </CardHeader>
         <CardContent>
@@ -36,19 +39,22 @@ export function ErrorState({ error }: ErrorStateProps) {
           <div className="bg-muted/50 rounded-lg p-4 text-sm">
             <p>How to resolve this:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              {isFormatError && (
-                <li>Double-check that you're using the correct invitation link</li>
+              {isTokenError && (
+                <li>Make sure you're using the correct invitation link</li>
               )}
               {isExpiredError && (
                 <li>Ask the hub administrator to send you a new invitation</li>
               )}
               {isProcessedError && (
-                <li>This invitation has already been used, check your hubs dashboard</li>
+                <li>This invitation has already been processed, check your hubs dashboard</li>
+              )}
+              {isAuthError && (
+                <li>Sign in with the account that received the invitation</li>
               )}
               {isNoInvitationsError && (
                 <>
-                  <li>Contact the hub administrator to confirm they've sent you an invitation</li>
-                  <li>Check if the invitation was sent to a different email address</li>
+                  <li>Ask the hub administrator to confirm they've sent you an invitation</li>
+                  <li>Make sure you're signed in with the correct account</li>
                 </>
               )}
               <li>Contact the hub administrator for assistance</li>
