@@ -46,20 +46,19 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
         throw updateError;
       }
       
-      // If accepting, create hub member record
+      // If accepting, create hub member record using RPC function to bypass RLS
       if (accept) {
-        const { error: memberError } = await supabase
-          .from('hub_members')
-          .insert({
-            hub_id: invitation.hub_id,
-            profile_id: user.id,
-            role: invitation.role,
-            status: 'Approved',
-          });
+        // Call a stored procedure to create the member record (bypasses RLS)
+        const { error: rpcError } = await supabase.rpc('create_hub_member', { 
+          hub_id: invitation.hub_id,
+          member_profile_id: user.id,
+          member_role: invitation.role,
+          member_status: 'Approved'
+        });
           
-        if (memberError) {
-          console.error("Error creating member record:", memberError);
-          throw memberError;
+        if (rpcError) {
+          console.error("Error creating member record:", rpcError);
+          throw rpcError;
         }
       }
       
