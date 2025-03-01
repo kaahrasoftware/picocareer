@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { InviteMemberForm } from "./InviteMemberForm";
+import { AddMemberForm } from "./members/AddMemberForm";
 import { MembersList } from "./MembersList";
 
 interface HubMemberManagementProps {
@@ -41,7 +41,7 @@ export function HubMemberManagement({ hubId }: HubMemberManagementProps) {
 
   return (
     <div className="space-y-6">
-      <InviteMemberForm hubId={hubId} />
+      <AddMemberForm hubId={hubId} />
       <MembersList hubId={hubId} members={members} />
     </div>
   );

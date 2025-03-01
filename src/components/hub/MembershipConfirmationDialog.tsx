@@ -1,37 +1,42 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface MembershipConfirmationDialogProps {
   hubId: string;
   hubName: string;
-  hubDescription?: string;
-  onConfirmed: () => void;
+  description?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function MembershipConfirmationDialog({
   hubId,
   hubName,
-  hubDescription,
-  onConfirmed
+  description,
+  open,
+  onOpenChange,
 }: MembershipConfirmationDialogProps) {
-  const [open, setOpen] = useState(true);
-  const [isConfirming, setIsConfirming] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleConfirm = async () => {
-    setIsConfirming(true);
+    setIsSubmitting(true);
+
     try {
       const { data, error } = await supabase.rpc('confirm_hub_membership', {
         _hub_id: hubId
@@ -39,62 +44,79 @@ export function MembershipConfirmationDialog({
 
       if (error) throw error;
 
-      toast({
-        title: "Membership confirmed",
-        description: `You're now a confirmed member of ${hubName}`,
-      });
+      if (data.success) {
+        setIsConfirmed(true);
+        toast({
+          title: "Membership Confirmed",
+          description: data.message,
+        });
 
-      setOpen(false);
-      onConfirmed();
+        // Invalidate any relevant queries
+        queryClient.invalidateQueries({ queryKey: ['hub', hubId] });
+        queryClient.invalidateQueries({ queryKey: ['hub-member-status', hubId] });
+        
+        // Close dialog after a short delay
+        setTimeout(() => {
+          onOpenChange(false);
+          setIsConfirmed(false);
+        }, 2000);
+      } else {
+        throw new Error(data.message || "Failed to confirm membership");
+      }
     } catch (error: any) {
-      console.error('Error confirming membership:', error);
+      console.error("Error confirming membership:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to confirm membership. Please try again.",
+        description: error.message || "Failed to confirm membership",
         variant: "destructive",
       });
     } finally {
-      setIsConfirming(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleDecline = () => {
-    setOpen(false);
-    // Just close the dialog without confirming - they can still view basic hub info
-    toast({
-      title: "Membership not confirmed",
-      description: "You can confirm your membership later to get full access",
-    });
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Welcome to {hubName}</DialogTitle>
-          <DialogDescription>
-            You've been added to this hub. Please confirm your membership to access all features.
-            {hubDescription && (
-              <p className="mt-2">{hubDescription}</p>
+          <DialogTitle className="text-xl">Join {hubName}</DialogTitle>
+          <DialogDescription className="pt-2">
+            {isConfirmed ? (
+              <div className="flex flex-col items-center py-4">
+                <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+                <p className="text-center font-medium">
+                  You have successfully joined {hubName}!
+                </p>
+              </div>
+            ) : (
+              <>
+                <p>You've been added to this hub by an administrator.</p>
+                {description && <p className="mt-2">{description}</p>}
+                <p className="mt-2">
+                  Confirm your membership to access all features and resources.
+                </p>
+              </>
             )}
           </DialogDescription>
         </DialogHeader>
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={handleDecline} disabled={isConfirming}>
-            Later
-          </Button>
-          <Button onClick={handleConfirm} disabled={isConfirming}>
-            {isConfirming ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Confirming...
-              </>
-            ) : (
-              "Confirm Membership"
-            )}
-          </Button>
-        </DialogFooter>
+        {!isConfirmed && (
+          <DialogFooter className="flex sm:justify-between">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Maybe Later
+            </Button>
+            <Button onClick={handleConfirm} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Confirming...
+                </>
+              ) : (
+                "Confirm Membership"
+              )}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -4,7 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { MemberRole } from "@/types/database/hubs";
-import type { ValidatedEmail } from "../invite/useEmailValidation";
+
+type ValidatedEmail = {
+  email: string;
+  isValid: boolean;
+  exists: boolean;
+  message?: string;
+};
 
 export function useAddMembers(hubId: string) {
   const [isAdding, setIsAdding] = useState(false);
@@ -12,37 +18,27 @@ export function useAddMembers(hubId: string) {
   const queryClient = useQueryClient();
 
   const addMembers = async (
-    validatedEmails: ValidatedEmail[],
+    emails: string[],
     role: MemberRole
   ): Promise<boolean> => {
-    if (validatedEmails.length === 0) return false;
+    if (emails.length === 0) return false;
 
     setIsAdding(true);
     try {
-      // Filter valid emails that exist in the system
-      const validEmails = validatedEmails
-        .filter(e => e.isValid && e.exists)
-        .map(e => e.email);
-
-      if (validEmails.length === 0) {
-        toast({
-          title: "No valid emails",
-          description: "Please enter at least one valid email that exists in the system",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Add members one by one using the RPC function
+      // Add members directly using our new RPC function
       const results = await Promise.all(
-        validEmails.map(async (email) => {
+        emails.map(async (email) => {
           const { data, error } = await supabase.rpc('add_hub_member', {
             _hub_id: hubId,
             _email: email,
             _role: role
           });
           
-          return { email, success: !error, message: error?.message || data.message };
+          return { 
+            email, 
+            success: !error && data?.success, 
+            message: error?.message || data?.message 
+          };
         })
       );
 

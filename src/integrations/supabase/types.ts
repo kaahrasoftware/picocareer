@@ -1149,6 +1149,7 @@ export type Database = {
       }
       hub_members: {
         Row: {
+          confirmed: boolean
           created_at: string | null
           department_id: string | null
           hub_id: string
@@ -1160,6 +1161,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          confirmed?: boolean
           created_at?: string | null
           department_id?: string | null
           hub_id: string
@@ -1171,6 +1173,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          confirmed?: boolean
           created_at?: string | null
           department_id?: string | null
           hub_id?: string
@@ -3053,6 +3056,14 @@ export type Database = {
       }
     }
     Functions: {
+      add_hub_member: {
+        Args: {
+          _hub_id: string
+          _email: string
+          _role: string
+        }
+        Returns: Json
+      }
       add_tokens_to_wallet: {
         Args: {
           p_wallet_id: string
@@ -3100,6 +3111,12 @@ export type Database = {
       clean_old_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      confirm_hub_membership: {
+        Args: {
+          _hub_id: string
+        }
+        Returns: Json
       }
       create_hub_member: {
         Args: {
@@ -3578,6 +3595,7 @@ export type Database = {
         | "hub_invitation_sent"
         | "availability_request"
         | "hub_invite"
+        | "hub_membership"
       onboarding_status:
         | "Pending"
         | "Under Review"
