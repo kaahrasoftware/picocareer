@@ -29,6 +29,7 @@ export function NotificationContent({
   // Helper function to determine notification type
   const isHubInvite = type === 'hub_invite';
   const isHubMembership = type === 'hub_membership';
+  const isSessionNotification = type === 'session_booked' || type === 'session_reminder' || type === 'session_cancelled';
   
   const extractHubId = (url?: string): string | null => {
     if (!url) return null;
@@ -165,6 +166,71 @@ export function NotificationContent({
       setIsProcessing(false);
     }
   };
+
+  // Helper function to render HTML content safely
+  const renderHTML = (content: string) => {
+    return { __html: content };
+  };
+  
+  // Session notification formatter that highlights key details
+  const formatSessionMessage = (message: string) => {
+    // Check if contains HTML-like content
+    if (message.includes('<') && message.includes('>')) {
+      return (
+        <div 
+          className="prose prose-sm max-w-none text-gray-600"
+          dangerouslySetInnerHTML={renderHTML(message)}
+        />
+      );
+    }
+    
+    // For plain text session notifications, try to extract and format key details
+    const dateMatch = message.match(/scheduled for ([^,]+),/);
+    const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
+    const mentorMatch = message.match(/with ([^\.]+)/);
+    const sessionTypeMatch = message.match(/for a ([^\.]+) session/);
+    
+    if (dateMatch || timeMatch || mentorMatch || sessionTypeMatch) {
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-gray-600">{message}</p>
+          
+          <div className="grid grid-cols-1 gap-1 bg-gray-50 p-3 rounded-md border border-gray-200 mt-2">
+            {dateMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">Date:</span>
+                <span className="text-xs text-gray-700">{dateMatch[1]}</span>
+              </div>
+            )}
+            
+            {timeMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">Time:</span>
+                <span className="text-xs text-gray-700">{timeMatch[1]}</span>
+              </div>
+            )}
+            
+            {sessionTypeMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">Type:</span>
+                <span className="text-xs text-gray-700">{sessionTypeMatch[1]}</span>
+              </div>
+            )}
+            
+            {mentorMatch && (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs font-medium text-gray-500">With:</span>
+                <span className="text-xs text-gray-700">{mentorMatch[1]}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    // Default fallback
+    return <p className="text-sm text-gray-600">{message}</p>;
+  };
   
   // Render appropriate content based on notification type
   if (isHubInvite) {
@@ -230,11 +296,45 @@ export function NotificationContent({
       </div>
     );
   }
+
+  // Session notifications with enhanced formatting
+  if (isSessionNotification) {
+    return (
+      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
+        {formatSessionMessage(message)}
+        
+        {action_url && (
+          <div className="flex items-center space-x-2 mt-2">
+            <Button 
+              size="sm"
+              onClick={() => {
+                // Mark notification as read
+                if (notification_id) {
+                  supabase
+                    .from('notifications')
+                    .update({ read: true })
+                    .eq('id', notification_id);
+                }
+                navigate(action_url);
+              }}
+              className="flex items-center"
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              View Session
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
   
   // Default content for other notification types
   return (
-    <p className={`mt-1 text-sm text-gray-600 bg-gray-50 p-2 rounded-md ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}>
-      {message}
-    </p>
+    <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
+      <div 
+        className={`text-sm text-gray-600 prose prose-sm max-w-none ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}
+        dangerouslySetInnerHTML={renderHTML(message)}
+      />
+    </div>
   );
 }
