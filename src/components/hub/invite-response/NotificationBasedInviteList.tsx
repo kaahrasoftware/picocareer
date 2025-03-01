@@ -31,6 +31,21 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
       
       const timestamp = new Date().toISOString();
       
+      // First update the invitation status
+      const { error: updateError } = await supabase
+        .from('hub_member_invites')
+        .update({
+          status: accept ? 'accepted' : 'rejected',
+          accepted_at: accept ? timestamp : null,
+          rejected_at: accept ? null : timestamp,
+        })
+        .eq('id', invitation.id);
+        
+      if (updateError) {
+        console.error("Error updating invitation status:", updateError);
+        throw updateError;
+      }
+      
       // If accepting, create hub member record
       if (accept) {
         const { error: memberError } = await supabase
@@ -46,21 +61,6 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
           console.error("Error creating member record:", memberError);
           throw memberError;
         }
-      }
-      
-      // Update invitation status
-      const { error: updateError } = await supabase
-        .from('hub_member_invites')
-        .update({
-          status: accept ? 'accepted' : 'rejected',
-          accepted_at: accept ? timestamp : null,
-          rejected_at: accept ? null : timestamp,
-        })
-        .eq('id', invitation.id);
-        
-      if (updateError) {
-        console.error("Error updating invitation status:", updateError);
-        throw updateError;
       }
       
       // Log the audit event
