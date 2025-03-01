@@ -157,20 +157,26 @@ export function NotificationContent({
     return { __html: content };
   };
   
-  const extractMeetingLink = (message: string): string | null => {
+  const extractSessionDetails = (message: string) => {
+    const dateMatch = message.match(/scheduled for ([^,]+),/);
+    const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
+    const mentorMatch = message.match(/with ([^\.]+)/);
+    const menteeMatch = message.match(/for ([^\.]+) \(mentee\)/); 
+    const sessionTypeMatch = message.match(/for a ([^\.]+) session/);
+    const durationMatch = message.match(/(\d+) minute/);
+    const meetingPlatformMatch = message.match(/via ([^\s\.]+)/);
     const meetingLinkMatch = message.match(/(?:meeting|meet) link[:\s]+([^\s<]+)/i);
-    if (meetingLinkMatch && meetingLinkMatch[1]) {
-      return meetingLinkMatch[1];
-    }
     
-    if (message.includes('href="')) {
-      const hrefMatch = message.match(/href="([^"]+)"/);
-      if (hrefMatch && hrefMatch[1]) {
-        return hrefMatch[1];
-      }
-    }
-    
-    return null;
+    return {
+      date: dateMatch ? dateMatch[1] : null,
+      time: timeMatch ? timeMatch[1] : null,
+      mentor: mentorMatch ? mentorMatch[1] : null,
+      mentee: menteeMatch ? menteeMatch[1] : null,
+      sessionType: sessionTypeMatch ? sessionTypeMatch[1] : null,
+      duration: durationMatch ? durationMatch[1] : null,
+      platform: meetingPlatformMatch ? meetingPlatformMatch[1] : null,
+      meetingLink: meetingLinkMatch ? meetingLinkMatch[1] : null,
+    };
   };
   
   const formatSessionMessage = (message: string) => {
@@ -183,72 +189,71 @@ export function NotificationContent({
       );
     }
     
-    const dateMatch = message.match(/scheduled for ([^,]+),/);
-    const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
-    const mentorMatch = message.match(/with ([^\.]+)/);
-    const sessionTypeMatch = message.match(/for a ([^\.]+) session/);
-    const durationMatch = message.match(/(\d+) minute/);
-    const meetingPlatformMatch = message.match(/via ([^\s\.]+)/);
+    const sessionDetails = extractSessionDetails(message);
     
-    if (dateMatch || timeMatch || mentorMatch || sessionTypeMatch) {
-      return (
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600">{message}</p>
+    return (
+      <div className="space-y-2">
+        <p className="text-sm text-gray-600">{message}</p>
+        
+        <div className="grid grid-cols-1 gap-2 bg-gray-50 p-4 rounded-md border border-gray-200 mt-2">
+          {sessionDetails.date && (
+            <div className="flex gap-2 items-center">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Date:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.date}</span>
+            </div>
+          )}
           
-          <div className="grid grid-cols-1 gap-2 bg-gray-50 p-4 rounded-md border border-gray-200 mt-2">
-            {dateMatch && (
-              <div className="flex gap-2 items-center">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-gray-500">Date:</span>
-                <span className="text-xs text-gray-700 font-semibold">{dateMatch[1]}</span>
-              </div>
-            )}
-            
-            {timeMatch && (
-              <div className="flex gap-2 items-center">
-                <Clock className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-gray-500">Time:</span>
-                <span className="text-xs text-gray-700 font-semibold">{timeMatch[1]}</span>
-              </div>
-            )}
-            
-            {durationMatch && (
-              <div className="flex gap-2 items-center">
-                <Clock className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-gray-500">Duration:</span>
-                <span className="text-xs text-gray-700 font-semibold">{durationMatch[1]} minutes</span>
-              </div>
-            )}
-            
-            {sessionTypeMatch && (
-              <div className="flex gap-2 items-center">
-                <Tag className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-gray-500">Type:</span>
-                <span className="text-xs text-gray-700 font-semibold">{sessionTypeMatch[1]}</span>
-              </div>
-            )}
-            
-            {mentorMatch && (
-              <div className="flex gap-2 items-center">
-                <UserCheck className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-gray-500">With:</span>
-                <span className="text-xs text-gray-700 font-semibold">{mentorMatch[1]}</span>
-              </div>
-            )}
-            
-            {meetingPlatformMatch && (
-              <div className="flex gap-2 items-center">
-                <Link className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-gray-500">Platform:</span>
-                <span className="text-xs text-gray-700 font-semibold">{meetingPlatformMatch[1]}</span>
-              </div>
-            )}
-          </div>
+          {sessionDetails.time && (
+            <div className="flex gap-2 items-center">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Time:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.time}</span>
+            </div>
+          )}
+          
+          {sessionDetails.duration && (
+            <div className="flex gap-2 items-center">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Duration:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.duration} minutes</span>
+            </div>
+          )}
+          
+          {sessionDetails.sessionType && (
+            <div className="flex gap-2 items-center">
+              <Tag className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Type:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.sessionType}</span>
+            </div>
+          )}
+          
+          {sessionDetails.mentor && (
+            <div className="flex gap-2 items-center">
+              <UserCheck className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Mentor:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.mentor}</span>
+            </div>
+          )}
+          
+          {sessionDetails.mentee && (
+            <div className="flex gap-2 items-center">
+              <UserCheck className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Mentee:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.mentee}</span>
+            </div>
+          )}
+          
+          {sessionDetails.platform && (
+            <div className="flex gap-2 items-center">
+              <Link className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-gray-500">Platform:</span>
+              <span className="text-xs text-gray-700 font-semibold">{sessionDetails.platform}</span>
+            </div>
+          )}
         </div>
-      );
-    }
-    
-    return <p className="text-sm text-gray-600">{message}</p>;
+      </div>
+    );
   };
   
   if (isHubInvite) {
@@ -315,7 +320,7 @@ export function NotificationContent({
   }
 
   if (isSessionNotification) {
-    const meetingLink = extractMeetingLink(message);
+    const sessionDetails = extractSessionDetails(message);
     
     return (
       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
@@ -341,7 +346,7 @@ export function NotificationContent({
             </Button>
           )}
           
-          {meetingLink && (
+          {sessionDetails.meetingLink && (
             <Button 
               size="sm"
               variant="default"
@@ -352,7 +357,7 @@ export function NotificationContent({
                     .update({ read: true })
                     .eq('id', notification_id);
                 }
-                window.open(meetingLink, '_blank', 'noopener,noreferrer');
+                window.open(sessionDetails.meetingLink, '_blank', 'noopener,noreferrer');
               }}
               className="flex items-center bg-green-600 hover:bg-green-700"
             >
