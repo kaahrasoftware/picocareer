@@ -35,18 +35,28 @@ export function NotificationContent({
     setIsProcessing(true);
     
     try {
-      // Extract the token from the action_url (improved extraction logic)
+      // Extract the token from the action_url using multiple approaches
       let token = null;
       
-      // Try to extract token using URL parsing
-      try {
-        const url = new URL(action_url);
-        token = url.searchParams.get('token');
-      } catch (parseError) {
-        // If URL parsing fails, try regex extraction as fallback
+      if (action_url.includes('token=')) {
+        // First try the most reliable method - direct regex extraction
         const tokenMatch = action_url.match(/token=([^&]+)/);
         if (tokenMatch && tokenMatch[1]) {
           token = tokenMatch[1];
+        }
+      } else if (action_url.includes('/hub-invite/')) {
+        // Alternative pattern - /hub-invite/{token}
+        const pathParts = action_url.split('/');
+        token = pathParts[pathParts.length - 1];
+      }
+      
+      // Fallback to URL parsing if the above methods failed
+      if (!token) {
+        try {
+          const url = new URL(action_url);
+          token = url.searchParams.get('token');
+        } catch (parseError) {
+          console.error("URL parsing error:", parseError);
         }
       }
       
@@ -71,6 +81,19 @@ export function NotificationContent({
       }
       
       if (!inviteData) {
+        // Additional debugging
+        console.log("Token used for query:", token);
+        console.log("Full action_url:", action_url);
+        
+        // Try fetching all pending invites for debugging
+        const { data: allInvites } = await supabase
+          .from('hub_member_invites')
+          .select('id, token, status')
+          .eq('status', 'pending')
+          .limit(5);
+          
+        console.log("Sample pending invites:", allInvites);
+        
         throw new Error("Could not find invitation details for the provided token");
       }
       
