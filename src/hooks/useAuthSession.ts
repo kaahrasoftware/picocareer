@@ -52,7 +52,9 @@ export function useAuthSession() {
             await handleSessionExpiration();
             return null;
           }
-          throw error;
+          // Don't throw the error to prevent app from crashing
+          console.warn('Auth error but continuing:', error);
+          return null;
         }
 
         // If session exists but access token is expired
@@ -76,6 +78,8 @@ export function useAuthSession() {
 
   // Set up auth state change listener
   supabase.auth.onAuthStateChange(async (event, newSession) => {
+    console.log(`Auth state changed: ${event}`);
+    
     if (event === 'SIGNED_IN') {
       queryClient.setQueryData(['auth-session'], newSession);
     } 

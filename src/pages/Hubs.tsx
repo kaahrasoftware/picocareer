@@ -15,14 +15,21 @@ export default function Hubs() {
   const { data: hubs, isLoading, error } = useQuery({
     queryKey: ['hubs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hubs')
-        .select('*')
-        .eq('status', 'Approved')
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('hubs')
+          .select('*')
+          .eq('status', 'Approved')
+          .order('name');
 
-      if (error) throw error;
-      return data as Hub[];
+        if (error) throw error;
+        
+        // Cast to Hub[] to ensure compatibility
+        return data as unknown as Hub[];
+      } catch (error) {
+        console.error("Error fetching hubs:", error);
+        throw error;
+      }
     },
   });
 

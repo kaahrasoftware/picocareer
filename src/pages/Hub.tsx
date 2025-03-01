@@ -23,14 +23,21 @@ export default function Hub() {
     queryKey: ['hub', hubId],
     queryFn: async () => {
       try {
+        if (!hubId) return null;
+        
         const { data, error } = await supabase
           .from('hubs')
           .select('*')
           .eq('id', hubId)
           .single();
 
-        if (error) throw error;
-        return data as HubType;
+        if (error) {
+          console.error("Error fetching hub:", error);
+          return null;
+        }
+        
+        // Transform data to match the Hub type if needed
+        return data as unknown as HubType;
       } catch (error) {
         console.error("Error fetching hub:", error);
         return null;
@@ -40,20 +47,26 @@ export default function Hub() {
   });
 
   // Fetch member status - only enabled with session
-  const { data: memberStatus } = useQuery({
+  const { data: memberStatus, isLoading: isMemberLoading } = useQuery({
     queryKey: ['hub-member-status', hubId, session?.user?.id],
     queryFn: async () => {
-      if (!session?.user?.id) return null;
+      if (!session?.user?.id || !hubId) return null;
       
       try {
         const { data, error } = await supabase
           .from('hub_members')
           .select('role, status, confirmed')
           .eq('hub_id', hubId)
-          .eq('profile_id', session?.user.id)
+          .eq('profile_id', session.user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) {
+          if (error.code !== 'PGRST116') { // PGRST116 means no rows returned
+            console.error("Error fetching member status:", error);
+          }
+          return null;
+        }
+        
         return data;
       } catch (error) {
         console.error("Error fetching member status:", error);
@@ -125,13 +138,15 @@ export default function Hub() {
       <HubTabs hub={hub} isAdmin={userIsAdmin} />
       
       {/* Membership confirmation dialog */}
-      <MembershipConfirmationDialog
-        hubId={hubId!}
-        hubName={hub.name}
-        description={hub.description || ''}
-        open={showConfirmation}
-        onOpenChange={setShowConfirmation}
-      />
+      {showConfirmation && (
+        <MembershipConfirmationDialog
+          hubId={hubId!}
+          hubName={hub.name}
+          description={hub.description || ''}
+          open={showConfirmation}
+          onOpenChange={setShowConfirmation}
+        />
+      )}
     </div>
   );
 }

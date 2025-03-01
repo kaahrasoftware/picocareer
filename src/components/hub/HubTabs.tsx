@@ -36,10 +36,13 @@ export function HubTabs({
           .from('hub_members')
           .select('role, status, confirmed')
           .eq('hub_id', hub.id)
-          .eq('profile_id', session?.user.id)
+          .eq('profile_id', session.user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error fetching member status in HubTabs:", error);
+          return null;
+        }
         return data;
       } catch (error) {
         console.error("Error fetching member status in HubTabs:", error);
