@@ -143,6 +143,7 @@ export default function Hub() {
         isMember={isMember}
         isAdmin={isAdmin}
         isModerator={isModerator}
+        isUnconfirmedMember={isUnconfirmedMember}
         hubStats={hubStats}
       />
       
