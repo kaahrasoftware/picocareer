@@ -3080,6 +3080,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_hub_member: {
+        Args: {
+          hub_id: string
+          member_profile_id: string
+          member_role: string
+          member_status: string
+        }
+        Returns: undefined
+      }
       create_session_and_update_availability: {
         Args: {
           p_mentor_id: string
