@@ -82,7 +82,7 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
       if (accept) {
         navigate(`/hubs/${invitation.hub.id}`);
       } else {
-        // Remove this invitation from the UI
+        // Refresh the page to remove the declined invitation
         window.location.reload();
       }
       
