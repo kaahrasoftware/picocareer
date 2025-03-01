@@ -2,11 +2,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Calendar, Clock, User, Link as LinkIcon } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatInTimeZone } from "date-fns-tz";
 
 export function NotificationContent({
   message,
@@ -14,14 +13,12 @@ export function NotificationContent({
   type,
   action_url,
   notification_id,
-  metadata
 }: {
   message: string;
   isExpanded: boolean;
   type?: string;
   action_url?: string;
   notification_id?: string;
-  metadata?: any;
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,7 +29,6 @@ export function NotificationContent({
   // Helper function to determine notification type
   const isHubInvite = type === 'hub_invite';
   const isHubMembership = type === 'hub_membership';
-  const isSessionBooked = type === 'session_booked';
   
   const extractHubId = (url?: string): string | null => {
     if (!url) return null;
@@ -169,81 +165,6 @@ export function NotificationContent({
       setIsProcessing(false);
     }
   };
-  
-  // Session notification content
-  if (isSessionBooked && metadata) {
-    const { mentorName, menteeName, sessionType, startTime, duration, platform, meetingLink } = metadata;
-    const formattedTime = startTime ? formatInTimeZone(
-      new Date(startTime),
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-      'PPP p'
-    ) : 'Time not specified';
-    
-    return (
-      <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-4 rounded-md border border-gray-200">
-        <p className={`mb-3 font-medium text-gray-800 ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}>
-          {message}
-        </p>
-        
-        <div className="space-y-3 bg-white p-3 rounded border border-gray-100">
-          <div className="flex items-start gap-2">
-            <Calendar className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-            <p className="text-gray-700">{formattedTime}</p>
-          </div>
-          
-          <div className="flex items-start gap-2">
-            <Clock className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-            <p className="text-gray-700">{duration} minutes</p>
-          </div>
-          
-          <div className="flex items-start gap-2">
-            <User className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-gray-700"><span className="font-medium">Mentor:</span> {mentorName}</p>
-              <p className="text-gray-700"><span className="font-medium">Mentee:</span> {menteeName}</p>
-            </div>
-          </div>
-          
-          {sessionType && (
-            <div className="flex items-start gap-2">
-              <div className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <p className="text-gray-700"><span className="font-medium">Type:</span> {sessionType}</p>
-            </div>
-          )}
-          
-          {platform && (
-            <div className="flex items-start gap-2">
-              <div className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <p className="text-gray-700"><span className="font-medium">Platform:</span> {platform}</p>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex items-center space-x-2 mt-3">
-          <Button 
-            size="sm"
-            onClick={() => action_url && navigate(action_url)}
-            variant="outline"
-            className="flex items-center"
-          >
-            <Calendar className="h-4 w-4 mr-1" />
-            View Session
-          </Button>
-          
-          {meetingLink && (
-            <Button 
-              size="sm"
-              onClick={() => window.open(meetingLink, '_blank')}
-              className="flex items-center"
-            >
-              <LinkIcon className="h-4 w-4 mr-1" />
-              Join Meeting
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
   
   // Render appropriate content based on notification type
   if (isHubInvite) {

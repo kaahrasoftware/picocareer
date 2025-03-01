@@ -22,7 +22,7 @@ export function useNotifications(session: Session | null) {
         
         const { data, error } = await supabase
           .from('notifications')
-          .select('*, metadata')
+          .select('*')
           .eq('profile_id', session.user.id)
           .order('created_at', { ascending: false });
         
