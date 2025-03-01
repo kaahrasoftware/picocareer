@@ -3069,6 +3069,27 @@ export type Database = {
         }
         Returns: Json
       }
+      check_hub_admin: {
+        Args: {
+          user_id: string
+          target_hub_id: string
+        }
+        Returns: boolean
+      }
+      check_hub_membership: {
+        Args: {
+          user_id: string
+          target_hub_id: string
+        }
+        Returns: boolean
+      }
+      check_pending_invitation: {
+        Args: {
+          user_id: string
+          target_hub_id: string
+        }
+        Returns: boolean
+      }
       check_verification_rate_limit: {
         Args: {
           _token: string
