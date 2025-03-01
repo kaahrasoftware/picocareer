@@ -40,7 +40,6 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Update local state when props change
   if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
     setLocalNotifications(notifications);
   }
@@ -107,9 +106,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px]">
+      <SheetContent className="w-[400px] bg-white">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+          <SheetTitle className="flex items-center gap-2 text-gray-800">
             Notifications
             <Badge 
               variant="destructive" 
@@ -121,13 +120,13 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
         </SheetHeader>
         <div className="mt-4">
           {localNotifications.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
+            <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
               No notifications yet
             </p>
           ) : (
             <Tabs defaultValue="mentorship" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 mb-4">
-                <TabsTrigger value="mentorship" className="relative flex items-center gap-2">
+              <TabsList className="w-full grid grid-cols-2 mb-4 bg-gray-100">
+                <TabsTrigger value="mentorship" className="relative flex items-center gap-2 data-[state=active]:bg-white">
                   Mentorship
                   {mentorshipUnreadCount > 0 && (
                     <Badge 
@@ -138,7 +137,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="general" className="relative flex items-center gap-2">
+                <TabsTrigger value="general" className="relative flex items-center gap-2 data-[state=active]:bg-white">
                   General
                   {generalUnreadCount > 0 && (
                     <Badge 
@@ -163,7 +162,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                     />
                   ))}
                   {(!categorizedNotifications.mentorship || categorizedNotifications.mentorship.length === 0) && (
-                    <p className="text-center text-muted-foreground py-4">
+                    <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
                       No mentorship notifications
                     </p>
                   )}
@@ -180,7 +179,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                     />
                   ))}
                   {(!categorizedNotifications.general || categorizedNotifications.general.length === 0) && (
-                    <p className="text-center text-muted-foreground py-4">
+                    <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
                       No general notifications
                     </p>
                   )}

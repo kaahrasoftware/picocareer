@@ -169,7 +169,7 @@ export function NotificationContent({
   // Render appropriate content based on notification type
   if (isHubInvite) {
     return (
-      <div className="mt-1 text-sm text-muted-foreground">
+      <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
         <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
           {message}
         </p>
@@ -182,14 +182,14 @@ export function NotificationContent({
         
         <div className="flex items-center space-x-2 mt-3">
           {isProcessing ? (
-            <div className="text-xs">Processing...</div>
+            <div className="text-xs text-gray-500">Processing...</div>
           ) : (
             <>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => handleInvitationResponse(false)}
-                className="flex items-center"
+                className="flex items-center bg-white hover:bg-gray-100"
               >
                 <XCircle className="h-4 w-4 mr-1" />
                 Decline
@@ -212,7 +212,7 @@ export function NotificationContent({
   // Hub membership notification
   if (isHubMembership) {
     return (
-      <div className="mt-1 text-sm text-muted-foreground">
+      <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
         <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
           {message}
         </p>
@@ -233,7 +233,7 @@ export function NotificationContent({
   
   // Default content for other notification types
   return (
-    <p className={`mt-1 text-sm text-muted-foreground ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}>
+    <p className={`mt-1 text-sm text-gray-600 bg-gray-50 p-2 rounded-md ${isExpanded ? "line-clamp-none" : "line-clamp-2"}`}>
       {message}
     </p>
   );

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -19,7 +20,7 @@ export function NotificationActions({
       <Button
         variant="ghost"
         size="sm"
-        className="text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+        className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
         onClick={onToggleExpand}
       >
         {isExpanded ? (
@@ -33,8 +34,8 @@ export function NotificationActions({
         variant="ghost"
         size="sm"
         className={read ? 
-          "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10" :
-          "text-sky-400 hover:text-sky-300 hover:bg-sky-400/10"
+          "text-gray-600 hover:text-gray-800 hover:bg-gray-100" :
+          "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
         }
         onClick={onToggleRead}
       >

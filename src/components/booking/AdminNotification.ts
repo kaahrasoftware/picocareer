@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 interface NotifyParams {
   mentorName: string;
   menteeName: string;

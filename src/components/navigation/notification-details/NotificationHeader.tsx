@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { CircleCheck, CircleDot } from "lucide-react";
@@ -12,7 +13,7 @@ interface NotificationHeaderProps {
 export function NotificationHeader({ title, createdAt, read, onToggleRead }: NotificationHeaderProps) {
   return (
     <div className="flex items-center justify-between">
-      <h4 className="font-medium text-zinc-50 flex items-center gap-2">
+      <h4 className="font-medium text-gray-800 flex items-center gap-2">
         {title}
         <Button
           variant="ghost"
@@ -27,7 +28,7 @@ export function NotificationHeader({ title, createdAt, read, onToggleRead }: Not
           )}
         </Button>
       </h4>
-      <span className="text-xs text-zinc-400">
+      <span className="text-xs text-gray-500">
         {format(new Date(createdAt), 'MMM d, h:mm a')}
       </span>
     </div>
