@@ -48,7 +48,7 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
       
       // If accepting, create hub member record using RPC function to bypass RLS
       if (accept) {
-        // Call a stored procedure to create the member record (bypasses RLS)
+        // Call the stored procedure that bypasses RLS
         const { error: rpcError } = await supabase.rpc('create_hub_member', { 
           hub_id: invitation.hub_id,
           member_profile_id: user.id,
