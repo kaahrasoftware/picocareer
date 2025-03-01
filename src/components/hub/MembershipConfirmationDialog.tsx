@@ -13,6 +13,7 @@ import { Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { HubOnboardingGuideDialog } from "./HubOnboardingGuideDialog";
 
 interface MembershipConfirmationDialogProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function MembershipConfirmationDialog({
 }: MembershipConfirmationDialogProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+  const [showGuideDialog, setShowGuideDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -83,8 +85,18 @@ export function MembershipConfirmationDialog({
     onClose();
   };
 
+  const handleStartGuide = () => {
+    setShowWelcomeDialog(false);
+    setShowGuideDialog(true);
+  };
+
+  const handleGuideClose = () => {
+    setShowGuideDialog(false);
+    onClose();
+  };
+
   // Show confirmation dialog first
-  if (!showWelcomeDialog) {
+  if (!showWelcomeDialog && !showGuideDialog) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent>
@@ -122,29 +134,43 @@ export function MembershipConfirmationDialog({
   }
 
   // Show welcome dialog after confirmation
-  return (
-    <Dialog open={showWelcomeDialog} onOpenChange={handleWelcomeClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Welcome to {hubName}!</DialogTitle>
-          <DialogDescription>
-            Your membership has been confirmed. You now have access to all hub features and content.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-6">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <CheckCircle className="h-16 w-16 text-emerald-500" />
-            <p className="text-sm text-muted-foreground">
-              You can now access announcements, resources, member directories, and participate in community discussions. Explore the different tabs to get started.
-            </p>
+  if (showWelcomeDialog) {
+    return (
+      <Dialog open={showWelcomeDialog} onOpenChange={handleWelcomeClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Welcome to {hubName}!</DialogTitle>
+            <DialogDescription>
+              Your membership has been confirmed. You now have access to all hub features and content.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <CheckCircle className="h-16 w-16 text-emerald-500" />
+              <p className="text-sm text-muted-foreground">
+                You can now access announcements, resources, member directories, and participate in community discussions. Explore the different tabs to get started.
+              </p>
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={handleWelcomeClose} className="w-full">
-            Get Started
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleWelcomeClose}>
+              Close
+            </Button>
+            <Button onClick={handleStartGuide}>
+              Get Started
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Show guide dialog
+  return (
+    <HubOnboardingGuideDialog 
+      isOpen={showGuideDialog} 
+      onClose={handleGuideClose} 
+      hubName={hubName} 
+    />
   );
 }

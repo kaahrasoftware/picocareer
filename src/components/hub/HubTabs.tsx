@@ -16,14 +16,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
+import { HubOnboardingGuideDialog } from "./HubOnboardingGuideDialog";
 
 interface HubTabsProps {
   hub: Hub;
@@ -50,6 +43,7 @@ export function HubTabs({
   const queryClient = useQueryClient();
   const [isConfirming, setIsConfirming] = useState(false);
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+  const [showGuideDialog, setShowGuideDialog] = useState(false);
 
   const handleConfirmMembership = async () => {
     try {
@@ -63,10 +57,15 @@ export function HubTabs({
         throw error;
       }
 
-      if (data && data.success) {
+      // Handle the response - the data can be various types based on the RPC function
+      const successValue = typeof data === 'object' && data !== null ? data.success : false;
+      
+      if (successValue) {
+        const messageValue = typeof data === 'object' && data !== null ? data.message : '';
+        
         toast({
           title: "Membership Confirmed",
-          description: data.message || `You have confirmed your membership in ${hub.name}`,
+          description: messageValue || `You have confirmed your membership in ${hub.name}`,
         });
         
         // Refresh hub data and member status
@@ -77,9 +76,11 @@ export function HubTabs({
         // Show welcome dialog
         setShowWelcomeDialog(true);
       } else {
+        const messageValue = typeof data === 'object' && data !== null ? data.message : '';
+        
         toast({
           title: "Error",
-          description: data?.message || "Failed to confirm membership",
+          description: messageValue || "Failed to confirm membership",
           variant: "destructive",
         });
       }
@@ -93,6 +94,11 @@ export function HubTabs({
     } finally {
       setIsConfirming(false);
     }
+  };
+
+  const handleStartGuide = () => {
+    setShowWelcomeDialog(false);
+    setShowGuideDialog(true);
   };
 
   return <>
@@ -193,11 +199,21 @@ export function HubTabs({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => setShowWelcomeDialog(false)} className="w-full">
+          <Button variant="outline" onClick={() => setShowWelcomeDialog(false)}>
+            Close
+          </Button>
+          <Button onClick={handleStartGuide}>
             Get Started
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Guide Dialog */}
+    <HubOnboardingGuideDialog 
+      isOpen={showGuideDialog} 
+      onClose={() => setShowGuideDialog(false)} 
+      hubName={hub.name} 
+    />
   </>;
 }
