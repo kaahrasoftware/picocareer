@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Calendar, Clock, UserCheck, Tag, Link } from "lucide-react";
+import { CheckCircle, XCircle, Calendar, Clock, UserCheck, Tag, Link, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -364,6 +363,28 @@ export function NotificationContent({
             >
               <Calendar className="h-4 w-4 mr-1" />
               View Session
+            </Button>
+          )}
+          
+          {meetingLink && (
+            <Button 
+              size="sm"
+              variant="default"
+              onClick={() => {
+                // Mark notification as read
+                if (notification_id) {
+                  supabase
+                    .from('notifications')
+                    .update({ read: true })
+                    .eq('id', notification_id);
+                }
+                // Open meeting link in a new tab
+                window.open(meetingLink, '_blank', 'noopener,noreferrer');
+              }}
+              className="flex items-center bg-green-600 hover:bg-green-700"
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Join Meeting
             </Button>
           )}
         </div>
