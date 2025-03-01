@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Calendar, Clock, UserCheck, Tag, Link } from "lucide-react";
+import { CheckCircle, XCircle, Calendar, Clock, UserCheck, Tag, Link, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -340,14 +340,17 @@ export function NotificationContent({
 
   // Session notifications with enhanced formatting
   if (isSessionNotification) {
+    const meetingLink = extractMeetingLink(message);
+    
     return (
       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
         {formatSessionMessage(message)}
         
         <div className="flex items-center space-x-2 mt-3">
-          {action_url && (
+          {meetingLink && (
             <Button 
               size="sm"
+              variant="default"
               onClick={() => {
                 // Mark notification as read
                 if (notification_id) {
@@ -356,12 +359,13 @@ export function NotificationContent({
                     .update({ read: true })
                     .eq('id', notification_id);
                 }
-                navigate(action_url);
+                // Open meeting link in a new tab
+                window.open(meetingLink, '_blank', 'noopener,noreferrer');
               }}
-              className="flex items-center"
+              className="flex items-center bg-green-600 hover:bg-green-700"
             >
-              <Calendar className="h-4 w-4 mr-1" />
-              View Session
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Join Meeting
             </Button>
           )}
         </div>
