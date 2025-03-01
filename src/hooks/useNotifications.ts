@@ -22,20 +22,7 @@ export function useNotifications(session: Session | null) {
         
         const { data, error } = await supabase
           .from('notifications')
-          .select(`
-            *,
-            metadata:session_booked(
-              mentor_sessions(
-                id,
-                scheduled_at,
-                mentee:mentee_id(id, full_name, avatar_url),
-                mentor:mentor_id(id, full_name, avatar_url),
-                session_type:session_type_id(type, duration),
-                meeting_platform,
-                meeting_link
-              )
-            )
-          `)
+          .select('*')
           .eq('profile_id', session.user.id)
           .order('created_at', { ascending: false });
         
@@ -62,7 +49,6 @@ export function useNotifications(session: Session | null) {
         }
 
         console.log('Notifications fetched successfully:', data?.length);
-        console.log('Notification data sample:', data?.[0]);
         return data || [];
       } catch (error: any) {
         console.error('Failed to fetch notifications:', error);
