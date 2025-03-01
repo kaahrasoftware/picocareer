@@ -1,35 +1,23 @@
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { CircleCheck, CircleDot } from "lucide-react";
+
+import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 
 interface NotificationHeaderProps {
-  title: string;
-  createdAt: string;
-  read: boolean;
-  onToggleRead: () => void;
+  unreadCount: number;
 }
 
-export function NotificationHeader({ title, createdAt, read, onToggleRead }: NotificationHeaderProps) {
+export function NotificationSheetHeader({ unreadCount }: NotificationHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <h4 className="font-medium text-zinc-50 flex items-center gap-2">
-        {title}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-4 w-4 p-0 hover:bg-transparent"
-          onClick={onToggleRead}
+    <SheetHeader>
+      <SheetTitle className="flex items-center gap-2">
+        Notifications
+        <Badge 
+          variant="destructive" 
+          className="ml-2"
         >
-          {read ? (
-            <CircleCheck className="h-4 w-4 text-emerald-500" />
-          ) : (
-            <CircleDot className="h-4 w-4 text-sky-500" />
-          )}
-        </Button>
-      </h4>
-      <span className="text-xs text-zinc-400">
-        {format(new Date(createdAt), 'MMM d, h:mm a')}
-      </span>
-    </div>
+          {unreadCount}
+        </Badge>
+      </SheetTitle>
+    </SheetHeader>
   );
 }
