@@ -25,7 +25,6 @@ export function NotificationContent({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Helper function to determine notification type
   const isHubInvite = type === 'hub_invite';
   const isHubMembership = type === 'hub_membership';
   const isSessionNotification = type === 'session_booked' || type === 'session_reminder' || type === 'session_cancelled';
@@ -33,7 +32,6 @@ export function NotificationContent({
   const extractHubId = (url?: string): string | null => {
     if (!url) return null;
     
-    // Extract hub ID from URL (e.g. /hubs/[uuid])
     const pathMatch = url.match(/\/hubs\/([^/?&]+)/);
     if (pathMatch && pathMatch[1]) return pathMatch[1];
     
@@ -42,7 +40,6 @@ export function NotificationContent({
   
   const handleHubMembershipClick = () => {
     if (action_url) {
-      // Mark notification as read
       if (notification_id) {
         supabase
           .from('notifications')
@@ -50,7 +47,6 @@ export function NotificationContent({
           .eq('id', notification_id);
       }
       
-      // Navigate to the hub page
       navigate(action_url);
     }
   };
@@ -62,14 +58,12 @@ export function NotificationContent({
       
       console.log("Starting invitation response process", { accept, notification_id, action_url });
       
-      // Get the current user first to validate authentication
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
         throw new Error("Please sign in to respond to this invitation");
       }
 
-      // Get user's email
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('email')
@@ -89,7 +83,6 @@ export function NotificationContent({
       let inviteData = null;
       let inviteToken = null;
       
-      // Extract hubId from action_url if present
       if (action_url) {
         hubId = extractHubId(action_url);
         console.log("Extracted hub ID:", hubId);
@@ -101,7 +94,6 @@ export function NotificationContent({
       
       const timestamp = new Date().toISOString();
       
-      // If accepting, create hub member record
       if (accept) {
         const { error: memberError } = await supabase
           .from('hub_members')
@@ -118,7 +110,6 @@ export function NotificationContent({
         }
       }
       
-      // If there's a notification, mark it as read
       if (notification_id) {
         await supabase
           .from('notifications')
@@ -126,7 +117,6 @@ export function NotificationContent({
           .eq('id', notification_id);
       }
       
-      // Get hub name
       const { data: hubData } = await supabase
         .from('hubs')
         .select('name')
@@ -135,7 +125,6 @@ export function NotificationContent({
         
       hubName = hubData?.name || "the hub";
       
-      // Show success message
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Declined",
         description: accept 
@@ -143,15 +132,12 @@ export function NotificationContent({
           : `You have declined the invitation to join ${hubName}`,
       });
       
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['hub-members', hubId] });
       
-      // Navigate to appropriate page
       if (accept) {
         navigate(`/hubs/${hubId}`);
       }
-      
     } catch (error: any) {
       console.error("Error processing invitation response:", error);
       setErrorMessage(error.message || "Failed to process invitation");
@@ -166,20 +152,16 @@ export function NotificationContent({
     }
   };
 
-  // Helper function to render HTML content safely
   const renderHTML = (content: string) => {
     return { __html: content };
   };
   
-  // Helper function to extract meeting link from message or action URL
   const extractMeetingLink = (message: string): string | null => {
-    // Look for meeting link in the message
     const meetingLinkMatch = message.match(/(?:meeting|meet) link[:\s]+([^\s<]+)/i);
     if (meetingLinkMatch && meetingLinkMatch[1]) {
       return meetingLinkMatch[1];
     }
     
-    // If no direct link found but HTML contains href
     if (message.includes('href="')) {
       const hrefMatch = message.match(/href="([^"]+)"/);
       if (hrefMatch && hrefMatch[1]) {
@@ -190,9 +172,7 @@ export function NotificationContent({
     return null;
   };
   
-  // Session notification formatter that highlights key details
   const formatSessionMessage = (message: string) => {
-    // Check if contains HTML-like content
     if (message.includes('<') && message.includes('>')) {
       return (
         <div 
@@ -202,7 +182,6 @@ export function NotificationContent({
       );
     }
     
-    // For plain text session notifications, try to extract and format key details
     const dateMatch = message.match(/scheduled for ([^,]+),/);
     const timeMatch = message.match(/at (\d+:\d+\s*[AP]M)/i);
     const mentorMatch = message.match(/with ([^\.]+)/);
@@ -268,11 +247,9 @@ export function NotificationContent({
       );
     }
     
-    // Default fallback
     return <p className="text-sm text-gray-600">{message}</p>;
   };
   
-  // Render appropriate content based on notification type
   if (isHubInvite) {
     return (
       <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
@@ -315,7 +292,6 @@ export function NotificationContent({
     );
   }
   
-  // Hub membership notification
   if (isHubMembership) {
     return (
       <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
@@ -337,7 +313,6 @@ export function NotificationContent({
     );
   }
 
-  // Session notifications with enhanced formatting
   if (isSessionNotification) {
     const meetingLink = extractMeetingLink(message);
     
@@ -350,7 +325,6 @@ export function NotificationContent({
             <Button 
               size="sm"
               onClick={() => {
-                // Mark notification as read
                 if (notification_id) {
                   supabase
                     .from('notifications')
@@ -371,14 +345,12 @@ export function NotificationContent({
               size="sm"
               variant="default"
               onClick={() => {
-                // Mark notification as read
                 if (notification_id) {
                   supabase
                     .from('notifications')
                     .update({ read: true })
                     .eq('id', notification_id);
                 }
-                // Open meeting link in a new tab
                 window.open(meetingLink, '_blank', 'noopener,noreferrer');
               }}
               className="flex items-center bg-green-600 hover:bg-green-700"
@@ -392,7 +364,6 @@ export function NotificationContent({
     );
   }
   
-  // Default content for other notification types
   return (
     <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-200">
       <div 
