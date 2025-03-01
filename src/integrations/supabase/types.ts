@@ -3205,6 +3205,7 @@ export type Database = {
         | "member_role_updated"
         | "branding_updated"
         | "member_confirmed"
+        | "confirmed_hub_membership"
       categories:
         | "Technology"
         | "Digital Tools"
