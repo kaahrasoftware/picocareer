@@ -36,7 +36,7 @@ export default function Hub() {
           throw error;
         }
         
-        return data as unknown as HubType;
+        return data as HubType;
       } catch (error) {
         console.error("Error fetching hub:", error);
         return null;

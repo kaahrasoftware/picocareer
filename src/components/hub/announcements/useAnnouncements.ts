@@ -5,7 +5,7 @@ import { HubAnnouncement } from "@/types/database/hubs";
 
 export function useAnnouncements(hubId: string, sortByRecent: boolean) {
   return useQuery({
-    queryKey: ['hub-announcements', hubId],
+    queryKey: ['hub-announcements', hubId, sortByRecent],
     queryFn: async () => {
       const {
         data: announcementsData,
@@ -38,6 +38,7 @@ export function useAnnouncements(hubId: string, sortByRecent: boolean) {
           created_by_profile: profileMap.get(announcement.created_by) || null
         };
       }) as HubAnnouncement[];
-    }
+    },
+    enabled: !!hubId
   });
 }
