@@ -1,112 +1,196 @@
 
-import { Hub } from "@/types/database/hubs";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Globe, Link2, MapPin, Phone, Users } from "lucide-react";
-import { HubSocialLinks } from "./HubSocialLinks";
+import { 
+  Globe, Users, FileText, Building, Link as LinkIcon, 
+  Twitter, Facebook, Instagram, Linkedin, Youtube 
+} from "lucide-react";
+import { Hub } from "@/types/database/hubs";
 
 interface HubOverviewSectionProps {
   hub: Hub;
-  hubStats: {
+  hubStats?: {
     membersCount: number;
     resourcesCount: number;
   } | null;
 }
 
 export function HubOverviewSection({ hub, hubStats }: HubOverviewSectionProps) {
+  const navigate = useNavigate();
+
+  // Array of social media links for mapping
+  const socialLinks = [
+    { icon: Twitter, url: hub.social_links?.twitter, label: "Twitter" },
+    { icon: Facebook, url: hub.social_links?.facebook, label: "Facebook" },
+    { icon: Instagram, url: hub.social_links?.instagram, label: "Instagram" },
+    { icon: Linkedin, url: hub.social_links?.linkedin, label: "LinkedIn" },
+    { icon: Youtube, url: hub.social_links?.youtube, label: "YouTube" },
+  ].filter(link => link.url);  // Filter out empty links
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-6">
+      {/* Hub Description */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">{hubStats?.membersCount || 0} Members</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">{hubStats?.resourcesCount || 0} Resources</span>
-            </div>
-            {hub.website && (
-              <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-muted-foreground" />
-                <a 
-                  href={hub.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {hub.website}
-                </a>
-              </div>
-            )}
-            {hub.apply_now_URL && (
-              <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-muted-foreground" />
-                <a 
-                  href={hub.apply_now_URL} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Apply Now
-                </a>
-              </div>
-            )}
-          </div>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            About
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            {hub.description || "No description available"}
+          </p>
+          
+          {hub.apply_now_url && (
+            <Button 
+              className="mt-4" 
+              onClick={() => window.open(hub.apply_now_url, '_blank')}
+            >
+              Apply Now
+            </Button>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              <h3 className="text-lg font-semibold">Members</h3>
+            </div>
+            <p className="text-3xl font-bold mt-2">{hubStats?.membersCount || hub.current_member_count || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-green-500" />
+              <h3 className="text-lg font-semibold">Resources</h3>
+            </div>
+            <p className="text-3xl font-bold mt-2">{hubStats?.resourcesCount || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Building className="h-5 w-5 text-purple-500" />
+              <h3 className="text-lg font-semibold">Type</h3>
+            </div>
+            <p className="text-xl font-medium mt-2">{hub.type}</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5 text-orange-500" />
+              <h3 className="text-lg font-semibold">Website</h3>
+            </div>
+            {hub.website ? (
+              <a 
+                href={hub.website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline mt-2 block truncate"
+              >
+                {hub.website}
+              </a>
+            ) : (
+              <p className="text-muted-foreground mt-2">Not available</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Contact Info */}
+      {hub.contact_info && (Object.values(hub.contact_info).some(value => value)) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
             {hub.contact_info?.email && (
-              <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-muted-foreground" />
-                <a 
-                  href={`mailto:${hub.contact_info.email}`}
-                  className="text-primary hover:underline"
-                >
+              <div>
+                <span className="font-medium">Email: </span>
+                <a href={`mailto:${hub.contact_info.email}`} className="text-blue-500 hover:underline">
                   {hub.contact_info.email}
                 </a>
               </div>
             )}
             {hub.contact_info?.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <span>{hub.contact_info.phone}</span>
+              <div>
+                <span className="font-medium">Phone: </span>
+                <a href={`tel:${hub.contact_info.phone}`} className="text-blue-500 hover:underline">
+                  {hub.contact_info.phone}
+                </a>
               </div>
             )}
             {hub.contact_info?.address && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <span className="font-medium">Address: </span>
                 <span>{hub.contact_info.address}</span>
               </div>
             )}
-            {hub.social_links && <HubSocialLinks socialLinks={hub.social_links} />}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
+      {/* Social Links */}
+      {socialLinks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Social Media</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4">
+              {socialLinks.map((item, index) => {
+                const IconComponent = item.icon;
+                return (
+                  <a 
+                    key={index}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+                    title={item.label}
+                  >
+                    <IconComponent className="h-5 w-5" />
+                  </a>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Important Links */}
       {hub.important_links && hub.important_links.length > 0 && (
-        <Card className="md:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>Important Links</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              {hub.important_links.map((link: { title: string; url: string }, index: number) => (
-                <a
-                  key={index}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-3 rounded-lg border hover:bg-accent transition-colors"
-                >
-                  <Link2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{link.title}</span>
-                </a>
+            <ul className="space-y-2">
+              {hub.important_links.map((link, index) => (
+                <li key={index}>
+                  <a 
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline flex items-center gap-2"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    {link.title}
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </CardContent>
         </Card>
       )}

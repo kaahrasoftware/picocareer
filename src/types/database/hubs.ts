@@ -82,6 +82,11 @@ export interface HubAnnouncement {
   scheduled_for?: string;
   target_audience?: string[];
   cover_image_url?: string;
+  created_by_profile?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export interface HubResource {
@@ -101,6 +106,11 @@ export interface HubResource {
   content_type?: string;
   original_filename?: string;
   version?: number;
+  created_by_profile?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export interface HubDepartment {
@@ -111,4 +121,60 @@ export interface HubDepartment {
   parent_department_id?: string;
   created_at: string;
   updated_at: string;
+  parent?: {
+    id: string;
+    name: string;
+  };
+}
+
+// Chat-related types
+export type ChatRoomType = 'public' | 'private';
+
+export interface ChatRoom {
+  id: string;
+  hub_id: string;
+  name: string;
+  description?: string;
+  type: ChatRoomType;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  room_id: string;
+  sender_id: string;
+  content: string;
+  type: 'text' | 'image' | 'file';
+  file_url?: string;
+  file_type?: string;
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ChatMessageWithSender extends ChatMessage {
+  sender: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+}
+
+// Hub invitation types
+export type InviteStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface HubInvite {
+  id: string;
+  hub_id: string;
+  invited_email: string;
+  token: string;
+  role: MemberRole;
+  status: InviteStatus;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+  accepted_at?: string | null;
+  rejected_at?: string | null;
 }

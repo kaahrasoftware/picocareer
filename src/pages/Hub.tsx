@@ -33,10 +33,9 @@ export default function Hub() {
 
         if (error) {
           console.error("Error fetching hub:", error);
-          return null;
+          throw error;
         }
         
-        // Transform data to match the Hub type if needed
         return data as unknown as HubType;
       } catch (error) {
         console.error("Error fetching hub:", error);
@@ -118,7 +117,7 @@ export default function Hub() {
   if (!session) {
     return (
       <div className="container py-8 space-y-8">
-        <HubHeader hub={hub} isAdmin={false} />
+        <HubHeader hub={hub} />
         <Alert className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -134,7 +133,7 @@ export default function Hub() {
 
   return (
     <div className="container py-8 space-y-8">
-      <HubHeader hub={hub} isAdmin={userIsAdmin} />
+      <HubHeader hub={hub} />
       <HubTabs hub={hub} isAdmin={userIsAdmin} />
       
       {/* Membership confirmation dialog */}
