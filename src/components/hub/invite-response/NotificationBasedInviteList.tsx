@@ -46,19 +46,83 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
         throw updateError;
       }
       
-      // If accepting, create hub member record using RPC function to bypass RLS
+      // If accepting, create hub member record and manually update metrics
       if (accept) {
-        // Call the stored procedure that bypasses RLS
-        const { error: rpcError } = await supabase.rpc('create_hub_member', { 
-          hub_id: invitation.hub_id,
-          member_profile_id: user.id,
-          member_role: invitation.role,
-          member_status: 'Approved'
-        });
+        // Step 1: Create the hub member record directly
+        const { error: memberError } = await supabase
+          .from('hub_members')
+          .insert({
+            hub_id: invitation.hub_id,
+            profile_id: user.id,
+            role: invitation.role,
+            status: 'Approved'
+          });
           
-        if (rpcError) {
-          console.error("Error creating member record:", rpcError);
-          throw rpcError;
+        if (memberError) {
+          console.error("Direct member insert failed, trying RPC function:", memberError);
+          
+          // Fallback to RPC function if direct insert fails
+          const { error: rpcError } = await supabase.rpc('create_hub_member', { 
+            hub_id: invitation.hub_id,
+            member_profile_id: user.id,
+            member_role: invitation.role,
+            member_status: 'Approved'
+          });
+            
+          if (rpcError) {
+            console.error("Error creating member record with RPC:", rpcError);
+            throw rpcError;
+          }
+        }
+        
+        // Step 2: Manually update metrics as a separate operation
+        // This is done to avoid relying on the trigger that might cause deadlocks
+        try {
+          const { data: metricsData, error: metricsCheckError } = await supabase
+            .from('hub_member_metrics')
+            .select('*')
+            .eq('hub_id', invitation.hub_id)
+            .single();
+            
+          if (metricsCheckError && metricsCheckError.code !== 'PGRST116') {
+            console.error("Error checking hub metrics:", metricsCheckError);
+          }
+          
+          if (!metricsData) {
+            // Create new metrics record if it doesn't exist
+            await supabase
+              .from('hub_member_metrics')
+              .insert({
+                hub_id: invitation.hub_id,
+                total_members: 1,
+                active_members: 1
+              });
+          } else {
+            // Update existing metrics
+            await supabase
+              .from('hub_member_metrics')
+              .update({
+                total_members: metricsData.total_members + 1,
+                active_members: metricsData.active_members + 1,
+                updated_at: new Date().toISOString()
+              })
+              .eq('hub_id', invitation.hub_id);
+          }
+        } catch (metricsError) {
+          // Just log metrics errors but don't fail the whole process
+          console.error("Error updating hub metrics:", metricsError);
+        }
+        
+        // Step 3: Update hub member count (best effort)
+        try {
+          await supabase
+            .from('hubs')
+            .update({
+              current_member_count: supabase.rpc('get_active_member_count', { hub_id: invitation.hub_id })
+            })
+            .eq('id', invitation.hub_id);
+        } catch (hubUpdateError) {
+          console.error("Error updating hub member count:", hubUpdateError);
         }
       }
       
