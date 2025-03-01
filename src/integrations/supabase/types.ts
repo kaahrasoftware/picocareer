@@ -1037,81 +1037,6 @@ export type Database = {
         }
         Relationships: []
       }
-      hub_member_invites: {
-        Row: {
-          accepted_at: string | null
-          admin_email: string | null
-          created_at: string
-          custom_message: string | null
-          email_sent_at: string | null
-          email_status: string | null
-          expires_at: string
-          hub_id: string
-          id: string
-          invited_by: string
-          invited_email: string
-          last_email_attempt: string | null
-          rejected_at: string | null
-          role: Database["public"]["Enums"]["hub_member_role"]
-          status: string
-          token: string | null
-          updated_at: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          admin_email?: string | null
-          created_at?: string
-          custom_message?: string | null
-          email_sent_at?: string | null
-          email_status?: string | null
-          expires_at?: string
-          hub_id: string
-          id?: string
-          invited_by: string
-          invited_email: string
-          last_email_attempt?: string | null
-          rejected_at?: string | null
-          role?: Database["public"]["Enums"]["hub_member_role"]
-          status?: string
-          token?: string | null
-          updated_at?: string
-        }
-        Update: {
-          accepted_at?: string | null
-          admin_email?: string | null
-          created_at?: string
-          custom_message?: string | null
-          email_sent_at?: string | null
-          email_status?: string | null
-          expires_at?: string
-          hub_id?: string
-          id?: string
-          invited_by?: string
-          invited_email?: string
-          last_email_attempt?: string | null
-          rejected_at?: string | null
-          role?: Database["public"]["Enums"]["hub_member_role"]
-          status?: string
-          token?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hub_member_invites_hub_id_fkey"
-            columns: ["hub_id"]
-            isOneToOne: false
-            referencedRelation: "hubs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "hub_member_invites_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       hub_member_metrics: {
         Row: {
           active_members: number | null
@@ -1149,6 +1074,7 @@ export type Database = {
       }
       hub_members: {
         Row: {
+          confirmed: boolean
           created_at: string | null
           department_id: string | null
           hub_id: string
@@ -1160,6 +1086,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          confirmed?: boolean
           created_at?: string | null
           department_id?: string | null
           hub_id: string
@@ -1171,6 +1098,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          confirmed?: boolean
           created_at?: string | null
           department_id?: string | null
           hub_id?: string
@@ -3053,6 +2981,14 @@ export type Database = {
       }
     }
     Functions: {
+      add_hub_member: {
+        Args: {
+          _hub_id: string
+          _email: string
+          _role: string
+        }
+        Returns: Json
+      }
       add_tokens_to_wallet: {
         Args: {
           p_wallet_id: string
@@ -3100,6 +3036,12 @@ export type Database = {
       clean_old_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      confirm_hub_membership: {
+        Args: {
+          _hub_id: string
+        }
+        Returns: Json
       }
       create_hub_member: {
         Args: {
@@ -3578,6 +3520,7 @@ export type Database = {
         | "hub_invitation_sent"
         | "availability_request"
         | "hub_invite"
+        | "hub_membership"
       onboarding_status:
         | "Pending"
         | "Under Review"
