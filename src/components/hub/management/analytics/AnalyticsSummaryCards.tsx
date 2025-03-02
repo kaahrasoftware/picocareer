@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Database, Users, MessageSquare, FileText, HardDrive } from "lucide-react";
 
 interface AnalyticsSummaryCardsProps {
   summary: any;
@@ -35,7 +36,8 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
+          <CardTitle className="text-sm font-medium flex items-center">
+            <Database className="mr-2 h-4 w-4 text-muted-foreground" />
             Storage Used
           </CardTitle>
           <Badge variant={storagePercent > 90 ? "destructive" : storagePercent > 70 ? "warning" : "outline"}>
@@ -55,7 +57,8 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
+          <CardTitle className="text-sm font-medium flex items-center">
+            <Users className="mr-2 h-4 w-4 text-muted-foreground" />
             Members
           </CardTitle>
           <Badge variant={memberPercent > 90 ? "destructive" : memberPercent > 70 ? "warning" : "outline"}>
@@ -75,23 +78,71 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Content Count
+          <CardTitle className="text-sm font-medium flex items-center">
+            <MessageSquare className="mr-2 h-4 w-4 text-muted-foreground" />
+            Announcements
           </CardTitle>
+          <Badge variant="outline">{summary.announcementsCount}</Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {summary.announcementsCount}
+          </div>
+          <CardDescription>
+            Total announcements published
+          </CardDescription>
+          <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-full" 
+              style={{ width: `${Math.min(100, summary.announcementsCount * 5)}%` }}
+            ></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center">
+            <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
+            Resources
+          </CardTitle>
+          <Badge variant="outline">{summary.resourcesCount}</Badge>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
             {summary.resourcesCount}
           </div>
           <CardDescription>
-            Resources: {summary.resourcesCount} | Announcements: {summary.announcementsCount}
+            Total resources uploaded
           </CardDescription>
-          <div className="mt-2 grid grid-cols-5 gap-1">
-            <div className="bg-primary h-2 rounded-l-sm" style={{ opacity: 0.3 + (summary.resourcesCount / 10) * 0.7 }}></div>
-            <div className="bg-primary h-2" style={{ opacity: 0.3 + (summary.announcementsCount / 5) * 0.7 }}></div>
-            <div className="bg-primary h-2" style={{ opacity: 0.3 + (summary.logoCount / 1) * 0.7 }}></div>
-            <div className="bg-primary h-2" style={{ opacity: 0.3 + (summary.bannerCount / 1) * 0.7 }}></div>
-            <div className="bg-primary h-2 rounded-r-sm" style={{ opacity: 0.3 + (summary.fileCount / 20) * 0.7 }}></div>
+          <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-full" 
+              style={{ width: `${Math.min(100, summary.resourcesCount * 5)}%` }}
+            ></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center">
+            <HardDrive className="mr-2 h-4 w-4 text-muted-foreground" />
+            Resources Storage
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {formatStorageSize(summary.resourcesStorageUsed || 0)}
+          </div>
+          <CardDescription>
+            Used for resources ({(((summary.resourcesStorageUsed || 0) / summary.storageUsed) * 100).toFixed(1)}% of total)
+          </CardDescription>
+          <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-full" 
+              style={{ width: `${Math.min(100, ((summary.resourcesStorageUsed || 0) / summary.storageLimit) * 100)}%` }}
+            ></div>
           </div>
         </CardContent>
       </Card>
