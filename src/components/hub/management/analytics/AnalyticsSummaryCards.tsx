@@ -16,9 +16,15 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
+  // Calculate percentages with safeguards against division by zero
+  const calculatePercentage = (value: number, max: number): number => {
+    if (max <= 0) return 0;
+    return Math.min(Math.round((value / max) * 100), 100);
+  };
+
   // Calculate percentages
-  const memberPercentage = Math.min(Math.round((summary.activeMembers / summary.memberLimit) * 100), 100);
-  const storagePercentage = Math.min(Math.round((summary.storageUsed / summary.storageLimit) * 100), 100);
+  const memberPercentage = calculatePercentage(summary.activeMembers, summary.memberLimit);
+  const storagePercentage = calculatePercentage(summary.storageUsed, summary.storageLimit);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
