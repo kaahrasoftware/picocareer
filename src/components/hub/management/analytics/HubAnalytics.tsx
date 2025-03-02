@@ -11,6 +11,8 @@ import { EngagementMetrics } from './EngagementMetrics';
 import { HubRecommendations } from './HubRecommendations';
 import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachYearOfInterval, endOfMonth, endOfWeek, endOfYear } from 'date-fns';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface HubAnalyticsProps {
   hubId: string;
@@ -18,9 +20,21 @@ interface HubAnalyticsProps {
 
 type TimePeriod = 'day' | 'week' | 'month' | 'year';
 
+interface StorageMetrics {
+  totalStorageBytes: number;
+  fileCount: number;
+  resourcesCount: number;
+  logoCount: number;
+  bannerCount: number;
+  announcementsCount: number;
+  lastCalculatedAt: string;
+}
+
 export function HubAnalytics({ hubId }: HubAnalyticsProps) {
   const [memberGrowth, setMemberGrowth] = useState<MemberGrowth[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [storageMetrics, setStorageMetrics] = useState<StorageMetrics | null>(null);
   const [summary, setSummary] = useState<AnalyticsSummary>({
     totalMembers: 0,
     memberLimit: 100,
@@ -117,109 +131,182 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     return datePoints;
   };
 
-  useEffect(() => {
-    async function fetchAnalytics() {
-      try {
-        const startDate = getTimeRangeFilter(timePeriod);
-        const endDate = new Date();
-        
-        // Generate empty data points for all possible dates in the range
-        const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
-        
-        // Fetch member metrics
-        const { data: memberMetrics, error: memberMetricsError } = await supabase
-          .from('hub_member_metrics')
-          .select('*')
-          .eq('hub_id', hubId)
-          .single();
-
-        if (memberMetricsError) throw memberMetricsError;
-
-        // Fetch storage metrics
-        const { data: storageMetrics, error: storageError } = await supabase
-          .from('hub_storage_metrics')
-          .select('*')
-          .eq('hub_id', hubId)
-          .single();
-
-        if (storageError) throw storageError;
-
-        // Fetch resource count
-        const { count: resourceCount, error: resourceError } = await supabase
-          .from('hub_resources')
-          .select('*', { count: 'exact', head: true })
-          .eq('hub_id', hubId);
-
-        if (resourceError) throw resourceError;
-
-        // Fetch announcement count
-        const { count: announcementCount, error: announcementError } = await supabase
-          .from('hub_announcements')
-          .select('*', { count: 'exact', head: true })
-          .eq('hub_id', hubId);
-
-        if (announcementError) throw announcementError;
-
+  const refreshMetrics = async () => {
+    setIsRefreshing(true);
+    try {
+      const { data, error } = await supabase.rpc('refresh_hub_metrics', { hub_uuid: hubId });
+      
+      if (error) throw error;
+      
+      // Update the stored metrics
+      if (data) {
         setSummary({
-          totalMembers: memberMetrics?.total_members || 0,
-          memberLimit: memberMetrics?.member_limit || 100,
-          activeMembers: memberMetrics?.active_members || 0,
-          resourceCount: resourceCount || 0,
-          announcementCount: announcementCount || 0,
-          storageUsed: storageMetrics?.total_storage_bytes || 0,
-          storageLimit: storageMetrics?.storage_limit_bytes || 5368709120
+          totalMembers: data.member_metrics.total_members || 0,
+          memberLimit: data.member_metrics.member_limit || 100,
+          activeMembers: data.member_metrics.active_members || 0,
+          resourceCount: data.storage_metrics.resources_count || 0,
+          announcementCount: data.storage_metrics.announcements_count || 0,
+          storageUsed: data.storage_metrics.total_storage_bytes || 0,
+          storageLimit: data.storage_limit_bytes || 5368709120
         });
-
-        // Fetch members join dates
-        const { data: memberData, error: memberGrowthError } = await supabase
-          .from('hub_members')
-          .select('join_date')
-          .eq('hub_id', hubId)
-          .eq('status', 'Approved')
-          .gte('join_date', startOfDay(startDate).toISOString())
-          .lte('join_date', endOfDay(endDate).toISOString());
-
-        if (memberGrowthError) throw memberGrowthError;
-
-        // Process member data into growth data
-        const growthMap = new Map<string, number>();
-        const dateFormat = timePeriod === 'day' ? 'yyyy-MM-dd' : 
-                         timePeriod === 'week' ? 'yyyy-MM-dd' :
-                         timePeriod === 'month' ? 'yyyy-MM' : 'yyyy';
-
-        // Initialize the map with empty data points
-        emptyDataPoints.forEach(point => {
-          growthMap.set(point.month, 0);
-        });
-
-        // Add the actual member counts
-        memberData?.forEach(member => {
-          const date = format(new Date(member.join_date), dateFormat);
-          growthMap.set(date, (growthMap.get(date) || 0) + 1);
-        });
-
-        // Convert the map to array and sort
-        const growthData = emptyDataPoints.map(point => ({
-          ...point,
-          new_members: growthMap.get(point.month) || 0
-        }));
-
-        setMemberGrowth(growthData);
-
-      } catch (error: any) {
-        toast({
-          title: "Error fetching analytics",
-          description: error.message,
-          variant: "destructive"
+        
+        setStorageMetrics({
+          totalStorageBytes: data.storage_metrics.total_storage_bytes || 0,
+          fileCount: data.storage_metrics.file_count || 0,
+          resourcesCount: data.storage_metrics.resources_count || 0,
+          logoCount: data.storage_metrics.logo_count || 0,
+          bannerCount: data.storage_metrics.banner_count || 0,
+          announcementsCount: data.storage_metrics.announcements_count || 0,
+          lastCalculatedAt: data.storage_metrics.last_calculated_at || new Date().toISOString()
         });
       }
+      
+      toast({
+        title: "Metrics refreshed",
+        description: "Hub metrics have been recalculated successfully.",
+      });
+      
+      // Fetch member growth data again to reflect any changes
+      fetchAnalytics();
+      
+    } catch (error: any) {
+      console.error('Error refreshing metrics:', error);
+      toast({
+        title: "Error refreshing metrics",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
     }
+  };
 
+  const fetchAnalytics = async () => {
+    try {
+      const startDate = getTimeRangeFilter(timePeriod);
+      const endDate = new Date();
+      
+      // Generate empty data points for all possible dates in the range
+      const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
+      
+      // Fetch member metrics
+      const { data: memberMetrics, error: memberMetricsError } = await supabase
+        .from('hub_member_metrics')
+        .select('*')
+        .eq('hub_id', hubId)
+        .single();
+
+      if (memberMetricsError) throw memberMetricsError;
+
+      // Fetch storage metrics
+      const { data: storageMetrics, error: storageError } = await supabase
+        .from('hub_storage_metrics')
+        .select('*')
+        .eq('hub_id', hubId)
+        .single();
+
+      if (storageError) throw storageError;
+
+      // Fetch resource count
+      const { count: resourceCount, error: resourceError } = await supabase
+        .from('hub_resources')
+        .select('*', { count: 'exact', head: true })
+        .eq('hub_id', hubId);
+
+      if (resourceError) throw resourceError;
+
+      // Fetch announcement count
+      const { count: announcementCount, error: announcementError } = await supabase
+        .from('hub_announcements')
+        .select('*', { count: 'exact', head: true })
+        .eq('hub_id', hubId);
+
+      if (announcementError) throw announcementError;
+
+      setSummary({
+        totalMembers: memberMetrics?.total_members || 0,
+        memberLimit: memberMetrics?.member_limit || 100,
+        activeMembers: memberMetrics?.active_members || 0,
+        resourceCount: resourceCount || 0,
+        announcementCount: announcementCount || 0,
+        storageUsed: storageMetrics?.total_storage_bytes || 0,
+        storageLimit: storageMetrics?.storage_limit_bytes || 5368709120
+      });
+
+      setStorageMetrics(storageMetrics ? {
+        totalStorageBytes: storageMetrics.total_storage_bytes || 0,
+        fileCount: storageMetrics.file_count || 0,
+        resourcesCount: storageMetrics.resources_count || 0,
+        logoCount: storageMetrics.logo_count || 0,
+        bannerCount: storageMetrics.banner_count || 0,
+        announcementsCount: storageMetrics.announcements_count || 0,
+        lastCalculatedAt: storageMetrics.last_calculated_at || new Date().toISOString()
+      } : null);
+
+      // Fetch members join dates
+      const { data: memberData, error: memberGrowthError } = await supabase
+        .from('hub_members')
+        .select('join_date')
+        .eq('hub_id', hubId)
+        .eq('status', 'Approved')
+        .gte('join_date', startOfDay(startDate).toISOString())
+        .lte('join_date', endOfDay(endDate).toISOString());
+
+      if (memberGrowthError) throw memberGrowthError;
+
+      // Process member data into growth data
+      const growthMap = new Map<string, number>();
+      const dateFormat = timePeriod === 'day' ? 'yyyy-MM-dd' : 
+                       timePeriod === 'week' ? 'yyyy-MM-dd' :
+                       timePeriod === 'month' ? 'yyyy-MM' : 'yyyy';
+
+      // Initialize the map with empty data points
+      emptyDataPoints.forEach(point => {
+        growthMap.set(point.month, 0);
+      });
+
+      // Add the actual member counts
+      memberData?.forEach(member => {
+        const date = format(new Date(member.join_date), dateFormat);
+        growthMap.set(date, (growthMap.get(date) || 0) + 1);
+      });
+
+      // Convert the map to array and sort
+      const growthData = emptyDataPoints.map(point => ({
+        ...point,
+        new_members: growthMap.get(point.month) || 0
+      }));
+
+      setMemberGrowth(growthData);
+
+    } catch (error: any) {
+      toast({
+        title: "Error fetching analytics",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
     fetchAnalytics();
   }, [hubId, timePeriod, toast]);
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Hub Analytics</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={refreshMetrics} 
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh Metrics'}
+        </Button>
+      </div>
+
       <AnalyticsSummaryCards summary={summary} />
       
       <Tabs defaultValue="growth" className="w-full">
@@ -273,6 +360,41 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
+          {storageMetrics && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Storage Usage Details</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Last calculated: {format(new Date(storageMetrics.lastCalculatedAt), 'PPpp')}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-medium text-sm">Resources</h3>
+                    <p className="text-2xl font-bold">{storageMetrics.resourcesCount}</p>
+                  </div>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-medium text-sm">Media Files</h3>
+                    <p className="text-2xl font-bold">{storageMetrics.logoCount + storageMetrics.bannerCount}</p>
+                    <div className="flex flex-col mt-2 text-xs text-muted-foreground">
+                      <span>Logos: {storageMetrics.logoCount}</span>
+                      <span>Banners: {storageMetrics.bannerCount}</span>
+                    </div>
+                  </div>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-medium text-sm">Announcements</h3>
+                    <p className="text-2xl font-bold">{storageMetrics.announcementsCount}</p>
+                  </div>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-medium text-sm">Total Files</h3>
+                    <p className="text-2xl font-bold">{storageMetrics.fileCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="engagement">
