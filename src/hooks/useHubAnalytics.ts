@@ -6,6 +6,25 @@ import { HubStorageMetrics, HubMemberMetrics, MemberGrowth, AnalyticsSummary } f
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';
 
+// Define the response type from the refresh_hub_metrics function
+interface RefreshHubMetricsResponse {
+  storage_metrics: {
+    total_storage_bytes: number;
+    file_count: number;
+    resources_count: number;
+    logo_count: number;
+    banner_count: number;
+    announcements_count: number;
+    last_calculated_at: string;
+    storage_limit_bytes: number;
+  };
+  member_metrics: {
+    total_members: number;
+    active_members: number;
+    member_limit: number;
+  };
+}
+
 export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'month') {
   const [memberGrowth, setMemberGrowth] = useState<MemberGrowth[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,7 +103,7 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
 
       // Use the refresh_hub_metrics function to get consistent metrics
       const { data: metricsData, error: metricsError } = await supabase
-        .rpc('refresh_hub_metrics', { _hub_id: hubId });
+        .rpc<RefreshHubMetricsResponse>('refresh_hub_metrics', { _hub_id: hubId });
 
       if (metricsError) throw metricsError;
 
@@ -93,12 +112,12 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
         const memberMetrics = metricsData.member_metrics;
         setSummary({
           totalMembers: memberMetrics.total_members,
-          memberLimit: memberMetrics.member_limit,
+          memberLimit: memberMetrics.member_limit || 100,
           activeMembers: memberMetrics.active_members,
           resourceCount: metricsData.storage_metrics.resources_count,
           announcementCount: metricsData.storage_metrics.announcements_count,
           storageUsed: metricsData.storage_metrics.total_storage_bytes,
-          storageLimit: metricsData.storage_metrics.storage_limit_bytes,
+          storageLimit: metricsData.storage_metrics.storage_limit_bytes || 5 * 1024 * 1024 * 1024, // Default to 5GB
         });
 
         setStorageMetrics({
