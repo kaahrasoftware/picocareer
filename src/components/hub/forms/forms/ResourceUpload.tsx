@@ -67,7 +67,8 @@ export function ResourceUpload({
     if (fileSize && fileSize > 0) {
       const sizeField = register("size_in_bytes");
       if (sizeField && sizeField.onChange) {
-        sizeField.onChange(fileSize);
+        sizeField.onChange({ target: { value: fileSize } });
+        console.log(`File size recorded: ${fileSize} bytes`);
       }
     }
   };

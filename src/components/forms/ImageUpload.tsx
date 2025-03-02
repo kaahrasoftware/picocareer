@@ -32,8 +32,11 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [fileSize, setFileSize] = useState<number>(0);
   
-  const customUploadSuccess = (url: string) => {
-    onUploadSuccess?.(url, fileSize);
+  const customUploadSuccess = (url: string, size?: number) => {
+    if (trackFileSize && size) {
+      setFileSize(size);
+    }
+    onUploadSuccess?.(url, size);
   };
 
   const { uploading, handleUpload, handleRemove } = useImageUpload({

@@ -1,10 +1,10 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { AnalyticsSummary } from '@/types/database/analytics';
-import { Users, FileText, Bell, HardDrive } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface AnalyticsSummaryCardsProps {
-  summary: AnalyticsSummary;
+  summary: any;
 }
 
 export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
@@ -23,95 +23,75 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
   };
 
   // Calculate percentages with safeguards against division by zero
-  const calculatePercentage = (value: number, max: number): number => {
-    if (max <= 0) return 0;
-    return Math.min(Math.round((value / max) * 100), 100);
-  };
-
-  // Calculate percentages
-  const memberPercentage = calculatePercentage(summary.activeMembers, summary.memberLimit);
-  const storagePercentage = calculatePercentage(summary.storageUsed, summary.storageLimit);
+  const storagePercent = summary.storageLimit > 0 
+    ? (summary.storageUsed / summary.storageLimit) * 100 
+    : 0;
+  
+  const memberPercent = summary.memberLimit > 0 
+    ? (summary.memberCount / summary.memberLimit) * 100 
+    : 0;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {/* Members Card */}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Members</p>
-              <div className="flex items-baseline gap-2">
-                <h4 className="text-2xl font-bold">{summary.activeMembers}</h4>
-                <span className="text-xs text-muted-foreground">/ {summary.memberLimit}</span>
-              </div>
-              <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary rounded-full"
-                  style={{ width: `${memberPercentage}%` }}
-                ></div>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{memberPercentage}% of capacity</p>
-            </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            Storage Used
+          </CardTitle>
+          <Badge variant={storagePercent > 90 ? "destructive" : storagePercent > 70 ? "warning" : "outline"}>
+            {storagePercent.toFixed(1)}%
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {formatStorageSize(summary.storageUsed)}
           </div>
+          <CardDescription>
+            of {formatStorageSize(summary.storageLimit)}
+          </CardDescription>
+          <Progress value={storagePercent} className="h-2 mt-2" />
         </CardContent>
       </Card>
 
-      {/* Resources Card */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Resources</p>
-              <h4 className="text-2xl font-bold">{summary.resourceCount}</h4>
-              <p className="mt-1 text-xs text-muted-foreground">Shared content items</p>
-            </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            Members
+          </CardTitle>
+          <Badge variant={memberPercent > 90 ? "destructive" : memberPercent > 70 ? "warning" : "outline"}>
+            {memberPercent.toFixed(1)}%
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {summary.memberCount}
           </div>
+          <CardDescription>
+            of {summary.memberLimit}
+          </CardDescription>
+          <Progress value={memberPercent} className="h-2 mt-2" />
         </CardContent>
       </Card>
 
-      {/* Announcements Card */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-amber-100 p-3 rounded-full">
-              <Bell className="h-6 w-6 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Announcements</p>
-              <h4 className="text-2xl font-bold">{summary.announcementCount}</h4>
-              <p className="mt-1 text-xs text-muted-foreground">Posted notifications</p>
-            </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            Content Count
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {summary.resourcesCount}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Storage Card */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-emerald-100 p-3 rounded-full">
-              <HardDrive className="h-6 w-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Storage</p>
-              <div className="flex items-baseline gap-2">
-                <h4 className="text-2xl font-bold">{formatStorageSize(summary.storageUsed)}</h4>
-                <span className="text-xs text-muted-foreground">/ {formatStorageSize(summary.storageLimit)}</span>
-              </div>
-              <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-600 rounded-full"
-                  style={{ width: `${storagePercentage}%` }}
-                ></div>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{storagePercentage}% used</p>
-            </div>
+          <CardDescription>
+            Resources: {summary.resourcesCount} | Announcements: {summary.announcementsCount}
+          </CardDescription>
+          <div className="mt-2 grid grid-cols-5 gap-1">
+            <div className="bg-primary h-2 rounded-l-sm" style={{ opacity: 0.3 + (summary.resourcesCount / 10) * 0.7 }}></div>
+            <div className="bg-primary h-2" style={{ opacity: 0.3 + (summary.announcementsCount / 5) * 0.7 }}></div>
+            <div className="bg-primary h-2" style={{ opacity: 0.3 + (summary.logoCount / 1) * 0.7 }}></div>
+            <div className="bg-primary h-2" style={{ opacity: 0.3 + (summary.bannerCount / 1) * 0.7 }}></div>
+            <div className="bg-primary h-2 rounded-r-sm" style={{ opacity: 0.3 + (summary.fileCount / 20) * 0.7 }}></div>
           </div>
         </CardContent>
       </Card>

@@ -25,7 +25,7 @@ interface FormFields {
   document_type?: DocumentType;
   external_url?: string;
   file_url?: string;
-  size_in_bytes?: number;
+  size_in_bytes: number;
   access_level: ResourceAccessLevel;
 }
 
@@ -46,7 +46,7 @@ export function ResourceForm({
       document_type: existingResource?.document_type,
       external_url: existingResource?.external_url || "",
       file_url: existingResource?.file_url || "",
-      size_in_bytes: 0,
+      size_in_bytes: existingResource?.size_in_bytes || 0,
       access_level: existingResource?.access_level || "members"
     }
   });

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface UseImageUploadProps {
   bucket: string;
   folderPath?: string;
-  onUploadSuccess?: (url: string) => void;
+  onUploadSuccess?: (url: string, fileSize?: number) => void;
 }
 
 export function useImageUpload({
@@ -32,18 +32,19 @@ export function useImageUpload({
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      const fileSize = file.size; // Get file size in bytes
 
       console.log('Uploading file:', {
         bucket,
         filePath,
         contentType: file.type,
-        size: file.size
+        size: fileSize
       });
 
       // First try to remove any existing file if there is one
       if (field.value) {
-        const existingFilePath = field.value.split('/').slice(-4).join('/'); // Get last 4 segments (e.g., hubs/[hubId]/logos/[filename])
         try {
+          const existingFilePath = field.value.split('/').slice(-4).join('/'); // Get last 4 segments (e.g., hubs/[hubId]/logos/[filename])
           await supabase.storage
             .from(bucket)
             .remove([existingFilePath]);
@@ -72,7 +73,7 @@ export function useImageUpload({
       console.log('Upload successful:', {
         publicUrl,
         filePath,
-        fileSize: file.size
+        fileSize: fileSize
       });
 
       // If this is a hub resource, update the size_in_bytes
@@ -95,7 +96,11 @@ export function useImageUpload({
       }
 
       field.onChange(publicUrl);
-      onUploadSuccess?.(publicUrl);
+      
+      // Pass the file size to the callback if provided
+      if (onUploadSuccess) {
+        onUploadSuccess(publicUrl, fileSize);
+      }
 
       toast({
         title: "Success",
@@ -143,7 +148,10 @@ export function useImageUpload({
         description: "File removed successfully",
       });
       
-      onUploadSuccess?.('');
+      // Call the callback with empty URL and zero size
+      if (onUploadSuccess) {
+        onUploadSuccess('', 0);
+      }
       
     } catch (error: any) {
       console.error('Remove error:', error);
