@@ -129,14 +129,22 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
       if (error) throw error;
       
       if (data) {
+        const { data: hubData, error: hubError } = await supabase
+          .from('hubs')
+          .select('member_limit, storage_limit_bytes')
+          .eq('id', hubId)
+          .single();
+          
+        if (hubError) throw hubError;
+        
         setSummary({
           totalMembers: data.member_metrics.total_members || 0,
-          memberLimit: data.member_metrics.member_limit || 100,
+          memberLimit: hubData.member_limit || 100,
           activeMembers: data.member_metrics.active_members || 0,
           resourceCount: data.storage_metrics.resources_count || 0,
           announcementCount: data.storage_metrics.announcements_count || 0,
           storageUsed: data.storage_metrics.total_storage_bytes || 0,
-          storageLimit: data.storage_metrics.storage_limit_bytes || 5368709120
+          storageLimit: hubData.storage_limit_bytes || 5368709120
         });
         
         setStorageMetrics({
@@ -147,13 +155,13 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
           banner_count: data.storage_metrics.banner_count || 0,
           announcements_count: data.storage_metrics.announcements_count || 0,
           last_calculated_at: data.storage_metrics.last_calculated_at || new Date().toISOString(),
-          storage_limit_bytes: data.storage_metrics.storage_limit_bytes || 5368709120
+          storage_limit_bytes: hubData.storage_limit_bytes || 5368709120
         });
         
         setMemberMetrics({
           total_members: data.member_metrics.total_members || 0,
           active_members: data.member_metrics.active_members || 0,
-          member_limit: data.member_metrics.member_limit || 100
+          member_limit: hubData.member_limit || 100
         });
       }
       
@@ -183,14 +191,14 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
       
       const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
       
-      const { data: memberMetricsData, error: memberMetricsError } = await supabase
-        .from('hub_member_metrics')
-        .select('*')
-        .eq('hub_id', hubId)
+      const { data: hubData, error: hubError } = await supabase
+        .from('hubs')
+        .select('current_storage_usage, current_member_count, storage_limit_bytes, member_limit')
+        .eq('id', hubId)
         .single();
-
-      if (memberMetricsError && memberMetricsError.code !== 'PGRST116') throw memberMetricsError;
-
+        
+      if (hubError) throw hubError;
+      
       const { data: storageMetricsData, error: storageError } = await supabase
         .from('hub_storage_metrics')
         .select('*')
@@ -199,19 +207,19 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
 
       if (storageError && storageError.code !== 'PGRST116') throw storageError;
 
-      const { data: hubData, error: hubError } = await supabase
-        .from('hubs')
-        .select('current_storage_usage, current_member_count, storage_limit_bytes, member_limit')
-        .eq('id', hubId)
+      const { data: memberMetricsData, error: memberMetricsError } = await supabase
+        .from('hub_member_metrics')
+        .select('*')
+        .eq('hub_id', hubId)
         .single();
-        
-      if (hubError) throw hubError;
+
+      if (memberMetricsError && memberMetricsError.code !== 'PGRST116') throw memberMetricsError;
 
       if (memberMetricsData) {
         setMemberMetrics({
           total_members: memberMetricsData.total_members || 0,
           active_members: memberMetricsData.active_members || 0,
-          member_limit: memberMetricsData.member_limit || 100
+          member_limit: hubData.member_limit || 100
         });
       }
 
@@ -224,34 +232,25 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
           banner_count: storageMetricsData.banner_count || 0,
           announcements_count: storageMetricsData.announcements_count || 0,
           last_calculated_at: storageMetricsData.last_calculated_at || new Date().toISOString(),
-          storage_limit_bytes: storageMetricsData.storage_limit_bytes || 5368709120
+          storage_limit_bytes: hubData.storage_limit_bytes || 5368709120
         });
       }
 
       setSummary({
         totalMembers: memberMetricsData?.total_members || hubData?.current_member_count || 0,
-        memberLimit: memberMetricsData?.member_limit || hubData?.member_limit || 100,
+        memberLimit: hubData?.member_limit || 100,
         activeMembers: memberMetricsData?.active_members || hubData?.current_member_count || 0,
         resourceCount: storageMetricsData?.resources_count || 0,
         announcementCount: storageMetricsData?.announcements_count || 0,
         storageUsed: storageMetricsData?.total_storage_bytes || hubData?.current_storage_usage || 0,
-        storageLimit: storageMetricsData?.storage_limit_bytes || hubData?.storage_limit_bytes || 5368709120
+        storageLimit: hubData?.storage_limit_bytes || 5368709120
       });
 
       if (storageMetricsData && 
           hubData && 
           storageMetricsData.total_storage_bytes !== hubData.current_storage_usage) {
         
-        const { error: updateError } = await supabase
-          .from('hubs')
-          .update({ 
-            current_storage_usage: storageMetricsData.total_storage_bytes
-          })
-          .eq('id', hubId);
-        
-        if (updateError) {
-          console.error('Error updating hub storage usage:', updateError);
-        }
+        await updateHubStorageUsage(hubId);
       }
 
       const { data: memberData, error: memberGrowthError } = await supabase
@@ -291,6 +290,23 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         description: error.message,
         variant: "destructive"
       });
+    }
+  };
+
+  const updateHubStorageUsage = async (hubId: string) => {
+    try {
+      const { error } = await supabase
+        .from('hubs')
+        .update({ 
+          current_storage_usage: storageMetrics?.total_storage_bytes || 0
+        })
+        .eq('id', hubId);
+        
+      if (error) {
+        console.error('Error updating hub storage usage:', error);
+      }
+    } catch (error: any) {
+      console.error('Error updating hub storage usage:', error);
     }
   };
 

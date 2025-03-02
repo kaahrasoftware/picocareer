@@ -1,15 +1,21 @@
 
-export interface MemberGrowth {
-  month: string;
-  new_members: number;
-  hub_id: string;
+// If this file doesn't exist yet, we'll create it with the necessary types
+
+export interface HubStorageMetrics {
+  total_storage_bytes: number;
+  file_count: number;
+  resources_count: number;
+  logo_count: number;
+  banner_count: number;
+  announcements_count: number;
+  last_calculated_at: string;
+  storage_limit_bytes?: number;
 }
 
-export interface ResourceAnalytic {
-  view_count: number;
-  download_count: number;
-  resource_id: string;
-  title?: string;
+export interface HubMemberMetrics {
+  total_members: number;
+  active_members: number;
+  member_limit?: number;
 }
 
 export interface AnalyticsSummary {
@@ -22,21 +28,10 @@ export interface AnalyticsSummary {
   storageLimit: number;
 }
 
-export interface HubStorageMetrics {
-  total_storage_bytes: number;
-  file_count: number;
-  resources_count: number;
-  logo_count: number;
-  banner_count: number;
-  announcements_count: number;
-  last_calculated_at: string;
-  storage_limit_bytes: number;
-}
-
-export interface HubMemberMetrics {
-  total_members: number;
-  active_members: number;
-  member_limit: number;
+export interface MemberGrowth {
+  month: string;
+  new_members: number;
+  hub_id: string;
 }
 
 export interface ResourceEngagement {
