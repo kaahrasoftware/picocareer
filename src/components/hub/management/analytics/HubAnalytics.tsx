@@ -7,7 +7,6 @@ import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { EngagementMetrics } from './EngagementMetrics';
 import { HubRecommendations } from './HubRecommendations';
 import { MemberGrowthChart } from './MemberGrowthChart';
-import { StorageUsageDetails } from './StorageUsageDetails';
 import { useHubAnalytics } from '@/hooks/useHubAnalytics';
 
 interface HubAnalyticsProps {
@@ -57,8 +56,6 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
             onTimePeriodChange={setTimePeriod}
             formatDate={formatDate}
           />
-
-          {storageMetrics && <StorageUsageDetails storageMetrics={storageMetrics} />}
         </TabsContent>
 
         <TabsContent value="engagement">
