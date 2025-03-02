@@ -25,6 +25,7 @@ interface FormFields {
   document_type?: DocumentType;
   external_url?: string;
   file_url?: string;
+  size_in_bytes?: number;
   access_level: ResourceAccessLevel;
 }
 
@@ -45,6 +46,7 @@ export function ResourceForm({
       document_type: existingResource?.document_type,
       external_url: existingResource?.external_url || "",
       file_url: existingResource?.file_url || "",
+      size_in_bytes: 0,
       access_level: existingResource?.access_level || "members"
     }
   });
@@ -61,6 +63,8 @@ export function ResourceForm({
         created_by: user.data.user?.id,
       };
 
+      console.log('Saving resource with size:', data.size_in_bytes, 'bytes');
+
       // For updates, we only want to update specific fields
       if (existingResource) {
         const { error } = await supabase
@@ -73,6 +77,7 @@ export function ResourceForm({
             document_type: data.document_type,
             external_url: data.external_url,
             file_url: data.file_url,
+            size_in_bytes: data.size_in_bytes || 0,
             access_level: data.access_level,
             updated_at: new Date().toISOString()
           })
@@ -80,12 +85,16 @@ export function ResourceForm({
 
         if (error) throw error;
       } else {
-        console.log('Creating new resource:', insertData);
+        console.log('Creating new resource:', {
+          ...insertData,
+          size_in_bytes: data.size_in_bytes || 0
+        });
 
         const { error } = await supabase
           .from('hub_resources')
           .insert({
             ...insertData,
+            size_in_bytes: data.size_in_bytes || 0,
             content_type: data.file_url ? 'application/pdf' : undefined,
             original_filename: data.file_url ? data.file_url.split('/').pop() : undefined,
             version: 1
@@ -93,6 +102,9 @@ export function ResourceForm({
 
         if (error) throw error;
       }
+
+      // Refresh hub metrics to update storage usage
+      await supabase.rpc('refresh_hub_metrics', { _hub_id: hubId });
 
       toast({
         title: "Success",
