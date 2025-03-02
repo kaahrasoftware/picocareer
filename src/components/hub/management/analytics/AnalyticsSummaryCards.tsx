@@ -8,12 +8,18 @@ interface AnalyticsSummaryCardsProps {
 }
 
 export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
-  // Format storage size
+  // Format storage size with improved unit handling
   const formatStorageSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    if (bytes === 0) return '0 B';
+    
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    
+    // Ensure we don't exceed available units
+    const unitIndex = Math.min(i, units.length - 1);
+    
+    // Format with appropriate precision (more decimals for smaller numbers)
+    return `${(bytes / Math.pow(1024, unitIndex)).toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex]}`;
   };
 
   // Calculate percentages with safeguards against division by zero
