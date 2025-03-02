@@ -61,15 +61,6 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
     if (!hubId) return;
 
     try {
-      // Get hub details for limits
-      const { data: hubData, error: hubError } = await supabase
-        .from('hubs')
-        .select('member_limit, storage_limit_bytes')
-        .eq('id', hubId)
-        .single();
-
-      if (hubError) throw hubError;
-
       // Calculate time range based on selected period
       const now = new Date();
       let startDate;

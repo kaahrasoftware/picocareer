@@ -3008,6 +3008,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      calculate_hub_member_count: {
+        Args: {
+          _hub_id: string
+        }
+        Returns: number
+      }
+      calculate_hub_storage_usage: {
+        Args: {
+          _hub_id: string
+        }
+        Returns: number
+      }
       check_and_insert_major: {
         Args: {
           major_data: Json
@@ -3079,6 +3091,18 @@ export type Database = {
       ensure_complete_hub_storage_structure: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      fix_hub_metrics_inconsistencies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          hub_id: string
+          name: string
+          old_storage: number
+          new_storage: number
+          old_members: number
+          new_members: number
+          fixed: boolean
+        }[]
       }
       generate_personality_test_mappings: {
         Args: Record<PropertyKey, never>
@@ -3155,6 +3179,10 @@ export type Database = {
         Returns: undefined
       }
       match_profiles_with_majors: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      refresh_all_hub_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
