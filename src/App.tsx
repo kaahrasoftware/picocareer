@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { routes } from '@/router/routes';
 import { Toaster } from '@/components/ui/toaster';
 import Error from '@/pages/Error';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -36,6 +36,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <div className="app">
+          <HubStorageInitializer />
           <AppRoutes />
           <Toaster />
         </div>

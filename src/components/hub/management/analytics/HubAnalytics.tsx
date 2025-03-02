@@ -136,7 +136,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
           resourceCount: data.storage_metrics.resources_count || 0,
           announcementCount: data.storage_metrics.announcements_count || 0,
           storageUsed: data.storage_metrics.total_storage_bytes || 0,
-          storageLimit: data.storage_limit_bytes || 5368709120
+          storageLimit: data.storage_metrics.storage_limit_bytes || 5368709120
         });
         
         setStorageMetrics({
@@ -147,7 +147,7 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
           banner_count: data.storage_metrics.banner_count || 0,
           announcements_count: data.storage_metrics.announcements_count || 0,
           last_calculated_at: data.storage_metrics.last_calculated_at || new Date().toISOString(),
-          storage_limit_bytes: data.storage_limit_bytes || 5368709120
+          storage_limit_bytes: data.storage_metrics.storage_limit_bytes || 5368709120
         });
         
         setMemberMetrics({
@@ -199,6 +199,14 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
 
       if (storageError && storageError.code !== 'PGRST116') throw storageError;
 
+      const { data: hubData, error: hubError } = await supabase
+        .from('hubs')
+        .select('current_storage_usage, current_member_count, storage_limit_bytes, member_limit')
+        .eq('id', hubId)
+        .single();
+        
+      if (hubError) throw hubError;
+
       if (memberMetricsData) {
         setMemberMetrics({
           total_members: memberMetricsData.total_members || 0,
@@ -221,14 +229,30 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
       }
 
       setSummary({
-        totalMembers: memberMetricsData?.total_members || 0,
-        memberLimit: memberMetricsData?.member_limit || 100,
-        activeMembers: memberMetricsData?.active_members || 0,
+        totalMembers: memberMetricsData?.total_members || hubData?.current_member_count || 0,
+        memberLimit: memberMetricsData?.member_limit || hubData?.member_limit || 100,
+        activeMembers: memberMetricsData?.active_members || hubData?.current_member_count || 0,
         resourceCount: storageMetricsData?.resources_count || 0,
         announcementCount: storageMetricsData?.announcements_count || 0,
-        storageUsed: storageMetricsData?.total_storage_bytes || 0,
-        storageLimit: storageMetricsData?.storage_limit_bytes || 5368709120
+        storageUsed: storageMetricsData?.total_storage_bytes || hubData?.current_storage_usage || 0,
+        storageLimit: storageMetricsData?.storage_limit_bytes || hubData?.storage_limit_bytes || 5368709120
       });
+
+      if (storageMetricsData && 
+          hubData && 
+          storageMetricsData.total_storage_bytes !== hubData.current_storage_usage) {
+        
+        const { error: updateError } = await supabase
+          .from('hubs')
+          .update({ 
+            current_storage_usage: storageMetricsData.total_storage_bytes
+          })
+          .eq('id', hubId);
+        
+        if (updateError) {
+          console.error('Error updating hub storage usage:', updateError);
+        }
+      }
 
       const { data: memberData, error: memberGrowthError } = await supabase
         .from('hub_members')
