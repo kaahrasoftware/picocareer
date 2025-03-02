@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,23 +8,23 @@ import { EngagementMetrics } from './EngagementMetrics';
 import { HubRecommendations } from './HubRecommendations';
 import { MemberGrowthChart } from './MemberGrowthChart';
 import { StorageUsageDetails } from './StorageUsageDetails';
-import { useHubAnalytics, TimePeriod } from '@/hooks/useHubAnalytics';
+import { useHubAnalytics } from '@/hooks/useHubAnalytics';
 
 interface HubAnalyticsProps {
   hubId: string;
 }
 
 export function HubAnalytics({ hubId }: HubAnalyticsProps) {
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
-  
   const { 
     memberGrowth, 
     isRefreshing, 
     storageMetrics, 
     summary, 
+    timePeriod,
+    setTimePeriod,
     refreshMetrics,
     formatDate
-  } = useHubAnalytics(hubId, timePeriod);
+  } = useHubAnalytics(hubId);
 
   return (
     <div className="space-y-6">

@@ -1042,7 +1042,6 @@ export type Database = {
           active_members: number | null
           hub_id: string | null
           id: string
-          member_limit: number | null
           total_members: number | null
           updated_at: string | null
         }
@@ -1050,7 +1049,6 @@ export type Database = {
           active_members?: number | null
           hub_id?: string | null
           id?: string
-          member_limit?: number | null
           total_members?: number | null
           updated_at?: string | null
         }
@@ -1058,7 +1056,6 @@ export type Database = {
           active_members?: number | null
           hub_id?: string | null
           id?: string
-          member_limit?: number | null
           total_members?: number | null
           updated_at?: string | null
         }
@@ -1372,29 +1369,41 @@ export type Database = {
       }
       hub_storage_metrics: {
         Row: {
+          announcements_count: number | null
+          banner_count: number | null
           bucket_id: string
           file_count: number | null
           hub_id: string | null
           id: string
-          storage_limit_bytes: number | null
+          last_calculated_at: string | null
+          logo_count: number | null
+          resources_count: number | null
           total_storage_bytes: number | null
           updated_at: string | null
         }
         Insert: {
+          announcements_count?: number | null
+          banner_count?: number | null
           bucket_id: string
           file_count?: number | null
           hub_id?: string | null
           id?: string
-          storage_limit_bytes?: number | null
+          last_calculated_at?: string | null
+          logo_count?: number | null
+          resources_count?: number | null
           total_storage_bytes?: number | null
           updated_at?: string | null
         }
         Update: {
+          announcements_count?: number | null
+          banner_count?: number | null
           bucket_id?: string
           file_count?: number | null
           hub_id?: string | null
           id?: string
-          storage_limit_bytes?: number | null
+          last_calculated_at?: string | null
+          logo_count?: number | null
+          resources_count?: number | null
           total_storage_bytes?: number | null
           updated_at?: string | null
         }
@@ -3148,6 +3157,12 @@ export type Database = {
       match_profiles_with_majors: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      refresh_hub_metrics: {
+        Args: {
+          _hub_id: string
+        }
+        Returns: Json
       }
       refresh_personality_test_mappings: {
         Args: Record<PropertyKey, never>

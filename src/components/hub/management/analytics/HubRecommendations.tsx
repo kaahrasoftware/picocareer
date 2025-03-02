@@ -1,113 +1,134 @@
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Bookmark, Search } from "lucide-react";
-import { useQuery } from '@tanstack/react-query';
-
-interface PopularContent {
-  content_type: string;
-  content_id: string;
-  title: string;
-  bookmark_count: number;
-  search_count: number;
-}
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface HubRecommendationsProps {
   hubId: string;
 }
 
+interface Recommendation {
+  type: string;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionPath: string;
+}
+
 export function HubRecommendations({ hubId }: HubRecommendationsProps) {
-  const { toast } = useToast();
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const { data: recommendations = [] } = useQuery({
-    queryKey: ['hub-recommendations', hubId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('get_hub_recommendations', { p_hub_id: hubId });
+  useEffect(() => {
+    async function analyzeAndGenerateRecommendations() {
+      setIsLoading(true);
+      try {
+        // Get hub metrics
+        const { data: metrics, error: metricsError } = await supabase
+          .from('hub_storage_metrics')
+          .select('*')
+          .eq('hub_id', hubId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching recommendations:", error);
-        toast({
-          title: "Error fetching recommendations",
-          description: error.message,
-          variant: "destructive"
-        });
-        return [];
+        if (metricsError) throw metricsError;
+
+        // Get member metrics
+        const { data: memberMetrics, error: memberError } = await supabase
+          .from('hub_member_metrics')
+          .select('*')
+          .eq('hub_id', hubId)
+          .single();
+
+        if (memberError) throw memberError;
+
+        // Generate recommendations based on metrics
+        const newRecommendations: Recommendation[] = [];
+
+        // Check if content is low
+        if (metrics.resources_count < 5) {
+          newRecommendations.push({
+            type: 'content',
+            title: 'Add More Resources',
+            description: 'Your hub has few resources. Adding more content will increase engagement.',
+            actionLabel: 'Add Resource',
+            actionPath: `/hubs/${hubId}/resources/new`
+          });
+        }
+
+        // Check if member count is low compared to limit
+        if (memberMetrics.active_members < memberMetrics.member_limit * 0.25) {
+          newRecommendations.push({
+            type: 'members',
+            title: 'Invite More Members',
+            description: 'Your hub has relatively few members. Consider inviting more people to join.',
+            actionLabel: 'Invite Members',
+            actionPath: `/hubs/${hubId}/members/invite`
+          });
+        }
+
+        // Check if announcements are low
+        if (metrics.announcements_count < 3) {
+          newRecommendations.push({
+            type: 'announcements',
+            title: 'Create More Announcements',
+            description: 'Regular announcements help keep members engaged and informed.',
+            actionLabel: 'Create Announcement',
+            actionPath: `/hubs/${hubId}/announcements/new`
+          });
+        }
+
+        setRecommendations(newRecommendations);
+      } catch (error) {
+        console.error("Error generating recommendations:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      return data as PopularContent[];
     }
-  });
 
-  const mostBookmarked = [...recommendations]
-    .sort((a, b) => b.bookmark_count - a.bookmark_count)
-    .slice(0, 5);
-
-  const mostSearched = [...recommendations]
-    .sort((a, b) => b.search_count - a.search_count)
-    .slice(0, 5);
+    if (hubId) {
+      analyzeAndGenerateRecommendations();
+    }
+  }, [hubId]);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Bookmark className="h-5 w-5" />
-            Most Bookmarked Content
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+    <Card>
+      <CardHeader>
+        <CardTitle>Hub Recommendations</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p>Analyzing hub data and generating recommendations...</p>
+        ) : recommendations.length > 0 ? (
           <div className="space-y-4">
-            {mostBookmarked.length > 0 ? (
-              mostBookmarked.map((item) => (
-                <div key={item.content_id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground capitalize">{item.content_type}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Bookmark className="h-4 w-4" />
-                    <span>{item.bookmark_count}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No bookmarked content yet</p>
-            )}
+            {recommendations.map((rec, index) => (
+              <div key={index} className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-medium">{rec.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{rec.description}</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2" 
+                  size="sm"
+                  onClick={() => navigate(rec.actionPath)}
+                >
+                  {rec.actionLabel}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Most Searched Content
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {mostSearched.length > 0 ? (
-              mostSearched.map((item) => (
-                <div key={item.content_id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground capitalize">{item.content_type}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Search className="h-4 w-4" />
-                    <span>{item.search_count}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No searched content yet</p>
-            )}
+        ) : (
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <h3 className="font-medium">Your hub is doing well!</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              We don't have any specific recommendations at this time. Keep up the good work!
+            </p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -1,116 +1,104 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { AnalyticsSummary } from "@/types/database/analytics";
-import { Users, FileText, Bell, HardDrive, Circle } from "lucide-react";
+import { AnalyticsSummary } from '@/types/database/analytics';
+import { Users, FileText, Bell, HardDrive } from 'lucide-react';
 
 interface AnalyticsSummaryCardsProps {
   summary: AnalyticsSummary;
 }
 
 export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-  
-  const calculatePercentage = (current: number, limit: number) => {
-    if (limit === 0) return 0;
-    return Math.min(Math.round((current / limit) * 100), 100);
+  // Format storage size
+  const formatStorageSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
-  const memberPercentage = calculatePercentage(summary.activeMembers, summary.memberLimit);
-  const storagePercentage = calculatePercentage(summary.storageUsed, summary.storageLimit);
+  // Calculate percentages
+  const memberPercentage = Math.min(Math.round((summary.activeMembers / summary.memberLimit) * 100), 100);
+  const storagePercentage = Math.min(Math.round((summary.storageUsed / summary.storageLimit) * 100), 100);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Members Card */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium">Members</p>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold">{summary.activeMembers}</p>
-              <p className="text-xs text-muted-foreground">
-                of {summary.memberLimit} ({memberPercentage}%)
-              </p>
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <Users className="h-6 w-6 text-primary" />
             </div>
-            <div className="h-12 w-12 rounded-full bg-muted-foreground/20 flex items-center justify-center">
-              <Circle 
-                className="h-8 w-8" 
-                style={{ 
-                  strokeDasharray: '100',
-                  strokeDashoffset: `${100 - memberPercentage}`,
-                  stroke: memberPercentage > 90 ? '#ef4444' : '#3b82f6',
-                  fill: 'none',
-                  strokeWidth: '8'
-                }} 
-              />
+            <div>
+              <p className="text-sm font-medium">Members</p>
+              <div className="flex items-baseline gap-2">
+                <h4 className="text-2xl font-bold">{summary.activeMembers}</h4>
+                <span className="text-xs text-muted-foreground">/ {summary.memberLimit}</span>
+              </div>
+              <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary rounded-full"
+                  style={{ width: `${memberPercentage}%` }}
+                ></div>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{memberPercentage}% of capacity</p>
             </div>
           </div>
         </CardContent>
       </Card>
-      
+
+      {/* Resources Card */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium">Resources</p>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
             <div>
-              <p className="text-2xl font-bold">{summary.resourceCount}</p>
-              <p className="text-xs text-muted-foreground">total resources</p>
+              <p className="text-sm font-medium">Resources</p>
+              <h4 className="text-2xl font-bold">{summary.resourceCount}</h4>
+              <p className="mt-1 text-xs text-muted-foreground">Shared content items</p>
             </div>
           </div>
         </CardContent>
       </Card>
-      
+
+      {/* Announcements Card */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium">Announcements</p>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-amber-100 p-3 rounded-full">
+              <Bell className="h-6 w-6 text-amber-600" />
+            </div>
             <div>
-              <p className="text-2xl font-bold">{summary.announcementCount}</p>
-              <p className="text-xs text-muted-foreground">total announcements</p>
+              <p className="text-sm font-medium">Announcements</p>
+              <h4 className="text-2xl font-bold">{summary.announcementCount}</h4>
+              <p className="mt-1 text-xs text-muted-foreground">Posted notifications</p>
             </div>
           </div>
         </CardContent>
       </Card>
-      
+
+      {/* Storage Card */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium">Storage</p>
-            <HardDrive className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold">{formatBytes(summary.storageUsed)}</p>
-              <p className="text-xs text-muted-foreground">
-                of {formatBytes(summary.storageLimit)} ({storagePercentage}%)
-              </p>
+          <div className="flex items-center gap-4">
+            <div className="bg-emerald-100 p-3 rounded-full">
+              <HardDrive className="h-6 w-6 text-emerald-600" />
             </div>
-            <div className="h-12 w-12 rounded-full bg-muted-foreground/20 flex items-center justify-center">
-              <Circle 
-                className="h-8 w-8" 
-                style={{ 
-                  strokeDasharray: '100',
-                  strokeDashoffset: `${100 - storagePercentage}`,
-                  stroke: storagePercentage > 90 ? '#ef4444' : '#3b82f6',
-                  fill: 'none',
-                  strokeWidth: '8'
-                }} 
-              />
+            <div>
+              <p className="text-sm font-medium">Storage</p>
+              <div className="flex items-baseline gap-2">
+                <h4 className="text-2xl font-bold">{formatStorageSize(summary.storageUsed)}</h4>
+                <span className="text-xs text-muted-foreground">/ {formatStorageSize(summary.storageLimit)}</span>
+              </div>
+              <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-600 rounded-full"
+                  style={{ width: `${storagePercentage}%` }}
+                ></div>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{storagePercentage}% used</p>
             </div>
           </div>
         </CardContent>

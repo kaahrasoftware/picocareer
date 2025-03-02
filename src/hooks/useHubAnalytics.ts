@@ -1,17 +1,15 @@
 
-import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { MemberGrowth, AnalyticsSummary, HubStorageMetrics, HubMemberMetrics } from '@/types/database/analytics';
-import { format, subDays, subWeeks, subMonths, subYears, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachYearOfInterval, endOfMonth, endOfWeek, endOfYear } from 'date-fns';
+import { format, subMonths, subWeeks, subDays, subYears, parseISO } from 'date-fns';
+import { HubStorageMetrics, HubMemberMetrics, MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';
 
-export function useHubAnalytics(hubId: string, timePeriod: TimePeriod) {
+export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'month') {
   const [memberGrowth, setMemberGrowth] = useState<MemberGrowth[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [storageMetrics, setStorageMetrics] = useState<HubStorageMetrics | null>(null);
-  const [memberMetrics, setMemberMetrics] = useState<HubMemberMetrics | null>(null);
   const [summary, setSummary] = useState<AnalyticsSummary>({
     totalMembers: 0,
     memberLimit: 100,
@@ -19,295 +17,130 @@ export function useHubAnalytics(hubId: string, timePeriod: TimePeriod) {
     resourceCount: 0,
     announcementCount: 0,
     storageUsed: 0,
-    storageLimit: 5368709120 // 5GB default
+    storageLimit: 5 * 1024 * 1024 * 1024, // 5GB default
   });
-  const { toast } = useToast();
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>(initialPeriod);
 
-  const getTimeRangeFilter = (period: TimePeriod) => {
-    const now = new Date();
+  // Format date based on selected period
+  const formatDate = useCallback((dateStr: string, period: TimePeriod): string => {
+    const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
     switch (period) {
       case 'day':
-        return subDays(now, 29);
+        return format(date, 'MMM d, h a');
       case 'week':
-        return subWeeks(now, 11);
+        return format(date, 'MMM d');
       case 'month':
-        return subMonths(now, 11);
+        return format(date, 'MMM yyyy');
       case 'year':
-        return subYears(now, 4);
+        return format(date, 'yyyy');
       default:
-        return subMonths(now, 11);
+        return format(date, 'MMM d, yyyy');
     }
-  };
+  }, []);
 
-  const formatDate = (date: string, period: TimePeriod) => {
-    switch (period) {
-      case 'day':
-        return format(new Date(date), 'MMM d');
-      case 'week':
-        return format(new Date(date), 'MMM d');
-      case 'month':
-        return format(new Date(date), 'MMM yyyy');
-      case 'year':
-        return format(new Date(date), 'yyyy');
-      default:
-        return format(new Date(date), 'MMM yyyy');
+  const fetchMetrics = useCallback(async () => {
+    if (!hubId) return;
+
+    try {
+      // Get hub details for limits
+      const { data: hubData, error: hubError } = await supabase
+        .from('hubs')
+        .select('member_limit, storage_limit_bytes')
+        .eq('id', hubId)
+        .single();
+
+      if (hubError) throw hubError;
+
+      // Calculate time range based on selected period
+      const now = new Date();
+      let startDate;
+      
+      switch (timePeriod) {
+        case 'day':
+          startDate = subDays(now, 7);
+          break;
+        case 'week':
+          startDate = subWeeks(now, 12);
+          break;
+        case 'month':
+          startDate = subMonths(now, 12);
+          break;
+        case 'year':
+          startDate = subYears(now, 5);
+          break;
+        default:
+          startDate = subMonths(now, 12);
+      }
+
+      // Fetch member growth for the selected period
+      const { data: growthData, error: growthError } = await supabase
+        .from('hub_member_growth')
+        .select('*')
+        .eq('hub_id', hubId)
+        .gte('month', startDate.toISOString())
+        .order('month', { ascending: true });
+
+      if (growthError) throw growthError;
+
+      // Use the refresh_hub_metrics function to get consistent metrics
+      const { data: metricsData, error: metricsError } = await supabase
+        .rpc('refresh_hub_metrics', { _hub_id: hubId });
+
+      if (metricsError) throw metricsError;
+
+      // Set state with fetched data
+      if (metricsData) {
+        const memberMetrics = metricsData.member_metrics;
+        setSummary({
+          totalMembers: memberMetrics.total_members,
+          memberLimit: memberMetrics.member_limit,
+          activeMembers: memberMetrics.active_members,
+          resourceCount: metricsData.storage_metrics.resources_count,
+          announcementCount: metricsData.storage_metrics.announcements_count,
+          storageUsed: metricsData.storage_metrics.total_storage_bytes,
+          storageLimit: metricsData.storage_metrics.storage_limit_bytes,
+        });
+
+        setStorageMetrics({
+          total_storage_bytes: metricsData.storage_metrics.total_storage_bytes,
+          file_count: metricsData.storage_metrics.file_count,
+          resources_count: metricsData.storage_metrics.resources_count,
+          logo_count: metricsData.storage_metrics.logo_count,
+          banner_count: metricsData.storage_metrics.banner_count,
+          announcements_count: metricsData.storage_metrics.announcements_count,
+          last_calculated_at: metricsData.storage_metrics.last_calculated_at,
+          storage_limit_bytes: metricsData.storage_metrics.storage_limit_bytes
+        });
+      }
+
+      setMemberGrowth(growthData || []);
+    } catch (error) {
+      console.error("Error fetching hub analytics:", error);
     }
-  };
+  }, [hubId, timePeriod]);
 
-  const generateEmptyDataPoints = (startDate: Date, endDate: Date, period: TimePeriod) => {
-    const datePoints = [];
-    let interval;
-    
-    switch (period) {
-      case 'day':
-        interval = { start: startDate, end: endDate };
-        break;
-      case 'week':
-        interval = { start: startDate, end: endOfWeek(endDate) };
-        break;
-      case 'month':
-        interval = { start: startDate, end: endOfMonth(endDate) };
-        break;
-      case 'year':
-        interval = { start: startDate, end: endOfYear(endDate) };
-        break;
-      default:
-        interval = { start: startDate, end: endDate };
-    }
+  // Initial fetch and refresh when timePeriod changes
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics, timePeriod]);
 
-    let dates;
-    switch (period) {
-      case 'day':
-        dates = eachDayOfInterval(interval);
-        break;
-      case 'week':
-        dates = eachWeekOfInterval(interval);
-        break;
-      case 'month':
-        dates = eachMonthOfInterval(interval);
-        break;
-      case 'year':
-        dates = eachYearOfInterval(interval);
-        break;
-      default:
-        dates = eachMonthOfInterval(interval);
-    }
-
-    const dateFormat = period === 'day' ? 'yyyy-MM-dd' : 
-                      period === 'week' ? 'yyyy-MM-dd' :
-                      period === 'month' ? 'yyyy-MM' : 'yyyy';
-
-    dates.forEach(date => {
-      datePoints.push({
-        month: format(date, dateFormat),
-        new_members: 0,
-        hub_id: hubId
-      });
-    });
-
-    return datePoints;
-  };
-
+  // Function to manually refresh metrics
   const refreshMetrics = async () => {
     setIsRefreshing(true);
     try {
-      const { data, error } = await supabase.rpc('refresh_hub_metrics', { hub_uuid: hubId });
-      
-      if (error) throw error;
-      
-      if (data) {
-        const { data: hubData, error: hubError } = await supabase
-          .from('hubs')
-          .select('member_limit, storage_limit_bytes')
-          .eq('id', hubId)
-          .single();
-          
-        if (hubError) throw hubError;
-        
-        setSummary({
-          totalMembers: data.member_metrics.total_members || 0,
-          memberLimit: hubData.member_limit || 100,
-          activeMembers: data.member_metrics.active_members || 0,
-          resourceCount: data.storage_metrics.resources_count || 0,
-          announcementCount: data.storage_metrics.announcements_count || 0,
-          storageUsed: data.storage_metrics.total_storage_bytes || 0,
-          storageLimit: hubData.storage_limit_bytes || 5368709120
-        });
-        
-        setStorageMetrics({
-          total_storage_bytes: data.storage_metrics.total_storage_bytes || 0,
-          file_count: data.storage_metrics.file_count || 0,
-          resources_count: data.storage_metrics.resources_count || 0,
-          logo_count: data.storage_metrics.logo_count || 0,
-          banner_count: data.storage_metrics.banner_count || 0,
-          announcements_count: data.storage_metrics.announcements_count || 0,
-          last_calculated_at: data.storage_metrics.last_calculated_at || new Date().toISOString(),
-          storage_limit_bytes: hubData.storage_limit_bytes
-        });
-        
-        setMemberMetrics({
-          total_members: data.member_metrics.total_members || 0,
-          active_members: data.member_metrics.active_members || 0,
-          member_limit: hubData.member_limit || 100
-        });
-      }
-      
-      toast({
-        title: "Metrics refreshed",
-        description: "Hub metrics have been recalculated successfully.",
-      });
-      
-      fetchAnalytics();
-      
-    } catch (error: any) {
-      console.error('Error refreshing metrics:', error);
-      toast({
-        title: "Error refreshing metrics",
-        description: error.message,
-        variant: "destructive"
-      });
+      await fetchMetrics();
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  const fetchAnalytics = async () => {
-    try {
-      const startDate = getTimeRangeFilter(timePeriod);
-      const endDate = new Date();
-      
-      const emptyDataPoints = generateEmptyDataPoints(startDate, endDate, timePeriod);
-      
-      const { data: hubData, error: hubError } = await supabase
-        .from('hubs')
-        .select('current_storage_usage, current_member_count, storage_limit_bytes, member_limit')
-        .eq('id', hubId)
-        .single();
-        
-      if (hubError) throw hubError;
-      
-      const { data: storageMetricsData, error: storageError } = await supabase
-        .from('hub_storage_metrics')
-        .select('*')
-        .eq('hub_id', hubId)
-        .single();
-
-      if (storageError && storageError.code !== 'PGRST116') throw storageError;
-
-      const { data: memberMetricsData, error: memberMetricsError } = await supabase
-        .from('hub_member_metrics')
-        .select('*')
-        .eq('hub_id', hubId)
-        .single();
-
-      if (memberMetricsError && memberMetricsError.code !== 'PGRST116') throw memberMetricsError;
-
-      if (memberMetricsData) {
-        setMemberMetrics({
-          total_members: memberMetricsData.total_members || 0,
-          active_members: memberMetricsData.active_members || 0,
-          member_limit: hubData.member_limit || 100
-        });
-      }
-
-      if (storageMetricsData) {
-        setStorageMetrics({
-          total_storage_bytes: storageMetricsData.total_storage_bytes || 0,
-          file_count: storageMetricsData.file_count || 0,
-          resources_count: storageMetricsData.resources_count || 0,
-          logo_count: storageMetricsData.logo_count || 0,
-          banner_count: storageMetricsData.banner_count || 0,
-          announcements_count: storageMetricsData.announcements_count || 0,
-          last_calculated_at: storageMetricsData.last_calculated_at || new Date().toISOString(),
-          storage_limit_bytes: hubData.storage_limit_bytes
-        });
-      }
-
-      setSummary({
-        totalMembers: memberMetricsData?.total_members || hubData?.current_member_count || 0,
-        memberLimit: hubData?.member_limit || 100,
-        activeMembers: memberMetricsData?.active_members || hubData?.current_member_count || 0,
-        resourceCount: storageMetricsData?.resources_count || 0,
-        announcementCount: storageMetricsData?.announcements_count || 0,
-        storageUsed: storageMetricsData?.total_storage_bytes || hubData?.current_storage_usage || 0,
-        storageLimit: hubData?.storage_limit_bytes || 5368709120
-      });
-
-      if (storageMetricsData && 
-          hubData && 
-          storageMetricsData.total_storage_bytes !== hubData.current_storage_usage) {
-        
-        await updateHubStorageUsage(hubId);
-      }
-
-      const { data: memberData, error: memberGrowthError } = await supabase
-        .from('hub_members')
-        .select('join_date')
-        .eq('hub_id', hubId)
-        .eq('status', 'Approved')
-        .gte('join_date', startOfDay(startDate).toISOString())
-        .lte('join_date', endOfDay(endDate).toISOString());
-
-      if (memberGrowthError) throw memberGrowthError;
-
-      const growthMap = new Map<string, number>();
-      const dateFormat = timePeriod === 'day' ? 'yyyy-MM-dd' : 
-                         timePeriod === 'week' ? 'yyyy-MM-dd' :
-                         timePeriod === 'month' ? 'yyyy-MM' : 'yyyy';
-
-      emptyDataPoints.forEach(point => {
-        growthMap.set(point.month, 0);
-      });
-
-      memberData?.forEach(member => {
-        const date = format(new Date(member.join_date), dateFormat);
-        growthMap.set(date, (growthMap.get(date) || 0) + 1);
-      });
-
-      const growthData = emptyDataPoints.map(point => ({
-        ...point,
-        new_members: growthMap.get(point.month) || 0
-      }));
-
-      setMemberGrowth(growthData);
-
-    } catch (error: any) {
-      toast({
-        title: "Error fetching analytics",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const updateHubStorageUsage = async (hubId: string) => {
-    try {
-      const { error } = await supabase
-        .from('hubs')
-        .update({ 
-          current_storage_usage: storageMetrics?.total_storage_bytes || 0
-        })
-        .eq('id', hubId);
-        
-      if (error) {
-        console.error('Error updating hub storage usage:', error);
-      }
-    } catch (error: any) {
-      console.error('Error updating hub storage usage:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchAnalytics();
-  }, [hubId, timePeriod]);
-
   return {
     memberGrowth,
-    timePeriod,
     isRefreshing,
     storageMetrics,
-    memberMetrics,
     summary,
+    timePeriod,
+    setTimePeriod,
     refreshMetrics,
     formatDate
   };
