@@ -36,7 +36,8 @@ export function useImageUpload({
       console.log('Uploading file:', {
         bucket,
         filePath,
-        contentType: file.type
+        contentType: file.type,
+        fileSize: file.size, // Size in bytes
       });
 
       // First try to remove any existing file if there is one
@@ -52,7 +53,7 @@ export function useImageUpload({
         }
       }
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, { 
           upsert: true,
@@ -70,7 +71,8 @@ export function useImageUpload({
 
       console.log('Upload successful:', {
         publicUrl,
-        filePath
+        filePath,
+        fileSize: file.size,
       });
 
       field.onChange(publicUrl);

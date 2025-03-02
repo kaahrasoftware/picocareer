@@ -1306,6 +1306,7 @@ export type Database = {
           id: string
           original_filename: string | null
           resource_type: Database["public"]["Enums"]["resource_type"]
+          size_in_bytes: number | null
           title: string
           updated_at: string | null
           version: number | null
@@ -1326,6 +1327,7 @@ export type Database = {
           id?: string
           original_filename?: string | null
           resource_type?: Database["public"]["Enums"]["resource_type"]
+          size_in_bytes?: number | null
           title: string
           updated_at?: string | null
           version?: number | null
@@ -1346,6 +1348,7 @@ export type Database = {
           id?: string
           original_filename?: string | null
           resource_type?: Database["public"]["Enums"]["resource_type"]
+          size_in_bytes?: number | null
           title?: string
           updated_at?: string | null
           version?: number | null

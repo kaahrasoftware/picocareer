@@ -51,16 +51,57 @@ export function ResourceForm({
 
   const resourceType = form.watch('resource_type');
   const documentType = form.watch('document_type');
+  const fileUrl = form.watch('file_url');
+
+  const getFileSizeFromUrl = async (url: string): Promise<number> => {
+    if (!url) return 0;
+    
+    try {
+      // Attempt to get file metadata if possible
+      const path = url.split('/').slice(-4).join('/');
+      const { data, error } = await supabase.storage
+        .from('hub_resources')
+        .getPublicUrl(path);
+      
+      if (error) {
+        console.error('Error getting file metadata:', error);
+        return 0;
+      }
+      
+      // If we can't get size from metadata, make a HEAD request
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) {
+          return parseInt(contentLength, 10);
+        }
+      } catch (headError) {
+        console.warn('Error getting file size via HEAD request:', headError);
+      }
+      
+      // As a fallback, estimate size based on resource type
+      if (resourceType === 'image') return 500000; // 500KB
+      if (resourceType === 'video') return 5000000; // 5MB
+      if (resourceType === 'audio') return 2000000; // 2MB
+      if (resourceType === 'document') return 1000000; // 1MB
+      
+      return 100000; // Default 100KB
+    } catch (error) {
+      console.error('Error determining file size:', error);
+      return 0;
+    }
+  };
 
   const onSubmit = async (data: FormFields) => {
     try {
       const user = await supabase.auth.getUser();
-      const insertData = {
-        ...data,
-        hub_id: hubId,
-        created_by: user.data.user?.id,
-      };
-
+      
+      // Get file size for the uploaded file
+      let fileSizeInBytes = 0;
+      if (data.file_url) {
+        fileSizeInBytes = await getFileSizeFromUrl(data.file_url);
+      }
+      
       // For updates, we only want to update specific fields
       if (existingResource) {
         const { error } = await supabase
@@ -74,25 +115,39 @@ export function ResourceForm({
             external_url: data.external_url,
             file_url: data.file_url,
             access_level: data.access_level,
+            size_in_bytes: fileSizeInBytes,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingResource.id);
 
         if (error) throw error;
       } else {
-        console.log('Creating new resource:', insertData);
+        console.log('Creating new resource with file size:', fileSizeInBytes);
 
         const { error } = await supabase
           .from('hub_resources')
           .insert({
-            ...insertData,
-            content_type: data.file_url ? 'application/pdf' : undefined,
+            hub_id: hubId,
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            resource_type: data.resource_type,
+            document_type: data.document_type,
+            external_url: data.external_url,
+            file_url: data.file_url,
+            access_level: data.access_level,
+            content_type: data.file_url ? 'application/octet-stream' : undefined,
             original_filename: data.file_url ? data.file_url.split('/').pop() : undefined,
-            version: 1
+            size_in_bytes: fileSizeInBytes,
+            version: 1,
+            created_by: user.data.user?.id,
           });
 
         if (error) throw error;
       }
+
+      // Update hub storage metrics after resource change
+      await updateHubStorageUsage(hubId);
 
       toast({
         title: "Success",
@@ -107,6 +162,14 @@ export function ResourceForm({
         description: "Failed to save resource. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const updateHubStorageUsage = async (hubId: string) => {
+    try {
+      await supabase.rpc('refresh_hub_metrics', { _hub_id: hubId });
+    } catch (error) {
+      console.error('Error updating hub storage usage:', error);
     }
   };
 
