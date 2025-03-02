@@ -5,7 +5,7 @@ export async function updateHubStorageUsage(hubId: string) {
   try {
     // Call the new centralized refresh_hub_metrics function
     const { data, error } = await supabase
-      .rpc('refresh_hub_metrics', { _hub_id: hubId });
+      .rpc('refresh_hub_metrics', { hub_uuid: hubId });
     
     if (error) {
       console.error('Error refreshing hub metrics:', error);

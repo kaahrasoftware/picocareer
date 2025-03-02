@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface UseImageUploadProps {
   bucket: string;
   folderPath?: string;
-  onUploadSuccess?: (url: string, fileSize?: number) => void;
+  onUploadSuccess?: (url: string) => void;
 }
 
 export function useImageUpload({
@@ -32,19 +32,17 @@ export function useImageUpload({
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      const fileSize = file.size; // Get file size in bytes
 
       console.log('Uploading file:', {
         bucket,
         filePath,
-        contentType: file.type,
-        size: fileSize
+        contentType: file.type
       });
 
       // First try to remove any existing file if there is one
       if (field.value) {
+        const existingFilePath = field.value.split('/').slice(-4).join('/'); // Get last 4 segments (e.g., hubs/[hubId]/logos/[filename])
         try {
-          const existingFilePath = field.value.split('/').slice(-4).join('/'); // Get last 4 segments (e.g., hubs/[hubId]/logos/[filename])
           await supabase.storage
             .from(bucket)
             .remove([existingFilePath]);
@@ -72,35 +70,11 @@ export function useImageUpload({
 
       console.log('Upload successful:', {
         publicUrl,
-        filePath,
-        fileSize: fileSize
+        filePath
       });
 
-      // If this is a hub resource, update the size_in_bytes
-      if (bucket === 'hub_resources' && folderPath?.startsWith('hubs/')) {
-        const hubId = folderPath.split('/')[1];
-        
-        // Check if this is for a resource or other file (logo, banner, etc.)
-        if (folderPath.includes('/resources/')) {
-          // For resources, we'll update when the record is created
-          console.log('Hub resource uploaded - size will be updated with resource record');
-        } else {
-          // For other files (logos, banners), update metrics directly
-          try {
-            await supabase.rpc('refresh_hub_metrics', { _hub_id: hubId });
-            console.log('Hub metrics refreshed after file upload');
-          } catch (metricsError) {
-            console.warn('Could not refresh hub metrics:', metricsError);
-          }
-        }
-      }
-
       field.onChange(publicUrl);
-      
-      // Pass the file size to the callback if provided
-      if (onUploadSuccess) {
-        onUploadSuccess(publicUrl, fileSize);
-      }
+      onUploadSuccess?.(publicUrl);
 
       toast({
         title: "Success",
@@ -148,10 +122,7 @@ export function useImageUpload({
         description: "File removed successfully",
       });
       
-      // Call the callback with empty URL and zero size
-      if (onUploadSuccess) {
-        onUploadSuccess('', 0);
-      }
+      onUploadSuccess?.('');
       
     } catch (error: any) {
       console.error('Remove error:', error);

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
@@ -14,9 +14,8 @@ interface ImageUploadProps {
   description?: string;
   bucket: string;
   accept?: string;
-  onUploadSuccess?: (url: string, fileSize?: number) => void;
+  onUploadSuccess?: (url: string) => void;
   folderPath?: string;
-  trackFileSize?: boolean;
 }
 
 export function ImageUpload({
@@ -27,34 +26,13 @@ export function ImageUpload({
   bucket,
   accept = "image/*",
   onUploadSuccess,
-  folderPath,
-  trackFileSize = false
+  folderPath
 }: ImageUploadProps) {
-  const [fileSize, setFileSize] = useState<number>(0);
-  
-  const customUploadSuccess = (url: string, size?: number) => {
-    if (trackFileSize && size) {
-      setFileSize(size);
-    }
-    onUploadSuccess?.(url, size);
-  };
-
   const { uploading, handleUpload, handleRemove } = useImageUpload({
     bucket,
     folderPath,
-    onUploadSuccess: customUploadSuccess
+    onUploadSuccess
   });
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const size = e.target.files[0].size;
-      setFileSize(size);
-      
-      if (trackFileSize) {
-        console.log(`File selected with size: ${size} bytes`);
-      }
-    }
-  };
 
   return (
     <FormField
@@ -69,10 +47,7 @@ export function ImageUpload({
                 <UploadButton
                   uploading={uploading}
                   hasValue={!!field.value}
-                  onInputChange={(e) => {
-                    handleFileSelect(e);
-                    handleUpload(e, field);
-                  }}
+                  onInputChange={(e) => handleUpload(e, field)}
                   accept={accept}
                 />
                 {field.value && (

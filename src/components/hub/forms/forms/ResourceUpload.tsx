@@ -59,20 +59,6 @@ export function ResourceUpload({
     documentType
   });
 
-  // Add hidden field for file size tracking
-  register("size_in_bytes", { value: 0 });
-
-  // Handle successful upload to capture file size
-  const handleUploadSuccess = (url: string, fileSize?: number) => {
-    if (fileSize && fileSize > 0) {
-      const sizeField = register("size_in_bytes");
-      if (sizeField && sizeField.onChange) {
-        sizeField.onChange({ target: { value: fileSize } });
-        console.log(`File size recorded: ${fileSize} bytes`);
-      }
-    }
-  };
-
   return (
     <div className="space-y-2">
       {resourceType === 'external_link' ? (
@@ -91,8 +77,6 @@ export function ResourceUpload({
           accept={getAcceptedFileTypes(resourceType, documentType)}
           folderPath={folderPath}
           description="Upload your file. Files will be stored in the hub's resources folder."
-          onUploadSuccess={handleUploadSuccess}
-          trackFileSize={true}
         />
       )}
     </div>
