@@ -1,3 +1,4 @@
+
 import { useCallback, useRef, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from 'react-router-dom';
