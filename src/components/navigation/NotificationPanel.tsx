@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotificationItem } from "./NotificationItem";
 import {
@@ -9,13 +10,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot } from "lucide-react";
+import { Bell, BellDot, Search, Calendar, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getNotificationCategory, type NotificationCategory } from "@/types/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 
 interface Notification {
   id: string;
@@ -36,13 +38,17 @@ interface NotificationPanelProps {
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
+  const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  if (JSON.stringify(notifications) !== JSON.stringify(localNotifications)) {
+  // Update local notifications when props change
+  useEffect(() => {
     setLocalNotifications(notifications);
-  }
+  }, [notifications]);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => 
@@ -75,7 +81,42 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     }
   };
 
-  const categorizedNotifications = localNotifications.reduce((acc, notification) => {
+  // Apply search and filters to notifications
+  const filteredNotifications = localNotifications.filter(notification => {
+    // Search text filter
+    const matchesSearch = searchTerm === "" || 
+      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Read status filter
+    const matchesReadStatus = 
+      readFilter === "all" || 
+      (readFilter === "read" && notification.read) || 
+      (readFilter === "unread" && !notification.read);
+    
+    // Date filter
+    let matchesDate = true;
+    const notificationDate = new Date(notification.created_at);
+    const now = new Date();
+    
+    if (dateFilter === "today") {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      matchesDate = notificationDate >= today;
+    } else if (dateFilter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(now.getDate() - 7);
+      matchesDate = notificationDate >= weekAgo;
+    } else if (dateFilter === "month") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(now.getMonth() - 1);
+      matchesDate = notificationDate >= monthAgo;
+    }
+    
+    return matchesSearch && matchesReadStatus && matchesDate;
+  });
+
+  // Categorize the filtered notifications
+  const categorizedNotifications = filteredNotifications.reduce((acc, notification) => {
     const category = getNotificationCategory(notification.type as any);
     if (!acc[category]) {
       acc[category] = [];
@@ -86,6 +127,14 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   const mentorshipUnreadCount = categorizedNotifications.mentorship?.filter(n => !n.read).length || 0;
   const generalUnreadCount = categorizedNotifications.general?.filter(n => !n.read).length || 0;
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setDateFilter("all");
+    setReadFilter("all");
+  };
+
+  const hasActiveFilters = searchTerm !== "" || dateFilter !== "all" || readFilter !== "all";
 
   return (
     <Sheet>
@@ -118,12 +167,88 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
             </Badge>
           </SheetTitle>
         </SheetHeader>
-        <div className="mt-4">
-          {localNotifications.length === 0 ? (
-            <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
-              No notifications yet
-            </p>
-          ) : (
+
+        <div className="mt-4 space-y-3">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search notifications..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 pr-8 py-2 bg-gray-50"
+            />
+            {searchTerm && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-1 top-1 h-8 w-8 text-gray-400"
+                onClick={() => setSearchTerm("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2">
+            <select 
+              value={readFilter}
+              onChange={(e) => setReadFilter(e.target.value as "all" | "read" | "unread")}
+              className="bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm"
+            >
+              <option value="all">All status</option>
+              <option value="read">Read</option>
+              <option value="unread">Unread</option>
+            </select>
+            
+            <select 
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as "all" | "today" | "week" | "month")}
+              className="bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm"
+            >
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="week">Last 7 days</option>
+              <option value="month">Last 30 days</option>
+            </select>
+
+            {hasActiveFilters && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs h-8 ml-auto"
+                onClick={clearFilters}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+
+          {/* No results message */}
+          {filteredNotifications.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 text-gray-400 bg-gray-50 rounded-md mt-4">
+              <Bell className="h-12 w-12 mb-2 opacity-20" />
+              <p className="text-center">
+                {localNotifications.length === 0 
+                  ? "No notifications yet" 
+                  : "No matching notifications"}
+              </p>
+              {localNotifications.length > 0 && hasActiveFilters && (
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={clearFilters}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Notifications list */}
+          {filteredNotifications.length > 0 && (
             <Tabs defaultValue="mentorship" className="w-full">
               <TabsList className="w-full grid grid-cols-2 mb-4 bg-gray-100">
                 <TabsTrigger value="mentorship" className="relative flex items-center gap-2 data-[state=active]:bg-white">
@@ -150,7 +275,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                 </TabsTrigger>
               </TabsList>
               
-              <ScrollArea className="h-[calc(100vh-12rem)]">
+              <ScrollArea className="h-[calc(100vh-20rem)]">
                 <TabsContent value="mentorship" className="mt-0 space-y-4">
                   {categorizedNotifications.mentorship?.map((notification) => (
                     <NotificationItem
