@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,13 +27,35 @@
     --radius: 0.75rem;
     --sidebar-width: 16rem;
   }
+  
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 210 20% 98%;
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 199 89% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 5% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 199 89% 55%;
+  }
 
   * {
     @apply border-border;
   }
   
   body {
-    @apply bg-gradient-to-br from-white to-gray-100 text-foreground min-h-screen;
+    @apply bg-gradient-to-br from-background to-background/90 text-foreground min-h-screen dark:from-background dark:to-background/80;
   }
 }
 
@@ -110,4 +133,19 @@
 .sticky.scrolled button {
   height: 2rem;
   font-size: 0.875rem;
+}
+
+/* Chat specific animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Glass effect for chat components */
+.glass-effect {
+  @apply bg-card/80 backdrop-blur-md border border-white/10 dark:border-white/5;
 }
