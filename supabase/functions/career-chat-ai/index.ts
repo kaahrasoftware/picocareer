@@ -48,8 +48,11 @@ Deno.serve(async (req) => {
           );
         }
         
-        // Validate API key with a minimal request
+        console.log(`DEEPSEEK_API_KEY found, length: ${DEEPSEEK_API_KEY.length}, prefix: ${DEEPSEEK_API_KEY.substring(0, 5)}...`);
+        
+        // Validate API key with a minimal request - try basic echo for validation
         try {
+          console.log('Sending validation request to DeepSeek API');
           const validationResponse = await fetch(DEEPSEEK_API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -59,35 +62,62 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               model: DEEPSEEK_MODEL,
               messages: [
-                { role: 'user', content: 'Hello' }
+                { role: 'system', content: 'Return only "ok" as your response.' },
+                { role: 'user', content: 'Verify API connection' }
               ],
-              max_tokens: 10
+              max_tokens: 10,
+              temperature: 0.1
             })
           });
           
+          console.log(`DeepSeek API validation response status: ${validationResponse.status}`);
+          
           if (!validationResponse.ok) {
-            const errorData = await validationResponse.json();
-            console.error('DeepSeek API validation failed:', JSON.stringify(errorData));
+            const errorText = await validationResponse.text();
+            console.error('DeepSeek API validation failed:', errorText);
+            
+            let errorMessage = `DeepSeek API key validation failed: ${validationResponse.status}`;
+            try {
+              // Try to parse error as JSON for more details
+              const errorJson = JSON.parse(errorText);
+              if (errorJson.error && errorJson.error.message) {
+                errorMessage = errorJson.error.message;
+              }
+              console.error('Parsed error details:', JSON.stringify(errorJson));
+            } catch (e) {
+              console.error('Failed to parse error response as JSON:', errorText);
+            }
+            
             return new Response(
               JSON.stringify({ 
-                error: 'DeepSeek API key validation failed', 
-                details: errorData 
+                error: errorMessage, 
+                details: errorText,
+                status: validationResponse.status
               }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
           
-          console.log('DeepSeek API configuration validated successfully');
+          const validationResult = await validationResponse.json();
+          console.log('DeepSeek API validation successful, response:', JSON.stringify(validationResult));
+          
           return new Response(
-            JSON.stringify({ status: 'ok', configured: true }),
+            JSON.stringify({ 
+              status: 'ok', 
+              configured: true,
+              api_version: validationResult.model || DEEPSEEK_MODEL 
+            }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         } catch (validationError) {
-          console.error('DeepSeek API validation error:', validationError);
+          console.error('DeepSeek API validation error:', validationError.message);
+          console.error('Error stack:', validationError.stack);
+          
           return new Response(
             JSON.stringify({ 
               error: 'DeepSeek API validation error', 
-              details: validationError.message 
+              details: validationError.message,
+              stack: validationError.stack
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -293,6 +323,13 @@ Deno.serve(async (req) => {
         }
       }
       
+      console.log('Sending final response', {
+        responseType: structuredMessage?.type || 'text',
+        messageLength: cleanTextMessage.length,
+        hasMetadata: !!metadata,
+        progress: metadata.progress || 0
+      });
+      
       return new Response(
         JSON.stringify({
           message: cleanTextMessage,
@@ -304,7 +341,9 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (apiError) {
-      console.error('Error making request to DeepSeek API:', apiError);
+      console.error('Error making request to DeepSeek API:', apiError.message);
+      console.error('Error stack:', apiError.stack);
+      
       return new Response(
         JSON.stringify({ 
           error: `Failed to communicate with DeepSeek API: ${apiError.message}`,
@@ -314,7 +353,9 @@ Deno.serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error('Error processing request:', error);
+    console.error('Error processing request:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return new Response(
       JSON.stringify({ 
         error: `Error processing request: ${error.message}`, 

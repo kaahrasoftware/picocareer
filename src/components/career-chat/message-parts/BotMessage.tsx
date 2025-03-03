@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ExternalLink, AlertCircle } from 'lucide-react';
+import { ExternalLink, AlertCircle, Info } from 'lucide-react';
 
 interface BotMessageProps {
   content: string;
@@ -13,6 +13,20 @@ export function BotMessage({ content }: BotMessageProps) {
       <div className="flex flex-col items-start mb-4">
         <div className="max-w-[95%] rounded-lg px-4 py-3 shadow-sm bg-red-50 border border-red-200 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-gray-800 whitespace-pre-wrap">
+            {content}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle info/debug messages
+  if (content.toLowerCase().includes('debug') || content.toLowerCase().includes('info:')) {
+    return (
+      <div className="flex flex-col items-start mb-4">
+        <div className="max-w-[95%] rounded-lg px-4 py-3 shadow-sm bg-blue-50 border border-blue-200 flex items-start gap-2">
+          <Info className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
           <div className="text-sm text-gray-800 whitespace-pre-wrap">
             {content}
           </div>
