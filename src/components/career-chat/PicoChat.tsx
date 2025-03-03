@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 import { SessionManagementDialog } from './SessionManagementDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 export function PicoChat() {
   const {
     messages,
@@ -42,11 +43,13 @@ export function PicoChat() {
   const [configChecked, setConfigChecked] = useState(false);
   const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages, isTyping]);
+
   useEffect(() => {
     const checkApiConfig = async () => {
       try {
@@ -79,6 +82,7 @@ export function PicoChat() {
       checkApiConfig();
     }
   }, [toast, messages.length, isLoading, configChecked]);
+
   useEffect(() => {
     const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
     if (userMessageCount >= 12 && !isAnalyzing && !showAnalyzeButton) {
@@ -88,9 +92,11 @@ export function PicoChat() {
       setShowAnalyzeButton(false);
     }
   }, [messages, isAnalyzing, showAnalyzeButton]);
+
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
   };
+
   const handleAnalyzeClick = async () => {
     if (!messages[0]?.session_id) return;
     const {
@@ -99,17 +105,27 @@ export function PicoChat() {
     analyzeResponses();
     setShowAnalyzeButton(false);
   };
+
   const handleStartNewChat = async () => {
     if (messages.length > 2) {
       if (confirm('Starting a new chat will end your current conversation. Continue?')) {
         await startNewSession();
-        toast.success('Started new conversation');
+        toast({
+          title: "New Conversation Started",
+          description: "Your previous conversation has been saved.",
+          variant: "default"
+        });
       }
     } else {
       await startNewSession();
-      toast.success('Started new conversation');
+      toast({
+        title: "New Conversation Started",
+        description: "Your previous conversation has been saved.",
+        variant: "default"
+      });
     }
   };
+
   if (isLoading) {
     return <MainLayout>
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
@@ -117,6 +133,7 @@ export function PicoChat() {
         </div>
       </MainLayout>;
   }
+
   if (hasConfigError) {
     return <MainLayout>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-4 p-8 text-center">
@@ -128,8 +145,9 @@ export function PicoChat() {
         </div>
       </MainLayout>;
   }
+
   return <MainLayout>
-      <div className="flex flex-col max-w-4xl mx-auto h-[calc(100vh-120px)] p-4">
+      <div className="flex flex-col max-w-6xl mx-auto h-[calc(100vh-120px)] p-4">
         {messages.length === 0 || messages.length === 1 && messages[0].message_type === 'system' ? <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-blue-100 flex items-center justify-center mb-4 animate-pulse">
               <Bot className="h-16 w-16 text-primary" />
