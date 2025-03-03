@@ -101,12 +101,14 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
-      // Format messages for the DeepSeek API
+      // Format messages for the AI
       const messageHistory = messages
         .filter(m => m.message_type === 'user' || m.message_type === 'bot')
         .map(m => ({
           role: m.message_type === 'user' ? 'user' : 'assistant',
-          content: m.content
+          content: m.content,
+          // Include metadata for assistant messages to help the AI understand context
+          ...(m.message_type === 'bot' && m.metadata ? { metadata: m.metadata } : {})
         }));
 
       // Add the new user message
@@ -120,7 +122,11 @@ export function useCareerChat() {
         body: {
           message: message.trim(),
           sessionId,
-          messages: messageHistory
+          messages: messageHistory,
+          instructions: {
+            specificQuestions: true,
+            conciseOptions: true
+          }
         }
       });
 

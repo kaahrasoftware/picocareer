@@ -4,7 +4,7 @@ import { Bot, Loader2 } from 'lucide-react';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
-  currentCategory?: string;
+  currentCategory?: string | null;
 }
 
 export function ChatHeader({ isAnalyzing, currentCategory }: ChatHeaderProps) {
@@ -13,13 +13,15 @@ export function ChatHeader({ isAnalyzing, currentCategory }: ChatHeaderProps) {
     
     switch (currentCategory) {
       case 'education':
-        return 'Discussing Educational Background';
+        return 'Educational Background';
       case 'skills':
-        return 'Exploring Skills & Expertise';
+        return 'Skills & Expertise';
       case 'workstyle':
-        return 'Understanding Work Preferences';
+        return 'Work Style Preferences';
       case 'goals':
-        return 'Defining Career Goals';
+        return 'Career Goals';
+      case 'complete':
+        return 'Career Recommendations';
       default:
         return null;
     }
