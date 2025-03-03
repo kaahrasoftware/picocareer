@@ -115,9 +115,15 @@ export function PicoChat() {
             console.error("Error fetching messages:", messagesError);
             toast("Error loading chat messages");
           } else if (existingMessages && existingMessages.length > 0) {
-            setMessages(existingMessages);
+            // Cast the messages to the correct type
+            const typedMessages = existingMessages.map(msg => ({
+              ...msg,
+              message_type: msg.message_type as 'bot' | 'user' | 'system' | 'recommendation'
+            }));
+            
+            setMessages(typedMessages as CareerChatMessage[]);
             // Determine the current question index based on bot messages
-            const botMessages = existingMessages.filter(msg => msg.message_type === 'bot');
+            const botMessages = typedMessages.filter(msg => msg.message_type === 'bot');
             // Skip the welcome messages
             setQuestionIndex(Math.max(0, botMessages.length - 2));
           }
@@ -183,8 +189,14 @@ export function PicoChat() {
       id: uuidv4()
     };
     
+    // Ensure message_type is cast to the expected type
+    const typedMessage = {
+      ...messageWithId,
+      message_type: messageWithId.message_type as 'bot' | 'user' | 'system' | 'recommendation'
+    };
+    
     // Optimistically update UI
-    setMessages(prev => [...prev, messageWithId]);
+    setMessages(prev => [...prev, typedMessage]);
     
     // Save to database
     const { error } = await supabase
@@ -204,7 +216,7 @@ export function PicoChat() {
         .eq('id', sessionId);
     }
     
-    return messageWithId;
+    return typedMessage;
   };
   
   // Function to analyze responses and generate career recommendations
