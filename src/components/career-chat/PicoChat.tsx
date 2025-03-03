@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Bot } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -11,6 +11,7 @@ import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 
 export function PicoChat() {
   const {
@@ -22,7 +23,8 @@ export function PicoChat() {
     hasConfigError,
     messagesEndRef,
     setInputMessage,
-    sendMessage
+    sendMessage,
+    addMessage
   } = useCareerChat();
   
   const { toast } = useToast();
@@ -129,41 +131,62 @@ export function PicoChat() {
   
   return (
     <MainLayout>
-      <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto">
-        <ChatHeader isAnalyzing={isAnalyzing} />
-        
-        <ScrollArea className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-4">
-            {messages.map((message, index) => (
-              <ChatMessage 
-                key={message.id || index} 
-                message={message} 
-                onSuggestionClick={handleSuggestionClick}
-              />
-            ))}
-            
-            {showAnalyzeButton && (
-              <div className="flex justify-center my-4">
-                <Button 
-                  onClick={handleAnalyzeClick}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Find Career Matches
-                </Button>
-              </div>
-            )}
-            
-            {isTyping && <ChatTypingIndicator />}
-            <div ref={messagesEndRef} />
+      <div className="flex flex-col max-w-4xl mx-auto h-[calc(100vh-120px)] p-4">
+        {messages.length === 0 || (messages.length === 1 && messages[0].message_type === 'system') ? (
+          <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
+            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Bot className="h-16 w-16 text-primary animate-pulse" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800">Welcome to Pico Career Guide</h1>
+            <p className="text-lg text-muted-foreground max-w-md">
+              I'm here to help you explore career options and find the perfect path for your skills and interests.
+            </p>
+            <Button 
+              className="mt-4"
+              size="lg"
+              onClick={() => sendMessage("Hi, I'd like to explore career options")}
+            >
+              Start Career Chat
+            </Button>
           </div>
-        </ScrollArea>
-        
-        <ChatInput 
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          onSendMessage={sendMessage}
-          isDisabled={isTyping || isAnalyzing}
-        />
+        ) : (
+          <div className="flex flex-col h-full bg-blue-50/30 rounded-lg shadow-sm overflow-hidden border">
+            <ChatHeader isAnalyzing={isAnalyzing} />
+            
+            <ScrollArea className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-white/80 to-blue-50/20">
+              <div className="space-y-4">
+                {messages.map((message, index) => (
+                  <ChatMessage 
+                    key={message.id || index} 
+                    message={message} 
+                    onSuggestionClick={handleSuggestionClick}
+                  />
+                ))}
+                
+                {showAnalyzeButton && (
+                  <div className="flex justify-center my-4">
+                    <Button 
+                      onClick={handleAnalyzeClick}
+                      className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all"
+                    >
+                      <span>Find Career Matches</span>
+                    </Button>
+                  </div>
+                )}
+                
+                {isTyping && <ChatTypingIndicator />}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+            
+            <ChatInput 
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              onSendMessage={sendMessage}
+              isDisabled={isTyping || isAnalyzing}
+            />
+          </div>
+        )}
       </div>
     </MainLayout>
   );

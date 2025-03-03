@@ -18,10 +18,10 @@ export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
   
   if (isRecommendation && message.metadata?.career) {
     return (
-      <div className="bg-card border border-primary/20 p-4 rounded-lg shadow-sm">
+      <div className="bg-gradient-to-r from-white to-blue-50 border border-primary/20 p-4 rounded-lg shadow-sm transition-all hover:shadow-md">
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium text-lg">{message.metadata.career}</h4>
-          <span className="text-sm bg-primary/20 text-primary px-2 py-1 rounded">
+          <span className="text-sm bg-primary/20 text-primary px-2 py-1 rounded-full font-medium">
             {message.metadata.score}% Match
           </span>
         </div>
@@ -33,12 +33,12 @@ export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
   return (
     <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} mb-4`}>
       <div 
-        className={`max-w-[90%] rounded-lg px-4 py-2 ${
+        className={`max-w-[90%] rounded-lg px-4 py-3 shadow-sm ${
           isUser 
             ? "bg-primary text-primary-foreground" 
             : message.message_type === 'system' 
-              ? "bg-muted" 
-              : "bg-card border"
+              ? "bg-muted/80" 
+              : "bg-white border"
         }`}
       >
         <p className={`text-sm ${isUser ? "text-primary-foreground" : ""}`}>
@@ -46,15 +46,14 @@ export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
         </p>
       </div>
       
-      {/* Display suggestion buttons if available */}
       {hasSuggestions && message.metadata.suggestions && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-w-[90%]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 max-w-[90%]">
           {message.metadata.suggestions.map((suggestion: string, index: number) => (
             <Button 
               key={index}
               variant="outline" 
               size="sm"
-              className="justify-start text-sm whitespace-normal h-auto py-2"
+              className="justify-start text-sm whitespace-normal h-auto py-2 border-primary/20 hover:bg-primary/5 transition-all"
               onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
             >
               {suggestion}

@@ -25,7 +25,7 @@ export function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t p-4 bg-background">
+    <form onSubmit={handleSubmit} className="border-t p-4 bg-white/50 rounded-b-lg">
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -33,12 +33,13 @@ export function ChatInput({
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type your message..."
           disabled={isDisabled}
-          className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="flex-1 px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm"
         />
         <Button 
           type="submit" 
           size="icon" 
           disabled={isDisabled || !inputMessage.trim()}
+          className="rounded-full shadow-sm hover:shadow-md transition-all"
         >
           <SendIcon className="h-5 w-5" />
         </Button>
