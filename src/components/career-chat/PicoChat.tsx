@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Bot, MessageCircle, Briefcase, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 import { SessionManagementDialog } from './SessionManagementDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
 export function PicoChat() {
   const {
     messages,
@@ -38,29 +36,31 @@ export function PicoChat() {
     sendMessage,
     addMessage
   } = useCareerChat();
-  
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
   const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
-  
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   }, [messages, isTyping]);
-  
   useEffect(() => {
     const checkApiConfig = async () => {
       try {
         const response = await supabase.functions.invoke('career-chat-ai', {
-          body: { type: 'config-check' }
+          body: {
+            type: 'config-check'
+          }
         });
-        
         if (response.error || response.data?.error) {
           toast({
             title: "DeepSeek API Key Not Configured",
             description: "Please contact an administrator to set up the DeepSeek integration.",
             variant: "destructive",
-            duration: 10000,
+            duration: 10000
           });
         } else {
           setConfigChecked(true);
@@ -71,44 +71,34 @@ export function PicoChat() {
           title: "Configuration Check Failed",
           description: "Could not verify the DeepSeek API configuration.",
           variant: "destructive",
-          duration: 5000,
+          duration: 5000
         });
       }
     };
-    
     if (!isLoading && messages.length <= 2 && !configChecked) {
       checkApiConfig();
     }
   }, [toast, messages.length, isLoading, configChecked]);
-  
   useEffect(() => {
     const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
-    
     if (userMessageCount >= 12 && !isAnalyzing && !showAnalyzeButton) {
       setShowAnalyzeButton(true);
     }
-    
     if (isAnalyzing || messages.some(msg => msg.message_type === 'recommendation')) {
       setShowAnalyzeButton(false);
     }
   }, [messages, isAnalyzing, showAnalyzeButton]);
-  
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
   };
-  
   const handleAnalyzeClick = async () => {
     if (!messages[0]?.session_id) return;
-    
-    const { analyzeResponses } = useCareerAnalysis(
-      messages[0].session_id,
-      addMessage
-    );
-    
+    const {
+      analyzeResponses
+    } = useCareerAnalysis(messages[0].session_id, addMessage);
     analyzeResponses();
     setShowAnalyzeButton(false);
   };
-  
   const handleStartNewChat = async () => {
     if (messages.length > 2) {
       if (confirm('Starting a new chat will end your current conversation. Continue?')) {
@@ -120,20 +110,15 @@ export function PicoChat() {
       toast.success('Started new conversation');
     }
   };
-  
   if (isLoading) {
-    return (
-      <MainLayout>
+    return <MainLayout>
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </MainLayout>
-    );
+      </MainLayout>;
   }
-  
   if (hasConfigError) {
-    return (
-      <MainLayout>
+    return <MainLayout>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-4 p-8 text-center">
           <AlertCircle className="h-12 w-12 text-destructive" />
           <h2 className="text-2xl font-semibold">AI Chat Unavailable</h2>
@@ -141,45 +126,30 @@ export function PicoChat() {
             The career chat AI service is currently unavailable. Please try again later or contact an administrator.
           </p>
         </div>
-      </MainLayout>
-    );
+      </MainLayout>;
   }
-  
-  return (
-    <MainLayout>
+  return <MainLayout>
       <div className="flex flex-col max-w-4xl mx-auto h-[calc(100vh-120px)] p-4">
-        {messages.length === 0 || (messages.length === 1 && messages[0].message_type === 'system') ? (
-          <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
+        {messages.length === 0 || messages.length === 1 && messages[0].message_type === 'system' ? <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-blue-100 flex items-center justify-center mb-4 animate-pulse">
               <Bot className="h-16 w-16 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">Welcome to Pico Career Guide</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Hey there.. Welcome, I am Pico!</h1>
             <p className="text-lg text-muted-foreground max-w-md">
               I'm here to help you explore career options and find the perfect path for your skills and interests.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <Button 
-                className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all"
-                size="lg"
-                onClick={() => sendMessage("Hi, I'd like to explore career options")}
-              >
+              <Button className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all" size="lg" onClick={() => sendMessage("Hi, I'd like to explore career options")}>
                 <MessageCircle className="h-5 w-5" />
                 <span>Start Career Chat</span>
               </Button>
               
-              <Button 
-                className="gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all"
-                size="lg"
-                variant="outline"
-                onClick={() => setSessionDialogOpen(true)}
-              >
+              <Button className="gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all" size="lg" variant="outline" onClick={() => setSessionDialogOpen(true)}>
                 <History className="h-5 w-5" />
                 <span>Past Conversations</span>
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
+          </div> : <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
             <div className="flex items-center justify-between bg-white border-b p-4">
               <div className="flex-1">
                 <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
@@ -209,54 +179,25 @@ export function PicoChat() {
             
             <ScrollArea className="flex-1 p-4 overflow-y-auto">
               <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <ChatMessage 
-                    key={message.id || index} 
-                    message={message} 
-                    onSuggestionClick={handleSuggestionClick}
-                    currentQuestionProgress={questionProgress}
-                  />
-                ))}
+                {messages.map((message, index) => <ChatMessage key={message.id || index} message={message} onSuggestionClick={handleSuggestionClick} currentQuestionProgress={questionProgress} />)}
                 
-                {showAnalyzeButton && (
-                  <div className="flex justify-center my-4 animate-fade-in">
-                    <Button 
-                      onClick={handleAnalyzeClick}
-                      className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all"
-                    >
+                {showAnalyzeButton && <div className="flex justify-center my-4 animate-fade-in">
+                    <Button onClick={handleAnalyzeClick} className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all">
                       <Briefcase className="h-5 w-5" />
                       <span>Find Career Matches</span>
                     </Button>
-                  </div>
-                )}
+                  </div>}
                 
                 {isTyping && <ChatTypingIndicator />}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
             
-            <ChatInput 
-              inputMessage={inputMessage}
-              setInputMessage={setInputMessage}
-              onSendMessage={sendMessage}
-              isDisabled={isTyping || isAnalyzing}
-            />
-          </div>
-        )}
+            <ChatInput inputMessage={inputMessage} setInputMessage={setInputMessage} onSendMessage={sendMessage} isDisabled={isTyping || isAnalyzing} />
+          </div>}
         
-        <SessionManagementDialog
-          open={sessionDialogOpen}
-          onOpenChange={setSessionDialogOpen}
-          pastSessions={pastSessions}
-          isFetchingPastSessions={isFetchingPastSessions}
-          onFetchPastSessions={fetchPastSessions}
-          onResumeSession={resumeSession}
-          onDeleteSession={deleteSession}
-          onUpdateSessionTitle={updateSessionTitle}
-        />
+        <SessionManagementDialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen} pastSessions={pastSessions} isFetchingPastSessions={isFetchingPastSessions} onFetchPastSessions={fetchPastSessions} onResumeSession={resumeSession} onDeleteSession={deleteSession} onUpdateSessionTitle={updateSessionTitle} />
       </div>
-    </MainLayout>
-  );
+    </MainLayout>;
 }
-
 export default PicoChat;
