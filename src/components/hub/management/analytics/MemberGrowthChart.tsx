@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { 
@@ -72,15 +71,44 @@ export function MemberGrowthChart({
     [memberGrowth, totalNewMembers]
   );
   
-  // Prepare data with cumulative growth
+  // Prepare data with cumulative growth - with special handling for yearly view
   const chartData = useMemo(() => {
     let cumulativeCount = 0;
+    
+    // Special handling for yearly view - aggregate by year
+    if (timePeriod === 'year') {
+      // Group by year and sum new_members
+      const yearlyData = memberGrowth.reduce((acc, item) => {
+        const year = new Date(item.month).getFullYear().toString();
+        if (!acc[year]) {
+          acc[year] = {
+            date: `${year}-01-01`, // Use January 1st as the representative date
+            year: year,
+            new_members: 0
+          };
+        }
+        acc[year].new_members += item.new_members;
+        return acc;
+      }, {} as Record<string, {date: string, year: string, new_members: number}>);
+      
+      // Convert to array and sort by year
+      const result = Object.values(yearlyData)
+        .sort((a, b) => a.year.localeCompare(b.year))
+        .map(item => ({
+          ...item,
+          cumulativeCount: (cumulativeCount += item.new_members)
+        }));
+      
+      return result;
+    }
+    
+    // For other time periods, keep the existing logic
     return memberGrowth.map(item => ({
       ...item,
       date: item.month, // Keep original date field for reference
       cumulativeCount: (cumulativeCount += item.new_members)
     }));
-  }, [memberGrowth]);
+  }, [memberGrowth, timePeriod]);
   
   // Determine the chart type based on the selected time period
   const renderChart = () => {
@@ -176,8 +204,7 @@ export function MemberGrowthChart({
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis 
-              dataKey="date"
-              tickFormatter={(value) => formatDate(value, timePeriod)}
+              dataKey="year"
               angle={0}
               textAnchor="middle"
               height={50}
@@ -196,7 +223,6 @@ export function MemberGrowthChart({
               hide={!showCumulative}
             />
             <Tooltip 
-              labelFormatter={(value) => formatDate(value, timePeriod)}
               formatter={(value, name) => {
                 if (name === 'new_members') return [`${value} new members`];
                 if (name === 'cumulativeCount') return [`${value} total members`];
