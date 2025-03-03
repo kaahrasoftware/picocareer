@@ -9,6 +9,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { MainLayout } from '@/router/layouts';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export function PicoChat() {
   const {

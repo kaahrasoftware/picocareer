@@ -14,14 +14,39 @@ serve(async (req) => {
   }
 
   try {
-    // Get DeepSeek API key from environment variable
+    const requestData = await req.json();
+
+    // Handle config check requests
+    if (requestData.type === 'config-check') {
+      // Get DeepSeek API key from environment variable
+      const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+      if (!deepSeekApiKey) {
+        return new Response(
+          JSON.stringify({ error: 'DeepSeek API key not configured' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ configured: true }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Get DeepSeek API key from environment variable for regular requests
     const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
     if (!deepSeekApiKey) {
       throw new Error('DeepSeek API key not found');
     }
 
     // Get data from request
-    const { message, sessionId, messages } = await req.json();
+    const { message, sessionId, messages } = requestData;
 
     // Create formatted message history for DeepSeek API
     const formattedMessages = messages.map(msg => ({
