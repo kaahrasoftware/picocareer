@@ -3,14 +3,12 @@ import React, { useEffect } from 'react';
 import PicoChat from '@/components/career-chat/PicoChat';
 
 export default function CareerChat() {
-  // Set dark mode on component mount
+  // Remove dark mode setting on component mount
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    // Ensure light mode by removing dark class if it exists
+    document.documentElement.classList.remove('dark');
     
-    // Cleanup on unmount
-    return () => {
-      document.documentElement.classList.remove('dark');
-    };
+    // No cleanup needed since we're not adding any classes
   }, []);
   
   return <PicoChat />;
