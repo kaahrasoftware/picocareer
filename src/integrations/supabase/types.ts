@@ -137,6 +137,121 @@ export type Database = {
         }
         Relationships: []
       }
+      career_chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          session_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type: string
+          metadata?: Json | null
+          session_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "career_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_chat_recommendations: {
+        Row: {
+          career_id: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          reasoning: string | null
+          score: number | null
+          session_id: string | null
+        }
+        Insert: {
+          career_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reasoning?: string | null
+          score?: number | null
+          session_id?: string | null
+        }
+        Update: {
+          career_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reasoning?: string | null
+          score?: number | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_chat_recommendations_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_chat_recommendations_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "career_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_chat_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          profile_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          profile_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          profile_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_chat_sessions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       career_major_relations: {
         Row: {
           career_id: string

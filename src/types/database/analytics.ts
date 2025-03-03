@@ -57,3 +57,47 @@ export interface AnnouncementEngagement {
   created_at: string;
   updated_at: string;
 }
+
+// Career chatbot interfaces
+export interface CareerChatSession {
+  id: string;
+  profile_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string;
+}
+
+export interface CareerChatMessage {
+  id: string;
+  session_id: string;
+  message_type: 'user' | 'bot' | 'system' | 'recommendation';
+  content: string;
+  metadata: any;
+  created_at: string;
+}
+
+export interface CareerRecommendation {
+  id: string;
+  session_id: string;
+  career_id: string;
+  score: number;
+  reasoning: string;
+  created_at: string;
+  metadata: any;
+  career?: {
+    title: string;
+    description: string;
+    image_url?: string;
+  }
+}
+
+export interface CareerAnalysisResult {
+  careers: {
+    title: string;
+    score: number;
+    reasoning: string;
+  }[];
+  personalityTraits: string[];
+  learningStyles: string[];
+}
