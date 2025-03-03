@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Bot } from 'lucide-react';
+import { Loader2, AlertCircle, Bot, MessageCircle, Briefcase } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -12,7 +11,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useCareerAnalysis } from './hooks/useCareerAnalysis';
-import { Progress } from '@/components/ui/progress';
 
 export function PicoChat() {
   const {
@@ -34,12 +32,10 @@ export function PicoChat() {
   const [configChecked, setConfigChecked] = useState(false);
   const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
   
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
   
-  // Show toast if DeepSeek API key is not configured
   useEffect(() => {
     const checkApiConfig = async () => {
       try {
@@ -68,33 +64,27 @@ export function PicoChat() {
       }
     };
     
-    // Only run the check if we have no messages (first load)
     if (!isLoading && messages.length <= 2 && !configChecked) {
       checkApiConfig();
     }
   }, [toast, messages.length, isLoading, configChecked]);
   
-  // Show analyze button after several user messages
   useEffect(() => {
     const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
     
-    // Show the analyze button after at least 12 user responses
     if (userMessageCount >= 12 && !isAnalyzing && !showAnalyzeButton) {
       setShowAnalyzeButton(true);
     }
     
-    // Hide the button after analysis
     if (isAnalyzing || messages.some(msg => msg.message_type === 'recommendation')) {
       setShowAnalyzeButton(false);
     }
   }, [messages, isAnalyzing, showAnalyzeButton]);
   
-  // Handle suggestion clicks
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
   };
   
-  // Handle analyze button click
   const handleAnalyzeClick = async () => {
     if (!messages[0]?.session_id) return;
     
@@ -117,7 +107,6 @@ export function PicoChat() {
     );
   }
   
-  // Show warning if configuration has an issue
   if (hasConfigError) {
     return (
       <MainLayout>
@@ -137,26 +126,27 @@ export function PicoChat() {
       <div className="flex flex-col max-w-4xl mx-auto h-[calc(100vh-120px)] p-4">
         {messages.length === 0 || (messages.length === 1 && messages[0].message_type === 'system') ? (
           <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
-            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Bot className="h-16 w-16 text-primary animate-pulse" />
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-blue-100 flex items-center justify-center mb-4 animate-pulse">
+              <Bot className="h-16 w-16 text-primary" />
             </div>
             <h1 className="text-3xl font-bold text-gray-800">Welcome to Pico Career Guide</h1>
             <p className="text-lg text-muted-foreground max-w-md">
               I'm here to help you explore career options and find the perfect path for your skills and interests.
             </p>
             <Button 
-              className="mt-4"
+              className="mt-4 bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all"
               size="lg"
               onClick={() => sendMessage("Hi, I'd like to explore career options")}
             >
-              Start Career Chat
+              <MessageCircle className="h-5 w-5" />
+              <span>Start Career Chat</span>
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col h-full bg-blue-50/30 rounded-lg shadow-sm overflow-hidden border">
+          <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
             <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
             
-            <ScrollArea className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-white/80 to-blue-50/20">
+            <ScrollArea className="flex-1 p-4 overflow-y-auto">
               <div className="space-y-4">
                 {messages.map((message, index) => (
                   <ChatMessage 
@@ -168,11 +158,12 @@ export function PicoChat() {
                 ))}
                 
                 {showAnalyzeButton && (
-                  <div className="flex justify-center my-4">
+                  <div className="flex justify-center my-4 animate-fade-in">
                     <Button 
                       onClick={handleAnalyzeClick}
                       className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all"
                     >
+                      <Briefcase className="h-5 w-5" />
                       <span>Find Career Matches</span>
                     </Button>
                   </div>

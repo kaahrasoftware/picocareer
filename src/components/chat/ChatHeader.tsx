@@ -1,57 +1,81 @@
 
 import React from 'react';
-import { Bot, Loader2 } from 'lucide-react';
+import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
   currentCategory?: string | null;
 }
 
-export function ChatHeader({ isAnalyzing, currentCategory }: ChatHeaderProps) {
+export function ChatHeader({ isAnalyzing = false, currentCategory = null }: ChatHeaderProps) {
+  const getCategoryIcon = () => {
+    switch (currentCategory) {
+      case 'education':
+        return <GraduationCap className="h-5 w-5 text-indigo-500" />;
+      case 'skills':
+        return <Brain className="h-5 w-5 text-emerald-500" />;
+      case 'workstyle':
+        return <MessagesSquare className="h-5 w-5 text-amber-500" />;
+      case 'goals':
+        return <Target className="h-5 w-5 text-primary" />;
+      case 'complete':
+        return <Star className="h-5 w-5 text-amber-400" />;
+      default:
+        return <Briefcase className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
   const getCategoryTitle = () => {
-    if (!currentCategory) return null;
-    
     switch (currentCategory) {
       case 'education':
         return 'Educational Background';
       case 'skills':
-        return 'Skills & Expertise';
+        return 'Skills Assessment';
       case 'workstyle':
         return 'Work Style Preferences';
       case 'goals':
-        return 'Career Goals';
+        return 'Career Aspirations';
       case 'complete':
         return 'Career Recommendations';
       default:
-        return null;
+        return 'Career Chat';
     }
   };
-  
-  const categoryTitle = getCategoryTitle();
-  
+
   return (
-    <div className="p-4 border-b bg-gradient-to-r from-white to-blue-50 rounded-t-lg shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Bot className="h-7 w-7 text-primary animate-pulse" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg text-gray-800">AI Career Guide</h3>
-            {categoryTitle ? (
-              <p className="text-sm text-muted-foreground">{categoryTitle}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Chat with Pico to explore career options</p>
-            )}
-          </div>
+    <div className="border-b p-4 bg-white shadow-sm">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          {isAnalyzing ? (
+            <>
+              <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center">
+                <Star className="h-3 w-3 text-primary animate-pulse" />
+              </div>
+              <h2 className="font-medium">Analyzing your responses...</h2>
+            </>
+          ) : (
+            <>
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                {currentCategory ? getCategoryIcon() : <Bot className="h-5 w-5 text-primary" />}
+              </div>
+              <h2 className="font-medium">{getCategoryTitle()}</h2>
+            </>
+          )}
         </div>
+        
         {isAnalyzing && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Analyzing your responses...
-          </div>
+          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+            Generating personalized recommendations
+          </span>
         )}
       </div>
+      
+      {isAnalyzing && (
+        <div className="mt-2">
+          <Progress value={50} className="h-1.5 animate-pulse" />
+        </div>
+      )}
     </div>
   );
 }
