@@ -1,6 +1,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useChatSession } from './useChatSession';
+import { useChatSession } from './chat-session'; // Updated import path
 import { useCareerAnalysis } from './useCareerAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
