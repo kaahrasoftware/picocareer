@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Stars, Bot } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -11,7 +11,6 @@ import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 
 export function PicoChat() {
   const {
@@ -23,14 +22,12 @@ export function PicoChat() {
     hasConfigError,
     messagesEndRef,
     setInputMessage,
-    sendMessage,
-    addMessage
+    sendMessage
   } = useCareerChat();
   
   const { toast } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
   const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
-  const { analyzeResponses } = useCareerAnalysis(messages[0]?.session_id || '', addMessage);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -93,8 +90,14 @@ export function PicoChat() {
   };
   
   // Handle analyze button click
-  const handleAnalyzeClick = () => {
+  const handleAnalyzeClick = async () => {
     if (!messages[0]?.session_id) return;
+    
+    const { analyzeResponses } = useCareerAnalysis(
+      messages[0].session_id,
+      addMessage
+    );
+    
     analyzeResponses();
     setShowAnalyzeButton(false);
   };
@@ -129,25 +132,7 @@ export function PicoChat() {
       <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto">
         <ChatHeader isAnalyzing={isAnalyzing} />
         
-        {messages.length <= 1 && (
-          <div className="flex flex-col items-center justify-center py-8 mb-4">
-            <div className="relative mb-6">
-              <div className="w-24 h-24 rounded-full bg-primary/20 p-4 flex items-center justify-center">
-                <Bot className="h-12 w-12 text-primary animate-pulse" />
-              </div>
-              <div className="absolute -top-2 -right-2">
-                <Stars className="h-6 w-6 text-yellow-400 animate-pulse" />
-              </div>
-            </div>
-            <h2 className="text-2xl font-bold mb-2 text-center">Welcome to Pico AI Career Guide</h2>
-            <p className="text-center text-muted-foreground max-w-md mb-4">
-              I'm here to help you discover career paths that match your interests and skills.
-              Let's chat about your career goals!
-            </p>
-          </div>
-        )}
-        
-        <ScrollArea className="flex-1 p-4 overflow-y-auto bg-background/60 backdrop-blur-sm rounded-lg border border-border/50">
+        <ScrollArea className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-4">
             {messages.map((message, index) => (
               <ChatMessage 
@@ -161,10 +146,8 @@ export function PicoChat() {
               <div className="flex justify-center my-4">
                 <Button 
                   onClick={handleAnalyzeClick}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2"
-                  size="lg"
+                  className="bg-primary hover:bg-primary/90"
                 >
-                  <Stars className="h-5 w-5" />
                   Find Career Matches
                 </Button>
               </div>
