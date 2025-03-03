@@ -134,7 +134,7 @@ export function PicoChat() {
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-blue-100 flex items-center justify-center mb-4 animate-pulse">
               <Bot className="h-16 w-16 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">Hey there.. Welcome, I am Pico!</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Hey there... I am Pico!</h1>
             <p className="text-lg text-muted-foreground max-w-md">
               I'm here to help you explore career options and find the perfect path for your skills and interests.
             </p>
