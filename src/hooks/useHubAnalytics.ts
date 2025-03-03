@@ -65,18 +65,19 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
       const now = new Date();
       let startDate;
       
+      // Update to fetch the appropriate amount of data based on timePeriod
       switch (timePeriod) {
         case 'day':
-          startDate = subDays(now, 7);
+          startDate = subDays(now, 30); // Show 30 days
           break;
         case 'week':
-          startDate = subWeeks(now, 12);
+          startDate = subWeeks(now, 12); // Show 12 weeks
           break;
         case 'month':
-          startDate = subMonths(now, 12);
+          startDate = subMonths(now, 12); // Show 12 months
           break;
         case 'year':
-          startDate = subYears(now, 5);
+          startDate = subYears(now, 5); // Show 5 years
           break;
         default:
           startDate = subMonths(now, 12);
