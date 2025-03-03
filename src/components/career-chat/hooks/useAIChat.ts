@@ -18,9 +18,12 @@ export function useAIChat(
     if (!sessionId) return;
     
     try {
+      console.log("Checking API configuration...");
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: { type: 'config-check' }
       });
+      
+      console.log("API configuration check response:", response);
       
       if (response.error || response.data?.error) {
         console.error('DeepSeek API configuration issue:', response.error || response.data?.error);
@@ -67,6 +70,8 @@ export function useAIChat(
         content: message.trim()
       });
 
+      console.log("Sending message to AI edge function...");
+      
       // Call our edge function
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: {
@@ -79,6 +84,8 @@ export function useAIChat(
           }
         }
       });
+
+      console.log("Edge function response:", response);
 
       if (response.error) {
         console.error('Edge function error:', response.error);

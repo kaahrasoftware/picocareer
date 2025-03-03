@@ -15,8 +15,22 @@ serve(async (req) => {
   }
 
   try {
-    // Get DeepSeek API key from environment or config
-    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") || "";
+    // Get DeepSeek API key from environment
+    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
+    
+    console.log("Checking DeepSeek API key configuration...");
+    if (!DEEPSEEK_API_KEY) {
+      console.error("DeepSeek API key not configured in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "DeepSeek API key not configured. Please add it to the Supabase secrets." 
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 // Using 200 to ensure the front-end gets the error message
+        }
+      );
+    }
     
     // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
@@ -41,23 +55,10 @@ serve(async (req) => {
         );
       }
       
+      console.log("DeepSeek API key is properly configured");
       return new Response(
         JSON.stringify({ status: "ok", configured: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    // Check if DeepSeek API key is configured
-    if (!DEEPSEEK_API_KEY) {
-      console.error("DeepSeek API key not configured");
-      return new Response(
-        JSON.stringify({ 
-          error: "DeepSeek API key not configured. Please add it to the Supabase secrets." 
-        }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200 // Using 200 to ensure the front-end gets the error message
-        }
       );
     }
     
