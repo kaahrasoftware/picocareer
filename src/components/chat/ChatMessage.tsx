@@ -9,7 +9,6 @@ import { UserMessage } from '@/components/career-chat/message-parts/UserMessage'
 import { SystemMessage } from '@/components/career-chat/message-parts/SystemMessage';
 import { BotMessage } from '@/components/career-chat/message-parts/BotMessage';
 import { extractSections } from '@/components/career-chat/utils/recommendationParser';
-import { QuestionOption } from '@/components/career-chat/types/aiResponses';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
@@ -27,22 +26,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     message.metadata.category && 
     message.metadata.hasOptions;
   
-  // Handle structured career recommendations
-  if (isRecommendation && message.metadata?.careers) {
-    // If we have structured career data
-    return (
-      <RecommendationSection 
-        recommendation={{
-          type: 'recommendation',
-          careers: message.metadata.careers,
-          personalities: message.metadata.personalities || [],
-          mentors: message.metadata.mentors || []
-        }} 
-      />
-    );
-  }
-  
-  // Handle single career recommendation messages (legacy format)
+  // Handle single career recommendation messages
   if (isRecommendation && message.metadata?.career) {
     return (
       <CareerRecommendationCard 
@@ -53,7 +37,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     );
   }
   
-  // Handle full recommendation message with multiple sections (legacy format)
+  // Handle full recommendation message with multiple sections
   if (isRecommendation && !message.metadata?.career) {
     const sections = extractSections(message.content);
     
@@ -71,9 +55,6 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     const questionNumber = message.metadata.questionNumber as number || 1;
     const totalInCategory = message.metadata.totalInCategory as number || 4;
     
-    // Check if we have structured options data
-    const optionsData = message.metadata.optionsData as QuestionOption[] || undefined;
-    
     return (
       <div className="flex flex-col items-start w-full">
         <QuestionCard 
@@ -82,12 +63,11 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
           questionNumber={questionNumber}
           totalQuestions={totalInCategory}
           progress={currentQuestionProgress}
-          options={optionsData}
         />
         
         {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
           <OptionCards 
-            options={optionsData || (message.metadata.suggestions as string[])}
+            options={message.metadata.suggestions as string[]}
             onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
           />
         )}
