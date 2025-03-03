@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { PicoChatContainer } from './components/PicoChatContainer';
+import { ChatLayout } from './ChatLayout';
 
 export function PicoChat() {
-  return <PicoChatContainer />;
+  return <ChatLayout />;
 }
 
 export default PicoChat;

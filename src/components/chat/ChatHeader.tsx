@@ -1,14 +1,24 @@
 
 import React from 'react';
-import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase, Minimize2, Menu } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
   currentCategory?: string | null;
+  onMinimize?: () => void;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
-export function ChatHeader({ isAnalyzing = false, currentCategory = null }: ChatHeaderProps) {
+export function ChatHeader({ 
+  isAnalyzing = false, 
+  currentCategory = null,
+  onMinimize,
+  onToggleSidebar,
+  isSidebarOpen = true
+}: ChatHeaderProps) {
   const getCategoryIcon = () => {
     switch (currentCategory) {
       case 'education':
@@ -44,9 +54,15 @@ export function ChatHeader({ isAnalyzing = false, currentCategory = null }: Chat
   };
 
   return (
-    <div className="border-b p-4 bg-white shadow-sm">
+    <div className="p-3 bg-white shadow-sm border-b">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
+          {!isSidebarOpen && onToggleSidebar && (
+            <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="mr-1">
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
+
           {isAnalyzing ? (
             <>
               <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center">
@@ -64,11 +80,19 @@ export function ChatHeader({ isAnalyzing = false, currentCategory = null }: Chat
           )}
         </div>
         
-        {isAnalyzing && (
-          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-            Generating personalized recommendations
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {isAnalyzing && (
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full hidden sm:inline-block">
+              Generating personalized recommendations
+            </span>
+          )}
+          
+          {onMinimize && (
+            <Button variant="ghost" size="icon" onClick={onMinimize} title="Minimize">
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       
       {isAnalyzing && (

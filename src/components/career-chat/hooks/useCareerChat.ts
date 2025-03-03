@@ -1,5 +1,5 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './useChatSession';
 import { useCareerAnalysis } from './useCareerAnalysis';
 import { useAIChat } from './useAIChat';
@@ -33,13 +33,34 @@ export function useCareerChat() {
   
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
+
+  // Determine when to show the analyze button
+  useEffect(() => {
+    const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
+    
+    if (userMessageCount >= 12 && !isAnalyzing && !showAnalyzeButton) {
+      setShowAnalyzeButton(true);
+    }
+    
+    if (isAnalyzing || messages.some(msg => msg.message_type === 'recommendation')) {
+      setShowAnalyzeButton(false);
+    }
+  }, [messages, isAnalyzing, showAnalyzeButton]);
   
-  // Function to send message (simplified now that most logic is in useAIChat)
+  // Function to send message
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId) return;
     await sendAIMessage(message);
     setInputMessage('');
   }, [sessionId, sendAIMessage]);
+
+  // Handle analyze button click
+  const handleAnalyzeClick = async () => {
+    if (!sessionId) return;
+    await analyzeResponses();
+    setShowAnalyzeButton(false);
+  };
 
   return {
     messages,
@@ -59,8 +80,10 @@ export function useCareerChat() {
     deleteSession,
     updateSessionTitle,
     messagesEndRef,
+    showAnalyzeButton,
     setInputMessage,
     sendMessage,
-    addMessage
+    addMessage,
+    handleAnalyzeClick
   };
 }
