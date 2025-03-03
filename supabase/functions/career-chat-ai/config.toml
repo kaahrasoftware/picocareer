@@ -34,7 +34,7 @@ Return responses in this JSON format:
     "progress": {
       "category": "education|skills|workstyle|goals",
       "current": 1,
-      "total": 6,
+      "total": 10,
       "overall": 25
     },
     "options": {

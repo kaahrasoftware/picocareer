@@ -38,7 +38,8 @@ export function useCareerChat() {
     education: 0,
     skills: 0,
     workstyle: 0,
-    goals: 0
+    goals: 0,
+    environment: 0
   });
 
   // Check API configuration on load
@@ -107,9 +108,9 @@ export function useCareerChat() {
         [newCategory]: prev[newCategory as keyof typeof prev] + 1
       }));
       
-      // Calculate overall progress (assuming 12-15 questions total plan)
+      // Calculate overall progress (assuming up to 10 questions per category, 5 categories)
       const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
-      setQuestionProgress(Math.min(Math.round((totalQuestions / 15) * 100), 100));
+      setQuestionProgress(Math.min(Math.round((totalQuestions / 50) * 100), 100));
     }
     
     // If this is a recommendation message, set progress to 100%

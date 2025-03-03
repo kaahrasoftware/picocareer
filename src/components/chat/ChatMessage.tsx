@@ -50,7 +50,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
         intro: structuredMessage.content.intro,
         category: structuredMessage.metadata.progress?.category || 'general',
         current: structuredMessage.metadata.progress?.current || 1,
-        total: structuredMessage.metadata.progress?.total || 4,
+        total: structuredMessage.metadata.progress?.total || 10,
         overall: structuredMessage.metadata.progress?.overall || currentQuestionProgress,
         options: structuredMessage.content.options || [],
         layout: structuredMessage.metadata.options?.layout || 'cards'
@@ -120,7 +120,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   if (isQuestion) {
     const category = message.metadata.category as string || 'general';
     const questionNumber = message.metadata.questionNumber as number || 1;
-    const totalInCategory = message.metadata.totalInCategory as number || 4;
+    const totalInCategory = message.metadata.totalInCategory as number || 10;
     const progress = message.metadata.progress as number || currentQuestionProgress;
     
     // Parse intro and question from the message content
