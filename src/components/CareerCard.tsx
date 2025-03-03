@@ -1,126 +1,104 @@
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CareerDetailsDialog } from "./CareerDetailsDialog";
-import { CareerHeader } from "./career/CareerHeader";
-import { BadgeSection } from "./career/BadgeSection";
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export interface CareerCardProps {
   id: string;
   title: string;
   description: string;
-  salary_range?: string;
-  image_url?: string;
-  industry?: string;
-  required_skills?: string[];
-  required_tools?: string[];
-  required_education?: string[];
-  academic_majors?: string[];
-  profiles_count?: number;
+  matchScore?: number;
+  salary?: string;
+  requiredSkills?: string[];
+  education?: string[];
+  onClick?: () => void;
 }
 
-export function CareerCard({ 
-  id, 
-  title, 
-  description, 
-  salary_range, 
-  image_url,
-  industry,
-  required_skills,
-  required_tools,
-  required_education,
-  academic_majors,
-  profiles_count = 0,
+export function CareerCard({
+  id,
+  title,
+  description,
+  matchScore,
+  salary,
+  requiredSkills = [],
+  education = [],
+  onClick
 }: CareerCardProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleOpenDialog = () => setDialogOpen(true);
-
-  const limitTags = (tags: string[] | undefined, limit: number = 3) => {
-    if (!tags || tags.length === 0) return { displayed: [], remaining: 0 };
-    return {
-      displayed: tags.slice(0, limit),
-      remaining: Math.max(0, tags.length - limit)
-    };
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
   };
 
-  const educationTags = limitTags(required_education);
-  const majorTags = limitTags(academic_majors);
-  const skillTags = limitTags(required_skills);
-  const toolTags = limitTags(required_tools);
-
   return (
-    <>
-      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
-        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="relative flex flex-col h-full">
-          <CareerHeader 
-            title={title}
-            industry={industry}
-            salary_range={salary_range}
-            image_url={image_url}
-            profiles_count={profiles_count}
-            onImageClick={handleOpenDialog}
-          />
-
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-            {description}
-          </p>
-
-          {educationTags.displayed.length > 0 && (
-            <BadgeSection
-              title="Required Education"
-              items={educationTags.displayed}
-              remainingCount={educationTags.remaining}
-              badgeClassName="bg-[#E5DEFF] text-[#4B5563] hover:bg-[#D8D1F2] transition-colors border border-[#D8D1F2]"
-            />
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+      <CardContent className="flex-1 pt-6">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-semibold">{title}</h3>
+          {matchScore && (
+            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+              {matchScore}% Match
+            </Badge>
           )}
-
-          {majorTags.displayed.length > 0 && (
-            <BadgeSection
-              title="Related Majors"
-              items={majorTags.displayed}
-              remainingCount={majorTags.remaining}
-              badgeClassName="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6]"
-            />
-          )}
-
-          {skillTags.displayed.length > 0 && (
-            <BadgeSection
-              title="Required Skills"
-              items={skillTags.displayed}
-              remainingCount={skillTags.remaining}
-              badgeClassName="bg-[#F2FCE2] text-[#4B5563] hover:bg-[#E5F6D3] transition-colors border border-[#E2EFD9]"
-            />
-          )}
-
-          {toolTags.displayed.length > 0 && (
-            <BadgeSection
-              title="Required Tools"
-              items={toolTags.displayed}
-              remainingCount={toolTags.remaining}
-              badgeClassName="bg-[#D3E4FD] text-[#4B5563] hover:bg-[#C1D9F9] transition-colors border border-[#C1D9F9]"
-            />
-          )}
-
-          <div className="mt-auto">
-            <Button 
-              variant="outline"
-              className="w-full bg-background hover:bg-muted/50 transition-colors"
-              onClick={handleOpenDialog}
-            >
-              View Details
-            </Button>
-          </div>
         </div>
-      </Card>
+        
+        <p className="text-sm text-muted-foreground mb-4">
+          {truncateText(description, 150)}
+        </p>
+        
+        {salary && (
+          <div className="mb-3">
+            <p className="text-xs text-muted-foreground mb-1">Salary Range</p>
+            <p className="text-sm font-medium">{salary}</p>
+          </div>
+        )}
+        
+        {requiredSkills.length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs text-muted-foreground mb-1">Key Skills</p>
+            <div className="flex flex-wrap gap-1">
+              {requiredSkills.slice(0, 3).map((skill, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {skill}
+                </Badge>
+              ))}
+              {requiredSkills.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{requiredSkills.length - 3} more
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {education.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Education</p>
+            <div className="flex flex-wrap gap-1">
+              {education.slice(0, 2).map((edu, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {edu}
+                </Badge>
+              ))}
+              {education.length > 2 && (
+                <Badge variant="outline" className="text-xs">
+                  +{education.length - 2} more
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
       
-      <CareerDetailsDialog 
-        careerId={id}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
-    </>
+      <CardFooter className="border-t pt-4">
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={onClick}
+        >
+          View Details
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
