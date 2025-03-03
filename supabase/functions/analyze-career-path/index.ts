@@ -1,6 +1,6 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.5.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.36.0';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,20 +14,18 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Parse the request body
     const { sessionId } = await req.json();
 
     if (!sessionId) {
       throw new Error('Session ID is required');
     }
 
-    console.log(`Analyzing career path for session: ${sessionId}`);
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 1. Fetch all messages for this session
+    // Get all user messages from the session
     const { data: messages, error: messagesError } = await supabase
       .from('career_chat_messages')
       .select('*')
@@ -38,94 +36,122 @@ serve(async (req) => {
       throw new Error(`Error fetching messages: ${messagesError.message}`);
     }
 
-    if (!messages || messages.length === 0) {
-      throw new Error('No messages found for analysis');
-    }
-
-    // 2. Extract user responses
+    // Extract user responses and key information
     const userMessages = messages.filter(msg => msg.message_type === 'user');
+    const botMessages = messages.filter(msg => msg.message_type === 'bot');
     
-    if (userMessages.length < 3) {
-      throw new Error('Not enough user messages for meaningful analysis');
+    // This would normally be a more complex analysis based on the conversation
+    // For now, we'll use a simplified approach to match careers
+    
+    // Extract keywords from user responses
+    const userContent = userMessages.map(msg => msg.content).join(' ').toLowerCase();
+    
+    // Get all careers from the database
+    const { data: careers, error: careersError } = await supabase
+      .from('careers')
+      .select('*')
+      .eq('complete_career', true)
+      .limit(100);
+
+    if (careersError) {
+      throw new Error(`Error fetching careers: ${careersError.message}`);
     }
 
-    // 3. Format the messages for analysis
-    const userResponses = userMessages.map(msg => msg.content).join('\n\n');
-    
-    console.log('User responses collected');
-
-    // 4. In a real implementation, we would analyze the responses with AI
-    // For now, we'll return mock career recommendations
-    
-    // Mock analysis results
-    const mockAnalysis = {
-      summary: "Based on the user's responses, they show strengths in problem-solving, creativity, and communication. They value work-life balance and prefer collaborative environments with flexibility.",
-      recommendations: [
-        {
-          title: "Software Developer",
-          score: 95,
-          reasoning: "Based on interest in problem-solving and logical thinking, software development could be an excellent fit. This career offers flexibility, good compensation, and opportunities for remote work, which aligns with work-life balance preferences."
-        },
-        {
-          title: "Data Scientist",
-          score: 88,
-          reasoning: "Analytical skills and interest in finding patterns would make someone successful in data science. This growing field combines statistics, programming, and domain expertise to extract insights from data."
-        },
-        {
-          title: "UX/UI Designer",
-          score: 82,
-          reasoning: "Creative tendencies and interest in how people interact with technology suggest enjoyment in UX/UI design. This field allows combination of creative and analytical thinking to create intuitive digital experiences."
+    // Simple matching algorithm based on keywords
+    const scoredCareers = careers.map(career => {
+      let score = 0;
+      const maxScore = 100;
+      
+      // Check for keyword matches in the career title and description
+      const careerKeywords = [
+        ...(career.keywords || []),
+        ...(career.required_skills || []),
+        ...(career.transferable_skills || []),
+      ];
+      
+      // Score based on keyword matches
+      careerKeywords.forEach(keyword => {
+        if (userContent.includes(keyword.toLowerCase())) {
+          score += 10;
         }
-      ]
-    };
-
-    console.log('Analysis completed');
-
-    // 5. Store the recommendations in the database
-    const recommendationPromises = mockAnalysis.recommendations.map(rec => {
-      return supabase
+      });
+      
+      // Limit the score to maxScore
+      score = Math.min(score, maxScore);
+      
+      // Ensure minimum score of 60% for demonstration purposes
+      score = Math.max(score, 60);
+      
+      return {
+        id: career.id,
+        title: career.title,
+        score: score,
+        reasoning: generateReasoning(career, score),
+      };
+    });
+    
+    // Sort careers by score (descending)
+    const topCareers = scoredCareers
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3); // Get top 3 careers
+    
+    // Store recommendation results in the database
+    for (const career of topCareers) {
+      await supabase
         .from('career_chat_recommendations')
         .insert({
           session_id: sessionId,
-          career_title: rec.title,
-          score: rec.score,
-          reasoning: rec.reasoning,
-          created_at: new Date().toISOString()
+          career_id: career.id,
+          score: career.score,
+          reasoning: career.reasoning,
         });
-    });
+    }
 
-    await Promise.all(recommendationPromises);
-    
-    console.log('Recommendations saved to database');
-
-    // 6. Return the analysis results
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        analysis: mockAnalysis 
+      JSON.stringify({
+        careers: topCareers,
       }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
-    console.error('Error in analyze-career-path function:', error);
-    
+    console.error('Error in analyze-career-path:', error.message);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      { 
+      JSON.stringify({ error: error.message }),
+      {
         status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
 });
+
+// Helper function to generate reasoning text based on career and score
+function generateReasoning(career: any, score: number): string {
+  const reasoningIntro = [
+    "Based on your responses,",
+    "From what you've shared,",
+    "Your profile suggests that",
+  ][Math.floor(Math.random() * 3)];
+  
+  let reasoningText = `${reasoningIntro} ${career.title} appears to be a good match. `;
+  
+  // Add description
+  if (career.description) {
+    reasoningText += `${career.description.split('.')[0]}. `;
+  }
+  
+  // Add skills if available
+  if (career.required_skills && career.required_skills.length > 0) {
+    const skills = career.required_skills.slice(0, 3);
+    reasoningText += `This role typically requires skills like ${skills.join(', ')}. `;
+  }
+  
+  // Add salary information if available
+  if (career.salary_range) {
+    reasoningText += `Professionals in this field typically earn ${career.salary_range}. `;
+  }
+  
+  return reasoningText;
+}

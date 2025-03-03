@@ -10,6 +10,7 @@ import { MainLayout } from '@/router/layouts';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 export function PicoChat() {
   const {
@@ -26,6 +27,7 @@ export function PicoChat() {
   
   const { toast } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
+  const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -67,9 +69,50 @@ export function PicoChat() {
     }
   }, [toast, messages.length, isLoading, configChecked]);
   
+  // Show analyze button after several user messages
+  useEffect(() => {
+    const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
+    
+    // Show the analyze button after at least 4 user responses
+    if (userMessageCount >= 4 && !isAnalyzing && !showAnalyzeButton) {
+      setShowAnalyzeButton(true);
+    }
+    
+    // Hide the button after analysis
+    if (isAnalyzing || messages.some(msg => msg.message_type === 'recommendation')) {
+      setShowAnalyzeButton(false);
+    }
+  }, [messages, isAnalyzing, showAnalyzeButton]);
+  
   // Handle suggestion clicks
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
+  };
+  
+  // Handle analyze button click
+  const handleAnalyzeClick = () => {
+    // This will trigger the career analysis
+    const { analyzeResponses } = require('./hooks/useCareerAnalysis').useCareerAnalysis(
+      messages[0]?.session_id,
+      async (message) => {
+        // We're reusing the addMessage function from useCareerChat
+        const { data, error } = await supabase
+          .from('career_chat_messages')
+          .insert(message)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error storing message:', error);
+          throw error;
+        }
+        
+        return data;
+      }
+    );
+    
+    analyzeResponses();
+    setShowAnalyzeButton(false);
   };
   
   if (isLoading) {
@@ -111,6 +154,17 @@ export function PicoChat() {
                 onSuggestionClick={handleSuggestionClick}
               />
             ))}
+            
+            {showAnalyzeButton && (
+              <div className="flex justify-center my-4">
+                <Button 
+                  onClick={handleAnalyzeClick}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Find Career Matches
+                </Button>
+              </div>
+            )}
             
             {isTyping && <ChatTypingIndicator />}
             <div ref={messagesEndRef} />

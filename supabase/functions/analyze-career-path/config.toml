@@ -1,5 +1,2 @@
 
-# wurdmlkfkzuivvwxjmxk
-name = "analyze-career-path"
-entrypoint = "index.ts"
-verify_jwt = true
+project_id = "wurdmlkfkzuivvwxjmxk"
