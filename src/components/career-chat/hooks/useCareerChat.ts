@@ -1,20 +1,20 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './useChatSession';
 import { useCareerAnalysis } from './useCareerAnalysis';
-import { QUESTION_FLOW } from '../constants';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function useCareerChat() {
   const { messages, sessionId, isLoading, addMessage } = useChatSession();
-  const { isAnalyzing, analyzeResponses } = useCareerAnalysis(sessionId, addMessage);
+  const { isAnalyzing, analyzeResponses } = useCareerAnalysis(sessionId || '', addMessage);
   
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [questionIndex, setQuestionIndex] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Function to send message and get response
+  // Function to send message and get AI response
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId) return;
     
@@ -30,27 +30,61 @@ export function useCareerChat() {
     setInputMessage('');
     setIsTyping(true);
     
-    // Simulate response delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // If we've gone through all the questions, analyze the responses
-    if (questionIndex >= QUESTION_FLOW.length) {
-      await analyzeResponses();
-    } else {
-      // Add bot response with next question
+    try {
+      // Format messages for the OpenAI API
+      const messageHistory = messages
+        .filter(m => m.message_type === 'user' || m.message_type === 'bot')
+        .map(m => ({
+          role: m.message_type === 'user' ? 'user' : 'assistant',
+          content: m.content
+        }));
+
+      // Add the new user message
+      messageHistory.push({
+        role: 'user',
+        content: message.trim()
+      });
+
+      // Call our edge function
+      const response = await supabase.functions.invoke('career-chat-ai', {
+        body: {
+          message: message.trim(),
+          sessionId,
+          messages: messageHistory
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = await response.data;
+      
+      // Add bot response
       await addMessage({
         session_id: sessionId,
         message_type: 'bot',
-        content: QUESTION_FLOW[questionIndex],
-        metadata: { questionIndex },
+        content: data.response,
+        metadata: {},
         created_at: new Date().toISOString()
       });
       
-      setQuestionIndex(prev => prev + 1);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      toast.error('Failed to get a response. Please try again.');
+      
+      // Add error message
+      await addMessage({
+        session_id: sessionId,
+        message_type: 'system',
+        content: "I'm sorry, I encountered an error. Please try again.",
+        metadata: { error: true },
+        created_at: new Date().toISOString()
+      });
+    } finally {
+      setIsTyping(false);
     }
-    
-    setIsTyping(false);
-  }, [sessionId, questionIndex, addMessage, analyzeResponses]);
+  }, [sessionId, messages, addMessage]);
 
   return {
     messages,

@@ -1,176 +1,149 @@
 
 import { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
+import { useAuthSession } from '@/hooks/useAuthSession';
 import { WELCOME_MESSAGES } from '../constants';
 
 export function useChatSession() {
   const [messages, setMessages] = useState<CareerChatMessage[]>([]);
-  const [sessionId, setSessionId] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Initialize or get existing session
+  const { session } = useAuthSession();
+
+  // Initialize or retrieve the chat session
   useEffect(() => {
-    const initializeChat = async () => {
-      setIsLoading(true);
-      try {
-        // Check for auth user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          // For now, create a demo session without requiring auth
-          const tempSessionId = uuidv4();
-          setSessionId(tempSessionId);
-          
-          // Set welcome messages with the session ID
-          const welcomeWithSession = WELCOME_MESSAGES.map(msg => ({
-            ...msg,
-            session_id: tempSessionId,
-          }));
-          
-          setMessages(welcomeWithSession);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Get most recent active session or create new one
-        const { data: existingSessions, error: sessionError } = await supabase
+    async function initSession() {
+      // Try to retrieve an existing active session
+      if (session?.user?.id) {
+        const { data: existingSessions } = await supabase
           .from('career_chat_sessions')
           .select('*')
-          .eq('profile_id', user.id)
+          .eq('profile_id', session.user.id)
           .eq('status', 'active')
-          .order('last_message_at', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(1);
-          
-        if (sessionError) {
-          console.error("Error fetching sessions:", sessionError);
-          toast("Error loading chat session");
-          setIsLoading(false);
-          return;
-        }
-        
-        let currentSessionId;
-        
+
         if (existingSessions && existingSessions.length > 0) {
-          // Use existing session
-          currentSessionId = existingSessions[0].id;
-          setSessionId(currentSessionId);
+          setSessionId(existingSessions[0].id);
           
-          // Fetch existing messages for this session
-          const { data: existingMessages, error: messagesError } = await supabase
+          // Load messages for this session
+          const { data: existingMessages } = await supabase
             .from('career_chat_messages')
             .select('*')
-            .eq('session_id', currentSessionId)
+            .eq('session_id', existingSessions[0].id)
             .order('created_at', { ascending: true });
-            
-          if (messagesError) {
-            console.error("Error fetching messages:", messagesError);
-            toast("Error loading chat messages");
-          } else if (existingMessages && existingMessages.length > 0) {
-            // Cast the messages to the correct type
-            const typedMessages = existingMessages.map(msg => ({
+          
+          if (existingMessages && existingMessages.length > 0) {
+            setMessages(existingMessages);
+          } else {
+            // If no messages found, initialize with welcome messages
+            setMessages(WELCOME_MESSAGES.map(msg => ({
               ...msg,
-              message_type: msg.message_type as 'bot' | 'user' | 'system' | 'recommendation'
-            }));
-            
-            setMessages(typedMessages as CareerChatMessage[]);
+              session_id: existingSessions[0].id
+            })));
+
+            // Save welcome messages to the database
+            await Promise.all(WELCOME_MESSAGES.map(msg => 
+              addMessage({
+                ...msg,
+                session_id: existingSessions[0].id
+              })
+            ));
           }
         } else {
-          // Create new session
+          // Create a new session
           const newSessionId = uuidv4();
-          const { error: createError } = await supabase
+          const { error } = await supabase
             .from('career_chat_sessions')
             .insert({
               id: newSessionId,
-              profile_id: user.id,
+              profile_id: session.user.id,
               status: 'active',
+              created_at: new Date().toISOString(),
               last_message_at: new Date().toISOString()
             });
-            
-          if (createError) {
-            console.error("Error creating session:", createError);
-            toast("Error creating chat session");
-            setIsLoading(false);
+
+          if (error) {
+            console.error('Error creating session:', error);
             return;
           }
-          
-          currentSessionId = newSessionId;
-          setSessionId(currentSessionId);
-          
-          // Add welcome messages to database
-          const welcomeMessages = WELCOME_MESSAGES.map(msg => ({
-            ...msg,
-            session_id: currentSessionId,
-          }));
-          
-          const { error: messagesError } = await supabase
-            .from('career_chat_messages')
-            .insert(welcomeMessages);
-            
-          if (messagesError) {
-            console.error("Error adding welcome messages:", messagesError);
-            toast("Error initializing chat");
-          }
-          
-          setMessages(welcomeMessages);
-        }
-      } catch (error) {
-        console.error("Error initializing chat:", error);
-        toast("Error initializing chat");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    initializeChat();
-  }, []);
 
-  // Function to add a message to state and database
-  const addMessage = async (message: Omit<CareerChatMessage, 'id'>) => {
-    if (!sessionId) return null;
-    
-    const messageWithId = {
-      ...message,
-      id: uuidv4()
-    };
-    
-    // Ensure message_type is cast to the expected type
-    const typedMessage = {
-      ...messageWithId,
-      message_type: messageWithId.message_type as 'bot' | 'user' | 'system' | 'recommendation'
-    };
-    
-    // Optimistically update UI
-    setMessages(prev => [...prev, typedMessage]);
-    
-    // Save to database
-    const { error } = await supabase
-      .from('career_chat_messages')
-      .insert(messageWithId);
+          setSessionId(newSessionId);
+          
+          // Initialize with welcome messages
+          setMessages(WELCOME_MESSAGES.map(msg => ({
+            ...msg,
+            session_id: newSessionId
+          })));
+
+          // Save welcome messages to the database
+          await Promise.all(WELCOME_MESSAGES.map(msg => 
+            addMessage({
+              ...msg,
+              session_id: newSessionId
+            })
+          ));
+        }
+      } else {
+        // Handle anonymous users
+        const newSessionId = uuidv4();
+        setSessionId(newSessionId);
+        setMessages(WELCOME_MESSAGES.map(msg => ({
+          ...msg,
+          session_id: newSessionId
+        })));
+      }
       
+      setIsLoading(false);
+    }
+
+    initSession();
+  }, [session]);
+
+  // Function to add a message to the conversation
+  async function addMessage(message: Omit<CareerChatMessage, 'id'>) {
+    if (!message.session_id) {
+      console.error('Cannot add message: No session ID');
+      return null;
+    }
+
+    // Optimistically update the UI
+    const tempId = uuidv4();
+    const tempMessage = { ...message, id: tempId };
+    setMessages(prev => [...prev, tempMessage]);
+
+    // Save to database
+    const { data, error } = await supabase
+      .from('career_chat_messages')
+      .insert(message)
+      .select()
+      .single();
+
     if (error) {
-      console.error("Error saving message:", error);
-      toast("Error saving message");
+      console.error('Error saving message:', error);
+      // Remove the temp message on error
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      return null;
     }
-    
-    // Update session last_message_at
-    if (sessionId) {
-      await supabase
-        .from('career_chat_sessions')
-        .update({ last_message_at: new Date().toISOString() })
-        .eq('id', sessionId);
-    }
-    
-    return typedMessage;
-  };
+
+    // Update last_message_at in the session
+    await supabase
+      .from('career_chat_sessions')
+      .update({ last_message_at: new Date().toISOString() })
+      .eq('id', message.session_id);
+
+    // Replace the temp message with the actual one from the database
+    setMessages(prev => prev.map(m => m.id === tempId ? data : m));
+
+    return data;
+  }
 
   return {
     messages,
     sessionId,
     isLoading,
-    addMessage,
-    setMessages
+    addMessage
   };
 }

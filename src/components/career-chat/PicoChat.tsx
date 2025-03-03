@@ -8,6 +8,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { MainLayout } from '@/router/layouts';
 import { useCareerChat } from './hooks/useCareerChat';
+import { useToast } from '@/components/ui/use-toast';
 
 export function PicoChat() {
   const {
@@ -21,10 +22,35 @@ export function PicoChat() {
     sendMessage
   } = useCareerChat();
   
+  const { toast } = useToast();
+  
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+  
+  // Show toast if API key is not configured
+  useEffect(() => {
+    const checkApiConfig = async () => {
+      try {
+        const response = await fetch('/api/check-openai-config');
+        const data = await response.json();
+        if (!data.configured) {
+          toast({
+            title: "OpenAI API Key Not Configured",
+            description: "Please contact an administrator to set up the OpenAI integration.",
+            variant: "destructive",
+            duration: 10000,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check API configuration:', error);
+      }
+    };
+    
+    // Commenting out for now as we don't have this endpoint yet
+    // checkApiConfig();
+  }, [toast]);
   
   if (isLoading) {
     return (
@@ -56,7 +82,7 @@ export function PicoChat() {
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
           onSendMessage={sendMessage}
-          isDisabled={isAnalyzing}
+          isDisabled={isTyping || isAnalyzing}
         />
       </div>
     </MainLayout>
