@@ -5,6 +5,7 @@ import { useCareerAnalysis } from './useCareerAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { StructuredMessage } from '@/types/database/message-types';
 
 export function useCareerChat() {
   const { 
@@ -69,14 +70,34 @@ export function useCareerChat() {
   useEffect(() => {
     if (messages.length === 0) return;
 
-    // Check latest bot message for category
-    const botMessages = messages.filter(m => m.message_type === 'bot');
+    // Check latest bot message for category and progress information
+    const botMessages = messages.filter(m => 
+      m.message_type === 'bot' || m.message_type === 'recommendation'
+    );
+    
     if (botMessages.length === 0) return;
     
     const latestBotMessage = botMessages[botMessages.length - 1];
     
-    // If we have a category in the metadata, update the current category
-    if (latestBotMessage.metadata?.category) {
+    // First check for structured message format (new)
+    const structuredMessage = latestBotMessage.metadata?.structuredMessage as StructuredMessage | undefined;
+    
+    if (structuredMessage?.type === 'question' && structuredMessage.metadata.progress) {
+      // Using new structured format
+      const category = structuredMessage.metadata.progress.category;
+      const overall = structuredMessage.metadata.progress.overall;
+      
+      setCurrentCategory(category);
+      setQuestionProgress(overall);
+      
+      // Update counts for this category
+      setQuestionCounts(prev => ({
+        ...prev,
+        [category]: prev[category as keyof typeof prev] + 1
+      }));
+    } 
+    // Fallback to legacy format
+    else if (latestBotMessage.metadata?.category) {
       const newCategory = latestBotMessage.metadata.category;
       setCurrentCategory(newCategory);
       
@@ -92,7 +113,9 @@ export function useCareerChat() {
     }
     
     // If this is a recommendation message, set progress to 100%
-    if (latestBotMessage.metadata?.isRecommendation) {
+    if (latestBotMessage.message_type === 'recommendation' || 
+        latestBotMessage.metadata?.isRecommendation ||
+        structuredMessage?.type === 'recommendation') {
       setQuestionProgress(100);
       setCurrentCategory('complete');
     }
@@ -138,6 +161,7 @@ export function useCareerChat() {
           sessionId,
           messages: messageHistory,
           instructions: {
+            useStructuredFormat: true,
             specificQuestions: true,
             conciseOptions: true
           }
@@ -158,8 +182,10 @@ export function useCareerChat() {
       console.log('Got response from career-chat-ai:', response.data);
       
       // Check if this is a recommendation (from structured response)
-      const isRecommendation = response.data?.rawResponse?.type === 'recommendation' ||
-                              response.data?.metadata?.isRecommendation;
+      const isRecommendation = 
+        response.data?.structuredMessage?.type === 'recommendation' ||
+        response.data?.rawResponse?.type === 'recommendation' ||
+        response.data?.metadata?.isRecommendation;
       
       // Add bot response to messages locally
       if (response.data?.message) {
@@ -170,6 +196,7 @@ export function useCareerChat() {
           content: response.data.message,
           metadata: {
             ...(response.data.metadata || {}),
+            structuredMessage: response.data.structuredMessage,
             rawResponse: response.data.rawResponse
           },
           created_at: new Date().toISOString()

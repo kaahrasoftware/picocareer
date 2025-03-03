@@ -12,6 +12,7 @@ import {
   extractSections, 
   parseStructuredRecommendation 
 } from '@/components/career-chat/utils/recommendationParser';
+import { StructuredMessage } from '@/types/database/message-types';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
@@ -24,7 +25,15 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
   
-  const isQuestion = message.message_type === 'bot' && 
+  // Try to parse structured message from metadata (new format)
+  const structuredMessage: StructuredMessage | null = 
+    message.metadata?.structuredMessage 
+      ? (message.metadata.structuredMessage as StructuredMessage) 
+      : null;
+
+  // Handle legacy format detection
+  const isQuestion = !structuredMessage && 
+    message.message_type === 'bot' && 
     message.metadata && 
     message.metadata.category && 
     message.metadata.hasOptions;
@@ -33,6 +42,27 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   const hasStructuredData = message.metadata?.rawResponse && 
     message.metadata.rawResponse.type === 'recommendation';
   
+  // Get content values for structured messages
+  const getQuestionInfo = () => {
+    if (structuredMessage?.type === 'question') {
+      return {
+        question: structuredMessage.content.question || '',
+        intro: structuredMessage.content.intro,
+        category: structuredMessage.metadata.progress?.category || 'general',
+        current: structuredMessage.metadata.progress?.current || 1,
+        total: structuredMessage.metadata.progress?.total || 4,
+        overall: structuredMessage.metadata.progress?.overall || currentQuestionProgress,
+        options: structuredMessage.content.options || [],
+        layout: structuredMessage.metadata.options?.layout || 'cards'
+      };
+    }
+    // Legacy format
+    return null;
+  };
+
+  // Parse structured question info if available
+  const questionInfo = getQuestionInfo();
+
   // Handle single career recommendation messages
   if (isRecommendation && message.metadata?.career) {
     return (
@@ -61,18 +91,54 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     // If the parser couldn't identify this as a recommendation, display as normal message
     return <BotMessage content={message.content} />;
   }
+
+  // Handle structured question format (new)
+  if (questionInfo) {
+    return (
+      <div className="flex flex-col items-start w-full">
+        <QuestionCard 
+          question={questionInfo.question}
+          intro={questionInfo.intro}
+          category={questionInfo.category}
+          questionNumber={questionInfo.current}
+          totalQuestions={questionInfo.total}
+          progress={questionInfo.overall}
+        />
+        
+        {questionInfo.options.length > 0 && (
+          <OptionCards 
+            options={questionInfo.options}
+            onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
+            layout={questionInfo.layout as any}
+          />
+        )}
+      </div>
+    );
+  }
   
-  // For question and option messages
+  // For legacy question and option messages
   if (isQuestion) {
     const category = message.metadata.category as string || 'general';
     const questionNumber = message.metadata.questionNumber as number || 1;
     const totalInCategory = message.metadata.totalInCategory as number || 4;
     const progress = message.metadata.progress as number || currentQuestionProgress;
     
+    // Parse intro and question from the message content
+    let intro = '';
+    let questionText = message.content;
+    
+    // Try to extract the intro and actual question from formatted content
+    const contentParts = message.content.split(/\*\*Question \d+\/\d+ \([^)]+\):\*\* /);
+    if (contentParts.length > 1) {
+      intro = contentParts[0].trim();
+      questionText = contentParts[1].trim();
+    }
+    
     return (
       <div className="flex flex-col items-start w-full">
         <QuestionCard 
-          question={message.content}
+          question={questionText}
+          intro={intro !== '' ? intro : undefined}
           category={category}
           questionNumber={questionNumber}
           totalQuestions={totalInCategory}
@@ -96,6 +162,11 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   
   if (isSystem) {
     return <SystemMessage content={message.content} />;
+  }
+  
+  // Handle structured conversation (new format)
+  if (structuredMessage?.type === 'conversation') {
+    return <BotMessage content={structuredMessage.content.intro || message.content} />;
   }
   
   // Default to bot message for anything else

@@ -6,6 +6,7 @@ import { Brain, Briefcase, GraduationCap, Target, MessagesSquare } from 'lucide-
 
 interface QuestionCardProps {
   question: string;
+  intro?: string;
   category: string;
   questionNumber: number;
   totalQuestions: number;
@@ -14,6 +15,7 @@ interface QuestionCardProps {
 
 export function QuestionCard({ 
   question, 
+  intro,
   category, 
   questionNumber, 
   totalQuestions,
@@ -75,6 +77,7 @@ export function QuestionCard({
         </div>
       </CardHeader>
       <CardContent>
+        {intro && <p className="text-sm text-gray-500 mb-2">{intro}</p>}
         <h3 className="text-lg font-medium text-gray-800 mb-3">{question}</h3>
         <Progress value={progress} className="h-1.5 bg-gray-100" />
       </CardContent>
