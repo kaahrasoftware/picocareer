@@ -53,7 +53,8 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
         total: structuredMessage.metadata.progress?.total || 4,
         overall: structuredMessage.metadata.progress?.overall || currentQuestionProgress,
         options: structuredMessage.content.options || [],
-        layout: structuredMessage.metadata.options?.layout || 'cards'
+        layout: structuredMessage.metadata.options?.layout || 'cards',
+        allowMultiple: structuredMessage.metadata.options?.type === 'multiple'
       };
     }
     // Legacy format
@@ -110,6 +111,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
             options={questionInfo.options}
             onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
             layout={questionInfo.layout as any}
+            allowMultiple={questionInfo.allowMultiple}
           />
         )}
       </div>
@@ -122,6 +124,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     const questionNumber = message.metadata.questionNumber as number || 1;
     const totalInCategory = message.metadata.totalInCategory as number || 4;
     const progress = message.metadata.progress as number || currentQuestionProgress;
+    const allowMultiple = message.metadata.multiSelect as boolean || false;
     
     // Parse intro and question from the message content
     let intro = '';
@@ -149,6 +152,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
           <OptionCards 
             options={message.metadata.suggestions as string[]}
             onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
+            allowMultiple={allowMultiple}
           />
         )}
       </div>
