@@ -29,13 +29,15 @@ export function PicoChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
   
-  // Show toast if API key is not configured
+  // Show toast if DeepSeek API key is not configured
   useEffect(() => {
     const checkApiConfig = async () => {
       try {
-        const response = await fetch('/api/check-deepseek-config');
-        const data = await response.json();
-        if (!data.configured) {
+        const response = await supabase.functions.invoke('career-chat-ai', {
+          body: { type: 'config-check' }
+        });
+        
+        if (response.error) {
           toast({
             title: "DeepSeek API Key Not Configured",
             description: "Please contact an administrator to set up the DeepSeek integration.",
@@ -48,9 +50,11 @@ export function PicoChat() {
       }
     };
     
-    // Commenting out for now as we don't have this endpoint yet
-    // checkApiConfig();
-  }, [toast]);
+    // Only run the check if we have no messages (first load)
+    if (!isLoading && messages.length <= 2) {
+      checkApiConfig();
+    }
+  }, [toast, messages.length, isLoading]);
   
   if (isLoading) {
     return (
