@@ -21,6 +21,10 @@ const categories = ['education', 'skills', 'workstyle', 'goals'];
 const questionsPerCategory = 3;
 const totalQuestions = categories.length * questionsPerCategory;
 
+// DeepSeek API configuration
+const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.ai/v1/chat/completions';
+const DEEPSEEK_MODEL = 'deepseek-chat-v1-33b';
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -30,21 +34,64 @@ Deno.serve(async (req) => {
   try {
     // Configuration check mode
     if (req.method === 'POST') {
-      const { type } = await req.json();
+      const requestData = await req.json();
       
-      if (type === 'config-check') {
+      if (requestData.type === 'config-check') {
+        console.log('Performing config check for DeepSeek API');
+        
         // Check if DeepSeek API key is configured
         if (!DEEPSEEK_API_KEY) {
+          console.error('DeepSeek API key not configured');
           return new Response(
             JSON.stringify({ error: 'DeepSeek API key not configured' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
-        return new Response(
-          JSON.stringify({ status: 'ok', configured: true }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        // Validate API key with a minimal request
+        try {
+          const validationResponse = await fetch(DEEPSEEK_API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: DEEPSEEK_MODEL,
+              messages: [
+                { role: 'user', content: 'Hello' }
+              ],
+              max_tokens: 10
+            })
+          });
+          
+          if (!validationResponse.ok) {
+            const errorData = await validationResponse.json();
+            console.error('DeepSeek API validation failed:', JSON.stringify(errorData));
+            return new Response(
+              JSON.stringify({ 
+                error: 'DeepSeek API key validation failed', 
+                details: errorData 
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          console.log('DeepSeek API configuration validated successfully');
+          return new Response(
+            JSON.stringify({ status: 'ok', configured: true }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (validationError) {
+          console.error('DeepSeek API validation error:', validationError);
+          return new Response(
+            JSON.stringify({ 
+              error: 'DeepSeek API validation error', 
+              details: validationError.message 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
     }
 
@@ -52,6 +99,7 @@ Deno.serve(async (req) => {
     const { message, sessionId, messages, instructions = {} } = await req.json();
     
     if (!DEEPSEEK_API_KEY) {
+      console.error('DeepSeek API Key not configured');
       return new Response(
         JSON.stringify({ error: 'DeepSeek API Key not configured. Please add it to your environment variables.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -122,121 +170,156 @@ Deno.serve(async (req) => {
       systemPrompt += `\n\nWhen providing options, make them concise, clear and distinct.`;
     }
 
+    console.log(`Making API request to DeepSeek with ${formattedMessages.length} messages`);
+    
     // Make the API call to DeepSeek
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...formattedMessages
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-    });
+    try {
+      const response = await fetch(DEEPSEEK_API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: DEEPSEEK_MODEL,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...formattedMessages
+          ],
+          temperature: 0.7,
+          max_tokens: 2000
+        })
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('DeepSeek API error:', errorText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('DeepSeek API error:', errorText);
+        let errorMessage = `DeepSeek API error: ${response.status}`;
+        
+        try {
+          // Try to parse error as JSON for more details
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error && errorJson.error.message) {
+            errorMessage = errorJson.error.message;
+          }
+        } catch (e) {
+          // If parsing fails, use the raw error text
+          errorMessage = errorText;
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            error: errorMessage,
+            status: response.status
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const result = await response.json();
+      console.log('DeepSeek API response successful');
+      
+      const aiResponse = result.choices?.[0]?.message?.content || '';
+      
+      // Check if response is in expected JSON format
+      let structuredMessage = null;
+      let rawResponse = null;
+      
+      try {
+        if (aiResponse.includes('{') && aiResponse.includes('}')) {
+          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            rawResponse = JSON.parse(jsonMatch[0]);
+            structuredMessage = rawResponse;
+            console.log('Successfully parsed structured message from response');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse JSON from response:', e);
+      }
+
+      // Generate metadata based on response
+      const metadata = {
+        structuredFormat: AI_RESPONSE_FORMAT === 'structured',
+        structuredVersion: STRUCTURED_RESPONSE_VERSION
+      };
+
+      // Add category tracking data
+      if (CATEGORY_TRACKING === 'enabled' && !structuredMessage) {
+        const currentCategory = categories[Math.min(Math.floor((userMessageCount - 1) / questionsPerCategory), categories.length - 1)];
+        const questionInCategory = ((userMessageCount - 1) % questionsPerCategory) + 1;
+        const overallProgress = Math.min(Math.round((userMessageCount / totalQuestions) * 100), 100);
+        
+        Object.assign(metadata, {
+          category: currentCategory,
+          questionNumber: questionInCategory,
+          totalInCategory: questionsPerCategory,
+          progress: overallProgress
+        });
+      }
+
+      // Generate a clean text message from structured format if needed
+      let cleanTextMessage = aiResponse;
+      if (structuredMessage) {
+        if (structuredMessage.type === 'question') {
+          cleanTextMessage = structuredMessage.content.intro 
+            ? `${structuredMessage.content.intro}\n\n**Question ${structuredMessage.metadata?.progress?.current || 1}/${structuredMessage.metadata?.progress?.total || 10} (${structuredMessage.metadata?.progress?.category || 'general'}):** ${structuredMessage.content.question}`
+            : `**Question ${structuredMessage.metadata?.progress?.current || 1}/${structuredMessage.metadata?.progress?.total || 10} (${structuredMessage.metadata?.progress?.category || 'general'}):** ${structuredMessage.content.question}`;
+        } else if (structuredMessage.type === 'recommendation') {
+          cleanTextMessage = 'Here are your personalized career recommendations based on your responses:';
+          
+          if (structuredMessage.sections?.careers) {
+            cleanTextMessage += '\n\n**Career Recommendations:**\n';
+            structuredMessage.sections.careers.forEach((career, i) => {
+              cleanTextMessage += `${i+1}. ${career.title} (${career.match}%)\n${career.reasoning}\n\n`;
+            });
+          }
+          
+          if (structuredMessage.sections?.personality) {
+            cleanTextMessage += '**Personality Assessment:**\n';
+            structuredMessage.sections.personality.forEach((trait, i) => {
+              cleanTextMessage += `${i+1}. ${trait.title} (${trait.match}%)\n${trait.description}\n\n`;
+            });
+          }
+          
+          if (structuredMessage.sections?.mentors) {
+            cleanTextMessage += '**Mentor Suggestions:**\n';
+            structuredMessage.sections.mentors.forEach((mentor, i) => {
+              cleanTextMessage += `${i+1}. ${mentor.name}\n${mentor.experience} - ${mentor.skills}\n\n`;
+            });
+          }
+        } else {
+          cleanTextMessage = structuredMessage.content?.intro || structuredMessage.content?.question || aiResponse;
+        }
+      }
+      
       return new Response(
-        JSON.stringify({ error: `DeepSeek API error: ${response.status}` }),
+        JSON.stringify({
+          message: cleanTextMessage,
+          messageId: `ai-${Date.now()}`,
+          structuredMessage,
+          rawResponse,
+          metadata
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    } catch (apiError) {
+      console.error('Error making request to DeepSeek API:', apiError);
+      return new Response(
+        JSON.stringify({ 
+          error: `Failed to communicate with DeepSeek API: ${apiError.message}`,
+          details: apiError.stack
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
-
-    const result = await response.json();
-    const aiResponse = result.choices?.[0]?.message?.content || '';
-    
-    // Check if response is in expected JSON format
-    let structuredMessage = null;
-    let rawResponse = null;
-    
-    try {
-      if (aiResponse.includes('{') && aiResponse.includes('}')) {
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          rawResponse = JSON.parse(jsonMatch[0]);
-          structuredMessage = rawResponse;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse JSON from response:', e);
-    }
-
-    // Generate metadata based on response
-    const metadata = {
-      structuredFormat: AI_RESPONSE_FORMAT === 'structured',
-      structuredVersion: STRUCTURED_RESPONSE_VERSION
-    };
-
-    // Add category tracking data
-    if (CATEGORY_TRACKING === 'enabled' && !structuredMessage) {
-      const currentCategory = categories[Math.min(Math.floor((userMessageCount - 1) / questionsPerCategory), categories.length - 1)];
-      const questionInCategory = ((userMessageCount - 1) % questionsPerCategory) + 1;
-      const overallProgress = Math.min(Math.round((userMessageCount / totalQuestions) * 100), 100);
-      
-      Object.assign(metadata, {
-        category: currentCategory,
-        questionNumber: questionInCategory,
-        totalInCategory: questionsPerCategory,
-        progress: overallProgress
-      });
-    }
-
-    // Generate a clean text message from structured format if needed
-    let cleanTextMessage = aiResponse;
-    if (structuredMessage) {
-      if (structuredMessage.type === 'question') {
-        cleanTextMessage = structuredMessage.content.intro 
-          ? `${structuredMessage.content.intro}\n\n**Question ${structuredMessage.metadata?.progress?.current || 1}/${structuredMessage.metadata?.progress?.total || 10} (${structuredMessage.metadata?.progress?.category || 'general'}):** ${structuredMessage.content.question}`
-          : `**Question ${structuredMessage.metadata?.progress?.current || 1}/${structuredMessage.metadata?.progress?.total || 10} (${structuredMessage.metadata?.progress?.category || 'general'}):** ${structuredMessage.content.question}`;
-      } else if (structuredMessage.type === 'recommendation') {
-        cleanTextMessage = 'Here are your personalized career recommendations based on your responses:';
-        
-        if (structuredMessage.sections?.careers) {
-          cleanTextMessage += '\n\n**Career Recommendations:**\n';
-          structuredMessage.sections.careers.forEach((career, i) => {
-            cleanTextMessage += `${i+1}. ${career.title} (${career.match}%)\n${career.reasoning}\n\n`;
-          });
-        }
-        
-        if (structuredMessage.sections?.personality) {
-          cleanTextMessage += '**Personality Assessment:**\n';
-          structuredMessage.sections.personality.forEach((trait, i) => {
-            cleanTextMessage += `${i+1}. ${trait.title} (${trait.match}%)\n${trait.description}\n\n`;
-          });
-        }
-        
-        if (structuredMessage.sections?.mentors) {
-          cleanTextMessage += '**Mentor Suggestions:**\n';
-          structuredMessage.sections.mentors.forEach((mentor, i) => {
-            cleanTextMessage += `${i+1}. ${mentor.name}\n${mentor.experience} - ${mentor.skills}\n\n`;
-          });
-        }
-      } else {
-        cleanTextMessage = structuredMessage.content?.intro || structuredMessage.content?.question || aiResponse;
-      }
-    }
-    
-    return new Response(
-      JSON.stringify({
-        message: cleanTextMessage,
-        messageId: `ai-${Date.now()}`,
-        structuredMessage,
-        rawResponse,
-        metadata
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
     console.error('Error processing request:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: `Error processing request: ${error.message}`, 
+        details: error.stack
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

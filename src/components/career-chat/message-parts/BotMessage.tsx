@@ -1,12 +1,26 @@
 
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, AlertCircle } from 'lucide-react';
 
 interface BotMessageProps {
   content: string;
 }
 
 export function BotMessage({ content }: BotMessageProps) {
+  // Handle error messages with special formatting
+  if (content.toLowerCase().includes('error') || content.toLowerCase().includes('failed')) {
+    return (
+      <div className="flex flex-col items-start mb-4">
+        <div className="max-w-[95%] rounded-lg px-4 py-3 shadow-sm bg-red-50 border border-red-200 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-gray-800 whitespace-pre-wrap">
+            {content}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Helper function to convert URLs in text to clickable links
   const renderTextWithLinks = (text: string) => {
     if (!text) return '';
