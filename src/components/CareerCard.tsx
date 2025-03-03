@@ -10,6 +10,7 @@ export interface CareerCardProps {
   description: string;
   matchScore?: number;
   salary?: string;
+  salary_range?: string;
   requiredSkills?: string[];
   education?: string[];
   onClick?: () => void;
@@ -21,6 +22,7 @@ export function CareerCard({
   description,
   matchScore,
   salary,
+  salary_range,
   requiredSkills = [],
   education = [],
   onClick
@@ -29,6 +31,9 @@ export function CareerCard({
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
   };
+
+  // Use salary_range if provided, otherwise use salary
+  const displaySalary = salary_range || salary;
 
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
@@ -46,10 +51,10 @@ export function CareerCard({
           {truncateText(description, 150)}
         </p>
         
-        {salary && (
+        {displaySalary && (
           <div className="mb-3">
             <p className="text-xs text-muted-foreground mb-1">Salary Range</p>
-            <p className="text-sm font-medium">{salary}</p>
+            <p className="text-sm font-medium">{displaySalary}</p>
           </div>
         )}
         

@@ -18,6 +18,7 @@ export interface MentorCardProps {
   education?: string;
   hourlyRate?: number;
   onClick?: () => void;
+  imageUrl?: string; // Added for backward compatibility
 }
 
 export function MentorCard({
@@ -29,16 +30,20 @@ export function MentorCard({
   skills = [],
   rating = 0,
   avatarUrl,
+  imageUrl, // Added to handle existing references
   education,
   hourlyRate,
   onClick
 }: MentorCardProps) {
+  // Use avatarUrl if provided, otherwise use imageUrl
+  const displayAvatarUrl = avatarUrl || imageUrl;
+  
   return (
     <Card className="h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={avatarUrl} alt={name} />
+            <AvatarImage src={displayAvatarUrl} alt={name} />
             <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>

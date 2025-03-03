@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -119,6 +120,8 @@ export const CareerListDialog = ({ isOpen, onClose, careers }: CareerListDialogP
                 title={career.title}
                 description={career.description}
                 salary_range={career.salary_range}
+                requiredSkills={career.required_skills}
+                education={career.required_education}
               />
             ))}
           </div>
