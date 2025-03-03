@@ -90,25 +90,12 @@ export function PicoChat() {
   };
   
   // Handle analyze button click
-  const handleAnalyzeClick = () => {
-    // This will trigger the career analysis
-    const { analyzeResponses } = require('./hooks/useCareerAnalysis').useCareerAnalysis(
-      messages[0]?.session_id,
-      async (message) => {
-        // We're reusing the addMessage function from useCareerChat
-        const { data, error } = await supabase
-          .from('career_chat_messages')
-          .insert(message)
-          .select()
-          .single();
-        
-        if (error) {
-          console.error('Error storing message:', error);
-          throw error;
-        }
-        
-        return data;
-      }
+  const handleAnalyzeClick = async () => {
+    if (!messages[0]?.session_id) return;
+    
+    const { analyzeResponses } = useCareerAnalysis(
+      messages[0].session_id,
+      addMessage
     );
     
     analyzeResponses();

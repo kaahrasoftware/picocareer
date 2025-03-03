@@ -94,7 +94,20 @@ export function useCareerChat() {
       // Log successful response for debugging
       console.log('Got response from career-chat-ai:', response.data);
       
-      // No need to add bot response here as it's already done in the edge function
+      // Add bot response to messages locally
+      if (response.data?.message) {
+        const botMessage: CareerChatMessage = {
+          id: response.data.messageId || `temp-${Date.now()}`,
+          session_id: sessionId,
+          message_type: 'bot',
+          content: response.data.message,
+          metadata: response.data.metadata || {},
+          created_at: new Date().toISOString()
+        };
+        
+        // Manually add the bot message to messages
+        await addMessage(botMessage);
+      }
       
     } catch (error) {
       console.error('Error getting AI response:', error);
