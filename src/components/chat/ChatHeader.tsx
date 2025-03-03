@@ -4,9 +4,29 @@ import { Bot, Loader2 } from 'lucide-react';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
+  currentCategory?: string;
 }
 
-export function ChatHeader({ isAnalyzing }: ChatHeaderProps) {
+export function ChatHeader({ isAnalyzing, currentCategory }: ChatHeaderProps) {
+  const getCategoryTitle = () => {
+    if (!currentCategory) return null;
+    
+    switch (currentCategory) {
+      case 'education':
+        return 'Discussing Educational Background';
+      case 'skills':
+        return 'Exploring Skills & Expertise';
+      case 'workstyle':
+        return 'Understanding Work Preferences';
+      case 'goals':
+        return 'Defining Career Goals';
+      default:
+        return null;
+    }
+  };
+  
+  const categoryTitle = getCategoryTitle();
+  
   return (
     <div className="p-4 border-b bg-gradient-to-r from-white to-blue-50 rounded-t-lg shadow-sm">
       <div className="flex items-center justify-between">
@@ -16,7 +36,11 @@ export function ChatHeader({ isAnalyzing }: ChatHeaderProps) {
           </div>
           <div>
             <h3 className="font-semibold text-lg text-gray-800">AI Career Guide</h3>
-            <p className="text-sm text-muted-foreground">Chat with Pico to explore career options</p>
+            {categoryTitle ? (
+              <p className="text-sm text-muted-foreground">{categoryTitle}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Chat with Pico to explore career options</p>
+            )}
           </div>
         </div>
         {isAnalyzing && (

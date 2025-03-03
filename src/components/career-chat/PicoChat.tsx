@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useCareerAnalysis } from './hooks/useCareerAnalysis';
+import { Progress } from '@/components/ui/progress';
 
 export function PicoChat() {
   const {
@@ -22,6 +23,8 @@ export function PicoChat() {
     isAnalyzing,
     hasConfigError,
     messagesEndRef,
+    currentCategory,
+    questionProgress,
     setInputMessage,
     sendMessage,
     addMessage
@@ -75,8 +78,8 @@ export function PicoChat() {
   useEffect(() => {
     const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
     
-    // Show the analyze button after at least 4 user responses
-    if (userMessageCount >= 4 && !isAnalyzing && !showAnalyzeButton) {
+    // Show the analyze button after at least 12 user responses
+    if (userMessageCount >= 12 && !isAnalyzing && !showAnalyzeButton) {
       setShowAnalyzeButton(true);
     }
     
@@ -102,6 +105,40 @@ export function PicoChat() {
     
     analyzeResponses();
     setShowAnalyzeButton(false);
+  };
+
+  const renderProgressBar = () => {
+    if (!currentCategory || messages.length <= 2) return null;
+    
+    let categoryLabel = '';
+    switch (currentCategory) {
+      case 'education':
+        categoryLabel = 'Educational Background';
+        break;
+      case 'skills':
+        categoryLabel = 'Skills & Technical Knowledge';
+        break;
+      case 'workstyle':
+        categoryLabel = 'Work Style Preferences';
+        break;
+      case 'goals':
+        categoryLabel = 'Career Goals';
+        break;
+      default:
+        categoryLabel = 'Career Analysis';
+    }
+    
+    return (
+      <div className="px-4 py-2 mb-3 bg-white/50 rounded-lg shadow-sm">
+        <div className="flex justify-between items-center mb-1">
+          <p className="text-sm font-medium text-gray-700">{categoryLabel}</p>
+          <span className="text-xs text-muted-foreground">
+            {Math.min(questionProgress, 100)}%
+          </span>
+        </div>
+        <Progress value={Math.min(questionProgress, 100)} className="h-2" />
+      </div>
+    );
   };
   
   if (isLoading) {
@@ -151,10 +188,12 @@ export function PicoChat() {
           </div>
         ) : (
           <div className="flex flex-col h-full bg-blue-50/30 rounded-lg shadow-sm overflow-hidden border">
-            <ChatHeader isAnalyzing={isAnalyzing} />
+            <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
             
             <ScrollArea className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-white/80 to-blue-50/20">
               <div className="space-y-4">
+                {renderProgressBar()}
+                
                 {messages.map((message, index) => (
                   <ChatMessage 
                     key={message.id || index} 
