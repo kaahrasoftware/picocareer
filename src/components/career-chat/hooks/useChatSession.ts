@@ -40,16 +40,29 @@ export function useChatSession() {
     if (!sessionId) return null;
     
     try {
-      // Optimistically add the message to the local state
-      setMessages(prevMessages => [...prevMessages, message]);
+      // Optimistically add the message to the local state with a temp ID if it doesn't have one
+      const tempId = message.id || `temp-${Date.now()}`;
+      const messageWithTempId = { ...message, id: tempId };
       
-      // If the message already has an ID, it may be a message we're adding manually
-      // after receiving from the API, so don't save it again
-      if (message.id && !message.id.startsWith('temp-')) {
-        return message;
-      }
+      // Update local state with the message (either with its existing ID or a new temp ID)
+      setMessages(prevMessages => {
+        // Check if the message already exists in our state (by content and type)
+        const existingMessageIndex = prevMessages.findIndex(
+          m => m.content === message.content && m.message_type === message.message_type
+        );
+        
+        if (existingMessageIndex >= 0) {
+          // Message exists - just return current state
+          return prevMessages;
+        } else {
+          // New message - add it
+          return [...prevMessages, messageWithTempId];
+        }
+      });
       
-      // Otherwise save to the database
+      // Always save to database, regardless of ID format
+      console.log('Saving message to database:', message.message_type, message.content.substring(0, 30) + '...');
+      
       const { data, error } = await supabase
         .from('career_chat_messages')
         .insert({
@@ -66,13 +79,14 @@ export function useChatSession() {
         throw error;
       }
 
-      // Update the message in our local state with the one from the database
+      // Update the message in our local state with the one from the database (real ID)
       setMessages(prevMessages => 
         prevMessages.map(msg => 
-          (message.id === msg.id) ? data : msg
+          (msg.id === tempId) ? data : msg
         )
       );
-
+      
+      console.log('Message saved successfully with ID:', data.id);
       return data;
     } catch (error) {
       console.error('Error adding message:', error);
@@ -392,6 +406,7 @@ export function useChatSession() {
           // Avoid duplicating messages that we've already added locally
           const exists = messages.some(msg => msg.id === payload.new.id);
           if (!exists) {
+            console.log('Received new message via subscription:', payload.new.message_type);
             // Add the new message to our local state
             setMessages(currentMessages => [...currentMessages, payload.new as CareerChatMessage]);
           }

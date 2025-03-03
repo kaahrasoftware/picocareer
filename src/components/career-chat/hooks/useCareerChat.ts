@@ -126,13 +126,15 @@ export function useCareerChat() {
     if (!message.trim() || !sessionId) return;
     
     // Add user message
-    await addMessage({
+    const userMessage: CareerChatMessage = {
       session_id: sessionId,
       message_type: 'user',
       content: message.trim(),
       metadata: {},
       created_at: new Date().toISOString()
-    });
+    };
+
+    await addMessage(userMessage);
     
     setInputMessage('');
     setIsTyping(true);
@@ -154,6 +156,8 @@ export function useCareerChat() {
         content: message.trim()
       });
 
+      console.log('Sending message to AI service...');
+      
       // Call our edge function
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: {
@@ -189,8 +193,9 @@ export function useCareerChat() {
       
       // Add bot response to messages locally
       if (response.data?.message) {
+        console.log('Creating bot message to save to DB');
+        
         const botMessage: CareerChatMessage = {
-          id: response.data.messageId || `temp-${Date.now()}`,
           session_id: sessionId,
           message_type: isRecommendation ? 'recommendation' : 'bot',
           content: response.data.message,
@@ -202,8 +207,9 @@ export function useCareerChat() {
           created_at: new Date().toISOString()
         };
         
-        // Manually add the bot message to messages
-        await addMessage(botMessage);
+        // Add the bot message to database and state
+        const savedMessage = await addMessage(botMessage);
+        console.log('Bot message saved:', savedMessage ? 'success' : 'failed');
         
         // Update progress when a recommendation is received
         if (isRecommendation) {
