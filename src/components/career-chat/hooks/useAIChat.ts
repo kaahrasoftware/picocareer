@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
@@ -18,17 +18,13 @@ export function useAIChat(
     if (!sessionId) return;
     
     try {
-      console.log("Checking API configuration...");
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: { type: 'config-check' }
       });
       
-      console.log("API configuration check response:", response);
-      
       if (response.error || response.data?.error) {
-        console.error('DeepSeek API configuration issue:', response.error || response.data?.error);
+        console.warn('DeepSeek API configuration issue:', response.error || response.data?.error);
         setHasConfigError(true);
-        toast.error('AI chat is currently unavailable. Please try again later.');
       } else {
         setHasConfigError(false);
       }
@@ -37,11 +33,6 @@ export function useAIChat(
       // Don't set hasConfigError to true here, as it might be a temporary network issue
     }
   }, [sessionId]);
-
-  // Call checkApiConfig when the component mounts or sessionId changes
-  useEffect(() => {
-    checkApiConfig();
-  }, [checkApiConfig]);
 
   // Function to send message and get AI response
   const sendAIMessage = useCallback(async (message: string) => {
@@ -70,8 +61,6 @@ export function useAIChat(
         content: message.trim()
       });
 
-      console.log("Sending message to AI edge function...");
-      
       // Call our edge function
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: {
@@ -85,8 +74,6 @@ export function useAIChat(
         }
       });
 
-      console.log("Edge function response:", response);
-
       if (response.error) {
         console.error('Edge function error:', response.error);
         throw new Error(response.error.message || 'Failed to get AI response');
@@ -94,12 +81,7 @@ export function useAIChat(
 
       if (response.data?.error) {
         console.error('AI service error:', response.data.error);
-        if (response.data.error.includes('API key not configured')) {
-          setHasConfigError(true);
-          throw new Error('AI service is not properly configured');
-        } else {
-          throw new Error(response.data.error);
-        }
+        throw new Error(response.data.error);
       }
 
       // Log successful response for debugging
