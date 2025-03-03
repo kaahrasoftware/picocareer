@@ -1,472 +1,283 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.131.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { load } from "https://deno.land/std@0.204.0/dotenv/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+// Load configuration
+const config = await load({ envPath: "./config.toml" });
+const deepseekApiKey = config.config?.DEEPSEEK_API_KEY || Deno.env.get("DEEPSEEK_API_KEY");
+const projectId = config["project_id"] || Deno.env.get("PROJECT_ID");
+
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || `https://${projectId}.supabase.co`;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Helper function to get all messages from a chat session
+async function getSessionMessages(sessionId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("career_chat_messages")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching session messages:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getSessionMessages:", error);
+    return [];
+  }
+}
+
+// Helper function to create a recommendation message
+async function createRecommendationMessage(
+  sessionId: string,
+  recommendation: any
+) {
+  try {
+    let content = '';
+    let metadata = {};
+    
+    // Convert to structured format if needed
+    if (typeof recommendation === 'string') {
+      content = recommendation;
+    } else {
+      content = "Here are your career recommendations.";
+      metadata = {
+        isRecommendation: true,
+        careers: recommendation.careers || [],
+        personalities: recommendation.personalities || [],
+        mentors: recommendation.mentors || []
+      };
+    }
+    
+    const { data, error } = await supabase
+      .from("career_chat_messages")
+      .insert({
+        session_id: sessionId,
+        message_type: "recommendation",
+        content,
+        metadata,
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Error creating recommendation message:", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in createRecommendationMessage:", error);
+    return null;
+  }
+}
+
+// Update session status to completed
+async function updateSessionStatus(sessionId: string) {
+  try {
+    const { error } = await supabase
+      .from("career_chat_sessions")
+      .update({ status: "completed" })
+      .eq("id", sessionId);
+
+    if (error) {
+      console.error("Error updating session status:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in updateSessionStatus:", error);
+    return false;
+  }
+}
+
+// Function to generate career recommendations using DeepSeek API
+async function generateCareerRecommendations(messages: any[]) {
+  try {
+    if (!deepseekApiKey) {
+      throw new Error("DeepSeek API key not configured");
+    }
+
+    const userMessages = messages
+      .filter(m => m.message_type === "user" || m.message_type === "bot")
+      .map(m => ({
+        role: m.message_type === "user" ? "user" : "assistant",
+        content: m.content
+      }));
+
+    // Format our instructions for the AI
+    const systemMessage = {
+      role: "system",
+      content: `You are a career guidance advisor. Based on the conversation history with the user, analyze their background, skills, preferences, and goals to provide personalized career recommendations.
+
+Return your analysis in the following structured JSON format:
+{
+  "careers": [
+    {
+      "title": "Software Engineer",
+      "match": 85,
+      "description": "Perfect match for your technical skills and problem-solving abilities."
+    },
+    {
+      "title": "Data Scientist",
+      "match": 82,
+      "description": "Great fit for your analytical mindset and mathematical background."
+    }
+  ],
+  "personalities": [
+    {
+      "type": "Analytical Problem Solver",
+      "match": 90,
+      "traits": ["Detail-oriented", "Logical", "Systematic"],
+      "description": "You approach problems methodically and enjoy finding solutions."
+    }
+  ],
+  "mentors": [
+    {
+      "name": "Sarah Johnson",
+      "expertise": "Software Engineering",
+      "experience": "15 years",
+      "match": 88
+    }
+  ]
+}
+
+Guidelines:
+1. Provide 3-5 career recommendations with match percentages (1-100) based on how well they align with the user's profile.
+2. Include 1-3 personality types that match the user.
+3. Suggest 2-3 fictional mentors who could help guide the user in their top career paths.
+4. Add brief descriptions for each career, personality type, and mentor.
+5. Ensure your response is formatted exactly as the JSON structure shown above.`
+    };
+
+    const apiMessages = [systemMessage, ...userMessages];
+
+    // Prepare the request to DeepSeek API
+    const requestBody = {
+      model: "deepseek-chat",
+      messages: apiMessages,
+      temperature: 0.7,
+      max_tokens: 1500,
+      response_format: { type: "json_object" },
+      top_p: 0.95,
+      stop: null,
+    };
+
+    // Call DeepSeek API
+    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${deepseekApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("DeepSeek API error:", errorText);
+      throw new Error(`DeepSeek API returned status ${response.status}: ${errorText}`);
+    }
+
+    const responseData = await response.json();
+    console.log("DeepSeek API response:", JSON.stringify(responseData));
+
+    if (responseData.choices && responseData.choices.length > 0) {
+      let aiMessage = responseData.choices[0].message.content;
+      
+      // Attempt to parse the JSON response
+      try {
+        // If the response is a string that contains JSON
+        if (typeof aiMessage === "string") {
+          // Extract JSON from markdown code blocks if present
+          const jsonMatch = aiMessage.match(/```json\n([\s\S]*?)\n```/) || 
+                          aiMessage.match(/```\n([\s\S]*?)\n```/) ||
+                          aiMessage.match(/\{[\s\S]*\}/);
+                          
+          if (jsonMatch) {
+            aiMessage = jsonMatch[1] || jsonMatch[0];
+          }
+          
+          // Parse the JSON string
+          return JSON.parse(aiMessage);
+        }
+        
+        // If already a JSON object
+        return aiMessage;
+      } catch (error) {
+        console.error("Failed to parse recommendation as JSON:", error);
+        return aiMessage; // Return the raw message if parsing fails
+      }
+    } else {
+      throw new Error("No response choices returned from DeepSeek API");
+    }
+  } catch (error) {
+    console.error("Error generating career recommendations:", error);
+    throw error;
+  }
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
   try {
-    // Get API key from environment variable
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
-    
-    if (!DEEPSEEK_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: 'DeepSeek API key not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-    
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    
-    // Parse request body
-    const { sessionId } = await req.json()
+    const requestData = await req.json();
+    const { sessionId } = requestData;
     
     if (!sessionId) {
       return new Response(
-        JSON.stringify({ error: 'Session ID is required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+        JSON.stringify({ error: "Session ID is required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
     
-    // Get all messages for this session
-    const { data: messages, error: messagesError } = await supabase
-      .from('career_chat_messages')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: true })
+    // Get all messages from the chat session
+    const messages = await getSessionMessages(sessionId);
     
-    if (messagesError) {
-      throw new Error(`Error fetching messages: ${messagesError.message}`)
-    }
-    
-    if (!messages || messages.length === 0) {
+    if (messages.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'No messages found for this session' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-      )
+        JSON.stringify({ error: "No messages found for this session" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
     
-    // Prepare conversation history for analysis
-    const conversationText = messages
-      .map(msg => {
-        if (msg.message_type === 'user') {
-          return `User: ${msg.content}`
-        } else if (msg.message_type === 'bot') {
-          return `Career Advisor: ${msg.content}`
-        }
-        return null
-      })
-      .filter(Boolean)
-      .join('\n\n')
+    // Generate career recommendations
+    const recommendations = await generateCareerRecommendations(messages);
     
-    // Get available careers from the database to use for recommendations
-    const { data: careers, error: careersError } = await supabase
-      .from('careers')
-      .select('id, title, description, salary_range, required_skills, required_education, work_environment, growth_potential')
-      .eq('status', 'Approved')
-      .order('profiles_count', { ascending: false })
-      .limit(50)
+    // Store the recommendation message in the database
+    await createRecommendationMessage(sessionId, recommendations);
     
-    if (careersError) {
-      throw new Error(`Error fetching careers: ${careersError.message}`)
-    }
+    // Update session status to completed
+    await updateSessionStatus(sessionId);
     
-    // Format careers as a list for the AI
-    const careersText = careers.map(career => 
-      `ID: ${career.id}\nTitle: ${career.title}\nDescription: ${career.description}\n` +
-      `Salary Range: ${career.salary_range || 'Not specified'}\n` +
-      `Required Skills: ${Array.isArray(career.required_skills) ? career.required_skills.join(', ') : 'Not specified'}\n` +
-      `Required Education: ${Array.isArray(career.required_education) ? career.required_education.join(', ') : 'Not specified'}\n` +
-      `Work Environment: ${career.work_environment || 'Not specified'}\n` +
-      `Growth Potential: ${career.growth_potential || 'Not specified'}`
-    ).join('\n\n');
-    
-    // Get personality types from the database
-    const { data: personalityTypes, error: personalityError } = await supabase
-      .from('personality_types')
-      .select('id, type, title, traits, strengths, weaknesses')
-    
-    if (personalityError) {
-      throw new Error(`Error fetching personality types: ${personalityError.message}`)
-    }
-    
-    // Format personality types as a list for the AI
-    const personalityText = personalityTypes.map(pt => 
-      `Type: ${pt.type}\nTitle: ${pt.title}\nTraits: ${Array.isArray(pt.traits) ? pt.traits.join(', ') : ''}\n` +
-      `Strengths: ${Array.isArray(pt.strengths) ? pt.strengths.join(', ') : ''}\n` +
-      `Weaknesses: ${Array.isArray(pt.weaknesses) ? pt.weaknesses.join(', ') : ''}`
-    ).join('\n\n');
-    
-    // Get mentors from the database
-    const { data: mentors, error: mentorsError } = await supabase
-      .from('profiles')
-      .select(`
-        id, 
-        full_name, 
-        position, 
-        bio, 
-        skills, 
-        tools_used, 
-        years_of_experience,
-        total_booked_sessions,
-        location
-      `)
-      .eq('user_type', 'mentor')
-      .eq('top_mentor', true)
-      .order('total_booked_sessions', { ascending: false })
-      .limit(20)
-    
-    if (mentorsError) {
-      throw new Error(`Error fetching mentors: ${mentorsError.message}`)
-    }
-    
-    // Format mentors as a list for the AI
-    const mentorsText = mentors.map(mentor => 
-      `ID: ${mentor.id}\nName: ${mentor.full_name || 'Unnamed'}\nPosition: ${mentor.position || 'Not specified'}\n` +
-      `Bio: ${mentor.bio || 'Not specified'}\n` +
-      `Skills: ${Array.isArray(mentor.skills) ? mentor.skills.join(', ') : 'Not specified'}\n` +
-      `Tools: ${Array.isArray(mentor.tools_used) ? mentor.tools_used.join(', ') : 'Not specified'}\n` +
-      `Experience: ${mentor.years_of_experience || 0} years\n` +
-      `Sessions: ${mentor.total_booked_sessions || 0}\n` +
-      `Location: ${mentor.location || 'Not specified'}`
-    ).join('\n\n');
-    
-    // Create prompt for the AI
-    const prompt = `
-You are an AI career advisor analyzing a conversation between a Career Advisor and a User about career preferences.
-
-Conversation:
-${conversationText}
-
-Based on this conversation, I want you to:
-
-1. Identify the user's skills, interests, preferences, educational background, and career goals.
-
-2. Recommend 5-7 career matches from the following list. For each career, provide:
-   - Title (exactly as it appears in the list)
-   - Match score (0-100%)
-   - Brief explanation of why this career matches the user's profile
-
-Available Careers:
-${careersText}
-
-3. Recommend 3 personality types that best match the user from the following list:
-   - Include the type and title (exactly as they appear)
-   - Match score (0-100%)
-   - Brief explanation of why this personality type matches the user
-
-Available Personality Types:
-${personalityText}
-
-4. Recommend 5 mentors who would be helpful for the user's career path:
-   - Include the mentor's name and position
-   - Brief explanation of why they would be a good mentor for the user
-
-Available Mentors:
-${mentorsText}
-
-Format your answer in clear sections for Career Recommendations, Personality Assessment, and Mentor Suggestions.
-`;
-    
-    // Send request to DeepSeek API for analysis
-    console.log('Sending analysis request to DeepSeek API');
-    const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.5,
-        max_tokens: 1500
-      })
-    });
-    
-    if (!deepseekResponse.ok) {
-      const errorData = await deepseekResponse.text();
-      console.error('DeepSeek API error:', errorData);
-      throw new Error(`DeepSeek API error: ${deepseekResponse.status} ${errorData}`);
-    }
-    
-    const deepseekData = await deepseekResponse.json();
-    const analysisContent = deepseekData.choices[0].message.content;
-    console.log('Analysis response:', analysisContent);
-    
-    // Parse the analysis to extract career recommendations
-    const careerRecommendations = extractCareerRecommendations(analysisContent, careers);
-    const personalityRecommendations = extractPersonalityRecommendations(analysisContent, personalityTypes);
-    const mentorRecommendations = extractMentorRecommendations(analysisContent, mentors);
-    
-    // Store the analysis in the database
-    const { data: analysisMessage, error: analysisError } = await supabase
-      .from('career_chat_messages')
-      .insert({
-        session_id: sessionId,
-        message_type: 'recommendation',
-        content: analysisContent,
-        metadata: {
-          isRecommendation: true,
-          analysisComplete: true,
-          careersCount: careerRecommendations.length,
-          personalitiesCount: personalityRecommendations.length,
-          mentorsCount: mentorRecommendations.length
-        }
-      })
-      .select()
-      .single();
-    
-    if (analysisError) {
-      console.error('Error storing analysis:', analysisError);
-      throw new Error('Failed to store analysis');
-    }
-    
-    // Store each career recommendation
-    for (const career of careerRecommendations) {
-      await supabase
-        .from('career_chat_recommendations')
-        .insert({
-          session_id: sessionId,
-          career_id: career.id,
-          score: career.score,
-          reasoning: career.reasoning,
-          metadata: {
-            title: career.title,
-            salary_range: career.salary_range,
-            skills: career.skills,
-            education: career.education,
-            environment: career.environment
-          }
-        });
-    }
-    
+    // Return the career recommendations
     return new Response(
-      JSON.stringify({
-        success: true,
-        messageId: analysisMessage.id,
-        careers: careerRecommendations,
-        personalities: personalityRecommendations,
-        mentors: mentorRecommendations
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(recommendations),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
     
   } catch (error) {
-    console.error('Error in analyze-career-path function:', error);
-    
+    console.error("Error processing request:", error);
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ error: error.message || "An error occurred processing your request" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
-
-// Helper function to extract career recommendations from the analysis text
-function extractCareerRecommendations(text: string, careers: any[]) {
-  const recommendations: Array<{
-    id: string;
-    title: string;
-    score: number;
-    reasoning: string;
-    salary_range?: string;
-    skills?: string[];
-    education?: string[];
-    environment?: string;
-  }> = [];
-  
-  // Extract the Career Recommendations section
-  const careerSection = text.split(/Career Recommendations|Career Matches/i)[1]?.split(/Personality Assessment|Personality Type/i)[0] || '';
-  
-  if (careerSection) {
-    // Look for patterns like "1. Software Developer (85%)" or "Software Developer - 85%"
-    const matches = careerSection.match(/[^-\n]*?(\d+%)/g) || [];
-    
-    for (const match of matches) {
-      // Extract title and score
-      const scoreMatch = match.match(/(\d+)%/);
-      if (!scoreMatch) continue;
-      
-      const score = parseInt(scoreMatch[1], 10);
-      const title = match.replace(scoreMatch[0], '').trim().replace(/^\d+\.\s+/, '');
-      
-      // Find the career in our database
-      const career = careers.find(c => 
-        c.title.toLowerCase() === title.toLowerCase() ||
-        title.toLowerCase().includes(c.title.toLowerCase())
-      );
-      
-      if (career) {
-        // Extract explanation - look for text after the score until the next match
-        const matchPos = careerSection.indexOf(match);
-        const nextMatchPos = careerSection.indexOf('%', matchPos + match.length);
-        
-        let reasoning = '';
-        if (nextMatchPos > 0) {
-          reasoning = careerSection.substring(matchPos + match.length, nextMatchPos).trim();
-        } else {
-          reasoning = careerSection.substring(matchPos + match.length).split('\n\n')[0].trim();
-        }
-        
-        recommendations.push({
-          id: career.id,
-          title: career.title,
-          score: score,
-          reasoning: reasoning || `This career matches your profile based on the conversation.`,
-          salary_range: career.salary_range,
-          skills: career.required_skills,
-          education: career.required_education,
-          environment: career.work_environment
-        });
-      }
-    }
-  }
-  
-  return recommendations;
-}
-
-// Helper function to extract personality recommendations
-function extractPersonalityRecommendations(text: string, personalityTypes: any[]) {
-  const recommendations: Array<{
-    type: string;
-    title: string;
-    score: number;
-    description: string;
-    traits?: string[];
-    strengths?: string[];
-  }> = [];
-  
-  // Extract the Personality Assessment section
-  const personalitySection = text.split(/Personality Assessment|Personality Type/i)[1]?.split(/Mentor Suggestions|Recommended Mentors/i)[0] || '';
-  
-  if (personalitySection) {
-    // Look for patterns like "1. ENFJ - The Protagonist (85%)" or "ENFJ (85%)"
-    const matches = personalitySection.match(/[^-\n]*?(\d+%)/g) || [];
-    
-    for (const match of matches) {
-      // Extract type and score
-      const scoreMatch = match.match(/(\d+)%/);
-      if (!scoreMatch) continue;
-      
-      const score = parseInt(scoreMatch[1], 10);
-      const typeText = match.replace(scoreMatch[0], '').trim().replace(/^\d+\.\s+/, '');
-      
-      // Try to extract personality type code (e.g., ENFJ)
-      const typeCodeMatch = typeText.match(/[EI][NS][TF][JP]/);
-      const typeCode = typeCodeMatch ? typeCodeMatch[0] : '';
-      
-      // Find the personality type in our database
-      const personalityType = personalityTypes.find(pt => 
-        (typeCode && pt.type === typeCode) ||
-        pt.title.toLowerCase().includes(typeText.toLowerCase()) ||
-        typeText.toLowerCase().includes(pt.title.toLowerCase())
-      );
-      
-      if (personalityType) {
-        // Extract explanation
-        const matchPos = personalitySection.indexOf(match);
-        const nextMatchPos = personalitySection.indexOf('%', matchPos + match.length);
-        
-        let description = '';
-        if (nextMatchPos > 0) {
-          description = personalitySection.substring(matchPos + match.length, nextMatchPos).trim();
-        } else {
-          description = personalitySection.substring(matchPos + match.length).split('\n\n')[0].trim();
-        }
-        
-        recommendations.push({
-          type: personalityType.type,
-          title: personalityType.title,
-          score: score,
-          description: description || `This personality type matches your profile.`,
-          traits: personalityType.traits,
-          strengths: personalityType.strengths
-        });
-      }
-    }
-  }
-  
-  return recommendations;
-}
-
-// Helper function to extract mentor recommendations
-function extractMentorRecommendations(text: string, mentors: any[]) {
-  const recommendations: Array<{
-    id: string;
-    name: string;
-    skills: string[];
-    position?: string;
-    experience?: number;
-    sessions?: number;
-    location?: string;
-    reasoning: string;
-  }> = [];
-  
-  // Extract the Mentor Suggestions section
-  const mentorSection = text.split(/Mentor Suggestions|Recommended Mentors/i)[1] || '';
-  
-  if (mentorSection) {
-    // Look for patterns like "1. John Smith" or "John Smith -"
-    const mentorLines = mentorSection.split('\n').filter(line => 
-      /^\d+\.\s+/.test(line.trim()) || 
-      /^[A-Z][a-z]+\s+[A-Z][a-z]+/.test(line.trim())
-    );
-    
-    for (const line of mentorLines) {
-      // Extract name
-      const nameMatch = line.match(/\d+\.\s+(.*?)(?:\s*\(|\s*-|\s*:|\s*$)/) || 
-                       line.match(/^([A-Z][a-z]+\s+[A-Z][a-z]+)/) ||
-                       line.match(/^([A-Z][a-z]+)/);
-                       
-      if (!nameMatch) continue;
-      const mentorName = nameMatch[1].trim();
-      
-      // Find the mentor in our database
-      const mentor = mentors.find(m => {
-        if (!m.full_name) return false;
-        return m.full_name.toLowerCase().includes(mentorName.toLowerCase()) || 
-               mentorName.toLowerCase().includes(m.full_name.toLowerCase());
-      });
-      
-      if (mentor) {
-        // Extract explanation
-        const linePos = mentorSection.indexOf(line);
-        const nextLinePos = mentorSection.indexOf('\n', linePos + line.length);
-        
-        let reasoning = '';
-        if (nextLinePos > 0) {
-          const nextNumberedLinePos = mentorSection.substring(nextLinePos).search(/^\d+\.\s+/m);
-          if (nextNumberedLinePos > 0) {
-            reasoning = mentorSection.substring(linePos + line.length, nextLinePos + nextNumberedLinePos).trim();
-          } else {
-            reasoning = mentorSection.substring(linePos + line.length).trim();
-          }
-        }
-        
-        recommendations.push({
-          id: mentor.id,
-          name: mentor.full_name,
-          skills: mentor.skills || [],
-          position: mentor.position,
-          experience: mentor.years_of_experience,
-          sessions: mentor.total_booked_sessions,
-          location: mentor.location,
-          reasoning: reasoning || `This mentor has expertise relevant to your career interests.`
-        });
-      }
-    }
-  }
-  
-  return recommendations;
-}

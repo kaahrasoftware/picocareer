@@ -5,8 +5,10 @@ project_id = "wurdmlkfkzuivvwxjmxk"
 DEEPSEEK_API_KEY = ""
 
 # Configuring the AI to generate more structured and concise responses
-AI_RESPONSE_FORMAT = "concise"
+RESPONSE_FORMAT = "structured_json"
 QUESTION_MAX_LENGTH = 60
 OPTIONS_MAX_COUNT = 4
 OPTIONS_MAX_LENGTH = 30
+CATEGORIES = ["education", "skills", "workstyle", "goals"]
+QUESTION_MIN_COUNT_PER_CATEGORY = 3
 CATEGORY_TRACKING = "enabled"

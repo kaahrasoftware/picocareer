@@ -5,6 +5,7 @@ import { useCareerAnalysis } from './useCareerAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { formatAIResponse, formatUserMessage } from '../utils/responseFormatter';
 
 export function useCareerChat() {
   const { 
@@ -102,14 +103,9 @@ export function useCareerChat() {
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId) return;
     
-    // Add user message
-    await addMessage({
-      session_id: sessionId,
-      message_type: 'user',
-      content: message.trim(),
-      metadata: {},
-      created_at: new Date().toISOString()
-    });
+    // Add user message using our formatter
+    const userMessage = formatUserMessage(message.trim(), sessionId);
+    await addMessage(userMessage);
     
     setInputMessage('');
     setIsTyping(true);
@@ -138,8 +134,8 @@ export function useCareerChat() {
           sessionId,
           messages: messageHistory,
           instructions: {
-            specificQuestions: true,
-            conciseOptions: true
+            structuredFormat: true,
+            responseType: 'json'
           }
         }
       });
@@ -157,16 +153,17 @@ export function useCareerChat() {
       // Log successful response for debugging
       console.log('Got response from career-chat-ai:', response.data);
       
-      // Add bot response to messages locally
+      // Process bot response using our formatter
       if (response.data?.message) {
-        const botMessage: CareerChatMessage = {
-          id: response.data.messageId || `temp-${Date.now()}`,
-          session_id: sessionId,
-          message_type: 'bot',
-          content: response.data.message,
-          metadata: response.data.metadata || {},
-          created_at: new Date().toISOString()
-        };
+        const botMessage = formatAIResponse(
+          response.data.message, 
+          sessionId
+        );
+        
+        // Add messageId if provided
+        if (response.data.messageId) {
+          botMessage.id = response.data.messageId;
+        }
         
         // Manually add the bot message to messages
         await addMessage(botMessage);

@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Brain, Briefcase, GraduationCap, Target, MessagesSquare } from 'lucide-react';
+import { QuestionOption } from './types/aiResponses';
 
 interface QuestionCardProps {
   question: string;
@@ -10,6 +11,7 @@ interface QuestionCardProps {
   questionNumber: number;
   totalQuestions: number;
   progress: number;
+  options?: QuestionOption[];
 }
 
 export function QuestionCard({ 
@@ -17,7 +19,8 @@ export function QuestionCard({
   category, 
   questionNumber, 
   totalQuestions,
-  progress 
+  progress,
+  options
 }: QuestionCardProps) {
   // Format category name for display
   const formatCategory = (cat: string) => {
