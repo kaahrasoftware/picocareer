@@ -2,26 +2,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AnalyticsSummary } from '@/types/database/analytics';
 import { Users, FileText, Bell, HardDrive } from 'lucide-react';
+import { formatFileSize } from "@/utils/storageUtils";
 
 interface AnalyticsSummaryCardsProps {
   summary: AnalyticsSummary;
 }
 
 export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
-  // Format storage size with improved unit handling
-  const formatStorageSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    
-    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    
-    // Ensure we don't exceed available units
-    const unitIndex = Math.min(i, units.length - 1);
-    
-    // Format with appropriate precision (more decimals for smaller numbers)
-    return `${(bytes / Math.pow(1024, unitIndex)).toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex]}`;
-  };
-
   // Calculate percentages with safeguards against division by zero
   const calculatePercentage = (value: number, max: number): number => {
     if (max <= 0) return 0;
@@ -101,8 +88,8 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
             <div>
               <p className="text-sm font-medium">Storage</p>
               <div className="flex items-baseline gap-2">
-                <h4 className="text-2xl font-bold">{formatStorageSize(summary.storageUsed)}</h4>
-                <span className="text-xs text-muted-foreground">/ {formatStorageSize(summary.storageLimit)}</span>
+                <h4 className="text-2xl font-bold">{formatFileSize(summary.storageUsed)}</h4>
+                <span className="text-xs text-muted-foreground">/ {formatFileSize(summary.storageLimit)}</span>
               </div>
               <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
                 <div 

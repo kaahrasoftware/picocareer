@@ -9,6 +9,7 @@ import { ResourceBasicInfo } from "./forms/ResourceBasicInfo";
 import { ResourceTypeSelect } from "./forms/ResourceTypeSelect";
 import { ResourceUpload } from "./forms/ResourceUpload";
 import { AccessLevelSelect } from "./forms/AccessLevelSelect";
+import { updateHubStorageUsage } from "@/utils/storageUtils";
 
 interface ResourceFormProps {
   hubId: string;
@@ -79,13 +80,13 @@ export function ResourceForm({
         console.warn('Error getting file size via HEAD request:', headError);
       }
       
-      // As a fallback, estimate size based on resource type
-      if (resourceType === 'image') return 500000; // 500KB
-      if (resourceType === 'video') return 5000000; // 5MB
-      if (resourceType === 'audio') return 2000000; // 2MB
-      if (resourceType === 'document') return 1000000; // 1MB
+      // Fallback size estimates - all in bytes
+      if (resourceType === 'image') return 500000; // 500KB = 500 * 1024 bytes
+      if (resourceType === 'video') return 5000000; // 5MB = 5 * 1024 * 1024 bytes
+      if (resourceType === 'audio') return 2000000; // 2MB = 2 * 1024 * 1024 bytes
+      if (resourceType === 'document') return 1000000; // 1MB = 1 * 1024 * 1024 bytes
       
-      return 100000; // Default 100KB
+      return 100000; // Default 100KB = 100 * 1024 bytes
     } catch (error) {
       console.error('Error determining file size:', error);
       return 0;
@@ -122,7 +123,7 @@ export function ResourceForm({
 
         if (error) throw error;
       } else {
-        console.log('Creating new resource with file size:', fileSizeInBytes);
+        console.log('Creating new resource with file size (bytes):', fileSizeInBytes);
 
         const { error } = await supabase
           .from('hub_resources')
@@ -162,14 +163,6 @@ export function ResourceForm({
         description: "Failed to save resource. Please try again.",
         variant: "destructive"
       });
-    }
-  };
-
-  const updateHubStorageUsage = async (hubId: string) => {
-    try {
-      await supabase.rpc('refresh_hub_metrics', { _hub_id: hubId });
-    } catch (error) {
-      console.error('Error updating hub storage usage:', error);
     }
   };
 

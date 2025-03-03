@@ -33,11 +33,14 @@ export function useImageUpload({
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
+      // Ensure file size is properly captured in bytes (browser's File API reports size in bytes)
+      const fileSizeInBytes = file.size;
+
       console.log('Uploading file:', {
         bucket,
         filePath,
         contentType: file.type,
-        fileSize: file.size, // Size in bytes
+        fileSizeBytes: fileSizeInBytes, 
       });
 
       // First try to remove any existing file if there is one
@@ -72,7 +75,7 @@ export function useImageUpload({
       console.log('Upload successful:', {
         publicUrl,
         filePath,
-        fileSize: file.size,
+        fileSizeBytes: fileSizeInBytes,
       });
 
       field.onChange(publicUrl);
