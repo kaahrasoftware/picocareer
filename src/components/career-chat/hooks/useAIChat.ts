@@ -23,7 +23,7 @@ export function useAIChat(
       });
       
       if (response.error || response.data?.error) {
-        console.warn('DeepSeek API configuration issue:', response.error || response.data?.error);
+        console.error('DeepSeek API configuration issue:', response.error || response.data?.error);
         setHasConfigError(true);
         toast.error('AI chat is currently unavailable. Please try again later.');
       } else {
@@ -38,7 +38,7 @@ export function useAIChat(
   // Call checkApiConfig when the component mounts or sessionId changes
   useEffect(() => {
     checkApiConfig();
-  }, [checkApiConfig, sessionId]);
+  }, [checkApiConfig]);
 
   // Function to send message and get AI response
   const sendAIMessage = useCallback(async (message: string) => {

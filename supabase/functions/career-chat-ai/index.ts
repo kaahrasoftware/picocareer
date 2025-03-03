@@ -61,6 +61,8 @@ serve(async (req) => {
       );
     }
     
+    console.log("DeepSeek API key is configured. Proceeding with request.");
+    
     // Configure format based on environment variables
     const responseFormat = Deno.env.get("RESPONSE_FORMAT") || "structured_json";
     const questionMaxLength = parseInt(Deno.env.get("QUESTION_MAX_LENGTH") || "60");
