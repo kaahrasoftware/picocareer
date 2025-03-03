@@ -5,6 +5,7 @@ import { ArrowRight, Check, UserRound, Briefcase, GraduationCap, Brain, Target, 
 import { MessageOption } from '@/types/database/message-types';
 import { LucideIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface OptionCardsProps {
   options: string[] | MessageOption[];
@@ -33,17 +34,8 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
     return LucideIcon ? LucideIcon : null;
   };
 
-  // Get an appropriate icon based on the option content
-  const getOptionIcon = (option: MessageOption) => {
-    // First try to use provided icon if available
-    if (option.icon) {
-      const IconComponent = getIconByName(option.icon);
-      if (IconComponent) {
-        return <IconComponent className="h-4 w-4 text-indigo-500" />;
-      }
-    }
-
-    // Fallback to content-based icon selection
+  // Get category based on option content
+  const getOptionCategory = (option: MessageOption): string => {
     const lowerOption = option.text.toLowerCase();
     
     if (lowerOption.includes('degree') || 
@@ -52,7 +44,7 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('university') ||
         lowerOption.includes('college') ||
         lowerOption.includes('learn')) {
-      return <GraduationCap className="h-4 w-4 text-indigo-500" />;
+      return 'education';
     }
     
     if (lowerOption.includes('skill') || 
@@ -62,7 +54,7 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('problem') ||
         lowerOption.includes('programming') ||
         lowerOption.includes('computer')) {
-      return <Brain className="h-4 w-4 text-emerald-500" />;
+      return 'skills';
     }
     
     if (lowerOption.includes('work') || 
@@ -71,14 +63,14 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('business') ||
         lowerOption.includes('industry') ||
         lowerOption.includes('professional')) {
-      return <Briefcase className="h-4 w-4 text-amber-500" />;
+      return 'work';
     }
     
     if (lowerOption.includes('goal') ||
         lowerOption.includes('future') ||
         lowerOption.includes('plan') ||
         lowerOption.includes('achieve')) {
-      return <Target className="h-4 w-4 text-blue-500" />;
+      return 'goals';
     }
     
     if (lowerOption.includes('team') ||
@@ -86,98 +78,251 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('people') ||
         lowerOption.includes('social') ||
         lowerOption.includes('help')) {
-      return <Users className="h-4 w-4 text-violet-500" />;
+      return 'social';
     }
     
     if (lowerOption.includes('time') ||
         lowerOption.includes('schedule') ||
         lowerOption.includes('flexible') ||
         lowerOption.includes('hours')) {
-      return <Clock className="h-4 w-4 text-orange-500" />;
+      return 'time';
     }
     
     if (lowerOption.includes('creative') ||
         lowerOption.includes('art') ||
         lowerOption.includes('design') ||
         lowerOption.includes('music')) {
-      return <Palette className="h-4 w-4 text-pink-500" />;
+      return 'creative';
     }
     
     if (lowerOption.includes('money') ||
         lowerOption.includes('paid') ||
         lowerOption.includes('salary')) {
-      return <Settings className="h-4 w-4 text-green-500" />;
+      return 'money';
     }
     
     if (lowerOption.includes('love') ||
         lowerOption.includes('passion') ||
         lowerOption.includes('interest')) {
-      return <Heart className="h-4 w-4 text-red-500" />;
+      return 'passion';
     }
 
     if (lowerOption.includes('leadership') ||
         lowerOption.includes('manage') ||
         lowerOption.includes('lead')) {
-      return <Star className="h-4 w-4 text-yellow-500" />;
+      return 'leadership';
     }
 
     if (lowerOption.includes('idea') ||
         lowerOption.includes('innovation') ||
         lowerOption.includes('thinking') ||
         lowerOption.includes('solution')) {
-      return <Lightbulb className="h-4 w-4 text-amber-500" />;
+      return 'innovation';
     }
     
-    // Default icon
-    return <UserRound className="h-4 w-4 text-gray-500" />;
+    // Default 
+    return 'general';
+  };
+
+  // Get an appropriate icon based on the option content
+  const getOptionIcon = (option: MessageOption) => {
+    // First try to use provided icon if available
+    if (option.icon) {
+      const IconComponent = getIconByName(option.icon);
+      if (IconComponent) {
+        return <IconComponent className="h-5 w-5" />;
+      }
+    }
+
+    // Fallback to content-based icon selection
+    const category = getOptionCategory(option);
+    
+    switch (category) {
+      case 'education':
+        return <GraduationCap className="h-5 w-5 text-indigo-500" />;
+      case 'skills':
+        return <Brain className="h-5 w-5 text-emerald-500" />;
+      case 'work':
+        return <Briefcase className="h-5 w-5 text-amber-500" />;
+      case 'goals':
+        return <Target className="h-5 w-5 text-blue-500" />;
+      case 'social':
+        return <Users className="h-5 w-5 text-violet-500" />;
+      case 'time':
+        return <Clock className="h-5 w-5 text-orange-500" />;
+      case 'creative':
+        return <Palette className="h-5 w-5 text-pink-500" />;
+      case 'money':
+        return <Settings className="h-5 w-5 text-green-500" />;
+      case 'passion':
+        return <Heart className="h-5 w-5 text-red-500" />;
+      case 'leadership':
+        return <Star className="h-5 w-5 text-yellow-500" />;
+      case 'innovation':
+        return <Lightbulb className="h-5 w-5 text-amber-500" />;
+      default:
+        return <UserRound className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  // Get gradient styles based on the category
+  const getCardStyles = (option: MessageOption) => {
+    const category = getOptionCategory(option);
+    
+    switch (category) {
+      case 'education':
+        return {
+          bgGradient: 'from-indigo-50 to-white',
+          hoverBgGradient: 'hover:from-indigo-100 hover:to-indigo-50/70',
+          borderColor: 'border-indigo-200',
+          iconColor: 'text-indigo-500'
+        };
+      case 'skills':
+        return {
+          bgGradient: 'from-emerald-50 to-white',
+          hoverBgGradient: 'hover:from-emerald-100 hover:to-emerald-50/70',
+          borderColor: 'border-emerald-200',
+          iconColor: 'text-emerald-500'
+        };
+      case 'work':
+        return {
+          bgGradient: 'from-amber-50 to-white',
+          hoverBgGradient: 'hover:from-amber-100 hover:to-amber-50/70',
+          borderColor: 'border-amber-200',
+          iconColor: 'text-amber-500'
+        };
+      case 'goals':
+        return {
+          bgGradient: 'from-blue-50 to-white',
+          hoverBgGradient: 'hover:from-blue-100 hover:to-blue-50/70',
+          borderColor: 'border-blue-200',
+          iconColor: 'text-blue-500'
+        };
+      case 'social':
+        return {
+          bgGradient: 'from-violet-50 to-white',
+          hoverBgGradient: 'hover:from-violet-100 hover:to-violet-50/70',
+          borderColor: 'border-violet-200',
+          iconColor: 'text-violet-500'
+        };
+      case 'time':
+        return {
+          bgGradient: 'from-orange-50 to-white',
+          hoverBgGradient: 'hover:from-orange-100 hover:to-orange-50/70',
+          borderColor: 'border-orange-200',
+          iconColor: 'text-orange-500'
+        };
+      case 'creative':
+        return {
+          bgGradient: 'from-pink-50 to-white',
+          hoverBgGradient: 'hover:from-pink-100 hover:to-pink-50/70',
+          borderColor: 'border-pink-200',
+          iconColor: 'text-pink-500'
+        };
+      case 'money':
+        return {
+          bgGradient: 'from-green-50 to-white',
+          hoverBgGradient: 'hover:from-green-100 hover:to-green-50/70',
+          borderColor: 'border-green-200',
+          iconColor: 'text-green-500'
+        };
+      case 'passion':
+        return {
+          bgGradient: 'from-red-50 to-white',
+          hoverBgGradient: 'hover:from-red-100 hover:to-red-50/70',
+          borderColor: 'border-red-200',
+          iconColor: 'text-red-500'
+        };
+      case 'leadership':
+        return {
+          bgGradient: 'from-yellow-50 to-white',
+          hoverBgGradient: 'hover:from-yellow-100 hover:to-yellow-50/70',
+          borderColor: 'border-yellow-200',
+          iconColor: 'text-yellow-500'
+        };
+      case 'innovation':
+        return {
+          bgGradient: 'from-amber-50 to-white',
+          hoverBgGradient: 'hover:from-amber-100 hover:to-amber-50/70',
+          borderColor: 'border-amber-200',
+          iconColor: 'text-amber-500'
+        };
+      default:
+        return {
+          bgGradient: 'from-gray-50 to-white',
+          hoverBgGradient: 'hover:from-gray-100 hover:to-gray-50/70',
+          borderColor: 'border-gray-200',
+          iconColor: 'text-gray-500'
+        };
+    }
   };
 
   // For chips layout, use a responsively flowing layout
   if (layout === 'chips') {
     return (
-      <div className="flex flex-wrap gap-2 w-full max-w-2xl mb-4 animate-fade-in">
-        {normalizedOptions.map((option) => (
-          <Button
-            key={option.id}
-            variant="outline"
-            size="sm"
-            className="rounded-full border border-blue-100 bg-blue-50/50 hover:bg-blue-100/50 text-sm"
-            onClick={() => onSelect(option.text)}
-          >
-            {getOptionIcon(option)}
-            <span className="ml-1">{option.text}</span>
-          </Button>
-        ))}
+      <div className="flex flex-wrap gap-3 w-full max-w-2xl my-5 animate-fade-in">
+        {normalizedOptions.map((option) => {
+          const styles = getCardStyles(option);
+          
+          return (
+            <Button
+              key={option.id}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-full border transition-all duration-300",
+                `bg-gradient-to-r ${styles.bgGradient} ${styles.hoverBgGradient}`,
+                `${styles.borderColor} hover:shadow-md hover:scale-105`,
+                "text-base font-medium"
+              )}
+              onClick={() => onSelect(option.text)}
+            >
+              <span className={cn("mr-1.5", styles.iconColor)}>
+                {getOptionIcon(option)}
+              </span>
+              <span className="text-gray-800">{option.text}</span>
+            </Button>
+          );
+        })}
       </div>
     );
   }
 
   // For cards layout, use a grid that adjusts based on the number of options
-  const gridCols = normalizedOptions.length <= 4 ? 
+  const gridCols = normalizedOptions.length <= 2 ? 
     "grid-cols-1 sm:grid-cols-2" : 
     "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
 
   return (
-    <div className={`grid ${gridCols} gap-3 w-full max-w-2xl mb-4 animate-fade-in`}>
-      {normalizedOptions.map((option) => (
-        <Button
-          key={option.id}
-          variant="outline"
-          className="h-auto py-3 px-4 text-left flex flex-col items-start gap-1 bg-gradient-to-r from-white to-blue-50/40 hover:to-blue-50 hover:bg-primary/5 border border-blue-100 rounded-lg transition-all shadow-sm hover:shadow group"
-          onClick={() => onSelect(option.text)}
-        >
-          <div className="flex w-full justify-between items-center">
-            <div className="flex items-center gap-2">
-              {getOptionIcon(option)}
-              <span className="font-medium text-gray-800">{option.text}</span>
+    <div className={`grid ${gridCols} gap-4 w-full max-w-2xl my-5 animate-fade-in`}>
+      {normalizedOptions.map((option) => {
+        const styles = getCardStyles(option);
+        
+        return (
+          <button
+            key={option.id}
+            className={cn(
+              "h-auto py-4 px-5 text-left flex flex-col gap-2 rounded-xl",
+              `bg-gradient-to-br ${styles.bgGradient} ${styles.hoverBgGradient}`,
+              `border ${styles.borderColor}`,
+              "shadow-sm hover:shadow-md transition-all duration-300",
+              "hover:scale-[1.02] group"
+            )}
+            onClick={() => onSelect(option.text)}
+          >
+            <div className="flex w-full justify-between items-center">
+              <div className={cn("flex items-center gap-2.5", styles.iconColor)}>
+                {getOptionIcon(option)}
+                <span className="font-medium text-base text-gray-800">{option.text}</span>
+              </div>
+              <ArrowRight className="h-4 w-4 text-primary/80 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" />
             </div>
-            <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          {option.description && (
-            <p className="text-xs text-gray-500 mt-1">{option.description}</p>
-          )}
-        </Button>
-      ))}
+            {option.description && (
+              <p className="text-sm text-gray-600 mt-1 pl-7.5">{option.description}</p>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
