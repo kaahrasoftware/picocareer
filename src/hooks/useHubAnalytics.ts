@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format, subMonths, subWeeks, subDays, subYears, parseISO } from 'date-fns';
+import { format, subMonths, subWeeks, subDays, subYears, parseISO, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
 import { HubStorageMetrics, HubMemberMetrics, MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';
@@ -64,57 +64,49 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
     const startDate = subDays(now, 30); // Show 30 days
     
     try {
-      // First try to fetch data from hub_member_growth_daily table
-      let { data: dailyData, error: dailyError } = await supabase
-        .from('hub_member_growth_daily')
-        .select('*')
+      // Fetch all hub members who joined in the last 30 days
+      const { data: memberData, error: memberError } = await supabase
+        .from('hub_members')
+        .select('id, join_date')
         .eq('hub_id', hubId)
-        .gte('date', startDate.toISOString())
-        .order('date', { ascending: true });
+        .gte('join_date', startOfDay(startDate).toISOString())
+        .lte('join_date', endOfDay(now).toISOString())
+        .order('join_date', { ascending: true });
         
-      // If there's no data or the table doesn't exist, generate daily data from member signups
-      if (dailyError || !dailyData || dailyData.length === 0) {
-        console.log('Daily data not available, generating from member signups');
-        
-        // Fetch hub members and group by join date
-        const { data: memberData, error: memberError } = await supabase
-          .from('hub_members')
-          .select('join_date')
-          .eq('hub_id', hubId)
-          .gte('join_date', startDate.toISOString());
-          
-        if (memberError) throw memberError;
-        
-        // Map dates to member counts
-        const dailyMap: Record<string, number> = {};
-        
-        // Initialize map with all days in the range (showing 0 for days with no signups)
-        for (let i = 0; i < 30; i++) {
-          const date = subDays(now, i);
-          const dateStr = format(date, 'yyyy-MM-dd');
-          dailyMap[dateStr] = 0;
-        }
-        
-        // Count signups by date
-        if (memberData) {
-          memberData.forEach(member => {
-            const date = format(new Date(member.join_date), 'yyyy-MM-dd');
-            dailyMap[date] = (dailyMap[date] || 0) + 1;
-          });
-        }
-        
-        // Convert map to array
-        dailyData = Object.entries(dailyMap).map(([date, count]) => ({
-          hub_id: hubId,
-          date: date,
-          month: date, // For compatibility with existing UI
-          new_members: count
-        })).sort((a, b) => a.date.localeCompare(b.date));
+      if (memberError) {
+        console.error('Error fetching member data:', memberError);
+        return [];
       }
       
-      return dailyData || [];
+      // Generate an array of all days in the range
+      const daysRange = eachDayOfInterval({ start: startDate, end: now });
+      
+      // Initialize counts for each day
+      const dailyMap: Record<string, number> = {};
+      daysRange.forEach(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        dailyMap[dateStr] = 0;
+      });
+      
+      // Count signups by date
+      if (memberData) {
+        memberData.forEach(member => {
+          const date = format(new Date(member.join_date), 'yyyy-MM-dd');
+          dailyMap[date] = (dailyMap[date] || 0) + 1;
+        });
+      }
+      
+      // Convert map to array of MemberGrowth objects
+      const dailyData = Object.entries(dailyMap).map(([date, count]) => ({
+        hub_id: hubId,
+        date: date,
+        month: date, // For compatibility with existing UI
+        new_members: count
+      })).sort((a, b) => a.date.localeCompare(b.date));
+      
+      return dailyData;
     } catch (error) {
-      console.error('Error fetching daily member growth data:', error);
+      console.error('Error generating daily member growth data:', error);
       return [];
     }
   }, [hubId]);
