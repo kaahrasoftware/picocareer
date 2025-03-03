@@ -1,10 +1,9 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 // Constants for the prompt
 const SYSTEM_PROMPT = `
-You are Pico, a helpful career advisor. Follow these strict guidelines:
+You are Pico, a helpful career advisor. You MUST follow these strict guidelines:
 
 1. Ask questions in this SPECIFIC order:
    - Educational background/interests (3-4 questions)
@@ -19,26 +18,38 @@ You are Pico, a helpful career advisor. Follow these strict guidelines:
    - Reference previous answers to personalize following questions
    - NEVER ask multiple questions in one message
 
-3. Question examples:
-   - "What's your highest level of education?" [Options: "High school", "Bachelor's degree", "Master's degree", "Other"]
-   - "Which skill are you strongest in?" [Options: "Communication", "Technical", "Creative", "Analytical"]
-   - "Do you prefer working alone or in teams?" [Options: "Alone", "Small teams", "Large teams"]
-   - "What's your top career priority?" [Options: "Salary", "Work-life balance", "Growth", "Impact"]
-
-4. Format each response with metadata:
+3. ALWAYS format your response as follows:
    {
-     "category": "education|skills|workstyle|goals",
-     "questionNumber": X,
-     "totalInCategory": Y,
-     "hasOptions": true,
-     "suggestions": ["Option 1", "Option 2", "Option 3"]
+     "type": "question",
+     "metadata": {
+       "category": "education|skills|workstyle|goals",
+       "questionNumber": X,
+       "totalInCategory": Y,
+       "options": ["Option 1", "Option 2", "Option 3"]
+     },
+     "content": "Your actual question text here"
    }
 
-5. After collecting 12-15 total responses:
-   - Provide career recommendations with match percentages
-   - Include personality analysis
-   - Suggest relevant mentors
-   - Format the recommendation clearly with sections
+4. After collecting 12-15 total responses, provide career recommendations in this format:
+   {
+     "type": "recommendation",
+     "sections": {
+       "careers": [
+         {"title": "Career Title", "match": 85, "reasoning": "Why this matches"},
+         {"title": "Another Career", "match": 75, "reasoning": "Explanation"}
+       ],
+       "personality": [
+         {"title": "Personality Trait", "match": 90, "description": "Description"},
+         {"title": "Another Trait", "match": 85, "description": "Details"}
+       ],
+       "mentors": [
+         {"name": "Mentor Name", "experience": "5 years", "skills": "Skills overview"},
+         {"name": "Another Mentor", "experience": "10 years", "skills": "Specialties"}
+       ]
+     }
+   }
+
+5. ALWAYS include the JSON structure in your response. This is MANDATORY.
 `;
 
 const corsHeaders = {
@@ -72,6 +83,7 @@ serve(async (req) => {
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
     
     if (!deepseekApiKey) {
+      console.error('Missing DeepSeek API key');
       return new Response(
         JSON.stringify({ error: 'DeepSeek API key not configured.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -140,9 +152,17 @@ serve(async (req) => {
     }
     
     // Add special instruction if we're about to transition to recommendations
-    if (currentCategory === 'goals' && questionNumber >= 3) {
-      prompt += "\nAfter this question, provide career recommendations based on all the user's answers.";
+    const totalQuestionsAsked = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
+    if ((currentCategory === 'goals' && questionNumber >= 3) || totalQuestionsAsked >= 12) {
+      prompt += "\nAfter this question, provide career recommendations based on all the user's answers in the specified JSON format.";
     }
+    
+    console.log('Calling DeepSeek API with prompt...', { 
+      currentCategory, 
+      questionNumber, 
+      totalQuestionsAsked,
+      apiKeyPresent: !!deepseekApiKey
+    });
     
     // Call the DeepSeek API
     const apiResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -169,6 +189,11 @@ serve(async (req) => {
     }
 
     const data = await apiResponse.json();
+    console.log('DeepSeek API response received', { 
+      choices: !!data.choices,
+      hasMessage: !!(data.choices?.[0]?.message),
+      responseLength: data.choices?.[0]?.message?.content?.length
+    });
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('Invalid response from DeepSeek API');
@@ -177,32 +202,47 @@ serve(async (req) => {
     // Extract the response text
     const responseContent = data.choices[0].message.content;
     
-    // Parse the message and extract metadata
+    // Try to extract JSON from the response
+    let parsedResponse;
+    let responseType = 'unknown';
     let metadata = {};
+    let cleanedMessage = responseContent;
+    
     try {
-      // Check if the message contains a JSON structure with metadata
-      const metadataMatch = responseContent.match(/\{[\s\S]*?\}/);
-      if (metadataMatch) {
-        const metadataJson = metadataMatch[0];
-        const parsedMetadata = JSON.parse(metadataJson);
+      // Look for JSON pattern in the response
+      const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonString = jsonMatch[0];
+        parsedResponse = JSON.parse(jsonString);
         
-        // Extract the metadata fields
-        metadata = {
-          category: parsedMetadata.category || currentCategory,
-          questionNumber: parsedMetadata.questionNumber || questionNumber,
-          totalInCategory: parsedMetadata.totalInCategory || 4,
-          hasOptions: true,
-          suggestions: parsedMetadata.suggestions || []
-        };
-        
-        // If this looks like a recommendation, mark it as such
-        if (responseContent.toLowerCase().includes('career recommendation') || 
-            responseContent.toLowerCase().includes('career matches')) {
-          metadata.isRecommendation = true;
-          metadata.category = 'complete';
+        // Determine the type of response
+        if (parsedResponse.type === 'question') {
+          responseType = 'question';
+          metadata = {
+            category: parsedResponse.metadata?.category || currentCategory,
+            questionNumber: parsedResponse.metadata?.questionNumber || questionNumber,
+            totalInCategory: parsedResponse.metadata?.totalInCategory || 4,
+            hasOptions: true,
+            suggestions: parsedResponse.metadata?.options || []
+          };
+          
+          // Use the content as the cleaned message
+          cleanedMessage = parsedResponse.content || responseContent.replace(jsonString, '').trim();
+        }
+        else if (parsedResponse.type === 'recommendation') {
+          responseType = 'recommendation';
+          metadata = {
+            isRecommendation: true,
+            category: 'complete'
+          };
+          
+          // For recommendations, keep the JSON as part of the response
+          // but also extract main content if needed for display
+          cleanedMessage = formatRecommendation(parsedResponse);
         }
       } else {
-        // Default metadata if none found
+        // Fallback for non-JSON responses
+        console.log('No JSON structure found in response, using default formatting');
         metadata = {
           category: currentCategory,
           questionNumber: questionNumber,
@@ -212,8 +252,8 @@ serve(async (req) => {
         };
       }
     } catch (e) {
-      console.error('Error parsing metadata:', e);
-      // Fallback metadata
+      console.error('Error parsing response JSON:', e);
+      // Fallback metadata when parsing fails
       metadata = {
         category: currentCategory,
         questionNumber: questionNumber,
@@ -223,37 +263,44 @@ serve(async (req) => {
       };
     }
     
-    // Clean the message by removing the JSON metadata block
-    let cleanedMessage = responseContent.replace(/\{[\s\S]*?\}/, '').trim();
+    // Track overall progress
+    const totalCategories = CATEGORIES.length;
+    const categoriesCompleted = CATEGORIES.findIndex(cat => cat === currentCategory);
+    const progressInCurrentCategory = questionNumber / 4; // assuming 4 questions per category
     
-    // Extract a clean question from the message
-    let questionText = cleanedMessage;
+    // Calculate overall progress (0-100)
+    const overallProgress = Math.min(
+      Math.round(((categoriesCompleted + progressInCurrentCategory) / totalCategories) * 100),
+      100
+    );
     
-    // If we have suggestions, split the message to separate question from options
-    if (metadata.suggestions && metadata.suggestions.length > 0) {
-      // Try to find where the question ends and options begin
-      const optionsIndex = findOptionsIndex(cleanedMessage, metadata.suggestions);
-      if (optionsIndex > 0) {
-        questionText = cleanedMessage.substring(0, optionsIndex).trim();
-      }
-    }
+    // Add progress to metadata
+    metadata.progress = overallProgress;
     
     // Generate a message ID
     const messageId = crypto.randomUUID();
 
+    console.log('Sending final response', { 
+      responseType, 
+      messageLength: cleanedMessage.length,
+      hasMetadata: Object.keys(metadata).length > 0,
+      progress: metadata.progress
+    });
+
     // Return the response
     return new Response(
       JSON.stringify({
-        message: questionText,
+        message: cleanedMessage,
         messageId,
-        metadata
+        metadata,
+        rawResponse: responseType === 'recommendation' ? parsedResponse : undefined
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error in career-chat-ai function:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'An error occurred' }),
+      JSON.stringify({ error: error.message || 'An error occurred', details: error.stack }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -287,31 +334,46 @@ function extractSuggestions(text) {
   return ["Yes", "No", "Maybe", "Not sure"];
 }
 
-// Helper function to find where the options begin in the message
-function findOptionsIndex(text, options) {
-  // Try to find the first option in the text
-  if (!options || options.length === 0) return -1;
-  
-  // Look for common option patterns
-  const patterns = [
-    '- ',
-    '* ',
-    '• ',
-    '1. ',
-    'Options:',
-    'Choose from:'
-  ];
-  
-  for (const pattern of patterns) {
-    const index = text.indexOf(pattern);
-    if (index > 0) return index;
+// Format recommendation for display
+function formatRecommendation(recommendation) {
+  if (!recommendation.sections) {
+    return JSON.stringify(recommendation, null, 2);
   }
   
-  // Try to find the actual option text
-  for (const option of options) {
-    const index = text.indexOf(option);
-    if (index > 0) return index;
+  let formattedText = "# Career Recommendations\n\n";
+  
+  // Add careers section
+  if (recommendation.sections.careers && recommendation.sections.careers.length > 0) {
+    formattedText += "## Career Matches\n\n";
+    recommendation.sections.careers.forEach((career, index) => {
+      formattedText += `${index + 1}. ${career.title} (${career.match}%)\n`;
+      if (career.reasoning) {
+        formattedText += `   ${career.reasoning}\n\n`;
+      }
+    });
   }
   
-  return -1;
+  // Add personality section
+  if (recommendation.sections.personality && recommendation.sections.personality.length > 0) {
+    formattedText += "\n## Personality Assessment\n\n";
+    recommendation.sections.personality.forEach((trait, index) => {
+      formattedText += `${index + 1}. ${trait.title} (${trait.match}%)\n`;
+      if (trait.description) {
+        formattedText += `   ${trait.description}\n\n`;
+      }
+    });
+  }
+  
+  // Add mentors section
+  if (recommendation.sections.mentors && recommendation.sections.mentors.length > 0) {
+    formattedText += "\n## Mentor Recommendations\n\n";
+    recommendation.sections.mentors.forEach((mentor, index) => {
+      formattedText += `${index + 1}. ${mentor.name} (${mentor.experience})\n`;
+      if (mentor.skills) {
+        formattedText += `   ${mentor.skills}\n\n`;
+      }
+    });
+  }
+  
+  return formattedText;
 }

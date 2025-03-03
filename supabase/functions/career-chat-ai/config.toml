@@ -1,11 +1,11 @@
 
 project_id = "wurdmlkfkzuivvwxjmxk"
 [config]
-# Replace the following with your DeepSeek API key
+# DeepSeek API key is set via environment variables
 DEEPSEEK_API_KEY = ""
 
 # Configuring the AI to generate more structured and concise responses
-AI_RESPONSE_FORMAT = "concise"
+AI_RESPONSE_FORMAT = "structured"
 QUESTION_MAX_LENGTH = 60
 OPTIONS_MAX_COUNT = 4
 OPTIONS_MAX_LENGTH = 30

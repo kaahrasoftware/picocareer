@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check, UserRound, Briefcase, GraduationCap, Brain } from 'lucide-react';
 
 interface OptionCardsProps {
   options: string[];
@@ -9,6 +9,38 @@ interface OptionCardsProps {
 }
 
 export function OptionCards({ options, onSelect }: OptionCardsProps) {
+  // Get an appropriate icon based on the option content
+  const getOptionIcon = (option: string) => {
+    const lowerOption = option.toLowerCase();
+    
+    if (lowerOption.includes('degree') || 
+        lowerOption.includes('education') || 
+        lowerOption.includes('school') ||
+        lowerOption.includes('university') ||
+        lowerOption.includes('college')) {
+      return <GraduationCap className="h-4 w-4 text-indigo-500" />;
+    }
+    
+    if (lowerOption.includes('skill') || 
+        lowerOption.includes('technical') || 
+        lowerOption.includes('coding') ||
+        lowerOption.includes('analysis') ||
+        lowerOption.includes('problem')) {
+      return <Brain className="h-4 w-4 text-emerald-500" />;
+    }
+    
+    if (lowerOption.includes('work') || 
+        lowerOption.includes('job') || 
+        lowerOption.includes('career') ||
+        lowerOption.includes('business') ||
+        lowerOption.includes('industry')) {
+      return <Briefcase className="h-4 w-4 text-amber-500" />;
+    }
+    
+    // Default icon
+    return <UserRound className="h-4 w-4 text-gray-500" />;
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl mb-4 animate-fade-in">
       {options.map((option, index) => (
@@ -19,7 +51,10 @@ export function OptionCards({ options, onSelect }: OptionCardsProps) {
           onClick={() => onSelect(option)}
         >
           <div className="flex w-full justify-between items-center">
-            <span className="font-medium text-gray-800">{option}</span>
+            <div className="flex items-center gap-2">
+              {getOptionIcon(option)}
+              <span className="font-medium text-gray-800">{option}</span>
+            </div>
             <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </Button>

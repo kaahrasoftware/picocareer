@@ -51,6 +51,13 @@ export function QuestionCard({
     }
   };
 
+  // Format progress display
+  const formattedProgress = Math.round(progress);
+  const progressStatus = formattedProgress < 25 ? 'Just Starting' : 
+                         formattedProgress < 50 ? 'Making Progress' :
+                         formattedProgress < 75 ? 'Getting There' :
+                         formattedProgress < 100 ? 'Almost Done' : 'Complete';
+
   return (
     <Card className="w-full max-w-2xl mb-4 bg-white border border-blue-100 shadow-sm transition-all hover:shadow animate-fade-in">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -60,9 +67,12 @@ export function QuestionCard({
             {formatCategory(category)} • Q{questionNumber}/{totalQuestions}
           </CardTitle>
         </div>
-        <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
-          {Math.round(progress)}%
-        </span>
+        <div className="flex flex-col items-end">
+          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
+            {formattedProgress}%
+          </span>
+          <span className="text-xs text-gray-500 mt-1">{progressStatus}</span>
+        </div>
       </CardHeader>
       <CardContent>
         <h3 className="text-lg font-medium text-gray-800 mb-3">{question}</h3>

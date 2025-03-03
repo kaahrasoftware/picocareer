@@ -157,19 +157,32 @@ export function useCareerChat() {
       // Log successful response for debugging
       console.log('Got response from career-chat-ai:', response.data);
       
+      // Check if this is a recommendation (from structured response)
+      const isRecommendation = response.data?.rawResponse?.type === 'recommendation' ||
+                              response.data?.metadata?.isRecommendation;
+      
       // Add bot response to messages locally
       if (response.data?.message) {
         const botMessage: CareerChatMessage = {
           id: response.data.messageId || `temp-${Date.now()}`,
           session_id: sessionId,
-          message_type: 'bot',
+          message_type: isRecommendation ? 'recommendation' : 'bot',
           content: response.data.message,
-          metadata: response.data.metadata || {},
+          metadata: {
+            ...(response.data.metadata || {}),
+            rawResponse: response.data.rawResponse
+          },
           created_at: new Date().toISOString()
         };
         
         // Manually add the bot message to messages
         await addMessage(botMessage);
+        
+        // Update progress when a recommendation is received
+        if (isRecommendation) {
+          setQuestionProgress(100);
+          setCurrentCategory('complete');
+        }
       }
       
     } catch (error) {

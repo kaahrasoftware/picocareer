@@ -29,8 +29,64 @@ export interface ParsedRecommendation {
   mentors: MentorRecommendation[];
 }
 
+// Type for structured response from DeepSeek
+export interface StructuredRecommendation {
+  type: string;
+  sections: {
+    careers: Array<{
+      title: string;
+      match: number;
+      reasoning: string;
+    }>;
+    personality: Array<{
+      title: string;
+      match: number;
+      description: string;
+    }>;
+    mentors: Array<{
+      name: string;
+      experience: string;
+      skills: string;
+    }>;
+  };
+}
+
+/**
+ * Parses a structured recommendation response directly
+ */
+export function parseStructuredRecommendation(rawResponse: any): ParsedRecommendation {
+  if (!rawResponse || rawResponse.type !== 'recommendation' || !rawResponse.sections) {
+    return { 
+      type: 'unknown',
+      careers: [],
+      personalities: [],
+      mentors: []
+    };
+  }
+  
+  return {
+    type: 'recommendation',
+    careers: (rawResponse.sections.careers || []).map((career: any) => ({
+      title: career.title || '',
+      match: career.match || 0,
+      reasoning: career.reasoning || ''
+    })),
+    personalities: (rawResponse.sections.personality || []).map((trait: any) => ({
+      title: trait.title || '',
+      match: trait.match || 0,
+      description: trait.description || ''
+    })),
+    mentors: (rawResponse.sections.mentors || []).map((mentor: any) => ({
+      name: mentor.name || '',
+      experience: mentor.experience || '',
+      skills: mentor.skills || ''
+    }))
+  };
+}
+
 /**
  * Extracts structured sections from a career recommendation message
+ * This is used as a fallback when raw JSON structure isn't available
  */
 export function extractSections(content: string): ParsedRecommendation {
   if (!content.includes('Career Recommendations') && 

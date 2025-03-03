@@ -8,7 +8,10 @@ import { RecommendationSection } from '@/components/career-chat/message-parts/Re
 import { UserMessage } from '@/components/career-chat/message-parts/UserMessage';
 import { SystemMessage } from '@/components/career-chat/message-parts/SystemMessage';
 import { BotMessage } from '@/components/career-chat/message-parts/BotMessage';
-import { extractSections } from '@/components/career-chat/utils/recommendationParser';
+import { 
+  extractSections, 
+  parseStructuredRecommendation 
+} from '@/components/career-chat/utils/recommendationParser';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
@@ -26,6 +29,10 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     message.metadata.category && 
     message.metadata.hasOptions;
   
+  // Check if this message contains raw structured response data
+  const hasStructuredData = message.metadata?.rawResponse && 
+    message.metadata.rawResponse.type === 'recommendation';
+  
   // Handle single career recommendation messages
   if (isRecommendation && message.metadata?.career) {
     return (
@@ -37,7 +44,13 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     );
   }
   
-  // Handle full recommendation message with multiple sections
+  // Handle structured recommendation from raw response
+  if (hasStructuredData) {
+    const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
+    return <RecommendationSection recommendation={structuredData} />;
+  }
+  
+  // Handle full recommendation message with multiple sections (fallback to text parsing)
   if (isRecommendation && !message.metadata?.career) {
     const sections = extractSections(message.content);
     
@@ -54,6 +67,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     const category = message.metadata.category as string || 'general';
     const questionNumber = message.metadata.questionNumber as number || 1;
     const totalInCategory = message.metadata.totalInCategory as number || 4;
+    const progress = message.metadata.progress as number || currentQuestionProgress;
     
     return (
       <div className="flex flex-col items-start w-full">
@@ -62,7 +76,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
           category={category}
           questionNumber={questionNumber}
           totalQuestions={totalInCategory}
-          progress={currentQuestionProgress}
+          progress={progress}
         />
         
         {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
