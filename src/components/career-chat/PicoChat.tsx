@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Bot, MessageCircle, Briefcase } from 'lucide-react';
+import { Loader2, AlertCircle, Bot, MessageCircle, Briefcase, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -11,6 +12,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useCareerAnalysis } from './hooks/useCareerAnalysis';
+import { SessionManagementDialog } from './SessionManagementDialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function PicoChat() {
   const {
@@ -23,6 +26,14 @@ export function PicoChat() {
     messagesEndRef,
     currentCategory,
     questionProgress,
+    pastSessions,
+    isFetchingPastSessions,
+    fetchPastSessions,
+    endCurrentSession,
+    startNewSession,
+    resumeSession,
+    deleteSession,
+    updateSessionTitle,
     setInputMessage,
     sendMessage,
     addMessage
@@ -31,6 +42,7 @@ export function PicoChat() {
   const { toast } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
   const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
+  const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -97,6 +109,18 @@ export function PicoChat() {
     setShowAnalyzeButton(false);
   };
   
+  const handleStartNewChat = async () => {
+    if (messages.length > 2) {
+      if (confirm('Starting a new chat will end your current conversation. Continue?')) {
+        await startNewSession();
+        toast.success('Started new conversation');
+      }
+    } else {
+      await startNewSession();
+      toast.success('Started new conversation');
+    }
+  };
+  
   if (isLoading) {
     return (
       <MainLayout>
@@ -133,18 +157,55 @@ export function PicoChat() {
             <p className="text-lg text-muted-foreground max-w-md">
               I'm here to help you explore career options and find the perfect path for your skills and interests.
             </p>
-            <Button 
-              className="mt-4 bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all"
-              size="lg"
-              onClick={() => sendMessage("Hi, I'd like to explore career options")}
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span>Start Career Chat</span>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <Button 
+                className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all"
+                size="lg"
+                onClick={() => sendMessage("Hi, I'd like to explore career options")}
+              >
+                <MessageCircle className="h-5 w-5" />
+                <span>Start Career Chat</span>
+              </Button>
+              
+              <Button 
+                className="gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all"
+                size="lg"
+                variant="outline"
+                onClick={() => setSessionDialogOpen(true)}
+              >
+                <History className="h-5 w-5" />
+                <span>Past Conversations</span>
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
-            <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
+            <div className="flex items-center justify-between bg-white border-b p-4">
+              <div className="flex-1">
+                <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
+              </div>
+              
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <History className="h-4 w-4" />
+                      Manage
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleStartNewChat}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      New Conversation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSessionDialogOpen(true)}>
+                      <History className="h-4 w-4 mr-2" />
+                      Past Conversations
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
             
             <ScrollArea className="flex-1 p-4 overflow-y-auto">
               <div className="space-y-4">
@@ -182,6 +243,17 @@ export function PicoChat() {
             />
           </div>
         )}
+        
+        <SessionManagementDialog
+          open={sessionDialogOpen}
+          onOpenChange={setSessionDialogOpen}
+          pastSessions={pastSessions}
+          isFetchingPastSessions={isFetchingPastSessions}
+          onFetchPastSessions={fetchPastSessions}
+          onResumeSession={resumeSession}
+          onDeleteSession={deleteSession}
+          onUpdateSessionTitle={updateSessionTitle}
+        />
       </div>
     </MainLayout>
   );

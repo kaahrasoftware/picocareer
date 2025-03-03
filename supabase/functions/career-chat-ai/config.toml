@@ -6,6 +6,7 @@ DEEPSEEK_API_KEY = ""
 
 # Configuring the AI to generate more structured and concise responses
 AI_RESPONSE_FORMAT = "concise"
-QUESTION_MAX_LENGTH = 100
+QUESTION_MAX_LENGTH = 60
 OPTIONS_MAX_COUNT = 4
-OPTIONS_MAX_LENGTH = 50
+OPTIONS_MAX_LENGTH = 30
+CATEGORY_TRACKING = "enabled"

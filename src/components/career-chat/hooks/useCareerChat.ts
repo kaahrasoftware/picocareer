@@ -7,7 +7,21 @@ import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
 
 export function useCareerChat() {
-  const { messages, sessionId, isLoading, addMessage } = useChatSession();
+  const { 
+    messages, 
+    sessionId, 
+    isLoading, 
+    addMessage, 
+    pastSessions,
+    isFetchingPastSessions,
+    fetchPastSessions,
+    endCurrentSession,
+    startNewSession,
+    resumeSession,
+    deleteSession,
+    updateSessionTitle 
+  } = useChatSession();
+  
   const { isAnalyzing, analyzeResponses } = useCareerAnalysis(sessionId || '', addMessage);
   
   const [inputMessage, setInputMessage] = useState('');
@@ -184,6 +198,14 @@ export function useCareerChat() {
     hasConfigError,
     currentCategory,
     questionProgress,
+    pastSessions,
+    isFetchingPastSessions,
+    fetchPastSessions,
+    endCurrentSession,
+    startNewSession,
+    resumeSession,
+    deleteSession,
+    updateSessionTitle,
     messagesEndRef,
     setInputMessage,
     sendMessage,
