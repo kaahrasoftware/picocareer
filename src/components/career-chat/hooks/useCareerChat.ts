@@ -91,6 +91,9 @@ export function useCareerChat() {
         throw new Error(response.data.error);
       }
 
+      // Log successful response for debugging
+      console.log('Got response from career-chat-ai:', response.data);
+      
       // No need to add bot response here as it's already done in the edge function
       
     } catch (error) {

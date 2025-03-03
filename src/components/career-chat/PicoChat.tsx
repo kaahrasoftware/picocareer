@@ -67,6 +67,11 @@ export function PicoChat() {
     }
   }, [toast, messages.length, isLoading, configChecked]);
   
+  // Handle suggestion clicks
+  const handleSuggestionClick = (suggestion: string) => {
+    sendMessage(suggestion);
+  };
+  
   if (isLoading) {
     return (
       <MainLayout>
@@ -100,7 +105,11 @@ export function PicoChat() {
         <ScrollArea className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <ChatMessage key={message.id || index} message={message} />
+              <ChatMessage 
+                key={message.id || index} 
+                message={message} 
+                onSuggestionClick={handleSuggestionClick}
+              />
             ))}
             
             {isTyping && <ChatTypingIndicator />}
