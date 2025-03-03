@@ -96,7 +96,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Handle structured question format (new)
   if (questionInfo) {
     return (
-      <div className="flex flex-col items-start w-full">
+      <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
         <QuestionCard 
           question={questionInfo.question}
           intro={questionInfo.intro}
@@ -107,12 +107,14 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
         />
         
         {questionInfo.options.length > 0 && (
-          <OptionCards 
-            options={questionInfo.options}
-            onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
-            layout={questionInfo.layout as any}
-            allowMultiple={questionInfo.allowMultiple}
-          />
+          <div className="w-full mt-2">
+            <OptionCards 
+              options={questionInfo.options}
+              onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
+              layout={questionInfo.layout as any}
+              allowMultiple={questionInfo.allowMultiple}
+            />
+          </div>
         )}
       </div>
     );
@@ -138,7 +140,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     }
     
     return (
-      <div className="flex flex-col items-start w-full">
+      <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
         <QuestionCard 
           question={questionText}
           intro={intro !== '' ? intro : undefined}
@@ -149,11 +151,13 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
         />
         
         {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
-          <OptionCards 
-            options={message.metadata.suggestions as string[]}
-            onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
-            allowMultiple={allowMultiple}
-          />
+          <div className="w-full mt-2">
+            <OptionCards 
+              options={message.metadata.suggestions as string[]}
+              onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
+              allowMultiple={allowMultiple}
+            />
+          </div>
         )}
       </div>
     );

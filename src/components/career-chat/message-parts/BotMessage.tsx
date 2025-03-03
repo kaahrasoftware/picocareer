@@ -23,9 +23,9 @@ export function BotMessage({ content }: BotMessageProps) {
   }, [content]);
 
   return (
-    <div className="flex flex-col items-start mb-4">
+    <div className="flex flex-col items-start mb-4 animate-fade-in">
       <div className={cn(
-        "max-w-[95%] rounded-xl px-5 py-4 shadow-sm transition-all duration-300 hover:shadow",
+        "max-w-[95%] rounded-xl px-5 py-4 shadow-md transition-all duration-300 hover:shadow-lg",
         isError 
           ? "bg-gradient-to-br from-red-50 to-white border border-red-200" 
           : "bg-gradient-to-br from-blue-50 to-white border border-blue-200"

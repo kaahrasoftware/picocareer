@@ -126,7 +126,7 @@ export function QuestionCard({
 
   return (
     <Card className={cn(
-      "w-full max-w-2xl mb-2 shadow-sm hover:shadow transition-all duration-300 animate-fade-in", 
+      "w-full max-w-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in", 
       `bg-gradient-to-br ${styles.gradientClass}`,
       `border ${styles.borderClass}`
     )}>

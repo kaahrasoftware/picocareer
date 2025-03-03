@@ -374,7 +374,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
 
   return (
-    <div className={`grid ${gridCols} gap-4 w-full max-w-2xl my-5 animate-fade-in`}>
+    <div className={`grid ${gridCols} gap-4 w-full max-w-2xl animate-fade-in`}>
       {normalizedOptions.map((option) => {
         const isSelected = isOptionSelected(option);
         const styles = getCardStyles(option, isSelected);
