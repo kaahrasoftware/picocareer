@@ -33,12 +33,12 @@ export function PicoChat() {
   useEffect(() => {
     const checkApiConfig = async () => {
       try {
-        const response = await fetch('/api/check-openai-config');
+        const response = await fetch('/api/check-deepseek-config');
         const data = await response.json();
         if (!data.configured) {
           toast({
-            title: "OpenAI API Key Not Configured",
-            description: "Please contact an administrator to set up the OpenAI integration.",
+            title: "DeepSeek API Key Not Configured",
+            description: "Please contact an administrator to set up the DeepSeek integration.",
             variant: "destructive",
             duration: 10000,
           });

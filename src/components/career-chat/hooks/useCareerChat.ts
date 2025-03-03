@@ -1,9 +1,10 @@
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useChatSession } from './useChatSession';
 import { useCareerAnalysis } from './useCareerAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CareerChatMessage } from '@/types/database/analytics';
 
 export function useCareerChat() {
   const { messages, sessionId, isLoading, addMessage } = useChatSession();
@@ -31,7 +32,7 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
-      // Format messages for the OpenAI API
+      // Format messages for the DeepSeek API
       const messageHistory = messages
         .filter(m => m.message_type === 'user' || m.message_type === 'bot')
         .map(m => ({
@@ -58,16 +59,7 @@ export function useCareerChat() {
         throw new Error(response.error.message);
       }
 
-      const data = await response.data;
-      
-      // Add bot response
-      await addMessage({
-        session_id: sessionId,
-        message_type: 'bot',
-        content: data.response,
-        metadata: {},
-        created_at: new Date().toISOString()
-      });
+      // No need to add bot response here as it's already done in the edge function
       
     } catch (error) {
       console.error('Error getting AI response:', error);

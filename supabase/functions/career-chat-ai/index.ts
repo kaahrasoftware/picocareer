@@ -1,88 +1,108 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.36.0';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
-interface RequestBody {
-  message: string;
-  sessionId: string;
-  messages: Array<{
-    role: string;
-    content: string;
-  }>;
-}
-
-// System prompt to guide the AI's behavior
-const SYSTEM_PROMPT = `You are Pico, an AI career guide. Your purpose is to help users explore career options that match their interests, skills, and preferences. 
-Ask thoughtful questions to understand the user better, then provide personalized career recommendations.
-
-Guidelines:
-- Be conversational and friendly but professional
-- Ask questions to understand the user's interests, skills, education, and work preferences
-- After collecting sufficient information, provide 2-3 personalized career recommendations with clear reasoning
-- Each recommendation should include a job title, why it might be a good fit, and key skills needed
-- Keep responses concise (max 3 paragraphs)
-- Don't ask all questions at once; have a natural conversation`;
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key is not configured');
+    // Get DeepSeek API key from environment variable
+    const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    if (!deepSeekApiKey) {
+      throw new Error('DeepSeek API key not found');
     }
 
-    const { message, sessionId, messages } = await req.json() as RequestBody;
+    // Get data from request
+    const { message, sessionId, messages } = await req.json();
 
-    if (!message || !sessionId) {
-      return new Response(
-        JSON.stringify({ error: 'Message and sessionId are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Create formatted message history for DeepSeek API
+    const formattedMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
 
-    // Prepare the message history for OpenAI, including system prompt
-    const messageHistory = [
-      { role: "system", content: SYSTEM_PROMPT },
-      ...messages
-    ];
+    // Add system message at the beginning with career advisor instructions
+    formattedMessages.unshift({
+      role: "system",
+      content: "You are a helpful career advisor named Pico. Your goal is to help users explore career paths that match their skills, interests, and goals. Be friendly, encouraging, and supportive. Ask thoughtful questions to understand the user better. Provide practical advice tailored to their situation."
+    });
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('Sending request to DeepSeek with messages:', JSON.stringify(formattedMessages.slice(0, 3)) + '...');
+
+    // Call DeepSeek API (using their chat completion API)
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepSeekApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messageHistory,
+        model: 'deepseek-chat',
+        messages: formattedMessages,
         temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+      const errorData = await response.text();
+      console.error('DeepSeek API error:', errorData);
+      throw new Error(`DeepSeek API error: ${response.status} ${errorData}`);
     }
 
     const data = await response.json();
+    console.log('DeepSeek response:', JSON.stringify(data));
+
+    // Extract the response text
     const aiResponse = data.choices[0].message.content;
 
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Store the message in the database
+    const { data: storedMessage, error } = await supabase
+      .from('career_chat_messages')
+      .insert({
+        session_id: sessionId,
+        message_type: 'bot',
+        content: aiResponse,
+        metadata: {}
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error storing message:', error);
+    }
+
+    // Return the AI response and the stored message data
     return new Response(
-      JSON.stringify({ response: aiResponse }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        response: aiResponse,
+        message: storedMessage
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   } catch (error) {
-    console.error('Error in career-chat-ai function:', error);
+    console.error('Error:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   }
 });

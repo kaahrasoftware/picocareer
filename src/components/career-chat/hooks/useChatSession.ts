@@ -1,144 +1,151 @@
 
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { CareerChatMessage } from '@/types/database/analytics';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthSession } from '@/hooks/useAuthSession';
 import { WELCOME_MESSAGES } from '../constants';
+import { CareerChatMessage } from '@/types/database/analytics';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 export function useChatSession() {
   const [messages, setMessages] = useState<CareerChatMessage[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const { session } = useAuthSession();
 
-  // Initialize or retrieve the chat session
-  useEffect(() => {
-    async function initSession() {
-      // Try to retrieve an existing active session
-      if (session?.user?.id) {
-        const { data: existingSessions } = await supabase
-          .from('career_chat_sessions')
-          .select('*')
-          .eq('profile_id', session.user.id)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (existingSessions && existingSessions.length > 0) {
-          setSessionId(existingSessions[0].id);
-          
-          // Load messages for this session
-          const { data: existingMessages } = await supabase
-            .from('career_chat_messages')
-            .select('*')
-            .eq('session_id', existingSessions[0].id)
-            .order('created_at', { ascending: true });
-          
-          if (existingMessages && existingMessages.length > 0) {
-            setMessages(existingMessages);
-          } else {
-            // If no messages found, initialize with welcome messages
-            setMessages(WELCOME_MESSAGES.map(msg => ({
-              ...msg,
-              session_id: existingSessions[0].id
-            })));
-
-            // Save welcome messages to the database
-            await Promise.all(WELCOME_MESSAGES.map(msg => 
-              addMessage({
-                ...msg,
-                session_id: existingSessions[0].id
-              })
-            ));
-          }
-        } else {
-          // Create a new session
-          const newSessionId = uuidv4();
-          const { error } = await supabase
-            .from('career_chat_sessions')
-            .insert({
-              id: newSessionId,
-              profile_id: session.user.id,
-              status: 'active',
-              created_at: new Date().toISOString(),
-              last_message_at: new Date().toISOString()
-            });
-
-          if (error) {
-            console.error('Error creating session:', error);
-            return;
-          }
-
-          setSessionId(newSessionId);
-          
-          // Initialize with welcome messages
-          setMessages(WELCOME_MESSAGES.map(msg => ({
-            ...msg,
-            session_id: newSessionId
-          })));
-
-          // Save welcome messages to the database
-          await Promise.all(WELCOME_MESSAGES.map(msg => 
-            addMessage({
-              ...msg,
-              session_id: newSessionId
-            })
-          ));
-        }
-      } else {
-        // Handle anonymous users
-        const newSessionId = uuidv4();
-        setSessionId(newSessionId);
-        setMessages(WELCOME_MESSAGES.map(msg => ({
-          ...msg,
-          session_id: newSessionId
-        })));
-      }
-      
-      setIsLoading(false);
-    }
-
-    initSession();
-  }, [session]);
-
-  // Function to add a message to the conversation
-  async function addMessage(message: Omit<CareerChatMessage, 'id'>) {
-    if (!message.session_id) {
-      console.error('Cannot add message: No session ID');
-      return null;
-    }
-
-    // Optimistically update the UI
-    const tempId = uuidv4();
-    const tempMessage = { ...message, id: tempId };
-    setMessages(prev => [...prev, tempMessage]);
-
-    // Save to database
+  // Function to create a new chat session
+  const createChatSession = async () => {
     const { data, error } = await supabase
-      .from('career_chat_messages')
-      .insert(message)
+      .from('career_chat_sessions')
+      .insert({
+        profile_id: session?.user.id || null,
+        status: 'active'
+      })
       .select()
       .single();
 
     if (error) {
-      console.error('Error saving message:', error);
-      // Remove the temp message on error
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      console.error('Error creating chat session:', error);
       return null;
     }
 
-    // Update last_message_at in the session
-    await supabase
+    return data.id;
+  };
+
+  // Function to get an existing chat session
+  const getExistingSession = async () => {
+    if (!session?.user.id) return null;
+
+    const { data, error } = await supabase
       .from('career_chat_sessions')
-      .update({ last_message_at: new Date().toISOString() })
-      .eq('id', message.session_id);
+      .select()
+      .eq('profile_id', session.user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-    // Replace the temp message with the actual one from the database
-    setMessages(prev => prev.map(m => m.id === tempId ? data : m));
+    if (error) {
+      console.error('Error fetching existing session:', error);
+      return null;
+    }
 
-    return data;
-  }
+    return data?.id || null;
+  };
+
+  // Function to get messages for a session
+  const getSessionMessages = async (sid: string) => {
+    const { data, error } = await supabase
+      .from('career_chat_messages')
+      .select()
+      .eq('session_id', sid)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching chat messages:', error);
+      return [];
+    }
+
+    // Type assertion to convert message_type from string to the expected enum type
+    const typedMessages = data.map(msg => ({
+      ...msg,
+      message_type: msg.message_type as 'user' | 'bot' | 'system' | 'recommendation'
+    })) as CareerChatMessage[];
+
+    return typedMessages;
+  };
+
+  // Initialize chat session and messages
+  useEffect(() => {
+    async function initializeChat() {
+      setIsLoading(true);
+      try {
+        // Get or create session
+        let sid = await getExistingSession();
+        if (!sid) {
+          sid = await createChatSession();
+        }
+        
+        setSessionId(sid);
+
+        // Get existing messages or set welcome messages
+        if (sid) {
+          const existingMessages = await getSessionMessages(sid);
+          if (existingMessages.length > 0) {
+            setMessages(existingMessages);
+          } else {
+            // Add welcome messages to the database and state
+            for (const msg of WELCOME_MESSAGES) {
+              await addMessage({
+                ...msg,
+                session_id: sid
+              });
+            }
+            setMessages(WELCOME_MESSAGES);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    initializeChat();
+  }, [session?.user.id]);
+
+  // Function to add a message to the conversation
+  const addMessage = async (message: Omit<CareerChatMessage, 'id'>): Promise<CareerChatMessage | null> => {
+    if (!sessionId) return null;
+
+    const { data, error } = await supabase
+      .from('career_chat_messages')
+      .insert({
+        ...message,
+        session_id: sessionId,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding message:', error);
+      return null;
+    }
+
+    // Update the messages state with the new message
+    setMessages(prev => [
+      ...prev, 
+      {
+        ...data,
+        message_type: data.message_type as 'user' | 'bot' | 'system' | 'recommendation'
+      } as CareerChatMessage
+    ]);
+
+    return {
+      ...data,
+      message_type: data.message_type as 'user' | 'bot' | 'system' | 'recommendation'
+    } as CareerChatMessage;
+  };
 
   return {
     messages,
