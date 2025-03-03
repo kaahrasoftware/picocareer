@@ -1,7 +1,7 @@
 
 project_id = "wurdmlkfkzuivvwxjmxk"
 [config]
-# Replace the following with your DeepSeek API key
+# Replace the following with your DeepSeek API key or set as environment variable
 DEEPSEEK_API_KEY = ""
 
 # Configuring the AI to generate more structured and concise responses

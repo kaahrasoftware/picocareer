@@ -9,6 +9,8 @@ import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
 import { Briefcase, Menu } from 'lucide-react';
 import { useCareerChat } from '../hooks/useCareerChat';
 import { WelcomeScreen } from './WelcomeScreen';
+import { ErrorState } from './ErrorState';
+import { LoadingState } from './LoadingState';
 
 interface ChatAreaProps {
   isMinimized: boolean;
@@ -30,6 +32,8 @@ export function ChatArea({
     inputMessage,
     isTyping,
     isAnalyzing,
+    isLoading,
+    hasConfigError,
     currentCategory,
     questionProgress,
     messagesEndRef,
@@ -46,6 +50,31 @@ export function ChatArea({
 
   const isFirstTimeUser = messages.length === 0 || 
     (messages.length === 1 && messages[0].message_type === 'system');
+
+  // Show loading state while initializing
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  // Show error state if there's a configuration error
+  if (hasConfigError) {
+    return (
+      <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white">
+        <div className="flex items-center p-3 border-b bg-white">
+          {!sidebarOpen && (
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="mr-2">
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
+          <h2 className="font-semibold">Career Chat</h2>
+        </div>
+        
+        <ErrorState 
+          message="The AI chat service is not properly configured. Please contact an administrator to set up the DeepSeek API key." 
+        />
+      </div>
+    );
+  }
 
   if (isFirstTimeUser) {
     return (
@@ -109,7 +138,7 @@ export function ChatArea({
         inputMessage={inputMessage}
         setInputMessage={setInputMessage}
         onSendMessage={sendMessage}
-        isDisabled={isTyping || isAnalyzing}
+        isDisabled={isTyping || isAnalyzing || hasConfigError}
       />
     </div>
   );

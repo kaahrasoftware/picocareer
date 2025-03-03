@@ -50,14 +50,14 @@ export function useCareerChat() {
   
   // Function to send message
   const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || !sessionId) return;
+    if (!message.trim() || !sessionId || hasConfigError) return;
     await sendAIMessage(message);
     setInputMessage('');
-  }, [sessionId, sendAIMessage]);
+  }, [sessionId, sendAIMessage, hasConfigError]);
 
   // Handle analyze button click
   const handleAnalyzeClick = async () => {
-    if (!sessionId) return;
+    if (!sessionId || hasConfigError) return;
     await analyzeResponses();
     setShowAnalyzeButton(false);
   };

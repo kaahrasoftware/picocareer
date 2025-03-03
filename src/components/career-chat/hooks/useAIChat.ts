@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
@@ -25,6 +25,7 @@ export function useAIChat(
       if (response.error || response.data?.error) {
         console.warn('DeepSeek API configuration issue:', response.error || response.data?.error);
         setHasConfigError(true);
+        toast.error('AI chat is currently unavailable. Please try again later.');
       } else {
         setHasConfigError(false);
       }
@@ -33,6 +34,11 @@ export function useAIChat(
       // Don't set hasConfigError to true here, as it might be a temporary network issue
     }
   }, [sessionId]);
+
+  // Call checkApiConfig when the component mounts or sessionId changes
+  useEffect(() => {
+    checkApiConfig();
+  }, [checkApiConfig, sessionId]);
 
   // Function to send message and get AI response
   const sendAIMessage = useCallback(async (message: string) => {
@@ -81,7 +87,12 @@ export function useAIChat(
 
       if (response.data?.error) {
         console.error('AI service error:', response.data.error);
-        throw new Error(response.data.error);
+        if (response.data.error.includes('API key not configured')) {
+          setHasConfigError(true);
+          throw new Error('AI service is not properly configured');
+        } else {
+          throw new Error(response.data.error);
+        }
       }
 
       // Log successful response for debugging
