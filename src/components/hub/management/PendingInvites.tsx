@@ -2,8 +2,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface PendingInvitesProps {
   hubId: string;
@@ -12,6 +14,7 @@ interface PendingInvitesProps {
 export function PendingInvites({ hubId }: PendingInvitesProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
   // Fetch pending (unconfirmed) members
   const { data: pendingMembers, isLoading } = useQuery({
@@ -37,6 +40,42 @@ export function PendingInvites({ hubId }: PendingInvitesProps) {
       return data;
     },
   });
+
+  const handleDeleteInvitation = async (memberId: string) => {
+    try {
+      setDeletingIds(prev => [...prev, memberId]);
+      
+      const { error } = await supabase
+        .from('hub_members')
+        .delete()
+        .eq('id', memberId)
+        .eq('hub_id', hubId)
+        .eq('confirmed', false);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Invalidate the query to refresh the data
+      queryClient.invalidateQueries({
+        queryKey: ['hub-pending-members', hubId],
+      });
+      
+      toast({
+        title: "Invitation cancelled",
+        description: "The member invitation has been cancelled.",
+      });
+    } catch (error: any) {
+      console.error('Error cancelling invitation:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel invitation.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingIds(prev => prev.filter(id => id !== memberId));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -75,6 +114,20 @@ export function PendingInvites({ hubId }: PendingInvitesProps) {
                   Waiting for confirmation
                 </span>
               </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="ml-2 text-destructive hover:bg-destructive/10"
+                onClick={() => handleDeleteInvitation(member.id)}
+                disabled={deletingIds.includes(member.id)}
+              >
+                {deletingIds.includes(member.id) ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
+                <span className="sr-only">Cancel invitation</span>
+              </Button>
             </div>
           ))}
         </div>
