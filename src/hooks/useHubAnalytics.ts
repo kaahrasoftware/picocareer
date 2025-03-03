@@ -57,6 +57,68 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
     }
   }, []);
 
+  const fetchDailyData = useCallback(async () => {
+    if (!hubId) return [];
+    
+    const now = new Date();
+    const startDate = subDays(now, 30); // Show 30 days
+    
+    try {
+      // First try to fetch data from hub_member_growth_daily table
+      let { data: dailyData, error: dailyError } = await supabase
+        .from('hub_member_growth_daily')
+        .select('*')
+        .eq('hub_id', hubId)
+        .gte('date', startDate.toISOString())
+        .order('date', { ascending: true });
+        
+      // If there's no data or the table doesn't exist, generate daily data from member signups
+      if (dailyError || !dailyData || dailyData.length === 0) {
+        console.log('Daily data not available, generating from member signups');
+        
+        // Fetch hub members and group by join date
+        const { data: memberData, error: memberError } = await supabase
+          .from('hub_members')
+          .select('join_date')
+          .eq('hub_id', hubId)
+          .gte('join_date', startDate.toISOString());
+          
+        if (memberError) throw memberError;
+        
+        // Map dates to member counts
+        const dailyMap: Record<string, number> = {};
+        
+        // Initialize map with all days in the range (showing 0 for days with no signups)
+        for (let i = 0; i < 30; i++) {
+          const date = subDays(now, i);
+          const dateStr = format(date, 'yyyy-MM-dd');
+          dailyMap[dateStr] = 0;
+        }
+        
+        // Count signups by date
+        if (memberData) {
+          memberData.forEach(member => {
+            const date = format(new Date(member.join_date), 'yyyy-MM-dd');
+            dailyMap[date] = (dailyMap[date] || 0) + 1;
+          });
+        }
+        
+        // Convert map to array
+        dailyData = Object.entries(dailyMap).map(([date, count]) => ({
+          hub_id: hubId,
+          date: date,
+          month: date, // For compatibility with existing UI
+          new_members: count
+        })).sort((a, b) => a.date.localeCompare(b.date));
+      }
+      
+      return dailyData || [];
+    } catch (error) {
+      console.error('Error fetching daily member growth data:', error);
+      return [];
+    }
+  }, [hubId]);
+
   const fetchMetrics = useCallback(async () => {
     if (!hubId) return;
 
@@ -64,34 +126,61 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
       // Calculate time range based on selected period
       const now = new Date();
       let startDate;
+      let data: MemberGrowth[] = [];
       
       // Update to fetch the appropriate amount of data based on timePeriod
       switch (timePeriod) {
         case 'day':
-          startDate = subDays(now, 30); // Show 30 days
+          data = await fetchDailyData();
           break;
         case 'week':
           startDate = subWeeks(now, 12); // Show 12 weeks
+          const { data: weekData, error: weekError } = await supabase
+            .from('hub_member_growth')
+            .select('*')
+            .eq('hub_id', hubId)
+            .gte('month', startDate.toISOString())
+            .order('month', { ascending: true });
+            
+          if (weekError) throw weekError;
+          data = weekData || [];
           break;
         case 'month':
           startDate = subMonths(now, 12); // Show 12 months
+          const { data: monthData, error: monthError } = await supabase
+            .from('hub_member_growth')
+            .select('*')
+            .eq('hub_id', hubId)
+            .gte('month', startDate.toISOString())
+            .order('month', { ascending: true });
+            
+          if (monthError) throw monthError;
+          data = monthData || [];
           break;
         case 'year':
           startDate = subYears(now, 5); // Show 5 years
+          const { data: yearData, error: yearError } = await supabase
+            .from('hub_member_growth')
+            .select('*')
+            .eq('hub_id', hubId)
+            .gte('month', startDate.toISOString())
+            .order('month', { ascending: true });
+            
+          if (yearError) throw yearError;
+          data = yearData || [];
           break;
         default:
           startDate = subMonths(now, 12);
+          const { data: defaultData, error: defaultError } = await supabase
+            .from('hub_member_growth')
+            .select('*')
+            .eq('hub_id', hubId)
+            .gte('month', startDate.toISOString())
+            .order('month', { ascending: true });
+            
+          if (defaultError) throw defaultError;
+          data = defaultData || [];
       }
-
-      // Fetch member growth for the selected period
-      const { data: growthData, error: growthError } = await supabase
-        .from('hub_member_growth')
-        .select('*')
-        .eq('hub_id', hubId)
-        .gte('month', startDate.toISOString())
-        .order('month', { ascending: true });
-
-      if (growthError) throw growthError;
 
       // Use the refresh_hub_metrics function to get consistent metrics
       const { data: metricsData, error: metricsError } = await supabase
@@ -124,11 +213,11 @@ export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'mont
         });
       }
 
-      setMemberGrowth(growthData || []);
+      setMemberGrowth(data || []);
     } catch (error) {
       console.error("Error fetching hub analytics:", error);
     }
-  }, [hubId, timePeriod]);
+  }, [hubId, timePeriod, fetchDailyData]);
 
   // Initial fetch and refresh when timePeriod changes
   useEffect(() => {

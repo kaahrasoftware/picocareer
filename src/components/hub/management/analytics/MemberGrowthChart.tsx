@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { 
@@ -75,6 +76,9 @@ export function MemberGrowthChart({
   const chartData = useMemo(() => {
     let cumulativeCount = 0;
     
+    // Get field name to use for date display - use date for daily, month for others
+    const dateField = timePeriod === 'day' && memberGrowth.some(item => item.date) ? 'date' : 'month';
+    
     // Special handling for yearly view - aggregate by year
     if (timePeriod === 'year') {
       // Group by year and sum new_members
@@ -105,7 +109,7 @@ export function MemberGrowthChart({
     // For other time periods, keep the existing logic
     return memberGrowth.map(item => ({
       ...item,
-      date: item.month, // Keep original date field for reference
+      date: item[dateField] || item.month, // Use appropriate date field with fallback
       cumulativeCount: (cumulativeCount += item.new_members)
     }));
   }, [memberGrowth, timePeriod]);

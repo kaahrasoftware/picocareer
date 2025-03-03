@@ -29,7 +29,8 @@ export interface AnalyticsSummary {
 }
 
 export interface MemberGrowth {
-  month: string;
+  month: string; // For backward compatibility
+  date?: string; // Added for daily data
   new_members: number;
   hub_id: string;
 }
