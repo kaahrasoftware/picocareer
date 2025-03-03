@@ -1,9 +1,19 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/types/database/database.types';
+
+interface PastSession {
+  id: string;
+  status: string;
+  created_at: string;
+  completed_at?: string;
+  title?: string;
+  message_count: number;
+}
 
 export function usePastSessions() {
-  const [pastSessions, setPastSessions] = useState<any[]>([]);
+  const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [isFetchingPastSessions, setIsFetchingPastSessions] = useState(false);
   
   /**
@@ -22,7 +32,6 @@ export function usePastSessions() {
           id, 
           status, 
           created_at, 
-          completed_at,
           title,
           career_chat_messages(count)
         `)
@@ -36,7 +45,10 @@ export function usePastSessions() {
       }
       
       const processedSessions = data.map(session => ({
-        ...session,
+        id: session.id,
+        status: session.status,
+        created_at: session.created_at,
+        title: session.title || null,
         message_count: session.career_chat_messages[0]?.count || 0
       }));
       

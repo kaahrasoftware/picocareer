@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CareerChatMessage } from '@/types/database/analytics';
@@ -41,7 +42,14 @@ export function useMessageManagement(sessionId: string | null) {
       // Update the message in our local state with the one from the database
       setMessages(prevMessages => 
         prevMessages.map(msg => 
-          (message.id === msg.id) ? data : msg
+          (message.id === msg.id) ? {
+            id: data.id,
+            session_id: data.session_id,
+            message_type: data.message_type as "user" | "bot" | "system" | "recommendation",
+            content: data.content,
+            metadata: data.metadata,
+            created_at: data.created_at
+          } : msg
         )
       );
 
@@ -71,7 +79,16 @@ export function useMessageManagement(sessionId: string | null) {
           const exists = messages.some(msg => msg.id === payload.new.id);
           if (!exists) {
             // Add the new message to our local state
-            setMessages(currentMessages => [...currentMessages, payload.new as CareerChatMessage]);
+            const newMessage: CareerChatMessage = {
+              id: payload.new.id as string,
+              session_id: payload.new.session_id as string,
+              message_type: payload.new.message_type as "user" | "bot" | "system" | "recommendation",
+              content: payload.new.content as string,
+              metadata: payload.new.metadata as Record<string, any>,
+              created_at: payload.new.created_at as string
+            };
+            
+            setMessages(currentMessages => [...currentMessages, newMessage]);
           }
         }
       )
