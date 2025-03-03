@@ -1,23 +1,25 @@
-
 import React from 'react';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { Button } from '@/components/ui/button';
+import { QuestionCard } from '@/components/career-chat/QuestionCard';
+import { OptionCards } from '@/components/career-chat/OptionCards';
 import { BookOpen, Briefcase, Users, Brain, Check, Star, Award } from 'lucide-react';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
   onSuggestionClick?: (suggestion: string) => void;
+  currentQuestionProgress?: number;
 }
 
-export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
+export function ChatMessage({ message, onSuggestionClick, currentQuestionProgress = 0 }: ChatMessageProps) {
   const isUser = message.message_type === 'user';
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
   
-  const hasSuggestions = message.message_type === 'bot' && 
+  const isQuestion = message.message_type === 'bot' && 
     message.metadata && 
-    message.metadata.hasOptions && 
-    Array.isArray(message.metadata.suggestions);
+    message.metadata.category && 
+    message.metadata.hasOptions;
   
   // Handle career recommendation messages
   if (isRecommendation && message.metadata?.career) {
@@ -39,7 +41,6 @@ export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
   
   // Extract recommendation sections if this is one big recommendation message
   if (isRecommendation && !message.metadata?.career) {
-    // Split the content into career, personality, and mentor sections
     const sections = extractSections(message.content);
     
     return (
@@ -135,7 +136,33 @@ export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
     );
   }
   
-  // Regular chat messages
+  // For question and option messages
+  if (isQuestion) {
+    const category = message.metadata.category || 'general';
+    const questionNumber = message.metadata.questionNumber || 1;
+    const totalInCategory = message.metadata.totalInCategory || 4;
+    
+    return (
+      <div className="flex flex-col items-start w-full">
+        <QuestionCard 
+          question={message.content}
+          category={category}
+          questionNumber={questionNumber}
+          totalQuestions={totalInCategory}
+          progress={currentQuestionProgress}
+        />
+        
+        {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
+          <OptionCards 
+            options={message.metadata.suggestions}
+            onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
+          />
+        )}
+      </div>
+    );
+  }
+  
+  // Regular chat messages (user messages, system messages, etc)
   return (
     <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} mb-4`}>
       <div 
@@ -151,22 +178,6 @@ export function ChatMessage({ message, onSuggestionClick }: ChatMessageProps) {
           {message.content}
         </p>
       </div>
-      
-      {hasSuggestions && message.metadata.suggestions && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 max-w-[90%]">
-          {message.metadata.suggestions.map((suggestion: string, index: number) => (
-            <Button 
-              key={index}
-              variant="outline" 
-              size="sm"
-              className="justify-start text-sm whitespace-normal h-auto py-2 border-primary/20 hover:bg-primary/5 transition-all"
-              onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -176,7 +187,6 @@ function extractSections(content: string) {
   if (!content.includes('Career Recommendations') && 
       !content.includes('Career Matches') && 
       !content.includes('Personality')) {
-    // Not a recommendation message
     return { type: 'unknown' };
   }
   
@@ -184,20 +194,16 @@ function extractSections(content: string) {
   const personalities: Array<{title: string, match: number, description: string}> = [];
   const mentors: Array<{name: string, experience: string, skills: string}> = [];
   
-  // Extract career section
   const careerSection = content.split(/Career (Recommendations|Matches)/i)[2]?.split(/Personality (Assessment|Analysis)/i)[0] || '';
   if (careerSection) {
-    // Look for patterns like "1. Software Developer (85%)" or "1. Software Developer - 85%"
     const careerMatches = careerSection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
     careerMatches.forEach((match, index) => {
-      // Extract title and score
       const titleMatch = match.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
       if (titleMatch) {
         const title = titleMatch[1].trim();
         const match = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
         
-        // Try to find reasoning - look for text after the career until the next numbered item
         let reasoning = '';
         const startPos = careerSection.indexOf(match) + match.length;
         const nextNumberPos = careerSection.substring(startPos).search(/\d+\.\s+/);
@@ -205,7 +211,6 @@ function extractSections(content: string) {
         if (nextNumberPos > 0) {
           reasoning = careerSection.substring(startPos, startPos + nextNumberPos).trim();
         } else if (index === careerMatches.length - 1) {
-          // For the last item, take all remaining text
           reasoning = careerSection.substring(startPos).trim();
         }
         
@@ -218,10 +223,8 @@ function extractSections(content: string) {
     });
   }
   
-  // Extract personality section
   const personalitySection = content.split(/Personality (Assessment|Analysis)/i)[1]?.split(/Mentor (Suggestions|Recommendations)/i)[0] || '';
   if (personalitySection) {
-    // Similar pattern matching for personality types
     const personalityMatches = personalitySection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
     personalityMatches.forEach((match, index) => {
@@ -249,10 +252,8 @@ function extractSections(content: string) {
     });
   }
   
-  // Extract mentor section
   const mentorSection = content.split(/Mentor (Suggestions|Recommendations)/i)[1] || '';
   if (mentorSection) {
-    // Pattern matching for mentors
     const mentorMatches = mentorSection.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/g) || [];
     
     mentorMatches.forEach((match, index) => {
@@ -270,7 +271,6 @@ function extractSections(content: string) {
           details = mentorSection.substring(startPos).trim();
         }
         
-        // Try to extract experience and skills from details
         const experienceMatch = details.match(/(\d+)\s+years?/i);
         const experience = experienceMatch ? `${experienceMatch[1]} years` : "Experienced";
         

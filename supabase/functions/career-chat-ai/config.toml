@@ -1,2 +1,5 @@
 
 project_id = "wurdmlkfkzuivvwxjmxk"
+[config]
+# Replace the following with your DeepSeek API key
+DEEPSEEK_API_KEY = ""
