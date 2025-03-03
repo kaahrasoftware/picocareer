@@ -6,10 +6,10 @@ DEEPSEEK_API_KEY = ""
 
 # Response format configuration
 AI_RESPONSE_FORMAT = "structured"
-STRUCTURED_RESPONSE_VERSION = "2"
+STRUCTURED_RESPONSE_VERSION = "3"
 QUESTION_MAX_LENGTH = 60
-OPTIONS_MAX_COUNT = 4
-OPTIONS_MAX_LENGTH = 30
+OPTIONS_MAX_COUNT = 8
+OPTIONS_MAX_LENGTH = 40
 CATEGORY_TRACKING = "enabled"
 
 # Structured format instruction
@@ -34,7 +34,7 @@ Return responses in this JSON format:
     "progress": {
       "category": "education|skills|workstyle|goals",
       "current": 1,
-      "total": 4,
+      "total": 6,
       "overall": 25
     },
     "options": {

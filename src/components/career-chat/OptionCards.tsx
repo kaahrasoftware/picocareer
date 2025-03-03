@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, UserRound, Briefcase, GraduationCap, Brain } from 'lucide-react';
+import { ArrowRight, Check, UserRound, Briefcase, GraduationCap, Brain, Target, Users, Clock, Palette, Settings, Heart, Star, Lightbulb } from 'lucide-react';
 import { MessageOption } from '@/types/database/message-types';
 import { LucideIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -50,7 +50,8 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('education') || 
         lowerOption.includes('school') ||
         lowerOption.includes('university') ||
-        lowerOption.includes('college')) {
+        lowerOption.includes('college') ||
+        lowerOption.includes('learn')) {
       return <GraduationCap className="h-4 w-4 text-indigo-500" />;
     }
     
@@ -58,7 +59,9 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('technical') || 
         lowerOption.includes('coding') ||
         lowerOption.includes('analysis') ||
-        lowerOption.includes('problem')) {
+        lowerOption.includes('problem') ||
+        lowerOption.includes('programming') ||
+        lowerOption.includes('computer')) {
       return <Brain className="h-4 w-4 text-emerald-500" />;
     }
     
@@ -66,14 +69,70 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
         lowerOption.includes('job') || 
         lowerOption.includes('career') ||
         lowerOption.includes('business') ||
-        lowerOption.includes('industry')) {
+        lowerOption.includes('industry') ||
+        lowerOption.includes('professional')) {
       return <Briefcase className="h-4 w-4 text-amber-500" />;
+    }
+    
+    if (lowerOption.includes('goal') ||
+        lowerOption.includes('future') ||
+        lowerOption.includes('plan') ||
+        lowerOption.includes('achieve')) {
+      return <Target className="h-4 w-4 text-blue-500" />;
+    }
+    
+    if (lowerOption.includes('team') ||
+        lowerOption.includes('group') ||
+        lowerOption.includes('people') ||
+        lowerOption.includes('social') ||
+        lowerOption.includes('help')) {
+      return <Users className="h-4 w-4 text-violet-500" />;
+    }
+    
+    if (lowerOption.includes('time') ||
+        lowerOption.includes('schedule') ||
+        lowerOption.includes('flexible') ||
+        lowerOption.includes('hours')) {
+      return <Clock className="h-4 w-4 text-orange-500" />;
+    }
+    
+    if (lowerOption.includes('creative') ||
+        lowerOption.includes('art') ||
+        lowerOption.includes('design') ||
+        lowerOption.includes('music')) {
+      return <Palette className="h-4 w-4 text-pink-500" />;
+    }
+    
+    if (lowerOption.includes('money') ||
+        lowerOption.includes('paid') ||
+        lowerOption.includes('salary')) {
+      return <Settings className="h-4 w-4 text-green-500" />;
+    }
+    
+    if (lowerOption.includes('love') ||
+        lowerOption.includes('passion') ||
+        lowerOption.includes('interest')) {
+      return <Heart className="h-4 w-4 text-red-500" />;
+    }
+
+    if (lowerOption.includes('leadership') ||
+        lowerOption.includes('manage') ||
+        lowerOption.includes('lead')) {
+      return <Star className="h-4 w-4 text-yellow-500" />;
+    }
+
+    if (lowerOption.includes('idea') ||
+        lowerOption.includes('innovation') ||
+        lowerOption.includes('thinking') ||
+        lowerOption.includes('solution')) {
+      return <Lightbulb className="h-4 w-4 text-amber-500" />;
     }
     
     // Default icon
     return <UserRound className="h-4 w-4 text-gray-500" />;
   };
 
+  // For chips layout, use a responsively flowing layout
   if (layout === 'chips') {
     return (
       <div className="flex flex-wrap gap-2 w-full max-w-2xl mb-4 animate-fade-in">
@@ -93,8 +152,13 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
     );
   }
 
+  // For cards layout, use a grid that adjusts based on the number of options
+  const gridCols = normalizedOptions.length <= 4 ? 
+    "grid-cols-1 sm:grid-cols-2" : 
+    "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl mb-4 animate-fade-in">
+    <div className={`grid ${gridCols} gap-3 w-full max-w-2xl mb-4 animate-fade-in`}>
       {normalizedOptions.map((option) => (
         <Button
           key={option.id}

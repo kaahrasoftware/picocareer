@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Brain, Briefcase, GraduationCap, Target, MessagesSquare } from 'lucide-react';
+import { Brain, Briefcase, GraduationCap, Target, MessagesSquare, Users, Clock, Settings } from 'lucide-react';
 
 interface QuestionCardProps {
   question: string;
@@ -27,11 +27,13 @@ export function QuestionCard({
       case 'education':
         return 'Educational Background';
       case 'skills':
-        return 'Skills & Technical Knowledge';
+        return 'Skills Assessment';
       case 'workstyle':
         return 'Work Style Preferences';
       case 'goals':
-        return 'Career Goals';
+        return 'Career Goals & Interests';
+      case 'environment':
+        return 'Work Environment';
       default:
         return cat.charAt(0).toUpperCase() + cat.slice(1);
     }
@@ -48,6 +50,8 @@ export function QuestionCard({
         return <MessagesSquare className="h-4 w-4 text-amber-500" />;
       case 'goals':
         return <Target className="h-4 w-4 text-primary" />;
+      case 'environment':
+        return <Users className="h-4 w-4 text-violet-500" />;
       default:
         return <Briefcase className="h-4 w-4 text-gray-500" />;
     }
@@ -55,9 +59,10 @@ export function QuestionCard({
 
   // Format progress display
   const formattedProgress = Math.round(progress);
-  const progressStatus = formattedProgress < 25 ? 'Just Starting' : 
-                         formattedProgress < 50 ? 'Making Progress' :
-                         formattedProgress < 75 ? 'Getting There' :
+  const progressStatus = formattedProgress < 20 ? 'Just Starting' : 
+                         formattedProgress < 40 ? 'Making Progress' :
+                         formattedProgress < 60 ? 'Getting There' :
+                         formattedProgress < 80 ? 'Going Well' :
                          formattedProgress < 100 ? 'Almost Done' : 'Complete';
 
   return (
