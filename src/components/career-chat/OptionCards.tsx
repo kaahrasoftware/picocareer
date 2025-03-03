@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, UserRound, Briefcase, GraduationCap, Brain, Target, Users, Clock, Palette, Settings, Heart, Star, Lightbulb } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { MessageOption } from '@/types/database/message-types';
 import { LucideIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -55,7 +55,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     return selectedOptions.includes(option.text);
   };
 
-  // Function to get icon from Lucide icons by name
+  // Function to get icon from Lucide icons by name (kept for backward compatibility)
   const getIconByName = (iconName?: string): LucideIcon | null => {
     if (!iconName) return null;
     
@@ -64,7 +64,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     return LucideIcon ? LucideIcon : null;
   };
 
-  // Get category based on option content
+  // Get category based on option content (kept for metadata purposes)
   const getOptionCategory = (option: MessageOption): string => {
     const lowerOption = option.text.toLowerCase();
     
@@ -154,47 +154,6 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     return 'general';
   };
 
-  // Get an appropriate icon based on the option content
-  const getOptionIcon = (option: MessageOption) => {
-    // First try to use provided icon if available
-    if (option.icon) {
-      const IconComponent = getIconByName(option.icon);
-      if (IconComponent) {
-        return <IconComponent className="h-4 w-4" />;
-      }
-    }
-
-    // Fallback to content-based icon selection
-    const category = getOptionCategory(option);
-    
-    switch (category) {
-      case 'education':
-        return <GraduationCap className="h-4 w-4 text-indigo-500" />;
-      case 'skills':
-        return <Brain className="h-4 w-4 text-emerald-500" />;
-      case 'work':
-        return <Briefcase className="h-4 w-4 text-amber-500" />;
-      case 'goals':
-        return <Target className="h-4 w-4 text-blue-500" />;
-      case 'social':
-        return <Users className="h-4 w-4 text-violet-500" />;
-      case 'time':
-        return <Clock className="h-4 w-4 text-orange-500" />;
-      case 'creative':
-        return <Palette className="h-4 w-4 text-pink-500" />;
-      case 'money':
-        return <Settings className="h-4 w-4 text-green-500" />;
-      case 'passion':
-        return <Heart className="h-4 w-4 text-red-500" />;
-      case 'leadership':
-        return <Star className="h-4 w-4 text-yellow-500" />;
-      case 'innovation':
-        return <Lightbulb className="h-4 w-4 text-amber-500" />;
-      default:
-        return <UserRound className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   // For chips layout, use a responsively flowing layout with white backgrounds
   if (layout === 'chips') {
     return (
@@ -212,15 +171,13 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
                 isSelected 
                   ? "border-primary text-primary shadow-sm"
                   : "border-gray-200 hover:border-gray-300 hover:shadow-sm",
-                "text-sm font-medium h-8 px-3",
+                "text-xs font-medium h-8 px-3",
                 "aria-pressed:scale-105"
               )}
               onClick={() => handleSelectOption(option)}
               aria-pressed={isSelected}
             >
-              <span className="mr-1.5 flex items-center">
-                {isSelected ? <Check className="h-3.5 w-3.5" /> : getOptionIcon(option)}
-              </span>
+              {isSelected && <span className="mr-1"><Check className="h-3 w-3" /></span>}
               <span className="text-gray-800">{option.text}</span>
             </Button>
           );
@@ -244,7 +201,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
           <button
             key={option.id}
             className={cn(
-              "py-3 px-4 text-left flex flex-col gap-1 rounded-lg",
+              "py-3 px-4 text-left rounded-lg",
               "transition-all duration-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               "bg-white hover:bg-gray-50",
               isSelected 
@@ -258,10 +215,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
             aria-checked={isSelected}
           >
             <div className="flex w-full justify-between items-center">
-              <div className="flex items-center gap-2">
-                {getOptionIcon(option)}
-                <span className="font-medium text-sm text-gray-800">{option.text}</span>
-              </div>
+              <span className="font-medium text-xs text-gray-800">{option.text}</span>
               {isSelected ? (
                 <div className="flex items-center justify-center rounded-full h-5 w-5 bg-primary/10 text-primary">
                   <Check className="h-3 w-3" />
@@ -271,7 +225,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
               )}
             </div>
             {option.description && (
-              <p className="text-xs text-gray-500 mt-1 pl-6">{option.description}</p>
+              <p className="text-xs text-gray-500 mt-1">{option.description}</p>
             )}
           </button>
         );
@@ -285,7 +239,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
               onSelect(selectedOptions.join(', '));
               setSelectedOptions([]);
             }}
-            className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all"
+            className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-xs shadow-sm hover:shadow-md transition-all"
           >
             Continue with {selectedOptions.length} selection{selectedOptions.length !== 1 ? 's' : ''}
           </Button>
