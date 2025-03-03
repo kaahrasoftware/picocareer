@@ -1,379 +1,302 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { corsHeaders } from "../_shared/cors.ts";
+import { config } from "https://deno.land/std@0.168.0/dotenv/mod.ts";
 
-// Constants for the prompt
-const SYSTEM_PROMPT = `
-You are Pico, a helpful career advisor. You MUST follow these strict guidelines:
+// Load config values
+const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") || "";
+const API_ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
-1. Ask questions in this SPECIFIC order:
-   - Educational background/interests (3-4 questions)
-   - Skills and technical knowledge (3-4 questions)
-   - Work style preferences (3-4 questions) 
-   - Career goals and aspirations (2-3 questions)
-
-2. For EACH question:
-   - Ask only ONE specific question at a time
-   - Keep questions focused and direct (max 15-20 words)
-   - Provide 2-4 brief answer options (max 5 words each)
-   - Reference previous answers to personalize following questions
-   - NEVER ask multiple questions in one message
-
-3. ALWAYS format your response as follows:
-   {
-     "type": "question",
-     "metadata": {
-       "category": "education|skills|workstyle|goals",
-       "questionNumber": X,
-       "totalInCategory": Y,
-       "options": ["Option 1", "Option 2", "Option 3"]
-     },
-     "content": "Your actual question text here"
-   }
-
-4. After collecting 12-15 total responses, provide career recommendations in this format:
-   {
-     "type": "recommendation",
-     "sections": {
-       "careers": [
-         {"title": "Career Title", "match": 85, "reasoning": "Why this matches"},
-         {"title": "Another Career", "match": 75, "reasoning": "Explanation"}
-       ],
-       "personality": [
-         {"title": "Personality Trait", "match": 90, "description": "Description"},
-         {"title": "Another Trait", "match": 85, "description": "Details"}
-       ],
-       "mentors": [
-         {"name": "Mentor Name", "experience": "5 years", "skills": "Skills overview"},
-         {"name": "Another Mentor", "experience": "10 years", "skills": "Specialties"}
-       ]
-     }
-   }
-
-5. ALWAYS include the JSON structure in your response. This is MANDATORY.
-`;
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Get config values
+const CONFIG = {
+  AI_RESPONSE_FORMAT: Deno.env.get("AI_RESPONSE_FORMAT") || "structured",
+  STRUCTURED_RESPONSE_VERSION: Deno.env.get("STRUCTURED_RESPONSE_VERSION") || "3",
+  QUESTION_MAX_LENGTH: parseInt(Deno.env.get("QUESTION_MAX_LENGTH") || "60"),
+  OPTIONS_MAX_COUNT: parseInt(Deno.env.get("OPTIONS_MAX_COUNT") || "8"),
+  OPTIONS_MAX_LENGTH: parseInt(Deno.env.get("OPTIONS_MAX_LENGTH") || "40"),
+  CATEGORY_TRACKING: Deno.env.get("CATEGORY_TRACKING") || "enabled",
+  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || ""
 };
 
-// Categories for tracking question progress
-const CATEGORIES = ['education', 'skills', 'workstyle', 'goals'];
+// Debug logging for configuration
+console.log("CONFIG:", {
+  API_ENDPOINT,
+  AI_RESPONSE_FORMAT: CONFIG.AI_RESPONSE_FORMAT,
+  STRUCTURED_RESPONSE_VERSION: CONFIG.STRUCTURED_RESPONSE_VERSION,
+  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
+});
 
+// System prompt with dynamic format instructions
+const getSystemPrompt = () => {
+  const basePrompt = `
+You are Pico, a friendly career guidance assistant. You help users explore career options by asking specific, relevant questions about their education, skills, interests, and work preferences. Your guidance should lead users to discover careers that might be a good match for them.
+
+Guidelines:
+1. Ask ONE focused question at a time, and provide 3-8 clear options for users to choose from.
+2. Make each option specific and concise (under 40 characters).
+3. Progress through these categories in order: education, skills, workstyle, goals.
+4. Ask 3-4 questions per category before moving to the next.
+5. After gathering sufficient information (12-15 questions), provide career recommendations.
+6. For career recommendations, include match percentages, reasoning, and personality insights.
+7. Be conversational and encouraging without being overly enthusiastic.
+`;
+
+  // If structured format instruction is available, append it
+  if (CONFIG.STRUCTURED_FORMAT_INSTRUCTION) {
+    return `${basePrompt}\n\n${CONFIG.STRUCTURED_FORMAT_INSTRUCTION}`;
+  }
+  
+  return basePrompt;
+};
+
+// Handler for the API requests
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse the request
-    const { message, messages, sessionId, instructions, type } = await req.json();
+    // Parse the request body
+    const body = await req.json();
+    
+    // Debug logging
+    console.log("Request type:", body.type);
 
-    // Check if this is a config check request
-    if (type === 'config-check') {
-      // Just return success to confirm the edge function is working
+    // Handle config check requests
+    if (body.type === "config-check") {
+      if (!DEEPSEEK_API_KEY) {
+        return new Response(
+          JSON.stringify({ error: "DeepSeek API key not configured" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       return new Response(
-        JSON.stringify({ status: 'ok' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ status: "ok", config: CONFIG }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get an API key for DeepSeek API
-    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
-    
-    if (!deepseekApiKey) {
-      console.error('Missing DeepSeek API key');
-      return new Response(
-        JSON.stringify({ error: 'DeepSeek API key not configured.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Validate required fields
+    if (!body.message) {
+      throw new Error("Message is required");
     }
 
-    // Determine current category and question based on message history
-    let currentCategory = 'education';
-    let questionNumber = 1;
-    
-    // Count previous questions by category
-    const categoryCounts = {
-      education: 0,
-      skills: 0,
-      workstyle: 0,
-      goals: 0
-    };
-    
-    // Analyze message history to set the correct category and question number
-    if (messages && messages.length > 0) {
-      for (const msg of messages) {
-        if (msg.role === 'assistant' && msg.metadata && msg.metadata.category) {
-          currentCategory = msg.metadata.category;
-          categoryCounts[currentCategory]++;
-        }
-      }
-      
-      // If we've finished with education (3+ questions), move to skills
-      if (categoryCounts.education >= 3 && currentCategory === 'education') {
-        currentCategory = 'skills';
-      }
-      
-      // If we've finished with skills (3+ questions), move to workstyle
-      if (categoryCounts.skills >= 3 && currentCategory === 'skills') {
-        currentCategory = 'workstyle';
-      }
-      
-      // If we've finished with workstyle (3+ questions), move to goals
-      if (categoryCounts.workstyle >= 3 && currentCategory === 'workstyle') {
-        currentCategory = 'goals';
-      }
-      
-      // Set the question number within the current category
-      questionNumber = categoryCounts[currentCategory] + 1;
-    }
-    
-    // Prepare the prompt with additional instructions
-    let promptAddition = "";
-    
-    if (instructions) {
-      if (instructions.specificQuestions) {
-        promptAddition += "\nAsk very specific, focused questions. Limit each question to a single concept.";
-      }
-      
-      if (instructions.conciseOptions) {
-        promptAddition += "\nProvide extremely concise answer options (max 3-5 words each).";
-      }
-    }
-    
-    // Construct the prompt with category guidance
-    let prompt = `${SYSTEM_PROMPT}${promptAddition}\n\nYou are currently asking questions about the user's ${currentCategory}. This is question #${questionNumber} in this category.\n\n`;
-    
-    // Add instruction for the first message if there are no previous messages
-    if (!messages || messages.length <= 1) {
-      prompt += "Start with a friendly introduction and ask about their educational background as the first question.";
-    }
-    
-    // Add special instruction if we're about to transition to recommendations
-    const totalQuestionsAsked = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
-    if ((currentCategory === 'goals' && questionNumber >= 3) || totalQuestionsAsked >= 12) {
-      prompt += "\nAfter this question, provide career recommendations based on all the user's answers in the specified JSON format.";
-    }
-    
-    console.log('Calling DeepSeek API with prompt...', { 
-      currentCategory, 
-      questionNumber, 
-      totalQuestionsAsked,
-      apiKeyPresent: !!deepseekApiKey
-    });
-    
-    // Call the DeepSeek API
-    const apiResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${deepseekApiKey}`,
+    // Set up the conversation history from the request or start fresh
+    const messages = [
+      {
+        role: "system",
+        content: getSystemPrompt(),
       },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: prompt },
-          ...messages,
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
-    });
+    ];
 
-    if (!apiResponse.ok) {
-      const errorData = await apiResponse.json();
-      console.error('DeepSeek API error:', errorData);
-      throw new Error(`DeepSeek API error: ${JSON.stringify(errorData)}`);
+    // Add previous messages if provided
+    if (body.messages && Array.isArray(body.messages)) {
+      body.messages.forEach((msg) => {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      });
+    } else {
+      // If no history, add a starter message
+      messages.push({
+        role: "user",
+        content: body.message,
+      });
     }
 
-    const data = await apiResponse.json();
-    console.log('DeepSeek API response received', { 
-      choices: !!data.choices,
-      hasMessage: !!(data.choices?.[0]?.message),
-      responseLength: data.choices?.[0]?.message?.content?.length
+    // Prepare the request to DeepSeek API
+    const requestOptions = {
+      model: "deepseek-chat",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 1000,
+    };
+
+    // Debug logging for API request
+    console.log("Sending request to DeepSeek API:", API_ENDPOINT);
+    console.log("Using model:", requestOptions.model);
+
+    // Make the request to DeepSeek API
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify(requestOptions),
     });
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid response from DeepSeek API');
+
+    // Parse the response
+    const data = await response.json();
+
+    // Debug logging
+    console.log("DeepSeek API response status:", response.status);
+
+    // Handle API errors
+    if (!response.ok) {
+      console.error("DeepSeek API error:", data);
+      let errorMessage = data.error?.message || "Unknown API error";
+      
+      // Check for specific error types
+      if (data.error?.code === "model_not_found") {
+        errorMessage = `Model not found: ${requestOptions.model}`;
+      } else if (data.error?.type === "invalid_request_error") {
+        errorMessage = `Invalid request: ${data.error.message}`;
+      } else if (response.status === 401) {
+        errorMessage = "Authentication error with DeepSeek API. Please check your API key.";
+      }
+      
+      throw new Error(`DeepSeek API error: ${errorMessage}`);
     }
 
-    // Extract the response text
-    const responseContent = data.choices[0].message.content;
-    
-    // Try to extract JSON from the response
-    let parsedResponse;
-    let responseType = 'unknown';
-    let metadata = {};
-    let cleanedMessage = responseContent;
+    // Extract the AI's response
+    const aiResponse = data.choices && data.choices[0]?.message?.content;
+    if (!aiResponse) {
+      throw new Error("No response content from DeepSeek API");
+    }
+
+    // Process the structured response
+    let structuredMessage = null;
+    let rawResponse = null;
     
     try {
-      // Look for JSON pattern in the response
-      const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+      // Try to parse JSON from the response
+      const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || 
+                        aiResponse.match(/```\n([\s\S]*?)\n```/) ||
+                        aiResponse.match(/\{[\s\S]*\}/);
+                        
       if (jsonMatch) {
-        const jsonString = jsonMatch[0];
-        parsedResponse = JSON.parse(jsonString);
+        const jsonContent = jsonMatch[1] || jsonMatch[0];
+        rawResponse = JSON.parse(jsonContent.trim());
+        structuredMessage = rawResponse;
         
-        // Determine the type of response
-        if (parsedResponse.type === 'question') {
-          responseType = 'question';
-          metadata = {
-            category: parsedResponse.metadata?.category || currentCategory,
-            questionNumber: parsedResponse.metadata?.questionNumber || questionNumber,
-            totalInCategory: parsedResponse.metadata?.totalInCategory || 4,
-            hasOptions: true,
-            suggestions: parsedResponse.metadata?.options || []
-          };
-          
-          // Use the content as the cleaned message
-          cleanedMessage = parsedResponse.content || responseContent.replace(jsonString, '').trim();
-        }
-        else if (parsedResponse.type === 'recommendation') {
-          responseType = 'recommendation';
-          metadata = {
-            isRecommendation: true,
-            category: 'complete'
-          };
-          
-          // For recommendations, keep the JSON as part of the response
-          // but also extract main content if needed for display
-          cleanedMessage = formatRecommendation(parsedResponse);
-        }
+        console.log("Successfully parsed structured response:", structuredMessage.type);
       } else {
-        // Fallback for non-JSON responses
-        console.log('No JSON structure found in response, using default formatting');
-        metadata = {
-          category: currentCategory,
-          questionNumber: questionNumber,
-          totalInCategory: 4,
-          hasOptions: true,
-          suggestions: extractSuggestions(responseContent)
-        };
+        console.log("Could not extract JSON from response, using text fallback");
       }
     } catch (e) {
-      console.error('Error parsing response JSON:', e);
-      // Fallback metadata when parsing fails
-      metadata = {
-        category: currentCategory,
-        questionNumber: questionNumber,
-        totalInCategory: 4,
-        hasOptions: true,
-        suggestions: extractSuggestions(responseContent)
-      };
+      console.warn("Error parsing structured response:", e.message);
+      console.log("Original response:", aiResponse);
     }
+
+    // Process the response for metadata
+    let metadata = {};
+    let messageType = "bot";
     
-    // Track overall progress
-    const totalCategories = CATEGORIES.length;
-    const categoriesCompleted = CATEGORIES.findIndex(cat => cat === currentCategory);
-    const progressInCurrentCategory = questionNumber / 4; // assuming 4 questions per category
-    
-    // Calculate overall progress (0-100)
-    const overallProgress = Math.min(
-      Math.round(((categoriesCompleted + progressInCurrentCategory) / totalCategories) * 100),
-      100
-    );
-    
-    // Add progress to metadata
-    metadata.progress = overallProgress;
-    
-    // Generate a message ID
+    if (structuredMessage) {
+      // Handle structured format
+      if (structuredMessage.type === "recommendation") {
+        messageType = "recommendation";
+      }
+      
+      // Add progress tracking info
+      if (structuredMessage.metadata?.progress) {
+        metadata = {
+          ...metadata,
+          category: structuredMessage.metadata.progress.category,
+          questionNumber: structuredMessage.metadata.progress.current,
+          totalInCategory: structuredMessage.metadata.progress.total,
+          progress: structuredMessage.metadata.progress.overall,
+        };
+      }
+      
+      // Add options if present
+      if (structuredMessage.content?.options) {
+        metadata = {
+          ...metadata,
+          hasOptions: true,
+          suggestions: structuredMessage.content.options.map(opt => opt.text)
+        };
+      }
+    } else {
+      // Legacy format - extract from text
+      const questionMatch = aiResponse.match(/\*\*Question (\d+)\/(\d+) \(([^)]+)\):/);
+      const isRecommendation = aiResponse.includes("Career Recommendations") || 
+                               aiResponse.includes("Career Matches");
+                               
+      if (isRecommendation) {
+        messageType = "recommendation";
+        metadata = { ...metadata, isRecommendation: true };
+      } else if (questionMatch) {
+        // Extract question info
+        const questionNumber = parseInt(questionMatch[1]);
+        const totalQuestions = parseInt(questionMatch[2]);
+        const category = questionMatch[3].toLowerCase();
+        
+        metadata = {
+          ...metadata,
+          category,
+          questionNumber,
+          totalInCategory: totalQuestions,
+          progress: Math.min(Math.round((questionNumber / totalQuestions) * 100), 100),
+        };
+        
+        // Extract suggestions
+        const suggestions = extractSuggestions(aiResponse);
+        if (suggestions.length > 0) {
+          metadata = {
+            ...metadata,
+            hasOptions: true,
+            suggestions,
+          };
+        }
+      }
+    }
+
+    // Generate unique ID for the message
     const messageId = crypto.randomUUID();
 
-    console.log('Sending final response', { 
-      responseType, 
-      messageLength: cleanedMessage.length,
-      hasMetadata: Object.keys(metadata).length > 0,
-      progress: metadata.progress
-    });
-
-    // Return the response
+    // Return the formatted response
     return new Response(
       JSON.stringify({
-        message: cleanedMessage,
         messageId,
+        message: aiResponse,
+        structuredMessage,
+        rawResponse,
         metadata,
-        rawResponse: responseType === 'recommendation' ? parsedResponse : undefined
+        messageType
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error('Error in career-chat-ai function:', error);
+    console.error("Error in edge function:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message || 'An error occurred', details: error.stack }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        messageId: crypto.randomUUID(),
+        message: "I'm sorry, I encountered an error. Please try again.",
+        error: error.message,
+        metadata: { error: true }
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
 
-// Helper function to extract suggestions from response text
+// Extract suggestions from text response (legacy format)
 function extractSuggestions(text) {
-  // Look for bulleted/numbered options
-  const optionsRegex = /(?:^|\n)(?:[-*•]|\d+\.)\s*([^\n]+)/g;
-  const matches = [...text.matchAll(optionsRegex)];
-  
-  if (matches.length >= 2) {
-    return matches.map(match => match[1].trim());
+  try {
+    // Look for numbered options or bullet points
+    const optionsRegex = /(?:\d+\.\s|\*\s)(.*?)(?=\n\d+\.\s|\n\*\s|$)/gs;
+    const matches = [...text.matchAll(optionsRegex)];
+    
+    if (matches.length > 0) {
+      return matches.map(match => match[1].trim());
+    }
+    
+    // If no matches, check for options in a different format
+    const optionsSection = text.match(/Options:\s*([\s\S]*?)(?:\n\n|$)/);
+    if (optionsSection) {
+      const lines = optionsSection[1].split('\n').map(line => line.trim());
+      return lines.filter(line => line.length > 0);
+    }
+    
+    // Fallback to simple yes/no options
+    return ["Yes", "No", "Tell me more"];
+  } catch (e) {
+    console.warn("Error extracting suggestions:", e);
+    return ["Yes", "No", "Maybe"];
   }
-  
-  // Try looking for options in brackets or quotes
-  const bracketOptionsRegex = /\[([^\]]+)\]|\(([^)]+)\)|"([^"]+)"|'([^']+)'/g;
-  const bracketMatches = [...text.matchAll(bracketOptionsRegex)];
-  
-  if (bracketMatches.length >= 2) {
-    return bracketMatches.map(match => {
-      // Get the first non-undefined group
-      for (let i = 1; i < match.length; i++) {
-        if (match[i]) return match[i].trim();
-      }
-      return "";
-    });
-  }
-  
-  // Fallback to default options
-  return ["Yes", "No", "Maybe", "Not sure"];
-}
-
-// Format recommendation for display
-function formatRecommendation(recommendation) {
-  if (!recommendation.sections) {
-    return JSON.stringify(recommendation, null, 2);
-  }
-  
-  let formattedText = "# Career Recommendations\n\n";
-  
-  // Add careers section
-  if (recommendation.sections.careers && recommendation.sections.careers.length > 0) {
-    formattedText += "## Career Matches\n\n";
-    recommendation.sections.careers.forEach((career, index) => {
-      formattedText += `${index + 1}. ${career.title} (${career.match}%)\n`;
-      if (career.reasoning) {
-        formattedText += `   ${career.reasoning}\n\n`;
-      }
-    });
-  }
-  
-  // Add personality section
-  if (recommendation.sections.personality && recommendation.sections.personality.length > 0) {
-    formattedText += "\n## Personality Assessment\n\n";
-    recommendation.sections.personality.forEach((trait, index) => {
-      formattedText += `${index + 1}. ${trait.title} (${trait.match}%)\n`;
-      if (trait.description) {
-        formattedText += `   ${trait.description}\n\n`;
-      }
-    });
-  }
-  
-  // Add mentors section
-  if (recommendation.sections.mentors && recommendation.sections.mentors.length > 0) {
-    formattedText += "\n## Mentor Recommendations\n\n";
-    recommendation.sections.mentors.forEach((mentor, index) => {
-      formattedText += `${index + 1}. ${mentor.name} (${mentor.experience})\n`;
-      if (mentor.skills) {
-        formattedText += `   ${mentor.skills}\n\n`;
-      }
-    });
-  }
-  
-  return formattedText;
 }
