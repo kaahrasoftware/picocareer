@@ -11,6 +11,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import { MainLayout } from '@/router/layouts';
 
 // Initial welcome messages
 const WELCOME_MESSAGES: CareerChatMessage[] = [
@@ -359,27 +360,29 @@ export function PicoChat() {
   }
   
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto">
-      <ChatHeader isAnalyzing={isAnalyzing} />
-      
-      <ScrollArea className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-4">
-          {messages.map((message, index) => (
-            <ChatMessage key={message.id || index} message={message} />
-          ))}
-          
-          {isTyping && <ChatTypingIndicator />}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
-      
-      <ChatInput 
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        onSendMessage={sendMessage}
-        isDisabled={isAnalyzing}
-      />
-    </div>
+    <MainLayout>
+      <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto">
+        <ChatHeader isAnalyzing={isAnalyzing} />
+        
+        <ScrollArea className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-4">
+            {messages.map((message, index) => (
+              <ChatMessage key={message.id || index} message={message} />
+            ))}
+            
+            {isTyping && <ChatTypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+        
+        <ChatInput 
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          onSendMessage={sendMessage}
+          isDisabled={isAnalyzing}
+        />
+      </div>
+    </MainLayout>
   );
 }
 
