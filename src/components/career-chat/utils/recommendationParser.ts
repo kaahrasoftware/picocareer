@@ -1,3 +1,4 @@
+
 /**
  * Utility to parse and structure career recommendation messages
  */
@@ -199,33 +200,3 @@ export function extractSections(content: string): ParsedRecommendation {
     mentors
   };
 }
-
-// Fix for the error in function extractHeading or similar functions
-const extractHeading = (text: string, pattern: RegExp): string | null => {
-  const match = text.match(pattern);
-  if (match && match[1]) {
-    const matchedValue = match[1];
-    // Check if the matched value is a string before accessing length property
-    return typeof matchedValue === 'string' ? matchedValue.trim() : String(matchedValue).trim();
-  }
-  return null;
-};
-
-// Fix for any other function with similar issue
-const extractContentBetweenHeadings = (text: string, startPattern: RegExp, endPattern?: RegExp): string | null => {
-  const startMatch = text.match(startPattern);
-  if (!startMatch) return null;
-  
-  const startMatchVal = startMatch[1];
-  const startIndex = startMatch.index + startMatch[0].length;
-  
-  if (endPattern) {
-    const restOfText = text.substring(startIndex);
-    const endMatch = restOfText.match(endPattern);
-    if (endMatch) {
-      return restOfText.substring(0, endMatch.index).trim();
-    }
-  }
-  
-  return text.substring(startIndex).trim();
-};

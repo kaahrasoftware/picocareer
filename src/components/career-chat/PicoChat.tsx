@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Bot, MessageCircle, Briefcase, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,7 +23,6 @@ export function PicoChat() {
     isTyping,
     isAnalyzing,
     hasConfigError,
-    configErrorDetails,
     messagesEndRef,
     currentCategory,
     questionProgress,
@@ -36,8 +36,7 @@ export function PicoChat() {
     updateSessionTitle,
     setInputMessage,
     sendMessage,
-    addMessage,
-    retryConnection
+    addMessage
   } = useCareerChat();
   
   const { toast } = useToast();
@@ -122,11 +121,6 @@ export function PicoChat() {
     }
   };
   
-  const handleRetryConnection = async () => {
-    toast.loading('Attempting to reconnect to AI service...');
-    await retryConnection();
-  };
-  
   if (isLoading) {
     return (
       <MainLayout>
@@ -146,24 +140,6 @@ export function PicoChat() {
           <p className="text-muted-foreground max-w-md">
             The career chat AI service is currently unavailable. Please try again later or contact an administrator.
           </p>
-          
-          {configErrorDetails && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 mt-2 max-w-md text-left text-sm text-gray-700">
-              <p className="font-semibold mb-1">Error details:</p>
-              <pre className="whitespace-pre-wrap text-xs">{configErrorDetails}</pre>
-            </div>
-          )}
-          
-          <div className="mt-6">
-            <Button
-              variant="outline"
-              onClick={handleRetryConnection}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Retry Connection
-            </Button>
-          </div>
         </div>
       </MainLayout>
     );

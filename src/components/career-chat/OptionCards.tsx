@@ -152,18 +152,13 @@ export function OptionCards({ options, onSelect, layout = 'cards' }: OptionCards
     );
   }
 
-  // For cards layout with many options, use a responsive grid
-  // Adjust grid columns based on number of options
-  const getGridColumns = () => {
-    const count = normalizedOptions.length;
-    if (count <= 3) return "grid-cols-1 sm:grid-cols-3";
-    if (count <= 4) return "grid-cols-1 sm:grid-cols-2";
-    if (count <= 6) return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
-    return "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
-  };
+  // For cards layout, use a grid that adjusts based on the number of options
+  const gridCols = normalizedOptions.length <= 4 ? 
+    "grid-cols-1 sm:grid-cols-2" : 
+    "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
 
   return (
-    <div className={`grid ${getGridColumns()} gap-3 w-full max-w-2xl mb-4 animate-fade-in`}>
+    <div className={`grid ${gridCols} gap-3 w-full max-w-2xl mb-4 animate-fade-in`}>
       {normalizedOptions.map((option) => (
         <Button
           key={option.id}

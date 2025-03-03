@@ -28,7 +28,6 @@ export function useCareerChat() {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [hasConfigError, setHasConfigError] = useState(false);
-  const [configErrorDetails, setConfigErrorDetails] = useState<string | null>(null);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [questionProgress, setQuestionProgress] = useState(0);
   
@@ -39,8 +38,7 @@ export function useCareerChat() {
     education: 0,
     skills: 0,
     workstyle: 0,
-    goals: 0,
-    environment: 0
+    goals: 0
   });
 
   // Check API configuration on load
@@ -49,57 +47,24 @@ export function useCareerChat() {
       if (!sessionId) return;
       
       try {
-        console.log('Checking DeepSeek API configuration...');
-        
         const response = await supabase.functions.invoke('career-chat-ai', {
           body: { type: 'config-check' }
         });
         
-        console.log('Config check response:', response);
-        
         if (response.error || response.data?.error) {
-          const errorMsg = response.error?.message || response.data?.error || 'Unknown error';
-          console.error('DeepSeek API configuration issue:', errorMsg);
+          console.warn('DeepSeek API configuration issue:', response.error || response.data?.error);
           setHasConfigError(true);
-          setConfigErrorDetails(errorMsg);
-          
-          // Add error message for debug purposes
-          addMessage({
-            session_id: sessionId,
-            message_type: 'system',
-            content: `Debug Info: DeepSeek API configuration failed. Error: ${errorMsg}`,
-            metadata: { error: true, debug: true },
-            created_at: new Date().toISOString()
-          });
         } else {
-          console.log('DeepSeek API configured successfully');
           setHasConfigError(false);
-          setConfigErrorDetails(null);
         }
       } catch (error) {
         console.error('Failed to check API configuration:', error);
-        
-        if (error instanceof Error) {
-          setConfigErrorDetails(error.message);
-          
-          // Add error message for debug purposes
-          addMessage({
-            session_id: sessionId,
-            message_type: 'system',
-            content: `Debug Info: Failed to check DeepSeek API. Error: ${error.message}`,
-            metadata: { error: true, debug: true },
-            created_at: new Date().toISOString()
-          });
-        }
-        
-        // Don't set hasConfigError to true here for network errors, as they might be temporary
-        // But show a toast to inform the user
-        toast.error('Failed to connect to AI service. Please check your connection and try again.');
+        // Don't set hasConfigError to true here, as it might be a temporary network issue
       }
     };
     
     checkApiConfig();
-  }, [sessionId, addMessage]);
+  }, [sessionId]);
 
   // Update category and question counts based on messages
   useEffect(() => {
@@ -142,9 +107,9 @@ export function useCareerChat() {
         [newCategory]: prev[newCategory as keyof typeof prev] + 1
       }));
       
-      // Calculate overall progress (assuming up to 10 questions per category, 5 categories)
+      // Calculate overall progress (assuming 12-15 questions total plan)
       const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
-      setQuestionProgress(Math.min(Math.round((totalQuestions / 50) * 100), 100));
+      setQuestionProgress(Math.min(Math.round((totalQuestions / 15) * 100), 100));
     }
     
     // If this is a recommendation message, set progress to 100%
@@ -189,8 +154,6 @@ export function useCareerChat() {
         content: message.trim()
       });
 
-      console.log(`Sending message to career-chat-ai with ${messageHistory.length} messages history`);
-      
       // Call our edge function
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: {
@@ -204,8 +167,6 @@ export function useCareerChat() {
           }
         }
       });
-
-      console.log('AI response received:', response);
 
       if (response.error) {
         console.error('Edge function error:', response.error);
@@ -255,17 +216,11 @@ export function useCareerChat() {
       console.error('Error getting AI response:', error);
       toast.error('Failed to get a response. Please try again.');
       
-      let errorMessage = 'I\'m sorry, I encountered an error. Please try again.';
-      
-      if (error instanceof Error) {
-        errorMessage += `\n\nError details: ${error.message}`;
-      }
-      
       // Add error message
       await addMessage({
         session_id: sessionId,
         message_type: 'system',
-        content: errorMessage,
+        content: "I'm sorry, I encountered an error. Please try again.",
         metadata: { error: true },
         created_at: new Date().toISOString()
       });
@@ -274,40 +229,6 @@ export function useCareerChat() {
     }
   }, [sessionId, messages, addMessage]);
 
-  // Add retry function to attempt reconnection
-  const retryConnection = useCallback(async () => {
-    setHasConfigError(false);
-    setConfigErrorDetails(null);
-    
-    try {
-      const response = await supabase.functions.invoke('career-chat-ai', {
-        body: { type: 'config-check' }
-      });
-      
-      if (response.error || response.data?.error) {
-        const errorMsg = response.error?.message || response.data?.error || 'Unknown error';
-        console.error('DeepSeek API configuration still failing:', errorMsg);
-        setHasConfigError(true);
-        setConfigErrorDetails(errorMsg);
-        toast.error('Still unable to connect to the AI service');
-      } else {
-        console.log('DeepSeek API reconnected successfully');
-        setHasConfigError(false);
-        setConfigErrorDetails(null);
-        toast.success('Successfully connected to the AI service');
-      }
-    } catch (error) {
-      console.error('Failed to reconnect to API:', error);
-      setHasConfigError(true);
-      
-      if (error instanceof Error) {
-        setConfigErrorDetails(error.message);
-      }
-      
-      toast.error('Failed to reconnect to the AI service');
-    }
-  }, []);
-
   return {
     messages,
     inputMessage,
@@ -315,7 +236,6 @@ export function useCareerChat() {
     isTyping,
     isAnalyzing,
     hasConfigError,
-    configErrorDetails,
     currentCategory,
     questionProgress,
     pastSessions,
@@ -329,7 +249,6 @@ export function useCareerChat() {
     messagesEndRef,
     setInputMessage,
     sendMessage,
-    addMessage,
-    retryConnection
+    addMessage
   };
 }
