@@ -1,5 +1,5 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './useChatSession';
 import { useCareerAnalysis } from './useCareerAnalysis';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,8 +12,34 @@ export function useCareerChat() {
   
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [hasConfigError, setHasConfigError] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check API configuration on load
+  useEffect(() => {
+    const checkApiConfig = async () => {
+      if (!sessionId) return;
+      
+      try {
+        const response = await supabase.functions.invoke('career-chat-ai', {
+          body: { type: 'config-check' }
+        });
+        
+        if (response.error || response.data?.error) {
+          console.warn('DeepSeek API configuration issue:', response.error || response.data?.error);
+          setHasConfigError(true);
+        } else {
+          setHasConfigError(false);
+        }
+      } catch (error) {
+        console.error('Failed to check API configuration:', error);
+        // Don't set hasConfigError to true here, as it might be a temporary network issue
+      }
+    };
+    
+    checkApiConfig();
+  }, [sessionId]);
 
   // Function to send message and get AI response
   const sendMessage = useCallback(async (message: string) => {
@@ -56,7 +82,13 @@ export function useCareerChat() {
       });
 
       if (response.error) {
-        throw new Error(response.error.message);
+        console.error('Edge function error:', response.error);
+        throw new Error(response.error.message || 'Failed to get AI response');
+      }
+
+      if (response.data?.error) {
+        console.error('AI service error:', response.data.error);
+        throw new Error(response.data.error);
       }
 
       // No need to add bot response here as it's already done in the edge function
@@ -84,6 +116,7 @@ export function useCareerChat() {
     isLoading,
     isTyping,
     isAnalyzing,
+    hasConfigError,
     messagesEndRef,
     setInputMessage,
     sendMessage
