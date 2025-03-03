@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, UserRound, Briefcase, GraduationCap, Brain, Target, Users, Clock, Palette, Settings, Heart, Star, Lightbulb } from 'lucide-react';
@@ -161,7 +160,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     if (option.icon) {
       const IconComponent = getIconByName(option.icon);
       if (IconComponent) {
-        return <IconComponent className="h-5 w-5" />;
+        return <IconComponent className="h-4 w-4" />;
       }
     }
 
@@ -170,176 +169,38 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     
     switch (category) {
       case 'education':
-        return <GraduationCap className="h-5 w-5 text-indigo-500" />;
+        return <GraduationCap className="h-4 w-4 text-indigo-500" />;
       case 'skills':
-        return <Brain className="h-5 w-5 text-emerald-500" />;
+        return <Brain className="h-4 w-4 text-emerald-500" />;
       case 'work':
-        return <Briefcase className="h-5 w-5 text-amber-500" />;
+        return <Briefcase className="h-4 w-4 text-amber-500" />;
       case 'goals':
-        return <Target className="h-5 w-5 text-blue-500" />;
+        return <Target className="h-4 w-4 text-blue-500" />;
       case 'social':
-        return <Users className="h-5 w-5 text-violet-500" />;
+        return <Users className="h-4 w-4 text-violet-500" />;
       case 'time':
-        return <Clock className="h-5 w-5 text-orange-500" />;
+        return <Clock className="h-4 w-4 text-orange-500" />;
       case 'creative':
-        return <Palette className="h-5 w-5 text-pink-500" />;
+        return <Palette className="h-4 w-4 text-pink-500" />;
       case 'money':
-        return <Settings className="h-5 w-5 text-green-500" />;
+        return <Settings className="h-4 w-4 text-green-500" />;
       case 'passion':
-        return <Heart className="h-5 w-5 text-red-500" />;
+        return <Heart className="h-4 w-4 text-red-500" />;
       case 'leadership':
-        return <Star className="h-5 w-5 text-yellow-500" />;
+        return <Star className="h-4 w-4 text-yellow-500" />;
       case 'innovation':
-        return <Lightbulb className="h-5 w-5 text-amber-500" />;
+        return <Lightbulb className="h-4 w-4 text-amber-500" />;
       default:
-        return <UserRound className="h-5 w-5 text-gray-500" />;
+        return <UserRound className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  // Get gradient styles based on the category and selection state
-  const getCardStyles = (option: MessageOption, isSelected: boolean) => {
-    const category = getOptionCategory(option);
-    const baseStyles = {
-      bgGradient: '',
-      hoverBgGradient: '',
-      borderColor: '',
-      iconColor: '',
-      selectedBgGradient: '',
-      selectedBorderColor: '',
-      selectedBoxShadow: ''
-    };
-    
-    switch (category) {
-      case 'education':
-        return {
-          bgGradient: 'from-indigo-50 to-white',
-          hoverBgGradient: 'hover:from-indigo-100 hover:to-indigo-50/70',
-          borderColor: 'border-indigo-200',
-          iconColor: 'text-indigo-500',
-          selectedBgGradient: 'from-indigo-200 to-indigo-50',
-          selectedBorderColor: 'border-indigo-400',
-          selectedBoxShadow: 'shadow-indigo-200'
-        };
-      case 'skills':
-        return {
-          bgGradient: 'from-emerald-50 to-white',
-          hoverBgGradient: 'hover:from-emerald-100 hover:to-emerald-50/70',
-          borderColor: 'border-emerald-200',
-          iconColor: 'text-emerald-500',
-          selectedBgGradient: 'from-emerald-200 to-emerald-50',
-          selectedBorderColor: 'border-emerald-400',
-          selectedBoxShadow: 'shadow-emerald-200'
-        };
-      case 'work':
-        return {
-          bgGradient: 'from-amber-50 to-white',
-          hoverBgGradient: 'hover:from-amber-100 hover:to-amber-50/70',
-          borderColor: 'border-amber-200',
-          iconColor: 'text-amber-500',
-          selectedBgGradient: 'from-amber-200 to-amber-50',
-          selectedBorderColor: 'border-amber-400',
-          selectedBoxShadow: 'shadow-amber-200'
-        };
-      case 'goals':
-        return {
-          bgGradient: 'from-blue-50 to-white',
-          hoverBgGradient: 'hover:from-blue-100 hover:to-blue-50/70',
-          borderColor: 'border-blue-200',
-          iconColor: 'text-blue-500',
-          selectedBgGradient: 'from-blue-200 to-blue-50',
-          selectedBorderColor: 'border-blue-400',
-          selectedBoxShadow: 'shadow-blue-200'
-        };
-      case 'social':
-        return {
-          bgGradient: 'from-violet-50 to-white',
-          hoverBgGradient: 'hover:from-violet-100 hover:to-violet-50/70',
-          borderColor: 'border-violet-200',
-          iconColor: 'text-violet-500',
-          selectedBgGradient: 'from-violet-200 to-violet-50',
-          selectedBorderColor: 'border-violet-400',
-          selectedBoxShadow: 'shadow-violet-200'
-        };
-      case 'time':
-        return {
-          bgGradient: 'from-orange-50 to-white',
-          hoverBgGradient: 'hover:from-orange-100 hover:to-orange-50/70',
-          borderColor: 'border-orange-200',
-          iconColor: 'text-orange-500',
-          selectedBgGradient: 'from-orange-200 to-orange-50',
-          selectedBorderColor: 'border-orange-400',
-          selectedBoxShadow: 'shadow-orange-200'
-        };
-      case 'creative':
-        return {
-          bgGradient: 'from-pink-50 to-white',
-          hoverBgGradient: 'hover:from-pink-100 hover:to-pink-50/70',
-          borderColor: 'border-pink-200',
-          iconColor: 'text-pink-500',
-          selectedBgGradient: 'from-pink-200 to-pink-50',
-          selectedBorderColor: 'border-pink-400',
-          selectedBoxShadow: 'shadow-pink-200'
-        };
-      case 'money':
-        return {
-          bgGradient: 'from-green-50 to-white',
-          hoverBgGradient: 'hover:from-green-100 hover:to-green-50/70',
-          borderColor: 'border-green-200',
-          iconColor: 'text-green-500',
-          selectedBgGradient: 'from-green-200 to-green-50',
-          selectedBorderColor: 'border-green-400',
-          selectedBoxShadow: 'shadow-green-200'
-        };
-      case 'passion':
-        return {
-          bgGradient: 'from-red-50 to-white',
-          hoverBgGradient: 'hover:from-red-100 hover:to-red-50/70',
-          borderColor: 'border-red-200',
-          iconColor: 'text-red-500',
-          selectedBgGradient: 'from-red-200 to-red-50',
-          selectedBorderColor: 'border-red-400',
-          selectedBoxShadow: 'shadow-red-200'
-        };
-      case 'leadership':
-        return {
-          bgGradient: 'from-yellow-50 to-white',
-          hoverBgGradient: 'hover:from-yellow-100 hover:to-yellow-50/70',
-          borderColor: 'border-yellow-200',
-          iconColor: 'text-yellow-500',
-          selectedBgGradient: 'from-yellow-200 to-yellow-50',
-          selectedBorderColor: 'border-yellow-400',
-          selectedBoxShadow: 'shadow-yellow-200'
-        };
-      case 'innovation':
-        return {
-          bgGradient: 'from-amber-50 to-white',
-          hoverBgGradient: 'hover:from-amber-100 hover:to-amber-50/70',
-          borderColor: 'border-amber-200',
-          iconColor: 'text-amber-500',
-          selectedBgGradient: 'from-amber-200 to-amber-50',
-          selectedBorderColor: 'border-amber-400',
-          selectedBoxShadow: 'shadow-amber-200'
-        };
-      default:
-        return {
-          bgGradient: 'from-gray-50 to-white',
-          hoverBgGradient: 'hover:from-gray-100 hover:to-gray-50/70',
-          borderColor: 'border-gray-200',
-          iconColor: 'text-gray-500',
-          selectedBgGradient: 'from-gray-200 to-gray-50',
-          selectedBorderColor: 'border-gray-400',
-          selectedBoxShadow: 'shadow-gray-200'
-        };
-    }
-  };
-
-  // For chips layout, use a responsively flowing layout
+  // For chips layout, use a responsively flowing layout with white backgrounds
   if (layout === 'chips') {
     return (
-      <div className="flex flex-wrap gap-3 w-full max-w-2xl my-5 animate-fade-in">
+      <div className="flex flex-wrap gap-2 w-full max-w-2xl my-4 animate-fade-in">
         {normalizedOptions.map((option) => {
           const isSelected = isOptionSelected(option);
-          const styles = getCardStyles(option, isSelected);
           
           return (
             <Button
@@ -347,18 +208,18 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
               variant="outline"
               size="sm"
               className={cn(
-                "rounded-full border transition-all duration-300",
+                "rounded-full border transition-all duration-200 bg-white hover:bg-gray-50",
                 isSelected 
-                  ? `bg-gradient-to-r ${styles.selectedBgGradient} ${styles.selectedBorderColor} shadow-md`
-                  : `bg-gradient-to-r ${styles.bgGradient} ${styles.hoverBgGradient} ${styles.borderColor} hover:shadow-md hover:scale-105`,
-                "text-base font-medium",
-                "aria-pressed:scale-105 aria-pressed:shadow-md"
+                  ? "border-primary text-primary shadow-sm"
+                  : "border-gray-200 hover:border-gray-300 hover:shadow-sm",
+                "text-sm font-medium h-8 px-3",
+                "aria-pressed:scale-105"
               )}
               onClick={() => handleSelectOption(option)}
               aria-pressed={isSelected}
             >
-              <span className={cn("mr-1.5", styles.iconColor)}>
-                {isSelected ? <Check className="h-4 w-4" /> : getOptionIcon(option)}
+              <span className="mr-1.5 flex items-center">
+                {isSelected ? <Check className="h-3.5 w-3.5" /> : getOptionIcon(option)}
               </span>
               <span className="text-gray-800">{option.text}</span>
             </Button>
@@ -369,26 +230,27 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
   }
 
   // For cards layout, use a grid that adjusts based on the number of options
+  // Use smaller cards with consistent white background
   const gridCols = normalizedOptions.length <= 2 ? 
     "grid-cols-1 sm:grid-cols-2" : 
-    "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
+    "grid-cols-2 sm:grid-cols-3 md:grid-cols-4";
 
   return (
-    <div className={`grid ${gridCols} gap-4 w-full max-w-2xl animate-fade-in`}>
+    <div className={`grid ${gridCols} gap-3 w-full max-w-3xl animate-fade-in`}>
       {normalizedOptions.map((option) => {
         const isSelected = isOptionSelected(option);
-        const styles = getCardStyles(option, isSelected);
         
         return (
           <button
             key={option.id}
             className={cn(
-              "h-auto py-4 px-5 text-left flex flex-col gap-2 rounded-xl",
-              "transition-all duration-300 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+              "py-3 px-4 text-left flex flex-col gap-1 rounded-lg",
+              "transition-all duration-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+              "bg-white hover:bg-gray-50",
               isSelected 
-                ? `bg-gradient-to-br ${styles.selectedBgGradient} ${styles.selectedBorderColor} shadow-md ${styles.selectedBoxShadow} scale-[1.03]`
-                : `bg-gradient-to-br ${styles.bgGradient} ${styles.hoverBgGradient} ${styles.borderColor} hover:shadow-md hover:scale-[1.02]`,
-              "border group aria-pressed:scale-[1.03] aria-pressed:shadow-md"
+                ? "border-2 border-primary shadow-sm" 
+                : "border border-gray-200 hover:border-gray-300 hover:shadow",
+              "group aria-pressed:shadow"
             )}
             onClick={() => handleSelectOption(option)}
             aria-pressed={isSelected}
@@ -396,34 +258,34 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
             aria-checked={isSelected}
           >
             <div className="flex w-full justify-between items-center">
-              <div className={cn("flex items-center gap-2.5", styles.iconColor)}>
+              <div className="flex items-center gap-2">
                 {getOptionIcon(option)}
-                <span className="font-medium text-base text-gray-800">{option.text}</span>
+                <span className="font-medium text-sm text-gray-800">{option.text}</span>
               </div>
               {isSelected ? (
-                <div className={cn("flex items-center justify-center rounded-full h-6 w-6", styles.iconColor, "bg-white/80")}>
-                  <Check className="h-4 w-4" />
+                <div className="flex items-center justify-center rounded-full h-5 w-5 bg-primary/10 text-primary">
+                  <Check className="h-3 w-3" />
                 </div>
               ) : (
-                <ArrowRight className="h-4 w-4 text-primary/80 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" />
+                <ArrowRight className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-1" />
               )}
             </div>
             {option.description && (
-              <p className="text-sm text-gray-600 mt-1 pl-7.5">{option.description}</p>
+              <p className="text-xs text-gray-500 mt-1 pl-6">{option.description}</p>
             )}
           </button>
         );
       })}
 
       {allowMultiple && selectedOptions.length > 0 && (
-        <div className="col-span-full flex justify-center mt-4">
+        <div className="col-span-full flex justify-center mt-3">
           <Button 
             onClick={() => {
               // Submit all selected options joined by commas
               onSelect(selectedOptions.join(', '));
               setSelectedOptions([]);
             }}
-            className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all"
+            className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all"
           >
             Continue with {selectedOptions.length} selection{selectedOptions.length !== 1 ? 's' : ''}
           </Button>
