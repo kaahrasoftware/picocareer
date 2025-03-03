@@ -21,8 +21,8 @@ const categories = ['education', 'skills', 'workstyle', 'goals'];
 const questionsPerCategory = 3;
 const totalQuestions = categories.length * questionsPerCategory;
 
-// DeepSeek API configuration
-const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.ai/v1/chat/completions';
+// DeepSeek API configuration - FIXED ENDPOINT FROM .ai TO .com
+const DEEPSEEK_API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
 const DEEPSEEK_MODEL = 'deepseek-chat-v1-33b';
 
 Deno.serve(async (req) => {
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
         
         // Validate API key with a minimal request - try basic echo for validation
         try {
-          console.log('Sending validation request to DeepSeek API');
+          console.log(`Sending validation request to DeepSeek API at: ${DEEPSEEK_API_ENDPOINT}`);
           const validationResponse = await fetch(DEEPSEEK_API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -113,11 +113,22 @@ Deno.serve(async (req) => {
           console.error('DeepSeek API validation error:', validationError.message);
           console.error('Error stack:', validationError.stack);
           
+          // Check if the error is related to a domain issue (common with api.deepseek.ai vs api.deepseek.com)
+          const errorMessage = validationError.message;
+          const isDomainError = errorMessage && (
+            errorMessage.includes('error sending request for url') || 
+            errorMessage.includes('network error') || 
+            errorMessage.includes('failed to fetch')
+          );
+          
           return new Response(
             JSON.stringify({ 
-              error: 'DeepSeek API validation error', 
+              error: isDomainError ? 
+                'Error connecting to DeepSeek API. Please verify the API endpoint and network connectivity.' : 
+                'DeepSeek API validation error', 
               details: validationError.message,
-              stack: validationError.stack
+              stack: validationError.stack,
+              endpoint: DEEPSEEK_API_ENDPOINT // Include the endpoint for debugging
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -201,6 +212,7 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Making API request to DeepSeek with ${formattedMessages.length} messages`);
+    console.log(`Using DeepSeek API endpoint: ${DEEPSEEK_API_ENDPOINT}`);
     
     // Make the API call to DeepSeek
     try {
@@ -240,7 +252,8 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: errorMessage,
-            status: response.status
+            status: response.status,
+            endpoint: DEEPSEEK_API_ENDPOINT // Include endpoint for debugging
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -344,10 +357,14 @@ Deno.serve(async (req) => {
       console.error('Error making request to DeepSeek API:', apiError.message);
       console.error('Error stack:', apiError.stack);
       
+      // Enhance error message to include endpoint information
+      const errorDetails = `Failed to communicate with DeepSeek API at ${DEEPSEEK_API_ENDPOINT}: ${apiError.message}`;
+      
       return new Response(
         JSON.stringify({ 
-          error: `Failed to communicate with DeepSeek API: ${apiError.message}`,
-          details: apiError.stack
+          error: errorDetails,
+          details: apiError.stack,
+          endpoint: DEEPSEEK_API_ENDPOINT
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
