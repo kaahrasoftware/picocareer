@@ -1,59 +1,48 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
+import { SendIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Send } from 'lucide-react';
 
 interface ChatInputProps {
   inputMessage: string;
   setInputMessage: (message: string) => void;
   onSendMessage: (message: string) => void;
-  isDisabled: boolean;
+  isDisabled?: boolean;
 }
 
 export function ChatInput({ 
   inputMessage, 
   setInputMessage, 
   onSendMessage, 
-  isDisabled 
+  isDisabled = false 
 }: ChatInputProps) {
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Focus the input field when the component mounts or isDisabled changes
-  useEffect(() => {
-    if (!isDisabled) {
-      inputRef.current?.focus();
-    }
-  }, [isDisabled]);
-  
-  // Handle sending messages with Enter key
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputMessage.trim()) {
       onSendMessage(inputMessage);
+      setInputMessage('');
     }
   };
-  
+
   return (
-    <div className="border-t p-4">
-      <div className="flex gap-2">
-        <Textarea
-          ref={inputRef}
-          placeholder="Type your message..."
+    <form onSubmit={handleSubmit} className="border-t p-4 bg-background">
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
+          placeholder="Type your message..."
           disabled={isDisabled}
-          className="min-h-[60px] resize-none"
+          className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <Button 
+          type="submit" 
           size="icon" 
-          onClick={() => onSendMessage(inputMessage)}
-          disabled={!inputMessage.trim() || isDisabled}
+          disabled={isDisabled || !inputMessage.trim()}
         >
-          <Send className="h-4 w-4" />
+          <SendIcon className="h-5 w-5" />
         </Button>
       </div>
-    </div>
+    </form>
   );
 }

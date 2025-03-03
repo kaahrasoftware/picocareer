@@ -1,6 +1,7 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
-import DefaultLayout from "./layouts";
+import { MainLayout } from "./layouts"; // Changed from DefaultLayout to MainLayout
 import Index from "../pages/Index";
 import Career from "../pages/Career";
 import Mentor from "../pages/Mentor";
@@ -32,12 +33,12 @@ import Error from "../pages/Error";
 import Hubs from "../pages/Hubs";
 import Hub from "../pages/Hub";
 import HubInviteResponse from "../pages/HubInviteResponse";
-import CareerChat from "../pages/CareerChat"; // New import
+import CareerChat from "../pages/CareerChat";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <DefaultLayout />,
+    element: <MainLayout />, // Changed from DefaultLayout to MainLayout
     errorElement: <Error />,
     children: [
       {

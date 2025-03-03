@@ -30,6 +30,7 @@ export function MainNavigation() {
 
   const resourceItems = [
     { path: "/personality-test", label: "Personality Test" },
+    { path: "/career-chat", label: "AI Career Guide" }, // Added this line
     { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
   ];

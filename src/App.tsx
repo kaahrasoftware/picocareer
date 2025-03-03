@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
 import { router } from '@/router/routes';
 import { Toaster } from '@/components/ui/toaster';
-import Error from '@/pages/Error';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
 import { RouterProvider } from 'react-router-dom';

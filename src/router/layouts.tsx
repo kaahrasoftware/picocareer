@@ -2,9 +2,10 @@
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
+import { Outlet } from "react-router-dom"; // Add this import
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode; // Make children optional
 }
 
 export function MainLayout({ children }: LayoutProps) {
@@ -12,7 +13,7 @@ export function MainLayout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col">
       <MenuSidebar />
       <main className="pt-16 flex-grow">
-        {children}
+        {children || <Outlet />} {/* Use children if provided, otherwise use Outlet */}
       </main>
       <Footer />
       <GoToTopButton />
@@ -25,7 +26,7 @@ export function AuthLayout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col">
       <MenuSidebar />
       <main className="pt-16 flex-grow">
-        {children}
+        {children || <Outlet />} {/* Use children if provided, otherwise use Outlet */}
       </main>
     </div>
   );
