@@ -12,7 +12,7 @@ import {
   extractSections, 
   parseStructuredRecommendation 
 } from '@/components/career-chat/utils/recommendationParser';
-import { StructuredMessage } from '@/types/database/message-types';
+import { StructuredMessage, MessageOption } from '@/types/database/message-types';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
@@ -31,6 +31,109 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
       ? (message.metadata.structuredMessage as StructuredMessage) 
       : null;
 
+  // Check if the message is in a numbered list format (1. Option, 2. Option, etc.)
+  const hasNumberedList = React.useMemo(() => {
+    if (message.message_type !== 'bot') return false;
+    
+    // Check if message contains numbered list pattern (1. Option)
+    const pattern = /\d+\.\s+[A-Za-z]/;
+    return pattern.test(message.content);
+  }, [message]);
+  
+  // Parse numbered list options into a structured format
+  const parseNumberedOptions = React.useMemo(() => {
+    if (!hasNumberedList) return null;
+    
+    const content = message.content;
+    
+    // Split into intro/question and options parts
+    const parts = content.split(/(\d+\.\s+)/);
+    let intro = '';
+    let question = '';
+    const options: MessageOption[] = [];
+    
+    if (parts.length > 0) {
+      // Extract the text before the first numbered option
+      const introText = parts[0].trim();
+      
+      // Try to split into intro and question if there's a clear question mark
+      const questionSplit = introText.split(/(?<=\?)\s+/);
+      if (questionSplit.length > 1) {
+        intro = questionSplit[0].trim();
+        question = questionSplit.slice(1).join(' ').trim();
+      } else {
+        // Look for sentences ending with question mark
+        const questionMatch = introText.match(/([^.!?]+\?)/g);
+        if (questionMatch && questionMatch.length > 0) {
+          question = questionMatch[questionMatch.length - 1].trim();
+          intro = introText.replace(question, '').trim();
+        } else {
+          // No clear question found, use last sentence as question
+          const sentences = introText.split(/(?<=\.|\!)\s+/);
+          if (sentences.length > 1) {
+            question = sentences.pop() || '';
+            intro = sentences.join(' ');
+          } else {
+            question = introText;
+          }
+        }
+      }
+      
+      // Parse options
+      for (let i = 1; i < parts.length; i += 2) {
+        if (i + 1 < parts.length) {
+          const optionNumber = parts[i].trim();
+          const optionText = parts[i + 1].trim();
+          
+          if (optionNumber && optionText) {
+            options.push({
+              id: optionText.toLowerCase().replace(/\s+/g, '-'),
+              text: optionText,
+              // Assign appropriate icons and categories based on content
+              ...getOptionMetadata(optionText)
+            });
+          }
+        }
+      }
+    }
+    
+    return {
+      intro,
+      question,
+      options
+    };
+  }, [message, hasNumberedList]);
+  
+  // Function to assign appropriate icons and categories based on option content
+  function getOptionMetadata(optionText: string): { icon?: string, category?: string } {
+    const text = optionText.toLowerCase();
+    
+    if (text.includes('problem') || text.includes('solving')) {
+      return { icon: 'Brain', category: 'skills' };
+    }
+    if (text.includes('design') || text.includes('build')) {
+      return { icon: 'Tool', category: 'skills' };
+    }
+    if (text.includes('teach') || text.includes('guid') || text.includes('help')) {
+      return { icon: 'Users', category: 'social' };
+    }
+    if (text.includes('research') || text.includes('explor')) {
+      return { icon: 'Search', category: 'skills' };
+    }
+    if (text.includes('manag') || text.includes('organiz')) {
+      return { icon: 'List', category: 'workstyle' };
+    }
+    if (text.includes('creat') || text.includes('innovat')) {
+      return { icon: 'Lightbulb', category: 'creative' };
+    }
+    if (text.includes('other')) {
+      return { icon: 'Plus', category: 'general' };
+    }
+    
+    // Default
+    return { icon: 'MessageCircle', category: 'general' };
+  }
+  
   // Handle legacy format detection
   const isQuestion = !structuredMessage && 
     message.message_type === 'bot' && 
@@ -113,6 +216,35 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
               onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
               layout={questionInfo.layout as any}
               allowMultiple={questionInfo.allowMultiple}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  // Handle detected numbered list format
+  if (hasNumberedList && parseNumberedOptions) {
+    const { intro, question, options } = parseNumberedOptions;
+    
+    return (
+      <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
+        <QuestionCard 
+          question={question}
+          intro={intro}
+          category={'general'}
+          questionNumber={1}
+          totalQuestions={4}
+          progress={currentQuestionProgress}
+        />
+        
+        {options.length > 0 && (
+          <div className="w-full mt-2">
+            <OptionCards 
+              options={options}
+              onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
+              layout="cards"
+              allowMultiple={false}
             />
           </div>
         )}

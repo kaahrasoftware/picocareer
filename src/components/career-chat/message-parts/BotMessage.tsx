@@ -11,7 +11,7 @@ export function BotMessage({ content }: BotMessageProps) {
   // Check if this is an error message
   const isError = content.includes("error") && content.includes("I'm sorry");
   
-  // Try to extract just the conversational part if it's JSON
+  // Try to extract just the conversational part if it's JSON or contains numbered options
   const cleanedContent = React.useMemo(() => {
     if (content.includes('```json') || content.includes('```')) {
       // Remove code blocks to display only the conversation text
@@ -19,6 +19,17 @@ export function BotMessage({ content }: BotMessageProps) {
         .replace(/\{[\s\S]*\}/g, '') // Remove any remaining JSON objects
         .trim();
     }
+    
+    // Check if this is a message with numbered options (1. Option, 2. Option, etc.)
+    if (/\d+\.\s+\w+/.test(content)) {
+      // Split the content by the first numbered option
+      const parts = content.split(/\d+\.\s+\w+/);
+      if (parts.length > 1) {
+        // Return just the text part before the options
+        return parts[0].trim();
+      }
+    }
+    
     return content;
   }, [content]);
 
