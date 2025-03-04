@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Bot, MessageCircle, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -229,7 +230,8 @@ export function PicoChat() {
               inputMessage={inputMessage} 
               setInputMessage={setInputMessage} 
               onSendMessage={sendMessage} 
-              isDisabled={isTyping || isAnalyzing || isSessionEnded} 
+              isDisabled={isTyping || isAnalyzing || isSessionEnded}
+              placeholder={isSessionEnded ? "Conversation ended. Start a new chat to continue." : "Type your question..."}
             />
           </div>
         )}
