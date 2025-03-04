@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Bot, MessageCircle, Briefcase, History, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, Bot, MessageCircle, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -85,13 +85,10 @@ export function PicoChat() {
 
   useEffect(() => {
     const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
-    if (userMessageCount >= 12 && !isAnalyzing && !showAnalyzeButton) {
-      setShowAnalyzeButton(true);
-    }
     if (isAnalyzing || messages.some(msg => msg.message_type === 'recommendation')) {
       setShowAnalyzeButton(false);
     }
-  }, [messages, isAnalyzing, showAnalyzeButton]);
+  }, [messages, isAnalyzing]);
 
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
@@ -198,13 +195,6 @@ export function PicoChat() {
             <ScrollArea className="flex-1 p-4 overflow-y-auto">
               <div className="space-y-4">
                 {messages.map((message, index) => <ChatMessage key={message.id || index} message={message} onSuggestionClick={handleSuggestionClick} currentQuestionProgress={questionProgress} />)}
-                
-                {showAnalyzeButton && <div className="flex justify-center my-4 animate-fade-in">
-                    <Button onClick={handleAnalyzeClick} className="bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all">
-                      <Briefcase className="h-5 w-5" />
-                      <span>Find Career Matches</span>
-                    </Button>
-                  </div>}
                 
                 {isTyping && <ChatTypingIndicator />}
                 <div ref={messagesEndRef} />
