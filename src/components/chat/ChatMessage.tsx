@@ -30,7 +30,8 @@ export function ChatMessage({
   const isUser = message.message_type === 'user';
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
-  const isSessionEnd = message.message_type === 'session_end';
+  const isSessionEnd = message.message_type === 'session_end' || 
+                      (message.metadata?.isSessionEnd === true);
   
   // Try to parse structured message from metadata (new format)
   const structuredMessage: StructuredMessage | null = 
@@ -191,7 +192,12 @@ export function ChatMessage({
   // Handle structured recommendation from raw response
   if (hasStructuredData) {
     const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
-    return <RecommendationSection recommendation={structuredData} />;
+    return (
+      <RecommendationSection 
+        recommendation={structuredData} 
+        onSuggestionClick={onSuggestionClick}
+      />
+    );
   }
   
   // Handle full recommendation message with multiple sections (fallback to text parsing)
@@ -199,7 +205,12 @@ export function ChatMessage({
     const sections = extractSections(message.content);
     
     if (sections.type === 'recommendation') {
-      return <RecommendationSection recommendation={sections} />;
+      return (
+        <RecommendationSection 
+          recommendation={sections} 
+          onSuggestionClick={onSuggestionClick}
+        />
+      );
     }
     
     // If the parser couldn't identify this as a recommendation, display as normal message
