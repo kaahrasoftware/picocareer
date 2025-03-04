@@ -12,6 +12,11 @@ OPTIONS_MAX_COUNT = 8
 OPTIONS_MAX_LENGTH = 40
 CATEGORY_TRACKING = "enabled"
 
+# Cache configuration
+ENABLE_RESPONSE_CACHE = "true"
+CACHE_EXPIRY_SECONDS = "3600"  # 1 hour cache expiry
+MAX_HISTORY_MESSAGES = "6"     # Only send the last 6 messages for context
+
 # Structured format instruction
 # This will instruct the AI to return responses in the specified format
 STRUCTURED_FORMAT_INSTRUCTION = """
