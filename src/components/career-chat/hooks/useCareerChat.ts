@@ -7,10 +7,6 @@ import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { StructuredMessage } from '@/types/database/message-types';
 
-// Client-side cache for template responses
-const responseCache: Record<string, { data: any, timestamp: number }> = {};
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
-
 export function useCareerChat() {
   const { 
     messages, 
@@ -34,7 +30,6 @@ export function useCareerChat() {
   const [hasConfigError, setHasConfigError] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [questionProgress, setQuestionProgress] = useState(0);
-  const [usingCachedResponse, setUsingCachedResponse] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -146,64 +141,6 @@ export function useCareerChat() {
     }
   }, [messages]);
 
-  // Clean up expired cache entries periodically
-  useEffect(() => {
-    const clearExpiredCache = () => {
-      const now = Date.now();
-      Object.keys(responseCache).forEach(key => {
-        if (now > responseCache[key].timestamp + CACHE_TTL) {
-          delete responseCache[key];
-        }
-      });
-    };
-    
-    const interval = setInterval(clearExpiredCache, 5 * 60 * 1000); // Every 5 minutes
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  // Generate cache key from message and context
-  const generateCacheKey = useCallback((message: string, category?: string, questionNumber?: number) => {
-    // For common starting messages, use a simpler key
-    if (message.toLowerCase().includes('hi') && message.length < 10) {
-      return 'greeting';
-    }
-    
-    // For category-specific first questions
-    if (category && questionNumber === 1) {
-      return `${category}:1`;
-    }
-    
-    // For other cases, use message hash
-    return `msg:${hashString(message)}`;
-  }, []);
-  
-  // Simple string hashing function
-  const hashString = (str: string): string => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString(16);
-  };
-
-  // Check if we can use a template for the first question in a category
-  const getTemplateForCategory = useCallback((category: string, questionNumber: number): string | null => {
-    if (questionNumber !== 1) return null;
-    
-    // Template responses for first question in each category
-    const templates: Record<string, string> = {
-      education: `Let's start by understanding your educational background. What's the highest level of education you've completed?`,
-      skills: `Now let's focus on your skills and abilities. What technical skills are you most proficient in?`,
-      workstyle: `Let's discuss your preferred work environment. Do you prefer working independently or as part of a team?`,
-      goals: `Finally, let's talk about your career goals. Where do you see yourself in 5 years?`
-    };
-    
-    return templates[category] || null;
-  }, []);
-
   // Function to send message and get AI response
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId || isSessionComplete) return;
@@ -221,7 +158,6 @@ export function useCareerChat() {
     
     setInputMessage('');
     setIsTyping(true);
-    setUsingCachedResponse(false);
     
     try {
       // Format messages for the AI
@@ -240,123 +176,21 @@ export function useCareerChat() {
         content: message.trim()
       });
 
-      // Get category and question info for potential template usage
-      let latestCategory = currentCategory;
-      let latestQuestionNumber = 1;
+      console.log('Sending message to AI service...');
       
-      // Find the last category and question number
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const msg = messages[i];
-        if (msg.metadata?.category && msg.metadata?.questionNumber) {
-          latestCategory = msg.metadata.category;
-          latestQuestionNumber = parseInt(msg.metadata.questionNumber) + 1;
-          break;
+      // Call our edge function
+      const response = await supabase.functions.invoke('career-chat-ai', {
+        body: {
+          message: message.trim(),
+          sessionId,
+          messages: messageHistory,
+          instructions: {
+            useStructuredFormat: true,
+            specificQuestions: true,
+            conciseOptions: true
+          }
         }
-        
-        // Also check structured message format
-        const structuredMsg = msg.metadata?.structuredMessage as StructuredMessage | undefined;
-        if (structuredMsg?.metadata?.progress) {
-          latestCategory = structuredMsg.metadata.progress.category;
-          latestQuestionNumber = parseInt(structuredMsg.metadata.progress.current) + 1;
-          break;
-        }
-      }
-      
-      // Check client-side cache first
-      const cacheKey = generateCacheKey(message, latestCategory as string, latestQuestionNumber);
-      
-      let response;
-      const now = Date.now();
-      
-      if (responseCache[cacheKey] && now < responseCache[cacheKey].timestamp + CACHE_TTL) {
-        console.log('Using cached response:', cacheKey);
-        response = {
-          data: responseCache[cacheKey].data
-        };
-        setUsingCachedResponse(true);
-        
-        // Add slight delay to make it feel more natural
-        await new Promise(resolve => setTimeout(resolve, 300));
-      } else {
-        console.log('Sending message to AI service...');
-        
-        // Check if we can use a template response for first question in category
-        const templateResponse = latestCategory ? getTemplateForCategory(latestCategory as string, latestQuestionNumber) : null;
-        
-        if (templateResponse && latestQuestionNumber === 1) {
-          // Simulate API response with template
-          console.log('Using template response for first question in category:', latestCategory);
-          
-          // Create a structured message that looks like it came from the AI
-          const structuredMsg = {
-            type: "question",
-            content: {
-              intro: "Let's explore your " + latestCategory + " background.",
-              question: templateResponse,
-              options: [
-                { id: "option1", text: "Option 1", category: latestCategory },
-                { id: "option2", text: "Option 2", category: latestCategory },
-                { id: "option3", text: "Option 3", category: latestCategory },
-                { id: "option4", text: "Option 4", category: latestCategory }
-              ]
-            },
-            metadata: {
-              progress: {
-                category: latestCategory,
-                current: 1,
-                total: 6,
-                overall: getProgressPercentage(latestCategory as string, 1)
-              },
-              options: {
-                type: "single",
-                layout: "cards"
-              }
-            }
-          };
-          
-          response = {
-            data: {
-              messageId: `template-${Date.now()}`,
-              message: templateResponse,
-              structuredMessage: structuredMsg,
-              metadata: {
-                category: latestCategory,
-                questionNumber: 1,
-                totalInCategory: 6,
-                progress: getProgressPercentage(latestCategory as string, 1),
-                hasOptions: true,
-                suggestions: ["Option 1", "Option 2", "Option 3", "Option 4"],
-                structuredMessage: structuredMsg
-              }
-            }
-          };
-          
-          setUsingCachedResponse(true);
-        } else {
-          // Call our edge function
-          response = await supabase.functions.invoke('career-chat-ai', {
-            body: {
-              message: message.trim(),
-              sessionId,
-              messages: messageHistory,
-              instructions: {
-                useStructuredFormat: true,
-                specificQuestions: true,
-                conciseOptions: true
-              }
-            }
-          });
-        }
-        
-        // Cache the response if successful
-        if (!response.error && response.data) {
-          responseCache[cacheKey] = {
-            data: response.data,
-            timestamp: Date.now()
-          };
-          console.log('Cached response with key:', cacheKey);
-        }
-      }
+      });
 
       if (response.error) {
         console.error('Edge function error:', response.error);
@@ -428,19 +262,7 @@ export function useCareerChat() {
     } finally {
       setIsTyping(false);
     }
-  }, [sessionId, messages, addMessage, isSessionComplete, currentCategory, generateCacheKey, getTemplateForCategory]);
-
-  // Helper function to calculate progress percentage 
-  const getProgressPercentage = (category: string, questionNumber: number): number => {
-    const categoryIndex = ['education', 'skills', 'workstyle', 'goals'].indexOf(category);
-    if (categoryIndex === -1) return 0;
-    
-    // Each category is 25% of progress, and each question is ~4% (1/24) of total progress
-    const baseProgress = categoryIndex * 25; // Progress from completed categories
-    const questionProgress = Math.floor((questionNumber / 6) * 25); // Progress within current category
-    
-    return Math.min(baseProgress + questionProgress, 100);
-  };
+  }, [sessionId, messages, addMessage, isSessionComplete]);
 
   return {
     messages,
@@ -463,7 +285,6 @@ export function useCareerChat() {
     setInputMessage,
     sendMessage,
     addMessage,
-    isSessionComplete,
-    usingCachedResponse
+    isSessionComplete
   };
 }

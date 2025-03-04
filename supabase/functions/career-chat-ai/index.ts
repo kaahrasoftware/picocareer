@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { generateCacheKey, getCachedResponse, cacheResponse, hasCache } from "./cache.ts";
+import { config } from "https://deno.land/std@0.168.0/dotenv/mod.ts";
 
 // Load config values
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") || "";
@@ -15,11 +15,7 @@ const CONFIG = {
   OPTIONS_MAX_COUNT: parseInt(Deno.env.get("OPTIONS_MAX_COUNT") || "8"),
   OPTIONS_MAX_LENGTH: parseInt(Deno.env.get("OPTIONS_MAX_LENGTH") || "40"),
   CATEGORY_TRACKING: Deno.env.get("CATEGORY_TRACKING") || "enabled",
-  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || "",
-  // New configuration options for optimization
-  MESSAGE_HISTORY_LIMIT: parseInt(Deno.env.get("MESSAGE_HISTORY_LIMIT") || "8"),
-  ENABLE_CACHING: Deno.env.get("ENABLE_CACHING") !== "disabled",
-  CACHE_FIRST_QUESTIONS: Deno.env.get("CACHE_FIRST_QUESTIONS") !== "disabled",
+  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || ""
 };
 
 // Debug logging for configuration
@@ -27,9 +23,7 @@ console.log("CONFIG:", {
   API_ENDPOINT,
   AI_RESPONSE_FORMAT: CONFIG.AI_RESPONSE_FORMAT,
   STRUCTURED_RESPONSE_VERSION: CONFIG.STRUCTURED_RESPONSE_VERSION,
-  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No",
-  MESSAGE_HISTORY_LIMIT: CONFIG.MESSAGE_HISTORY_LIMIT,
-  ENABLE_CACHING: CONFIG.ENABLE_CACHING
+  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
 });
 
 // System prompt with updated instructions for more structured progression
@@ -172,52 +166,6 @@ serve(async (req) => {
       throw new Error("Message is required");
     }
 
-    // Check for current category and question progress
-    let currentCategory = "education"; // Default to first category
-    let currentQuestionNumber = 1;
-    let isFirstQuestionInCategory = false;
-    
-    // Extract category and progress info from previous messages
-    if (body.messages && Array.isArray(body.messages)) {
-      // Look for structured message metadata to determine current progress
-      for (let i = body.messages.length - 1; i >= 0; i--) {
-        const msg = body.messages[i];
-        if (msg.role === "assistant" && msg.metadata?.progress) {
-          currentCategory = msg.metadata.progress.category;
-          currentQuestionNumber = parseInt(msg.metadata.progress.current) + 1;
-          break;
-        }
-      }
-      
-      // Check if this is the first question in a category
-      isFirstQuestionInCategory = currentQuestionNumber === 1;
-    }
-    
-    // Cache key generation
-    let cacheKey = null;
-    
-    // Only cache first questions in each category (they're not context-dependent)
-    if (CONFIG.ENABLE_CACHING && isFirstQuestionInCategory) {
-      cacheKey = generateCacheKey(currentCategory, currentQuestionNumber);
-      
-      // Check if we have a cached response
-      if (hasCache(cacheKey)) {
-        const cachedResponse = getCachedResponse(cacheKey);
-        if (cachedResponse) {
-          console.log(`Using cached response for ${currentCategory} question ${currentQuestionNumber}`);
-          
-          // Add a unique message ID for this instance
-          const messageId = crypto.randomUUID();
-          cachedResponse.messageId = messageId;
-          
-          return new Response(
-            JSON.stringify(cachedResponse),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
-    }
-
     // Set up the conversation history from the request or start fresh
     const messages = [
       {
@@ -226,24 +174,14 @@ serve(async (req) => {
       },
     ];
 
-    // Add only the most recent messages if provided (limit history)
+    // Add previous messages if provided
     if (body.messages && Array.isArray(body.messages)) {
-      const recentMessages = body.messages.slice(-CONFIG.MESSAGE_HISTORY_LIMIT);
-      
-      recentMessages.forEach((msg) => {
+      body.messages.forEach((msg) => {
         messages.push({
           role: msg.role,
           content: msg.content,
         });
       });
-      
-      // If we truncated history, add a summary message at the beginning
-      if (body.messages.length > CONFIG.MESSAGE_HISTORY_LIMIT) {
-        messages.splice(1, 0, {
-          role: "system",
-          content: `The conversation has been ongoing. Current category: ${currentCategory}, question ${currentQuestionNumber}.`,
-        });
-      }
     } else {
       // If no history, add a starter message
       messages.push({
@@ -252,14 +190,12 @@ serve(async (req) => {
       });
     }
 
-    // Prepare the request to DeepSeek API with optimized parameters
+    // Prepare the request to DeepSeek API
     const requestOptions = {
       model: "deepseek-chat",
       messages: messages,
-      // Lower temperature for more consistent and faster responses
-      temperature: 0.6,
-      // Adjust token count based on response type
-      max_tokens: currentCategory === "complete" ? 1000 : 600,
+      temperature: 0.7,
+      max_tokens: 1000,
     };
 
     // Debug logging for API request
@@ -411,26 +347,17 @@ serve(async (req) => {
 
     // Generate unique ID for the message
     const messageId = crypto.randomUUID();
-    
-    // Prepare the final response
-    const responseData = {
-      messageId,
-      message: aiResponse,
-      structuredMessage,
-      rawResponse,
-      metadata,
-      messageType
-    };
-    
-    // Cache the response for first questions in categories
-    if (CONFIG.ENABLE_CACHING && cacheKey && isFirstQuestionInCategory) {
-      cacheResponse(cacheKey, responseData);
-      console.log(`Cached response for ${currentCategory} question ${currentQuestionNumber}`);
-    }
 
     // Return the formatted response
     return new Response(
-      JSON.stringify(responseData),
+      JSON.stringify({
+        messageId,
+        message: aiResponse,
+        structuredMessage,
+        rawResponse,
+        metadata,
+        messageType
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

@@ -12,11 +12,6 @@ OPTIONS_MAX_COUNT = 8
 OPTIONS_MAX_LENGTH = 40
 CATEGORY_TRACKING = "enabled"
 
-# Performance optimization settings
-MESSAGE_HISTORY_LIMIT = 8
-ENABLE_CACHING = "enabled"
-CACHE_FIRST_QUESTIONS = "enabled"
-
 # Structured format instruction
 # This will instruct the AI to return responses in the specified format
 STRUCTURED_FORMAT_INSTRUCTION = """
