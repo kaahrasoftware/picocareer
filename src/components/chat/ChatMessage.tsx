@@ -1,359 +1,101 @@
 
 import React from 'react';
+import { CircleDashed, AlertCircle, Bot, User, SparkleIcon } from 'lucide-react';
+import clsx from 'clsx';
+import { Avatar } from '@/components/ui/avatar';
+import { BotMessage } from '../career-chat/message-parts/BotMessage';
+import { UserMessage } from '../career-chat/message-parts/UserMessage';
+import { SystemMessage } from '../career-chat/message-parts/SystemMessage';
+import { RecommendationSection } from '../career-chat/message-parts/RecommendationSection';
 import { CareerChatMessage } from '@/types/database/analytics';
-import { QuestionCard } from '@/components/career-chat/QuestionCard';
-import { OptionCards } from '@/components/career-chat/OptionCards';
-import { CareerMatchCard } from '@/components/career-chat/message-parts/CareerMatchCard';
-import { RecommendationSection } from '@/components/career-chat/message-parts/RecommendationSection';
-import { UserMessage } from '@/components/career-chat/message-parts/UserMessage';
-import { SystemMessage } from '@/components/career-chat/message-parts/SystemMessage';
-import { BotMessage } from '@/components/career-chat/message-parts/BotMessage';
-import { 
-  extractSections, 
-  parseStructuredRecommendation 
-} from '@/components/career-chat/utils/recommendationParser';
-import { StructuredMessage, MessageOption } from '@/types/database/message-types';
+import { Badge } from '@/components/ui/badge';
 
-interface ChatMessageProps {
+type ChatMessageProps = {
   message: CareerChatMessage;
   onSuggestionClick?: (suggestion: string) => void;
   onCareerDetailsClick?: (careerId: string) => void;
   currentQuestionProgress?: number;
-}
+};
 
-export function ChatMessage({ 
-  message, 
-  onSuggestionClick, 
+export const ChatMessage = ({
+  message,
+  onSuggestionClick,
   onCareerDetailsClick,
-  currentQuestionProgress = 0 
-}: ChatMessageProps) {
+  currentQuestionProgress
+}: ChatMessageProps) => {
+  if (!message) return null;
+
   const isUser = message.message_type === 'user';
-  const isRecommendation = message.message_type === 'recommendation';
+  const isBot = message.message_type === 'bot';
   const isSystem = message.message_type === 'system';
-  const isSessionEnd = message.message_type === 'session_end' || 
-                      (message.metadata?.isSessionEnd === true);
-  
-  // Try to parse structured message from metadata (new format)
-  const structuredMessage: StructuredMessage | null = 
-    message.metadata?.structuredMessage 
-      ? (message.metadata.structuredMessage as StructuredMessage) 
-      : null;
+  const isRecommendation = message.message_type === 'recommendation';
+  const isSessionEnd = message.message_type === 'session_end';
+  const isFromCache = message.metadata?.fromCache || message.metadata?.fromTemplate;
 
-  // Check if the message is in a numbered list format (1. Option, 2. Option, etc.)
-  const hasNumberedList = React.useMemo(() => {
-    if (message.message_type !== 'bot') return false;
-    
-    // Check if message contains numbered list pattern (1. Option)
-    const pattern = /\d+\.\s+[A-Za-z]/;
-    return pattern.test(message.content);
-  }, [message]);
-  
-  // Parse numbered list options into a structured format
-  const parseNumberedOptions = React.useMemo(() => {
-    if (!hasNumberedList) return null;
-    
-    const content = message.content;
-    
-    // Split into intro/question and options parts
-    const parts = content.split(/(\d+\.\s+)/);
-    let intro = '';
-    let question = '';
-    const options: MessageOption[] = [];
-    
-    if (parts.length > 0) {
-      // Extract the text before the first numbered option
-      const introText = parts[0].trim();
-      
-      // Try to split into intro and question if there's a clear question mark
-      const questionSplit = introText.split(/(?<=\?)\s+/);
-      if (questionSplit.length > 1) {
-        intro = questionSplit[0].trim();
-        question = questionSplit.slice(1).join(' ').trim();
-      } else {
-        // Look for sentences ending with question mark
-        const questionMatch = introText.match(/([^.!?]+\?)/g);
-        if (questionMatch && questionMatch.length > 0) {
-          question = questionMatch[questionMatch.length - 1].trim();
-          intro = introText.replace(question, '').trim();
-        } else {
-          // No clear question found, use last sentence as question
-          const sentences = introText.split(/(?<=\.|\!)\s+/);
-          if (sentences.length > 1) {
-            question = sentences.pop() || '';
-            intro = sentences.join(' ');
-          } else {
-            question = introText;
-          }
-        }
-      }
-      
-      // Parse options
-      for (let i = 1; i < parts.length; i += 2) {
-        if (i + 1 < parts.length) {
-          const optionNumber = parts[i].trim();
-          const optionText = parts[i + 1].trim();
+  return (
+    <div className={clsx(
+      "flex items-start gap-3 py-2 px-4",
+      isUser && "bg-background",
+      isBot && "bg-muted/30",
+      isSystem && "bg-amber-50 dark:bg-amber-950/20",
+      isRecommendation && "bg-blue-50 dark:bg-blue-950/20",
+      isSessionEnd && "bg-green-50 dark:bg-green-950/20",
+    )}>
+      {/* Avatar */}
+      <div className="mt-0.5">
+        <Avatar className={clsx(
+          "h-8 w-8 border",
+          isUser ? "bg-primary text-primary-foreground" : "bg-muted-foreground/10",
+        )}>
+          {isUser && <User className="h-4 w-4" />}
+          {isBot && <Bot className="h-4 w-4" />}
+          {isSystem && <AlertCircle className="h-4 w-4" />}
+          {(isRecommendation || isSessionEnd) && <SparkleIcon className="h-4 w-4" />}
+        </Avatar>
+      </div>
+
+      {/* Message Content */}
+      <div className="flex-1 space-y-2 overflow-hidden">
+        <div className="flex items-center gap-2">
+          <div className="font-semibold text-sm">
+            {isUser && 'You'}
+            {isBot && 'Pico'}
+            {isSystem && 'System'}
+            {isRecommendation && 'Career Recommendations'}
+            {isSessionEnd && 'Session Complete'}
+          </div>
           
-          if (optionNumber && optionText) {
-            options.push({
-              id: optionText.toLowerCase().replace(/\s+/g, '-'),
-              text: optionText,
-              // Assign appropriate icons and categories based on content
-              ...getOptionMetadata(optionText)
-            });
-          }
-        }
-      }
-    }
-    
-    return {
-      intro,
-      question,
-      options
-    };
-  }, [message, hasNumberedList]);
-  
-  // Function to assign appropriate icons and categories based on option content
-  function getOptionMetadata(optionText: string): { icon?: string, category?: string } {
-    const text = optionText.toLowerCase();
-    
-    if (text.includes('problem') || text.includes('solving')) {
-      return { icon: 'Brain', category: 'skills' };
-    }
-    if (text.includes('design') || text.includes('build')) {
-      return { icon: 'Tool', category: 'skills' };
-    }
-    if (text.includes('teach') || text.includes('guid') || text.includes('help')) {
-      return { icon: 'Users', category: 'social' };
-    }
-    if (text.includes('research') || text.includes('explor')) {
-      return { icon: 'Search', category: 'skills' };
-    }
-    if (text.includes('manag') || text.includes('organiz')) {
-      return { icon: 'List', category: 'workstyle' };
-    }
-    if (text.includes('creat') || text.includes('innovat')) {
-      return { icon: 'Lightbulb', category: 'creative' };
-    }
-    if (text.includes('other')) {
-      return { icon: 'Plus', category: 'general' };
-    }
-    
-    // Default
-    return { icon: 'MessageCircle', category: 'general' };
-  }
-  
-  // Handle legacy format detection
-  const isQuestion = !structuredMessage && 
-    message.message_type === 'bot' && 
-    message.metadata && 
-    message.metadata.category && 
-    message.metadata.hasOptions;
-  
-  // Check if this message contains raw structured response data
-  const hasStructuredData = message.metadata?.rawResponse && 
-    message.metadata.rawResponse.type === 'recommendation';
-  
-  // Get content values for structured messages
-  const getQuestionInfo = () => {
-    if (structuredMessage?.type === 'question') {
-      return {
-        question: structuredMessage.content.question || '',
-        intro: structuredMessage.content.intro,
-        category: structuredMessage.metadata.progress?.category || 'general',
-        current: structuredMessage.metadata.progress?.current || 1,
-        total: structuredMessage.metadata.progress?.total || 4,
-        overall: structuredMessage.metadata.progress?.overall || currentQuestionProgress,
-        options: structuredMessage.content.options || [],
-        layout: structuredMessage.metadata.options?.layout || 'cards',
-        allowMultiple: structuredMessage.metadata.options?.type === 'multiple'
-      };
-    }
-    // Legacy format
-    return null;
-  };
+          {/* Cache indicator */}
+          {isFromCache && (
+            <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+              <CircleDashed className="h-3 w-3 mr-1" />
+              Fast Response
+            </Badge>
+          )}
+        </div>
 
-  // Parse structured question info if available
-  const questionInfo = getQuestionInfo();
-
-  // Handle single career recommendation messages with the new card
-  if (isRecommendation && message.metadata?.career) {
-    return (
-      <CareerMatchCard 
-        career={message.metadata.career as string}
-        score={message.metadata.score as number}
-        description={message.content}
-        details={message.metadata.details}
-        careerId={message.metadata.careerId}
-        onViewDetails={onCareerDetailsClick}
-      />
-    );
-  }
-  
-  // Handle structured recommendation from raw response
-  if (hasStructuredData) {
-    const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
-    return (
-      <RecommendationSection 
-        recommendation={structuredData} 
-        onSuggestionClick={onSuggestionClick}
-      />
-    );
-  }
-  
-  // Handle full recommendation message with multiple sections (fallback to text parsing)
-  if (isRecommendation && !message.metadata?.career) {
-    const sections = extractSections(message.content);
-    
-    if (sections.type === 'recommendation') {
-      return (
-        <RecommendationSection 
-          recommendation={sections} 
-          onSuggestionClick={onSuggestionClick}
-        />
-      );
-    }
-    
-    // If the parser couldn't identify this as a recommendation, display as normal message
-    return <BotMessage content={message.content} />;
-  }
-
-  // Handle session end messages specially
-  if (isSessionEnd) {
-    return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-4 mb-4 animate-fade-in">
-        <h4 className="font-medium text-green-800 mb-2">Assessment Complete</h4>
-        <p className="text-sm text-green-700 mb-3">{message.content}</p>
-        
-        {message.metadata?.suggestions && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {(message.metadata.suggestions as string[]).map((suggestion, i) => (
-              <button 
-                key={i}
-                onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
-                className="bg-white text-green-700 text-sm px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition-colors"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Handle structured question format (new)
-  if (questionInfo) {
-    return (
-      <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
-        <QuestionCard 
-          question={questionInfo.question}
-          intro={questionInfo.intro}
-          category={questionInfo.category}
-          questionNumber={questionInfo.current}
-          totalQuestions={questionInfo.total}
-          progress={questionInfo.overall}
-        />
-        
-        {questionInfo.options.length > 0 && (
-          <div className="w-full mt-2">
-            <OptionCards 
-              options={questionInfo.options}
-              onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
-              layout={questionInfo.layout as any}
-              allowMultiple={questionInfo.allowMultiple}
+        <div className="text-sm">
+          {isUser && <UserMessage message={message} />}
+          
+          {isBot && (
+            <BotMessage 
+              message={message} 
+              onSuggestionClick={onSuggestionClick} 
+              currentProgress={currentQuestionProgress}
             />
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  // Handle detected numbered list format
-  if (hasNumberedList && parseNumberedOptions) {
-    const { intro, question, options } = parseNumberedOptions;
-    
-    return (
-      <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
-        <QuestionCard 
-          question={question}
-          intro={intro}
-          category={'general'}
-          questionNumber={1}
-          totalQuestions={4}
-          progress={currentQuestionProgress}
-        />
-        
-        {options.length > 0 && (
-          <div className="w-full mt-2">
-            <OptionCards 
-              options={options}
-              onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
-              layout="cards"
-              allowMultiple={false}
+          )}
+          
+          {isSystem && <SystemMessage message={message} />}
+          
+          {(isRecommendation || isSessionEnd) && (
+            <RecommendationSection 
+              message={message} 
+              onSuggestionClick={onSuggestionClick}
+              onCareerDetailsClick={onCareerDetailsClick}
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    );
-  }
-  
-  // For legacy question and option messages
-  if (isQuestion) {
-    const category = message.metadata.category as string || 'general';
-    const questionNumber = message.metadata.questionNumber as number || 1;
-    const totalInCategory = message.metadata.totalInCategory as number || 4;
-    const progress = message.metadata.progress as number || currentQuestionProgress;
-    const allowMultiple = message.metadata.multiSelect as boolean || false;
-    
-    // Parse intro and question from the message content
-    let intro = '';
-    let questionText = message.content;
-    
-    // Try to extract the intro and actual question from formatted content
-    const contentParts = message.content.split(/\*\*Question \d+\/\d+ \([^)]+\):\*\* /);
-    if (contentParts.length > 1) {
-      intro = contentParts[0].trim();
-      questionText = contentParts[1].trim();
-    }
-    
-    return (
-      <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
-        <QuestionCard 
-          question={questionText}
-          intro={intro !== '' ? intro : undefined}
-          category={category}
-          questionNumber={questionNumber}
-          totalQuestions={totalInCategory}
-          progress={progress}
-        />
-        
-        {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
-          <div className="w-full mt-2">
-            <OptionCards 
-              options={message.metadata.suggestions as string[]}
-              onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
-              allowMultiple={allowMultiple}
-            />
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  // Regular chat messages based on message type
-  if (isUser) {
-    return <UserMessage content={message.content} />;
-  }
-  
-  if (isSystem) {
-    return <SystemMessage content={message.content} />;
-  }
-  
-  // Handle structured conversation (new format)
-  if (structuredMessage?.type === 'conversation') {
-    return <BotMessage content={structuredMessage.content.intro || message.content} />;
-  }
-  
-  // Default to bot message for anything else
-  return <BotMessage content={message.content} />;
-}
+    </div>
+  );
+};
