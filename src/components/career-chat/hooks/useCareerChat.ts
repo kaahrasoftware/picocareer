@@ -30,7 +30,6 @@ export function useCareerChat() {
   const [hasConfigError, setHasConfigError] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [questionProgress, setQuestionProgress] = useState(0);
-  const [lastResponseFromCache, setLastResponseFromCache] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -108,13 +107,6 @@ export function useCareerChat() {
     
     const latestBotMessage = botMessages[botMessages.length - 1];
     
-    // Check if response was from cache
-    if (latestBotMessage.metadata?.fromCache || latestBotMessage.metadata?.fromTemplate) {
-      setLastResponseFromCache(true);
-    } else {
-      setLastResponseFromCache(false);
-    }
-    
     // First check for structured message format (new)
     const structuredMessage = latestBotMessage.metadata?.structuredMessage as StructuredMessage | undefined;
     
@@ -168,7 +160,7 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
-      // Format messages for the AI - only sending the most relevant messages to improve performance
+      // Format messages for the AI
       const messageHistory = messages
         .filter(m => m.message_type === 'user' || m.message_type === 'bot')
         .map(m => ({
@@ -213,14 +205,6 @@ export function useCareerChat() {
       // Log successful response for debugging
       console.log('Got response from career-chat-ai:', response.data);
       
-      // Check if response came from cache
-      if (response.data?.fromCache || response.data?.fromTemplate) {
-        console.log('Response retrieved from cache or template');
-        setLastResponseFromCache(true);
-      } else {
-        setLastResponseFromCache(false);
-      }
-      
       // Check if this is a recommendation or session end
       const isRecommendation = 
         response.data?.structuredMessage?.type === 'recommendation' ||
@@ -243,9 +227,7 @@ export function useCareerChat() {
           metadata: {
             ...(response.data.metadata || {}),
             structuredMessage: response.data.structuredMessage,
-            rawResponse: response.data.rawResponse,
-            fromCache: response.data.fromCache || false,
-            fromTemplate: response.data.fromTemplate || false
+            rawResponse: response.data.rawResponse
           },
           created_at: new Date().toISOString()
         };
@@ -303,7 +285,6 @@ export function useCareerChat() {
     setInputMessage,
     sendMessage,
     addMessage,
-    isSessionComplete,
-    lastResponseFromCache
+    isSessionComplete
   };
 }
