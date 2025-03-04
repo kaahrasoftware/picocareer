@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Bot, MessageCircle, History, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, Bot, MessageCircle, History, RefreshCw, Zap } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -14,6 +15,7 @@ import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 import { SessionManagementDialog } from './SessionManagementDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function PicoChat() {
   const {
@@ -36,7 +38,8 @@ export function PicoChat() {
     updateSessionTitle,
     setInputMessage,
     sendMessage,
-    addMessage
+    addMessage,
+    usingCachedResponse
   } = useCareerChat();
   const {
     toast
@@ -186,6 +189,21 @@ export function PicoChat() {
               </div>
               
               <div className="flex gap-2">
+                {usingCachedResponse && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                          <Zap className="h-3.5 w-3.5" />
+                          <span>Instant</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Using cached response for faster replies</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-1.5">
@@ -219,7 +237,17 @@ export function PicoChat() {
                   />
                 ))}
                 
-                {isTyping && <ChatTypingIndicator />}
+                {isTyping && (
+                  <div className="relative">
+                    <ChatTypingIndicator />
+                    {usingCachedResponse && (
+                      <div className="absolute right-2 top-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Zap className="h-3 w-3" />
+                        <span>Instant</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
