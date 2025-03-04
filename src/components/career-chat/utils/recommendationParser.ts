@@ -159,10 +159,10 @@ export function parseStructuredRecommendation(rawResponse: any): ParsedRecommend
  * Extracts structured sections from a career recommendation message
  * This is used as a fallback when raw JSON structure isn't available
  */
-export function extractSections(content: string): ParsedRecommendation {
-  if (!content.includes('Career Recommendations') && 
-      !content.includes('Career Matches') && 
-      !content.includes('Personality')) {
+export function extractSections(text: string): ParsedRecommendation {
+  if (!text.includes('Career Recommendations') && 
+      !text.includes('Career Matches') && 
+      !text.includes('Personality')) {
     return { 
       type: 'unknown',
       careers: [],
@@ -175,7 +175,7 @@ export function extractSections(content: string): ParsedRecommendation {
   const personalities: PersonalityInsight[] = [];
   const mentors: MentorRecommendation[] = [];
   
-  const careerSection = content.split(/Career (Recommendations|Matches)/i)[2]?.split(/Personality (Assessment|Analysis)/i)[0] || '';
+  const careerSection = text.split(/Career (Recommendations|Matches)/i)[2]?.split(/Personality (Assessment|Analysis)/i)[0] || '';
   if (careerSection) {
     const careerMatches = careerSection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
@@ -204,7 +204,7 @@ export function extractSections(content: string): ParsedRecommendation {
     });
   }
   
-  const personalitySection = content.split(/Personality (Assessment|Analysis)/i)[1]?.split(/Mentor (Suggestions|Recommendations)/i)[0] || '';
+  const personalitySection = text.split(/Personality (Assessment|Analysis)/i)[1]?.split(/Mentor (Suggestions|Recommendations)/i)[0] || '';
   if (personalitySection) {
     const personalityMatches = personalitySection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
@@ -233,7 +233,7 @@ export function extractSections(content: string): ParsedRecommendation {
     });
   }
   
-  const mentorSection = content.split(/Mentor (Suggestions|Recommendations)/i)[1] || '';
+  const mentorSection = text.split(/Mentor (Suggestions|Recommendations)/i)[1] || '';
   if (mentorSection) {
     const mentorMatches = mentorSection.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/g) || [];
     
