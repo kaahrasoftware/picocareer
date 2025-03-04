@@ -14,7 +14,9 @@ export interface MessageOption {
 export interface MessageContent {
   intro?: string;        // Optional friendly intro
   question?: string;     // The actual question
+  message?: string;      // For session_end messages
   options?: MessageOption[];  // Available options if any
+  suggestions?: string[]; // For session_end suggestion options
 }
 
 export interface MessageProgress {
@@ -31,10 +33,12 @@ export interface MessageOptionsConfig {
 }
 
 export interface StructuredMessage {
-  type: "conversation" | "question" | "recommendation";
+  type: "conversation" | "question" | "recommendation" | "session_end";
   content: MessageContent;
   metadata: {
     progress?: MessageProgress;
     options?: MessageOptionsConfig;
+    isSessionEnd?: boolean;
+    completionType?: string;
   };
 }

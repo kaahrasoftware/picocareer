@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Bot, MessageCircle, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -41,8 +42,8 @@ export function PicoChat() {
     toast
   } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
-  const [showAnalyzeButton, setShowAnalyzeButton] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
+  const [isSessionEnded, setIsSessionEnded] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -83,24 +84,30 @@ export function PicoChat() {
     }
   }, [toast, messages.length, isLoading, configChecked]);
 
+  // Check for session end messages
   useEffect(() => {
-    const userMessageCount = messages.filter(msg => msg.message_type === 'user').length;
-    if (isAnalyzing || messages.some(msg => msg.message_type === 'recommendation')) {
-      setShowAnalyzeButton(false);
+    const hasSessionEndMessage = messages.some(msg => 
+      msg.message_type === 'session_end' || 
+      msg.metadata?.isSessionEnd === true
+    );
+    
+    if (hasSessionEndMessage) {
+      setIsSessionEnded(true);
+    } else {
+      setIsSessionEnded(false);
     }
-  }, [messages, isAnalyzing]);
+  }, [messages]);
 
   const handleSuggestionClick = (suggestion: string) => {
+    // If session is ended and suggestion is to start a new chat
+    if (isSessionEnded && 
+        (suggestion.toLowerCase().includes('new') || 
+         suggestion.toLowerCase().includes('start'))) {
+      handleStartNewChat();
+      return;
+    }
+    
     sendMessage(suggestion);
-  };
-
-  const handleAnalyzeClick = async () => {
-    if (!messages[0]?.session_id) return;
-    const {
-      analyzeResponses
-    } = useCareerAnalysis(messages[0].session_id, addMessage);
-    analyzeResponses();
-    setShowAnalyzeButton(false);
   };
 
   const handleStartNewChat = async () => {
@@ -201,7 +208,12 @@ export function PicoChat() {
               </div>
             </ScrollArea>
             
-            <ChatInput inputMessage={inputMessage} setInputMessage={setInputMessage} onSendMessage={sendMessage} isDisabled={isTyping || isAnalyzing} />
+            <ChatInput 
+              inputMessage={inputMessage} 
+              setInputMessage={setInputMessage} 
+              onSendMessage={sendMessage} 
+              isDisabled={isTyping || isAnalyzing || isSessionEnded} 
+            />
           </div>}
         
         <SessionManagementDialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen} pastSessions={pastSessions} isFetchingPastSessions={isFetchingPastSessions} onFetchPastSessions={fetchPastSessions} onResumeSession={resumeSession} onDeleteSession={deleteSession} onUpdateSessionTitle={updateSessionTitle} />

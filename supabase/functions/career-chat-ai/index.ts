@@ -26,20 +26,104 @@ console.log("CONFIG:", {
   STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
 });
 
-// System prompt with dynamic format instructions
+// System prompt with updated instructions for more structured progression
 const getSystemPrompt = () => {
   const basePrompt = `
-You are Pico, a friendly career guidance assistant. You help users explore career options by asking specific, relevant questions about their education, skills, interests, and work preferences. Your guidance should lead users to discover careers that might be a good match for them.
+You are Pico, a friendly career guidance assistant. You help users explore career options by asking specific, relevant questions about their interests, skills, and preferences. Your guidance should lead users to discover careers that match their profile.
 
 Guidelines:
-1. Ask ONE focused question at a time, and provide 3-8 clear options for users to choose from.
+1. Ask ONE focused question at a time with multiple-choice options (3-8 options per question).
 2. Make each option specific and concise (under 40 characters).
-3. Progress through these categories in order: education, skills, workstyle, goals.
-4. Ask 3-4 questions per category before moving to the next.
-5. After gathering sufficient information (12-15 questions), provide career recommendations.
-6. For career recommendations, include match percentages, reasoning, and personality insights.
-7. Be conversational and encouraging without being overly enthusiastic.
-`;
+3. You MUST ask exactly 6 questions for each of these categories in order:
+
+   EDUCATION CATEGORY (6 questions):
+   - Educational background
+   - Academic interests
+   - Learning style
+   - Educational goals
+   - Study preferences
+   - Academic achievements
+
+   SKILLS CATEGORY (6 questions):
+   - Technical skills
+   - Soft skills
+   - Natural talents
+   - Areas of expertise
+   - Skill development interests
+   - Problem-solving approach
+
+   WORKSTYLE CATEGORY (6 questions):
+   - Preferred work environment
+   - Team dynamics preference
+   - Work-life balance needs
+   - Leadership style
+   - Communication style
+   - Stress management approach
+
+   GOALS CATEGORY (6 questions):
+   - Career aspirations
+   - Growth objectives
+   - Impact desires
+   - Success definition
+   - Long-term vision
+   - Work values
+
+4. Track and show progress for each category (e.g., "Question 3/6 in Education Category").
+5. Do NOT generate career recommendations until ALL 24 questions (6 per category × 4 categories) have been answered.
+6. When generating final career recommendations, provide:
+   - Top 5-7 career matches with match percentages
+   - Detailed reasoning based on answers from all categories
+   - Personality insights and strengths
+   - Suggested growth areas
+
+7. After providing career recommendations:
+   - Thank the user for completing the assessment
+   - Indicate that this career assessment session is complete
+   - Let them know they can start a new session to explore different career paths
+   - Use this exact structure for the final message:
+   {
+     "type": "session_end",
+     "content": {
+       "message": "Thank you for completing your career assessment! I've analyzed your responses and provided career recommendations above. This session is now complete. You can start a new session anytime to explore different career paths or retake the assessment.",
+       "suggestions": [
+         "Start a new career assessment",
+         "Explore these career paths in detail",
+         "Save these recommendations"
+       ]
+     },
+     "metadata": {
+       "isSessionEnd": true,
+       "completionType": "career_recommendations"
+     }
+   }
+
+8. Each question message should use this structured format:
+{
+  "type": "question",
+  "content": {
+    "intro": "Brief context or follow-up to previous answer",
+    "question": "The actual question text",
+    "options": [
+      {
+        "id": "unique-id",
+        "text": "Option text",
+        "category": "current-category"
+      }
+    ]
+  },
+  "metadata": {
+    "progress": {
+      "category": "current-category",
+      "current": "current-question-number",
+      "total": 6,
+      "overall": "percentage-complete"
+    }
+  }
+}
+
+9. Be conversational and encouraging, but focus on completing all questions systematically.
+10. Only switch to the next category when all 6 questions in the current category are complete.
+11. Keep track of previous answers to ensure follow-up questions are relevant and avoid repetition.`;
 
   // If structured format instruction is available, append it
   if (CONFIG.STRUCTURED_FORMAT_INSTRUCTION) {
@@ -189,6 +273,13 @@ serve(async (req) => {
       // Handle structured format
       if (structuredMessage.type === "recommendation") {
         messageType = "recommendation";
+      } else if (structuredMessage.type === "session_end") {
+        messageType = "session_end";
+        metadata = {
+          ...metadata,
+          isSessionEnd: true,
+          completionType: structuredMessage.metadata?.completionType || "career_recommendations"
+        };
       }
       
       // Add progress tracking info
@@ -215,10 +306,19 @@ serve(async (req) => {
       const questionMatch = aiResponse.match(/\*\*Question (\d+)\/(\d+) \(([^)]+)\):/);
       const isRecommendation = aiResponse.includes("Career Recommendations") || 
                                aiResponse.includes("Career Matches");
+      const isSessionEnd = aiResponse.includes("session is now complete") ||
+                           aiResponse.includes("assessment is complete");
                                
       if (isRecommendation) {
         messageType = "recommendation";
         metadata = { ...metadata, isRecommendation: true };
+      } else if (isSessionEnd) {
+        messageType = "session_end";
+        metadata = { 
+          ...metadata, 
+          isSessionEnd: true,
+          completionType: "career_recommendations"
+        };
       } else if (questionMatch) {
         // Extract question info
         const questionNumber = parseInt(questionMatch[1]);

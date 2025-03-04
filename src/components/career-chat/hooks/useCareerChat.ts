@@ -40,6 +40,9 @@ export function useCareerChat() {
     workstyle: 0,
     goals: 0
   });
+  
+  // Track if a session is completed/ended
+  const [isSessionComplete, setIsSessionComplete] = useState(false);
 
   // Check API configuration on load
   useEffect(() => {
@@ -70,9 +73,34 @@ export function useCareerChat() {
   useEffect(() => {
     if (messages.length === 0) return;
 
+    // Check for session end messages first
+    const hasSessionEndMessage = messages.some(msg => 
+      msg.message_type === 'session_end' || 
+      msg.metadata?.isSessionEnd === true
+    );
+    
+    if (hasSessionEndMessage) {
+      setIsSessionComplete(true);
+      setCurrentCategory('complete');
+      setQuestionProgress(100);
+      return;
+    }
+
+    // Check for recommendation messages next
+    const hasRecommendationMessage = messages.some(msg => 
+      msg.message_type === 'recommendation' || 
+      msg.metadata?.isRecommendation === true
+    );
+    
+    if (hasRecommendationMessage) {
+      setQuestionProgress(100);
+      setCurrentCategory('complete');
+      return;
+    }
+
     // Check latest bot message for category and progress information
     const botMessages = messages.filter(m => 
-      m.message_type === 'bot' || m.message_type === 'recommendation'
+      m.message_type === 'bot'
     );
     
     if (botMessages.length === 0) return;
@@ -107,23 +135,15 @@ export function useCareerChat() {
         [newCategory]: prev[newCategory as keyof typeof prev] + 1
       }));
       
-      // Calculate overall progress (assuming 12-15 questions total plan)
+      // Calculate overall progress (assuming 24 questions total - 6 per category)
       const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
-      setQuestionProgress(Math.min(Math.round((totalQuestions / 15) * 100), 100));
-    }
-    
-    // If this is a recommendation message, set progress to 100%
-    if (latestBotMessage.message_type === 'recommendation' || 
-        latestBotMessage.metadata?.isRecommendation ||
-        structuredMessage?.type === 'recommendation') {
-      setQuestionProgress(100);
-      setCurrentCategory('complete');
+      setQuestionProgress(Math.min(Math.round((totalQuestions / 24) * 100), 100));
     }
   }, [messages]);
 
   // Function to send message and get AI response
   const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || !sessionId) return;
+    if (!message.trim() || !sessionId || isSessionComplete) return;
     
     // Add user message
     const userMessage: CareerChatMessage = {
@@ -185,11 +205,16 @@ export function useCareerChat() {
       // Log successful response for debugging
       console.log('Got response from career-chat-ai:', response.data);
       
-      // Check if this is a recommendation (from structured response)
+      // Check if this is a recommendation or session end
       const isRecommendation = 
         response.data?.structuredMessage?.type === 'recommendation' ||
         response.data?.rawResponse?.type === 'recommendation' ||
         response.data?.metadata?.isRecommendation;
+
+      const isSessionEnd = 
+        response.data?.structuredMessage?.type === 'session_end' ||
+        response.data?.rawResponse?.type === 'session_end' ||
+        response.data?.metadata?.isSessionEnd;
       
       // Add bot response to messages locally
       if (response.data?.message) {
@@ -197,7 +222,7 @@ export function useCareerChat() {
         
         const botMessage: CareerChatMessage = {
           session_id: sessionId,
-          message_type: isRecommendation ? 'recommendation' : 'bot',
+          message_type: isSessionEnd ? 'session_end' : isRecommendation ? 'recommendation' : 'bot',
           content: response.data.message,
           metadata: {
             ...(response.data.metadata || {}),
@@ -211,10 +236,14 @@ export function useCareerChat() {
         const savedMessage = await addMessage(botMessage);
         console.log('Bot message saved:', savedMessage ? 'success' : 'failed');
         
-        // Update progress when a recommendation is received
-        if (isRecommendation) {
+        // Update progress when a recommendation or session end is received
+        if (isRecommendation || isSessionEnd) {
           setQuestionProgress(100);
           setCurrentCategory('complete');
+          
+          if (isSessionEnd) {
+            setIsSessionComplete(true);
+          }
         }
       }
       
@@ -233,7 +262,7 @@ export function useCareerChat() {
     } finally {
       setIsTyping(false);
     }
-  }, [sessionId, messages, addMessage]);
+  }, [sessionId, messages, addMessage, isSessionComplete]);
 
   return {
     messages,
@@ -255,6 +284,7 @@ export function useCareerChat() {
     messagesEndRef,
     setInputMessage,
     sendMessage,
-    addMessage
+    addMessage,
+    isSessionComplete
   };
 }
