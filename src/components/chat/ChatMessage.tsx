@@ -181,7 +181,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Handle structured recommendation from raw response
   if (hasStructuredData) {
     const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
-    return <RecommendationSection recommendation={structuredData} />;
+    return <RecommendationSection recommendation={structuredData} onSuggestionClick={onSuggestionClick} />;
   }
   
   // Handle full recommendation message with multiple sections (fallback to text parsing)
@@ -189,7 +189,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     const sections = extractSections(message.content);
     
     if (sections.type === 'recommendation') {
-      return <RecommendationSection recommendation={sections} />;
+      return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
     }
     
     // If the parser couldn't identify this as a recommendation, display as normal message
