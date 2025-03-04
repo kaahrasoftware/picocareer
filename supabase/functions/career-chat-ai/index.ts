@@ -15,11 +15,7 @@ const CONFIG = {
   OPTIONS_MAX_COUNT: parseInt(Deno.env.get("OPTIONS_MAX_COUNT") || "8"),
   OPTIONS_MAX_LENGTH: parseInt(Deno.env.get("OPTIONS_MAX_LENGTH") || "40"),
   CATEGORY_TRACKING: Deno.env.get("CATEGORY_TRACKING") || "enabled",
-  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || "",
-  // Cache configuration
-  ENABLE_RESPONSE_CACHE: Deno.env.get("ENABLE_RESPONSE_CACHE") === "true",
-  CACHE_EXPIRY_SECONDS: parseInt(Deno.env.get("CACHE_EXPIRY_SECONDS") || "3600"),
-  MAX_HISTORY_MESSAGES: parseInt(Deno.env.get("MAX_HISTORY_MESSAGES") || "6")
+  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || ""
 };
 
 // Debug logging for configuration
@@ -27,47 +23,8 @@ console.log("CONFIG:", {
   API_ENDPOINT,
   AI_RESPONSE_FORMAT: CONFIG.AI_RESPONSE_FORMAT,
   STRUCTURED_RESPONSE_VERSION: CONFIG.STRUCTURED_RESPONSE_VERSION,
-  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No",
-  ENABLE_RESPONSE_CACHE: CONFIG.ENABLE_RESPONSE_CACHE,
-  MAX_HISTORY_MESSAGES: CONFIG.MAX_HISTORY_MESSAGES
+  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
 });
-
-// Simple in-memory cache with expiry
-// In production, you would use a more robust cache solution like Redis
-interface CacheEntry {
-  timestamp: number;
-  data: any;
-}
-
-const responseCache = new Map<string, CacheEntry>();
-
-// Generate a cache key based on user's question and context
-function generateCacheKey(message: string, category: string | null, questionNumber: number | null): string {
-  // For initial questions in each category, we can be more aggressive with caching
-  if (questionNumber === 1 && category) {
-    return `${category}_first_question`;
-  }
-  
-  // For other questions, use a combination of category, question number, and simplified message
-  const simplifiedMessage = message.toLowerCase().trim().replace(/[^\w\s]/g, '');
-  return `${category || 'uncategorized'}_${questionNumber || 0}_${simplifiedMessage.substring(0, 50)}`;
-}
-
-// Check if cache entry is valid (not expired)
-function isCacheValid(entry: CacheEntry): boolean {
-  const now = Date.now();
-  return (now - entry.timestamp) < CONFIG.CACHE_EXPIRY_SECONDS * 1000;
-}
-
-// Clear expired cache entries periodically
-function cleanupCache(): void {
-  const now = Date.now();
-  for (const [key, entry] of responseCache.entries()) {
-    if ((now - entry.timestamp) >= CONFIG.CACHE_EXPIRY_SECONDS * 1000) {
-      responseCache.delete(key);
-    }
-  }
-}
 
 // System prompt with updated instructions for more structured progression
 const getSystemPrompt = () => {
@@ -176,129 +133,8 @@ Guidelines:
   return basePrompt;
 };
 
-// Predefined templates for first questions in each category - used for faster initial responses
-const categoryTemplates = {
-  "education": {
-    "type": "question",
-    "content": {
-      "intro": "Let's start with understanding your educational background.",
-      "question": "What is your highest level of education?",
-      "options": [
-        { "id": "edu-1", "text": "High School", "category": "education" },
-        { "id": "edu-2", "text": "Some College", "category": "education" },
-        { "id": "edu-3", "text": "Associate's Degree", "category": "education" },
-        { "id": "edu-4", "text": "Bachelor's Degree", "category": "education" },
-        { "id": "edu-5", "text": "Master's Degree", "category": "education" },
-        { "id": "edu-6", "text": "Doctorate/PhD", "category": "education" },
-        { "id": "edu-7", "text": "Self-taught/No formal education", "category": "education" }
-      ]
-    },
-    "metadata": {
-      "progress": {
-        "category": "education",
-        "current": 1,
-        "total": 6,
-        "overall": 4
-      },
-      "options": {
-        "type": "single",
-        "layout": "cards"
-      }
-    }
-  },
-  "skills": {
-    "type": "question",
-    "content": {
-      "intro": "Great! Now let's talk about your skills and abilities.",
-      "question": "Which technical skills are you strongest in?",
-      "options": [
-        { "id": "skill-1", "text": "Programming/Coding", "category": "skills" },
-        { "id": "skill-2", "text": "Data Analysis", "category": "skills" },
-        { "id": "skill-3", "text": "Design/Creative", "category": "skills" },
-        { "id": "skill-4", "text": "Writing/Communication", "category": "skills" },
-        { "id": "skill-5", "text": "Project Management", "category": "skills" },
-        { "id": "skill-6", "text": "Research", "category": "skills" },
-        { "id": "skill-7", "text": "Mathematical/Analytical", "category": "skills" },
-        { "id": "skill-8", "text": "I'm still developing my skills", "category": "skills" }
-      ]
-    },
-    "metadata": {
-      "progress": {
-        "category": "skills",
-        "current": 1,
-        "total": 6,
-        "overall": 29
-      },
-      "options": {
-        "type": "single",
-        "layout": "cards"
-      }
-    }
-  },
-  "workstyle": {
-    "type": "question",
-    "content": {
-      "intro": "Let's understand your work preferences better.",
-      "question": "What type of work environment do you prefer?",
-      "options": [
-        { "id": "work-1", "text": "Corporate office", "category": "workstyle" },
-        { "id": "work-2", "text": "Remote/Work from home", "category": "workstyle" },
-        { "id": "work-3", "text": "Hybrid (mix of office and remote)", "category": "workstyle" },
-        { "id": "work-4", "text": "Outdoor/Field work", "category": "workstyle" },
-        { "id": "work-5", "text": "Creative studio", "category": "workstyle" },
-        { "id": "work-6", "text": "Startup environment", "category": "workstyle" },
-        { "id": "work-7", "text": "Varied locations", "category": "workstyle" }
-      ]
-    },
-    "metadata": {
-      "progress": {
-        "category": "workstyle",
-        "current": 1,
-        "total": 6,
-        "overall": 54
-      },
-      "options": {
-        "type": "single",
-        "layout": "cards"
-      }
-    }
-  },
-  "goals": {
-    "type": "question",
-    "content": {
-      "intro": "Finally, let's talk about your career goals and aspirations.",
-      "question": "What's most important to you in your career?",
-      "options": [
-        { "id": "goal-1", "text": "Financial security/High income", "category": "goals" },
-        { "id": "goal-2", "text": "Work-life balance", "category": "goals" },
-        { "id": "goal-3", "text": "Making a difference/Social impact", "category": "goals" },
-        { "id": "goal-4", "text": "Career advancement/Growth", "category": "goals" },
-        { "id": "goal-5", "text": "Creative expression", "category": "goals" },
-        { "id": "goal-6", "text": "Intellectual challenge", "category": "goals" },
-        { "id": "goal-7", "text": "Independence/Autonomy", "category": "goals" },
-        { "id": "goal-8", "text": "Recognition/Status", "category": "goals" }
-      ]
-    },
-    "metadata": {
-      "progress": {
-        "category": "goals",
-        "current": 1,
-        "total": 6,
-        "overall": 79
-      },
-      "options": {
-        "type": "single",
-        "layout": "cards"
-      }
-    }
-  }
-};
-
 // Handler for the API requests
 serve(async (req) => {
-  // Clean up expired cache entries
-  cleanupCache();
-
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -330,107 +166,6 @@ serve(async (req) => {
       throw new Error("Message is required");
     }
 
-    // Extract current category and question number from previous messages
-    let currentCategory: string | null = null;
-    let currentQuestionNumber: number | null = null;
-    let isCachedResponse = false;
-
-    if (body.messages && Array.isArray(body.messages) && body.messages.length > 0) {
-      // Look for category and question number in the most recent bot message
-      for (let i = body.messages.length - 1; i >= 0; i--) {
-        const msg = body.messages[i];
-        if (msg.role === "assistant" && msg.metadata) {
-          if (msg.metadata.structuredMessage?.metadata?.progress) {
-            currentCategory = msg.metadata.structuredMessage.metadata.progress.category;
-            currentQuestionNumber = msg.metadata.structuredMessage.metadata.progress.current;
-          } else if (msg.metadata.category) {
-            currentCategory = msg.metadata.category;
-            currentQuestionNumber = msg.metadata.questionNumber;
-          }
-          
-          if (currentCategory) break;
-        }
-      }
-    }
-
-    // Check cache for this specific question/context
-    const cacheKey = generateCacheKey(body.message, currentCategory, currentQuestionNumber);
-    
-    if (CONFIG.ENABLE_RESPONSE_CACHE) {
-      const cachedResponse = responseCache.get(cacheKey);
-      
-      if (cachedResponse && isCacheValid(cachedResponse)) {
-        console.log(`Cache hit for key: ${cacheKey}`);
-        isCachedResponse = true;
-        
-        // Add cache information to the response
-        const responseWithCacheInfo = {
-          ...cachedResponse.data,
-          fromCache: true
-        };
-        
-        return new Response(
-          JSON.stringify(responseWithCacheInfo),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
-
-    // Check if this is the first question in a new category and use template if available
-    let useTemplateResponse = false;
-    let templateResponse = null;
-    
-    if (currentQuestionNumber === 6 && currentCategory) {
-      // We're at the end of one category, so the next will be the first of a new category
-      const nextCategory = 
-        currentCategory === "education" ? "skills" :
-        currentCategory === "skills" ? "workstyle" :
-        currentCategory === "workstyle" ? "goals" : null;
-        
-      if (nextCategory && categoryTemplates[nextCategory]) {
-        console.log(`Using template for first question in ${nextCategory} category`);
-        useTemplateResponse = true;
-        templateResponse = categoryTemplates[nextCategory];
-      }
-    } else if (!currentCategory && categoryTemplates["education"]) {
-      // Very first question of the session
-      console.log("Using template for first question in education category");
-      useTemplateResponse = true;
-      templateResponse = categoryTemplates["education"];
-    }
-
-    if (useTemplateResponse && templateResponse) {
-      const messageId = crypto.randomUUID();
-      const responseData = {
-        messageId,
-        message: JSON.stringify(templateResponse),
-        structuredMessage: templateResponse,
-        metadata: {
-          category: templateResponse.metadata.progress.category,
-          questionNumber: templateResponse.metadata.progress.current,
-          totalInCategory: templateResponse.metadata.progress.total,
-          progress: templateResponse.metadata.progress.overall,
-          hasOptions: true,
-          suggestions: templateResponse.content.options.map(opt => opt.text),
-          fromTemplate: true
-        },
-        messageType: "bot"
-      };
-      
-      // Store in cache
-      if (CONFIG.ENABLE_RESPONSE_CACHE) {
-        responseCache.set(cacheKey, {
-          timestamp: Date.now(),
-          data: responseData
-        });
-      }
-      
-      return new Response(
-        JSON.stringify(responseData),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Set up the conversation history from the request or start fresh
     const messages = [
       {
@@ -439,20 +174,9 @@ serve(async (req) => {
       },
     ];
 
-    // Add previous messages if provided, but limit to the most recent N messages
+    // Add previous messages if provided
     if (body.messages && Array.isArray(body.messages)) {
-      const recentMessages = body.messages.slice(-CONFIG.MAX_HISTORY_MESSAGES);
-      
-      // Always include user's current message
-      const userMessage = body.messages.find(msg => 
-        msg.role === "user" && msg.content === body.message
-      );
-      
-      if (userMessage && !recentMessages.includes(userMessage)) {
-        recentMessages.push(userMessage);
-      }
-      
-      recentMessages.forEach((msg) => {
+      body.messages.forEach((msg) => {
         messages.push({
           role: msg.role,
           content: msg.content,
@@ -524,9 +248,9 @@ serve(async (req) => {
     try {
       // Try to parse JSON from the response
       const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || 
-                      aiResponse.match(/```\n([\s\S]*?)\n```/) ||
-                      aiResponse.match(/\{[\s\S]*\}/);
-                      
+                        aiResponse.match(/```\n([\s\S]*?)\n```/) ||
+                        aiResponse.match(/\{[\s\S]*\}/);
+                        
       if (jsonMatch) {
         const jsonContent = jsonMatch[1] || jsonMatch[0];
         rawResponse = JSON.parse(jsonContent.trim());
@@ -581,10 +305,10 @@ serve(async (req) => {
       // Legacy format - extract from text
       const questionMatch = aiResponse.match(/\*\*Question (\d+)\/(\d+) \(([^)]+)\):/);
       const isRecommendation = aiResponse.includes("Career Recommendations") || 
-                             aiResponse.includes("Career Matches");
+                               aiResponse.includes("Career Matches");
       const isSessionEnd = aiResponse.includes("session is now complete") ||
-                         aiResponse.includes("assessment is complete");
-                             
+                           aiResponse.includes("assessment is complete");
+                               
       if (isRecommendation) {
         messageType = "recommendation";
         metadata = { ...metadata, isRecommendation: true };
@@ -624,27 +348,16 @@ serve(async (req) => {
     // Generate unique ID for the message
     const messageId = crypto.randomUUID();
 
-    // Prepare the response data
-    const responseData = {
-      messageId,
-      message: aiResponse,
-      structuredMessage,
-      rawResponse,
-      metadata,
-      messageType
-    };
-    
-    // Store in cache if enabled
-    if (CONFIG.ENABLE_RESPONSE_CACHE) {
-      responseCache.set(cacheKey, {
-        timestamp: Date.now(),
-        data: responseData
-      });
-    }
-
     // Return the formatted response
     return new Response(
-      JSON.stringify(responseData),
+      JSON.stringify({
+        messageId,
+        message: aiResponse,
+        structuredMessage,
+        rawResponse,
+        metadata,
+        messageType
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 import { SessionManagementDialog } from './SessionManagementDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
 
 export function PicoChat() {
   const {
@@ -37,8 +36,7 @@ export function PicoChat() {
     updateSessionTitle,
     setInputMessage,
     sendMessage,
-    addMessage,
-    lastResponseFromCache
+    addMessage
   } = useCareerChat();
   const {
     toast
@@ -46,8 +44,6 @@ export function PicoChat() {
   const [configChecked, setConfigChecked] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
-  const [careerDetailsOpen, setCareerDetailsOpen] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -88,6 +84,7 @@ export function PicoChat() {
     }
   }, [toast, messages.length, isLoading, configChecked]);
 
+  // Check for session end messages
   useEffect(() => {
     const hasSessionEndMessage = messages.some(msg => 
       msg.message_type === 'session_end' || 
@@ -102,6 +99,7 @@ export function PicoChat() {
   }, [messages]);
 
   const handleSuggestionClick = (suggestion: string) => {
+    // If session is ended and suggestion is to start a new chat
     if (isSessionEnded && 
         (suggestion.toLowerCase().includes('new') || 
          suggestion.toLowerCase().includes('start'))) {
@@ -132,11 +130,6 @@ export function PicoChat() {
     }
   };
 
-  const handleCareerDetailsClick = (careerId: string) => {
-    setSelectedCareerId(careerId);
-    setCareerDetailsOpen(true);
-  };
-
   if (isLoading) {
     return <MainLayout>
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
@@ -150,7 +143,7 @@ export function PicoChat() {
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-4 p-8 text-center">
           <AlertCircle className="h-12 w-12 text-destructive" />
           <h2 className="text-2xl font-semibold">AI Chat Unavailable</h2>
-          <p className="text-lg text-muted-foreground max-w-md">
+          <p className="text-muted-foreground max-w-md">
             The career chat AI service is currently unavailable. Please try again later or contact an administrator.
           </p>
         </div>
@@ -159,8 +152,7 @@ export function PicoChat() {
 
   return <MainLayout>
       <div className="flex flex-col max-w-6xl mx-auto h-[calc(100vh-120px)] p-4">
-        {messages.length === 0 || messages.length === 1 && messages[0].message_type === 'system' ? (
-          <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
+        {messages.length === 0 || messages.length === 1 && messages[0].message_type === 'system' ? <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-blue-100 flex items-center justify-center mb-4 animate-pulse">
               <Bot className="h-16 w-16 text-primary" />
             </div>
@@ -179,9 +171,7 @@ export function PicoChat() {
                 <span>Past Conversations</span>
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
+          </div> : <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
             <div className="flex items-center justify-between bg-white border-b p-4">
               <div className="flex-1">
                 <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
@@ -211,15 +201,7 @@ export function PicoChat() {
             
             <ScrollArea className="flex-1 p-4 overflow-y-auto">
               <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <ChatMessage 
-                    key={message.id || index} 
-                    message={message} 
-                    onSuggestionClick={handleSuggestionClick} 
-                    onCareerDetailsClick={handleCareerDetailsClick}
-                    currentQuestionProgress={questionProgress} 
-                  />
-                ))}
+                {messages.map((message, index) => <ChatMessage key={message.id || index} message={message} onSuggestionClick={handleSuggestionClick} currentQuestionProgress={questionProgress} />)}
                 
                 {isTyping && <ChatTypingIndicator />}
                 <div ref={messagesEndRef} />
@@ -230,28 +212,11 @@ export function PicoChat() {
               inputMessage={inputMessage} 
               setInputMessage={setInputMessage} 
               onSendMessage={sendMessage} 
-              isDisabled={isTyping || isAnalyzing || isSessionEnded}
-              placeholder={isSessionEnded ? "Conversation ended. Start a new chat to continue." : "Type your question..."}
+              isDisabled={isTyping || isAnalyzing || isSessionEnded} 
             />
-          </div>
-        )}
+          </div>}
         
-        <SessionManagementDialog 
-          open={sessionDialogOpen} 
-          onOpenChange={setSessionDialogOpen} 
-          pastSessions={pastSessions} 
-          isFetchingPastSessions={isFetchingPastSessions} 
-          onFetchPastSessions={fetchPastSessions} 
-          onResumeSession={resumeSession} 
-          onDeleteSession={deleteSession} 
-          onUpdateSessionTitle={updateSessionTitle} 
-        />
-
-        <CareerDetailsDialog 
-          open={careerDetailsOpen} 
-          onOpenChange={setCareerDetailsOpen} 
-          careerId={selectedCareerId} 
-        />
+        <SessionManagementDialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen} pastSessions={pastSessions} isFetchingPastSessions={isFetchingPastSessions} onFetchPastSessions={fetchPastSessions} onResumeSession={resumeSession} onDeleteSession={deleteSession} onUpdateSessionTitle={updateSessionTitle} />
       </div>
     </MainLayout>;
 }
