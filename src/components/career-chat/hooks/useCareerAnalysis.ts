@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { getHybridCareerRecommendations, createRecommendationMessage } from '../utils/careerMatchingEngine';
 
 export function useCareerAnalysis(sessionId: string, addMessage: (message: CareerChatMessage) => Promise<void>) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -22,41 +23,98 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
         created_at: new Date().toISOString()
       });
       
-      // Call the edge function to analyze the chat responses and get career recommendations
-      const { data, error } = await supabase.functions.invoke('analyze-career-path', {
-        body: { sessionId }
-      });
+      // Step 1: Get all messages for this session to analyze
+      const { data: messages, error: messagesError } = await supabase
+        .from('career_chat_messages')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
       
-      if (error) {
-        throw new Error(error.message);
+      if (messagesError) {
+        throw new Error(`Error fetching messages: ${messagesError.message}`);
       }
       
-      if (!data || !data.careers || !Array.isArray(data.careers)) {
-        throw new Error('Invalid response from career analysis');
+      if (!messages || messages.length === 0) {
+        throw new Error('No messages found for this session');
       }
       
-      // Add a summary message
-      await addMessage({
-        session_id: sessionId,
-        message_type: 'system',
-        content: "Based on our conversation, here are some career paths that might be a good fit for you:",
-        metadata: {},
-        created_at: new Date().toISOString()
-      });
+      // Step 2: Use hybrid approach to get career recommendations
+      // First fetch from database directly (faster)
+      const hybridRecommendations = await getHybridCareerRecommendations(messages);
       
-      // Add career recommendation messages
-      for (const career of data.careers) {
+      // If we have enough recommendations, we can skip the AI analysis
+      if (hybridRecommendations.length >= 5) {
+        console.log('Using hybrid recommendations:', hybridRecommendations);
+        
+        // Add a summary message
         await addMessage({
           session_id: sessionId,
-          message_type: 'recommendation',
-          content: career.reasoning,
-          metadata: {
-            career: career.title,
-            score: career.score,
-            careerId: career.id
-          },
+          message_type: 'system',
+          content: "Based on our conversation, here are some career paths that might be a good fit for you:",
+          metadata: {},
           created_at: new Date().toISOString()
         });
+        
+        // Add career recommendation messages
+        for (const career of hybridRecommendations) {
+          await addMessage({
+            session_id: sessionId,
+            message_type: 'recommendation',
+            content: career.reasoning || `${career.title} matches your profile.`,
+            metadata: {
+              career: career.title,
+              score: career.score,
+              careerId: career.id,
+              details: {
+                salary_range: career.salary_range,
+                required_skills: career.required_skills,
+                growth_potential: career.growth_potential,
+                work_environment: career.work_environment
+              }
+            },
+            created_at: new Date().toISOString()
+          });
+        }
+      } else {
+        // Fallback to AI analysis if we don't have enough database matches
+        console.log('Falling back to AI analysis due to insufficient database matches');
+        
+        // Call the edge function to analyze the chat responses and get career recommendations
+        const { data, error } = await supabase.functions.invoke('analyze-career-path', {
+          body: { sessionId }
+        });
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        if (!data || !data.careers || !Array.isArray(data.careers)) {
+          throw new Error('Invalid response from career analysis');
+        }
+        
+        // Add a summary message
+        await addMessage({
+          session_id: sessionId,
+          message_type: 'system',
+          content: "Based on our conversation, here are some career paths that might be a good fit for you:",
+          metadata: {},
+          created_at: new Date().toISOString()
+        });
+        
+        // Add career recommendation messages
+        for (const career of data.careers) {
+          await addMessage({
+            session_id: sessionId,
+            message_type: 'recommendation',
+            content: career.reasoning,
+            metadata: {
+              career: career.title,
+              score: career.score,
+              careerId: career.id
+            },
+            created_at: new Date().toISOString()
+          });
+        }
       }
       
       // Add next steps message
@@ -71,6 +129,23 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
             "Explore other options",
             "How can I prepare for these careers?",
             "Start a new career assessment"
+          ]
+        },
+        created_at: new Date().toISOString()
+      });
+      
+      // Add session end message
+      await addMessage({
+        session_id: sessionId,
+        message_type: 'session_end',
+        content: "Thank you for completing your career assessment! I've analyzed your responses and provided career recommendations above. This session is now complete. You can start a new session anytime to explore different career paths or retake the assessment.",
+        metadata: {
+          isSessionEnd: true,
+          completionType: "career_recommendations",
+          suggestions: [
+            "Start a new career assessment",
+            "Explore these career paths in detail",
+            "Save these recommendations"
           ]
         },
         created_at: new Date().toISOString()

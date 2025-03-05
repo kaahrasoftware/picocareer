@@ -15,11 +15,12 @@ CATEGORY_TRACKING = "enabled"
 # Structured format instruction
 # This will instruct the AI to return responses in the specified format
 STRUCTURED_FORMAT_INSTRUCTION = """
-Return responses in this JSON format:
+Return responses in one of these JSON formats:
+
+For questions during the assessment:
 {
-  "type": "question|conversation|recommendation|assessment_result",
+  "type": "question",
   "content": {
-    // For questions and conversations
     "intro": "Optional friendly intro text",
     "question": "The actual question being asked",
     "options": [
@@ -29,43 +30,7 @@ Return responses in this JSON format:
         "icon": "optional-icon-name",
         "description": "Optional description"
       }
-    ],
-    
-    // For assessment results (final career recommendations)
-    "introduction": {
-      "title": "Your Career Assessment Results",
-      "summary": "Brief overview of the assessment process and what the results mean"
-    },
-    "career_recommendations": [
-      {
-        "title": "Career Title",
-        "match_percentage": 95,
-        "description": "Why this career matches your profile",
-        "key_requirements": ["requirement1", "requirement2"]
-      }
-    ],
-    "personality_insights": [
-      {
-        "trait": "Trait name",
-        "strength_level": 85,
-        "description": "Description of this personality trait"
-      }
-    ],
-    "growth_areas": [
-      {
-        "skill": "Skill to develop",
-        "importance": "high|medium|low",
-        "description": "Why this skill matters for your career path"
-      }
-    ],
-    "closing": {
-      "message": "Thank you message",
-      "next_steps": [
-        "Suggestion 1",
-        "Suggestion 2",
-        "Suggestion 3"
-      ]
-    }
+    ]
   },
   "metadata": {
     "progress": {
@@ -77,8 +42,74 @@ Return responses in this JSON format:
     "options": {
       "type": "single",
       "layout": "cards|chips|buttons"
+    }
+  }
+}
+
+For final recommendations at the end of the assessment:
+{
+  "type": "recommendation",
+  "sections": {
+    "introduction": {
+      "title": "Your Career Assessment Results",
+      "summary": "A brief summary of the assessment results",
+      "completionDate": "Current date string",
+      "overallInsight": "Overall insight about the user's profile"
     },
-    "isSessionEnd": false
+    "careers": [
+      {
+        "title": "Career title",
+        "match": 85,
+        "description": "What makes this career a good match",
+        "keySkills": ["Skill 1", "Skill 2", "Skill 3"],
+        "education": "Typical education requirements"
+      }
+    ],
+    "personalityInsights": [
+      {
+        "trait": "Trait name",
+        "strength": 90,
+        "description": "Description of this personality trait"
+      }
+    ],
+    "growthAreas": [
+      {
+        "skill": "Skill to develop",
+        "priority": "high|medium|low",
+        "description": "Why this skill is important",
+        "resources": ["Resource 1", "Resource 2"]
+      }
+    ],
+    "closing": {
+      "message": "Thank you for completing your career assessment!",
+      "nextSteps": [
+        "Explore these career paths in detail",
+        "Connect with mentors in these fields",
+        "Develop the suggested skills"
+      ]
+    }
+  },
+  "metadata": {
+    "type": "final_recommendation",
+    "isComplete": true
+  }
+}
+
+For a session end message:
+{
+  "type": "session_end",
+  "content": {
+    "message": "Thank you for completing your career assessment! This session is now complete.",
+    "suggestions": [
+      "Start a new career assessment",
+      "Explore these career paths in detail",
+      "Save these recommendations"
+    ]
+  },
+  "metadata": {
+    "isSessionEnd": true,
+    "completionType": "career_recommendations"
   }
 }
 """
+
