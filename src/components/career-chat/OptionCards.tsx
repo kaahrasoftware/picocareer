@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check } from 'lucide-react';
@@ -39,14 +38,9 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
         }
       });
     } else {
-      // For single selection, immediately trigger onSelect and show visual feedback briefly
+      // For single selection, immediately trigger onSelect without delay
       setSelectedOptions([option.text]);
-      
-      // Short delay to show selection before submitting
-      setTimeout(() => {
-        onSelect(option.text);
-        setSelectedOptions([]);
-      }, 300);
+      onSelect(option.text);
     }
   };
 
