@@ -12,14 +12,21 @@ OPTIONS_MAX_COUNT = 8
 OPTIONS_MAX_LENGTH = 40
 CATEGORY_TRACKING = "enabled"
 
+# Cache configuration
+ENABLE_RESPONSE_CACHE = "true"
+CACHE_EXPIRY_SECONDS = "3600"  # 1 hour cache expiry
+MAX_HISTORY_MESSAGES = "6"     # Only send the last 6 messages for context
+
+# Template responses
+ENABLE_TEMPLATE_RESPONSES = "true"  # Use pre-defined templates for common questions
+FIRST_QUESTIONS_USE_TEMPLATE = "true"  # First question of each category uses templates
+
 # Structured format instruction
 # This will instruct the AI to return responses in the specified format
 STRUCTURED_FORMAT_INSTRUCTION = """
-Return responses in one of these JSON formats:
-
-For questions during the assessment:
+Return responses in this JSON format:
 {
-  "type": "question",
+  "type": "question|conversation|recommendation",
   "content": {
     "intro": "Optional friendly intro text",
     "question": "The actual question being asked",
@@ -45,71 +52,4 @@ For questions during the assessment:
     }
   }
 }
-
-For final recommendations at the end of the assessment:
-{
-  "type": "recommendation",
-  "sections": {
-    "introduction": {
-      "title": "Your Career Assessment Results",
-      "summary": "A brief summary of the assessment results",
-      "completionDate": "Current date string",
-      "overallInsight": "Overall insight about the user's profile"
-    },
-    "careers": [
-      {
-        "title": "Career title",
-        "match": 85,
-        "description": "What makes this career a good match",
-        "keySkills": ["Skill 1", "Skill 2", "Skill 3"],
-        "education": "Typical education requirements"
-      }
-    ],
-    "personalityInsights": [
-      {
-        "trait": "Trait name",
-        "strength": 90,
-        "description": "Description of this personality trait"
-      }
-    ],
-    "growthAreas": [
-      {
-        "skill": "Skill to develop",
-        "priority": "high|medium|low",
-        "description": "Why this skill is important",
-        "resources": ["Resource 1", "Resource 2"]
-      }
-    ],
-    "closing": {
-      "message": "Thank you for completing your career assessment!",
-      "nextSteps": [
-        "Explore these career paths in detail",
-        "Connect with mentors in these fields",
-        "Develop the suggested skills"
-      ]
-    }
-  },
-  "metadata": {
-    "type": "final_recommendation",
-    "isComplete": true
-  }
-}
-
-For a session end message:
-{
-  "type": "session_end",
-  "content": {
-    "message": "Thank you for completing your career assessment! This session is now complete.",
-    "suggestions": [
-      "Start a new career assessment",
-      "Explore these career paths in detail",
-      "Save these recommendations"
-    ]
-  },
-  "metadata": {
-    "isSessionEnd": true,
-    "completionType": "career_recommendations"
-  }
-}
 """
-
