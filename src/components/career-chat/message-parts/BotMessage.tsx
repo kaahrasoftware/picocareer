@@ -2,24 +2,17 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CareerChatMessage } from '@/types/database/analytics';
 
 interface BotMessageProps {
-  message: CareerChatMessage;
-  onSuggestionClick?: (suggestion: string) => void;
-  currentProgress?: number;
+  content: string;
 }
 
-export function BotMessage({ message, onSuggestionClick, currentProgress }: BotMessageProps) {
-  const content = message.content;
-  
-  // Check if this is an error message (with null safety)
-  const isError = content?.includes("error") && content?.includes("I'm sorry");
+export function BotMessage({ content }: BotMessageProps) {
+  // Check if this is an error message
+  const isError = content.includes("error") && content.includes("I'm sorry");
   
   // Try to extract just the conversational part if it's JSON or contains numbered options
   const cleanedContent = React.useMemo(() => {
-    if (!content) return ""; // Handle null or undefined content
-    
     if (content.includes('```json') || content.includes('```')) {
       // Remove code blocks to display only the conversation text
       return content.replace(/```(?:json)?\n[\s\S]*?\n```/g, '')
@@ -39,10 +32,6 @@ export function BotMessage({ message, onSuggestionClick, currentProgress }: BotM
     
     return content;
   }, [content]);
-
-  if (!content) {
-    return <div className="text-muted-foreground italic">Loading response...</div>;
-  }
 
   return (
     <div className="flex flex-col items-start mb-4 animate-fade-in">
