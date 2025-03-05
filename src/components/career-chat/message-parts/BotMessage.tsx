@@ -25,6 +25,8 @@ export function BotMessage({ content, category }: BotMessageProps) {
         return "from-blue-50 to-white border-blue-200";
       case 'personality':
         return "from-purple-50 to-white border-purple-200";
+      case 'complete':
+        return "from-green-50 to-white border-green-200";
       default:
         return "from-blue-50 to-white border-blue-200";
     }

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Bot, MessageCircle, History, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +10,6 @@ import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { useCareerAnalysis } from './hooks/useCareerAnalysis';
 import { SessionManagementDialog } from './SessionManagementDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -200,7 +200,14 @@ export function PicoChat() {
           
           <ScrollArea className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-4">
-              {messages.map((message, index) => <ChatMessage key={message.id || index} message={message} onSuggestionClick={handleSuggestionClick} currentQuestionProgress={questionProgress} />)}
+              {messages.map((message, index) => (
+                <ChatMessage 
+                  key={message.id || index} 
+                  message={message} 
+                  onSuggestionClick={handleSuggestionClick} 
+                  currentQuestionProgress={questionProgress} 
+                />
+              ))}
               
               {isTyping && <ChatTypingIndicator />}
               <div ref={messagesEndRef} />

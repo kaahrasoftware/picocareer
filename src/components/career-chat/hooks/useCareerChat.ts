@@ -112,34 +112,51 @@ export function useCareerChat() {
     
     if (structuredMessage?.type === 'question' && structuredMessage.metadata.progress) {
       // Using new structured format
-      const category = structuredMessage.metadata.progress.category;
+      const category = structuredMessage.metadata.progress.category?.toLowerCase() || 'general';
       const overall = structuredMessage.metadata.progress.overall;
       
       setCurrentCategory(category);
-      setQuestionProgress(overall);
+      
+      // Handle overall progress as either string percentage or number
+      if (typeof overall === 'string' && overall.includes('%')) {
+        setQuestionProgress(parseInt(overall.replace('%', '')));
+      } else if (typeof overall === 'string') {
+        setQuestionProgress(parseInt(overall));
+      } else if (typeof overall === 'number') {
+        setQuestionProgress(overall);
+      } else {
+        // Calculate based on question number
+        const current = structuredMessage.metadata.progress.current || 1;
+        const total = 24; // Total questions across all categories
+        setQuestionProgress(Math.min(Math.round((current / total) * 100), 100));
+      }
       
       // Update counts for this category
-      setQuestionCounts(prev => ({
-        ...prev,
-        [category]: prev[category as keyof typeof prev] + 1
-      }));
+      if (category in questionCounts) {
+        setQuestionCounts(prev => ({
+          ...prev,
+          [category]: structuredMessage.metadata.progress?.current || prev[category as keyof typeof prev] + 1
+        }));
+      }
     } 
     // Fallback to legacy format
     else if (latestBotMessage.metadata?.category) {
-      const newCategory = latestBotMessage.metadata.category;
-      setCurrentCategory(newCategory);
+      const category = (latestBotMessage.metadata.category as string).toLowerCase();
+      setCurrentCategory(category);
       
-      // Update counts for this category
-      setQuestionCounts(prev => ({
-        ...prev,
-        [newCategory]: prev[newCategory as keyof typeof prev] + 1
-      }));
+      // Update counts for this category if it's in our tracked categories
+      if (category in questionCounts) {
+        setQuestionCounts(prev => ({
+          ...prev,
+          [category]: prev[category as keyof typeof prev] + 1
+        }));
+      }
       
       // Calculate overall progress (assuming 24 questions total - 6 per category)
-      const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
-      setQuestionProgress(Math.min(Math.round((totalQuestions / 24) * 100), 100));
+      const totalAnswered = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
+      setQuestionProgress(Math.min(Math.round((totalAnswered / 24) * 100), 100));
     }
-  }, [messages]);
+  }, [messages, questionCounts]);
 
   // Function to send message and get AI response
   const sendMessage = useCallback(async (message: string) => {

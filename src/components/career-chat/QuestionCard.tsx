@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -114,8 +113,22 @@ export function QuestionCard({
     }
   };
 
+  // Ensure progress is a number between 0-100
+  const normalizeProgress = () => {
+    // First check if it's a string with a percentage sign
+    if (typeof progress === 'string' && progress.includes('%')) {
+      return parseFloat(progress);
+    }
+    // Then check if it's a string without a percentage sign
+    if (typeof progress === 'string') {
+      return parseFloat(progress);
+    }
+    // Otherwise assume it's a number
+    return progress;
+  };
+
   // Format progress display
-  const formattedProgress = Math.round(progress);
+  const formattedProgress = Math.round(normalizeProgress());
   const progressStatus = formattedProgress < 20 ? 'Just Starting' : 
                          formattedProgress < 40 ? 'Making Progress' :
                          formattedProgress < 60 ? 'Getting There' :
@@ -152,7 +165,7 @@ export function QuestionCard({
         {intro && <p className="text-sm text-gray-600 mb-3">{intro}</p>}
         <h3 className="text-lg font-medium text-gray-800 mb-4">{question}</h3>
         <Progress 
-          value={progress} 
+          value={formattedProgress} 
           className={cn("h-1.5 bg-gray-100", styles.progressColorClass)} 
         />
       </CardContent>

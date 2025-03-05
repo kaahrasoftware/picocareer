@@ -45,7 +45,17 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
       // Short delay to show selection before submitting
       setTimeout(() => {
         onSelect(option.text);
+        setSelectedOptions([]);
       }, 300);
+    }
+  };
+
+  // Submit all selected options when multiple selection is enabled
+  const handleSubmitMultiple = () => {
+    if (selectedOptions.length > 0) {
+      // Submit all selected options joined by commas
+      onSelect(selectedOptions.join(', '));
+      setSelectedOptions([]);
     }
   };
 
@@ -86,11 +96,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
         {allowMultiple && selectedOptions.length > 0 && (
           <div className="w-full mt-3">
             <Button 
-              onClick={() => {
-                // Submit all selected options joined by commas
-                onSelect(selectedOptions.join(', '));
-                setSelectedOptions([]);
-              }}
+              onClick={handleSubmitMultiple}
               className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-xs shadow-sm hover:shadow-md transition-all"
             >
               Continue with {selectedOptions.length} selection{selectedOptions.length !== 1 ? 's' : ''}
@@ -101,8 +107,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     );
   }
 
-  // For cards layout, use a grid that adjusts based on the number of options
-  // Use smaller cards with consistent white background
+  // For cards layout
   const gridCols = normalizedOptions.length <= 2 ? 
     "grid-cols-1 sm:grid-cols-2" : 
     "grid-cols-2 sm:grid-cols-3 md:grid-cols-4";
@@ -149,11 +154,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
       {allowMultiple && selectedOptions.length > 0 && (
         <div className="col-span-full flex justify-center mt-3">
           <Button 
-            onClick={() => {
-              // Submit all selected options joined by commas
-              onSelect(selectedOptions.join(', '));
-              setSelectedOptions([]);
-            }}
+            onClick={handleSubmitMultiple}
             className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-xs shadow-sm hover:shadow-md transition-all"
           >
             Continue with {selectedOptions.length} selection{selectedOptions.length !== 1 ? 's' : ''}

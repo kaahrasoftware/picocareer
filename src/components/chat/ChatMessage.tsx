@@ -151,10 +151,10 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
       return {
         question: structuredMessage.content.question || '',
         intro: structuredMessage.content.intro,
-        category: structuredMessage.metadata.progress?.category || 'general',
+        category: structuredMessage.metadata.progress?.category?.toLowerCase() || 'general',
         current: structuredMessage.metadata.progress?.current || 1,
         total: structuredMessage.metadata.progress?.total || 4,
-        overall: structuredMessage.metadata.progress?.overall || currentQuestionProgress,
+        overall: parseFloat(structuredMessage.metadata.progress?.overall || '0') || currentQuestionProgress,
         options: structuredMessage.content.options || [],
         layout: structuredMessage.metadata.options?.layout || 'cards',
         allowMultiple: structuredMessage.metadata.options?.type === 'multiple'
@@ -206,7 +206,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
           category={questionInfo.category}
           questionNumber={questionInfo.current}
           totalQuestions={questionInfo.total}
-          progress={questionInfo.overall}
+          progress={typeof questionInfo.overall === 'number' ? questionInfo.overall : parseFloat(questionInfo.overall)}
         />
         
         {questionInfo.options.length > 0 && (
@@ -226,7 +226,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Handle detected numbered list format
   if (hasNumberedList && parseNumberedOptions) {
     const { intro, question, options } = parseNumberedOptions;
-    const category = message.metadata?.category as string || 'general';
+    const category = (message.metadata?.category as string || 'general').toLowerCase();
     
     return (
       <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
@@ -255,7 +255,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   
   // For legacy question and option messages
   if (isQuestion) {
-    const category = message.metadata.category as string || 'general';
+    const category = (message.metadata.category as string || 'general').toLowerCase();
     const questionNumber = message.metadata.questionNumber as number || 1;
     const totalInCategory = message.metadata.totalInCategory as number || 4;
     const progress = message.metadata.progress as number || currentQuestionProgress;
@@ -307,13 +307,13 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   
   // Handle structured conversation (new format)
   if (structuredMessage?.type === 'conversation') {
-    const category = structuredMessage.metadata?.progress?.category;
+    const category = structuredMessage.metadata?.progress?.category?.toLowerCase();
     return <BotMessage content={structuredMessage.content.intro || message.content} category={category} />;
   }
   
   // Default to bot message for anything else with category info if available
   return <BotMessage 
     content={message.content} 
-    category={message.metadata?.category as string} 
+    category={(message.metadata?.category as string || '').toLowerCase()} 
   />;
 }
