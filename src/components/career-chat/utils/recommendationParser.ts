@@ -1,4 +1,3 @@
-
 /**
  * Utility to parse and structure career recommendation messages
  */
@@ -22,32 +21,77 @@ export interface MentorRecommendation {
   skills: string;
 }
 
+// Types for structured assessment result content
+export interface AssessmentIntroduction {
+  title: string;
+  summary: string;
+}
+
+export interface StructuredCareerRecommendation {
+  title: string;
+  match_percentage: number;
+  description: string;
+  key_requirements?: string[];
+}
+
+export interface PersonalityTrait {
+  trait: string;
+  strength_level: number;
+  description: string;
+}
+
+export interface GrowthArea {
+  skill: string;
+  importance: string;
+  description: string;
+}
+
+export interface ClosingInfo {
+  message: string;
+  next_steps: string[];
+}
+
+export interface StructuredAssessmentContent {
+  introduction?: AssessmentIntroduction;
+  career_recommendations?: StructuredCareerRecommendation[];
+  personality_insights?: PersonalityTrait[];
+  growth_areas?: GrowthArea[];
+  closing?: ClosingInfo;
+}
+
 export interface ParsedRecommendation {
-  type: 'recommendation' | 'unknown';
+  type: 'recommendation' | 'assessment_result' | 'unknown';
   careers: CareerRecommendation[];
   personalities: PersonalityInsight[];
   mentors: MentorRecommendation[];
+  structuredContent?: StructuredAssessmentContent;
 }
 
 // Type for structured response from DeepSeek
 export interface StructuredRecommendation {
   type: string;
-  sections: {
-    careers: Array<{
+  content: {
+    careers?: Array<{
       title: string;
       match: number;
       reasoning: string;
     }>;
-    personality: Array<{
+    personality?: Array<{
       title: string;
       match: number;
       description: string;
     }>;
-    mentors: Array<{
+    mentors?: Array<{
       name: string;
       experience: string;
       skills: string;
     }>;
+    // New structured assessment result format
+    introduction?: AssessmentIntroduction;
+    career_recommendations?: StructuredCareerRecommendation[];
+    personality_insights?: PersonalityTrait[];
+    growth_areas?: GrowthArea[];
+    closing?: ClosingInfo;
   };
 }
 
@@ -55,7 +99,7 @@ export interface StructuredRecommendation {
  * Parses a structured recommendation response directly
  */
 export function parseStructuredRecommendation(rawResponse: any): ParsedRecommendation {
-  if (!rawResponse || rawResponse.type !== 'recommendation' || !rawResponse.sections) {
+  if (!rawResponse) {
     return { 
       type: 'unknown',
       careers: [],
@@ -63,24 +107,51 @@ export function parseStructuredRecommendation(rawResponse: any): ParsedRecommend
       mentors: []
     };
   }
+
+  // Handle the new assessment_result type
+  if (rawResponse.type === 'assessment_result') {
+    return {
+      type: 'assessment_result',
+      careers: [],
+      personalities: [],
+      mentors: [],
+      structuredContent: {
+        introduction: rawResponse.content.introduction,
+        career_recommendations: rawResponse.content.career_recommendations,
+        personality_insights: rawResponse.content.personality_insights,
+        growth_areas: rawResponse.content.growth_areas,
+        closing: rawResponse.content.closing
+      }
+    };
+  }
   
-  return {
-    type: 'recommendation',
-    careers: (rawResponse.sections.careers || []).map((career: any) => ({
-      title: career.title || '',
-      match: career.match || 0,
-      reasoning: career.reasoning || ''
-    })),
-    personalities: (rawResponse.sections.personality || []).map((trait: any) => ({
-      title: trait.title || '',
-      match: trait.match || 0,
-      description: trait.description || ''
-    })),
-    mentors: (rawResponse.sections.mentors || []).map((mentor: any) => ({
-      name: mentor.name || '',
-      experience: mentor.experience || '',
-      skills: mentor.skills || ''
-    }))
+  // Handle legacy recommendation format
+  if (rawResponse.type === 'recommendation') {
+    return {
+      type: 'recommendation',
+      careers: (rawResponse.content.careers || []).map((career: any) => ({
+        title: career.title || '',
+        match: career.match || 0,
+        reasoning: career.reasoning || ''
+      })),
+      personalities: (rawResponse.content.personality || []).map((trait: any) => ({
+        title: trait.title || '',
+        match: trait.match || 0,
+        description: trait.description || ''
+      })),
+      mentors: (rawResponse.content.mentors || []).map((mentor: any) => ({
+        name: mentor.name || '',
+        experience: mentor.experience || '',
+        skills: mentor.skills || ''
+      }))
+    };
+  }
+  
+  return { 
+    type: 'unknown',
+    careers: [],
+    personalities: [],
+    mentors: []
   };
 }
 

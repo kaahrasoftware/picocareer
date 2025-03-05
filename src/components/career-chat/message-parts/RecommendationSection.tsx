@@ -1,19 +1,83 @@
 
 import React from 'react';
-import { Star, Brain, Users, Check, Briefcase, Award, GraduationCap } from 'lucide-react';
 import { ParsedRecommendation } from '../utils/recommendationParser';
+import { IntroductionSection } from './IntroductionSection';
+import { CareersSection } from './CareersSection';
+import { PersonalitySection } from './PersonalitySection';
+import { GrowthAreasSection } from './GrowthAreasSection';
+import { ClosingSection } from './ClosingSection';
 
 interface RecommendationSectionProps {
   recommendation: ParsedRecommendation;
+  onSuggestionClick?: (suggestion: string) => void;
 }
 
-export function RecommendationSection({ recommendation }: RecommendationSectionProps) {
+export function RecommendationSection({ recommendation, onSuggestionClick }: RecommendationSectionProps) {
+  // Check if this is a structured assessment result
+  const isStructuredAssessment = 
+    recommendation.type === 'assessment_result' && 
+    recommendation.structuredContent;
+
+  if (isStructuredAssessment && recommendation.structuredContent) {
+    const { 
+      introduction, 
+      career_recommendations, 
+      personality_insights, 
+      growth_areas, 
+      closing 
+    } = recommendation.structuredContent;
+    
+    return (
+      <div className="space-y-4 animate-fade-in">
+        {/* Introduction Section */}
+        {introduction && (
+          <IntroductionSection 
+            title={introduction.title || "Your Career Assessment Results"} 
+            summary={introduction.summary || "Based on your responses, here are personalized career recommendations."}
+          />
+        )}
+        
+        {/* Careers Section */}
+        {career_recommendations && career_recommendations.length > 0 && (
+          <CareersSection 
+            careers={career_recommendations} 
+            onExploreCareer={(career) => onSuggestionClick && onSuggestionClick(`Tell me more about ${career}`)}
+          />
+        )}
+        
+        {/* Personality Section */}
+        {personality_insights && personality_insights.length > 0 && (
+          <PersonalitySection traits={personality_insights} />
+        )}
+        
+        {/* Growth Areas Section */}
+        {growth_areas && growth_areas.length > 0 && (
+          <GrowthAreasSection areas={growth_areas} />
+        )}
+        
+        {/* Closing Section */}
+        {closing && (
+          <ClosingSection 
+            message={closing.message || "Thank you for completing the career assessment!"} 
+            nextSteps={closing.next_steps || [
+              "Explore these careers in detail",
+              "Start a new career assessment",
+              "Connect with mentors in these fields"
+            ]}
+            onNextStepClick={onSuggestionClick}
+          />
+        )}
+      </div>
+    );
+  }
+  
+  // Fallback to the original format for backward compatibility
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Careers Section */}
       <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100">
         <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-          <Briefcase className="h-5 w-5 text-primary mr-2" />
+          <i className="h-5 w-5 text-primary mr-2" />
           Top Career Matches
         </h3>
         <div className="space-y-3">
@@ -21,7 +85,7 @@ export function RecommendationSection({ recommendation }: RecommendationSectionP
             <div key={idx} className="bg-white rounded-md p-3 border border-blue-100 transition-all hover:shadow-sm">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  {idx < 3 && <Award className="h-4 w-4 text-amber-500" />}
+                  {idx < 3 && <i className="h-4 w-4 text-amber-500" />}
                   <h4 className="font-medium">{career.title}</h4>
                 </div>
                 <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-medium">
@@ -38,7 +102,7 @@ export function RecommendationSection({ recommendation }: RecommendationSectionP
       {recommendation.personalities.length > 0 && (
         <div className="bg-gradient-to-r from-white to-purple-50 p-5 rounded-lg shadow-sm border border-purple-100">
           <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-            <Brain className="h-5 w-5 text-purple-500 mr-2" />
+            <i className="h-5 w-5 text-purple-500 mr-2" />
             Personality Profile
           </h3>
           <div className="space-y-3">
@@ -61,7 +125,7 @@ export function RecommendationSection({ recommendation }: RecommendationSectionP
       {recommendation.mentors.length > 0 && (
         <div className="bg-gradient-to-r from-white to-green-50 p-5 rounded-lg shadow-sm border border-green-100">
           <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-            <Users className="h-5 w-5 text-green-500 mr-2" />
+            <i className="h-5 w-5 text-green-500 mr-2" />
             Recommended Mentors
           </h3>
           <div className="space-y-3">
@@ -85,7 +149,7 @@ export function RecommendationSection({ recommendation }: RecommendationSectionP
       {/* Next Steps Section */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
         <h3 className="text-medium font-medium flex items-center mb-2">
-          <Check className="h-5 w-5 text-green-500 mr-2" />
+          <i className="h-5 w-5 text-green-500 mr-2" />
           Next Steps
         </h3>
         <p className="text-sm text-gray-600">
