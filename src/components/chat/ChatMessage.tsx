@@ -3,7 +3,7 @@ import React from 'react';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { QuestionCard } from '@/components/career-chat/QuestionCard';
 import { OptionCards } from '@/components/career-chat/OptionCards';
-import { CareerRecommendationCard } from '@/components/career-chat/message-parts/CareerRecommendationCard';
+import { CareerMatchCard } from '@/components/career-chat/message-parts/CareerMatchCard';
 import { RecommendationSection } from '@/components/career-chat/message-parts/RecommendationSection';
 import { UserMessage } from '@/components/career-chat/message-parts/UserMessage';
 import { SystemMessage } from '@/components/career-chat/message-parts/SystemMessage';
@@ -17,13 +17,20 @@ import { StructuredMessage, MessageOption } from '@/types/database/message-types
 interface ChatMessageProps {
   message: CareerChatMessage;
   onSuggestionClick?: (suggestion: string) => void;
+  onCareerDetailsClick?: (careerId: string) => void;
   currentQuestionProgress?: number;
 }
 
-export function ChatMessage({ message, onSuggestionClick, currentQuestionProgress = 0 }: ChatMessageProps) {
+export function ChatMessage({ 
+  message, 
+  onSuggestionClick, 
+  onCareerDetailsClick,
+  currentQuestionProgress = 0 
+}: ChatMessageProps) {
   const isUser = message.message_type === 'user';
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
+  const isSessionEnd = message.message_type === 'session_end';
   
   // Try to parse structured message from metadata (new format)
   const structuredMessage: StructuredMessage | null = 
@@ -167,13 +174,16 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Parse structured question info if available
   const questionInfo = getQuestionInfo();
 
-  // Handle single career recommendation messages
+  // Handle single career recommendation messages with the new card
   if (isRecommendation && message.metadata?.career) {
     return (
-      <CareerRecommendationCard 
+      <CareerMatchCard 
         career={message.metadata.career as string}
         score={message.metadata.score as number}
         description={message.content}
+        details={message.metadata.details}
+        careerId={message.metadata.careerId}
+        onViewDetails={onCareerDetailsClick}
       />
     );
   }
@@ -181,7 +191,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Handle structured recommendation from raw response
   if (hasStructuredData) {
     const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
-    return <RecommendationSection recommendation={structuredData} onSuggestionClick={onSuggestionClick} />;
+    return <RecommendationSection recommendation={structuredData} />;
   }
   
   // Handle full recommendation message with multiple sections (fallback to text parsing)
@@ -189,11 +199,35 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     const sections = extractSections(message.content);
     
     if (sections.type === 'recommendation') {
-      return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
+      return <RecommendationSection recommendation={sections} />;
     }
     
     // If the parser couldn't identify this as a recommendation, display as normal message
     return <BotMessage content={message.content} />;
+  }
+
+  // Handle session end messages specially
+  if (isSessionEnd) {
+    return (
+      <div className="rounded-lg border border-green-200 bg-green-50 p-4 mb-4 animate-fade-in">
+        <h4 className="font-medium text-green-800 mb-2">Assessment Complete</h4>
+        <p className="text-sm text-green-700 mb-3">{message.content}</p>
+        
+        {message.metadata?.suggestions && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {(message.metadata.suggestions as string[]).map((suggestion, i) => (
+              <button 
+                key={i}
+                onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
+                className="bg-white text-green-700 text-sm px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition-colors"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   }
 
   // Handle structured question format (new)
