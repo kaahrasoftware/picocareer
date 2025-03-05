@@ -55,9 +55,9 @@ export function BotMessage({ content, category }: BotMessageProps) {
   }, [content]);
 
   return (
-    <div className="flex flex-col items-start mb-4 animate-fade-in">
+    <div className="flex flex-col items-start mb-4 animate-fade-in" style={{animationDuration: '200ms'}}>
       <div className={cn(
-        "max-w-[95%] rounded-xl px-5 py-4 shadow-md transition-all duration-300 hover:shadow-lg",
+        "max-w-[95%] rounded-xl px-5 py-4 shadow-md transition-all duration-200 hover:shadow-lg",
         isError 
           ? "bg-gradient-to-br from-red-50 to-white border border-red-200" 
           : `bg-gradient-to-br ${getCategoryGradient()}`

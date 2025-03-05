@@ -42,12 +42,13 @@ export function PicoChat() {
   const [configChecked, setConfigChecked] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
+  const [localIsTyping, setLocalIsTyping] = useState(false); // Local typing state for immediate feedback
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, localIsTyping]); // Add localIsTyping to scroll dependencies
 
   useEffect(() => {
     const checkApiConfig = async () => {
@@ -95,6 +96,11 @@ export function PicoChat() {
     }
   }, [messages]);
 
+  // Update local typing state when isTyping changes
+  useEffect(() => {
+    setLocalIsTyping(isTyping);
+  }, [isTyping]);
+
   const handleSuggestionClick = (suggestion: string) => {
     if (isSessionEnded && 
         (suggestion.toLowerCase().includes('new') || 
@@ -103,7 +109,13 @@ export function PicoChat() {
       return;
     }
     
-    sendMessage(suggestion);
+    // Show typing indicator immediately
+    setLocalIsTyping(true);
+    sendMessage(suggestion)
+      .catch(() => {
+        // Reset typing indicator if there's an error
+        setLocalIsTyping(false);
+      });
   };
 
   const handleStartNewChat = async () => {
@@ -209,7 +221,7 @@ export function PicoChat() {
                 />
               ))}
               
-              {isTyping && <ChatTypingIndicator />}
+              {(isTyping || localIsTyping) && <ChatTypingIndicator />}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
@@ -217,8 +229,15 @@ export function PicoChat() {
           <ChatInput 
             inputMessage={inputMessage} 
             setInputMessage={setInputMessage} 
-            onSendMessage={sendMessage} 
-            isDisabled={isTyping || isAnalyzing || isSessionEnded} 
+            onSendMessage={(msg) => {
+              setLocalIsTyping(true); // Show typing indicator immediately
+              sendMessage(msg)
+                .catch(() => {
+                  // Reset typing indicator if there's an error
+                  setLocalIsTyping(false);
+                });
+            }} 
+            isDisabled={isTyping || localIsTyping || isAnalyzing || isSessionEnded} 
           />
         </div>
       )}

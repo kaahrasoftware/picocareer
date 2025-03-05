@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check } from 'lucide-react';
@@ -38,9 +39,9 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
         }
       });
     } else {
-      // For single selection, immediately trigger onSelect without delay
-      setSelectedOptions([option.text]);
-      onSelect(option.text);
+      // For single selection, immediately trigger onSelect
+      setSelectedOptions([option.text]); // Set visual state 
+      onSelect(option.text); // Immediately trigger callback
     }
   };
 
@@ -49,6 +50,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     if (selectedOptions.length > 0) {
       // Submit all selected options joined by commas
       onSelect(selectedOptions.join(', '));
+      // Clear selections after submitting
       setSelectedOptions([]);
     }
   };
@@ -80,6 +82,8 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
               )}
               onClick={() => handleSelectOption(option)}
               aria-pressed={isSelected}
+              // Disable button after selection for single-select mode to prevent double clicks
+              disabled={!allowMultiple && selectedOptions.length > 0 && !isSelected}
             >
               {isSelected && <span className="mr-1"><Check className="h-3 w-3" /></span>}
               <span className="text-gray-800">{option.text}</span>
@@ -127,6 +131,8 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
             aria-pressed={isSelected}
             role="checkbox"
             aria-checked={isSelected}
+            // Disable button after selection for single-select mode to prevent double clicks
+            disabled={!allowMultiple && selectedOptions.length > 0 && !isSelected}
           >
             <div className="flex w-full justify-between items-center">
               <span className="font-medium text-xs text-gray-800">{option.text}</span>
