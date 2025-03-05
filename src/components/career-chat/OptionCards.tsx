@@ -1,9 +1,8 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check } from 'lucide-react';
 import { MessageOption } from '@/types/database/message-types';
-import { LucideIcon } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface OptionCardsProps {
@@ -55,105 +54,6 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     return selectedOptions.includes(option.text);
   };
 
-  // Function to get icon from Lucide icons by name (kept for backward compatibility)
-  const getIconByName = (iconName?: string): LucideIcon | null => {
-    if (!iconName) return null;
-    
-    // @ts-ignore - dynamic import from lucide-react
-    const LucideIcon = (LucideIcons as any)[iconName];
-    return LucideIcon ? LucideIcon : null;
-  };
-
-  // Get category based on option content (kept for metadata purposes)
-  const getOptionCategory = (option: MessageOption): string => {
-    const lowerOption = option.text.toLowerCase();
-    
-    if (lowerOption.includes('degree') || 
-        lowerOption.includes('education') || 
-        lowerOption.includes('school') ||
-        lowerOption.includes('university') ||
-        lowerOption.includes('college') ||
-        lowerOption.includes('learn')) {
-      return 'education';
-    }
-    
-    if (lowerOption.includes('skill') || 
-        lowerOption.includes('technical') || 
-        lowerOption.includes('coding') ||
-        lowerOption.includes('analysis') ||
-        lowerOption.includes('problem') ||
-        lowerOption.includes('programming') ||
-        lowerOption.includes('computer')) {
-      return 'skills';
-    }
-    
-    if (lowerOption.includes('work') || 
-        lowerOption.includes('job') || 
-        lowerOption.includes('career') ||
-        lowerOption.includes('business') ||
-        lowerOption.includes('industry') ||
-        lowerOption.includes('professional')) {
-      return 'work';
-    }
-    
-    if (lowerOption.includes('goal') ||
-        lowerOption.includes('future') ||
-        lowerOption.includes('plan') ||
-        lowerOption.includes('achieve')) {
-      return 'goals';
-    }
-    
-    if (lowerOption.includes('team') ||
-        lowerOption.includes('group') ||
-        lowerOption.includes('people') ||
-        lowerOption.includes('social') ||
-        lowerOption.includes('help')) {
-      return 'social';
-    }
-    
-    if (lowerOption.includes('time') ||
-        lowerOption.includes('schedule') ||
-        lowerOption.includes('flexible') ||
-        lowerOption.includes('hours')) {
-      return 'time';
-    }
-    
-    if (lowerOption.includes('creative') ||
-        lowerOption.includes('art') ||
-        lowerOption.includes('design') ||
-        lowerOption.includes('music')) {
-      return 'creative';
-    }
-    
-    if (lowerOption.includes('money') ||
-        lowerOption.includes('paid') ||
-        lowerOption.includes('salary')) {
-      return 'money';
-    }
-    
-    if (lowerOption.includes('love') ||
-        lowerOption.includes('passion') ||
-        lowerOption.includes('interest')) {
-      return 'passion';
-    }
-
-    if (lowerOption.includes('leadership') ||
-        lowerOption.includes('manage') ||
-        lowerOption.includes('lead')) {
-      return 'leadership';
-    }
-
-    if (lowerOption.includes('idea') ||
-        lowerOption.includes('innovation') ||
-        lowerOption.includes('thinking') ||
-        lowerOption.includes('solution')) {
-      return 'innovation';
-    }
-    
-    // Default 
-    return 'general';
-  };
-
   // For chips layout, use a responsively flowing layout with white backgrounds
   if (layout === 'chips') {
     return (
@@ -182,6 +82,21 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
             </Button>
           );
         })}
+        
+        {allowMultiple && selectedOptions.length > 0 && (
+          <div className="w-full mt-3">
+            <Button 
+              onClick={() => {
+                // Submit all selected options joined by commas
+                onSelect(selectedOptions.join(', '));
+                setSelectedOptions([]);
+              }}
+              className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-xs shadow-sm hover:shadow-md transition-all"
+            >
+              Continue with {selectedOptions.length} selection{selectedOptions.length !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }

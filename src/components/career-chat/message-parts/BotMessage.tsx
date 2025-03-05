@@ -5,11 +5,30 @@ import { cn } from '@/lib/utils';
 
 interface BotMessageProps {
   content: string;
+  category?: string;
 }
 
-export function BotMessage({ content }: BotMessageProps) {
+export function BotMessage({ content, category }: BotMessageProps) {
   // Check if this is an error message
   const isError = content.includes("error") && content.includes("I'm sorry");
+  
+  // Get styles based on category
+  const getCategoryGradient = () => {
+    switch (category) {
+      case 'education':
+        return "from-indigo-50 to-white border-indigo-200";
+      case 'skills':
+        return "from-emerald-50 to-white border-emerald-200";
+      case 'workstyle':
+        return "from-amber-50 to-white border-amber-200";
+      case 'goals':
+        return "from-blue-50 to-white border-blue-200";
+      case 'personality':
+        return "from-purple-50 to-white border-purple-200";
+      default:
+        return "from-blue-50 to-white border-blue-200";
+    }
+  };
   
   // Try to extract just the conversational part if it's JSON or contains numbered options
   const cleanedContent = React.useMemo(() => {
@@ -39,7 +58,7 @@ export function BotMessage({ content }: BotMessageProps) {
         "max-w-[95%] rounded-xl px-5 py-4 shadow-md transition-all duration-300 hover:shadow-lg",
         isError 
           ? "bg-gradient-to-br from-red-50 to-white border border-red-200" 
-          : "bg-gradient-to-br from-blue-50 to-white border border-blue-200"
+          : `bg-gradient-to-br ${getCategoryGradient()}`
       )}>
         {isError ? (
           <div className="flex items-start gap-2.5">

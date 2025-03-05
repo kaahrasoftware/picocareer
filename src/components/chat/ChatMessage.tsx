@@ -226,13 +226,14 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Handle detected numbered list format
   if (hasNumberedList && parseNumberedOptions) {
     const { intro, question, options } = parseNumberedOptions;
+    const category = message.metadata?.category as string || 'general';
     
     return (
       <div className="flex flex-col items-start w-full space-y-6 animate-fade-in">
         <QuestionCard 
           question={question}
           intro={intro}
-          category={'general'}
+          category={category}
           questionNumber={1}
           totalQuestions={4}
           progress={currentQuestionProgress}
@@ -244,7 +245,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
               options={options}
               onSelect={(option) => onSuggestionClick && onSuggestionClick(option)}
               layout="cards"
-              allowMultiple={false}
+              allowMultiple={message.metadata?.allowMultiple as boolean || false}
             />
           </div>
         )}
@@ -306,9 +307,13 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   
   // Handle structured conversation (new format)
   if (structuredMessage?.type === 'conversation') {
-    return <BotMessage content={structuredMessage.content.intro || message.content} />;
+    const category = structuredMessage.metadata?.progress?.category;
+    return <BotMessage content={structuredMessage.content.intro || message.content} category={category} />;
   }
   
-  // Default to bot message for anything else
-  return <BotMessage content={message.content} />;
+  // Default to bot message for anything else with category info if available
+  return <BotMessage 
+    content={message.content} 
+    category={message.metadata?.category as string} 
+  />;
 }
