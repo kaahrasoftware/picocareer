@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { ParsedRecommendation } from '../utils/recommendationParser';
-import { IntroductionSection } from './IntroductionSection';
-import { CareersSection } from './CareersSection';
-import { PersonalitySection } from './PersonalitySection';
-import { GrowthAreasSection } from './GrowthAreasSection';
-import { ClosingSection } from './ClosingSection';
+import { IntroductionSection } from './recommendation-sections/IntroductionSection';
+import { CareersSection } from './recommendation-sections/CareersSection';
+import { PersonalitySection } from './recommendation-sections/PersonalitySection';
+import { GrowthAreasSection } from './recommendation-sections/GrowthAreasSection';
+import { ClosingSection } from './recommendation-sections/ClosingSection';
 
 interface RecommendationSectionProps {
   recommendation: ParsedRecommendation;
@@ -13,151 +13,35 @@ interface RecommendationSectionProps {
 }
 
 export function RecommendationSection({ recommendation, onSuggestionClick }: RecommendationSectionProps) {
-  // Check if this is a structured assessment result
-  const isStructuredAssessment = 
-    recommendation.type === 'assessment_result' && 
-    recommendation.structuredContent;
-
-  if (isStructuredAssessment && recommendation.structuredContent) {
-    const { 
-      introduction, 
-      career_recommendations, 
-      personality_insights, 
-      growth_areas, 
-      closing 
-    } = recommendation.structuredContent;
-    
-    return (
-      <div className="space-y-4 animate-fade-in">
-        {/* Introduction Section */}
-        {introduction && (
-          <IntroductionSection 
-            title={introduction.title || "Your Career Assessment Results"} 
-            summary={introduction.summary || "Based on your responses, here are personalized career recommendations."}
-          />
-        )}
-        
-        {/* Careers Section */}
-        {career_recommendations && career_recommendations.length > 0 && (
-          <CareersSection 
-            careers={career_recommendations} 
-            onExploreCareer={(career) => onSuggestionClick && onSuggestionClick(`Tell me more about ${career}`)}
-          />
-        )}
-        
-        {/* Personality Section */}
-        {personality_insights && personality_insights.length > 0 && (
-          <PersonalitySection traits={personality_insights} />
-        )}
-        
-        {/* Growth Areas Section */}
-        {growth_areas && growth_areas.length > 0 && (
-          <GrowthAreasSection areas={growth_areas} />
-        )}
-        
-        {/* Closing Section */}
-        {closing && (
-          <ClosingSection 
-            message={closing.message || "Thank you for completing the career assessment!"} 
-            nextSteps={closing.next_steps || [
-              "Explore these careers in detail",
-              "Start a new career assessment",
-              "Connect with mentors in these fields"
-            ]}
-            onNextStepClick={onSuggestionClick}
-          />
-        )}
-      </div>
-    );
-  }
-  
-  // Fallback to the original format for backward compatibility
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      {/* Introduction Section */}
+      {recommendation.introduction && (
+        <IntroductionSection introduction={recommendation.introduction} />
+      )}
+      
       {/* Careers Section */}
-      <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100">
-        <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-          <i className="h-5 w-5 text-primary mr-2" />
-          Top Career Matches
-        </h3>
-        <div className="space-y-3">
-          {recommendation.careers.map((career, idx) => (
-            <div key={idx} className="bg-white rounded-md p-3 border border-blue-100 transition-all hover:shadow-sm">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {idx < 3 && <i className="h-4 w-4 text-amber-500" />}
-                  <h4 className="font-medium">{career.title}</h4>
-                </div>
-                <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-medium">
-                  {career.match}% Match
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">{career.reasoning}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {recommendation.careers.length > 0 && (
+        <CareersSection careers={recommendation.careers} />
+      )}
       
       {/* Personality Section */}
       {recommendation.personalities.length > 0 && (
-        <div className="bg-gradient-to-r from-white to-purple-50 p-5 rounded-lg shadow-sm border border-purple-100">
-          <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-            <i className="h-5 w-5 text-purple-500 mr-2" />
-            Personality Profile
-          </h3>
-          <div className="space-y-3">
-            {recommendation.personalities.map((personality, idx) => (
-              <div key={idx} className="bg-white rounded-md p-3 border border-purple-100 transition-all hover:shadow-sm">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium">{personality.title}</h4>
-                  <span className="text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded-full">
-                    {personality.match}% Match
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">{personality.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PersonalitySection personalities={recommendation.personalities} />
       )}
       
-      {/* Mentors Section */}
-      {recommendation.mentors.length > 0 && (
-        <div className="bg-gradient-to-r from-white to-green-50 p-5 rounded-lg shadow-sm border border-green-100">
-          <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-            <i className="h-5 w-5 text-green-500 mr-2" />
-            Recommended Mentors
-          </h3>
-          <div className="space-y-3">
-            {recommendation.mentors.map((mentor, idx) => (
-              <div key={idx} className="bg-white rounded-md p-3 border border-green-100 transition-all hover:shadow-sm">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium">{mentor.name}</h4>
-                  {mentor.experience && (
-                    <span className="text-xs bg-green-200 text-green-700 px-2 py-1 rounded-full">
-                      {mentor.experience} Experience
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 mt-1">{mentor.skills}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Growth Areas Section */}
+      {recommendation.growthAreas.length > 0 && (
+        <GrowthAreasSection growthAreas={recommendation.growthAreas} />
       )}
       
-      {/* Next Steps Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
-        <h3 className="text-medium font-medium flex items-center mb-2">
-          <i className="h-5 w-5 text-green-500 mr-2" />
-          Next Steps
-        </h3>
-        <p className="text-sm text-gray-600">
-          Would you like to explore any of these career paths in more detail? You can ask specific questions
-          about the careers listed or request information about educational requirements, daily responsibilities,
-          or how to connect with one of the recommended mentors.
-        </p>
-      </div>
+      {/* Closing Section */}
+      {recommendation.closing && (
+        <ClosingSection 
+          closing={recommendation.closing} 
+          onSuggestionClick={onSuggestionClick} 
+        />
+      )}
     </div>
   );
 }

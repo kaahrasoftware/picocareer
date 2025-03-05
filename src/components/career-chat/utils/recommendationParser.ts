@@ -1,3 +1,4 @@
+
 /**
  * Utility to parse and structure career recommendation messages
  */
@@ -7,6 +8,8 @@ export interface CareerRecommendation {
   title: string;
   match: number;
   reasoning: string;
+  keySkills?: string[];
+  education?: string;
 }
 
 export interface PersonalityInsight {
@@ -15,83 +18,78 @@ export interface PersonalityInsight {
   description: string;
 }
 
+export interface GrowthArea {
+  skill: string;
+  priority: "high" | "medium" | "low";
+  description: string;
+  resources?: string[];
+}
+
 export interface MentorRecommendation {
   name: string;
   experience: string;
   skills: string;
 }
 
-// Types for structured assessment result content
-export interface AssessmentIntroduction {
+export interface TestResultIntroduction {
   title: string;
   summary: string;
+  completionDate: string;
+  overallInsight: string;
 }
 
-export interface StructuredCareerRecommendation {
-  title: string;
-  match_percentage: number;
-  description: string;
-  key_requirements?: string[];
-}
-
-export interface PersonalityTrait {
-  trait: string;
-  strength_level: number;
-  description: string;
-}
-
-export interface GrowthArea {
-  skill: string;
-  importance: string;
-  description: string;
-}
-
-export interface ClosingInfo {
+export interface TestResultClosing {
   message: string;
-  next_steps: string[];
-}
-
-export interface StructuredAssessmentContent {
-  introduction?: AssessmentIntroduction;
-  career_recommendations?: StructuredCareerRecommendation[];
-  personality_insights?: PersonalityTrait[];
-  growth_areas?: GrowthArea[];
-  closing?: ClosingInfo;
+  nextSteps: string[];
 }
 
 export interface ParsedRecommendation {
-  type: 'recommendation' | 'assessment_result' | 'unknown';
+  type: 'recommendation' | 'unknown';
+  introduction?: TestResultIntroduction;
   careers: CareerRecommendation[];
   personalities: PersonalityInsight[];
+  growthAreas: GrowthArea[];
   mentors: MentorRecommendation[];
-  structuredContent?: StructuredAssessmentContent;
+  closing?: TestResultClosing;
 }
 
 // Type for structured response from DeepSeek
 export interface StructuredRecommendation {
   type: string;
-  content: {
-    careers?: Array<{
+  sections: {
+    introduction?: {
       title: string;
-      match: number;
-      reasoning: string;
-    }>;
-    personality?: Array<{
+      summary: string;
+      completionDate: string;
+      overallInsight: string;
+    };
+    careers: Array<{
       title: string;
       match: number;
       description: string;
+      keySkills?: string[];
+      education?: string;
     }>;
+    personalityInsights: Array<{
+      trait: string;
+      strength: number;
+      description: string;
+    }>;
+    growthAreas: Array<{
+      skill: string;
+      priority: "high" | "medium" | "low";
+      description: string;
+      resources?: string[];
+    }>;
+    closing?: {
+      message: string;
+      nextSteps: string[];
+    };
     mentors?: Array<{
       name: string;
       experience: string;
       skills: string;
     }>;
-    // New structured assessment result format
-    introduction?: AssessmentIntroduction;
-    career_recommendations?: StructuredCareerRecommendation[];
-    personality_insights?: PersonalityTrait[];
-    growth_areas?: GrowthArea[];
-    closing?: ClosingInfo;
   };
 }
 
@@ -99,59 +97,51 @@ export interface StructuredRecommendation {
  * Parses a structured recommendation response directly
  */
 export function parseStructuredRecommendation(rawResponse: any): ParsedRecommendation {
-  if (!rawResponse) {
+  if (!rawResponse || rawResponse.type !== 'recommendation' || !rawResponse.sections) {
     return { 
       type: 'unknown',
       careers: [],
       personalities: [],
+      growthAreas: [],
       mentors: []
     };
   }
-
-  // Handle the new assessment_result type
-  if (rawResponse.type === 'assessment_result') {
-    return {
-      type: 'assessment_result',
-      careers: [],
-      personalities: [],
-      mentors: [],
-      structuredContent: {
-        introduction: rawResponse.content.introduction,
-        career_recommendations: rawResponse.content.career_recommendations,
-        personality_insights: rawResponse.content.personality_insights,
-        growth_areas: rawResponse.content.growth_areas,
-        closing: rawResponse.content.closing
-      }
-    };
-  }
   
-  // Handle legacy recommendation format
-  if (rawResponse.type === 'recommendation') {
-    return {
-      type: 'recommendation',
-      careers: (rawResponse.content.careers || []).map((career: any) => ({
-        title: career.title || '',
-        match: career.match || 0,
-        reasoning: career.reasoning || ''
-      })),
-      personalities: (rawResponse.content.personality || []).map((trait: any) => ({
-        title: trait.title || '',
-        match: trait.match || 0,
-        description: trait.description || ''
-      })),
-      mentors: (rawResponse.content.mentors || []).map((mentor: any) => ({
-        name: mentor.name || '',
-        experience: mentor.experience || '',
-        skills: mentor.skills || ''
-      }))
-    };
-  }
-  
-  return { 
-    type: 'unknown',
-    careers: [],
-    personalities: [],
-    mentors: []
+  return {
+    type: 'recommendation',
+    introduction: rawResponse.sections.introduction ? {
+      title: rawResponse.sections.introduction.title || 'Your Career Assessment Results',
+      summary: rawResponse.sections.introduction.summary || '',
+      completionDate: rawResponse.sections.introduction.completionDate || new Date().toLocaleDateString(),
+      overallInsight: rawResponse.sections.introduction.overallInsight || ''
+    } : undefined,
+    careers: (rawResponse.sections.careers || []).map((career: any) => ({
+      title: career.title || '',
+      match: career.match || 0,
+      reasoning: career.description || '',
+      keySkills: career.keySkills || [],
+      education: career.education || ''
+    })),
+    personalities: (rawResponse.sections.personalityInsights || []).map((trait: any) => ({
+      title: trait.trait || '',
+      match: trait.strength || 0,
+      description: trait.description || ''
+    })),
+    growthAreas: (rawResponse.sections.growthAreas || []).map((area: any) => ({
+      skill: area.skill || '',
+      priority: area.priority || 'medium',
+      description: area.description || '',
+      resources: area.resources || []
+    })),
+    mentors: (rawResponse.sections.mentors || []).map((mentor: any) => ({
+      name: mentor.name || '',
+      experience: mentor.experience || '',
+      skills: mentor.skills || ''
+    })),
+    closing: rawResponse.sections.closing ? {
+      message: rawResponse.sections.closing.message || 'Thank you for completing your career assessment!',
+      nextSteps: rawResponse.sections.closing.nextSteps || []
+    } : undefined
   };
 }
 
@@ -167,14 +157,30 @@ export function extractSections(content: string): ParsedRecommendation {
       type: 'unknown',
       careers: [],
       personalities: [],
+      growthAreas: [],
       mentors: []
     };
   }
   
-  const careers: CareerRecommendation[] = [];
-  const personalities: PersonalityInsight[] = [];
-  const mentors: MentorRecommendation[] = [];
+  // Extract introduction if present
+  const introSection = content.split(/Career (Recommendations|Matches)/i)[0] || '';
+  let introduction: TestResultIntroduction | undefined = undefined;
   
+  if (introSection) {
+    const titleMatch = introSection.match(/# (.*?)(?:\n|$)/);
+    const summaryMatch = introSection.match(/\n\n(.*?)(?=\n\n|$)/);
+    
+    introduction = {
+      title: titleMatch ? titleMatch[1].trim() : 'Your Career Assessment Results',
+      summary: summaryMatch ? summaryMatch[1].trim() : '',
+      completionDate: new Date().toLocaleDateString(),
+      overallInsight: introSection.replace(titleMatch ? titleMatch[0] : '', '')
+        .replace(summaryMatch ? summaryMatch[0] : '', '').trim()
+    };
+  }
+  
+  // Extract careers section
+  const careers: CareerRecommendation[] = [];
   const careerSection = content.split(/Career (Recommendations|Matches)/i)[2]?.split(/Personality (Assessment|Analysis)/i)[0] || '';
   if (careerSection) {
     const careerMatches = careerSection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
@@ -183,7 +189,7 @@ export function extractSections(content: string): ParsedRecommendation {
       const titleMatch = match.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
       if (titleMatch) {
         const title = titleMatch[1].trim();
-        const match = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
+        const matchPercentage = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
         
         let reasoning = '';
         const startPos = careerSection.indexOf(match) + match.length;
@@ -195,16 +201,35 @@ export function extractSections(content: string): ParsedRecommendation {
           reasoning = careerSection.substring(startPos).trim();
         }
         
+        // Extract key skills if they exist
+        const keySkillsMatch = reasoning.match(/Key Skills:(.*?)(?=Education:|$)/is);
+        const educationMatch = reasoning.match(/Education:(.*?)(?=\n\n|$)/is);
+        
+        const keySkills = keySkillsMatch 
+          ? keySkillsMatch[1].trim().split(/,|\n/).map(s => s.trim()).filter(Boolean)
+          : [];
+        
+        const education = educationMatch ? educationMatch[1].trim() : '';
+        
+        // Clean up the reasoning by removing the extracted parts
+        let cleanReasoning = reasoning;
+        if (keySkillsMatch) cleanReasoning = cleanReasoning.replace(keySkillsMatch[0], '');
+        if (educationMatch) cleanReasoning = cleanReasoning.replace(educationMatch[0], '');
+        
         careers.push({
           title,
-          match,
-          reasoning: reasoning || `Good match based on your skills and preferences.`
+          match: matchPercentage,
+          reasoning: cleanReasoning.trim() || `Good match based on your skills and preferences.`,
+          keySkills,
+          education
         });
       }
     });
   }
   
-  const personalitySection = content.split(/Personality (Assessment|Analysis)/i)[1]?.split(/Mentor (Suggestions|Recommendations)/i)[0] || '';
+  // Extract personality insights section
+  const personalities: PersonalityInsight[] = [];
+  const personalitySection = content.split(/Personality (Assessment|Analysis|Insights)/i)[1]?.split(/Growth Areas|Suggested Skills|Next Steps/i)[0] || '';
   if (personalitySection) {
     const personalityMatches = personalitySection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
@@ -212,7 +237,7 @@ export function extractSections(content: string): ParsedRecommendation {
       const titleMatch = match.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
       if (titleMatch) {
         const title = titleMatch[1].trim();
-        const match = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
+        const matchPercentage = parseInt(titleMatch[2] || titleMatch[3] || '80', 10);
         
         let description = '';
         const startPos = personalitySection.indexOf(match) + match.length;
@@ -226,13 +251,80 @@ export function extractSections(content: string): ParsedRecommendation {
         
         personalities.push({
           title,
-          match,
-          description: description || `Personality type that matches your profile.`
+          match: matchPercentage,
+          description: description || `Personality trait that matches your profile.`
         });
       }
     });
   }
   
+  // Extract growth areas section
+  const growthAreas: GrowthArea[] = [];
+  const growthAreaSection = content.split(/Growth Areas|Suggested Skills/i)[1]?.split(/Next Steps|Conclusion|Thank/i)[0] || '';
+  if (growthAreaSection) {
+    const growthMatches = growthAreaSection.match(/\d+\.\s+(.*?)(?:\(|:|\s*-)/g) || [];
+    
+    growthMatches.forEach((match, index) => {
+      const skillMatch = match.match(/\d+\.\s+(.*?)(?:\(|:|\s*-)/);
+      if (skillMatch) {
+        const skill = skillMatch[1].trim();
+        
+        let details = '';
+        const startPos = growthAreaSection.indexOf(match) + match.length;
+        const nextNumberPos = growthAreaSection.substring(startPos).search(/\d+\.\s+/);
+        
+        if (nextNumberPos > 0) {
+          details = growthAreaSection.substring(startPos, startPos + nextNumberPos).trim();
+        } else if (index === growthMatches.length - 1) {
+          details = growthAreaSection.substring(startPos).trim();
+        }
+        
+        // Extract priority
+        let priority: "high" | "medium" | "low" = "medium";
+        if (details.toLowerCase().includes('high priority') || details.toLowerCase().includes('priority: high')) {
+          priority = "high";
+        } else if (details.toLowerCase().includes('low priority') || details.toLowerCase().includes('priority: low')) {
+          priority = "low";
+        }
+        
+        // Extract resources if they exist
+        const resourcesMatch = details.match(/Resources:(.*?)(?=\n\n|$)/is);
+        const resources = resourcesMatch 
+          ? resourcesMatch[1].trim().split(/,|\n/).map(s => s.trim()).filter(Boolean)
+          : [];
+        
+        // Clean up the description
+        let description = details;
+        if (resourcesMatch) description = description.replace(resourcesMatch[0], '');
+        
+        growthAreas.push({
+          skill,
+          priority,
+          description: description.trim(),
+          resources
+        });
+      }
+    });
+  }
+  
+  // Extract closing section
+  let closing: TestResultClosing | undefined = undefined;
+  const closingSection = content.split(/Next Steps|Conclusion|Thank/i)[1] || '';
+  if (closingSection) {
+    const nextStepsMatch = closingSection.match(/\d+\.\s+(.*?)(?=\n\d+\.\s+|$)/g) || [];
+    const nextSteps = nextStepsMatch.map(step => {
+      const match = step.match(/\d+\.\s+(.*?)$/);
+      return match ? match[1].trim() : step.trim();
+    }).filter(Boolean);
+    
+    closing = {
+      message: closingSection.split(nextStepsMatch[0] || '')[0].trim() || 'Thank you for completing your career assessment!',
+      nextSteps: nextSteps.length > 0 ? nextSteps : ['Explore these career paths in detail', 'Connect with mentors in these fields']
+    };
+  }
+  
+  // Extract mentor section if it exists
+  const mentors: MentorRecommendation[] = [];
   const mentorSection = content.split(/Mentor (Suggestions|Recommendations)/i)[1] || '';
   if (mentorSection) {
     const mentorMatches = mentorSection.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/g) || [];
@@ -266,8 +358,11 @@ export function extractSections(content: string): ParsedRecommendation {
   
   return {
     type: 'recommendation',
+    introduction,
     careers,
     personalities,
-    mentors
+    growthAreas,
+    mentors,
+    closing
   };
 }
