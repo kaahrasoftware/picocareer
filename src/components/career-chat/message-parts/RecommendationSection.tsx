@@ -1,47 +1,99 @@
 
 import React from 'react';
+import { Star, Brain, Users, Check, Briefcase, Award, GraduationCap } from 'lucide-react';
 import { ParsedRecommendation } from '../utils/recommendationParser';
-import { IntroductionSection } from './recommendation-sections/IntroductionSection';
-import { CareersSection } from './recommendation-sections/CareersSection';
-import { PersonalitySection } from './recommendation-sections/PersonalitySection';
-import { GrowthAreasSection } from './recommendation-sections/GrowthAreasSection';
-import { ClosingSection } from './recommendation-sections/ClosingSection';
 
 interface RecommendationSectionProps {
   recommendation: ParsedRecommendation;
-  onSuggestionClick?: (suggestion: string) => void;
 }
 
-export function RecommendationSection({ recommendation, onSuggestionClick }: RecommendationSectionProps) {
+export function RecommendationSection({ recommendation }: RecommendationSectionProps) {
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Introduction Section */}
-      {recommendation.introduction && (
-        <IntroductionSection introduction={recommendation.introduction} />
-      )}
-      
+    <div className="space-y-4 animate-fade-in">
       {/* Careers Section */}
-      {recommendation.careers.length > 0 && (
-        <CareersSection careers={recommendation.careers} />
-      )}
+      <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100">
+        <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
+          <Briefcase className="h-5 w-5 text-primary mr-2" />
+          Top Career Matches
+        </h3>
+        <div className="space-y-3">
+          {recommendation.careers.map((career, idx) => (
+            <div key={idx} className="bg-white rounded-md p-3 border border-blue-100 transition-all hover:shadow-sm">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  {idx < 3 && <Award className="h-4 w-4 text-amber-500" />}
+                  <h4 className="font-medium">{career.title}</h4>
+                </div>
+                <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-medium">
+                  {career.match}% Match
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">{career.reasoning}</p>
+            </div>
+          ))}
+        </div>
+      </div>
       
       {/* Personality Section */}
       {recommendation.personalities.length > 0 && (
-        <PersonalitySection personalities={recommendation.personalities} />
+        <div className="bg-gradient-to-r from-white to-purple-50 p-5 rounded-lg shadow-sm border border-purple-100">
+          <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
+            <Brain className="h-5 w-5 text-purple-500 mr-2" />
+            Personality Profile
+          </h3>
+          <div className="space-y-3">
+            {recommendation.personalities.map((personality, idx) => (
+              <div key={idx} className="bg-white rounded-md p-3 border border-purple-100 transition-all hover:shadow-sm">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium">{personality.title}</h4>
+                  <span className="text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded-full">
+                    {personality.match}% Match
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">{personality.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
       
-      {/* Growth Areas Section */}
-      {recommendation.growthAreas.length > 0 && (
-        <GrowthAreasSection growthAreas={recommendation.growthAreas} />
+      {/* Mentors Section */}
+      {recommendation.mentors.length > 0 && (
+        <div className="bg-gradient-to-r from-white to-green-50 p-5 rounded-lg shadow-sm border border-green-100">
+          <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
+            <Users className="h-5 w-5 text-green-500 mr-2" />
+            Recommended Mentors
+          </h3>
+          <div className="space-y-3">
+            {recommendation.mentors.map((mentor, idx) => (
+              <div key={idx} className="bg-white rounded-md p-3 border border-green-100 transition-all hover:shadow-sm">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium">{mentor.name}</h4>
+                  {mentor.experience && (
+                    <span className="text-xs bg-green-200 text-green-700 px-2 py-1 rounded-full">
+                      {mentor.experience} Experience
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mt-1">{mentor.skills}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
       
-      {/* Closing Section */}
-      {recommendation.closing && (
-        <ClosingSection 
-          closing={recommendation.closing} 
-          onSuggestionClick={onSuggestionClick} 
-        />
-      )}
+      {/* Next Steps Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+        <h3 className="text-medium font-medium flex items-center mb-2">
+          <Check className="h-5 w-5 text-green-500 mr-2" />
+          Next Steps
+        </h3>
+        <p className="text-sm text-gray-600">
+          Would you like to explore any of these career paths in more detail? You can ask specific questions
+          about the careers listed or request information about educational requirements, daily responsibilities,
+          or how to connect with one of the recommended mentors.
+        </p>
+      </div>
     </div>
   );
 }
