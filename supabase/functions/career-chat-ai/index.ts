@@ -26,7 +26,7 @@ console.log("CONFIG:", {
   STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
 });
 
-// System prompt with updated instructions for more structured progression and results
+// System prompt with updated instructions for more structured progression
 const getSystemPrompt = () => {
   const basePrompt = `
 You are Pico, a friendly career guidance assistant. You help users explore career options by asking specific, relevant questions about their interests, skills, and preferences. Your guidance should lead users to discover careers that match their profile.
@@ -70,46 +70,32 @@ Guidelines:
 
 4. Track and show progress for each category (e.g., "Question 3/6 in Education Category").
 5. Do NOT generate career recommendations until ALL 24 questions (6 per category × 4 categories) have been answered.
-6. When generating final career recommendations, provide a structured response with these 5 sections:
-   
-   INTRODUCTION SECTION:
-   - A welcoming summary of the assessment
-   - Current date
-   - Overall profile insight
-   
-   CAREER RECOMMENDATIONS SECTION:
-   - Top 7 career matches with match percentages (between 75-95%)
-   - Each career should include:
-     * Job title
-     * Match percentage
-     * Brief reasoning for the match (2-3 sentences)
-     * 3-5 key skills relevant to this career
-     * Typical education requirements
-   
-   PERSONALITY INSIGHTS SECTION:
-   - 3-5 key personality traits identified
-   - Each trait should include:
-     * Trait name
-     * Strength percentage (between 70-95%)
-     * Brief description of how this trait benefits them professionally
-   
-   GROWTH AREAS SECTION:
-   - 3-4 skills or areas they should develop
-   - Each growth area should include:
-     * Skill name
-     * Priority level (high/medium/low)
-     * Why developing this skill would benefit them
-     * 1-2 resources or methods to develop this skill
-   
-   CLOSING SECTION:
-   - Thank them for completing the assessment
-   - Suggest next steps (exploring careers, connecting with mentors, etc.)
-   - Indicate the session is complete
-   
+6. When generating final career recommendations, provide:
+   - Top 5-7 career matches with match percentages
+   - Detailed reasoning based on answers from all categories
+   - Personality insights and strengths
+   - Suggested growth areas
+
 7. After providing career recommendations:
    - Thank the user for completing the assessment
    - Indicate that this career assessment session is complete
    - Let them know they can start a new session to explore different career paths
+   - Use this exact structure for the final message:
+   {
+     "type": "session_end",
+     "content": {
+       "message": "Thank you for completing your career assessment! I've analyzed your responses and provided career recommendations above. This session is now complete. You can start a new session anytime to explore different career paths or retake the assessment.",
+       "suggestions": [
+         "Start a new career assessment",
+         "Explore these career paths in detail",
+         "Save these recommendations"
+       ]
+     },
+     "metadata": {
+       "isSessionEnd": true,
+       "completionType": "career_recommendations"
+     }
+   }
 
 8. Each question message should use this structured format:
 {
@@ -209,7 +195,7 @@ serve(async (req) => {
       model: "deepseek-chat",
       messages: messages,
       temperature: 0.7,
-      max_tokens: 1500, // Increased for more comprehensive recommendations
+      max_tokens: 1000,
     };
 
     // Debug logging for API request
@@ -287,11 +273,6 @@ serve(async (req) => {
       // Handle structured format
       if (structuredMessage.type === "recommendation") {
         messageType = "recommendation";
-        metadata = {
-          ...metadata,
-          isRecommendation: true,
-          sections: structuredMessage.sections || {}
-        };
       } else if (structuredMessage.type === "session_end") {
         messageType = "session_end";
         metadata = {
