@@ -6,9 +6,14 @@ import { Progress } from '@/components/ui/progress';
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
   currentCategory?: string | null;
+  questionProgress?: number;
 }
 
-export function ChatHeader({ isAnalyzing = false, currentCategory = null }: ChatHeaderProps) {
+export function ChatHeader({ 
+  isAnalyzing = false, 
+  currentCategory = null, 
+  questionProgress = 0 
+}: ChatHeaderProps) {
   const getCategoryIcon = () => {
     switch (currentCategory) {
       case 'education':
@@ -44,7 +49,7 @@ export function ChatHeader({ isAnalyzing = false, currentCategory = null }: Chat
   };
 
   return (
-    <div className="border-b p-4 bg-white shadow-sm">
+    <div className="bg-white shadow-sm">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           {isAnalyzing ? (
@@ -70,6 +75,17 @@ export function ChatHeader({ isAnalyzing = false, currentCategory = null }: Chat
           </span>
         )}
       </div>
+      
+      {!isAnalyzing && questionProgress > 0 && questionProgress < 100 && (
+        <div className="mt-2">
+          <Progress value={questionProgress} className="h-1.5" />
+          <div className="flex justify-end mt-1">
+            <span className="text-xs text-gray-500">
+              {questionProgress}% complete
+            </span>
+          </div>
+        </div>
+      )}
       
       {isAnalyzing && (
         <div className="mt-2">

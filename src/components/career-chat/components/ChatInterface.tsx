@@ -45,7 +45,11 @@ export function ChatInterface({
     <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
       <div className="flex items-center justify-between bg-white border-b p-4">
         <div className="flex-1">
-          <ChatHeader isAnalyzing={isAnalyzing} currentCategory={currentCategory} />
+          <ChatHeader 
+            isAnalyzing={isAnalyzing} 
+            currentCategory={currentCategory} 
+            questionProgress={questionProgress}
+          />
         </div>
         
         <div className="flex gap-2">

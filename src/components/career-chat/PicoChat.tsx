@@ -30,7 +30,6 @@ export function PicoChat() {
     updateSessionTitle,
     setInputMessage,
     sendMessage,
-    addMessage,
     isSessionComplete
   } = useCareerChat();
   
@@ -55,8 +54,8 @@ export function PicoChat() {
         });
         if (response.error || response.data?.error) {
           toast({
-            title: "DeepSeek API Key Not Configured",
-            description: "Please contact an administrator to set up the DeepSeek integration.",
+            title: "API Configuration Issue",
+            description: "There was a problem with the chat configuration. Please try again later.",
             variant: "destructive",
             duration: 10000
           });
@@ -67,7 +66,7 @@ export function PicoChat() {
         console.error('Failed to check API configuration:', error);
         toast({
           title: "Configuration Check Failed",
-          description: "Could not verify the DeepSeek API configuration.",
+          description: "Could not verify the chat API configuration.",
           variant: "destructive",
           duration: 5000
         });

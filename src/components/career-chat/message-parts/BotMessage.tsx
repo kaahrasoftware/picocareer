@@ -46,7 +46,7 @@ export function BotMessage({ content, category }: BotMessageProps) {
         "max-w-[95%] rounded-xl px-4 py-3 shadow-sm",
         isError 
           ? "bg-gradient-to-br from-red-50 to-white border border-red-200" 
-          : `bg-gradient-to-br ${getCategoryGradient()}`
+          : `bg-gradient-to-br ${getCategoryGradient()} border`
       )}>
         {isError ? (
           <div className="flex items-start gap-2">

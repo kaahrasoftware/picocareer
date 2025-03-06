@@ -20,4 +20,4 @@ export interface UseChatSessionReturn {
 }
 
 // Export the types from the centralized location for convenience
-export { MessageType, MessageStatus, MessageDeliveryMetadata, QuestionCounts };
+export type { MessageType, MessageStatus, MessageDeliveryMetadata, QuestionCounts };
