@@ -31,7 +31,8 @@ export function PicoChatContainer() {
     setInputMessage,
     sendMessage,
     isSessionComplete,
-    handleStartNewChat
+    handleStartNewChat,
+    handleBeginAssessment
   } = useCareerChat();
   
   const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
@@ -148,6 +149,7 @@ export function PicoChatContainer() {
           isSessionEnded={isSessionComplete}
           messagesEndRef={messagesEndRef}
           onSuggestionClick={handleSuggestionClick}
+          onBeginAssessment={handleBeginAssessment}
           onSendMessage={handleSendMessage}
           onStartNewChat={handleStartNewChat}
           onViewPastSessions={handleViewPastSessions}

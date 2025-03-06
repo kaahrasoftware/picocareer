@@ -29,6 +29,7 @@ export function CustomInputField({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && customValue.trim() && !isSelecting && !disabled) {
+      e.preventDefault(); // Prevent form submission
       handleCustomSubmit();
     }
   };
@@ -53,6 +54,7 @@ export function CustomInputField({
         disabled={isSelecting || disabled}
       />
       <Button 
+        type="button"
         onClick={handleCustomSubmit} 
         disabled={!customValue.trim() || isSelecting || disabled}
         className="shadow-sm hover:shadow-md transition-all"

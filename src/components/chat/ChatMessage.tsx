@@ -12,10 +12,12 @@ import { parseStructuredRecommendation } from '@/components/career-chat/utils/re
 import { StructuredMessage } from '@/types/database/message-types';
 import { StructuredQuestionMessage } from './components/StructuredQuestionMessage';
 import { NumberedListMessage } from './components/NumberedListMessage';
+import { WelcomeMessage } from '@/components/career-chat/message-parts/WelcomeMessage';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
   onSuggestionClick?: (suggestion: string) => void;
+  onBeginAssessment?: () => void;
   currentQuestionProgress?: number;
   isDisabled?: boolean;
 }
@@ -23,6 +25,7 @@ interface ChatMessageProps {
 export function ChatMessage({ 
   message, 
   onSuggestionClick, 
+  onBeginAssessment,
   currentQuestionProgress = 0,
   isDisabled = false 
 }: ChatMessageProps) {
@@ -30,6 +33,8 @@ export function ChatMessage({
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
   const isSessionEnd = message.message_type === 'session_end' || message.metadata?.isSessionEnd === true;
+  const isWelcomeMessage = isSystem && message.metadata?.suggestions && 
+    message.metadata.suggestions.includes("Begin Assessment");
   
   // Try to parse structured message from metadata (new format)
   const structuredMessage: StructuredMessage | null = 
@@ -43,6 +48,27 @@ export function ChatMessage({
     const pattern = /\d+\.\s+[A-Za-z]/;
     return pattern.test(message.content);
   }, [message]);
+
+  const handleSuggestionSelect = (suggestion: string) => {
+    if (isDisabled) return;
+    
+    if (suggestion === "Begin Assessment" && onBeginAssessment) {
+      onBeginAssessment();
+    } else if (onSuggestionClick) {
+      onSuggestionClick(suggestion);
+    }
+  };
+
+  // Handle welcome message specially
+  if (isWelcomeMessage) {
+    return (
+      <WelcomeMessage 
+        content={message.content} 
+        onBeginAssessment={onBeginAssessment}
+        isDisabled={isDisabled} 
+      />
+    );
+  }
 
   // Handle single career recommendation messages
   if (isRecommendation && message.metadata?.career) {
@@ -104,7 +130,7 @@ export function ChatMessage({
       <StructuredQuestionMessage 
         message={structuredMessage}
         currentQuestionProgress={currentQuestionProgress}
-        onSuggestionClick={isDisabled ? undefined : onSuggestionClick}
+        onSuggestionClick={isDisabled ? undefined : handleSuggestionSelect}
         isDisabled={isDisabled}
       />
     );
@@ -116,7 +142,7 @@ export function ChatMessage({
       <NumberedListMessage 
         message={message}
         currentQuestionProgress={currentQuestionProgress}
-        onSuggestionClick={isDisabled ? undefined : onSuggestionClick}
+        onSuggestionClick={isDisabled ? undefined : handleSuggestionSelect}
         isDisabled={isDisabled}
       />
     );
@@ -128,7 +154,14 @@ export function ChatMessage({
   }
   
   if (isSystem) {
-    return <SystemMessage content={message.content} />;
+    return (
+      <SystemMessage 
+        content={message.content}
+        suggestions={message.metadata?.suggestions as string[] | undefined} 
+        onSuggestionClick={handleSuggestionSelect}
+        isDisabled={isDisabled}
+      />
+    );
   }
   
   // Handle structured conversation (new format)

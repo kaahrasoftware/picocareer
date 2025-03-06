@@ -21,6 +21,7 @@ interface ChatInterfaceProps {
   isSessionEnded: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   onSuggestionClick: (suggestion: string) => void;
+  onBeginAssessment: () => void;
   onSendMessage: (message: string) => Promise<void>;
   onStartNewChat: () => void;
   onViewPastSessions: () => void;
@@ -39,6 +40,7 @@ export function ChatInterface({
   isSessionEnded,
   messagesEndRef,
   onSuggestionClick,
+  onBeginAssessment,
   onSendMessage,
   onStartNewChat,
   onViewPastSessions,
@@ -109,7 +111,8 @@ export function ChatInterface({
             <ChatMessage 
               key={message.id || index} 
               message={message} 
-              onSuggestionClick={onSuggestionClick} 
+              onSuggestionClick={onSuggestionClick}
+              onBeginAssessment={onBeginAssessment}
               currentQuestionProgress={questionProgress} 
               isDisabled={isActionInProgress}
             />

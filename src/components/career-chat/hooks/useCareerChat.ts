@@ -30,15 +30,18 @@ export function useCareerChat() {
   const { 
     getCurrentCategory,
     getProgress,
+    getCurrentCategoryProgress,
     advanceQuestion, 
     createQuestionMessage,
-    isComplete
+    isComplete,
+    shouldCompleteAssessment
   } = useStructuredQuestions();
   
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [hasConfigError, setHasConfigError] = useState(false);
   const [questionProgress, setQuestionProgress] = useState(0);
+  const [shouldShowFirstQuestion, setShouldShowFirstQuestion] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +82,31 @@ export function useCareerChat() {
     
     checkApiConfig();
   }, [sessionId]);
+
+  // Show first question when shouldShowFirstQuestion state is set
+  useEffect(() => {
+    if (shouldShowFirstQuestion && sessionId && !isTyping) {
+      const sendFirstQuestion = async () => {
+        setIsTyping(true);
+        try {
+          const questionMessage = createQuestionMessage(sessionId);
+          await addMessage(questionMessage);
+        } finally {
+          setIsTyping(false);
+          setShouldShowFirstQuestion(false);
+        }
+      };
+      
+      sendFirstQuestion();
+    }
+  }, [shouldShowFirstQuestion, sessionId, addMessage, createQuestionMessage, isTyping]);
+
+  // Handler for starting the assessment after welcome message
+  const handleBeginAssessment = async () => {
+    if (!sessionId || isTyping) return;
+    
+    setShouldShowFirstQuestion(true);
+  };
 
   // Process user responses and advance to next question
   const sendMessage = useCallback(async (message: string) => {
@@ -127,8 +155,10 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
-      // Check if we need to generate recommendations after a certain number of questions
-      if (getProgress() >= 90 && !isAnalyzing) {
+      // Check if we should complete the assessment (for 'goals' category after enough questions)
+      const checkCompletion = shouldCompleteAssessment();
+      
+      if (checkCompletion && !isAnalyzing) {
         // Time to generate recommendations
         await analyzeResponses(messages);
         
@@ -164,6 +194,7 @@ export function useCareerChat() {
         // Update category and progress
         const newCategory = getCurrentCategory();
         const newProgress = getProgress();
+        const categoryProgress = getCurrentCategoryProgress();
         
         setCurrentCategory(newCategory);
         setQuestionProgress(newProgress);
@@ -171,7 +202,8 @@ export function useCareerChat() {
         // Update session metadata
         updateSessionMetadata({
           lastCategory: newCategory,
-          overallProgress: newProgress
+          overallProgress: newProgress,
+          categoryProgress: categoryProgress
         });
         
         // Send the next question, unless we're at the end
@@ -213,7 +245,6 @@ export function useCareerChat() {
   }, [
     sessionId, 
     isSessionComplete, 
-    getProgress, 
     isAnalyzing, 
     analyzeResponses, 
     messages, 
@@ -222,9 +253,12 @@ export function useCareerChat() {
     updateSessionTitle, 
     advanceQuestion, 
     getCurrentCategory, 
+    getCurrentCategoryProgress,
+    getProgress, 
     createQuestionMessage, 
     addMessage,
-    endCurrentSession
+    endCurrentSession,
+    shouldCompleteAssessment
   ]);
 
   // Create a dedicated function for starting a new chat
@@ -242,21 +276,18 @@ export function useCareerChat() {
             id: uuidv4(),
             session_id: sessionId,
             message_type: 'system',
-            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you. Let's get started!",
-            metadata: {},
+            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you.",
+            metadata: {
+              hasOptions: true,
+              suggestions: [
+                "Begin Assessment"
+              ]
+            },
             created_at: new Date().toISOString()
           };
           
           await addMessage(welcomeMessage);
-          
-          // Add a small delay before sending the first question
-          setTimeout(async () => {
-            if (sessionId) {
-              const questionMessage = createQuestionMessage(sessionId);
-              await addMessage(questionMessage);
-            }
-            setIsTyping(false);
-          }, 1000);
+          setIsTyping(false);
         } else {
           setIsTyping(false);
         }
@@ -292,6 +323,7 @@ export function useCareerChat() {
     sendMessage,
     addMessage,
     isSessionComplete,
-    handleStartNewChat
+    handleStartNewChat,
+    handleBeginAssessment
   };
 }

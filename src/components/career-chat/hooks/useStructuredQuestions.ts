@@ -11,6 +11,12 @@ export function useStructuredQuestions() {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [categoryCompletionMap, setCategoryCompletionMap] = useState<Record<string, number>>({
+    education: 0,
+    skills: 0,
+    workstyle: 0,
+    goals: 0
+  });
 
   const getCurrentCategory = useCallback(() => {
     if (isComplete) return 'complete';
@@ -24,6 +30,10 @@ export function useStructuredQuestions() {
     const totalQuestions = CATEGORIES.length * QUESTIONS_PER_CATEGORY;
     return Math.floor((completedQuestions / totalQuestions) * 100);
   }, [currentCategoryIndex, currentQuestionIndex, isComplete]);
+
+  const getCurrentCategoryProgress = useCallback(() => {
+    return Math.floor(((currentQuestionIndex + 1) / QUESTIONS_PER_CATEGORY) * 100);
+  }, [currentQuestionIndex]);
 
   const getNextQuestion = useCallback((): StructuredMessage => {
     if (isComplete) {
@@ -79,6 +89,15 @@ export function useStructuredQuestions() {
   }, [currentCategoryIndex, currentQuestionIndex, getProgress, isComplete]);
 
   const advanceQuestion = useCallback(() => {
+    // First update our category completion map
+    setCategoryCompletionMap(prev => {
+      const currentCategory = CATEGORIES[currentCategoryIndex];
+      return {
+        ...prev,
+        [currentCategory]: prev[currentCategory] + 1
+      };
+    });
+    
     if (currentQuestionIndex < QUESTIONS_PER_CATEGORY - 1) {
       // Move to next question in current category
       setCurrentQuestionIndex(prev => prev + 1);
@@ -90,6 +109,15 @@ export function useStructuredQuestions() {
       // All questions have been asked
       setIsComplete(true);
     }
+  }, [currentCategoryIndex, currentQuestionIndex]);
+
+  // Check if all categories have reached their required question count
+  const shouldCompleteAssessment = useCallback(() => {
+    // Only consider completion after at least some questions from goals category
+    if (currentCategoryIndex < 3) return false;
+    
+    // We must be in the goals category and have answered at least 3 questions
+    return currentCategoryIndex === 3 && currentQuestionIndex >= 3;
   }, [currentCategoryIndex, currentQuestionIndex]);
 
   const createQuestionMessage = useCallback((sessionId: string): CareerChatMessage => {
@@ -113,9 +141,11 @@ export function useStructuredQuestions() {
   return {
     getCurrentCategory,
     getProgress,
+    getCurrentCategoryProgress,
     getNextQuestion,
     advanceQuestion,
     createQuestionMessage,
-    isComplete
+    isComplete,
+    shouldCompleteAssessment
   };
 }

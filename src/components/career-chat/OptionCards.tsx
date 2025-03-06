@@ -17,7 +17,7 @@ export function OptionCards({
   const [customValue, setCustomValue] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
-  const [clickProcessed, setClickProcessed] = useState(false);
+  const [processingClick, setProcessingClick] = useState(false);
 
   // Convert legacy string options to MessageOption format
   const normalizedOptions = options.map((option): MessageOption => {
@@ -31,7 +31,7 @@ export function OptionCards({
   });
 
   // Add "Other" option if not present and not disabled
-  const finalOptions = !normalizedOptions.some(opt => opt.id === 'other') && !disabled
+  const finalOptions = !normalizedOptions.some(opt => opt.id === 'other' || opt.text === 'Other (specify)') && !disabled
     ? [...normalizedOptions, {
         id: 'other',
         text: 'Other (specify)',
@@ -45,21 +45,24 @@ export function OptionCards({
     setCustomValue('');
     setShowCustomInput(false);
     setIsSelecting(false);
-    setClickProcessed(false);
+    setProcessingClick(false);
   }, [options, disabled]);
 
   // Function to handle option selection with debouncing
   const handleSelectOption = (option: MessageOption) => {
-    if (isSelecting || disabled || clickProcessed) {
+    if (isSelecting || disabled || processingClick) {
       return; // Prevent selection when processing or disabled
     }
 
     // Handle "Other" option specially
-    if (option.id === 'other') {
+    if (option.id === 'other' || option.text === 'Other (specify)') {
       setShowCustomInput(true);
       setSelectedOptions([option.text]);
       return;
     }
+
+    // Immediately set processing state to prevent double-clicks
+    setProcessingClick(true);
 
     if (allowMultiple) {
       // For multiple selection
@@ -72,29 +75,26 @@ export function OptionCards({
         }
       });
     } else {
-      // For single selection, immediately trigger onSelect
+      // For single selection, show visual feedback first
       setIsSelecting(true);
-      setSelectedOptions([option.text]); // Set visual state 
-      setClickProcessed(true); // Prevent double processing
+      setSelectedOptions([option.text]);
       
-      // Slight delay to show visual feedback
+      // Add a short delay for visual feedback before triggering onSelect
       setTimeout(() => {
         onSelect(option.text);
-        // Don't reset here - let the parent component 
-        // trigger a reset by changing the options
-      }, 150);
+      }, 200);
     }
   };
 
   // Handle custom value submission
   const handleCustomSubmit = () => {
-    if (customValue.trim() && !isSelecting && !disabled) {
+    if (customValue.trim() && !isSelecting && !disabled && !processingClick) {
       setIsSelecting(true);
-      setClickProcessed(true);
+      setProcessingClick(true);
       
       setTimeout(() => {
         onSelect(customValue.trim());
-      }, 150);
+      }, 200);
     }
   };
 
@@ -105,13 +105,13 @@ export function OptionCards({
 
   // Submit all selected options when multiple selection is enabled
   const handleSubmitMultiple = () => {
-    if (selectedOptions.length > 0 && !isSelecting && !disabled) {
+    if (selectedOptions.length > 0 && !isSelecting && !disabled && !processingClick) {
       setIsSelecting(true);
-      setClickProcessed(true);
+      setProcessingClick(true);
       
       setTimeout(() => {
         onSelect(selectedOptions.join(', '));
-      }, 150);
+      }, 200);
     }
   };
 
