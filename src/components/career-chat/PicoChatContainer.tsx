@@ -56,6 +56,11 @@ export function PicoChatContainer() {
   }, [messages.length]);
 
   const handleSuggestionClick = (suggestion: string) => {
+    if (isTyping || localIsTyping) {
+      // Don't process clicks when already processing something
+      return;
+    }
+    
     if (isSessionComplete && 
         (suggestion.toLowerCase().includes('new') || 
          suggestion.toLowerCase().includes('start'))) {
@@ -71,6 +76,11 @@ export function PicoChatContainer() {
   };
 
   const handleSendMessage = async (msg: string) => {
+    if (isTyping || localIsTyping) {
+      // Don't send when already processing something
+      return;
+    }
+    
     setLocalIsTyping(true);
     await sendMessage(msg)
       .catch(() => {
@@ -89,6 +99,13 @@ export function PicoChatContainer() {
   };
 
   const handleDownloadResults = () => {
+    if (messages.length === 0) {
+      toast({
+        description: "No results to download yet."
+      });
+      return;
+    }
+    
     try {
       downloadPdfResults(messages);
       

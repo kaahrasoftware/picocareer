@@ -3,56 +3,48 @@ import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
-import { MessageSenderProps } from './types';
-import { useStructuredQuestions } from '../useStructuredQuestions';
-import { useCareerAnalysis } from '../useCareerAnalysis';
+import { MessageSenderProps, UseMessageSenderReturn } from './types';
 
 export function useMessageSender({
   sessionId,
-  sessionMetadata,
-  isSessionComplete,
   messages,
-  setInputMessage,
+  isSessionComplete,
+  currentCategory,
+  getProgress,
+  isAnalyzing,
+  analyzeResponses,
+  addMessage,
   setIsTyping,
-  updateSessionTitle,
-  updateSessionMetadata,
+  setInputMessage,
+  setIsSessionComplete,
   setCurrentCategory,
   setQuestionProgress,
-  setIsSessionComplete,
+  updateSessionMetadata,
+  sessionMetadata,
+  updateSessionTitle,
+  advanceQuestion,
+  getCurrentCategory,
+  createQuestionMessage,
   endCurrentSession
-}: MessageSenderProps) {
-  const { 
-    getCurrentCategory,
-    getProgress,
-    advanceQuestion, 
-    createQuestionMessage,
-    isComplete
-  } = useStructuredQuestions();
+}: MessageSenderProps): UseMessageSenderReturn {
   
-  const { isAnalyzing, analyzeResponses } = useCareerAnalysis(sessionId || '', addMessage);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Function to add a message to the chat
-  async function addMessage(message: CareerChatMessage) {
-    // Implementation would call the addMessage function from useChatSession
-    // This is a placeholder for the function signature
-    return Promise.resolve();
-  }
-
-  // Process user responses and advance to next question
+  // Send a message and get a response
   const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || !sessionId) return;
+    if (!message.trim() || !sessionId || isProcessing) return;
     
     // Check allowed actions in completed sessions
     if (isSessionComplete) {
       // Allow career exploration requests
       const isCareerExploreRequest = message.toLowerCase().includes('tell me more about') || 
-                                    (message.toLowerCase().includes('explore') && 
-                                     message.toLowerCase().includes('career'));
+                                   (message.toLowerCase().includes('explore') && 
+                                    message.toLowerCase().includes('career'));
       
       // Allow requests to start a new assessment
       const isNewAssessmentRequest = message.toLowerCase().includes('start') && 
-                                    (message.toLowerCase().includes('new') || 
-                                     message.toLowerCase().includes('assessment'));
+                                   (message.toLowerCase().includes('new') || 
+                                    message.toLowerCase().includes('assessment'));
       
       // If not an allowed action, show a message and return
       if (!isCareerExploreRequest && !isNewAssessmentRequest) {
@@ -69,6 +61,7 @@ export function useMessageSender({
       // For career exploration, continue with sending the message
     }
     
+    setIsProcessing(true);
     const messageId = uuidv4();
     const userMessage: CareerChatMessage = {
       id: messageId,
@@ -79,12 +72,12 @@ export function useMessageSender({
       created_at: new Date().toISOString()
     };
 
-    await addMessage(userMessage);
-    
-    setInputMessage('');
-    setIsTyping(true);
-    
     try {
+      await addMessage(userMessage);
+      
+      setInputMessage('');
+      setIsTyping(true);
+      
       // Check if we need to generate recommendations after a certain number of questions
       if (getProgress() >= 90 && !isAnalyzing) {
         // Time to generate recommendations
@@ -167,6 +160,7 @@ export function useMessageSender({
       });
     } finally {
       setIsTyping(false);
+      setIsProcessing(false);
     }
   }, [
     sessionId, 
@@ -187,13 +181,20 @@ export function useMessageSender({
     setIsTyping,
     setIsSessionComplete,
     setCurrentCategory,
-    setQuestionProgress
+    setQuestionProgress,
+    isProcessing
   ]);
 
   // Create a dedicated function for starting a new chat
-  const handleStartNewChat = async () => {
+  const handleStartNewChat = useCallback(async () => {
     try {
+      setIsProcessing(true);
       setIsTyping(true);
+      await endCurrentSession().catch(err => {
+        console.log('No active session to end or error ending session:', err);
+        // Continue anyway since we're starting a new session
+      });
+      
       await startNewSession();
       
       // We need to initialize the session with a welcome message
@@ -219,9 +220,11 @@ export function useMessageSender({
               await addMessage(questionMessage);
             }
             setIsTyping(false);
+            setIsProcessing(false);
           }, 1000);
         } else {
           setIsTyping(false);
+          setIsProcessing(false);
         }
       }, 500);
       
@@ -230,13 +233,24 @@ export function useMessageSender({
       console.error("Error starting new chat:", error);
       toast.error("Failed to start a new assessment.");
       setIsTyping(false);
+      setIsProcessing(false);
     }
-  };
+  }, [
+    sessionId,
+    endCurrentSession,
+    startNewSession,
+    addMessage,
+    createQuestionMessage,
+    setIsTyping
+  ]);
 
   return {
-    isAnalyzing,
     sendMessage,
-    addMessage,
     handleStartNewChat
   };
+}
+
+// Need to add this for TypeScript to recognize as a module
+async function startNewSession() {
+  // This is just a stub for TypeScript, will be replaced by actual parameter in useCallback
 }

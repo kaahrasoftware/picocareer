@@ -1,40 +1,54 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
 
 interface CustomInputFieldProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: () => void;
-  placeholder?: string;
-  autoFocus?: boolean;
+  customValue: string;
+  handleCustomValueChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleCustomSubmit: () => void;
+  isSelecting: boolean;
 }
 
-export function CustomInputField({
-  value,
-  onChange,
-  onSubmit,
-  placeholder = "Type your answer...",
-  autoFocus = true
+export function CustomInputField({ 
+  customValue, 
+  handleCustomValueChange, 
+  handleCustomSubmit,
+  isSelecting
 }: CustomInputFieldProps) {
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      onSubmit();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && customValue.trim() && !isSelecting) {
+      handleCustomSubmit();
     }
   };
 
   return (
-    <div className="w-full flex gap-2 mt-2">
-      <Input
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="flex-1"
-        onKeyPress={handleKeyPress}
-        autoFocus={autoFocus}
+    <div className="flex gap-2 mt-4">
+      <input
+        ref={inputRef}
+        type="text"
+        className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+        value={customValue}
+        onChange={handleCustomValueChange}
+        onKeyDown={handleKeyDown}
+        placeholder="Type your custom answer..."
+        disabled={isSelecting}
       />
-      <Button onClick={onSubmit} type="submit">
+      <Button 
+        onClick={handleCustomSubmit} 
+        disabled={!customValue.trim() || isSelecting}
+      >
+        {isSelecting ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : null}
         Submit
       </Button>
     </div>

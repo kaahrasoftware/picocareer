@@ -1,22 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, Plus } from 'lucide-react';
-import { MessageOption } from '@/types/database/message-types';
-import { cn } from '@/lib/utils';
+import { OptionCardsLayoutProps } from './types';
+import { Loader2 } from 'lucide-react';
 import { CustomInputField } from './CustomInputField';
-
-interface ChipsLayoutProps {
-  options: MessageOption[];
-  selectedOptions: string[];
-  handleSelectOption: (option: MessageOption) => void;
-  showCustomInput: boolean;
-  customValue: string;
-  handleCustomValueChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleCustomSubmit: () => void;
-  handleSubmitMultiple: () => void;
-  allowMultiple: boolean;
-}
 
 export function ChipsLayout({
   options,
@@ -27,58 +14,49 @@ export function ChipsLayout({
   handleCustomValueChange,
   handleCustomSubmit,
   handleSubmitMultiple,
-  allowMultiple
-}: ChipsLayoutProps) {
-  // Check if an option is currently selected
-  const isOptionSelected = (option: MessageOption): boolean => {
-    return selectedOptions.includes(option.text);
-  };
-
+  allowMultiple,
+  isSelecting
+}: OptionCardsLayoutProps) {
   return (
-    <div className="flex flex-wrap gap-2 w-full max-w-2xl my-4 animate-fade-in">
-      {options.map((option) => {
-        const isSelected = isOptionSelected(option);
-        
-        return (
+    <div className="space-y-4 my-4 w-full">
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
           <Button
             key={option.id}
-            variant="outline"
-            size="sm"
-            className={cn(
-              "rounded-full border transition-all duration-200 bg-white hover:bg-gray-50",
-              isSelected 
-                ? "border-primary text-primary shadow-sm"
-                : "border-gray-200 hover:border-gray-300 hover:shadow-sm",
-              "text-xs font-medium h-8 px-3",
-              "aria-pressed:scale-105"
-            )}
+            variant={selectedOptions.includes(option.text) ? "default" : "outline"}
+            className={`rounded-full ${
+              selectedOptions.includes(option.text) ? "bg-primary text-primary-foreground" : ""
+            } ${isSelecting ? "opacity-70 cursor-not-allowed" : ""}`}
             onClick={() => handleSelectOption(option)}
-            aria-pressed={isSelected}
-            disabled={!allowMultiple && selectedOptions.length > 0 && !isSelected && option.id !== 'other'}
+            disabled={isSelecting}
           >
-            {isSelected && <span className="mr-1"><Check className="h-3 w-3" /></span>}
-            {option.id === 'other' && <Plus className="h-3 w-3 mr-1" />}
-            <span className="text-gray-800">{option.text}</span>
+            {isSelecting && selectedOptions.includes(option.text) ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : null}
+            {option.text}
           </Button>
-        );
-      })}
-      
+        ))}
+      </div>
+
       {showCustomInput && (
         <CustomInputField
-          value={customValue}
-          onChange={handleCustomValueChange}
-          onSubmit={handleCustomSubmit}
-          autoFocus={true}
+          customValue={customValue}
+          handleCustomValueChange={handleCustomValueChange}
+          handleCustomSubmit={handleCustomSubmit}
+          isSelecting={isSelecting}
         />
       )}
-      
-      {allowMultiple && selectedOptions.length > 0 && !showCustomInput && (
-        <div className="w-full mt-3">
+
+      {allowMultiple && selectedOptions.length > 0 && (
+        <div className="flex justify-end mt-4">
           <Button 
             onClick={handleSubmitMultiple}
-            className="bg-primary hover:bg-primary/90 gap-1.5 rounded-full px-4 py-2 text-xs shadow-sm hover:shadow-md transition-all"
+            disabled={isSelecting}
           >
-            Continue with {selectedOptions.length} selection{selectedOptions.length !== 1 ? 's' : ''}
+            {isSelecting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : null}
+            Submit
           </Button>
         </div>
       )}

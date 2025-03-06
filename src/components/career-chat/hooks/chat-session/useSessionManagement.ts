@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { CareerChatMessage, CareerChatSession, ChatSessionMetadata } from '@/types/database/analytics';
 
@@ -54,7 +55,7 @@ export function useSessionManagement(
         .from('career_chat_sessions')
         .update({ 
           status: 'completed',
-          completed_at: new Date().toISOString(),
+          last_active_at: new Date().toISOString(),
           title: sessionTitle,
           session_metadata: finalMetadata
         })
@@ -79,10 +80,10 @@ export function useSessionManagement(
       // End current session first if there is one
       if (sessionId) {
         await endCurrentSession();
-      } else {
-        // If there's no current session, just initialize a new one
-        await initializeChat(true);
       }
+      
+      // Initialize a new chat session
+      await initializeChat(true);
     } catch (error) {
       console.error('Error starting new session:', error);
     }
@@ -99,9 +100,8 @@ export function useSessionManagement(
           id, 
           status, 
           created_at, 
-          completed_at,
-          title,
           last_active_at,
+          title,
           session_metadata,
           total_messages,
           progress_data
@@ -144,7 +144,7 @@ export function useSessionManagement(
           .from('career_chat_sessions')
           .update({ 
             status: 'completed',
-            completed_at: new Date().toISOString()
+            last_active_at: new Date().toISOString()
           })
           .eq('id', sessionId);
       }
@@ -154,7 +154,6 @@ export function useSessionManagement(
         .from('career_chat_sessions')
         .update({ 
           status: 'active',
-          completed_at: null,
           last_active_at: new Date().toISOString()
         })
         .eq('id', targetSessionId);

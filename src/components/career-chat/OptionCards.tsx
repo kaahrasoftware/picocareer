@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageOption } from '@/types/database/message-types';
 import { ChipsLayout } from './option-cards/ChipsLayout';
@@ -10,6 +10,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [customValue, setCustomValue] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   // Convert legacy string options to MessageOption format
   const normalizedOptions = options.map((option): MessageOption => {
@@ -31,8 +32,20 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     });
   }
 
+  // Reset selection state when options change
+  useEffect(() => {
+    setSelectedOptions([]);
+    setCustomValue('');
+    setShowCustomInput(false);
+    setIsSelecting(false);
+  }, [options]);
+
   // Function to handle option selection
   const handleSelectOption = (option: MessageOption) => {
+    if (isSelecting) {
+      return; // Prevent multiple selections while processing
+    }
+
     if (option.id === 'other') {
       setShowCustomInput(true);
       setSelectedOptions([option.text]);
@@ -51,17 +64,25 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
       });
     } else {
       // For single selection, immediately trigger onSelect
+      setIsSelecting(true);
       setSelectedOptions([option.text]); // Set visual state 
-      onSelect(option.text); // Immediately trigger callback
+      
+      // Use a small delay to prevent accidental double clicks
+      setTimeout(() => {
+        onSelect(option.text);
+      }, 100);
     }
   };
 
   // Handle custom value submission
   const handleCustomSubmit = () => {
-    if (customValue.trim()) {
-      onSelect(customValue.trim());
-      setCustomValue('');
-      setShowCustomInput(false);
+    if (customValue.trim() && !isSelecting) {
+      setIsSelecting(true);
+      
+      // Small delay to prevent accidental double submission
+      setTimeout(() => {
+        onSelect(customValue.trim());
+      }, 100);
     }
   };
 
@@ -72,11 +93,13 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
 
   // Submit all selected options when multiple selection is enabled
   const handleSubmitMultiple = () => {
-    if (selectedOptions.length > 0) {
+    if (selectedOptions.length > 0 && !isSelecting) {
+      setIsSelecting(true);
+      
       // Submit all selected options joined by commas
-      onSelect(selectedOptions.join(', '));
-      // Clear selections after submitting
-      setSelectedOptions([]);
+      setTimeout(() => {
+        onSelect(selectedOptions.join(', '));
+      }, 100);
     }
   };
 
@@ -93,6 +116,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
         handleCustomSubmit={handleCustomSubmit}
         handleSubmitMultiple={handleSubmitMultiple}
         allowMultiple={allowMultiple}
+        isSelecting={isSelecting}
       />
     );
   }
@@ -109,6 +133,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
       handleCustomSubmit={handleCustomSubmit}
       handleSubmitMultiple={handleSubmitMultiple}
       allowMultiple={allowMultiple}
+      isSelecting={isSelecting}
     />
   );
 }
