@@ -1,0 +1,169 @@
+import React, { useState } from 'react';
+import { useCareerChat } from './hooks/useCareerChat';
+import { useConfigCheck } from './hooks/useConfigCheck';
+import { useToast } from '@/components/ui/use-toast';
+import { downloadPdfResults } from './utils/pdfGenerator';
+import { EmptyState } from './components/EmptyState';
+import { ChatInterface } from './components/ChatInterface';
+import { LoadingState } from './components/LoadingState';
+import { ErrorState } from './components/ErrorState';
+import { SessionManagementDialog } from './session-management';
+
+export function PicoChatContainer() {
+  const {
+    messages,
+    inputMessage,
+    isLoading: isChatLoading,
+    isTyping,
+    isAnalyzing,
+    messagesEndRef,
+    currentCategory,
+    questionProgress,
+    pastSessions,
+    isFetchingPastSessions,
+    fetchPastSessions,
+    endCurrentSession,
+    startNewSession,
+    resumeSession,
+    deleteSession,
+    updateSessionTitle,
+    setInputMessage,
+    sendMessage,
+    isSessionComplete,
+    handleStartNewChat
+  } = useCareerChat();
+  
+  const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
+  const { toast } = useToast();
+  
+  const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
+  const [localIsTyping, setLocalIsTyping] = useState(false);
+  const [showInitialState, setShowInitialState] = useState(true);
+
+  // Keep messagesEndRef in view when new messages arrive
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  }, [messages, isTyping, localIsTyping]);
+
+  // Sync local typing state with the hook's state
+  React.useEffect(() => {
+    setLocalIsTyping(isTyping);
+  }, [isTyping]);
+
+  // Check if we have messages to determine whether to show the empty state
+  React.useEffect(() => {
+    if (messages.length > 0 && showInitialState) {
+      setShowInitialState(false);
+    }
+  }, [messages.length]);
+
+  const handleSuggestionClick = (suggestion: string) => {
+    if (isSessionComplete && 
+        (suggestion.toLowerCase().includes('new') || 
+         suggestion.toLowerCase().includes('start'))) {
+      handleStartNewChat();
+      return;
+    }
+    
+    setLocalIsTyping(true);
+    sendMessage(suggestion)
+      .catch(() => {
+        setLocalIsTyping(false);
+      });
+  };
+
+  const handleSendMessage = async (msg: string) => {
+    setLocalIsTyping(true);
+    await sendMessage(msg)
+      .catch(() => {
+        setLocalIsTyping(false);
+      });
+  };
+
+  const handleInitiateChat = () => {
+    setShowInitialState(false);
+    handleStartNewChat();
+  };
+
+  const handleViewPastSessions = () => {
+    fetchPastSessions();
+    setSessionDialogOpen(true);
+  };
+
+  const handleDownloadResults = () => {
+    try {
+      downloadPdfResults(messages);
+      
+      toast({
+        title: "Download Complete",
+        description: "Your career assessment results have been downloaded.",
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Download Failed",
+        description: "There was a problem generating your results PDF.",
+        variant: "destructive",
+        duration: 5000
+      });
+    }
+  };
+
+  // Show loading state while API config is being checked
+  const isLoadingState = isConfigLoading || isChatLoading;
+  if (isLoadingState) {
+    return <LoadingState />;
+  }
+
+  // Show error state if config check failed
+  if (hasConfigError) {
+    return <ErrorState />;
+  }
+
+  return (
+    <div className="flex flex-col max-w-6xl mx-auto h-[calc(100vh-120px)] p-4">
+      {showInitialState ? (
+        <EmptyState 
+          onStartChat={handleInitiateChat} 
+          onViewPastSessions={handleViewPastSessions} 
+        />
+      ) : (
+        <ChatInterface 
+          messages={messages}
+          inputMessage={inputMessage}
+          isTyping={localIsTyping}
+          isAnalyzing={isAnalyzing}
+          currentCategory={currentCategory}
+          questionProgress={questionProgress}
+          isSessionEnded={isSessionComplete}
+          messagesEndRef={messagesEndRef}
+          onSuggestionClick={handleSuggestionClick}
+          onSendMessage={handleSendMessage}
+          onStartNewChat={handleStartNewChat}
+          onViewPastSessions={handleViewPastSessions}
+          onEndCurrentSession={endCurrentSession}
+          onDownloadResults={handleDownloadResults}
+          setInputMessage={setInputMessage}
+        />
+      )}
+      
+      <SessionManagementDialog 
+        open={sessionDialogOpen} 
+        onOpenChange={setSessionDialogOpen} 
+        pastSessions={pastSessions} 
+        isFetchingPastSessions={isFetchingPastSessions} 
+        onFetchPastSessions={fetchPastSessions} 
+        onResumeSession={(sessionId) => {
+          resumeSession(sessionId);
+          setShowInitialState(false);
+          setSessionDialogOpen(false);
+        }} 
+        onDeleteSession={deleteSession} 
+        onUpdateSessionTitle={updateSessionTitle} 
+      />
+    </div>
+  );
+}
