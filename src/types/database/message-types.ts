@@ -20,6 +20,8 @@ export interface MessageContent {
   careers?: CareerSuggestion[]; // For recommendations
   personality?: PersonalityTrait[]; // For personality insights
   growth_areas?: GrowthArea[]; // For growth areas
+  career_recommendations?: CareerSuggestion[]; // For structured assessment format
+  personality_insights?: PersonalityTrait[]; // For structured assessment format
 }
 
 export interface MessageProgress {
@@ -53,6 +55,10 @@ export interface CareerSuggestion {
   description: string;
   key_requirements?: string[];
   education_paths?: string[];
+  id?: string;
+  industry?: string;
+  salary_range?: string;
+  growth_potential?: string;
 }
 
 export interface PersonalityTrait {

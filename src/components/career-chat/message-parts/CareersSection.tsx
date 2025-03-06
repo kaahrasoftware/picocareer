@@ -8,6 +8,10 @@ interface CareerRecommendation {
   description: string;
   key_requirements?: string[];
   education_paths?: string[];
+  id?: string;
+  industry?: string;
+  salary_range?: string;
+  growth_potential?: string;
 }
 
 interface CareersSectionProps {
@@ -16,6 +20,20 @@ interface CareersSectionProps {
 }
 
 export function CareersSection({ careers, onExploreCareer }: CareersSectionProps) {
+  if (!careers || careers.length === 0) {
+    return (
+      <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100 mb-4">
+        <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
+          <Briefcase className="h-5 w-5 text-primary mr-2" />
+          Top Career Matches
+        </h3>
+        <div className="p-4 bg-white rounded-md border border-blue-100">
+          <p className="text-gray-600 text-center">No career matches found based on your responses.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100 mb-4">
       <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
@@ -37,6 +55,21 @@ export function CareersSection({ careers, onExploreCareer }: CareersSectionProps
                 {career.match_percentage}% Match
               </span>
             </div>
+            
+            {career.salary_range && (
+              <div className="mt-1.5 flex items-center text-xs text-gray-500">
+                <span className="font-medium">Salary Range:</span>
+                <span className="ml-1">{career.salary_range}</span>
+              </div>
+            )}
+            
+            {career.industry && (
+              <div className="mt-1 flex items-center text-xs text-gray-500">
+                <span className="font-medium">Industry:</span>
+                <span className="ml-1">{career.industry}</span>
+              </div>
+            )}
+            
             <p className="text-sm text-gray-600 mt-2">{career.description}</p>
             
             {career.key_requirements && career.key_requirements.length > 0 && (

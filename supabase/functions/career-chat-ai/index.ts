@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
 
@@ -13,7 +14,9 @@ const CONFIG = {
   OPTIONS_MAX_COUNT: parseInt(Deno.env.get("OPTIONS_MAX_COUNT") || "8"),
   OPTIONS_MAX_LENGTH: parseInt(Deno.env.get("OPTIONS_MAX_LENGTH") || "40"),
   CATEGORY_TRACKING: Deno.env.get("CATEGORY_TRACKING") || "enabled",
-  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || ""
+  STRUCTURED_FORMAT_INSTRUCTION: Deno.env.get("STRUCTURED_FORMAT_INSTRUCTION") || "",
+  RECOMMENDATION_MAX_CAREERS: parseInt(Deno.env.get("RECOMMENDATION_MAX_CAREERS") || "7"),
+  RECOMMENDATION_FORMAT: Deno.env.get("RECOMMENDATION_FORMAT") || "structured"
 };
 
 // Debug logging for configuration
@@ -21,7 +24,9 @@ console.log("CONFIG:", {
   API_ENDPOINT,
   AI_RESPONSE_FORMAT: CONFIG.AI_RESPONSE_FORMAT,
   STRUCTURED_RESPONSE_VERSION: CONFIG.STRUCTURED_RESPONSE_VERSION,
-  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
+  STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No",
+  RECOMMENDATION_MAX_CAREERS: CONFIG.RECOMMENDATION_MAX_CAREERS,
+  RECOMMENDATION_FORMAT: CONFIG.RECOMMENDATION_FORMAT
 });
 
 // Streamlined system prompt for faster responses
@@ -96,6 +101,338 @@ Guidelines:
   return basePrompt;
 };
 
+// Function to match AI recommended careers with database careers
+async function matchCareersWithDatabase(recommendedCareers) {
+  try {
+    if (!recommendedCareers || recommendedCareers.length === 0) {
+      console.log("No careers to match with database");
+      return [];
+    }
+
+    // Extract all career titles to match
+    const careerTitles = recommendedCareers.map(career => 
+      typeof career === 'string' ? career : career.title);
+    
+    console.log("Attempting to match these careers with database:", careerTitles);
+
+    // Create the Supabase client for the edge function
+    const supabaseClient = Deno.env.get("SUPABASE_URL") 
+      ? new (await import("https://esm.sh/@supabase/supabase-js@2")).createClient(
+          Deno.env.get("SUPABASE_URL") || "",
+          Deno.env.get("SUPABASE_ANON_KEY") || ""
+        )
+      : null;
+
+    if (!supabaseClient) {
+      console.error("Failed to create Supabase client");
+      return recommendedCareers;
+    }
+
+    // Fetch matching careers from database
+    // First try exact matches
+    let { data: matchedCareers, error } = await supabaseClient
+      .from('careers')
+      .select('*')
+      .in('title', careerTitles)
+      .eq('status', 'Approved')
+      .limit(CONFIG.RECOMMENDATION_MAX_CAREERS);
+
+    if (error) {
+      console.error("Error querying careers table:", error);
+      return recommendedCareers;
+    }
+
+    // If we didn't get enough matches, try fuzzy matching
+    if (!matchedCareers || matchedCareers.length < careerTitles.length) {
+      console.log("Insufficient exact matches, trying fuzzy matching");
+      
+      // Build a query with OR conditions for each title using ILIKE
+      const fuzzyQuery = careerTitles
+        .map(title => {
+          // Check if we already have an exact match
+          const alreadyMatched = matchedCareers?.some(
+            career => career.title.toLowerCase() === title.toLowerCase()
+          );
+          
+          // If already matched, skip this title
+          if (alreadyMatched) return null;
+          
+          // Create a fuzzy match query
+          const searchTerms = title.split(' ')
+            .filter(term => term.length > 3) // Only use meaningful words
+            .map(term => `title.ilike.%${term}%`);
+          
+          return searchTerms.length > 0 ? searchTerms.join(',') : null;
+        })
+        .filter(Boolean); // Remove null entries
+      
+      if (fuzzyQuery.length > 0) {
+        const { data: fuzzyMatches, error: fuzzyError } = await supabaseClient
+          .from('careers')
+          .select('*')
+          .or(fuzzyQuery.join(','))
+          .eq('status', 'Approved')
+          .not('id', 'in', (matchedCareers || []).map(c => c.id))
+          .limit(CONFIG.RECOMMENDATION_MAX_CAREERS - (matchedCareers?.length || 0));
+        
+        if (fuzzyError) {
+          console.error("Error in fuzzy matching:", fuzzyError);
+        } else if (fuzzyMatches) {
+          matchedCareers = [...(matchedCareers || []), ...fuzzyMatches];
+          console.log(`Found ${fuzzyMatches.length} additional careers through fuzzy matching`);
+        }
+      }
+    }
+
+    // If we still don't have matches, just return the original recommendations
+    if (!matchedCareers || matchedCareers.length === 0) {
+      console.log("No matches found in database, returning original recommendations");
+      return recommendedCareers;
+    }
+
+    console.log(`Found ${matchedCareers.length} matching careers in database`);
+
+    // Map the original recommendations to include database information
+    return recommendedCareers.map(recommendation => {
+      // Extract title from recommendation (handle both string and object formats)
+      const title = typeof recommendation === 'string' ? recommendation : recommendation.title;
+      
+      // Find matching database career
+      const dbMatch = matchedCareers.find(career => 
+        career.title.toLowerCase() === title.toLowerCase());
+      
+      // If no match, return original recommendation
+      if (!dbMatch) {
+        // Look for a partial match
+        const partialMatch = matchedCareers.find(career => 
+          career.title.toLowerCase().includes(title.toLowerCase()) || 
+          title.toLowerCase().includes(career.title.toLowerCase()));
+        
+        if (!partialMatch) {
+          return recommendation;
+        }
+        
+        // Use partial match
+        return enhanceRecommendation(recommendation, partialMatch);
+      }
+      
+      // Enhance recommendation with database data
+      return enhanceRecommendation(recommendation, dbMatch);
+    });
+  } catch (error) {
+    console.error("Error matching careers with database:", error);
+    return recommendedCareers;
+  }
+}
+
+// Helper function to enhance a recommendation with database career data
+function enhanceRecommendation(recommendation, dbCareer) {
+  if (!dbCareer) return recommendation;
+  
+  if (typeof recommendation === 'string') {
+    // Simple string format, return rich career object
+    return {
+      title: dbCareer.title,
+      match_percentage: 90, // Default match percentage
+      description: dbCareer.description || `Career in ${dbCareer.title}`,
+      key_requirements: dbCareer.required_skills || [],
+      education_paths: dbCareer.required_education || [],
+      id: dbCareer.id
+    };
+  }
+  
+  // Object format, enhance with database data
+  const match_percentage = recommendation.match || recommendation.match_percentage || 90;
+  
+  return {
+    title: dbCareer.title,
+    match_percentage: match_percentage,
+    description: recommendation.description || dbCareer.description || `Career in ${dbCareer.title}`,
+    key_requirements: dbCareer.required_skills || [],
+    education_paths: dbCareer.required_education || [],
+    id: dbCareer.id,
+    industry: dbCareer.industry,
+    salary_range: dbCareer.salary_range,
+    growth_potential: dbCareer.growth_potential
+  };
+}
+
+// Function to process raw AI responses into structured assessment results
+async function processRecommendations(aiResponse) {
+  try {
+    // Try to parse the JSON from the AI response
+    let parsedRecommendations = null;
+    let structuredFormat = false;
+    
+    // Look for structured JSON in the response
+    const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || 
+                       aiResponse.match(/```\n([\s\S]*?)\n```/) ||
+                       aiResponse.match(/\{[\s\S]*\}/);
+    
+    if (jsonMatch) {
+      const jsonContent = jsonMatch[1] || jsonMatch[0];
+      try {
+        parsedRecommendations = JSON.parse(jsonContent.trim());
+        structuredFormat = true;
+        console.log("Successfully parsed structured recommendations");
+      } catch (e) {
+        console.error("Error parsing JSON recommendations:", e);
+      }
+    }
+    
+    // If we couldn't parse structured JSON, try to extract career recommendations from text
+    if (!parsedRecommendations) {
+      console.log("Fallback to text parsing for recommendations");
+      
+      // Extract career recommendations from markdown/text format
+      const careerMatches = [];
+      
+      // Look for numbered career listings
+      const careerListings = aiResponse.match(/\d+\.\s+([^\n]+?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%|\s*\n)/g);
+      
+      if (careerListings) {
+        careerListings.forEach(listing => {
+          const titleMatch = listing.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%|\s*$)/);
+          if (titleMatch) {
+            const title = titleMatch[1].trim();
+            const matchPercentage = parseInt(titleMatch[2] || titleMatch[3] || '90', 10);
+            
+            // Extract description if available (look for text after the title)
+            let description = "";
+            const listingPos = aiResponse.indexOf(listing);
+            if (listingPos >= 0) {
+              const nextListingMatch = aiResponse.substring(listingPos + listing.length).match(/\d+\.\s+/);
+              const nextListingPos = nextListingMatch 
+                ? aiResponse.substring(listingPos + listing.length).indexOf(nextListingMatch[0]) 
+                : -1;
+              
+              if (nextListingPos > 0) {
+                description = aiResponse.substring(
+                  listingPos + listing.length, 
+                  listingPos + listing.length + nextListingPos
+                ).trim();
+              }
+            }
+            
+            careerMatches.push({
+              title,
+              match_percentage: matchPercentage,
+              description: description || `Career in ${title}`
+            });
+          }
+        });
+      }
+      
+      if (careerMatches.length > 0) {
+        parsedRecommendations = {
+          type: "assessment_result",
+          content: {
+            career_recommendations: careerMatches
+          }
+        };
+      } else {
+        // Last resort: split by lines and look for potential career titles
+        const lines = aiResponse.split('\n');
+        const potentialTitles = lines.filter(line => 
+          line.trim().length > 0 && 
+          line.trim().length < 50 &&
+          !line.startsWith('#') &&
+          !line.match(/^\d+\./) &&
+          !line.includes(':')
+        ).slice(0, 7); // Take at most 7 potential careers
+        
+        if (potentialTitles.length > 0) {
+          parsedRecommendations = {
+            type: "assessment_result",
+            content: {
+              career_recommendations: potentialTitles.map(title => ({
+                title: title.trim(),
+                match_percentage: 90,
+                description: `Career in ${title.trim()}`
+              }))
+            }
+          };
+        }
+      }
+    }
+    
+    // If we still couldn't extract recommendations, return a default structure
+    if (!parsedRecommendations) {
+      console.log("Unable to extract career recommendations, using default");
+      return {
+        type: "assessment_result",
+        content: {
+          introduction: {
+            title: "Your Career Assessment Results",
+            summary: "Based on your responses, here are some potential career paths that might be a good fit."
+          },
+          career_recommendations: []
+        }
+      };
+    }
+    
+    // For structured format, ensure we have the right structure
+    if (structuredFormat) {
+      if (parsedRecommendations.type === "recommendation" && parsedRecommendations.content) {
+        // Extract careers from the content
+        let careersToMatch = [];
+        
+        if (parsedRecommendations.content.career_recommendations) {
+          careersToMatch = parsedRecommendations.content.career_recommendations;
+        } else if (parsedRecommendations.content.careers) {
+          careersToMatch = parsedRecommendations.content.careers;
+        }
+        
+        // Match with database
+        if (careersToMatch.length > 0) {
+          const enhancedCareers = await matchCareersWithDatabase(careersToMatch);
+          
+          // Update the recommendations with database-enriched careers
+          if (parsedRecommendations.content.career_recommendations) {
+            parsedRecommendations.content.career_recommendations = enhancedCareers;
+          } else if (parsedRecommendations.content.careers) {
+            parsedRecommendations.content.careers = enhancedCareers;
+          }
+        }
+        
+        return parsedRecommendations;
+      }
+      
+      // Check for assessment_result format
+      if (parsedRecommendations.type === "assessment_result" && parsedRecommendations.content) {
+        if (parsedRecommendations.content.career_recommendations) {
+          const enhancedCareers = await matchCareersWithDatabase(
+            parsedRecommendations.content.career_recommendations
+          );
+          parsedRecommendations.content.career_recommendations = enhancedCareers;
+        }
+        return parsedRecommendations;
+      }
+    } else {
+      // For text-parsed recommendations
+      const careerRecommendations = parsedRecommendations.content.career_recommendations;
+      if (careerRecommendations && careerRecommendations.length > 0) {
+        const enhancedCareers = await matchCareersWithDatabase(careerRecommendations);
+        parsedRecommendations.content.career_recommendations = enhancedCareers;
+      }
+    }
+    
+    return parsedRecommendations;
+  } catch (error) {
+    console.error("Error processing recommendations:", error);
+    return {
+      type: "assessment_result",
+      content: {
+        introduction: {
+          title: "Your Career Assessment Results",
+          summary: "Based on your responses, here are some potential career paths that might be a good fit."
+        },
+        career_recommendations: []
+      }
+    };
+  }
+}
+
 // Handler for the API requests
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -150,6 +487,43 @@ Instructions:
 4. Also include a brief analysis of their strongest skills or traits.
 5. Format your response using this structure:
 
+${CONFIG.RECOMMENDATION_FORMAT === "structured" ? `
+{
+  "type": "assessment_result",
+  "content": {
+    "introduction": {
+      "title": "Your Career Assessment Results",
+      "summary": "Based on your responses, here are personalized career recommendations that match your profile."
+    },
+    "career_recommendations": [
+      {
+        "title": "Career Title",
+        "match_percentage": 95,
+        "description": "Why this career matches their profile",
+        "key_requirements": ["Requirement 1", "Requirement 2"]
+      }
+    ],
+    "personality_insights": [
+      {
+        "trait": "Trait name",
+        "strength_level": 4,
+        "description": "Description of this trait"
+      }
+    ],
+    "growth_areas": [
+      {
+        "skill": "Skill to develop",
+        "importance": "high",
+        "description": "Why this skill matters"
+      }
+    ],
+    "closing": {
+      "message": "Concluding message",
+      "next_steps": ["Step 1", "Step 2", "Step 3"]
+    }
+  }
+}
+` : `
 # Career Recommendations
 
 ## Top Career Matches
@@ -173,6 +547,7 @@ Instructions:
 ## Next Steps
 
 [Brief advice on how to explore these careers further]
+`}
 `;
 
       // Create a focused message list with just the user's assessment responses
@@ -238,25 +613,16 @@ Instructions:
         throw new Error("No response content from DeepSeek API");
       }
 
-      // Create structured message for the recommendation
-      const structuredMessage = {
-        type: "recommendation",
-        content: {
-          recommendations: aiResponse,
-        },
-        metadata: {
-          isRecommendation: true,
-          completionType: "career_recommendations"
-        }
-      };
+      // Process recommendations to match with database
+      const processedRecommendations = await processRecommendations(aiResponse);
 
       // Return the recommendation response
       return new Response(
         JSON.stringify({
           messageId: crypto.randomUUID(),
           message: aiResponse,
-          structuredMessage,
-          rawResponse: structuredMessage,
+          structuredMessage: processedRecommendations,
+          rawResponse: processedRecommendations,
           metadata: {
             isRecommendation: true,
             completionType: "career_recommendations"

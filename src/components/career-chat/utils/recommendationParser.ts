@@ -127,10 +127,24 @@ export function parseStructuredRecommendation(rawResponse: any): ParsedRecommend
 
   // Handle the assessment_result type
   if (rawResponse.type === 'assessment_result') {
+    // Convert career_recommendations to the format the UI expects
+    let careers: CareerRecommendation[] = [];
+    if (rawResponse.content.career_recommendations && rawResponse.content.career_recommendations.length > 0) {
+      careers = rawResponse.content.career_recommendations.map(career => ({
+        title: career.title || '',
+        match: career.match_percentage || 0,
+        reasoning: career.description || ''
+      }));
+    }
+
     return {
       type: 'assessment_result',
-      careers: [],
-      personalities: [],
+      careers,
+      personalities: (rawResponse.content.personality_insights || []).map((trait: any) => ({
+        title: trait.trait || '',
+        match: trait.strength_level || 0,
+        description: trait.description || ''
+      })),
       mentors: [],
       structuredContent: {
         introduction: rawResponse.content.introduction,
@@ -148,8 +162,8 @@ export function parseStructuredRecommendation(rawResponse: any): ParsedRecommend
       type: 'recommendation',
       careers: (rawResponse.content.careers || []).map((career: any) => ({
         title: career.title || '',
-        match: career.match || 0,
-        reasoning: career.reasoning || ''
+        match: career.match_percentage || career.match || 0,
+        reasoning: career.description || career.reasoning || ''
       })),
       personalities: (rawResponse.content.personality || []).map((trait: any) => ({
         title: trait.title || '',

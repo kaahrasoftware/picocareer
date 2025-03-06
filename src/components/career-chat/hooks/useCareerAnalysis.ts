@@ -92,6 +92,29 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
         };
         
         await addMessage(recommendationMessage);
+        
+        // Save career recommendations to the database if they exist
+        if (response.data.structuredMessage?.content?.career_recommendations) {
+          try {
+            const careerRecommendations = response.data.structuredMessage.content.career_recommendations;
+            
+            for (const career of careerRecommendations) {
+              if (career.id) {
+                // Store reference to the career in the database
+                await supabase.from('career_chat_recommendations')
+                  .insert({
+                    session_id: sessionId,
+                    career_id: career.id,
+                    score: career.match_percentage,
+                    reasoning: career.description
+                  });
+              }
+            }
+          } catch (error) {
+            console.error('Error saving career recommendations:', error);
+            // Non-critical error, don't throw
+          }
+        }
       }
       
       // Add the session end message
