@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { config } from "https://deno.land/std@0.168.0/dotenv/mod.ts";
 
 // Load config values
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") || "";
@@ -43,8 +42,9 @@ Guidelines:
 4. Track progress as "Question X/6 in Category" and overall progress percentage.
 5. Provide 5-7 career matches only after completing all 24 questions.
 6. Use this exact format for all responses:
+\`\`\`json
 {
-  "type": "question|recommendation|session_end",
+  "type": "question|conversation|recommendation|session_end",
   "content": {
     "intro": "Brief context",
     "question": "Your question here?",
@@ -60,11 +60,17 @@ Guidelines:
       "current": 1,
       "total": 6,
       "overall": 25
+    },
+    "options": {
+      "type": "single|multiple",
+      "layout": "buttons|cards|chips"
     }
   }
 }
+\`\`\`
 
 7. For session end, use this exact format:
+\`\`\`json
 {
   "type": "session_end",
   "content": {
@@ -79,7 +85,8 @@ Guidelines:
     "isSessionEnd": true,
     "completionType": "career_recommendations"
   }
-}`;
+}
+\`\`\``;
 
   // If structured format instruction is available, append it
   if (CONFIG.STRUCTURED_FORMAT_INSTRUCTION) {
@@ -153,7 +160,7 @@ serve(async (req) => {
       model: "deepseek-chat",
       messages: messages,
       temperature: 0.5, // Lower temperature for more deterministic responses
-      max_tokens: 600,  // Reduced token count for faster responses
+      max_tokens: 800,  // Increased token count for better structured responses
       top_p: 0.9,       // More focused sampling
       frequency_penalty: 0.0,
       presence_penalty: 0.0,
@@ -223,6 +230,21 @@ serve(async (req) => {
     } catch (e) {
       console.warn("Error parsing structured response:", e.message);
       console.log("Original response:", aiResponse);
+      // Try an alternative parsing approach for malformed JSON
+      try {
+        // Clean up common JSON formatting errors
+        const cleanedJson = aiResponse
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .trim();
+          
+        // Attempt to parse again
+        rawResponse = JSON.parse(cleanedJson);
+        structuredMessage = rawResponse;
+        console.log("Successfully parsed cleaned structured response");
+      } catch (cleanError) {
+        console.warn("Failed to parse even with cleanup:", cleanError.message);
+      }
     }
 
     // Process the response for metadata
@@ -261,6 +283,9 @@ serve(async (req) => {
           suggestions: structuredMessage.content.options.map(opt => opt.text)
         };
       }
+      
+      // Keep the whole structured message for reference
+      metadata.structuredMessage = structuredMessage;
     } else {
       // Fallback to basic text processing if structured format fails
       const isRecommendation = aiResponse.includes("Career Recommendations") || 
@@ -277,6 +302,17 @@ serve(async (req) => {
           ...metadata, 
           isSessionEnd: true,
           completionType: "career_recommendations"
+        };
+      }
+      
+      // Try to extract options or suggestions from the text
+      const optionsMatch = aiResponse.match(/(\d+\.\s+.*?)(?=\d+\.|$)/gs);
+      if (optionsMatch) {
+        const suggestions = optionsMatch.map(o => o.trim().replace(/^\d+\.\s+/, ''));
+        metadata = {
+          ...metadata,
+          hasOptions: true,
+          suggestions
         };
       }
     }
@@ -310,5 +346,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper function has been removed as we're focusing on structured responses

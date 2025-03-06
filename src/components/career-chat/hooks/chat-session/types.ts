@@ -16,6 +16,9 @@ export interface UseChatSessionReturn {
   updateSessionTitle: (targetSessionId: string, title: string) => Promise<void>;
 }
 
+// Define MessageType to include session_end
+export type MessageType = "system" | "user" | "bot" | "recommendation" | "session_end";
+
 // Add interface for question counts
 export interface QuestionCounts {
   education: number;
