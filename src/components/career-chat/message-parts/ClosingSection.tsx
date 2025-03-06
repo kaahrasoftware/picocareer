@@ -30,7 +30,7 @@ export function ClosingSection({
         return "from-blue-50 to-sky-50 border-blue-100 text-blue-500";
       case 'complete':
         return isSessionComplete 
-          ? "from-green-50 to-emerald-50 border-green-100 text-green-500" 
+          ? "from-green-50 to-emerald-50 border-green-100 text-green-600" 
           : "from-blue-50 to-green-50 border-green-100 text-green-500";
       default:
         return "from-blue-50 to-green-50 border-green-100 text-green-500";
@@ -76,13 +76,24 @@ export function ClosingSection({
             <button
               key={idx}
               onClick={() => onNextStepClick && onNextStepClick(step)}
-              className="flex items-center w-full p-3 bg-white rounded-md border border-gray-100 hover:shadow-sm transition-all text-left"
+              className={`flex items-center w-full p-3 bg-white rounded-md border border-gray-100 hover:shadow-sm transition-all text-left ${
+                isSessionComplete ? 'hover:border-green-100' : ''
+              }`}
             >
               {getIcon(step)}
               <span className="flex-1 text-sm text-gray-700">{step}</span>
               <ChevronRight className="h-4 w-4 text-gray-400" />
             </button>
           ))}
+        </div>
+      )}
+      
+      {isSessionComplete && (
+        <div className="mt-4 pt-3 border-t border-green-100">
+          <p className="text-xs text-green-600 flex items-center">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Your assessment is complete and your results have been saved
+          </p>
         </div>
       )}
     </div>

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { CareerChatMessage, CareerChatSession, ChatSessionMetadata } from '@/types/database/analytics';
 
@@ -46,7 +45,8 @@ export function useSessionManagement(
       const finalMetadata: ChatSessionMetadata = {
         ...sessionMetadata,
         title: sessionTitle,
-        isComplete: true
+        isComplete: true,
+        completedAt: new Date().toISOString()
       };
       
       // Update the current session status to completed
@@ -65,13 +65,10 @@ export function useSessionManagement(
         return;
       }
       
-      // Clear the current messages and session
-      setMessages([]);
-      setSessionId(null);
-      setSessionMetadata(null);
+      // Update local state
+      setSessionMetadata(finalMetadata);
       
-      // Start a new session
-      await initializeChat(true);
+      console.log('Session completed successfully:', sessionId);
     } catch (error) {
       console.error('Error ending current session:', error);
     }

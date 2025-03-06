@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './chat-session'; 
 import { useCareerAnalysis } from './useCareerAnalysis';
@@ -115,27 +114,31 @@ export function useCareerChat() {
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId) return;
     
-    // Check if this is a career exploration request after session completion
-    const isCareerExploreRequest = isSessionComplete && 
-                                  (message.toLowerCase().includes('tell me more about') || 
-                                   message.toLowerCase().includes('explore') && message.toLowerCase().includes('career'));
-    
-    // Check if this is a request to start a new assessment
-    const isNewAssessmentRequest = isSessionComplete && 
-                                  (message.toLowerCase().includes('start') && 
-                                  (message.toLowerCase().includes('new') || message.toLowerCase().includes('assessment')));
-    
-    // If session is complete and this is not an allowed post-assessment action, ignore
-    if (isSessionComplete && !isCareerExploreRequest && !isNewAssessmentRequest) {
-      // For a new assessment request, handle it separately
-      if (message.toLowerCase().includes('new') && message.toLowerCase().includes('assessment')) {
-        handleStartNewChat();
+    // Check allowed actions in completed sessions
+    if (isSessionComplete) {
+      // Allow career exploration requests
+      const isCareerExploreRequest = message.toLowerCase().includes('tell me more about') || 
+                                    (message.toLowerCase().includes('explore') && 
+                                     message.toLowerCase().includes('career'));
+      
+      // Allow requests to start a new assessment
+      const isNewAssessmentRequest = message.toLowerCase().includes('start') && 
+                                    (message.toLowerCase().includes('new') || 
+                                     message.toLowerCase().includes('assessment'));
+      
+      // If not an allowed action, show a message and return
+      if (!isCareerExploreRequest && !isNewAssessmentRequest) {
+        toast.info("This assessment is complete. You can explore specific careers or start a new assessment.");
         return;
       }
       
-      // For non-recognized commands in completed sessions, show a message to the user
-      toast.info("This assessment is complete. You can explore specific careers or start a new assessment.");
-      return;
+      // Handle new assessment requests
+      if (isNewAssessmentRequest) {
+        await handleStartNewChat();
+        return;
+      }
+      
+      // For career exploration, continue with sending the message
     }
     
     const messageId = uuidv4();
@@ -154,39 +157,27 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
-      // Handle career exploration requests specially when session is complete
-      if (isCareerExploreRequest && isSessionComplete) {
-        // Just add the message and wait for response directly
-        // No need to go through the question flow
-        setIsTyping(false);
-        return;
-      }
-      
-      // Handle new assessment requests
-      if (isNewAssessmentRequest) {
-        await startNewSession();
-        setIsTyping(false);
-        return;
-      }
-      
       // Check if we need to generate recommendations after a certain number of questions
       if (getProgress() >= 90 && !isAnalyzing) {
         // Time to generate recommendations
         await analyzeResponses(messages);
+        
+        // Mark session as complete
         setIsSessionComplete(true);
         setCurrentCategory('complete');
         setQuestionProgress(100);
         
         // Update session metadata
-        updateSessionMetadata({
+        await updateSessionMetadata({
           isComplete: true,
           overallProgress: 100,
           lastCategory: 'complete'
         });
-      } else {
-        // Process the user message but don't need to call API for most responses
-        // Just save the user's answer and advance to the next question
         
+        // End the current session in the database
+        await endCurrentSession();
+      } else {
+        // Regular question flow
         // If this is one of the first messages, suggest a title
         if (!sessionMetadata?.title && messages.length <= 3) {
           const suggestedTitle = message.slice(0, 30);
@@ -221,12 +212,15 @@ export function useCareerChat() {
           await analyzeResponses(messages);
           setIsSessionComplete(true);
           
-          // Update session metadata
-          updateSessionMetadata({
+          // Update session metadata and end session
+          await updateSessionMetadata({
             isComplete: true,
             overallProgress: 100,
             lastCategory: 'complete'
           });
+          
+          // End the current session in the database
+          await endCurrentSession();
         }
       }
     } catch (error) {
@@ -258,7 +252,8 @@ export function useCareerChat() {
     getCurrentCategory, 
     createQuestionMessage, 
     addMessage,
-    startNewSession
+    startNewSession,
+    endCurrentSession
   ]);
 
   // Create a dedicated function for starting a new chat

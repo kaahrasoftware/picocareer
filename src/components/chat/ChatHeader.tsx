@@ -67,13 +67,14 @@ export function ChatHeader({
             </>
           ) : (
             <>
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className={`h-8 w-8 rounded-full ${isSessionComplete && currentCategory === 'complete' ? 'bg-green-100' : 'bg-primary/10'} flex items-center justify-center`}>
                 {currentCategory ? getCategoryIcon() : <Bot className="h-5 w-5 text-primary" />}
               </div>
               <h2 className="font-medium">{getCategoryTitle()}</h2>
               
               {isSessionComplete && currentCategory === 'complete' && (
-                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2">
+                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2 flex items-center">
+                  <Check className="h-3 w-3 mr-1" />
                   Complete
                 </span>
               )}
@@ -102,6 +103,17 @@ export function ChatHeader({
       {isAnalyzing && (
         <div className="mt-2">
           <Progress value={50} className="h-1.5 animate-pulse" />
+        </div>
+      )}
+      
+      {isSessionComplete && currentCategory === 'complete' && (
+        <div className="mt-2">
+          <Progress value={100} className="h-1.5 bg-green-100" />
+          <div className="flex justify-end mt-1">
+            <span className="text-xs text-green-600">
+              100% complete
+            </span>
+          </div>
         </div>
       )}
     </div>
