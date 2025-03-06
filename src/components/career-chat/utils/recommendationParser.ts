@@ -1,6 +1,8 @@
+
 /**
  * Utility to parse and structure career recommendation messages
  */
+import { CareerSuggestion, GrowthArea, PersonalityTrait } from "@/types/database/message-types";
 
 // Types for parsed recommendation sections
 export interface CareerRecommendation {
@@ -32,18 +34,7 @@ export interface StructuredCareerRecommendation {
   match_percentage: number;
   description: string;
   key_requirements?: string[];
-}
-
-export interface PersonalityTrait {
-  trait: string;
-  strength_level: number;
-  description: string;
-}
-
-export interface GrowthArea {
-  skill: string;
-  importance: string;
-  description: string;
+  education_paths?: string[];
 }
 
 export interface ClosingInfo {
@@ -60,7 +51,7 @@ export interface StructuredAssessmentContent {
 }
 
 export interface ParsedRecommendation {
-  type: 'recommendation' | 'assessment_result' | 'unknown';
+  type: 'recommendation' | 'assessment_result' | 'session_end' | 'unknown';
   careers: CareerRecommendation[];
   personalities: PersonalityInsight[];
   mentors: MentorRecommendation[];
@@ -92,6 +83,12 @@ export interface StructuredRecommendation {
     personality_insights?: PersonalityTrait[];
     growth_areas?: GrowthArea[];
     closing?: ClosingInfo;
+    message?: string;
+    suggestions?: string[];
+  };
+  metadata?: {
+    isSessionEnd?: boolean;
+    completionType?: string;
   };
 }
 
@@ -108,7 +105,27 @@ export function parseStructuredRecommendation(rawResponse: any): ParsedRecommend
     };
   }
 
-  // Handle the new assessment_result type
+  // Handle session_end messages
+  if (rawResponse.type === 'session_end') {
+    return {
+      type: 'session_end',
+      careers: [],
+      personalities: [],
+      mentors: [],
+      structuredContent: {
+        introduction: {
+          title: "Session Complete",
+          summary: rawResponse.content?.message || "Your career assessment session is complete."
+        },
+        closing: {
+          message: rawResponse.content?.message || "Thank you for completing the assessment.",
+          next_steps: rawResponse.content?.suggestions || []
+        }
+      }
+    };
+  }
+
+  // Handle the assessment_result type
   if (rawResponse.type === 'assessment_result') {
     return {
       type: 'assessment_result',
@@ -179,15 +196,22 @@ export function extractSections(content: string): ParsedRecommendation {
   if (careerSection) {
     const careerMatches = careerSection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
-    careerMatches.forEach((match, index) => {
-      const titleMatch = match.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
+    careerMatches.forEach((matchText, index) => {
+      const titleMatch = matchText.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
       if (titleMatch) {
         const title = titleMatch[1].trim();
-        const match = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
+        const matchScore = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
         
         let reasoning = '';
-        const startPos = careerSection.indexOf(match) + match.length;
-        const nextNumberPos = careerSection.substring(startPos).search(/\d+\.\s+/);
+        const startPos = careerSection.indexOf(matchText) + matchText.length;
+        let nextNumberPos;
+        
+        if (index < careerMatches.length - 1) {
+          const nextMatchPos = careerSection.indexOf(careerMatches[index + 1], startPos);
+          nextNumberPos = nextMatchPos > 0 ? nextMatchPos - startPos : -1;
+        } else {
+          nextNumberPos = careerSection.substring(startPos).search(/\d+\.\s+/);
+        }
         
         if (nextNumberPos > 0) {
           reasoning = careerSection.substring(startPos, startPos + nextNumberPos).trim();
@@ -197,7 +221,7 @@ export function extractSections(content: string): ParsedRecommendation {
         
         careers.push({
           title,
-          match,
+          match: matchScore,
           reasoning: reasoning || `Good match based on your skills and preferences.`
         });
       }
@@ -208,15 +232,22 @@ export function extractSections(content: string): ParsedRecommendation {
   if (personalitySection) {
     const personalityMatches = personalitySection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
     
-    personalityMatches.forEach((match, index) => {
-      const titleMatch = match.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
+    personalityMatches.forEach((matchText, index) => {
+      const titleMatch = matchText.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
       if (titleMatch) {
         const title = titleMatch[1].trim();
-        const match = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
+        const matchScore = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
         
         let description = '';
-        const startPos = personalitySection.indexOf(match) + match.length;
-        const nextNumberPos = personalitySection.substring(startPos).search(/\d+\.\s+/);
+        const startPos = personalitySection.indexOf(matchText) + matchText.length;
+        let nextNumberPos;
+        
+        if (index < personalityMatches.length - 1) {
+          const nextMatchPos = personalitySection.indexOf(personalityMatches[index + 1], startPos);
+          nextNumberPos = nextMatchPos > 0 ? nextMatchPos - startPos : -1;
+        } else {
+          nextNumberPos = personalitySection.substring(startPos).search(/\d+\.\s+/);
+        }
         
         if (nextNumberPos > 0) {
           description = personalitySection.substring(startPos, startPos + nextNumberPos).trim();
@@ -226,7 +257,7 @@ export function extractSections(content: string): ParsedRecommendation {
         
         personalities.push({
           title,
-          match,
+          match: matchScore,
           description: description || `Personality type that matches your profile.`
         });
       }
@@ -237,14 +268,21 @@ export function extractSections(content: string): ParsedRecommendation {
   if (mentorSection) {
     const mentorMatches = mentorSection.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/g) || [];
     
-    mentorMatches.forEach((match, index) => {
-      const nameMatch = match.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/);
+    mentorMatches.forEach((matchText, index) => {
+      const nameMatch = matchText.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/);
       if (nameMatch) {
         const name = nameMatch[1].trim();
         
         let details = '';
-        const startPos = mentorSection.indexOf(match) + match.length;
-        const nextNumberPos = mentorSection.substring(startPos).search(/\d+\.\s+/);
+        const startPos = mentorSection.indexOf(matchText) + matchText.length;
+        let nextNumberPos;
+        
+        if (index < mentorMatches.length - 1) {
+          const nextMatchPos = mentorSection.indexOf(mentorMatches[index + 1], startPos);
+          nextNumberPos = nextMatchPos > 0 ? nextMatchPos - startPos : -1;
+        } else {
+          nextNumberPos = mentorSection.substring(startPos).search(/\d+\.\s+/);
+        }
         
         if (nextNumberPos > 0) {
           details = mentorSection.substring(startPos, startPos + nextNumberPos).trim();

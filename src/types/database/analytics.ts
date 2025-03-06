@@ -24,6 +24,8 @@ export interface CareerRecommendation {
   score: number;
   reasoning: string;
   metadata?: Record<string, any>;
+  key_requirements?: string[];
+  education_paths?: string[];
 }
 
 export interface PersonalityInsight {

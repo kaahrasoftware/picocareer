@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useCareerAnalysis(sessionId: string, addMessage: (message: CareerChatMessage) => Promise<void>) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -15,6 +16,7 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
     try {
       // Add a system message to inform the user that analysis is starting
       await addMessage({
+        id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
         content: "I'm analyzing your responses to find career matches that align with your preferences...",
@@ -37,6 +39,7 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
       
       // Add a summary message
       await addMessage({
+        id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
         content: "Based on our conversation, here are some career paths that might be a good fit for you:",
@@ -47,6 +50,7 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
       // Add career recommendation messages
       for (const career of data.careers) {
         await addMessage({
+          id: uuidv4(),
           session_id: sessionId,
           message_type: 'recommendation',
           content: career.reasoning,
@@ -59,19 +63,37 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
         });
       }
       
-      // Add next steps message
+      // Add session end message with suggestions
       await addMessage({
+        id: uuidv4(),
         session_id: sessionId,
-        message_type: 'bot',
-        content: "Would you like more information about any of these career paths? Or would you like to explore other options?",
+        message_type: 'session_end',
+        content: "Your career assessment is now complete! Would you like to explore any of these career paths in more detail?",
         metadata: {
+          isSessionEnd: true,
           hasOptions: true,
           suggestions: [
             "Tell me more about these careers",
             "Explore other options",
             "How can I prepare for these careers?",
             "Start a new career assessment"
-          ]
+          ],
+          rawResponse: {
+            type: "session_end",
+            content: {
+              message: "Your career assessment is now complete! Would you like to explore any of these career paths in more detail?",
+              suggestions: [
+                "Tell me more about these careers",
+                "Explore other options", 
+                "How can I prepare for these careers?",
+                "Start a new career assessment"
+              ]
+            },
+            metadata: {
+              isSessionEnd: true,
+              completionType: "career_recommendations"
+            }
+          }
         },
         created_at: new Date().toISOString()
       });
@@ -81,6 +103,7 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
       toast.error('Failed to analyze your responses. Please try again.');
       
       await addMessage({
+        id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
         content: "I'm sorry, I encountered an error while analyzing your responses. Please try again.",

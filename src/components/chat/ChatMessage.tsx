@@ -50,7 +50,9 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   }
   
   // Handle structured recommendation from raw response
-  if (message.metadata?.rawResponse && message.metadata.rawResponse.type === 'recommendation') {
+  if (message.metadata?.rawResponse && 
+     (message.metadata.rawResponse.type === 'recommendation' ||
+      message.metadata.rawResponse.type === 'assessment_result')) {
     const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
     return <RecommendationSection recommendation={structuredData} onSuggestionClick={onSuggestionClick} />;
   }
@@ -64,14 +66,14 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
     return <BotMessage content={message.content} />;
   }
 
-  // Handle session end message (new)
+  // Handle session end message
   if (isSessionEnd) {
-    // Similar handling to recommendation, could be expanded with custom component if needed
-    const sections = parseStructuredRecommendation({ type: 'session_end', content: message.content });
-    if (sections.type === 'recommendation' || sections.type === 'session_end') {
-      return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
-    }
-    return <BotMessage content={message.content} />;
+    const rawResponse = message.metadata?.rawResponse 
+      ? message.metadata.rawResponse 
+      : { type: 'session_end', content: { message: message.content } };
+    
+    const sections = parseStructuredRecommendation(rawResponse);
+    return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
   }
 
   // Handle structured question format (new)

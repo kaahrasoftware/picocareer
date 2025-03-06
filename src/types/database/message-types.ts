@@ -17,6 +17,9 @@ export interface MessageContent {
   message?: string;      // For session_end messages
   options?: MessageOption[];  // Available options if any
   suggestions?: string[]; // For session_end suggestion options
+  careers?: CareerSuggestion[]; // For recommendations
+  personality?: PersonalityTrait[]; // For personality insights
+  growth_areas?: GrowthArea[]; // For growth areas
 }
 
 export interface MessageProgress {
@@ -33,7 +36,7 @@ export interface MessageOptionsConfig {
 }
 
 export interface StructuredMessage {
-  type: "conversation" | "question" | "recommendation" | "session_end";
+  type: "conversation" | "question" | "recommendation" | "session_end" | "assessment_result";
   content: MessageContent;
   metadata: {
     progress?: MessageProgress;
@@ -41,4 +44,27 @@ export interface StructuredMessage {
     isSessionEnd?: boolean;
     completionType?: string;
   };
+}
+
+// Enhanced recommendation structures
+export interface CareerSuggestion {
+  title: string;
+  match_percentage: number;
+  description: string;
+  key_requirements?: string[];
+  education_paths?: string[];
+}
+
+export interface PersonalityTrait {
+  trait: string;
+  strength_level: number;
+  description: string;
+  related_careers?: string[];
+}
+
+export interface GrowthArea {
+  skill: string;
+  importance: string;
+  description: string;
+  improvement_suggestions?: string[];
 }

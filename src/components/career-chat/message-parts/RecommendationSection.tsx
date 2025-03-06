@@ -13,12 +13,13 @@ interface RecommendationSectionProps {
 }
 
 export function RecommendationSection({ recommendation, onSuggestionClick }: RecommendationSectionProps) {
-  // Check if this is a structured assessment result
-  const isStructuredAssessment = 
-    recommendation.type === 'assessment_result' && 
+  // Check if this is a structured assessment result or session end
+  const isStructuredContent = 
+    (recommendation.type === 'assessment_result' || 
+     recommendation.type === 'session_end') && 
     recommendation.structuredContent;
 
-  if (isStructuredAssessment && recommendation.structuredContent) {
+  if (isStructuredContent && recommendation.structuredContent) {
     const { 
       introduction, 
       career_recommendations, 
@@ -93,6 +94,14 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
                 </span>
               </div>
               <p className="text-sm text-gray-600 mt-1">{career.reasoning}</p>
+              {onSuggestionClick && (
+                <button 
+                  onClick={() => onSuggestionClick(`Tell me more about ${career.title}`)}
+                  className="mt-2 text-xs text-primary hover:text-primary/80 flex items-center"
+                >
+                  Explore this career <span className="ml-1">→</span>
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -157,6 +166,23 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
           about the careers listed or request information about educational requirements, daily responsibilities,
           or how to connect with one of the recommended mentors.
         </p>
+        
+        {onSuggestionClick && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button 
+              onClick={() => onSuggestionClick("Start a new career assessment")}
+              className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200"
+            >
+              Start a new assessment
+            </button>
+            <button 
+              onClick={() => onSuggestionClick("Tell me more about educational requirements for these careers")}
+              className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200"
+            >
+              Educational requirements
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

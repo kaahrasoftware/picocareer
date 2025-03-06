@@ -19,7 +19,7 @@ export interface UseChatSessionReturn {
 // Define MessageType to include session_end
 export type MessageType = "system" | "user" | "bot" | "recommendation" | "session_end";
 
-// Add interface for question counts
+// Add interface for question counts with index signature
 export interface QuestionCounts {
   education: number;
   skills: number;

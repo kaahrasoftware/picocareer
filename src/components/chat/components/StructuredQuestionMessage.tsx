@@ -21,7 +21,9 @@ export function StructuredQuestionMessage({
     category: message.metadata.progress?.category?.toLowerCase() || 'general',
     current: message.metadata.progress?.current || 1,
     total: message.metadata.progress?.total || 4,
-    overall: parseFloat(message.metadata.progress?.overall || '0') || currentQuestionProgress,
+    overall: typeof message.metadata.progress?.overall === 'number' 
+      ? message.metadata.progress.overall 
+      : parseFloat(String(message.metadata.progress?.overall || '0')) || currentQuestionProgress,
     options: message.content.options || [],
     layout: message.metadata.options?.layout || 'cards',
     allowMultiple: message.metadata.options?.type === 'multiple'
@@ -35,7 +37,7 @@ export function StructuredQuestionMessage({
         category={questionInfo.category}
         questionNumber={questionInfo.current}
         totalQuestions={questionInfo.total}
-        progress={typeof questionInfo.overall === 'number' ? questionInfo.overall : parseFloat(questionInfo.overall)}
+        progress={questionInfo.overall}
       />
       
       {questionInfo.options.length > 0 && (

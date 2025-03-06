@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Briefcase, Award, ChevronRight } from 'lucide-react';
+import { Briefcase, Award, ChevronRight, GraduationCap, Book } from 'lucide-react';
 
 interface CareerRecommendation {
   title: string;
   match_percentage: number;
   description: string;
   key_requirements?: string[];
+  education_paths?: string[];
 }
 
 interface CareersSectionProps {
@@ -40,11 +41,28 @@ export function CareersSection({ careers, onExploreCareer }: CareersSectionProps
             
             {career.key_requirements && career.key_requirements.length > 0 && (
               <div className="mt-3">
-                <h5 className="text-xs font-medium text-gray-700 mb-1">Key Requirements:</h5>
+                <h5 className="text-xs font-medium text-gray-700 mb-1 flex items-center">
+                  <Book className="h-3 w-3 mr-1" /> Key Requirements:
+                </h5>
                 <div className="flex flex-wrap gap-1">
                   {career.key_requirements.map((req, i) => (
                     <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                       {req}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {career.education_paths && career.education_paths.length > 0 && (
+              <div className="mt-2">
+                <h5 className="text-xs font-medium text-gray-700 mb-1 flex items-center">
+                  <GraduationCap className="h-3 w-3 mr-1" /> Education Paths:
+                </h5>
+                <div className="flex flex-wrap gap-1">
+                  {career.education_paths.map((path, i) => (
+                    <span key={i} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                      {path}
                     </span>
                   ))}
                 </div>
