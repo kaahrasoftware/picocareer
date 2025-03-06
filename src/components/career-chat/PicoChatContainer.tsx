@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useConfigCheck } from './hooks/useConfigCheck';
@@ -92,13 +93,11 @@ export function PicoChatContainer() {
       downloadPdfResults(messages);
       
       toast({
-        title: "Download Complete",
         description: "Your career assessment results have been downloaded."
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
-        title: "Download Failed",
         description: "There was a problem generating your results PDF.",
         variant: "destructive"
       });
