@@ -141,26 +141,35 @@ export type Database = {
         Row: {
           content: string
           created_at: string | null
+          delivery_metadata: Json | null
           id: string
+          message_index: number | null
           message_type: string
           metadata: Json | null
           session_id: string | null
+          status: string | null
         }
         Insert: {
           content: string
           created_at?: string | null
+          delivery_metadata?: Json | null
           id?: string
+          message_index?: number | null
           message_type: string
           metadata?: Json | null
           session_id?: string | null
+          status?: string | null
         }
         Update: {
           content?: string
           created_at?: string | null
+          delivery_metadata?: Json | null
           id?: string
+          message_index?: number | null
           message_type?: string
           metadata?: Json | null
           session_id?: string | null
+          status?: string | null
         }
         Relationships: [
           {
@@ -221,25 +230,40 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_suspended: boolean | null
+          last_active_at: string | null
           last_message_at: string | null
           profile_id: string | null
+          progress_data: Json | null
+          session_metadata: Json | null
           status: string | null
+          total_messages: number | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          is_suspended?: boolean | null
+          last_active_at?: string | null
           last_message_at?: string | null
           profile_id?: string | null
+          progress_data?: Json | null
+          session_metadata?: Json | null
           status?: string | null
+          total_messages?: number | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          is_suspended?: boolean | null
+          last_active_at?: string | null
           last_message_at?: string | null
           profile_id?: string | null
+          progress_data?: Json | null
+          session_metadata?: Json | null
           status?: string | null
+          total_messages?: number | null
           updated_at?: string | null
         }
         Relationships: [

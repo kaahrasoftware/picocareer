@@ -30,13 +30,13 @@ export function PicoChat() {
     updateSessionTitle,
     setInputMessage,
     sendMessage,
-    addMessage
+    addMessage,
+    isSessionComplete
   } = useCareerChat();
   
   const { toast } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
-  const [isSessionEnded, setIsSessionEnded] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
 
   useEffect(() => {
@@ -79,24 +79,11 @@ export function PicoChat() {
   }, [toast, messages.length, isLoading, configChecked]);
 
   useEffect(() => {
-    const hasSessionEndMessage = messages.some(msg => 
-      msg.message_type === 'session_end' || 
-      msg.metadata?.isSessionEnd === true
-    );
-    
-    if (hasSessionEndMessage) {
-      setIsSessionEnded(true);
-    } else {
-      setIsSessionEnded(false);
-    }
-  }, [messages]);
-
-  useEffect(() => {
     setLocalIsTyping(isTyping);
   }, [isTyping]);
 
   const handleSuggestionClick = (suggestion: string) => {
-    if (isSessionEnded && 
+    if (isSessionComplete && 
         (suggestion.toLowerCase().includes('new') || 
          suggestion.toLowerCase().includes('start'))) {
       handleStartNewChat();
@@ -153,7 +140,10 @@ export function PicoChat() {
       {hasNoMessages ? (
         <EmptyState 
           onStartChat={() => sendMessage("Hi, I'd like to explore career options")} 
-          onViewPastSessions={() => setSessionDialogOpen(true)} 
+          onViewPastSessions={() => {
+            fetchPastSessions();
+            setSessionDialogOpen(true);
+          }} 
         />
       ) : (
         <ChatInterface 
@@ -163,12 +153,15 @@ export function PicoChat() {
           isAnalyzing={isAnalyzing}
           currentCategory={currentCategory}
           questionProgress={questionProgress}
-          isSessionEnded={isSessionEnded}
+          isSessionEnded={isSessionComplete}
           messagesEndRef={messagesEndRef}
           onSuggestionClick={handleSuggestionClick}
           onSendMessage={handleSendMessage}
           onStartNewChat={handleStartNewChat}
-          onViewPastSessions={() => setSessionDialogOpen(true)}
+          onViewPastSessions={() => {
+            fetchPastSessions();
+            setSessionDialogOpen(true);
+          }}
           setInputMessage={setInputMessage}
         />
       )}

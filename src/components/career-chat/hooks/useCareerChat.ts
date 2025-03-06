@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { StructuredMessage } from '@/types/database/message-types';
 import { QuestionCounts } from './chat-session/types';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useCareerChat() {
   const { 
@@ -21,7 +22,9 @@ export function useCareerChat() {
     startNewSession,
     resumeSession,
     deleteSession,
-    updateSessionTitle 
+    updateSessionTitle,
+    updateSessionMetadata,
+    sessionMetadata
   } = useChatSession();
   
   const { isAnalyzing, analyzeResponses } = useCareerAnalysis(sessionId || '', addMessage);
@@ -67,6 +70,30 @@ export function useCareerChat() {
     checkApiConfig();
   }, [sessionId]);
 
+  // Check session state from metadata
+  useEffect(() => {
+    if (sessionMetadata?.isComplete) {
+      setIsSessionComplete(true);
+      setCurrentCategory('complete');
+      setQuestionProgress(100);
+    } else if (sessionMetadata) {
+      // Set question counts from metadata if available
+      if (sessionMetadata.questionCounts) {
+        setQuestionCounts(sessionMetadata.questionCounts as QuestionCounts);
+      }
+      
+      // Set current category
+      if (sessionMetadata.lastCategory) {
+        setCurrentCategory(sessionMetadata.lastCategory);
+      }
+      
+      // Set progress
+      if (typeof sessionMetadata.overallProgress === 'number') {
+        setQuestionProgress(sessionMetadata.overallProgress);
+      }
+    }
+  }, [sessionMetadata]);
+
   useEffect(() => {
     if (messages.length === 0) return;
 
@@ -79,6 +106,12 @@ export function useCareerChat() {
       setIsSessionComplete(true);
       setCurrentCategory('complete');
       setQuestionProgress(100);
+      // Update session metadata
+      updateSessionMetadata({
+        isComplete: true,
+        overallProgress: 100,
+        lastCategory: 'complete'
+      });
       return;
     }
 
@@ -90,6 +123,11 @@ export function useCareerChat() {
     if (hasRecommendationMessage) {
       setQuestionProgress(100);
       setCurrentCategory('complete');
+      // Update session metadata
+      updateSessionMetadata({
+        overallProgress: 100,
+        lastCategory: 'complete'
+      });
       return;
     }
 
@@ -99,40 +137,70 @@ export function useCareerChat() {
     const latestBotMessage = botMessages[botMessages.length - 1];
     
     const structuredMessage = latestBotMessage.metadata?.structuredMessage as StructuredMessage | undefined;
+    let updatedQuestionCounts = { ...questionCounts };
+    let category = currentCategory;
+    let progress = questionProgress;
     
     if (structuredMessage?.type === 'question' && structuredMessage.metadata.progress) {
-      const category = structuredMessage.metadata.progress.category?.toLowerCase() || 'general';
-      const overall = structuredMessage.metadata.progress.overall;
+      category = structuredMessage.metadata.progress.category?.toLowerCase() || 'general';
       
-      setCurrentCategory(category);
+      // Update question counts for the category
+      if (category in updatedQuestionCounts) {
+        updatedQuestionCounts[category] += 1;
+      } else {
+        updatedQuestionCounts[category] = 1;
+      }
       
-      if (typeof overall === 'number') {
-        setQuestionProgress(overall);
-      } else if (typeof overall === 'string') {
-        if (overall.includes('%')) {
-          setQuestionProgress(parseInt(overall.replace('%', '')));
+      // Update progress
+      if (typeof structuredMessage.metadata.progress.overall === 'number') {
+        progress = structuredMessage.metadata.progress.overall;
+      } else if (typeof structuredMessage.metadata.progress.overall === 'string') {
+        if (structuredMessage.metadata.progress.overall.includes('%')) {
+          progress = parseInt(structuredMessage.metadata.progress.overall.replace('%', ''));
         } else {
-          setQuestionProgress(parseInt(overall));
+          progress = parseInt(structuredMessage.metadata.progress.overall);
         }
       } else {
-        const current = structuredMessage.metadata.progress.current || 1;
-        const total = 24;
-        setQuestionProgress(Math.min(Math.round((current / total) * 100), 100));
+        const totalAnswered = Object.values(updatedQuestionCounts).reduce((a, b) => a + b, 0);
+        progress = Math.min(Math.round((totalAnswered / 24) * 100), 100);
       }
     } 
     else if (latestBotMessage.metadata?.category) {
-      const category = (latestBotMessage.metadata.category as string).toLowerCase();
-      setCurrentCategory(category);
+      category = (latestBotMessage.metadata.category as string).toLowerCase();
       
-      const totalAnswered = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
-      setQuestionProgress(Math.min(Math.round((totalAnswered / 24) * 100), 100));
+      // Update question counts for the category
+      if (category in updatedQuestionCounts) {
+        updatedQuestionCounts[category] += 1;
+      } else {
+        updatedQuestionCounts[category] = 1;
+      }
+      
+      const totalAnswered = Object.values(updatedQuestionCounts).reduce((a, b) => a + b, 0);
+      progress = Math.min(Math.round((totalAnswered / 24) * 100), 100);
     }
-  }, [messages, questionCounts]);
+    
+    // Update state with new values
+    setCurrentCategory(category);
+    setQuestionProgress(progress);
+    setQuestionCounts(updatedQuestionCounts);
+    
+    // Update session metadata
+    if (category !== currentCategory || progress !== questionProgress) {
+      updateSessionMetadata({
+        lastCategory: category,
+        questionCounts: updatedQuestionCounts,
+        overallProgress: progress
+      });
+    }
+    
+  }, [messages, questionCounts, updateSessionMetadata, currentCategory, questionProgress]);
 
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId || isSessionComplete) return;
     
+    const messageId = uuidv4();
     const userMessage: CareerChatMessage = {
+      id: messageId,
       session_id: sessionId,
       message_type: 'user',
       content: message.trim(),
@@ -186,6 +254,12 @@ export function useCareerChat() {
 
       console.log('Got response from career-chat-ai');
       
+      // Check if we should update the session title
+      if (!sessionMetadata?.title && messages.length <= 3) {
+        const suggestedTitle = response.data?.suggestedTitle || message.slice(0, 30);
+        updateSessionTitle(sessionId, suggestedTitle);
+      }
+      
       const isRecommendation = 
         response.data?.structuredMessage?.type === 'recommendation' ||
         response.data?.metadata?.isRecommendation;
@@ -196,6 +270,7 @@ export function useCareerChat() {
       
       if (response.data?.message) {
         const botMessage: CareerChatMessage = {
+          id: uuidv4(),
           session_id: sessionId,
           message_type: isSessionEnd ? 'session_end' : isRecommendation ? 'recommendation' : 'bot',
           content: response.data.message,
@@ -215,6 +290,11 @@ export function useCareerChat() {
           
           if (isSessionEnd) {
             setIsSessionComplete(true);
+            updateSessionMetadata({
+              isComplete: true,
+              overallProgress: 100,
+              lastCategory: 'complete'
+            });
           }
         }
       }
@@ -224,6 +304,7 @@ export function useCareerChat() {
       toast.error('Failed to get a response. Please try again.');
       
       await addMessage({
+        id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
         content: "I'm sorry, I encountered an error. Please try again.",
@@ -233,7 +314,7 @@ export function useCareerChat() {
     } finally {
       setIsTyping(false);
     }
-  }, [sessionId, messages, addMessage, isSessionComplete]);
+  }, [sessionId, messages, addMessage, isSessionComplete, sessionMetadata, updateSessionTitle, updateSessionMetadata]);
 
   return {
     messages,

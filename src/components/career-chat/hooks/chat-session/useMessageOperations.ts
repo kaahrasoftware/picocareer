@@ -2,18 +2,46 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { v4 as uuidv4 } from 'uuid';
+import { MessageDeliveryMetadata, MessageStatus } from './types';
 
-export function useMessageOperations(sessionId: string | null, messages: CareerChatMessage[], setMessages: React.Dispatch<React.SetStateAction<CareerChatMessage[]>>) {
+export function useMessageOperations(
+  sessionId: string | null, 
+  messages: CareerChatMessage[], 
+  setMessages: React.Dispatch<React.SetStateAction<CareerChatMessage[]>>
+) {
   
   const addMessage = async (message: CareerChatMessage) => {
     if (!sessionId) return null;
     
     try {
-      // Optimistically add the message to the local state with a temp ID if it doesn't have one
-      const tempId = message.id || `temp-${Date.now()}`;
-      const messageWithTempId = { ...message, id: tempId };
+      // Ensure the message has a proper UUID
+      const messageId = message.id || uuidv4();
       
-      // Update local state with the message (either with its existing ID or a new temp ID)
+      // Calculate message index (for proper ordering)
+      const messageIndex = messages.length;
+      
+      // Set initial message status
+      const status: MessageStatus = 'sending';
+      
+      // Initialize delivery metadata
+      const deliveryMetadata: MessageDeliveryMetadata = {
+        attempts: 1,
+        lastAttempt: new Date().toISOString()
+      };
+      
+      // Create complete message with all fields
+      const completeMessage: CareerChatMessage = { 
+        ...message,
+        id: messageId,
+        session_id: sessionId,
+        message_index: messageIndex,
+        status,
+        delivery_metadata: deliveryMetadata,
+        created_at: message.created_at || new Date().toISOString()
+      };
+      
+      // Optimistically add message to local state
       setMessages(prevMessages => {
         // Check if the message already exists in our state (by content and type)
         const existingMessageIndex = prevMessages.findIndex(
@@ -25,37 +53,77 @@ export function useMessageOperations(sessionId: string | null, messages: CareerC
           return prevMessages;
         } else {
           // New message - add it
-          return [...prevMessages, messageWithTempId];
+          return [...prevMessages, completeMessage];
         }
       });
       
-      // Always save to database, regardless of ID format
-      console.log('Saving message to database:', message.message_type, message.content.substring(0, 30) + '...');
+      // Save to database
+      console.log('Saving message to database:', completeMessage.message_type, completeMessage.content.substring(0, 30) + '...');
       
       const { data, error } = await supabase
         .from('career_chat_messages')
         .insert({
-          session_id: message.session_id,
-          message_type: message.message_type,
-          content: message.content,
-          metadata: message.metadata
+          id: completeMessage.id,
+          session_id: completeMessage.session_id,
+          message_type: completeMessage.message_type,
+          content: completeMessage.content,
+          metadata: completeMessage.metadata,
+          message_index: completeMessage.message_index,
+          status: completeMessage.status,
+          delivery_metadata: completeMessage.delivery_metadata
         })
         .select()
         .single();
 
       if (error) {
         console.error('Error storing message:', error);
+        
+        // Update local message status to failed
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            (msg.id === completeMessage.id) 
+              ? { 
+                  ...msg, 
+                  status: 'failed',
+                  delivery_metadata: {
+                    ...msg.delivery_metadata,
+                    error: error.message,
+                    lastAttempt: new Date().toISOString()
+                  }
+                } 
+              : msg
+          )
+        );
+        
         throw error;
       }
 
-      // Update the message in our local state with the one from the database (real ID)
+      // Update the message in our local state with the one from the database (real ID and updated status)
       setMessages(prevMessages => 
         prevMessages.map(msg => 
-          (msg.id === tempId) ? data : msg
+          (msg.id === completeMessage.id) 
+            ? { 
+                ...data, 
+                status: 'sent',
+                delivery_metadata: {
+                  ...data.delivery_metadata,
+                  receivedAt: new Date().toISOString()
+                }
+              } 
+            : msg
         )
       );
       
       console.log('Message saved successfully with ID:', data.id);
+      
+      // Update the total_messages counter in the session
+      await supabase
+        .from('career_chat_sessions')
+        .update({ 
+          total_messages: supabase.rpc('increment', { row_id: sessionId, table_name: 'career_chat_sessions', column_name: 'total_messages' }) 
+        })
+        .eq('id', sessionId);
+      
       return data;
     } catch (error) {
       console.error('Error adding message:', error);
@@ -63,5 +131,99 @@ export function useMessageOperations(sessionId: string | null, messages: CareerC
     }
   };
 
-  return { addMessage };
+  // Function to retry failed messages
+  const retryMessage = async (messageId: string) => {
+    try {
+      // Find the failed message in local state
+      const failedMessage = messages.find(msg => msg.id === messageId && msg.status === 'failed');
+      
+      if (!failedMessage) {
+        console.error('Failed message not found:', messageId);
+        return null;
+      }
+      
+      // Update delivery metadata
+      const updatedDeliveryMetadata = {
+        ...failedMessage.delivery_metadata,
+        attempts: (failedMessage.delivery_metadata?.attempts || 0) + 1,
+        lastAttempt: new Date().toISOString(),
+        error: undefined // Clear previous error
+      };
+      
+      // Update local message status to sending
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === messageId 
+            ? { 
+                ...msg, 
+                status: 'sending',
+                delivery_metadata: updatedDeliveryMetadata
+              } 
+            : msg
+        )
+      );
+      
+      // Retry saving to database
+      const { data, error } = await supabase
+        .from('career_chat_messages')
+        .upsert({
+          id: failedMessage.id,
+          session_id: failedMessage.session_id,
+          message_type: failedMessage.message_type,
+          content: failedMessage.content,
+          metadata: failedMessage.metadata,
+          message_index: failedMessage.message_index,
+          status: 'sending',
+          delivery_metadata: updatedDeliveryMetadata
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error retrying message:', error);
+        
+        // Update local message status to failed again
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === messageId 
+              ? { 
+                  ...msg, 
+                  status: 'failed',
+                  delivery_metadata: {
+                    ...msg.delivery_metadata,
+                    error: error.message,
+                    lastAttempt: new Date().toISOString()
+                  }
+                } 
+              : msg
+          )
+        );
+        
+        throw error;
+      }
+
+      // Update local state with success
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === messageId 
+            ? { 
+                ...data, 
+                status: 'sent',
+                delivery_metadata: {
+                  ...data.delivery_metadata,
+                  receivedAt: new Date().toISOString()
+                }
+              } 
+            : msg
+        )
+      );
+      
+      return data;
+    } catch (error) {
+      console.error('Error retrying message:', error);
+      return null;
+    }
+  };
+
+  return { addMessage, retryMessage };
 }

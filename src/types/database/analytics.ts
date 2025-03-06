@@ -10,6 +10,9 @@ export interface CareerChatMessage {
   content: string;
   metadata: Record<string, any>;
   created_at: string;
+  status?: string;
+  delivery_metadata?: Record<string, any>;
+  message_index?: number;
 }
 
 export interface CareerAnalysisResult {
@@ -94,4 +97,29 @@ export interface AnnouncementEngagement {
   category: string;
   views: number;
   reactions: number;
+}
+
+export interface ChatSessionMetadata {
+  title?: string;
+  lastCategory?: string;
+  completedCategories?: string[];
+  startedAt?: string;
+  progress?: Record<string, number>;
+  questionCounts?: Record<string, number>;
+  overallProgress?: number;
+  isComplete?: boolean;
+}
+
+export interface CareerChatSession {
+  id: string;
+  profile_id: string;
+  status: string;
+  created_at: string;
+  completed_at?: string;
+  title?: string;
+  last_active_at?: string;
+  session_metadata?: ChatSessionMetadata;
+  is_suspended?: boolean;
+  total_messages?: number;
+  progress_data?: Record<string, number>;
 }

@@ -1,27 +1,62 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CareerChatMessage } from '@/types/database/analytics';
+import { CareerChatMessage, CareerChatSession, ChatSessionMetadata } from '@/types/database/analytics';
 
 export function useSessionManagement(
   sessionId: string | null, 
   setSessionId: React.Dispatch<React.SetStateAction<string | null>>,
   setMessages: React.Dispatch<React.SetStateAction<CareerChatMessage[]>>,
-  pastSessions: any[],
+  pastSessions: CareerChatSession[],
   setPastSessions: React.Dispatch<React.SetStateAction<any[]>>,
   initializeChat: (forceNew?: boolean) => Promise<void>,
-  userId: string
+  userId: string,
+  sessionMetadata: ChatSessionMetadata | null,
+  setSessionMetadata: React.Dispatch<React.SetStateAction<ChatSessionMetadata | null>>
 ) {
   
   const endCurrentSession = async () => {
     if (!sessionId) return;
     
     try {
+      // Get the most recent messages to generate a title if one doesn't exist
+      let sessionTitle = sessionMetadata?.title;
+      
+      if (!sessionTitle) {
+        // Find first user message for title generation
+        const userMessages = await supabase
+          .from('career_chat_messages')
+          .select('content')
+          .eq('session_id', sessionId)
+          .eq('message_type', 'user')
+          .order('created_at', { ascending: true })
+          .limit(1);
+          
+        if (userMessages.data && userMessages.data.length > 0) {
+          // Create a title from the first user message
+          const firstMsg = userMessages.data[0].content;
+          sessionTitle = firstMsg.length > 30 
+            ? `${firstMsg.substring(0, 30)}...` 
+            : firstMsg;
+        } else {
+          sessionTitle = `Chat session ${new Date().toLocaleDateString()}`;
+        }
+      }
+      
+      // Update final metadata
+      const finalMetadata: ChatSessionMetadata = {
+        ...sessionMetadata,
+        title: sessionTitle,
+        isComplete: true
+      };
+      
       // Update the current session status to completed
       const { error } = await supabase
         .from('career_chat_sessions')
         .update({ 
           status: 'completed',
-          completed_at: new Date().toISOString()
+          completed_at: new Date().toISOString(),
+          title: sessionTitle,
+          session_metadata: finalMetadata
         })
         .eq('id', sessionId);
         
@@ -33,6 +68,7 @@ export function useSessionManagement(
       // Clear the current messages and session
       setMessages([]);
       setSessionId(null);
+      setSessionMetadata(null);
       
       // Start a new session
       await initializeChat(true);
@@ -68,23 +104,21 @@ export function useSessionManagement(
           created_at, 
           completed_at,
           title,
-          career_chat_messages:career_chat_messages(count)
+          last_active_at,
+          session_metadata,
+          total_messages,
+          progress_data
         `)
         .eq('profile_id', userId)
         .in('status', ['completed', 'archived'])
-        .order('created_at', { ascending: false });
+        .order('last_active_at', { ascending: false });
         
       if (error) {
         console.error('Error fetching past sessions:', error);
         return;
       }
       
-      const processedSessions = data.map(session => ({
-        ...session,
-        message_count: session.career_chat_messages[0]?.count || 0
-      }));
-      
-      setPastSessions(processedSessions);
+      setPastSessions(data || []);
     } catch (error) {
       console.error('Error fetching past sessions:', error);
     }
@@ -97,7 +131,7 @@ export function useSessionManagement(
       // First check if the session exists and belongs to the user
       const { data: sessionData, error: sessionError } = await supabase
         .from('career_chat_sessions')
-        .select('*')
+        .select('*, session_metadata')
         .eq('id', targetSessionId)
         .eq('profile_id', userId)
         .single();
@@ -123,7 +157,8 @@ export function useSessionManagement(
         .from('career_chat_sessions')
         .update({ 
           status: 'active',
-          completed_at: null
+          completed_at: null,
+          last_active_at: new Date().toISOString()
         })
         .eq('id', targetSessionId);
       
@@ -132,7 +167,7 @@ export function useSessionManagement(
         .from('career_chat_messages')
         .select('*')
         .eq('session_id', targetSessionId)
-        .order('created_at', { ascending: true });
+        .order('message_index', { ascending: true });
         
       if (messagesError) {
         console.error('Error fetching messages for resumed session:', messagesError);
@@ -142,6 +177,7 @@ export function useSessionManagement(
       // Update state
       setSessionId(targetSessionId);
       setMessages(messagesData || []);
+      setSessionMetadata(sessionData.session_metadata || null);
     } catch (error) {
       console.error('Error resuming session:', error);
     }
@@ -194,6 +230,7 @@ export function useSessionManagement(
       if (sessionId === targetSessionId) {
         setSessionId(null);
         setMessages([]);
+        setSessionMetadata(null);
         initializeChat(true);
       }
     } catch (error) {
@@ -207,7 +244,13 @@ export function useSessionManagement(
     try {
       const { error } = await supabase
         .from('career_chat_sessions')
-        .update({ title })
+        .update({ 
+          title,
+          session_metadata: { 
+            ...(sessionMetadata || {}),
+            title
+          }
+        })
         .eq('id', targetSessionId)
         .eq('profile_id', userId);
         
@@ -216,7 +259,12 @@ export function useSessionManagement(
         return;
       }
       
-      // Update local state if needed
+      // Update local state
+      if (sessionId === targetSessionId) {
+        setSessionMetadata(prev => prev ? { ...prev, title } : { title });
+      }
+      
+      // Update past sessions list if needed
       if (pastSessions.length > 0) {
         setPastSessions(prevSessions => 
           prevSessions.map(s => 
@@ -228,6 +276,35 @@ export function useSessionManagement(
       console.error('Error updating session title:', error);
     }
   };
+  
+  const updateSessionMetadata = async (metadata: Partial<ChatSessionMetadata>) => {
+    if (!sessionId || !userId) return;
+    
+    try {
+      // Merge with existing metadata
+      const updatedMetadata = { ...(sessionMetadata || {}), ...metadata };
+      
+      const { error } = await supabase
+        .from('career_chat_sessions')
+        .update({ 
+          session_metadata: updatedMetadata,
+          last_active_at: new Date().toISOString()
+        })
+        .eq('id', sessionId)
+        .eq('profile_id', userId);
+        
+      if (error) {
+        console.error('Error updating session metadata:', error);
+        return;
+      }
+      
+      // Update local state
+      setSessionMetadata(updatedMetadata);
+      
+    } catch (error) {
+      console.error('Error updating session metadata:', error);
+    }
+  };
 
   return {
     endCurrentSession,
@@ -235,6 +312,7 @@ export function useSessionManagement(
     fetchPastSessions,
     resumeSession,
     deleteSession,
-    updateSessionTitle
+    updateSessionTitle,
+    updateSessionMetadata
   };
 }

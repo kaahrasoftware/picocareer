@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthSession } from '@/hooks/useAuthSession';
-import { CareerChatMessage } from '@/types/database/analytics';
+import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
 import { useMessageOperations } from './useMessageOperations';
 import { useSessionManagement } from './useSessionManagement';
 import { useSessionInitialization } from './useSessionCreation';
@@ -15,6 +15,7 @@ export function useChatSession(): UseChatSessionReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [pastSessions, setPastSessions] = useState<any[]>([]);
   const [isFetchingPastSessions, setIsFetchingPastSessions] = useState(false);
+  const [sessionMetadata, setSessionMetadata] = useState<ChatSessionMetadata | null>(null);
 
   const userId = session?.user?.id;
   
@@ -22,7 +23,14 @@ export function useChatSession(): UseChatSessionReturn {
   const { addMessage } = useMessageOperations(sessionId, messages, setMessages);
   
   // Initialize the chat session
-  const { initializeChat } = useSessionInitialization(userId, setSessionId, setMessages, setIsLoading, addMessage);
+  const { initializeChat } = useSessionInitialization(
+    userId, 
+    setSessionId, 
+    setMessages, 
+    setIsLoading, 
+    addMessage,
+    setSessionMetadata
+  );
   
   // Session management operations
   const { 
@@ -31,7 +39,8 @@ export function useChatSession(): UseChatSessionReturn {
     fetchPastSessions: fetchPastSessionsImpl,
     resumeSession,
     deleteSession,
-    updateSessionTitle
+    updateSessionTitle,
+    updateSessionMetadata
   } = useSessionManagement(
     sessionId, 
     setSessionId, 
@@ -39,7 +48,9 @@ export function useChatSession(): UseChatSessionReturn {
     pastSessions, 
     setPastSessions, 
     initializeChat,
-    userId || ''
+    userId || '',
+    sessionMetadata,
+    setSessionMetadata
   );
   
   // Wrap fetchPastSessions to handle loading state
@@ -69,6 +80,8 @@ export function useChatSession(): UseChatSessionReturn {
     startNewSession,
     resumeSession,
     deleteSession,
-    updateSessionTitle
+    updateSessionTitle,
+    updateSessionMetadata,
+    sessionMetadata
   };
 }

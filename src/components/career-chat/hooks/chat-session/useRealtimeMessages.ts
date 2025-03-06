@@ -31,10 +31,49 @@ export function useRealtimeMessages(
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'career_chat_messages',
+          filter: `session_id=eq.${sessionId}`
+        },
+        async (payload) => {
+          // Update the message in our local state
+          console.log('Message updated via subscription:', payload.new.id);
+          setMessages(currentMessages => 
+            currentMessages.map(msg => 
+              msg.id === payload.new.id ? payload.new as CareerChatMessage : msg
+            )
+          );
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Realtime subscription status: ${status}`);
+      });
+
+    // Session updates subscription
+    const sessionChannel = supabase
+      .channel(`session-updates-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'career_chat_sessions',
+          filter: `id=eq.${sessionId}`
+        },
+        async (payload) => {
+          console.log('Session updated via subscription:', payload.new.id);
+          // We don't directly update the session here - that's handled by the parent hook
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(sessionChannel);
     };
   }, [sessionId, messages, setMessages]);
 }
