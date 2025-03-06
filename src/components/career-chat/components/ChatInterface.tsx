@@ -49,6 +49,7 @@ export function ChatInterface({
             isAnalyzing={isAnalyzing} 
             currentCategory={currentCategory} 
             questionProgress={questionProgress}
+            isSessionComplete={isSessionEnded}
           />
         </div>
         
@@ -63,11 +64,11 @@ export function ChatInterface({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onStartNewChat}>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                New Conversation
+                New Assessment
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onViewPastSessions}>
                 <History className="h-4 w-4 mr-2" />
-                Past Conversations
+                Past Assessments
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -94,7 +95,9 @@ export function ChatInterface({
         inputMessage={inputMessage} 
         setInputMessage={setInputMessage} 
         onSendMessage={onSendMessage}
-        isDisabled={isTyping || isAnalyzing || isSessionEnded} 
+        isDisabled={isTyping || isAnalyzing} 
+        isSessionComplete={isSessionEnded}
+        placeholderText={isSessionEnded ? "Try exploring career paths or start a new assessment..." : "Type your message..."}
       />
     </div>
   );

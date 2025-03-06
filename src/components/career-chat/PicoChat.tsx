@@ -30,14 +30,14 @@ export function PicoChat() {
     updateSessionTitle,
     setInputMessage,
     sendMessage,
-    isSessionComplete
+    isSessionComplete,
+    handleStartNewChat
   } = useCareerChat();
   
   const { toast } = useToast();
   const [configChecked, setConfigChecked] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -97,26 +97,6 @@ export function PicoChat() {
       });
   };
 
-  const handleStartNewChat = async () => {
-    if (messages.length > 2) {
-      if (confirm('Starting a new chat will end your current conversation. Continue?')) {
-        await startNewSession();
-        toast({
-          title: "New Conversation Started",
-          description: "Your previous conversation has been saved.",
-          variant: "default"
-        });
-      }
-    } else {
-      await startNewSession();
-      toast({
-        title: "New Conversation Started",
-        description: "Your previous conversation has been saved.",
-        variant: "default"
-      });
-    }
-  };
-
   const handleSendMessage = async (msg: string) => {
     setLocalIsTyping(true);
     await sendMessage(msg)
@@ -139,7 +119,7 @@ export function PicoChat() {
     <div className="flex flex-col max-w-6xl mx-auto h-[calc(100vh-120px)] p-4">
       {hasNoMessages ? (
         <EmptyState 
-          onStartChat={() => sendMessage("Hi, I'd like to explore career options")} 
+          onStartChat={() => sendMessage("I'd like to explore career options")} 
           onViewPastSessions={() => {
             fetchPastSessions();
             setSessionDialogOpen(true);

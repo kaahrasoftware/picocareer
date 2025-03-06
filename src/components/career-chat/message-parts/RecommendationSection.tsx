@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ParsedRecommendation } from '../utils/recommendationParser';
 import { IntroductionSection } from './IntroductionSection';
@@ -11,9 +10,14 @@ import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
 interface RecommendationSectionProps {
   recommendation: ParsedRecommendation;
   onSuggestionClick?: (suggestion: string) => void;
+  isSessionComplete?: boolean;
 }
 
-export function RecommendationSection({ recommendation, onSuggestionClick }: RecommendationSectionProps) {
+export function RecommendationSection({ 
+  recommendation, 
+  onSuggestionClick,
+  isSessionComplete = false
+}: RecommendationSectionProps) {
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
 
   // Check if this is a structured assessment result or session end
@@ -37,12 +41,21 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
       closing 
     } = recommendation.structuredContent;
     
+    // Custom next steps for completed sessions
+    const completedSessionNextSteps = [
+      "Start a new career assessment",
+      "Explore these career paths in detail",
+      "Save these recommendations"
+    ];
+    
     return (
       <div className="space-y-4 animate-fade-in">
         {/* Introduction Section */}
         {introduction && (
           <IntroductionSection 
-            title={introduction.title || "Your Career Assessment Results"} 
+            title={isSessionComplete 
+              ? "Your Career Assessment Results" 
+              : (introduction.title || "Your Career Assessment Results")} 
             summary={introduction.summary || "Based on your responses, here are personalized career recommendations."}
           />
         )}
@@ -68,13 +81,30 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
         {/* Closing Section */}
         {closing && (
           <ClosingSection 
-            message={closing.message || "Thank you for completing the career assessment!"} 
-            nextSteps={closing.next_steps || [
-              "Explore these careers in detail",
-              "Start a new career assessment",
-              "Connect with mentors in these fields"
-            ]}
+            message={isSessionComplete 
+              ? "Your career assessment is now complete! You can explore these recommendations or start a new assessment anytime." 
+              : (closing.message || "Thank you for completing the career assessment!")} 
+            nextSteps={isSessionComplete 
+              ? completedSessionNextSteps 
+              : (closing.next_steps || [
+                "Explore these careers in detail",
+                "Start a new career assessment",
+                "Connect with mentors in these fields"
+              ])}
             onNextStepClick={onSuggestionClick}
+            isSessionComplete={isSessionComplete}
+            category="complete"
+          />
+        )}
+
+        {/* Career Details Dialog */}
+        {selectedCareerId && (
+          <CareerDetailsDialog 
+            careerId={selectedCareerId}
+            open={!!selectedCareerId}
+            onOpenChange={(open) => {
+              if (!open) setSelectedCareerId(null);
+            }}
           />
         )}
       </div>
@@ -191,6 +221,17 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
           </div>
         )}
       </div>
+
+      {/* Career Details Dialog */}
+      {selectedCareerId && (
+        <CareerDetailsDialog 
+          careerId={selectedCareerId}
+          open={!!selectedCareerId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedCareerId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

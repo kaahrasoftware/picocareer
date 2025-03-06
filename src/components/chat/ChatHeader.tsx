@@ -1,18 +1,20 @@
 
 import React from 'react';
-import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase } from 'lucide-react';
+import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase, Check, CheckCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
   currentCategory?: string | null;
   questionProgress?: number;
+  isSessionComplete?: boolean;
 }
 
 export function ChatHeader({ 
   isAnalyzing = false, 
   currentCategory = null, 
-  questionProgress = 0 
+  questionProgress = 0,
+  isSessionComplete = false
 }: ChatHeaderProps) {
   const getCategoryIcon = () => {
     switch (currentCategory) {
@@ -25,7 +27,9 @@ export function ChatHeader({
       case 'goals':
         return <Target className="h-5 w-5 text-primary" />;
       case 'complete':
-        return <Star className="h-5 w-5 text-amber-400" />;
+        return isSessionComplete 
+          ? <CheckCircle className="h-5 w-5 text-green-500" />
+          : <Star className="h-5 w-5 text-amber-400" />;
       default:
         return <Briefcase className="h-5 w-5 text-gray-500" />;
     }
@@ -42,7 +46,9 @@ export function ChatHeader({
       case 'goals':
         return 'Career Aspirations';
       case 'complete':
-        return 'Career Recommendations';
+        return isSessionComplete 
+          ? 'Assessment Complete'
+          : 'Career Recommendations';
       default:
         return 'Career Chat';
     }
@@ -65,6 +71,12 @@ export function ChatHeader({
                 {currentCategory ? getCategoryIcon() : <Bot className="h-5 w-5 text-primary" />}
               </div>
               <h2 className="font-medium">{getCategoryTitle()}</h2>
+              
+              {isSessionComplete && currentCategory === 'complete' && (
+                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2">
+                  Complete
+                </span>
+              )}
             </>
           )}
         </div>

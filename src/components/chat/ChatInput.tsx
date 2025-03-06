@@ -8,13 +8,17 @@ interface ChatInputProps {
   setInputMessage: (message: string) => void;
   onSendMessage: (message: string) => void;
   isDisabled?: boolean;
+  isSessionComplete?: boolean;
+  placeholderText?: string;
 }
 
 export function ChatInput({ 
   inputMessage, 
   setInputMessage, 
   onSendMessage, 
-  isDisabled = false 
+  isDisabled = false,
+  isSessionComplete = false,
+  placeholderText = "Type your message..."
 }: ChatInputProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +35,19 @@ export function ChatInput({
           type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Type your message..."
+          placeholder={placeholderText}
           disabled={isDisabled}
-          className="flex-1 px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm"
+          className={`flex-1 px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm ${
+            isSessionComplete ? 'bg-gray-50 border-gray-200' : 'bg-white'
+          }`}
         />
         <Button 
           type="submit" 
           size="icon" 
           disabled={isDisabled || !inputMessage.trim()}
-          className="rounded-full shadow-sm hover:shadow-md transition-all"
+          className={`rounded-full shadow-sm hover:shadow-md transition-all ${
+            isSessionComplete ? 'bg-green-600 hover:bg-green-700' : ''
+          }`}
         >
           <SendIcon className="h-5 w-5" />
         </Button>

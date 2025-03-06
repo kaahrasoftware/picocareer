@@ -113,7 +113,30 @@ export function useCareerChat() {
 
   // Process user responses and advance to next question
   const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || !sessionId || isSessionComplete) return;
+    if (!message.trim() || !sessionId) return;
+    
+    // Check if this is a career exploration request after session completion
+    const isCareerExploreRequest = isSessionComplete && 
+                                  (message.toLowerCase().includes('tell me more about') || 
+                                   message.toLowerCase().includes('explore') && message.toLowerCase().includes('career'));
+    
+    // Check if this is a request to start a new assessment
+    const isNewAssessmentRequest = isSessionComplete && 
+                                  (message.toLowerCase().includes('start') && 
+                                  (message.toLowerCase().includes('new') || message.toLowerCase().includes('assessment')));
+    
+    // If session is complete and this is not an allowed post-assessment action, ignore
+    if (isSessionComplete && !isCareerExploreRequest && !isNewAssessmentRequest) {
+      // For a new assessment request, handle it separately
+      if (message.toLowerCase().includes('new') && message.toLowerCase().includes('assessment')) {
+        handleStartNewChat();
+        return;
+      }
+      
+      // For non-recognized commands in completed sessions, show a message to the user
+      toast.info("This assessment is complete. You can explore specific careers or start a new assessment.");
+      return;
+    }
     
     const messageId = uuidv4();
     const userMessage: CareerChatMessage = {
@@ -131,6 +154,21 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
+      // Handle career exploration requests specially when session is complete
+      if (isCareerExploreRequest && isSessionComplete) {
+        // Just add the message and wait for response directly
+        // No need to go through the question flow
+        setIsTyping(false);
+        return;
+      }
+      
+      // Handle new assessment requests
+      if (isNewAssessmentRequest) {
+        await startNewSession();
+        setIsTyping(false);
+        return;
+      }
+      
       // Check if we need to generate recommendations after a certain number of questions
       if (getProgress() >= 90 && !isAnalyzing) {
         // Time to generate recommendations
@@ -219,8 +257,25 @@ export function useCareerChat() {
     advanceQuestion, 
     getCurrentCategory, 
     createQuestionMessage, 
-    addMessage
+    addMessage,
+    startNewSession
   ]);
+
+  // Create a dedicated function for starting a new chat
+  const handleStartNewChat = async () => {
+    if (messages.length > 2) {
+      if (confirm('Starting a new assessment will end your current session. Continue?')) {
+        await startNewSession();
+        toast({
+          title: "New Assessment Started",
+          description: "Your previous results have been saved.",
+          variant: "default"
+        });
+      }
+    } else {
+      await startNewSession();
+    }
+  };
 
   return {
     messages,
@@ -243,6 +298,7 @@ export function useCareerChat() {
     setInputMessage,
     sendMessage,
     addMessage,
-    isSessionComplete
+    isSessionComplete,
+    handleStartNewChat
   };
 }
