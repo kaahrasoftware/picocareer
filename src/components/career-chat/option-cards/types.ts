@@ -6,6 +6,7 @@ export interface OptionCardsProps {
   onSelect: (optionText: string) => void;
   layout?: 'cards' | 'chips';
   allowMultiple?: boolean;
+  disabled?: boolean;
 }
 
 export interface OptionCardsLayoutProps {
@@ -19,4 +20,5 @@ export interface OptionCardsLayoutProps {
   handleSubmitMultiple: () => void;
   allowMultiple: boolean;
   isSelecting: boolean;
+  disabled?: boolean;
 }

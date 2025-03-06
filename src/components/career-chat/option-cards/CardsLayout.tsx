@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { OptionCardsLayoutProps } from './types';
 import { Loader2 } from 'lucide-react';
 import { CustomInputField } from './CustomInputField';
+import { cn } from '@/lib/utils';
 
 export function CardsLayout({
   options,
@@ -15,27 +16,37 @@ export function CardsLayout({
   handleCustomSubmit,
   handleSubmitMultiple,
   allowMultiple,
-  isSelecting
+  isSelecting,
+  disabled
 }: OptionCardsLayoutProps) {
   return (
-    <div className="space-y-4 my-4 w-full">
+    <div className={cn(
+      "space-y-4 my-4 w-full",
+      disabled && "opacity-70 pointer-events-none"
+    )}>
       <div className="grid grid-cols-1 gap-2">
-        {options.map((option) => (
-          <Button
-            key={option.id}
-            variant={selectedOptions.includes(option.text) ? "default" : "outline"}
-            className={`justify-start p-4 h-auto w-full text-left ${
-              selectedOptions.includes(option.text) ? "bg-primary text-primary-foreground" : ""
-            } ${isSelecting ? "opacity-70 cursor-not-allowed" : ""}`}
-            onClick={() => handleSelectOption(option)}
-            disabled={isSelecting}
-          >
-            {isSelecting && selectedOptions.includes(option.text) ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            {option.text}
-          </Button>
-        ))}
+        {options.map((option) => {
+          const isSelected = selectedOptions.includes(option.text);
+          const isProcessing = isSelecting && isSelected;
+          
+          return (
+            <Button
+              key={option.id}
+              variant={isSelected ? "default" : "outline"}
+              className={cn(
+                "justify-start p-4 h-auto w-full text-left transition-all duration-200",
+                isSelected ? "bg-primary text-primary-foreground" : "",
+                isProcessing ? "opacity-70 cursor-not-allowed" : "",
+                disabled ? "opacity-50 cursor-not-allowed" : ""
+              )}
+              onClick={() => handleSelectOption(option)}
+              disabled={isSelecting || disabled}
+            >
+              {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {option.text}
+            </Button>
+          );
+        })}
       </div>
 
       {showCustomInput && (
@@ -44,6 +55,7 @@ export function CardsLayout({
           handleCustomValueChange={handleCustomValueChange}
           handleCustomSubmit={handleCustomSubmit}
           isSelecting={isSelecting}
+          disabled={disabled}
         />
       )}
 
@@ -51,7 +63,8 @@ export function CardsLayout({
         <div className="flex justify-end mt-4">
           <Button 
             onClick={handleSubmitMultiple}
-            disabled={isSelecting}
+            disabled={isSelecting || disabled}
+            className="shadow-sm hover:shadow-md transition-all"
           >
             {isSelecting ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

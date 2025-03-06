@@ -6,11 +6,18 @@ import { ChipsLayout } from './option-cards/ChipsLayout';
 import { CardsLayout } from './option-cards/CardsLayout';
 import { OptionCardsProps } from './option-cards/types';
 
-export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple = false }: OptionCardsProps) {
+export function OptionCards({ 
+  options, 
+  onSelect, 
+  layout = 'cards', 
+  allowMultiple = false,
+  disabled = false
+}: OptionCardsProps) {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [customValue, setCustomValue] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
+  const [clickProcessed, setClickProcessed] = useState(false);
 
   // Convert legacy string options to MessageOption format
   const normalizedOptions = options.map((option): MessageOption => {
@@ -23,29 +30,31 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
     return option;
   });
 
-  // Always add "Other" option if not present
-  if (!normalizedOptions.some(opt => opt.id === 'other')) {
-    normalizedOptions.push({
-      id: 'other',
-      text: 'Other (specify)',
-      icon: 'Plus'
-    });
-  }
+  // Add "Other" option if not present and not disabled
+  const finalOptions = !normalizedOptions.some(opt => opt.id === 'other') && !disabled
+    ? [...normalizedOptions, {
+        id: 'other',
+        text: 'Other (specify)',
+        icon: 'Plus'
+      }]
+    : normalizedOptions;
 
-  // Reset selection state when options change
+  // Reset selection state when options change or when disabled changes
   useEffect(() => {
     setSelectedOptions([]);
     setCustomValue('');
     setShowCustomInput(false);
     setIsSelecting(false);
-  }, [options]);
+    setClickProcessed(false);
+  }, [options, disabled]);
 
-  // Function to handle option selection
+  // Function to handle option selection with debouncing
   const handleSelectOption = (option: MessageOption) => {
-    if (isSelecting) {
-      return; // Prevent multiple selections while processing
+    if (isSelecting || disabled || clickProcessed) {
+      return; // Prevent selection when processing or disabled
     }
 
+    // Handle "Other" option specially
     if (option.id === 'other') {
       setShowCustomInput(true);
       setSelectedOptions([option.text]);
@@ -66,23 +75,26 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
       // For single selection, immediately trigger onSelect
       setIsSelecting(true);
       setSelectedOptions([option.text]); // Set visual state 
+      setClickProcessed(true); // Prevent double processing
       
-      // Use a small delay to prevent accidental double clicks
+      // Slight delay to show visual feedback
       setTimeout(() => {
         onSelect(option.text);
-      }, 100);
+        // Don't reset here - let the parent component 
+        // trigger a reset by changing the options
+      }, 150);
     }
   };
 
   // Handle custom value submission
   const handleCustomSubmit = () => {
-    if (customValue.trim() && !isSelecting) {
+    if (customValue.trim() && !isSelecting && !disabled) {
       setIsSelecting(true);
+      setClickProcessed(true);
       
-      // Small delay to prevent accidental double submission
       setTimeout(() => {
         onSelect(customValue.trim());
-      }, 100);
+      }, 150);
     }
   };
 
@@ -93,13 +105,13 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
 
   // Submit all selected options when multiple selection is enabled
   const handleSubmitMultiple = () => {
-    if (selectedOptions.length > 0 && !isSelecting) {
+    if (selectedOptions.length > 0 && !isSelecting && !disabled) {
       setIsSelecting(true);
+      setClickProcessed(true);
       
-      // Submit all selected options joined by commas
       setTimeout(() => {
         onSelect(selectedOptions.join(', '));
-      }, 100);
+      }, 150);
     }
   };
 
@@ -107,7 +119,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
   if (layout === 'chips') {
     return (
       <ChipsLayout
-        options={normalizedOptions}
+        options={finalOptions}
         selectedOptions={selectedOptions}
         handleSelectOption={handleSelectOption}
         showCustomInput={showCustomInput}
@@ -117,6 +129,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
         handleSubmitMultiple={handleSubmitMultiple}
         allowMultiple={allowMultiple}
         isSelecting={isSelecting}
+        disabled={disabled}
       />
     );
   }
@@ -124,7 +137,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
   // Default to cards layout
   return (
     <CardsLayout
-      options={normalizedOptions}
+      options={finalOptions}
       selectedOptions={selectedOptions}
       handleSelectOption={handleSelectOption}
       showCustomInput={showCustomInput}
@@ -134,6 +147,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
       handleSubmitMultiple={handleSubmitMultiple}
       allowMultiple={allowMultiple}
       isSelecting={isSelecting}
+      disabled={disabled}
     />
   );
 }

@@ -17,9 +17,15 @@ interface ChatMessageProps {
   message: CareerChatMessage;
   onSuggestionClick?: (suggestion: string) => void;
   currentQuestionProgress?: number;
+  isDisabled?: boolean;
 }
 
-export function ChatMessage({ message, onSuggestionClick, currentQuestionProgress = 0 }: ChatMessageProps) {
+export function ChatMessage({ 
+  message, 
+  onSuggestionClick, 
+  currentQuestionProgress = 0,
+  isDisabled = false 
+}: ChatMessageProps) {
   const isUser = message.message_type === 'user';
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
@@ -54,14 +60,24 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
      (message.metadata.rawResponse.type === 'recommendation' ||
       message.metadata.rawResponse.type === 'assessment_result')) {
     const structuredData = parseStructuredRecommendation(message.metadata.rawResponse);
-    return <RecommendationSection recommendation={structuredData} onSuggestionClick={onSuggestionClick} />;
+    return (
+      <RecommendationSection 
+        recommendation={structuredData} 
+        onSuggestionClick={isDisabled ? undefined : onSuggestionClick} 
+      />
+    );
   }
   
   // Handle full recommendation message with multiple sections
   if (isRecommendation && !message.metadata?.career) {
     const sections = parseStructuredRecommendation({ type: 'recommendation', content: message.content });
     if (sections.type === 'recommendation') {
-      return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
+      return (
+        <RecommendationSection 
+          recommendation={sections} 
+          onSuggestionClick={isDisabled ? undefined : onSuggestionClick} 
+        />
+      );
     }
     return <BotMessage content={message.content} />;
   }
@@ -73,7 +89,13 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
       : { type: 'session_end', content: { message: message.content } };
     
     const sections = parseStructuredRecommendation(rawResponse);
-    return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
+    return (
+      <RecommendationSection 
+        recommendation={sections} 
+        onSuggestionClick={isDisabled ? undefined : onSuggestionClick}
+        isSessionComplete={true}
+      />
+    );
   }
 
   // Handle structured question format (new)
@@ -82,7 +104,8 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
       <StructuredQuestionMessage 
         message={structuredMessage}
         currentQuestionProgress={currentQuestionProgress}
-        onSuggestionClick={onSuggestionClick}
+        onSuggestionClick={isDisabled ? undefined : onSuggestionClick}
+        isDisabled={isDisabled}
       />
     );
   }
@@ -93,7 +116,8 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
       <NumberedListMessage 
         message={message}
         currentQuestionProgress={currentQuestionProgress}
-        onSuggestionClick={onSuggestionClick}
+        onSuggestionClick={isDisabled ? undefined : onSuggestionClick}
+        isDisabled={isDisabled}
       />
     );
   }
@@ -110,12 +134,19 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   // Handle structured conversation (new format)
   if (structuredMessage?.type === 'conversation') {
     const category = structuredMessage.metadata?.progress?.category?.toLowerCase();
-    return <BotMessage content={structuredMessage.content.intro || message.content} category={category} />;
+    return (
+      <BotMessage 
+        content={structuredMessage.content.intro || message.content} 
+        category={category} 
+      />
+    );
   }
   
   // Default to bot message for anything else with category info if available
-  return <BotMessage 
-    content={message.content} 
-    category={(message.metadata?.category as string || '').toLowerCase()} 
-  />;
+  return (
+    <BotMessage 
+      content={message.content} 
+      category={(message.metadata?.category as string || '').toLowerCase()} 
+    />
+  );
 }

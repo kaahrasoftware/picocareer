@@ -9,6 +9,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { cn } from '@/lib/utils';
 
 interface ChatInterfaceProps {
   messages: CareerChatMessage[];
@@ -45,6 +46,16 @@ export function ChatInterface({
   onDownloadResults,
   setInputMessage
 }: ChatInterfaceProps) {
+  // Auto-scroll to bottom on new messages or typing changes
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  }, [messages, isTyping, messagesEndRef]);
+  
+  // Determine if any action is in progress
+  const isActionInProgress = isTyping || isAnalyzing;
+  
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-blue-50/50 to-white rounded-lg shadow-sm overflow-hidden border">
       <div className="flex items-center justify-between bg-white border-b p-4">
@@ -68,11 +79,11 @@ export function ChatInterface({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onStartNewChat}>
+              <DropdownMenuItem onClick={onStartNewChat} disabled={isActionInProgress}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 New Assessment
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onViewPastSessions}>
+              <DropdownMenuItem onClick={onViewPastSessions} disabled={isActionInProgress}>
                 <History className="h-4 w-4 mr-2" />
                 Past Assessments
               </DropdownMenuItem>
@@ -87,7 +98,12 @@ export function ChatInterface({
         </div>
       </div>
       
-      <ScrollArea className="flex-1 p-4 overflow-y-auto">
+      <ScrollArea 
+        className={cn(
+          "flex-1 p-4 overflow-y-auto",
+          isActionInProgress && "opacity-90"
+        )}
+      >
         <div className="space-y-4">
           {messages.map((message, index) => (
             <ChatMessage 
@@ -95,6 +111,7 @@ export function ChatInterface({
               message={message} 
               onSuggestionClick={onSuggestionClick} 
               currentQuestionProgress={questionProgress} 
+              isDisabled={isActionInProgress}
             />
           ))}
           

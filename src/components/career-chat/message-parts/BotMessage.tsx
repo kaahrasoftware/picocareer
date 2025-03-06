@@ -6,11 +6,20 @@ import { cn } from '@/lib/utils';
 interface BotMessageProps {
   content: string;
   category?: string;
+  isTyping?: boolean;
+  isError?: boolean;
 }
 
-export function BotMessage({ content, category }: BotMessageProps) {
-  // Check if this is an error message
-  const isError = content.includes("error") && content.includes("I'm sorry");
+export function BotMessage({ 
+  content, 
+  category,
+  isTyping = false,
+  isError: propIsError
+}: BotMessageProps) {
+  // Check if this is an error message if not explicitly set
+  const isError = propIsError !== undefined 
+    ? propIsError 
+    : content.includes("error") && content.includes("I'm sorry");
   
   // Get styles based on category - simplified for faster rendering
   const getCategoryGradient = () => {
@@ -41,12 +50,21 @@ export function BotMessage({ content, category }: BotMessageProps) {
   }, [content]);
 
   return (
-    <div className="flex flex-col items-start mb-4 animate-fade-in" style={{animationDuration: '150ms'}}>
+    <div 
+      className={cn(
+        "flex flex-col items-start mb-4",
+        !isTyping && "animate-fade-in"
+      )} 
+      style={{
+        animationDuration: '150ms'
+      }}
+    >
       <div className={cn(
-        "max-w-[95%] rounded-xl px-4 py-3 shadow-sm",
+        "max-w-[95%] rounded-xl px-4 py-3 shadow-sm transition-all",
         isError 
           ? "bg-gradient-to-br from-red-50 to-white border border-red-200" 
-          : `bg-gradient-to-br ${getCategoryGradient()} border`
+          : `bg-gradient-to-br ${getCategoryGradient()} border`,
+        isTyping && "opacity-80"
       )}>
         {isError ? (
           <div className="flex items-start gap-2">
