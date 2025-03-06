@@ -126,6 +126,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
               placeholder="Type your answer..."
               className="flex-1"
               onKeyPress={(e) => e.key === 'Enter' && handleCustomSubmit()}
+              autoFocus
             />
             <Button onClick={handleCustomSubmit} type="submit">
               Submit
@@ -205,6 +206,7 @@ export function OptionCards({ options, onSelect, layout = 'cards', allowMultiple
             placeholder="Type your answer..."
             className="flex-1"
             onKeyPress={(e) => e.key === 'Enter' && handleCustomSubmit()}
+            autoFocus
           />
           <Button onClick={handleCustomSubmit} type="submit">
             Submit
