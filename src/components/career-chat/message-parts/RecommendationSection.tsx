@@ -50,7 +50,7 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
         {/* Careers Section */}
         {career_recommendations && career_recommendations.length > 0 && (
           <CareersSection 
-            careers={career_recommendations} 
+            careers={career_recommendations}
             onExploreCareer={handleExploreCareer}
           />
         )}
@@ -75,17 +75,6 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
               "Connect with mentors in these fields"
             ]}
             onNextStepClick={onSuggestionClick}
-          />
-        )}
-
-        {/* Career Details Dialog */}
-        {selectedCareerId && (
-          <CareerDetailsDialog 
-            careerId={selectedCareerId}
-            open={!!selectedCareerId}
-            onOpenChange={(open) => {
-              if (!open) setSelectedCareerId(null);
-            }}
           />
         )}
       </div>
