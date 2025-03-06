@@ -1,6 +1,5 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useChatSession } from './chat-session'; // Updated import path
+import { useChatSession } from './chat-session'; 
 import { useCareerAnalysis } from './useCareerAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,10 +29,10 @@ export function useCareerChat() {
   const [hasConfigError, setHasConfigError] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [questionProgress, setQuestionProgress] = useState(0);
+  const [messageCache, setMessageCache] = useState<Map<string, CareerChatMessage>>(new Map());
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Track questions by category
   const [questionCounts, setQuestionCounts] = useState({
     education: 0,
     skills: 0,
@@ -41,10 +40,8 @@ export function useCareerChat() {
     goals: 0
   });
   
-  // Track if a session is completed/ended
   const [isSessionComplete, setIsSessionComplete] = useState(false);
 
-  // Check API configuration on load
   useEffect(() => {
     const checkApiConfig = async () => {
       if (!sessionId) return;
@@ -62,18 +59,15 @@ export function useCareerChat() {
         }
       } catch (error) {
         console.error('Failed to check API configuration:', error);
-        // Don't set hasConfigError to true here, as it might be a temporary network issue
       }
     };
     
     checkApiConfig();
   }, [sessionId]);
 
-  // Update category and question counts based on messages
   useEffect(() => {
     if (messages.length === 0) return;
 
-    // Check for session end messages first
     const hasSessionEndMessage = messages.some(msg => 
       msg.message_type === 'session_end' || 
       msg.metadata?.isSessionEnd === true
@@ -86,7 +80,6 @@ export function useCareerChat() {
       return;
     }
 
-    // Check for recommendation messages next
     const hasRecommendationMessage = messages.some(msg => 
       msg.message_type === 'recommendation' || 
       msg.metadata?.isRecommendation === true
@@ -98,71 +91,43 @@ export function useCareerChat() {
       return;
     }
 
-    // Check latest bot message for category and progress information
-    const botMessages = messages.filter(m => 
-      m.message_type === 'bot'
-    );
-    
+    const botMessages = messages.filter(m => m.message_type === 'bot');
     if (botMessages.length === 0) return;
     
     const latestBotMessage = botMessages[botMessages.length - 1];
     
-    // First check for structured message format (new)
     const structuredMessage = latestBotMessage.metadata?.structuredMessage as StructuredMessage | undefined;
     
     if (structuredMessage?.type === 'question' && structuredMessage.metadata.progress) {
-      // Using new structured format
       const category = structuredMessage.metadata.progress.category?.toLowerCase() || 'general';
       const overall = structuredMessage.metadata.progress.overall;
       
       setCurrentCategory(category);
       
-      // Handle overall progress as either string percentage or number
-      if (typeof overall === 'string' && overall.includes('%')) {
+      if (typeof overall === 'number') {
+        setQuestionProgress(overall);
+      } else if (typeof overall === 'string' && overall.includes('%')) {
         setQuestionProgress(parseInt(overall.replace('%', '')));
       } else if (typeof overall === 'string') {
         setQuestionProgress(parseInt(overall));
-      } else if (typeof overall === 'number') {
-        setQuestionProgress(overall);
       } else {
-        // Calculate based on question number
         const current = structuredMessage.metadata.progress.current || 1;
-        const total = 24; // Total questions across all categories
+        const total = 24;
         setQuestionProgress(Math.min(Math.round((current / total) * 100), 100));
       }
-      
-      // Update counts for this category
-      if (category in questionCounts) {
-        setQuestionCounts(prev => ({
-          ...prev,
-          [category]: structuredMessage.metadata.progress?.current || prev[category as keyof typeof prev] + 1
-        }));
-      }
     } 
-    // Fallback to legacy format
     else if (latestBotMessage.metadata?.category) {
       const category = (latestBotMessage.metadata.category as string).toLowerCase();
       setCurrentCategory(category);
       
-      // Update counts for this category if it's in our tracked categories
-      if (category in questionCounts) {
-        setQuestionCounts(prev => ({
-          ...prev,
-          [category]: prev[category as keyof typeof prev] + 1
-        }));
-      }
-      
-      // Calculate overall progress (assuming 24 questions total - 6 per category)
       const totalAnswered = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
       setQuestionProgress(Math.min(Math.round((totalAnswered / 24) * 100), 100));
     }
-  }, [messages, questionCounts]);
+  }, [messages]);
 
-  // Function to send message and get AI response
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId || isSessionComplete) return;
     
-    // Add user message
     const userMessage: CareerChatMessage = {
       session_id: sessionId,
       message_type: 'user',
@@ -177,17 +142,14 @@ export function useCareerChat() {
     setIsTyping(true);
     
     try {
-      // Format messages for the AI
       const messageHistory = messages
         .filter(m => m.message_type === 'user' || m.message_type === 'bot')
+        .slice(-10)
         .map(m => ({
           role: m.message_type === 'user' ? 'user' : 'assistant',
-          content: m.content,
-          // Include metadata for assistant messages to help the AI understand context
-          ...(m.message_type === 'bot' && m.metadata ? { metadata: m.metadata } : {})
+          content: m.content
         }));
 
-      // Add the new user message
       messageHistory.push({
         role: 'user',
         content: message.trim()
@@ -195,7 +157,6 @@ export function useCareerChat() {
 
       console.log('Sending message to AI service...');
       
-      // Call our edge function
       const response = await supabase.functions.invoke('career-chat-ai', {
         body: {
           message: message.trim(),
@@ -219,24 +180,17 @@ export function useCareerChat() {
         throw new Error(response.data.error);
       }
 
-      // Log successful response for debugging
-      console.log('Got response from career-chat-ai:', response.data);
+      console.log('Got response from career-chat-ai');
       
-      // Check if this is a recommendation or session end
       const isRecommendation = 
         response.data?.structuredMessage?.type === 'recommendation' ||
-        response.data?.rawResponse?.type === 'recommendation' ||
         response.data?.metadata?.isRecommendation;
 
       const isSessionEnd = 
         response.data?.structuredMessage?.type === 'session_end' ||
-        response.data?.rawResponse?.type === 'session_end' ||
         response.data?.metadata?.isSessionEnd;
       
-      // Add bot response to messages locally
       if (response.data?.message) {
-        console.log('Creating bot message to save to DB');
-        
         const botMessage: CareerChatMessage = {
           session_id: sessionId,
           message_type: isSessionEnd ? 'session_end' : isRecommendation ? 'recommendation' : 'bot',
@@ -249,11 +203,8 @@ export function useCareerChat() {
           created_at: new Date().toISOString()
         };
         
-        // Add the bot message to database and state
         const savedMessage = await addMessage(botMessage);
-        console.log('Bot message saved:', savedMessage ? 'success' : 'failed');
         
-        // Update progress when a recommendation or session end is received
         if (isRecommendation || isSessionEnd) {
           setQuestionProgress(100);
           setCurrentCategory('complete');
@@ -268,7 +219,6 @@ export function useCareerChat() {
       console.error('Error getting AI response:', error);
       toast.error('Failed to get a response. Please try again.');
       
-      // Add error message
       await addMessage({
         session_id: sessionId,
         message_type: 'system',

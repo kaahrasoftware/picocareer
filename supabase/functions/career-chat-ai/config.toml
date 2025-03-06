@@ -4,68 +4,25 @@ project_id = "wurdmlkfkzuivvwxjmxk"
 # DeepSeek API key is set via environment variables
 DEEPSEEK_API_KEY = ""
 
-# Response format configuration
+# Response format configuration - optimized for speed
 AI_RESPONSE_FORMAT = "structured"
 STRUCTURED_RESPONSE_VERSION = "3"
-QUESTION_MAX_LENGTH = 60
-OPTIONS_MAX_COUNT = 8
-OPTIONS_MAX_LENGTH = 40
+QUESTION_MAX_LENGTH = 40
+OPTIONS_MAX_COUNT = 5
+OPTIONS_MAX_LENGTH = 30
 CATEGORY_TRACKING = "enabled"
 
-# Structured format instruction
-# This will instruct the AI to return responses in the specified format
+# Structured format instruction - simplified
 STRUCTURED_FORMAT_INSTRUCTION = """
-Return responses in this JSON format:
+Return responses in this exact JSON format:
 {
-  "type": "question|conversation|recommendation|assessment_result",
+  "type": "question|recommendation|session_end",
   "content": {
-    // For questions and conversations
-    "intro": "Optional friendly intro text",
-    "question": "The actual question being asked",
+    "intro": "Brief context",
+    "question": "Your question?",
     "options": [
-      {
-        "id": "unique-id",
-        "text": "Option text",
-        "icon": "optional-icon-name",
-        "description": "Optional description"
-      }
-    ],
-    
-    // For assessment results (final career recommendations)
-    "introduction": {
-      "title": "Your Career Assessment Results",
-      "summary": "Brief overview of the assessment process and what the results mean"
-    },
-    "career_recommendations": [
-      {
-        "title": "Career Title",
-        "match_percentage": 95,
-        "description": "Why this career matches your profile",
-        "key_requirements": ["requirement1", "requirement2"]
-      }
-    ],
-    "personality_insights": [
-      {
-        "trait": "Trait name",
-        "strength_level": 85,
-        "description": "Description of this personality trait"
-      }
-    ],
-    "growth_areas": [
-      {
-        "skill": "Skill to develop",
-        "importance": "high|medium|low",
-        "description": "Why this skill matters for your career path"
-      }
-    ],
-    "closing": {
-      "message": "Thank you message",
-      "next_steps": [
-        "Suggestion 1",
-        "Suggestion 2",
-        "Suggestion 3"
-      ]
-    }
+      {"id": "option-id", "text": "Option text"}
+    ]
   },
   "metadata": {
     "progress": {
@@ -73,12 +30,7 @@ Return responses in this JSON format:
       "current": 1,
       "total": 6,
       "overall": 25
-    },
-    "options": {
-      "type": "single",
-      "layout": "cards|chips|buttons"
-    },
-    "isSessionEnd": false
+    }
   }
 }
 """

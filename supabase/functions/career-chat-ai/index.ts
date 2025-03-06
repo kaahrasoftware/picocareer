@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { config } from "https://deno.land/std@0.168.0/dotenv/mod.ts";
@@ -26,104 +25,61 @@ console.log("CONFIG:", {
   STRUCTURE_FORMAT_AVAILABLE: CONFIG.STRUCTURED_FORMAT_INSTRUCTION ? "Yes" : "No"
 });
 
-// System prompt with updated instructions for more structured progression
+// Streamlined system prompt for faster responses
 const getSystemPrompt = () => {
   const basePrompt = `
-You are Pico, a friendly career guidance assistant. You help users explore career options by asking specific, relevant questions about their interests, skills, and preferences. Your guidance should lead users to discover careers that match their profile.
+You are Pico, a career guidance assistant. Ask users about their interests, skills, and preferences to recommend careers. Be concise and specific.
 
 Guidelines:
-1. Ask ONE focused question at a time with multiple-choice options (3-8 options per question).
-2. Make each option specific and concise (under 40 characters).
-3. You MUST ask exactly 6 questions for each of these categories in order:
+1. Ask ONE focused question at a time with 3-5 multiple-choice options (never more).
+2. Make each option specific and under 30 characters.
+3. Follow this category sequence strictly:
 
-   EDUCATION CATEGORY (6 questions):
-   - Educational background
-   - Academic interests
-   - Learning style
-   - Educational goals
-   - Study preferences
-   - Academic achievements
+   EDUCATION (6 questions): background, interests, learning style, goals, preferences, achievements
+   SKILLS (6 questions): technical skills, soft skills, talents, expertise, interests, problem-solving
+   WORKSTYLE (6 questions): environment, team dynamics, work-life balance, leadership, communication, stress management
+   GOALS (6 questions): aspirations, growth, impact, success definition, vision, values
 
-   SKILLS CATEGORY (6 questions):
-   - Technical skills
-   - Soft skills
-   - Natural talents
-   - Areas of expertise
-   - Skill development interests
-   - Problem-solving approach
-
-   WORKSTYLE CATEGORY (6 questions):
-   - Preferred work environment
-   - Team dynamics preference
-   - Work-life balance needs
-   - Leadership style
-   - Communication style
-   - Stress management approach
-
-   GOALS CATEGORY (6 questions):
-   - Career aspirations
-   - Growth objectives
-   - Impact desires
-   - Success definition
-   - Long-term vision
-   - Work values
-
-4. Track and show progress for each category (e.g., "Question 3/6 in Education Category").
-5. Do NOT generate career recommendations until ALL 24 questions (6 per category × 4 categories) have been answered.
-6. When generating final career recommendations, provide:
-   - Top 5-7 career matches with match percentages
-   - Detailed reasoning based on answers from all categories
-   - Personality insights and strengths
-   - Suggested growth areas
-
-7. After providing career recommendations:
-   - Thank the user for completing the assessment
-   - Indicate that this career assessment session is complete
-   - Let them know they can start a new session to explore different career paths
-   - Use this exact structure for the final message:
-   {
-     "type": "session_end",
-     "content": {
-       "message": "Thank you for completing your career assessment! I've analyzed your responses and provided career recommendations above. This session is now complete. You can start a new session anytime to explore different career paths or retake the assessment.",
-       "suggestions": [
-         "Start a new career assessment",
-         "Explore these career paths in detail",
-         "Save these recommendations"
-       ]
-     },
-     "metadata": {
-       "isSessionEnd": true,
-       "completionType": "career_recommendations"
-     }
-   }
-
-8. Each question message should use this structured format:
+4. Track progress as "Question X/6 in Category" and overall progress percentage.
+5. Provide 5-7 career matches only after completing all 24 questions.
+6. Use this exact format for all responses:
 {
-  "type": "question",
+  "type": "question|recommendation|session_end",
   "content": {
-    "intro": "Brief context or follow-up to previous answer",
-    "question": "The actual question text",
+    "intro": "Brief context",
+    "question": "Your question here?",
     "options": [
-      {
-        "id": "unique-id",
-        "text": "Option text",
-        "category": "current-category"
-      }
+      {"id": "option1", "text": "First option"},
+      {"id": "option2", "text": "Second option"},
+      {"id": "option3", "text": "Third option"}
     ]
   },
   "metadata": {
     "progress": {
-      "category": "current-category",
-      "current": "current-question-number",
+      "category": "education|skills|workstyle|goals",
+      "current": 1,
       "total": 6,
-      "overall": "percentage-complete"
+      "overall": 25
     }
   }
 }
 
-9. Be conversational and encouraging, but focus on completing all questions systematically.
-10. Only switch to the next category when all 6 questions in the current category are complete.
-11. Keep track of previous answers to ensure follow-up questions are relevant and avoid repetition.`;
+7. For session end, use this exact format:
+{
+  "type": "session_end",
+  "content": {
+    "message": "Thank you for completing your career assessment! I've analyzed your responses and provided career recommendations above. This session is now complete. You can start a new session anytime to explore different career paths or retake the assessment.",
+    "suggestions": [
+      "Start a new career assessment",
+      "Explore these career paths in detail",
+      "Save these recommendations"
+    ]
+  },
+  "metadata": {
+    "isSessionEnd": true,
+    "completionType": "career_recommendations"
+  }
+}`;
 
   // If structured format instruction is available, append it
   if (CONFIG.STRUCTURED_FORMAT_INSTRUCTION) {
@@ -166,7 +122,7 @@ serve(async (req) => {
       throw new Error("Message is required");
     }
 
-    // Set up the conversation history from the request or start fresh
+    // Set up the conversation history
     const messages = [
       {
         role: "system",
@@ -174,9 +130,11 @@ serve(async (req) => {
       },
     ];
 
-    // Add previous messages if provided
+    // Add previous messages if provided - LIMIT TO LAST 10 MESSAGES FOR SPEED
     if (body.messages && Array.isArray(body.messages)) {
-      body.messages.forEach((msg) => {
+      // Only keep the most recent messages to reduce context size
+      const recentMessages = body.messages.slice(-10);
+      recentMessages.forEach((msg) => {
         messages.push({
           role: msg.role,
           content: msg.content,
@@ -190,17 +148,19 @@ serve(async (req) => {
       });
     }
 
-    // Prepare the request to DeepSeek API
+    // Prepare the request to DeepSeek API with optimized parameters
     const requestOptions = {
       model: "deepseek-chat",
       messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000,
+      temperature: 0.5, // Lower temperature for more deterministic responses
+      max_tokens: 600,  // Reduced token count for faster responses
+      top_p: 0.9,       // More focused sampling
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
     };
 
     // Debug logging for API request
-    console.log("Sending request to DeepSeek API:", API_ENDPOINT);
-    console.log("Using model:", requestOptions.model);
+    console.log("Sending request to DeepSeek API");
 
     // Make the request to DeepSeek API
     const response = await fetch(API_ENDPOINT, {
@@ -302,13 +262,12 @@ serve(async (req) => {
         };
       }
     } else {
-      // Legacy format - extract from text
-      const questionMatch = aiResponse.match(/\*\*Question (\d+)\/(\d+) \(([^)]+)\):/);
+      // Fallback to basic text processing if structured format fails
       const isRecommendation = aiResponse.includes("Career Recommendations") || 
-                               aiResponse.includes("Career Matches");
+                              aiResponse.includes("Career Matches");
       const isSessionEnd = aiResponse.includes("session is now complete") ||
-                           aiResponse.includes("assessment is complete");
-                               
+                          aiResponse.includes("assessment is complete");
+                            
       if (isRecommendation) {
         messageType = "recommendation";
         metadata = { ...metadata, isRecommendation: true };
@@ -319,29 +278,6 @@ serve(async (req) => {
           isSessionEnd: true,
           completionType: "career_recommendations"
         };
-      } else if (questionMatch) {
-        // Extract question info
-        const questionNumber = parseInt(questionMatch[1]);
-        const totalQuestions = parseInt(questionMatch[2]);
-        const category = questionMatch[3].toLowerCase();
-        
-        metadata = {
-          ...metadata,
-          category,
-          questionNumber,
-          totalInCategory: totalQuestions,
-          progress: Math.min(Math.round((questionNumber / totalQuestions) * 100), 100),
-        };
-        
-        // Extract suggestions
-        const suggestions = extractSuggestions(aiResponse);
-        if (suggestions.length > 0) {
-          metadata = {
-            ...metadata,
-            hasOptions: true,
-            suggestions,
-          };
-        }
       }
     }
 
@@ -375,28 +311,4 @@ serve(async (req) => {
   }
 });
 
-// Extract suggestions from text response (legacy format)
-function extractSuggestions(text) {
-  try {
-    // Look for numbered options or bullet points
-    const optionsRegex = /(?:\d+\.\s|\*\s)(.*?)(?=\n\d+\.\s|\n\*\s|$)/gs;
-    const matches = [...text.matchAll(optionsRegex)];
-    
-    if (matches.length > 0) {
-      return matches.map(match => match[1].trim());
-    }
-    
-    // If no matches, check for options in a different format
-    const optionsSection = text.match(/Options:\s*([\s\S]*?)(?:\n\n|$)/);
-    if (optionsSection) {
-      const lines = optionsSection[1].split('\n').map(line => line.trim());
-      return lines.filter(line => line.length > 0);
-    }
-    
-    // Fallback to simple yes/no options
-    return ["Yes", "No", "Tell me more"];
-  } catch (e) {
-    console.warn("Error extracting suggestions:", e);
-    return ["Yes", "No", "Maybe"];
-  }
-}
+// Helper function has been removed as we're focusing on structured responses

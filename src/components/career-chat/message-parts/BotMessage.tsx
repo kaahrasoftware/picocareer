@@ -12,7 +12,7 @@ export function BotMessage({ content, category }: BotMessageProps) {
   // Check if this is an error message
   const isError = content.includes("error") && content.includes("I'm sorry");
   
-  // Get styles based on category
+  // Get styles based on category - simplified for faster rendering
   const getCategoryGradient = () => {
     switch (category) {
       case 'education':
@@ -32,43 +32,29 @@ export function BotMessage({ content, category }: BotMessageProps) {
     }
   };
   
-  // Try to extract just the conversational part if it's JSON or contains numbered options
+  // Simplified content cleaning for faster processing
   const cleanedContent = React.useMemo(() => {
     if (content.includes('```json') || content.includes('```')) {
-      // Remove code blocks to display only the conversation text
-      return content.replace(/```(?:json)?\n[\s\S]*?\n```/g, '')
-        .replace(/\{[\s\S]*\}/g, '') // Remove any remaining JSON objects
-        .trim();
+      return content.replace(/```(?:json)?\n[\s\S]*?\n```/g, '').trim();
     }
-    
-    // Check if this is a message with numbered options (1. Option, 2. Option, etc.)
-    if (/\d+\.\s+\w+/.test(content)) {
-      // Split the content by the first numbered option
-      const parts = content.split(/\d+\.\s+\w+/);
-      if (parts.length > 1) {
-        // Return just the text part before the options
-        return parts[0].trim();
-      }
-    }
-    
     return content;
   }, [content]);
 
   return (
-    <div className="flex flex-col items-start mb-4 animate-fade-in" style={{animationDuration: '200ms'}}>
+    <div className="flex flex-col items-start mb-4 animate-fade-in" style={{animationDuration: '150ms'}}>
       <div className={cn(
-        "max-w-[95%] rounded-xl px-5 py-4 shadow-md transition-all duration-200 hover:shadow-lg",
+        "max-w-[95%] rounded-xl px-4 py-3 shadow-sm",
         isError 
           ? "bg-gradient-to-br from-red-50 to-white border border-red-200" 
           : `bg-gradient-to-br ${getCategoryGradient()}`
       )}>
         {isError ? (
-          <div className="flex items-start gap-2.5">
-            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{cleanedContent}</p>
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{cleanedContent}</p>
           </div>
         ) : (
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{cleanedContent}</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{cleanedContent}</p>
         )}
       </div>
     </div>
