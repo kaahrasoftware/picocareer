@@ -1,349 +1,290 @@
 
-import { QuestionBank } from './question-types';
+import { QuestionCategory } from './question-types';
 
-/**
- * Structured question bank for career assessment
- */
+interface Question {
+  intro?: string;
+  question: string;
+  options: string[];
+}
 
-export const CATEGORIES = ['education', 'skills', 'workstyle', 'goals'];
-
-export const questionBank: QuestionBank = {
-  "education": {
-    "name": "Education Background",
-    "description": "Questions about your educational history and learning preferences",
-    "questions": [
-      {
-        "id": "edu-1",
-        "text": "What is your highest level of education?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your education level",
-        "options": [
-          { "id": "e1-1", "text": "High School" },
-          { "id": "e1-2", "text": "Bachelor's Degree" },
-          { "id": "e1-3", "text": "Master's Degree" },
-          { "id": "e1-4", "text": "Doctorate" },
-          { "id": "e1-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "edu-2",
-        "text": "Which field of study interests you most?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your field of interest",
-        "options": [
-          { "id": "e2-1", "text": "Science & Technology" },
-          { "id": "e2-2", "text": "Business & Economics" },
-          { "id": "e2-3", "text": "Arts & Humanities" },
-          { "id": "e2-4", "text": "Healthcare" },
-          { "id": "e2-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "edu-3",
-        "text": "How do you prefer to learn new things?",
-        "allowCustom": true,
-        "customPrompt": "Describe your learning style",
-        "options": [
-          { "id": "e3-1", "text": "Hands-on Practice" },
-          { "id": "e3-2", "text": "Reading & Research" },
-          { "id": "e3-3", "text": "Visual Learning" },
-          { "id": "e3-4", "text": "Group Discussion" },
-          { "id": "e3-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "edu-4",
-        "text": "What are your academic achievements?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your achievements",
-        "options": [
-          { "id": "e4-1", "text": "High Academic Honors" },
-          { "id": "e4-2", "text": "Strong Project Portfolio" },
-          { "id": "e4-3", "text": "Research Experience" },
-          { "id": "e4-4", "text": "Leadership Activities" },
-          { "id": "e4-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "edu-5",
-        "text": "Your preferred learning environment?",
-        "allowCustom": true,
-        "customPrompt": "Describe your ideal learning environment",
-        "options": [
-          { "id": "e5-1", "text": "Traditional Classroom" },
-          { "id": "e5-2", "text": "Online Learning" },
-          { "id": "e5-3", "text": "Practical Workshops" },
-          { "id": "e5-4", "text": "Self-Directed Study" },
-          { "id": "e5-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "edu-6",
-        "text": "Future education plans?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your education plans",
-        "options": [
-          { "id": "e6-1", "text": "Advanced Degree" },
-          { "id": "e6-2", "text": "Professional Certificates" },
-          { "id": "e6-3", "text": "Skill-Specific Training" },
-          { "id": "e6-4", "text": "Continuous Learning" },
-          { "id": "e6-custom", "text": "Other (specify)" }
-        ]
-      }
-    ]
-  },
-  "skills": {
-    "name": "Skills & Abilities",
-    "description": "Questions about your technical and soft skills",
-    "questions": [
-      {
-        "id": "skill-1",
-        "text": "Your strongest technical skills?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your technical skills",
-        "options": [
-          { "id": "s1-1", "text": "Data & Analytics" },
-          { "id": "s1-2", "text": "Programming" },
-          { "id": "s1-3", "text": "Design & Creative" },
-          { "id": "s1-4", "text": "Technical Writing" },
-          { "id": "s1-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "skill-2",
-        "text": "Best soft skill?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your soft skills",
-        "options": [
-          { "id": "s2-1", "text": "Communication" },
-          { "id": "s2-2", "text": "Leadership" },
-          { "id": "s2-3", "text": "Problem Solving" },
-          { "id": "s2-4", "text": "Team Collaboration" },
-          { "id": "s2-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "skill-3",
-        "text": "Natural talents?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your natural talents",
-        "options": [
-          { "id": "s3-1", "text": "Creative Thinking" },
-          { "id": "s3-2", "text": "Strategic Planning" },
-          { "id": "s3-3", "text": "People Management" },
-          { "id": "s3-4", "text": "Technical Aptitude" },
-          { "id": "s3-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "skill-4",
-        "text": "Area of expertise?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your expertise",
-        "options": [
-          { "id": "s4-1", "text": "Technical Systems" },
-          { "id": "s4-2", "text": "Business Operations" },
-          { "id": "s4-3", "text": "Creative Production" },
-          { "id": "s4-4", "text": "People Development" },
-          { "id": "s4-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "skill-5",
-        "text": "Skills you want to develop?",
-        "allowCustom": true,
-        "customPrompt": "Tell us what skills you want to develop",
-        "options": [
-          { "id": "s5-1", "text": "Advanced Tech Skills" },
-          { "id": "s5-2", "text": "Management Abilities" },
-          { "id": "s5-3", "text": "Creative Expertise" },
-          { "id": "s5-4", "text": "Leadership Qualities" },
-          { "id": "s5-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "skill-6",
-        "text": "Problem-solving approach?",
-        "allowCustom": true,
-        "customPrompt": "Describe how you solve problems",
-        "options": [
-          { "id": "s6-1", "text": "Analytical Thinking" },
-          { "id": "s6-2", "text": "Creative Solutions" },
-          { "id": "s6-3", "text": "Collaborative Approach" },
-          { "id": "s6-4", "text": "Systematic Method" },
-          { "id": "s6-custom", "text": "Other (specify)" }
-        ]
-      }
-    ]
-  },
-  "workstyle": {
-    "name": "Work Environment & Style",
-    "description": "Questions about your preferred work environment and style",
-    "questions": [
-      {
-        "id": "work-1",
-        "text": "Preferred work environment?",
-        "allowCustom": true,
-        "customPrompt": "Describe your ideal work environment",
-        "options": [
-          { "id": "w1-1", "text": "Traditional Office" },
-          { "id": "w1-2", "text": "Remote Work" },
-          { "id": "w1-3", "text": "Hybrid Setting" },
-          { "id": "w1-4", "text": "Field Work" },
-          { "id": "w1-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "work-2",
-        "text": "Team dynamics preference?",
-        "allowCustom": true,
-        "customPrompt": "Describe your preferred team dynamics",
-        "options": [
-          { "id": "w2-1", "text": "Independent Work" },
-          { "id": "w2-2", "text": "Team Collaboration" },
-          { "id": "w2-3", "text": "Leadership Role" },
-          { "id": "w2-4", "text": "Mixed Interaction" },
-          { "id": "w2-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "work-3",
-        "text": "Work-life balance priority?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your work-life balance priorities",
-        "options": [
-          { "id": "w3-1", "text": "Fixed Schedule" },
-          { "id": "w3-2", "text": "Flexible Hours" },
-          { "id": "w3-3", "text": "Results-Focused" },
-          { "id": "w3-4", "text": "Project-Based" },
-          { "id": "w3-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "work-4",
-        "text": "Leadership style?",
-        "allowCustom": true,
-        "customPrompt": "Describe your leadership style",
-        "options": [
-          { "id": "w4-1", "text": "Directive" },
-          { "id": "w4-2", "text": "Collaborative" },
-          { "id": "w4-3", "text": "Supportive" },
-          { "id": "w4-4", "text": "Delegative" },
-          { "id": "w4-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "work-5",
-        "text": "Communication preference?",
-        "allowCustom": true,
-        "customPrompt": "Tell us how you prefer to communicate",
-        "options": [
-          { "id": "w5-1", "text": "Written" },
-          { "id": "w5-2", "text": "Verbal" },
-          { "id": "w5-3", "text": "Visual" },
-          { "id": "w5-4", "text": "Mixed Methods" },
-          { "id": "w5-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "work-6",
-        "text": "Stress management approach?",
-        "allowCustom": true,
-        "customPrompt": "How do you manage stress at work?",
-        "options": [
-          { "id": "w6-1", "text": "Planning & Organization" },
-          { "id": "w6-2", "text": "Regular Breaks" },
-          { "id": "w6-3", "text": "Team Support" },
-          { "id": "w6-4", "text": "Problem Prioritization" },
-          { "id": "w6-custom", "text": "Other (specify)" }
-        ]
-      }
-    ]
-  },
-  "goals": {
-    "name": "Career Goals & Values",
-    "description": "Questions about your career aspirations and values",
-    "questions": [
-      {
-        "id": "goal-1",
-        "text": "Career aspirations?",
-        "allowCustom": true,
-        "customPrompt": "Tell us about your career aspirations",
-        "options": [
-          { "id": "g1-1", "text": "Executive Leadership" },
-          { "id": "g1-2", "text": "Expert/Specialist" },
-          { "id": "g1-3", "text": "Entrepreneur" },
-          { "id": "g1-4", "text": "Project Manager" },
-          { "id": "g1-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "goal-2",
-        "text": "Growth priority?",
-        "allowCustom": true,
-        "customPrompt": "What's your top professional growth priority?",
-        "options": [
-          { "id": "g2-1", "text": "Skill Development" },
-          { "id": "g2-2", "text": "Career Advancement" },
-          { "id": "g2-3", "text": "Income Growth" },
-          { "id": "g2-4", "text": "Work-Life Balance" },
-          { "id": "g2-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "goal-3",
-        "text": "Desired impact?",
-        "allowCustom": true,
-        "customPrompt": "What kind of impact do you want to make?",
-        "options": [
-          { "id": "g3-1", "text": "Social Change" },
-          { "id": "g3-2", "text": "Innovation" },
-          { "id": "g3-3", "text": "Business Success" },
-          { "id": "g3-4", "text": "Knowledge Sharing" },
-          { "id": "g3-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "goal-4",
-        "text": "Definition of success?",
-        "allowCustom": true,
-        "customPrompt": "How do you define professional success?",
-        "options": [
-          { "id": "g4-1", "text": "Financial Rewards" },
-          { "id": "g4-2", "text": "Personal Growth" },
-          { "id": "g4-3", "text": "Recognition" },
-          { "id": "g4-4", "text": "Making a Difference" },
-          { "id": "g4-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "goal-5",
-        "text": "Professional vision?",
-        "allowCustom": true,
-        "customPrompt": "Describe your professional vision",
-        "options": [
-          { "id": "g5-1", "text": "Industry Leader" },
-          { "id": "g5-2", "text": "Innovator" },
-          { "id": "g5-3", "text": "Mentor" },
-          { "id": "g5-4", "text": "Subject Expert" },
-          { "id": "g5-custom", "text": "Other (specify)" }
-        ]
-      },
-      {
-        "id": "goal-6",
-        "text": "Core work values?",
-        "allowCustom": true,
-        "customPrompt": "What values are most important to you at work?",
-        "options": [
-          { "id": "g6-1", "text": "Innovation" },
-          { "id": "g6-2", "text": "Integrity" },
-          { "id": "g6-3", "text": "Collaboration" },
-          { "id": "g6-4", "text": "Excellence" },
-          { "id": "g6-custom", "text": "Other (specify)" }
-        ]
-      }
-    ]
-  }
+export const questionBank: Record<QuestionCategory, Question[]> = {
+  education: [
+    {
+      intro: "Let's start by understanding your educational background.",
+      question: "What is your current highest level of education?",
+      options: [
+        "High School or GED",
+        "Some College",
+        "Associate's Degree",
+        "Bachelor's Degree",
+        "Master's Degree",
+        "Doctorate or Professional Degree"
+      ]
+    },
+    {
+      question: "What field of study are you most interested in or have you studied?",
+      options: [
+        "Computer Science/IT",
+        "Business/Economics",
+        "Engineering",
+        "Arts/Humanities",
+        "Natural Sciences",
+        "Social Sciences",
+        "Healthcare/Medicine",
+        "Education"
+      ]
+    },
+    {
+      question: "How would you describe your learning style?",
+      options: [
+        "Self-directed learner",
+        "Prefer structured educational settings",
+        "Hands-on, practical learning",
+        "Discussion and collaborative learning",
+        "Visual learning through demonstrations"
+      ]
+    },
+    {
+      question: "Are you interested in pursuing more education or certifications?",
+      options: [
+        "Yes, I plan to pursue a higher degree",
+        "Yes, interested in professional certifications",
+        "Maybe, if required for career advancement",
+        "No, I prefer to learn on the job",
+        "Undecided"
+      ]
+    },
+    {
+      question: "How important is continuous learning and development in your career?",
+      options: [
+        "Extremely important - I love learning new things",
+        "Important for career advancement",
+        "Somewhat important",
+        "Not very important",
+        "I prefer stability over learning new skills"
+      ]
+    },
+    {
+      question: "What academic achievements are you most proud of?",
+      options: [
+        "High grades/academic honors",
+        "Research or projects",
+        "Leadership positions",
+        "Competition awards",
+        "Overcoming educational challenges",
+        "Teaching or mentoring others"
+      ]
+    }
+  ],
+  skills: [
+    {
+      intro: "Now let's explore your skills and abilities.",
+      question: "Which technical skills are you strongest in?",
+      options: [
+        "Programming/Software Development",
+        "Data Analysis/Statistics",
+        "Design/Creative Tools",
+        "Technical Writing/Documentation",
+        "Research Methods",
+        "Engineering/Physical Sciences",
+        "Project Management Tools"
+      ]
+    },
+    {
+      question: "What soft skills do you excel at?",
+      options: [
+        "Communication/Presenting",
+        "Leadership/Team Management",
+        "Critical Thinking/Problem Solving",
+        "Creativity/Innovation",
+        "Teamwork/Collaboration",
+        "Organization/Time Management",
+        "Adaptability/Flexibility"
+      ]
+    },
+    {
+      question: "What skills would you like to develop further?",
+      options: [
+        "Technical/Digital Skills",
+        "Leadership/Management",
+        "Creative/Design Skills",
+        "Communication/Public Speaking",
+        "Analytical/Research Skills",
+        "Foreign Languages",
+        "Business/Entrepreneurial Skills"
+      ]
+    },
+    {
+      question: "How quickly do you learn new tools or technologies?",
+      options: [
+        "Very quickly - I enjoy the challenge",
+        "Fairly quickly with good resources",
+        "At an average pace",
+        "I prefer to master one thing before learning another",
+        "I find learning new technologies challenging"
+      ]
+    },
+    {
+      question: "How do you prefer to solve complex problems?",
+      options: [
+        "Research thoroughly before acting",
+        "Collaborate with others for diverse perspectives",
+        "Trial and error experimentation",
+        "Break it down into smaller components",
+        "Use intuition and past experience",
+        "Find an expert or established solution"
+      ]
+    },
+    {
+      question: "Which of these tools or technologies are you most comfortable with?",
+      options: [
+        "Microsoft Office/Google Workspace",
+        "Programming Languages (Python, Java, etc.)",
+        "Creative Software (Adobe, Design Tools)",
+        "Data Analysis Tools (SQL, Excel, BI tools)",
+        "Project Management Software",
+        "Social Media/Digital Marketing Tools",
+        "Industry-Specific Software"
+      ]
+    }
+  ],
+  workstyle: [
+    {
+      intro: "Let's understand your work preferences and style.",
+      question: "What type of work environment do you prefer?",
+      options: [
+        "Structured corporate environment",
+        "Small business or startup",
+        "Remote/work from home",
+        "Field work/changing locations",
+        "Creative or collaborative workspace",
+        "Academic or research setting"
+      ]
+    },
+    {
+      question: "How do you prefer to interact with colleagues?",
+      options: [
+        "Frequent collaboration and teamwork",
+        "Balance of teamwork and independent work",
+        "Mostly independent with occasional collaboration",
+        "Leading or managing others",
+        "Working entirely independently"
+      ]
+    },
+    {
+      question: "What is your ideal work-life balance?",
+      options: [
+        "Standard 9-5 with clear boundaries",
+        "Flexible hours but consistent schedule",
+        "Project-based with varying intensity",
+        "Willing to work long hours for career advancement",
+        "Part-time or reduced hours",
+        "Seasonal work with time off periods"
+      ]
+    },
+    {
+      question: "Do you prefer leading or being part of a team?",
+      options: [
+        "Leading a team",
+        "Individual contributor with some leadership",
+        "Part of a collaborative team",
+        "Working independently within a team structure",
+        "Purely individual contributor"
+      ]
+    },
+    {
+      question: "How do you handle work-related stress and pressure?",
+      options: [
+        "Thrive under pressure - it motivates me",
+        "Handle it well with good organization",
+        "Prefer a moderate, consistent pace",
+        "Occasional pressure is fine but not constantly",
+        "Prefer low-pressure environments",
+        "Stress significantly affects my performance"
+      ]
+    },
+    {
+      question: "How important is a diverse and inclusive workplace to you?",
+      options: [
+        "Essential - I seek this specifically",
+        "Very important",
+        "Somewhat important",
+        "Not a major factor in my decision",
+        "I haven't thought much about it"
+      ]
+    }
+  ],
+  goals: [
+    {
+      intro: "Finally, let's discuss your career goals and aspirations.",
+      question: "What are your primary career goals for the next 5 years?",
+      options: [
+        "Advance to a senior or management position",
+        "Develop specialized expertise",
+        "Change career fields or industries",
+        "Start my own business",
+        "Achieve better work-life balance",
+        "Increase income/financial stability",
+        "Make a positive impact/meaningful work"
+      ]
+    },
+    {
+      question: "How important is career growth and advancement to you?",
+      options: [
+        "Extremely important - rapid advancement",
+        "Very important but balanced with other factors",
+        "Moderately important",
+        "Less important than job satisfaction",
+        "Not very important - stability is my priority"
+      ]
+    },
+    {
+      question: "What impact would you like to make through your work?",
+      options: [
+        "Help individuals directly",
+        "Create innovative solutions or products",
+        "Advance knowledge in a field",
+        "Environmental or social change",
+        "Economic or business impact",
+        "Creative or cultural contributions",
+        "Educational impact"
+      ]
+    },
+    {
+      question: "How do you define career success?",
+      options: [
+        "Financial rewards and security",
+        "Recognition and prestige",
+        "Work-life balance and personal fulfillment",
+        "Making a difference/positive impact",
+        "Continuous learning and growth",
+        "Leadership and influence",
+        "Creative expression and innovation"
+      ]
+    },
+    {
+      question: "Where do you see yourself in 10+ years?",
+      options: [
+        "Executive or senior leadership",
+        "Recognized expert in my field",
+        "Business owner or entrepreneur",
+        "Retired or working part-time",
+        "Switched to a different career",
+        "Teaching or mentoring others",
+        "Unsure but open to opportunities"
+      ]
+    },
+    {
+      question: "Which values are most important to you in a career?",
+      options: [
+        "Innovation and creativity",
+        "Helping others/social impact",
+        "Financial success",
+        "Independence and autonomy",
+        "Stability and security",
+        "Recognition and status",
+        "Balance and wellbeing"
+      ]
+    }
+  ]
 };
-
-export default questionBank;

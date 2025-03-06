@@ -4,33 +4,6 @@ project_id = "wurdmlkfkzuivvwxjmxk"
 # DeepSeek API key is set via environment variables
 DEEPSEEK_API_KEY = ""
 
-# Response format configuration - optimized for speed
-AI_RESPONSE_FORMAT = "structured"
-STRUCTURED_RESPONSE_VERSION = "3"
-QUESTION_MAX_LENGTH = 40
-OPTIONS_MAX_COUNT = 5
-OPTIONS_MAX_LENGTH = 30
-CATEGORY_TRACKING = "enabled"
-
-# Structured format instruction - simplified
-STRUCTURED_FORMAT_INSTRUCTION = """
-Return responses in this exact JSON format:
-{
-  "type": "question|recommendation|session_end",
-  "content": {
-    "intro": "Brief context",
-    "question": "Your question?",
-    "options": [
-      {"id": "option-id", "text": "Option text"}
-    ]
-  },
-  "metadata": {
-    "progress": {
-      "category": "education|skills|workstyle|goals",
-      "current": 1,
-      "total": 6,
-      "overall": 25
-    }
-  }
-}
-"""
+# Config for recommendation generation only
+RECOMMENDATION_MAX_CAREERS = 7
+RECOMMENDATION_FORMAT = "structured"

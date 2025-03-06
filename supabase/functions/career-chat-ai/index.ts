@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
 
@@ -121,6 +120,148 @@ serve(async (req) => {
       }
       return new Response(
         JSON.stringify({ status: "ok", config: CONFIG }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle recommendation requests - this is now a focused endpoint just for generating recommendations
+    if (body.type === "recommendation") {
+      if (!body.sessionId) {
+        throw new Error("Session ID is required");
+      }
+
+      if (!body.instructions?.userResponses || !Array.isArray(body.instructions.userResponses)) {
+        throw new Error("User responses are required");
+      }
+
+      // Simplified prompt for recommendation generation
+      const systemPrompt = `
+You are a career guidance AI assistant. Based on the user's responses to career assessment questions,
+provide personalized career recommendations. 
+
+Instructions:
+1. Analyze the user's responses to identify their skills, interests, education level, and work preferences.
+2. Recommend 5-7 specific careers that match their profile.
+3. For each career, provide:
+   - Job title
+   - Match percentage (how well it fits their profile)
+   - Brief description of why it's a good match
+   - 2-3 key requirements or qualifications
+4. Also include a brief analysis of their strongest skills or traits.
+5. Format your response using this structure:
+
+# Career Recommendations
+
+## Top Career Matches
+
+1. [Career Title] (95% Match)
+   - [Brief description of why this career matches their profile]
+   - Key requirements: [List 2-3 requirements]
+
+2. [Career Title] (92% Match)
+   - [Description]
+   - Key requirements: [Requirements]
+
+[Continue for all recommendations]
+
+## Your Strengths
+
+- [Strength 1]: [Brief explanation]
+- [Strength 2]: [Brief explanation]
+- [Strength 3]: [Brief explanation]
+
+## Next Steps
+
+[Brief advice on how to explore these careers further]
+`;
+
+      // Create a focused message list with just the user's assessment responses
+      const userResponses = body.instructions.userResponses.map((response: string, index: number) => ({
+        role: "user",
+        content: `Response ${index + 1}: ${response}`
+      }));
+
+      // Add a final instruction to generate recommendations
+      userResponses.push({
+        role: "user",
+        content: "Please analyze my responses and provide career recommendations that match my profile."
+      });
+
+      // Prepare the messages array for the API request
+      const messages = [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        ...userResponses
+      ];
+
+      // Make the request to DeepSeek API with optimized parameters for recommendations
+      const requestOptions = {
+        model: "deepseek-chat",
+        messages: messages,
+        temperature: 0.7,  // Slightly higher temperature for creative recommendations
+        max_tokens: 1500,  // Increased token count for detailed recommendations
+        top_p: 0.9,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
+      };
+
+      // Debug logging
+      console.log("Sending recommendation request to DeepSeek API");
+
+      // Make the request to DeepSeek API
+      const response = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify(requestOptions),
+      });
+
+      // Parse the response
+      const data = await response.json();
+
+      // Debug logging
+      console.log("DeepSeek API response status:", response.status);
+
+      // Handle API errors
+      if (!response.ok) {
+        console.error("DeepSeek API error:", data);
+        throw new Error(`DeepSeek API error: ${data.error?.message || "Unknown API error"}`);
+      }
+
+      // Extract the AI's response
+      const aiResponse = data.choices && data.choices[0]?.message?.content;
+      if (!aiResponse) {
+        throw new Error("No response content from DeepSeek API");
+      }
+
+      // Create structured message for the recommendation
+      const structuredMessage = {
+        type: "recommendation",
+        content: {
+          recommendations: aiResponse,
+        },
+        metadata: {
+          isRecommendation: true,
+          completionType: "career_recommendations"
+        }
+      };
+
+      // Return the recommendation response
+      return new Response(
+        JSON.stringify({
+          messageId: crypto.randomUUID(),
+          message: aiResponse,
+          structuredMessage,
+          rawResponse: structuredMessage,
+          metadata: {
+            isRecommendation: true,
+            completionType: "career_recommendations"
+          }
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

@@ -1,112 +1,128 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { v4 as uuidv4 } from 'uuid';
 
-export function useCareerAnalysis(sessionId: string, addMessage: (message: CareerChatMessage) => Promise<void>) {
+export function useCareerAnalysis(sessionId: string, addMessage: (message: CareerChatMessage) => Promise<any>) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const analyzeResponses = useCallback(async () => {
+  const analyzeResponses = useCallback(async (messages: CareerChatMessage[]) => {
     if (!sessionId) return;
     
     setIsAnalyzing(true);
     
     try {
-      // Add a system message to inform the user that analysis is starting
-      await addMessage({
+      // Create an analyzing message to show the user we're working on recommendations
+      const analyzingMessage: CareerChatMessage = {
         id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
-        content: "I'm analyzing your responses to find career matches that align with your preferences...",
-        metadata: {},
+        content: "Analyzing your responses to generate personalized career recommendations...",
+        metadata: { isAnalyzing: true },
         created_at: new Date().toISOString()
-      });
+      };
       
-      // Call the edge function to analyze the chat responses and get career recommendations
-      const { data, error } = await supabase.functions.invoke('analyze-career-path', {
-        body: { sessionId }
-      });
+      await addMessage(analyzingMessage);
       
-      if (error) {
-        throw new Error(error.message);
+      // Prepare the request to the AI service
+      const userMessages = messages
+        .filter(m => m.message_type === 'user')
+        .map(m => ({
+          role: 'user',
+          content: m.content
+        }));
+      
+      const questionMessages = messages
+        .filter(m => m.message_type === 'bot' && m.metadata?.structuredMessage?.type === 'question')
+        .map(m => ({
+          role: 'assistant',
+          content: m.content
+        }));
+        
+      const messageHistory = [];
+      
+      // Interleave questions and answers for context
+      for (let i = 0; i < Math.max(questionMessages.length, userMessages.length); i++) {
+        if (i < questionMessages.length) {
+          messageHistory.push(questionMessages[i]);
+        }
+        if (i < userMessages.length) {
+          messageHistory.push(userMessages[i]);
+        }
       }
       
-      if (!data || !data.careers || !Array.isArray(data.careers)) {
-        throw new Error('Invalid response from career analysis');
+      // Call the edge function to generate recommendations
+      const response = await supabase.functions.invoke('career-chat-ai', {
+        body: {
+          type: 'recommendation',
+          sessionId,
+          messages: messageHistory,
+          instructions: {
+            generateRecommendations: true,
+            userResponses: userMessages.map(m => m.content)
+          }
+        }
+      });
+
+      if (response.error) {
+        console.error('Edge function error:', response.error);
+        throw new Error(response.error.message || 'Failed to generate recommendations');
+      }
+
+      if (response.data?.error) {
+        console.error('AI service error:', response.data.error);
+        throw new Error(response.data.error);
       }
       
-      // Add a summary message
-      await addMessage({
-        id: uuidv4(),
-        session_id: sessionId,
-        message_type: 'system',
-        content: "Based on our conversation, here are some career paths that might be a good fit for you:",
-        metadata: {},
-        created_at: new Date().toISOString()
-      });
-      
-      // Add career recommendation messages
-      for (const career of data.careers) {
-        await addMessage({
+      // Add the recommendation message
+      if (response.data?.message) {
+        const recommendationMessage: CareerChatMessage = {
           id: uuidv4(),
           session_id: sessionId,
           message_type: 'recommendation',
-          content: career.reasoning,
+          content: response.data.message,
           metadata: {
-            career: career.title,
-            score: career.score,
-            careerId: career.id
+            ...(response.data.metadata || {}),
+            structuredMessage: response.data.structuredMessage,
+            rawResponse: response.data.rawResponse,
+            isRecommendation: true
           },
           created_at: new Date().toISOString()
-        });
+        };
+        
+        await addMessage(recommendationMessage);
       }
       
-      // Add session end message with suggestions
-      await addMessage({
+      // Add the session end message
+      const sessionEndMessage: CareerChatMessage = {
         id: uuidv4(),
         session_id: sessionId,
         message_type: 'session_end',
-        content: "Your career assessment is now complete! Would you like to explore any of these career paths in more detail?",
+        content: "Thank you for completing your career assessment! I've analyzed your responses and provided career recommendations above. This session is now complete. You can start a new session anytime to explore different career paths or retake the assessment.",
         metadata: {
           isSessionEnd: true,
-          hasOptions: true,
+          completionType: "career_recommendations",
           suggestions: [
-            "Tell me more about these careers",
-            "Explore other options",
-            "How can I prepare for these careers?",
-            "Start a new career assessment"
-          ],
-          rawResponse: {
-            type: "session_end",
-            content: {
-              message: "Your career assessment is now complete! Would you like to explore any of these career paths in more detail?",
-              suggestions: [
-                "Tell me more about these careers",
-                "Explore other options", 
-                "How can I prepare for these careers?",
-                "Start a new career assessment"
-              ]
-            },
-            metadata: {
-              isSessionEnd: true,
-              completionType: "career_recommendations"
-            }
-          }
+            "Start a new career assessment",
+            "Explore these career paths in detail",
+            "Save these recommendations"
+          ]
         },
         created_at: new Date().toISOString()
-      });
+      };
+      
+      await addMessage(sessionEndMessage);
       
     } catch (error) {
       console.error('Error analyzing responses:', error);
-      toast.error('Failed to analyze your responses. Please try again.');
       
+      // Add error message
       await addMessage({
         id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
-        content: "I'm sorry, I encountered an error while analyzing your responses. Please try again.",
+        content: "I'm sorry, I encountered an error generating career recommendations. Please try again or start a new session.",
         metadata: { error: true },
         created_at: new Date().toISOString()
       });
@@ -115,5 +131,8 @@ export function useCareerAnalysis(sessionId: string, addMessage: (message: Caree
     }
   }, [sessionId, addMessage]);
 
-  return { isAnalyzing, analyzeResponses };
+  return {
+    isAnalyzing,
+    analyzeResponses
+  };
 }
