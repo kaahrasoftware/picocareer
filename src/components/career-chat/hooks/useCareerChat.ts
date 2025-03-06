@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './chat-session'; 
 import { useCareerAnalysis } from './useCareerAnalysis';
@@ -51,40 +52,9 @@ export function useCareerChat() {
     if (!isLoading) {
       setCurrentCategory(getCurrentCategory());
       setQuestionProgress(getProgress());
-      setIsSessionComplete(isComplete);
+      setIsSessionComplete(isComplete || (sessionMetadata?.isComplete === true));
     }
-  }, [isLoading, getCurrentCategory, getProgress, isComplete]);
-
-  // Check if we need to send the first question
-  useEffect(() => {
-    const checkAndSendFirstQuestion = async () => {
-      if (!isLoading && sessionId && messages.length <= 1) {
-        // This is a new session, send the first question
-        try {
-          const welcomeMessage = {
-            id: uuidv4(),
-            session_id: sessionId,
-            message_type: 'system',
-            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you. Let's get started!",
-            metadata: {},
-            created_at: new Date().toISOString()
-          };
-          
-          await addMessage(welcomeMessage);
-          
-          // Add a small delay before sending the first question for a better UX
-          setTimeout(async () => {
-            const questionMessage = createQuestionMessage(sessionId);
-            await addMessage(questionMessage);
-          }, 1000);
-        } catch (error) {
-          console.error('Error sending first question:', error);
-        }
-      }
-    };
-    
-    checkAndSendFirstQuestion();
-  }, [isLoading, sessionId, messages.length, addMessage, createQuestionMessage]);
+  }, [isLoading, getCurrentCategory, getProgress, isComplete, sessionMetadata]);
 
   // For API error checking
   useEffect(() => {
@@ -171,7 +141,8 @@ export function useCareerChat() {
         await updateSessionMetadata({
           isComplete: true,
           overallProgress: 100,
-          lastCategory: 'complete'
+          lastCategory: 'complete',
+          completedAt: new Date().toISOString()
         });
         
         // End the current session in the database
@@ -216,7 +187,8 @@ export function useCareerChat() {
           await updateSessionMetadata({
             isComplete: true,
             overallProgress: 100,
-            lastCategory: 'complete'
+            lastCategory: 'complete',
+            completedAt: new Date().toISOString()
           });
           
           // End the current session in the database
@@ -252,23 +224,49 @@ export function useCareerChat() {
     getCurrentCategory, 
     createQuestionMessage, 
     addMessage,
-    startNewSession,
     endCurrentSession
   ]);
 
   // Create a dedicated function for starting a new chat
   const handleStartNewChat = async () => {
-    if (messages.length > 2) {
-      if (confirm('Starting a new assessment will end your current session. Continue?')) {
-        await startNewSession();
-        toast({
-          title: "New Assessment Started",
-          description: "Your previous results have been saved.",
-          variant: "default"
-        });
-      }
-    } else {
+    try {
+      setIsTyping(true);
       await startNewSession();
+      
+      // We need to initialize the session with a welcome message
+      // This runs after startNewSession has created a new session and set sessionId
+      setTimeout(async () => {
+        if (sessionId) {
+          // Welcome message
+          const welcomeMessage = {
+            id: uuidv4(),
+            session_id: sessionId,
+            message_type: 'system',
+            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you. Let's get started!",
+            metadata: {},
+            created_at: new Date().toISOString()
+          };
+          
+          await addMessage(welcomeMessage);
+          
+          // Add a small delay before sending the first question
+          setTimeout(async () => {
+            if (sessionId) {
+              const questionMessage = createQuestionMessage(sessionId);
+              await addMessage(questionMessage);
+            }
+            setIsTyping(false);
+          }, 1000);
+        } else {
+          setIsTyping(false);
+        }
+      }, 500);
+      
+      toast.success("New assessment started!");
+    } catch (error) {
+      console.error("Error starting new chat:", error);
+      toast.error("Failed to start a new assessment.");
+      setIsTyping(false);
     }
   };
 

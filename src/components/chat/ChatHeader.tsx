@@ -1,20 +1,25 @@
 
 import React from 'react';
-import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase, Check, CheckCircle } from 'lucide-react';
+import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase, Check, CheckCircle, X, Download } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
   currentCategory?: string | null;
   questionProgress?: number;
   isSessionComplete?: boolean;
+  onEndSession?: () => void;
+  onDownloadResults?: () => void;
 }
 
 export function ChatHeader({ 
   isAnalyzing = false, 
   currentCategory = null, 
   questionProgress = 0,
-  isSessionComplete = false
+  isSessionComplete = false,
+  onEndSession,
+  onDownloadResults
 }: ChatHeaderProps) {
   const getCategoryIcon = () => {
     switch (currentCategory) {
@@ -82,11 +87,31 @@ export function ChatHeader({
           )}
         </div>
         
-        {isAnalyzing && (
-          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-            Generating personalized recommendations
-          </span>
-        )}
+        <div className="flex gap-2">
+          {!isSessionComplete && !isAnalyzing && onEndSession && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50"
+              onClick={onEndSession}
+            >
+              <X className="h-4 w-4" />
+              End Session
+            </Button>
+          )}
+          
+          {isSessionComplete && onDownloadResults && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1.5"
+              onClick={onDownloadResults}
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+          )}
+        </div>
       </div>
       
       {!isAnalyzing && questionProgress > 0 && questionProgress < 100 && (

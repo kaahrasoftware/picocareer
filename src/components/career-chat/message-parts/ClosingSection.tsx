@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle, ChevronRight, RefreshCw, FileCheck } from 'lucide-react';
+import { CheckCircle, ChevronRight, RefreshCw, FileCheck, Download } from 'lucide-react';
 
 interface ClosingSectionProps {
   message: string;
@@ -44,7 +44,7 @@ export function ClosingSection({
   const defaultNextSteps = [
     "Start a new career assessment",
     "Explore these career paths in detail",
-    "Save these recommendations"
+    "Download these recommendations"
   ];
 
   // Use provided next steps or default ones if session is complete
@@ -55,8 +55,8 @@ export function ClosingSection({
   const getIcon = (step: string) => {
     if (step.toLowerCase().includes('new') || step.toLowerCase().includes('start')) {
       return <RefreshCw className="h-4 w-4 text-blue-500 mr-2" />;
-    } else if (step.toLowerCase().includes('save')) {
-      return <FileCheck className="h-4 w-4 text-green-500 mr-2" />;
+    } else if (step.toLowerCase().includes('save') || step.toLowerCase().includes('download')) {
+      return <Download className="h-4 w-4 text-green-500 mr-2" />;
     } else {
       return <ChevronRight className="h-4 w-4 text-gray-400" />;
     }

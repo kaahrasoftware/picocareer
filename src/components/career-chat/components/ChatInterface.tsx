@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { RefreshCw, History } from 'lucide-react';
+import { RefreshCw, History, Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
@@ -23,6 +23,8 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => Promise<void>;
   onStartNewChat: () => void;
   onViewPastSessions: () => void;
+  onEndCurrentSession: () => Promise<void>;
+  onDownloadResults?: () => void;
   setInputMessage: (message: string) => void;
 }
 
@@ -39,6 +41,8 @@ export function ChatInterface({
   onSendMessage,
   onStartNewChat,
   onViewPastSessions,
+  onEndCurrentSession,
+  onDownloadResults,
   setInputMessage
 }: ChatInterfaceProps) {
   return (
@@ -50,6 +54,8 @@ export function ChatInterface({
             currentCategory={currentCategory} 
             questionProgress={questionProgress}
             isSessionComplete={isSessionEnded}
+            onEndSession={onEndCurrentSession}
+            onDownloadResults={onDownloadResults}
           />
         </div>
         
@@ -70,6 +76,12 @@ export function ChatInterface({
                 <History className="h-4 w-4 mr-2" />
                 Past Assessments
               </DropdownMenuItem>
+              {isSessionEnded && onDownloadResults && (
+                <DropdownMenuItem onClick={onDownloadResults}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Results
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -98,6 +110,8 @@ export function ChatInterface({
         isDisabled={isTyping || isAnalyzing} 
         isSessionComplete={isSessionEnded}
         placeholderText={isSessionEnded ? "Try exploring career paths or start a new assessment..." : "Type your message..."}
+        onDownloadResults={onDownloadResults}
+        onStartNewChat={onStartNewChat}
       />
     </div>
   );
