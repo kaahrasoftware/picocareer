@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { QuestionCard } from '@/components/career-chat/QuestionCard';
