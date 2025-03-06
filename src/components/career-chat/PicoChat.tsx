@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { SessionManagementDialog } from './SessionManagementDialog';
+import { SessionManagementDialog } from './session-management';
 import { EmptyState } from './components/EmptyState';
 import { ChatInterface } from './components/ChatInterface';
 import { LoadingState } from './components/LoadingState';
@@ -37,13 +36,13 @@ export function PicoChat() {
   const [configChecked, setConfigChecked] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
-  const [localIsTyping, setLocalIsTyping] = useState(false); // Local typing state for immediate feedback
+  const [localIsTyping, setLocalIsTyping] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
-  }, [messages, isTyping, localIsTyping]); // Add localIsTyping to scroll dependencies
+  }, [messages, isTyping, localIsTyping]);
 
   useEffect(() => {
     const checkApiConfig = async () => {
@@ -91,7 +90,6 @@ export function PicoChat() {
     }
   }, [messages]);
 
-  // Update local typing state when isTyping changes
   useEffect(() => {
     setLocalIsTyping(isTyping);
   }, [isTyping]);
@@ -104,11 +102,9 @@ export function PicoChat() {
       return;
     }
     
-    // Show typing indicator immediately
     setLocalIsTyping(true);
     sendMessage(suggestion)
       .catch(() => {
-        // Reset typing indicator if there's an error
         setLocalIsTyping(false);
       });
   };
@@ -134,10 +130,9 @@ export function PicoChat() {
   };
 
   const handleSendMessage = async (msg: string) => {
-    setLocalIsTyping(true); // Show typing indicator immediately
+    setLocalIsTyping(true);
     await sendMessage(msg)
       .catch(() => {
-        // Reset typing indicator if there's an error
         setLocalIsTyping(false);
       });
   };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useMessageState } from './useMessageState';
 import { useSessionManager } from './useSessionManager';
@@ -6,6 +5,7 @@ import { useProgressTracker } from './useProgressTracker';
 import { useApiConfig } from './useApiConfig';
 import { useMessageSender } from './useMessageSender';
 import { UseCareerChatReturn } from './types';
+import { SessionManagementDialog } from '../../session-management';
 
 export function useCareerChat(): UseCareerChatReturn {
   const {
