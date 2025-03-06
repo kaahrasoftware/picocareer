@@ -1,76 +1,62 @@
 
-import { useEffect } from 'react';
-import { CareerChatMessage } from "@/types/database/analytics";
-import { StructuredMessage } from "@/types/database/message-types";
-import { QuestionCounts } from '../chat-session/types';
+import { useState, useEffect } from 'react';
+import { useChatSession } from '../chat-session';
+import { QuestionCounts } from './types';
 
-export function useProgressTracker(
-  messages: CareerChatMessage[],
-  setCurrentCategory: (category: string | null) => void,
-  setQuestionProgress: (progress: number) => void,
-  questionCounts: QuestionCounts,
-  setIsSessionComplete: (isComplete: boolean) => void
-) {
+export function useProgressTracker() {
+  const { sessionMetadata } = useChatSession();
+  
+  // Track question progress and categories
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  const [questionProgress, setQuestionProgress] = useState(0);
+  const [isSessionComplete, setIsSessionComplete] = useState(false);
+
+  // Update progress from session metadata
   useEffect(() => {
-    if (messages.length === 0) return;
-
-    // Check for session end messages by either message_type or metadata flag
-    const hasSessionEndMessage = messages.some(msg => 
-      msg.message_type === 'session_end' || 
-      msg.metadata?.isSessionEnd === true
-    );
-    
-    if (hasSessionEndMessage) {
-      setIsSessionComplete(true);
-      setCurrentCategory('complete');
-      setQuestionProgress(100);
-      return;
+    if (sessionMetadata) {
+      setCurrentCategory(sessionMetadata.lastCategory || null);
+      setQuestionProgress(sessionMetadata.overallProgress || 0);
+      setIsSessionComplete(sessionMetadata.isComplete === true);
     }
+  }, [sessionMetadata]);
 
-    const hasRecommendationMessage = messages.some(msg => 
-      msg.message_type === 'recommendation' || 
-      msg.metadata?.isRecommendation === true
-    );
+  return {
+    currentCategory,
+    questionProgress,
+    isSessionComplete,
+    setCurrentCategory,
+    setQuestionProgress,
+    setIsSessionComplete,
     
-    if (hasRecommendationMessage) {
-      setQuestionProgress(100);
-      setCurrentCategory('complete');
-      return;
-    }
-
-    const botMessages = messages.filter(m => m.message_type === 'bot');
-    if (botMessages.length === 0) return;
-    
-    const latestBotMessage = botMessages[botMessages.length - 1];
-    
-    const structuredMessage = latestBotMessage.metadata?.structuredMessage as StructuredMessage | undefined;
-    
-    if (structuredMessage?.type === 'question' && structuredMessage.metadata.progress) {
-      const category = structuredMessage.metadata.progress.category?.toLowerCase() || 'general';
-      const overall = structuredMessage.metadata.progress.overall;
+    // Helper functions for analyzing question progress
+    calculateCategoryProgress: (counts: QuestionCounts) => {
+      // Calculate the overall progress based on question counts in each category
+      const totalQuestions = 
+        counts.education + 
+        counts.skills + 
+        counts.workstyle + 
+        counts.goals;
       
-      setCurrentCategory(category);
+      const MAX_QUESTIONS = 12; // Adjust as needed based on actual flow
       
-      if (typeof overall === 'number') {
-        setQuestionProgress(overall);
-      } else if (typeof overall === 'string') {
-        if (overall.includes('%')) {
-          setQuestionProgress(parseInt(overall.replace('%', '')));
-        } else {
-          setQuestionProgress(parseInt(overall));
-        }
-      } else {
-        const current = structuredMessage.metadata.progress.current || 1;
-        const total = 24;
-        setQuestionProgress(Math.min(Math.round((current / total) * 100), 100));
+      return Math.min(Math.round((totalQuestions / MAX_QUESTIONS) * 100), 100);
+    },
+    
+    getCategoryFromContent: (content: string) => {
+      // Helper to determine category from question content
+      const lowerContent = content.toLowerCase();
+      
+      if (lowerContent.includes('education') || lowerContent.includes('study') || lowerContent.includes('degree')) {
+        return 'education';
+      } else if (lowerContent.includes('skill') || lowerContent.includes('strength') || lowerContent.replace(/\s+/g, '').includes('goodat')) {
+        return 'skills';
+      } else if (lowerContent.includes('prefer') || lowerContent.includes('environment') || lowerContent.includes('work style')) {
+        return 'workstyle';
+      } else if (lowerContent.includes('goal') || lowerContent.includes('aspire') || lowerContent.includes('future')) {
+        return 'goals';
       }
-    } 
-    else if (latestBotMessage.metadata?.category) {
-      const category = (latestBotMessage.metadata.category as string).toLowerCase();
-      setCurrentCategory(category);
       
-      const totalAnswered = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
-      setQuestionProgress(Math.min(Math.round((totalAnswered / 24) * 100), 100));
+      return 'general';
     }
-  }, [messages, questionCounts, setCurrentCategory, setQuestionProgress, setIsSessionComplete]);
+  };
 }

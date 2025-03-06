@@ -1,33 +1,29 @@
 
-import { CareerChatMessage } from "@/types/database/analytics";
-import { StructuredMessage } from "@/types/database/message-types";
+import { CareerChatMessage } from '@/types/database/analytics';
+import { Dispatch, SetStateAction } from 'react';
 
-export interface UseCareerChatReturn {
-  messages: CareerChatMessage[];
-  inputMessage: string;
-  isLoading: boolean;
-  isTyping: boolean;
-  isAnalyzing: boolean;
-  hasConfigError: boolean;
-  currentCategory: string | null;
-  questionProgress: number;
-  pastSessions: any[];
-  isFetchingPastSessions: boolean;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
-  isSessionComplete: boolean;
-  fetchPastSessions: () => Promise<void>;
-  endCurrentSession: () => Promise<void>;
-  startNewSession: () => Promise<void>;
-  resumeSession: (targetSessionId: string) => Promise<void>;
-  deleteSession: (targetSessionId: string) => Promise<void>;
-  updateSessionTitle: (targetSessionId: string, title: string) => Promise<void>;
-  setInputMessage: (message: string) => void;
-  sendMessage: (message: string) => Promise<void>;
-  addMessage: (message: CareerChatMessage) => Promise<any>;
+export interface ChatSessionMetadata {
+  title?: string;
+  isComplete?: boolean;
+  overallProgress?: number;
+  lastCategory?: string;
+  completedAt?: string;
+  [key: string]: any;
 }
 
-export interface MessageCache {
-  [key: string]: CareerChatMessage;
+export interface MessageSenderProps {
+  sessionId: string | null;
+  sessionMetadata: ChatSessionMetadata | null;
+  isSessionComplete: boolean;
+  messages: CareerChatMessage[];
+  setInputMessage: Dispatch<SetStateAction<string>>;
+  setIsTyping: Dispatch<SetStateAction<boolean>>;
+  updateSessionTitle: (sessionId: string, title: string) => Promise<void>;
+  updateSessionMetadata: (metadata: Partial<ChatSessionMetadata>) => Promise<void>;
+  setCurrentCategory: Dispatch<SetStateAction<string | null>>;
+  setQuestionProgress: Dispatch<SetStateAction<number>>;
+  setIsSessionComplete: Dispatch<SetStateAction<boolean>>;
+  endCurrentSession: () => Promise<void>;
 }
 
 export interface QuestionCounts {
@@ -35,4 +31,5 @@ export interface QuestionCounts {
   skills: number;
   workstyle: number;
   goals: number;
+  [key: string]: number;
 }

@@ -1,112 +1,40 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useRef } from 'react';
 import { useMessageState } from './useMessageState';
-import { useSessionManager } from './useSessionManager';
-import { useProgressTracker } from './useProgressTracker';
-import { useApiConfig } from './useApiConfig';
 import { useMessageSender } from './useMessageSender';
-import { UseCareerChatReturn } from './types';
-import { SessionManagementDialog } from '../../session-management';
+import { useProgressTracker } from './useProgressTracker';
+import { useSessionManager } from './useSessionManager';
+import { useApiConfig } from './useApiConfig';
+import { CareerChatMessage } from '@/types/database/analytics';
 
-export function useCareerChat(): UseCareerChatReturn {
+export function useCareerChat() {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Split the hook into several smaller, focused hooks
+  const { 
+    checkApiConfig, 
+    hasConfigError 
+  } = useApiConfig();
+
   const {
     messages,
-    setMessages,
     inputMessage,
-    setInputMessage,
-    isTyping,
+    isLoading,
+    isTyping, 
     setIsTyping,
-    localIsTyping,
-    setLocalIsTyping,
-    hasConfigError,
-    setHasConfigError,
-    currentCategory,
-    setCurrentCategory,
-    questionProgress,
-    setQuestionProgress,
-    messagesEndRef,
-    questionCounts,
-    setQuestionCounts,
-    isSessionComplete,
-    setIsSessionComplete
+    setInputMessage
   } = useMessageState();
-
+  
   const {
-    sessionId,
-    isLoading,
-    isAnalyzing,
-    addMessage,
-    pastSessions,
-    isFetchingPastSessions,
-    fetchPastSessions,
-    endCurrentSession,
-    startNewSession,
-    resumeSession,
-    deleteSession,
-    updateSessionTitle
-  } = useSessionManager();
-
-  const [configChecked, setConfigChecked] = useState(false);
-
-  // Track progress of chat
-  useProgressTracker(
-    messages,
-    setCurrentCategory,
-    setQuestionProgress,
-    questionCounts,
-    setIsSessionComplete
-  );
-
-  // Check API configuration
-  useApiConfig(
-    sessionId, 
-    setHasConfigError, 
-    isLoading, 
-    messages.length, 
-    configChecked, 
-    setConfigChecked
-  );
-
-  // Handle session end state
-  useEffect(() => {
-    const hasSessionEndMessage = messages.some(msg => 
-      msg.message_type === 'session_end' || 
-      msg.metadata?.isSessionEnd === true
-    );
-    
-    if (hasSessionEndMessage) {
-      setIsSessionComplete(true);
-    } else {
-      setIsSessionComplete(false);
-    }
-  }, [messages, setIsSessionComplete]);
-
-  // Update local typing state when isTyping changes
-  useEffect(() => {
-    setLocalIsTyping(isTyping);
-  }, [isTyping, setLocalIsTyping]);
-
-  // Message sending functionality
-  const { sendMessage } = useMessageSender(
-    sessionId,
-    messages,
-    addMessage,
-    setInputMessage,
-    setIsTyping,
-    isSessionComplete,
-    setQuestionProgress,
-    setCurrentCategory,
-    setIsSessionComplete
-  );
-
-  return {
-    messages,
-    inputMessage,
-    isLoading,
-    isTyping: localIsTyping, // Use local state for immediate feedback
-    isAnalyzing,
-    hasConfigError,
     currentCategory,
     questionProgress,
+    isSessionComplete,
+    setCurrentCategory,
+    setQuestionProgress,
+    setIsSessionComplete
+  } = useProgressTracker();
+
+  const {
     pastSessions,
     isFetchingPastSessions,
     fetchPastSessions,
@@ -115,10 +43,66 @@ export function useCareerChat(): UseCareerChatReturn {
     resumeSession,
     deleteSession,
     updateSessionTitle,
+    sessionId,
+    sessionMetadata,
+    updateSessionMetadata
+  } = useSessionManager(setIsSessionComplete, setCurrentCategory, setQuestionProgress);
+
+  const {
+    isAnalyzing,
+    sendMessage,
+    addMessage,
+    handleStartNewChat
+  } = useMessageSender({
+    sessionId,
+    sessionMetadata,
+    isSessionComplete,
+    messages,
+    setInputMessage,
+    setIsTyping,
+    updateSessionTitle,
+    updateSessionMetadata,
+    setCurrentCategory,
+    setQuestionProgress,
+    setIsSessionComplete,
+    endCurrentSession
+  });
+
+  // Check API configuration
+  checkApiConfig(sessionId);
+
+  return {
+    // Message state
+    messages,
+    inputMessage,
+    isLoading,
+    isTyping,
+    isAnalyzing,
+    hasConfigError,
+    
+    // Progress tracking
+    currentCategory,
+    questionProgress,
+    isSessionComplete,
+    
+    // Session management
+    pastSessions,
+    isFetchingPastSessions,
+    fetchPastSessions,
+    endCurrentSession,
+    startNewSession,
+    resumeSession,
+    deleteSession,
+    updateSessionTitle,
+    sessionMetadata,
+    
+    // UI refs
     messagesEndRef,
+    
+    // Actions
     setInputMessage,
     sendMessage,
     addMessage,
-    isSessionComplete
+    handleStartNewChat
   };
 }

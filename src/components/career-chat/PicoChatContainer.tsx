@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useConfigCheck } from './hooks/useConfigCheck';
-import { useToast } from '@/components/ui/use-toast';
 import { downloadPdfResults } from './utils/pdfGenerator';
 import { EmptyState } from './components/EmptyState';
 import { ChatInterface } from './components/ChatInterface';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { SessionManagementDialog } from './session-management';
+import { toast } from 'sonner';
 
 export function PicoChatContainer() {
   const {
@@ -34,26 +34,21 @@ export function PicoChatContainer() {
   } = useCareerChat();
   
   const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
-  const { toast } = useToast();
-  
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
   const [showInitialState, setShowInitialState] = useState(true);
 
-  // Keep messagesEndRef in view when new messages arrive
-  React.useEffect(() => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages, isTyping, localIsTyping]);
 
-  // Sync local typing state with the hook's state
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalIsTyping(isTyping);
   }, [isTyping]);
 
-  // Check if we have messages to determine whether to show the empty state
-  React.useEffect(() => {
+  useEffect(() => {
     if (messages.length > 0 && showInitialState) {
       setShowInitialState(false);
     }
@@ -98,27 +93,23 @@ export function PicoChatContainer() {
       
       toast({
         title: "Download Complete",
-        description: "Your career assessment results have been downloaded.",
-        duration: 3000
+        description: "Your career assessment results have been downloaded."
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
         title: "Download Failed",
         description: "There was a problem generating your results PDF.",
-        variant: "destructive",
-        duration: 5000
+        variant: "destructive"
       });
     }
   };
 
-  // Show loading state while API config is being checked
   const isLoadingState = isConfigLoading || isChatLoading;
   if (isLoadingState) {
     return <LoadingState />;
   }
 
-  // Show error state if config check failed
   if (hasConfigError) {
     return <ErrorState />;
   }

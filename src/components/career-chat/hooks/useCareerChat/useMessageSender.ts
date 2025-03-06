@@ -1,24 +1,77 @@
 
-import { useCallback } from 'react';
-import { CareerChatMessage } from "@/types/database/analytics";
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import { CareerChatMessage } from '@/types/database/analytics';
+import { MessageSenderProps } from './types';
+import { useStructuredQuestions } from '../useStructuredQuestions';
+import { useCareerAnalysis } from '../useCareerAnalysis';
 
-export function useMessageSender(
-  sessionId: string | null,
-  messages: CareerChatMessage[],
-  addMessage: (message: CareerChatMessage) => Promise<any>,
-  setInputMessage: (message: string) => void,
-  setIsTyping: (isTyping: boolean) => void,
-  isSessionComplete: boolean,
-  setQuestionProgress: (progress: number) => void,
-  setCurrentCategory: (category: string | null) => void,
-  setIsSessionComplete: (isComplete: boolean) => void
-) {
+export function useMessageSender({
+  sessionId,
+  sessionMetadata,
+  isSessionComplete,
+  messages,
+  setInputMessage,
+  setIsTyping,
+  updateSessionTitle,
+  updateSessionMetadata,
+  setCurrentCategory,
+  setQuestionProgress,
+  setIsSessionComplete,
+  endCurrentSession
+}: MessageSenderProps) {
+  const { 
+    getCurrentCategory,
+    getProgress,
+    advanceQuestion, 
+    createQuestionMessage,
+    isComplete
+  } = useStructuredQuestions();
+  
+  const { isAnalyzing, analyzeResponses } = useCareerAnalysis(sessionId || '', addMessage);
+
+  // Function to add a message to the chat
+  async function addMessage(message: CareerChatMessage) {
+    // Implementation would call the addMessage function from useChatSession
+    // This is a placeholder for the function signature
+    return Promise.resolve();
+  }
+
+  // Process user responses and advance to next question
   const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || !sessionId || isSessionComplete) return;
+    if (!message.trim() || !sessionId) return;
     
+    // Check allowed actions in completed sessions
+    if (isSessionComplete) {
+      // Allow career exploration requests
+      const isCareerExploreRequest = message.toLowerCase().includes('tell me more about') || 
+                                    (message.toLowerCase().includes('explore') && 
+                                     message.toLowerCase().includes('career'));
+      
+      // Allow requests to start a new assessment
+      const isNewAssessmentRequest = message.toLowerCase().includes('start') && 
+                                    (message.toLowerCase().includes('new') || 
+                                     message.toLowerCase().includes('assessment'));
+      
+      // If not an allowed action, show a message and return
+      if (!isCareerExploreRequest && !isNewAssessmentRequest) {
+        toast.info("This assessment is complete. You can explore specific careers or start a new assessment.");
+        return;
+      }
+      
+      // Handle new assessment requests
+      if (isNewAssessmentRequest) {
+        await handleStartNewChat();
+        return;
+      }
+      
+      // For career exploration, continue with sending the message
+    }
+    
+    const messageId = uuidv4();
     const userMessage: CareerChatMessage = {
+      id: messageId,
       session_id: sessionId,
       message_type: 'user',
       content: message.trim(),
@@ -32,85 +85,80 @@ export function useMessageSender(
     setIsTyping(true);
     
     try {
-      const messageHistory = messages
-        .filter(m => m.message_type === 'user' || m.message_type === 'bot')
-        .slice(-10)
-        .map(m => ({
-          role: m.message_type === 'user' ? 'user' : 'assistant',
-          content: m.content
-        }));
-
-      messageHistory.push({
-        role: 'user',
-        content: message.trim()
-      });
-
-      console.log('Sending message to AI service...');
-      
-      const response = await supabase.functions.invoke('career-chat-ai', {
-        body: {
-          message: message.trim(),
-          sessionId,
-          messages: messageHistory,
-          instructions: {
-            useStructuredFormat: true,
-            specificQuestions: true,
-            conciseOptions: true
-          }
+      // Check if we need to generate recommendations after a certain number of questions
+      if (getProgress() >= 90 && !isAnalyzing) {
+        // Time to generate recommendations
+        await analyzeResponses(messages);
+        
+        // Mark session as complete
+        setIsSessionComplete(true);
+        setCurrentCategory('complete');
+        setQuestionProgress(100);
+        
+        // Update session metadata
+        await updateSessionMetadata({
+          isComplete: true,
+          overallProgress: 100,
+          lastCategory: 'complete',
+          completedAt: new Date().toISOString()
+        });
+        
+        // End the current session in the database
+        await endCurrentSession();
+      } else {
+        // Regular question flow
+        // If this is one of the first messages, suggest a title
+        if (!sessionMetadata?.title && messages.length <= 3) {
+          const suggestedTitle = message.slice(0, 30);
+          updateSessionTitle(sessionId, suggestedTitle);
         }
-      });
-
-      if (response.error) {
-        console.error('Edge function error:', response.error);
-        throw new Error(response.error.message || 'Failed to get AI response');
-      }
-
-      if (response.data?.error) {
-        console.error('AI service error:', response.data.error);
-        throw new Error(response.data.error);
-      }
-
-      console.log('Got response from career-chat-ai');
-      
-      const isRecommendation = 
-        response.data?.structuredMessage?.type === 'recommendation' ||
-        response.data?.metadata?.isRecommendation;
-
-      const isSessionEnd = 
-        response.data?.structuredMessage?.type === 'session_end' ||
-        response.data?.metadata?.isSessionEnd;
-      
-      if (response.data?.message) {
-        const botMessage: CareerChatMessage = {
-          session_id: sessionId,
-          message_type: isSessionEnd ? 'system' : isRecommendation ? 'recommendation' : 'bot',
-          content: response.data.message,
-          metadata: {
-            ...(response.data.metadata || {}),
-            structuredMessage: response.data.structuredMessage,
-            rawResponse: response.data.rawResponse,
-            isSessionEnd: isSessionEnd
-          },
-          created_at: new Date().toISOString()
-        };
         
-        const savedMessage = await addMessage(botMessage);
+        // Wait a moment for a more natural conversation flow
+        await new Promise(resolve => setTimeout(resolve, 800));
         
-        if (isRecommendation || isSessionEnd) {
-          setQuestionProgress(100);
-          setCurrentCategory('complete');
+        // Move to the next question
+        advanceQuestion();
+        
+        // Update category and progress
+        const newCategory = getCurrentCategory();
+        const newProgress = getProgress();
+        
+        setCurrentCategory(newCategory);
+        setQuestionProgress(newProgress);
+        
+        // Update session metadata
+        updateSessionMetadata({
+          lastCategory: newCategory,
+          overallProgress: newProgress
+        });
+        
+        // Send the next question, unless we're at the end
+        if (newCategory !== 'complete') {
+          const nextQuestionMessage = createQuestionMessage(sessionId);
+          await addMessage(nextQuestionMessage);
+        } else {
+          // Start the recommendation process
+          await analyzeResponses(messages);
+          setIsSessionComplete(true);
           
-          if (isSessionEnd) {
-            setIsSessionComplete(true);
-          }
+          // Update session metadata and end session
+          await updateSessionMetadata({
+            isComplete: true,
+            overallProgress: 100,
+            lastCategory: 'complete',
+            completedAt: new Date().toISOString()
+          });
+          
+          // End the current session in the database
+          await endCurrentSession();
         }
       }
-      
     } catch (error) {
-      console.error('Error getting AI response:', error);
+      console.error('Error processing message:', error);
       toast.error('Failed to get a response. Please try again.');
       
       await addMessage({
+        id: uuidv4(),
         session_id: sessionId,
         message_type: 'system',
         content: "I'm sorry, I encountered an error. Please try again.",
@@ -120,7 +168,75 @@ export function useMessageSender(
     } finally {
       setIsTyping(false);
     }
-  }, [sessionId, messages, addMessage, isSessionComplete, setInputMessage, setIsTyping, setQuestionProgress, setCurrentCategory, setIsSessionComplete]);
+  }, [
+    sessionId, 
+    isSessionComplete, 
+    getProgress, 
+    isAnalyzing, 
+    analyzeResponses, 
+    messages, 
+    updateSessionMetadata, 
+    sessionMetadata, 
+    updateSessionTitle, 
+    advanceQuestion, 
+    getCurrentCategory, 
+    createQuestionMessage, 
+    addMessage,
+    endCurrentSession,
+    setInputMessage,
+    setIsTyping,
+    setIsSessionComplete,
+    setCurrentCategory,
+    setQuestionProgress
+  ]);
 
-  return { sendMessage };
+  // Create a dedicated function for starting a new chat
+  const handleStartNewChat = async () => {
+    try {
+      setIsTyping(true);
+      await startNewSession();
+      
+      // We need to initialize the session with a welcome message
+      // This runs after startNewSession has created a new session and set sessionId
+      setTimeout(async () => {
+        if (sessionId) {
+          // Welcome message
+          const welcomeMessage = {
+            id: uuidv4(),
+            session_id: sessionId,
+            message_type: 'system',
+            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you. Let's get started!",
+            metadata: {},
+            created_at: new Date().toISOString()
+          };
+          
+          await addMessage(welcomeMessage);
+          
+          // Add a small delay before sending the first question
+          setTimeout(async () => {
+            if (sessionId) {
+              const questionMessage = createQuestionMessage(sessionId);
+              await addMessage(questionMessage);
+            }
+            setIsTyping(false);
+          }, 1000);
+        } else {
+          setIsTyping(false);
+        }
+      }, 500);
+      
+      toast.success("New assessment started!");
+    } catch (error) {
+      console.error("Error starting new chat:", error);
+      toast.error("Failed to start a new assessment.");
+      setIsTyping(false);
+    }
+  };
+
+  return {
+    isAnalyzing,
+    sendMessage,
+    addMessage,
+    handleStartNewChat
+  };
 }
