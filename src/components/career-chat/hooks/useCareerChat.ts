@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './chat-session'; 
 import { useCareerAnalysis } from './useCareerAnalysis';
@@ -5,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { StructuredMessage } from '@/types/database/message-types';
+import { QuestionCounts } from './chat-session/types';
 
 export function useCareerChat() {
   const { 
@@ -33,7 +35,7 @@ export function useCareerChat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [questionCounts, setQuestionCounts] = useState({
+  const [questionCounts, setQuestionCounts] = useState<QuestionCounts>({
     education: 0,
     skills: 0,
     workstyle: 0,
@@ -106,10 +108,12 @@ export function useCareerChat() {
       
       if (typeof overall === 'number') {
         setQuestionProgress(overall);
-      } else if (typeof overall === 'string' && overall.includes('%')) {
-        setQuestionProgress(parseInt(overall.replace('%', '')));
       } else if (typeof overall === 'string') {
-        setQuestionProgress(parseInt(overall));
+        if (overall.includes('%')) {
+          setQuestionProgress(parseInt(overall.replace('%', '')));
+        } else {
+          setQuestionProgress(parseInt(overall));
+        }
       } else {
         const current = structuredMessage.metadata.progress.current || 1;
         const total = 24;
@@ -123,7 +127,7 @@ export function useCareerChat() {
       const totalAnswered = Object.values(questionCounts).reduce((a, b) => a + b, 0) + 1;
       setQuestionProgress(Math.min(Math.round((totalAnswered / 24) * 100), 100));
     }
-  }, [messages]);
+  }, [messages, questionCounts]);
 
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || !sessionId || isSessionComplete) return;

@@ -15,3 +15,12 @@ export interface UseChatSessionReturn {
   deleteSession: (targetSessionId: string) => Promise<void>;
   updateSessionTitle: (targetSessionId: string, title: string) => Promise<void>;
 }
+
+// Add interface for question counts
+export interface QuestionCounts {
+  education: number;
+  skills: number;
+  workstyle: number;
+  goals: number;
+  [key: string]: number; // Index signature to allow string keys
+}

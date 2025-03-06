@@ -2,17 +2,19 @@
 import { useEffect } from 'react';
 import { CareerChatMessage } from "@/types/database/analytics";
 import { StructuredMessage } from "@/types/database/message-types";
+import { QuestionCounts } from '../chat-session/types';
 
 export function useProgressTracker(
   messages: CareerChatMessage[],
   setCurrentCategory: (category: string | null) => void,
   setQuestionProgress: (progress: number) => void,
-  questionCounts: Record<string, number>,
+  questionCounts: QuestionCounts,
   setIsSessionComplete: (isComplete: boolean) => void
 ) {
   useEffect(() => {
     if (messages.length === 0) return;
 
+    // Check for session end messages by either message_type or metadata flag
     const hasSessionEndMessage = messages.some(msg => 
       msg.message_type === 'session_end' || 
       msg.metadata?.isSessionEnd === true
@@ -51,10 +53,12 @@ export function useProgressTracker(
       
       if (typeof overall === 'number') {
         setQuestionProgress(overall);
-      } else if (typeof overall === 'string' && overall.includes('%')) {
-        setQuestionProgress(parseInt(overall.replace('%', '')));
       } else if (typeof overall === 'string') {
-        setQuestionProgress(parseInt(overall));
+        if (overall.includes('%')) {
+          setQuestionProgress(parseInt(overall.replace('%', '')));
+        } else {
+          setQuestionProgress(parseInt(overall));
+        }
       } else {
         const current = structuredMessage.metadata.progress.current || 1;
         const total = 24;

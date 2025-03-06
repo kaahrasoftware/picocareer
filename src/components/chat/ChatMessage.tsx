@@ -23,6 +23,7 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   const isUser = message.message_type === 'user';
   const isRecommendation = message.message_type === 'recommendation';
   const isSystem = message.message_type === 'system';
+  const isSessionEnd = message.message_type === 'session_end' || message.metadata?.isSessionEnd === true;
   
   // Try to parse structured message from metadata (new format)
   const structuredMessage: StructuredMessage | null = 
@@ -58,6 +59,16 @@ export function ChatMessage({ message, onSuggestionClick, currentQuestionProgres
   if (isRecommendation && !message.metadata?.career) {
     const sections = parseStructuredRecommendation({ type: 'recommendation', content: message.content });
     if (sections.type === 'recommendation') {
+      return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
+    }
+    return <BotMessage content={message.content} />;
+  }
+
+  // Handle session end message (new)
+  if (isSessionEnd) {
+    // Similar handling to recommendation, could be expanded with custom component if needed
+    const sections = parseStructuredRecommendation({ type: 'session_end', content: message.content });
+    if (sections.type === 'recommendation' || sections.type === 'session_end') {
       return <RecommendationSection recommendation={sections} onSuggestionClick={onSuggestionClick} />;
     }
     return <BotMessage content={message.content} />;

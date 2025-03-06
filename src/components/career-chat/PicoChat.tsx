@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useToast } from '@/components/ui/use-toast';
