@@ -35,6 +35,10 @@ export interface StructuredCareerRecommendation {
   description: string;
   key_requirements?: string[];
   education_paths?: string[];
+  id?: string; // Added ID field to link to careers database
+  industry?: string;
+  salary_range?: string;
+  growth_potential?: string;
 }
 
 export interface ClosingInfo {

@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Briefcase, Award, ChevronRight, GraduationCap, Book } from 'lucide-react';
+import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
 
 interface CareerRecommendation {
   title: string;
@@ -20,6 +21,8 @@ interface CareersSectionProps {
 }
 
 export function CareersSection({ careers, onExploreCareer }: CareersSectionProps) {
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+
   if (!careers || careers.length === 0) {
     return (
       <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100 mb-4">
@@ -33,6 +36,16 @@ export function CareersSection({ careers, onExploreCareer }: CareersSectionProps
       </div>
     );
   }
+
+  const handleExploreCareer = (career: CareerRecommendation) => {
+    if (career.id) {
+      // Open career details dialog if we have an ID
+      setSelectedCareerId(career.id);
+    } else if (onExploreCareer) {
+      // Fall back to the original behavior
+      onExploreCareer(career.title);
+    }
+  };
 
   return (
     <div className="bg-gradient-to-r from-white to-blue-50 p-5 rounded-lg shadow-sm border border-blue-100 mb-4">
@@ -102,17 +115,26 @@ export function CareersSection({ careers, onExploreCareer }: CareersSectionProps
               </div>
             )}
             
-            {onExploreCareer && (
-              <button 
-                onClick={() => onExploreCareer(career.title)}
-                className="mt-3 flex items-center text-xs text-primary hover:text-primary/80"
-              >
-                Explore this career <ChevronRight className="h-3 w-3 ml-1" />
-              </button>
-            )}
+            <button 
+              onClick={() => handleExploreCareer(career)}
+              className="mt-3 flex items-center text-xs text-primary hover:text-primary/80"
+            >
+              Explore this career <ChevronRight className="h-3 w-3 ml-1" />
+            </button>
           </div>
         ))}
       </div>
+
+      {/* Career Details Dialog */}
+      {selectedCareerId && (
+        <CareerDetailsDialog 
+          careerId={selectedCareerId}
+          open={!!selectedCareerId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedCareerId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

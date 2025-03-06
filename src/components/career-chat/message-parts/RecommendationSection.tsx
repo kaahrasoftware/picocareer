@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ParsedRecommendation } from '../utils/recommendationParser';
 import { IntroductionSection } from './IntroductionSection';
 import { CareersSection } from './CareersSection';
 import { PersonalitySection } from './PersonalitySection';
 import { GrowthAreasSection } from './GrowthAreasSection';
 import { ClosingSection } from './ClosingSection';
+import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
 
 interface RecommendationSectionProps {
   recommendation: ParsedRecommendation;
@@ -13,11 +14,19 @@ interface RecommendationSectionProps {
 }
 
 export function RecommendationSection({ recommendation, onSuggestionClick }: RecommendationSectionProps) {
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+
   // Check if this is a structured assessment result or session end
   const isStructuredContent = 
     (recommendation.type === 'assessment_result' || 
      recommendation.type === 'session_end') && 
     recommendation.structuredContent;
+
+  const handleExploreCareer = (careerTitle: string) => {
+    if (onSuggestionClick) {
+      onSuggestionClick(`Tell me more about ${careerTitle}`);
+    }
+  };
 
   if (isStructuredContent && recommendation.structuredContent) {
     const { 
@@ -42,7 +51,7 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
         {career_recommendations && career_recommendations.length > 0 && (
           <CareersSection 
             careers={career_recommendations} 
-            onExploreCareer={(career) => onSuggestionClick && onSuggestionClick(`Tell me more about ${career}`)}
+            onExploreCareer={handleExploreCareer}
           />
         )}
         
@@ -66,6 +75,17 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
               "Connect with mentors in these fields"
             ]}
             onNextStepClick={onSuggestionClick}
+          />
+        )}
+
+        {/* Career Details Dialog */}
+        {selectedCareerId && (
+          <CareerDetailsDialog 
+            careerId={selectedCareerId}
+            open={!!selectedCareerId}
+            onOpenChange={(open) => {
+              if (!open) setSelectedCareerId(null);
+            }}
           />
         )}
       </div>
@@ -94,14 +114,12 @@ export function RecommendationSection({ recommendation, onSuggestionClick }: Rec
                 </span>
               </div>
               <p className="text-sm text-gray-600 mt-1">{career.reasoning}</p>
-              {onSuggestionClick && (
-                <button 
-                  onClick={() => onSuggestionClick(`Tell me more about ${career.title}`)}
-                  className="mt-2 text-xs text-primary hover:text-primary/80 flex items-center"
-                >
-                  Explore this career <span className="ml-1">→</span>
-                </button>
-              )}
+              <button 
+                onClick={() => handleExploreCareer(career.title)}
+                className="mt-2 text-xs text-primary hover:text-primary/80 flex items-center"
+              >
+                Explore this career <span className="ml-1">→</span>
+              </button>
             </div>
           ))}
         </div>

@@ -37,6 +37,7 @@ export function PicoChat() {
   const [configChecked, setConfigChecked] = useState(false);
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
