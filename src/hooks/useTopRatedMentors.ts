@@ -12,7 +12,8 @@ export const useTopRatedMentors = () => {
         .select(`
           *,
           company:companies(name),
-          career:careers!profiles_position_fkey(title)
+          career:careers!profiles_position_fkey(title),
+          avg_rating:session_feedback(rating)
         `)
         .eq('user_type', 'mentor')
         .eq('top_mentor', true)
@@ -24,27 +25,42 @@ export const useTopRatedMentors = () => {
         throw error;
       }
       
-      // Shuffle the results in JavaScript instead of using random() in SQL
-      const shuffledData = data
-        .sort(() => Math.random() - 0.5)
-        .map(mentor => ({
+      // Process the results to calculate average rating
+      const processedData = data.map(mentor => {
+        // Calculate real average rating if available
+        let avgRating = 0;
+        let totalRatings = 0;
+        
+        if (mentor.avg_rating && mentor.avg_rating.length > 0) {
+          // Filter out null ratings
+          const validRatings = mentor.avg_rating.filter(r => r.rating !== null);
+          totalRatings = validRatings.length;
+          
+          if (totalRatings > 0) {
+            const sum = validRatings.reduce((acc, curr) => acc + curr.rating, 0);
+            avgRating = parseFloat((sum / totalRatings).toFixed(1));
+          }
+        }
+        
+        return {
           id: mentor.id,
           title: mentor.position || "Mentor",
           company: mentor.company?.name || "",
           imageUrl: mentor.avatar_url || "",
           name: mentor.full_name || "",
-          stats: {
-            mentees: `${Math.floor(Math.random() * 900 + 100)}`,
-            connected: `${Math.floor(Math.random() * 900 + 100)}K`,
-            recordings: `${Math.floor(Math.random() * 90 + 10)}`
-          },
           top_mentor: mentor.top_mentor,
           position: mentor.position,
           career_title: mentor.career?.title || "No position set",
           location: mentor.location,
           bio: mentor.bio,
-          skills: mentor.skills
-        }));
+          skills: mentor.skills || [],
+          rating: avgRating || 0,
+          totalRatings: totalRatings || 0
+        };
+      });
+
+      // Shuffle the results in JavaScript instead of using random() in SQL
+      const shuffledData = processedData.sort(() => Math.random() - 0.5);
 
       console.log('Fetched mentors:', shuffledData?.length);
       return shuffledData;

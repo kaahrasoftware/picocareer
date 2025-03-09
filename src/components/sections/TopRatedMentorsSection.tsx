@@ -43,7 +43,10 @@ export const TopRatedMentorsSection = () => {
               <CarouselItem key={mentor.id} className="pl-4 basis-full md:basis-1/3">
                 <MentorCard 
                   {...mentor} 
-                  position={mentor.career_title} // Use career_title instead of position ID
+                  position={mentor.career_title}
+                  rating={mentor.rating} 
+                  totalRatings={mentor.totalRatings}
+                  avatarUrl={mentor.imageUrl}
                 />
               </CarouselItem>
             ))}
