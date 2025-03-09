@@ -47,6 +47,7 @@ export const TopRatedMentorsSection = () => {
                   company={mentor.company}
                   location={mentor.location}
                   skills={mentor.skills}
+                  keywords={mentor.keywords}
                   rating={mentor.rating}
                   totalRatings={mentor.totalRatings}
                   avatarUrl={mentor.imageUrl}

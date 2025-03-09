@@ -4,8 +4,9 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, MapPin, BookOpen, Star } from 'lucide-react';
+import { Briefcase, MapPin, BookOpen, Star, Tag } from 'lucide-react';
 import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
+import { badgeStyles } from '@/components/career-details/BadgeStyles';
 
 export interface MentorCardProps {
   id: string;
@@ -14,6 +15,7 @@ export interface MentorCardProps {
   company?: string;
   location?: string;
   skills?: string[];
+  keywords?: string[];
   rating?: number;
   totalRatings?: number;
   avatarUrl?: string;
@@ -30,6 +32,7 @@ export function MentorCard({
   company,
   location,
   skills = [],
+  keywords = [],
   rating = 0,
   totalRatings = 0,
   avatarUrl,
@@ -69,25 +72,50 @@ export function MentorCard({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-1">
+        <CardContent className="flex-1 space-y-4">
           {education && (
             <p className="text-sm mb-3 flex items-center gap-1">
               <BookOpen className="h-3 w-3" />
               {education}
             </p>
           )}
+          
           {skills.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-1">Skills</p>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground font-medium flex items-center">
+                <Tag className="h-3 w-3 mr-1" />
+                Skills
+              </p>
               <div className="flex flex-wrap gap-1">
                 {skills.slice(0, 3).map((skill, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className={badgeStyles.tools}>
                     {skill}
                   </Badge>
                 ))}
                 {skills.length > 3 && (
                   <Badge variant="outline" className="text-xs">
                     +{skills.length - 3} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {keywords.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground font-medium flex items-center">
+                <Tag className="h-3 w-3 mr-1" />
+                Keywords
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {keywords.slice(0, 3).map((keyword, index) => (
+                  <Badge key={index} variant="outline" className={badgeStyles.keyword}>
+                    {keyword}
+                  </Badge>
+                ))}
+                {keywords.length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{keywords.length - 3} more
                   </Badge>
                 )}
               </div>

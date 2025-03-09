@@ -52,6 +52,7 @@ export const useTopRatedMentors = () => {
           location: mentor.location,
           bio: mentor.bio,
           skills: mentor.skills || [],
+          keywords: mentor.keywords || [],
           rating: avgRating || 0,
           totalRatings: totalRatings || 0,
           top_mentor: mentor.top_mentor
