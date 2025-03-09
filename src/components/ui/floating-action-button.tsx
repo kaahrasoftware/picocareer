@@ -36,7 +36,7 @@ export function FloatingActionButton() {
         </DialogHeader>
         <div className="flex justify-center py-6">
           <Button 
-            onClick={() => handleOptionClick("/blog-upload")}
+            onClick={() => handleOptionClick("/blog/upload")}
             className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
             variant="outline"
           >
