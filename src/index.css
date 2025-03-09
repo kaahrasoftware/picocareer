@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -111,3 +112,18 @@
   height: 2rem;
   font-size: 0.875rem;
 }
+
+/* Animation for FloatingActionButton */
+@keyframes bounce-once {
+  0%, 100% {
+    transform: translateY(0) translateX(-50%);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-50%);
+  }
+}
+
+.animate-bounce-once {
+  animation: bounce-once 1s ease-in-out 1;
+}
+
