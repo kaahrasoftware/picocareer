@@ -15,6 +15,7 @@ import Event from "../pages/Event";
 import CareerUpload from "../pages/CareerUpload";
 import EventUpload from "../pages/EventUpload";
 import BlogUpload from "../pages/BlogUpload";
+import FeedUpload from "../pages/FeedUpload";
 import School from "../pages/School";
 import MajorUpload from "../pages/MajorUpload";
 import Profile from "../pages/Profile";
@@ -124,6 +125,10 @@ export const router = createBrowserRouter([
       {
         path: "blog/upload",
         element: <BlogUpload />,
+      },
+      {
+        path: "feed/upload",
+        element: <FeedUpload />,
       },
       {
         path: "school",
