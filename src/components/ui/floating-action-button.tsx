@@ -21,7 +21,7 @@ export function FloatingActionButton({
         "bg-picocareer-primary hover:bg-picocareer-accent transition-all",
         "flex items-center justify-center",
         "hover:shadow-xl hover:scale-105 active:scale-95",
-        "animate-bounce-once",
+        "animate-pulse",
         className
       )}
     >

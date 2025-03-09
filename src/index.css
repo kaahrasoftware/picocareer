@@ -33,7 +33,7 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-white to-gray-100 text-foreground min-h-screen;
+    @apply bg-white text-foreground min-h-screen;
   }
 }
 
@@ -126,4 +126,3 @@
 .animate-bounce-once {
   animation: bounce-once 1s ease-in-out 1;
 }
-

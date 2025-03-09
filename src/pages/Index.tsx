@@ -8,7 +8,7 @@ import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSec
 
 const Index = () => {
   return (
-    <div className="w-full">
+    <div className="w-full bg-gradient-to-b from-gray-50 to-white">
       <div className="w-full px-4 sm:px-8 lg:px-12 py-8">
         <div className="max-w-7xl mx-auto space-y-16">
           <HeroSection />
