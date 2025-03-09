@@ -1,6 +1,5 @@
+
 import { useState } from "react";
-import { MentorCard } from "@/components/MentorCard";
-import { MentorListDialog } from "@/components/MentorListDialog";
 import { useTopRatedMentors } from "@/hooks/useTopRatedMentors";
 import { Link } from "react-router-dom";
 import {
@@ -10,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { ProfileCard } from "@/components/community/ProfileCard";
 
 export const TopRatedMentorsSection = () => {
   const { data: mentors = [], isLoading } = useTopRatedMentors();
@@ -39,8 +39,8 @@ export const TopRatedMentorsSection = () => {
         >
           <CarouselContent className="-ml-4">
             {mentors.map((mentor) => (
-              <CarouselItem key={mentor.id} className="pl-4 basis-full md:basis-1/3">
-                <MentorCard {...mentor} />
+              <CarouselItem key={mentor.id} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                <ProfileCard profile={mentor} />
               </CarouselItem>
             ))}
           </CarouselContent>
