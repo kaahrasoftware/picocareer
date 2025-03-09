@@ -26,6 +26,8 @@ export function ProfileCardHeader({ profile }: ProfileCardHeaderProps) {
         imageAlt={profile.full_name || 'User'}
         size="md"
         editable={false}
+        fallback={profile.full_name ? profile.full_name[0] : 'U'}
+        profileId={profile.id}
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2">

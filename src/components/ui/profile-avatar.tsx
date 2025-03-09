@@ -25,7 +25,7 @@ export function ProfileAvatar({
 
   return (
     <Avatar className={sizeClasses[size]}>
-      <AvatarImage src={avatarUrl} alt={imageAlt} />
+      <AvatarImage src={avatarUrl || ""} alt={imageAlt} />
       <AvatarFallback>{getFallback()}</AvatarFallback>
     </Avatar>
   );
