@@ -1,10 +1,14 @@
+
 import { DialogContent, DialogHeader } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileEditForm } from "./ProfileEditForm";
-import { ProfileView } from "./ProfileView";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileOverviewTab } from "./tabs/ProfileOverviewTab";
+import { ProfileContentTab } from "./tabs/ProfileContentTab";
+import { ProfileInsightsTab } from "./tabs/ProfileInsightsTab";
+import { FileText, BarChart, User } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 
 interface ProfileDialogContentProps {
@@ -70,17 +74,48 @@ export function ProfileDialogContent({
         </div>
       </DialogHeader>
 
-      <ScrollArea className="flex-1 px-1 sm:px-2">
-        {isEditing ? (
-          <ProfileEditForm 
-            profile={profile} 
-            onCancel={() => setIsEditing(false)}
-            onSuccess={() => setIsEditing(false)}
-          />
-        ) : (
-          <ProfileView profile={profile} />
-        )}
-      </ScrollArea>
+      {isEditing ? (
+        <ProfileEditForm 
+          profile={profile} 
+          onCancel={() => setIsEditing(false)}
+          onSuccess={() => setIsEditing(false)}
+        />
+      ) : (
+        <div className="h-[calc(85vh-160px)] sm:h-[calc(85vh-180px)]">
+          <Tabs defaultValue="overview" className="h-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview" className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="content" className="flex items-center gap-1">
+                <FileText className="h-4 w-4" />
+                Content
+              </TabsTrigger>
+              {isMentor && (
+                <TabsTrigger value="insights" className="flex items-center gap-1">
+                  <BarChart className="h-4 w-4" />
+                  Insights
+                </TabsTrigger>
+              )}
+            </TabsList>
+            
+            <TabsContent value="overview" className="h-full mt-0">
+              <ProfileOverviewTab profile={profile} />
+            </TabsContent>
+            
+            <TabsContent value="content" className="h-full mt-0">
+              <ProfileContentTab profileId={profile.id} />
+            </TabsContent>
+            
+            {isMentor && (
+              <TabsContent value="insights" className="h-full mt-0">
+                <ProfileInsightsTab profileId={profile.id} />
+              </TabsContent>
+            )}
+          </Tabs>
+        </div>
+      )}
     </DialogContent>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileLinks } from "./ProfileLinks";
@@ -38,26 +39,22 @@ export function ProfileView({ profile }: ProfileViewProps) {
   });
 
   return (
-    <div className="flex flex-col items-center w-full min-h-screen bg-background">
-      <div className="w-full max-w-3xl px-4 sm:px-6 py-6">
-        <div className="space-y-4 sm:space-y-6">
-          <PersonalSection profile={profile} />
-          <ProfessionalSection profile={profile} careerTitle={careerDetails?.title} />
-          <SkillsSection profile={profile} />
-          <EducationSection profile={profile} />
-          <ProfileLinks
-            linkedinUrl={profile.linkedin_url}
-            githubUrl={profile.github_url}
-            websiteUrl={profile.website_url}
-            xUrl={profile.X_url}
-            instagramUrl={profile.instagram_url}
-            facebookUrl={profile.facebook_url}
-            youtubeUrl={profile.youtube_url}
-            tiktokUrl={profile.tiktok_url}
-            profileId={profile.id}
-          />
-        </div>
-      </div>
+    <div className="space-y-4 sm:space-y-6 py-2">
+      <PersonalSection profile={profile} />
+      <ProfessionalSection profile={profile} careerTitle={careerDetails?.title} />
+      <SkillsSection profile={profile} />
+      <EducationSection profile={profile} />
+      <ProfileLinks
+        linkedinUrl={profile.linkedin_url}
+        githubUrl={profile.github_url}
+        websiteUrl={profile.website_url}
+        xUrl={profile.X_url}
+        instagramUrl={profile.instagram_url}
+        facebookUrl={profile.facebook_url}
+        youtubeUrl={profile.youtube_url}
+        tiktokUrl={profile.tiktok_url}
+        profileId={profile.id}
+      />
     </div>
   );
 }
