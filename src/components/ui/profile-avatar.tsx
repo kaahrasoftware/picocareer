@@ -1,9 +1,16 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ProfileAvatarProps } from "@/types/availability";
+
+export interface ProfileAvatarProps {
+  avatarUrl?: string;
+  imageAlt?: string;
+  size?: "sm" | "md" | "lg";
+  editable?: boolean;
+  onChange?: (file: File) => void;
+}
 
 export function ProfileAvatar({ 
-  avatarUrl, 
+  avatarUrl = "", 
   imageAlt = "", 
   size = "md", 
   editable = false, 
@@ -15,10 +22,12 @@ export function ProfileAvatar({
     lg: "h-16 w-16"
   };
 
+  const firstLetter = imageAlt?.[0] || (typeof imageAlt === 'string' && imageAlt.length > 0 ? imageAlt[0] : 'U');
+
   return (
     <Avatar className={sizeClasses[size]}>
       <AvatarImage src={avatarUrl} alt={imageAlt} />
-      <AvatarFallback>{imageAlt[0]}</AvatarFallback>
+      <AvatarFallback>{firstLetter}</AvatarFallback>
     </Avatar>
   );
 }

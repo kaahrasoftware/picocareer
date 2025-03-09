@@ -44,18 +44,17 @@ export const useTopRatedMentors = () => {
         
         return {
           id: mentor.id,
-          title: mentor.position || "Mentor",
+          name: mentor.full_name || "",
           company: mentor.company?.name || "",
           imageUrl: mentor.avatar_url || "",
-          name: mentor.full_name || "",
-          top_mentor: mentor.top_mentor,
           position: mentor.position,
           career_title: mentor.career?.title || "No position set",
           location: mentor.location,
           bio: mentor.bio,
           skills: mentor.skills || [],
           rating: avgRating || 0,
-          totalRatings: totalRatings || 0
+          totalRatings: totalRatings || 0,
+          top_mentor: mentor.top_mentor
         };
       });
 

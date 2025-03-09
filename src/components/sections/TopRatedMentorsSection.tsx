@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
-import { MentorListDialog } from "@/components/MentorListDialog";
 import { useTopRatedMentors } from "@/hooks/useTopRatedMentors";
 import { Link } from "react-router-dom";
 import {
@@ -42,9 +41,13 @@ export const TopRatedMentorsSection = () => {
             {mentors.map((mentor) => (
               <CarouselItem key={mentor.id} className="pl-4 basis-full md:basis-1/3">
                 <MentorCard 
-                  {...mentor} 
+                  id={mentor.id}
+                  name={mentor.name}
                   position={mentor.career_title}
-                  rating={mentor.rating} 
+                  company={mentor.company}
+                  location={mentor.location}
+                  skills={mentor.skills}
+                  rating={mentor.rating}
                   totalRatings={mentor.totalRatings}
                   avatarUrl={mentor.imageUrl}
                 />

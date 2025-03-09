@@ -1,3 +1,4 @@
+
 import { MentorCard } from "@/components/MentorCard";
 import { Mentor } from "@/types/mentor";
 
@@ -21,16 +22,13 @@ export function MentorResults({ mentors }: MentorResultsProps) {
           key={mentor.id} 
           id={mentor.id}
           name={mentor.name}
-          title={mentor.title}
+          position={mentor.position || mentor.career_title}
           company={mentor.company}
-          imageUrl={mentor.imageUrl}
-          stats={mentor.stats}
-          top_mentor={mentor.top_mentor}
-          position={mentor.position}
-          career_title={mentor.career_title}
           location={mentor.location}
-          bio={mentor.bio}
           skills={mentor.skills}
+          avatarUrl={mentor.imageUrl}
+          rating={mentor.rating}
+          totalRatings={mentor.totalRatings}
         />
       ))}
     </div>
