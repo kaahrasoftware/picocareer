@@ -1,5 +1,5 @@
 
-import { Plus, BookPlus, FileText } from "lucide-react";
+import { Plus, BookPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -34,7 +34,7 @@ export function FloatingActionButton() {
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">Create New Content</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-6">
+        <div className="flex justify-center py-6">
           <Button 
             onClick={() => handleOptionClick("/blog/upload")}
             className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
@@ -42,14 +42,6 @@ export function FloatingActionButton() {
           >
             <BookPlus className="h-12 w-12 text-primary" />
             <span className="text-lg font-medium">Blog Post</span>
-          </Button>
-          <Button 
-            onClick={() => handleOptionClick("/feed/upload")}
-            className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
-            variant="outline"
-          >
-            <FileText className="h-12 w-12 text-primary" />
-            <span className="text-lg font-medium">Resource</span>
           </Button>
         </div>
       </DialogContent>

@@ -1,53 +1,200 @@
 
-import React from "react";
-import { RouteObject } from "react-router-dom";
-import { MainLayout, AuthLayout } from "./layouts";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 
-// Lazy load all pages
-const Home = React.lazy(() => import("../pages/Index"));
-const Blog = React.lazy(() => import("../pages/Blog"));
-const BlogUpload = React.lazy(() => import("../pages/BlogUpload"));
-const FeedUpload = React.lazy(() => import("../pages/FeedUpload"));
-const Profile = React.lazy(() => import("../pages/Profile"));
-const Auth = React.lazy(() => import("../pages/Auth"));
-const Hub = React.lazy(() => import("../pages/Hub"));
-const Hubs = React.lazy(() => import("../pages/Hubs"));
-const School = React.lazy(() => import("../pages/School"));
-const Institution = React.lazy(() => import("../pages/Institution"));
-const Institutions = React.lazy(() => import("../pages/Institutions"));
-const Privacy = React.lazy(() => import("../pages/Privacy"));
-const Terms = React.lazy(() => import("../pages/Terms"));
-const Contact = React.lazy(() => import("../pages/Contact"));
-const About = React.lazy(() => import("../pages/About"));
+import { MainLayout } from "./layouts"; // Changed from DefaultLayout to MainLayout
+import Index from "../pages/Index";
+import Career from "../pages/Career";
+import Mentor from "../pages/Mentor";
+import Blog from "../pages/Blog";
+import Contact from "../pages/Contact";
+import Program from "../pages/Program";
+import About from "../pages/About";
+import Privacy from "../pages/Privacy";
+import Terms from "../pages/Terms";
+import Event from "../pages/Event";
+import CareerUpload from "../pages/CareerUpload";
+import EventUpload from "../pages/EventUpload";
+import BlogUpload from "../pages/BlogUpload";
+import School from "../pages/School";
+import MajorUpload from "../pages/MajorUpload";
+import Profile from "../pages/Profile";
+import PersonalityTest from "../pages/PersonalityTest";
+import Video from "../pages/Video";
+import Auth from "../pages/Auth";
+import TokenShop from "../pages/TokenShop";
+import EmailConfirmation from "../pages/EmailConfirmation";
+import Funding from "../pages/Funding";
+import MentorRegistration from "../pages/MentorRegistration";
+import Institutions from "../pages/Institutions";
+import Institution from "../pages/Institution";
+import PasswordReset from "../pages/PasswordReset";
+import Dashboard from "../pages/Dashboard";
+import Error from "../pages/Error";
+import Hubs from "../pages/Hubs";
+import Hub from "../pages/Hub";
+import HubInviteResponse from "../pages/HubInviteResponse";
+import CareerChat from "../pages/CareerChat";
 
-export const routes: RouteObject[] = [
+export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: <MainLayout />, // Changed from DefaultLayout to MainLayout
+    errorElement: <Error />,
     children: [
-      { index: true, element: <Home /> },
-      { path: "blog", element: <Blog /> },
-      { path: "blog/upload", element: <BlogUpload /> },
-      { path: "feed/upload", element: <FeedUpload /> },
-      { path: "profile", element: <Profile /> },
-      { path: "hubs", element: <Hubs /> },
-      { path: "hubs/:hubId", element: <Hub /> },
-      { path: "institutions", element: <Institutions /> },
-      { path: "institutions/:institutionId", element: <Institution /> },
-      { path: "privacy", element: <Privacy /> },
-      { path: "terms", element: <Terms /> },
-      { path: "contact", element: <Contact /> },
-      { path: "about", element: <About /> },
-      { path: "*", element: <Home /> }, // Fallback to Home instead of NotFound
+      {
+        path: "",
+        element: <Index />,
+      },
+      {
+        path: "auth",
+        element: <Auth />,
+      },
+      {
+        path: "career",
+        element: <Career />,
+      },
+      {
+        path: "career/:id",
+        element: <Career />,
+      },
+      {
+        path: "career-chat", // New route
+        element: <CareerChat />,
+      },
+      {
+        path: "mentor",
+        element: <Mentor />,
+      },
+      {
+        path: "mentor/:id",
+        element: <Mentor />,
+      },
+      {
+        path: "blog",
+        element: <Blog />,
+      },
+      {
+        path: "blog/:id",
+        element: <Blog />,
+      },
+      {
+        path: "contact",
+        element: <Contact />,
+      },
+      {
+        path: "program",
+        element: <Program />,
+      },
+      {
+        path: "program/:id",
+        element: <Program />,
+      },
+      {
+        path: "about",
+        element: <About />,
+      },
+      {
+        path: "privacy",
+        element: <Privacy />,
+      },
+      {
+        path: "terms",
+        element: <Terms />,
+      },
+      {
+        path: "event",
+        element: <Event />,
+      },
+      {
+        path: "event/:id",
+        element: <Event />,
+      },
+      {
+        path: "feedback/:id",
+        element: <Profile initialTab="calendar" />,
+      },
+      {
+        path: "career/upload",
+        element: <CareerUpload />,
+      },
+      {
+        path: "event/upload",
+        element: <EventUpload />,
+      },
+      {
+        path: "blog/upload",
+        element: <BlogUpload />,
+      },
+      {
+        path: "school",
+        element: <School />,
+      },
+      {
+        path: "major/upload",
+        element: <MajorUpload />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
+      },
+      {
+        path: "profile/:id",
+        element: <Profile />,
+      },
+      {
+        path: "personality-test",
+        element: <PersonalityTest />,
+      },
+      {
+        path: "video",
+        element: <Video />,
+      },
+      {
+        path: "token-shop",
+        element: <TokenShop />,
+      },
+      {
+        path: "email-confirmation",
+        element: <EmailConfirmation />,
+      },
+      {
+        path: "funding",
+        element: <Funding />,
+      },
+      {
+        path: "mentor-registration",
+        element: <MentorRegistration />,
+      },
+      {
+        path: "institutions",
+        element: <Institutions />,
+      },
+      {
+        path: "institutions/:id",
+        element: <Institution />,
+      },
+      {
+        path: "password-reset",
+        element: <PasswordReset />,
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "hubs",
+        element: <Hubs />,
+      },
+      {
+        path: "hubs/:id",
+        element: <Hub />,
+      },
+      {
+        path: "hub-invite/response",
+        element: <HubInviteResponse />,
+      },
     ],
   },
-  {
-    path: "/auth",
-    element: <AuthLayout />,
-    children: [
-      { index: true, element: <Auth /> },
-    ],
-  },
-];
+]);
 
-export default routes;
+export default router;
