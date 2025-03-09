@@ -13,7 +13,7 @@ export const useTopRatedMentors = () => {
           *,
           company:companies(name),
           career:careers!profiles_position_fkey(title),
-          avg_rating:session_feedback(rating)
+          avg_rating:session_feedback!session_feedback_to_profile_id_fkey(rating)
         `)
         .eq('user_type', 'mentor')
         .eq('top_mentor', true)
