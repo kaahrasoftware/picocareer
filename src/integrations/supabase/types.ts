@@ -1798,6 +1798,59 @@ export type Database = {
           },
         ]
       }
+      mentor_content: {
+        Row: {
+          content_type: string
+          created_at: string
+          description: string | null
+          external_url: string | null
+          file_url: string | null
+          id: string
+          mentor_id: string
+          metadata: Json | null
+          size_in_bytes: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          file_url?: string | null
+          id?: string
+          mentor_id: string
+          metadata?: Json | null
+          size_in_bytes?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          file_url?: string | null
+          id?: string
+          mentor_id?: string
+          metadata?: Json | null
+          size_in_bytes?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_content_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_session_types: {
         Row: {
           created_at: string
@@ -1990,6 +2043,65 @@ export type Database = {
             foreignKeyName: "mentor_specializations_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentor_storage_metrics: {
+        Row: {
+          blog_count: number | null
+          created_at: string | null
+          document_count: number | null
+          file_count: number | null
+          image_count: number | null
+          last_calculated_at: string | null
+          link_count: number | null
+          mentor_id: string
+          other_count: number | null
+          pdf_count: number | null
+          presentation_count: number | null
+          spreadsheet_count: number | null
+          total_storage_bytes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          blog_count?: number | null
+          created_at?: string | null
+          document_count?: number | null
+          file_count?: number | null
+          image_count?: number | null
+          last_calculated_at?: string | null
+          link_count?: number | null
+          mentor_id: string
+          other_count?: number | null
+          pdf_count?: number | null
+          presentation_count?: number | null
+          spreadsheet_count?: number | null
+          total_storage_bytes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          blog_count?: number | null
+          created_at?: string | null
+          document_count?: number | null
+          file_count?: number | null
+          image_count?: number | null
+          last_calculated_at?: string | null
+          link_count?: number | null
+          mentor_id?: string
+          other_count?: number | null
+          pdf_count?: number | null
+          presentation_count?: number | null
+          spreadsheet_count?: number | null
+          total_storage_bytes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_storage_metrics_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
