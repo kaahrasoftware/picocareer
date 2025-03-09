@@ -13,10 +13,11 @@ const Index = () => {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
 
-  // Debug logs
+  // Enhanced debug logs
   useEffect(() => {
     console.log("Index - Session:", session?.user?.id);
     console.log("Index - Profile:", profile);
+    console.log("Index - User type:", profile?.user_type);
     console.log("Index - Is mentor:", profile?.user_type === "mentor");
   }, [session, profile]);
 
