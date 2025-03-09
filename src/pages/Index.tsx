@@ -13,9 +13,9 @@ const Index = () => {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
 
-  // Log profile data on the index page for debugging
+  // Debug logs
   useEffect(() => {
-    console.log("Index - Session:", session);
+    console.log("Index - Session:", session?.user?.id);
     console.log("Index - Profile:", profile);
     console.log("Index - Is mentor:", profile?.user_type === "mentor");
   }, [session, profile]);

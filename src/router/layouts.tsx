@@ -20,9 +20,9 @@ export function MainLayout({ children }: { children?: React.ReactNode }) {
     setShowAddContentDialog(false);
   };
 
-  // Log profile and session data for debugging
+  // Debug logs
   useEffect(() => {
-    console.log("MainLayout - Session:", session);
+    console.log("MainLayout - Session:", session?.user?.id);
     console.log("MainLayout - Profile:", profile);
     console.log("MainLayout - Is mentor:", profile?.user_type === "mentor");
     console.log("MainLayout - Profile loading:", isLoading);
@@ -32,6 +32,7 @@ export function MainLayout({ children }: { children?: React.ReactNode }) {
   // Determine if the user is a mentor
   const isMentor = profile?.user_type === "mentor";
 
+  // Added fallback checks and simpler loading state
   return (
     <div className="min-h-screen flex flex-col">
       <MenuSidebar />
@@ -44,16 +45,22 @@ export function MainLayout({ children }: { children?: React.ReactNode }) {
       {session?.user && (
         <>
           {isLoading ? (
-            <Skeleton className="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14" />
+            // Show skeleton while loading
+            <div className="fixed bottom-6 right-6 z-50">
+              <Skeleton className="rounded-full w-14 h-14" />
+            </div>
           ) : error ? (
+            // Log error but don't show error UI
             console.error("Error loading profile:", error)
           ) : isMentor ? (
+            // Show FAB for mentors
             <FloatingActionButton 
               icon={<Plus className="h-6 w-6 text-white" />} 
               onClick={() => setShowAddContentDialog(true)}
             />
           ) : null}
           
+          {/* Only render dialog when needed */}
           {showAddContentDialog && session.user && isMentor && (
             <AddContentDialog
               open={showAddContentDialog}
