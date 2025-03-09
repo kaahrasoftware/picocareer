@@ -1,4 +1,3 @@
-
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
 
@@ -9,11 +8,11 @@ export const HeroSection = () => {
       <section className="text-center mb-12">
         <div className="space-y-4">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center flex-wrap gap-2">
-            <span className="text-gray-800 py-2">
+            <span className="bg-gradient-to-r from-[#333333] to-[#555555] bg-clip-text text-transparent py-2">
               The Key to Unlocking Your Career Potential
             </span>
           </h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Navigate your educational and career journey with confidence, backed by expert guidance and personalized support
           </p>
         </div>

@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap, Users2, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -36,8 +35,8 @@ export const Slides = () => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2 text-gray-800">What We Do</h2>
-        <p className="text-gray-600">
+        <h2 className="text-3xl font-bold mb-2">What We Do</h2>
+        <p className="text-muted-foreground">
           Empowering your journey with clarity, connection, and confidence at every step.
         </p>
       </div>
@@ -45,7 +44,7 @@ export const Slides = () => {
         {slides.map((slide, index) => (
           <Card 
             key={index} 
-            className="group relative overflow-hidden backdrop-blur-sm border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            className="group relative overflow-hidden backdrop-blur-sm border border-white/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate(slide.route)}
           >
             <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${slide.gradient}`} />
@@ -55,8 +54,8 @@ export const Slides = () => {
                   <slide.icon className="w-8 h-8 text-white" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">{slide.title}</h3>
-              <p className="text-gray-600 text-center leading-relaxed">
+              <h3 className="text-xl font-semibold mb-4 text-center">{slide.title}</h3>
+              <p className="text-muted-foreground text-center leading-relaxed">
                 {slide.description}
               </p>
             </CardContent>
