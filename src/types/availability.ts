@@ -14,12 +14,10 @@ export interface TimeSlotInputsProps {
 }
 
 export interface ProfileAvatarProps {
-  avatarUrl: string | null;
+  avatarUrl: string;
   imageAlt?: string;
   size: "sm" | "md" | "lg";
   editable?: boolean;
-  fallback?: string;
-  profileId?: string;
   onChange?: (file: File) => void;
 }
 
