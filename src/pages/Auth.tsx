@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
@@ -90,7 +91,7 @@ export default function Auth() {
                 size="lg"
                 className="w-full max-w-xs bg-picocareer-primary hover:bg-picocareer-accent text-white font-semibold py-4 lg:py-6 text-base lg:text-lg shadow-lg"
               >
-                <Link to="/mentor/register" className="flex items-center justify-center gap-2">
+                <Link to="/mentor-registration" className="flex items-center justify-center gap-2">
                   <UserPlus className="w-5 h-5" />
                   Become a Mentor
                 </Link>

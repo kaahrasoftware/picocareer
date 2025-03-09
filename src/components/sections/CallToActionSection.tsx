@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -40,7 +41,7 @@ export const CallToActionSection = () => {
                 variant="secondary"
                 className="w-full md:w-auto bg-white hover:bg-gray-100 text-picocareer-dark font-semibold"
               >
-                <Link to="/mentor/register" className="flex items-center justify-center gap-2">
+                <Link to="/mentor-registration" className="flex items-center justify-center gap-2">
                   <GraduationCap className="mr-2 h-5 w-5" />
                   Become a Mentor
                 </Link>
