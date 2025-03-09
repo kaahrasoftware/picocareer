@@ -1,16 +1,20 @@
+
 import React from "react";
-import { FormField as FormFieldBase } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ImageUpload } from "./ImageUpload";
-import { RichTextEditor } from "./RichTextEditor";
-import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
-import { BasicInputField } from "./fields/BasicInputField";
+import { Control } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/forms/ImageUpload";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
 import { CategoryField } from "./fields/CategoryField";
 import { SubcategoryField } from "./fields/SubcategoryField";
-import { FeatureField } from "./fields/FeatureField";
-import { DegreeField } from "./fields/DegreeField";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -18,262 +22,133 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface FormFieldProps {
   name: string;
   label: string;
+  type: string;
   placeholder?: string;
   description?: string;
-  type?: "text" | "number" | "textarea" | "checkbox" | "array" | "image" | "degree" | "category" | "subcategory" | "select" | "datetime-local" | "richtext";
-  bucket?: string;
   required?: boolean;
-  options?: Array<{ id: string; title?: string; name?: string; }>;
+  options?: { value: string; label: string }[];
+  bucket?: string;
+  component?: React.ComponentType<any>;
+  defaultValue?: any;
   dependsOn?: string;
-  watch?: any;
-  control?: any;
-  component?: any;
+  dependsOnValue?: string;
+  dependsOnValues?: string[];
 }
 
-export function FormField({ 
-  control, 
-  name, 
-  label, 
-  placeholder, 
-  description, 
-  type = "text",
-  bucket = "images",
-  required = false,
-  options = [],
+interface ComponentProps {
+  control: Control<any>;
+  name: string;
+  label: string;
+  type: string;
+  placeholder?: string;
+  description?: string;
+  required?: boolean;
+  options?: { value: string; label: string }[];
+  bucket?: string;
+  dependsOn?: string;
+  dependsOnValue?: string;
+  dependsOnValues?: string[];
+  watch?: any;
+}
+
+export function FormField({
+  control,
+  name,
+  label,
+  type,
+  placeholder,
+  description,
+  required,
+  options,
+  bucket,
   dependsOn,
-  watch,
-  component
-}: FormFieldProps) {
-  const { data: schools } = useQuery({
-    queryKey: ['schools'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schools')
-        .select('id, name')
-        .eq('status', 'Approved')
-        .order('name');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: name === 'school_id'
-  });
-
-  const { data: majors } = useQuery({
-    queryKey: ['majors'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('majors')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: name === 'academic_major_id'
-  });
-
-  const { data: companies } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name')
-        .eq('status', 'Approved')
-        .order('name');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: name === 'company_id'
-  });
-
-  const { data: careers } = useQuery({
-    queryKey: ['careers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('careers')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: name === 'position'
-  });
-
-  if (type === "image") {
-    return (
-      <ImageUpload
-        control={control}
-        name={name}
-        label={label}
-        description={description}
-        bucket={bucket}
-      />
-    );
+  dependsOnValue,
+  dependsOnValues,
+  watch
+}: ComponentProps) {
+  // Check if this field should be shown based on dependency
+  if (dependsOn && watch) {
+    const dependsOnFieldValue = watch(dependsOn);
+    
+    // Check if field should be shown based on single value or array of values
+    if (dependsOnValue && dependsOnFieldValue !== dependsOnValue) {
+      return null;
+    }
+    
+    if (dependsOnValues && !dependsOnValues.includes(dependsOnFieldValue)) {
+      return null;
+    }
   }
 
   return (
-    <FormFieldBase
+    <FormField
       control={control}
       name={name}
-      render={({ field }) => {
-        switch (type) {
-          case "degree":
-            return (
-              <DegreeField
-                field={field}
-                label={label}
-                description={description}
-                required={required}
-              />
-            );
-            
-          case "category":
-            return (
-              <CategoryField
-                field={field}
-                label={label}
-                description={description}
-                required={required}
-              />
-            );
-          
-          case "subcategory":
-            return (
-              <SubcategoryField
-                field={field}
-                label={label}
-                description={description}
-                required={required}
-                selectedCategory={watch && watch(dependsOn || "")}
-              />
-            );
-
-          case "select":
-            if (name === "position") {
-              return (
-                <SelectWithCustomOption
-                  value={field.value || ""}
-                  onValueChange={field.onChange}
-                  options={careers || []}
-                  placeholder={placeholder || "Select position"}
-                  tableName="careers"
-                />
-              );
-            } else if (name === "company_id") {
-              return (
-                <SelectWithCustomOption
-                  value={field.value || ""}
-                  onValueChange={field.onChange}
-                  options={companies || []}
-                  placeholder={placeholder || "Select company"}
-                  tableName="companies"
-                />
-              );
-            } else if (name === "school_id") {
-              return (
-                <SelectWithCustomOption
-                  value={field.value || ""}
-                  onValueChange={field.onChange}
-                  options={schools || []}
-                  placeholder={placeholder || "Select your school"}
-                  tableName="schools"
-                />
-              );
-            } else if (name === "academic_major_id") {
-              return (
-                <SelectWithCustomOption
-                  value={field.value || ""}
-                  onValueChange={field.onChange}
-                  options={majors || []}
-                  placeholder={placeholder || "Select major"}
-                  tableName="majors"
-                />
-              );
-            } else {
-              // Generic select for other cases (platform, event_type, etc.)
-              return (
-                <Select
-                  value={field.value || ""}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={placeholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <ScrollArea className="h-[200px]">
-                      {options.map((option) => (
-                        <SelectItem key={option.id} value={option.id}>
-                          {option.name || option.title || ''}
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
-              );
-            }
-
-          case "richtext":
-            if (component) {
-              const RichTextComponent = component;
-              return (
-                <RichTextComponent
-                  value={field.value || ''}
-                  onChange={field.onChange}
-                  placeholder={placeholder}
-                />
-              );
-            }
-            return (
-              <BasicInputField
-                field={field}
-                label={label}
-                placeholder={placeholder}
-                description={description}
-                required={required}
-                type="text"
-              />
-            );
-
-          case "checkbox":
-            return (
-              <FeatureField
-                field={field}
-                label={label}
-                description={description}
-              />
-            );
-
-          case "datetime-local":
-            return (
-              <BasicInputField
-                field={field}
-                label={label}
-                placeholder={placeholder}
-                description={description}
-                type="datetime-local"
-                required={required}
-              />
-            );
-
-          default:
-            return (
-              <BasicInputField
-                field={field}
-                label={label}
-                placeholder={placeholder}
-                description={description}
-                type={type === "number" ? "number" : "text"}
-                required={required}
-              />
-            );
-        }
-      }}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}{required ? <span className="text-destructive ml-1">*</span> : null}</FormLabel>
+          <FormControl>
+            {renderFormControl(field, type, placeholder, options, bucket)}
+          </FormControl>
+          {description && (
+            <FormDescription>{description}</FormDescription>
+          )}
+          <FormMessage />
+        </FormItem>
+      )}
     />
   );
+}
+
+function renderFormControl(field: any, type: string, placeholder?: string, options?: any[], bucket?: string) {
+  switch (type) {
+    case "text":
+      return <Input {...field} placeholder={placeholder} />;
+    case "textarea":
+      return <Textarea {...field} placeholder={placeholder} />;
+    case "select":
+      return (
+        <Select
+          value={field.value}
+          onValueChange={field.onChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={placeholder || "Select an option"} />
+          </SelectTrigger>
+          <SelectContent>
+            {options?.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    case "image":
+    case "file":
+      return <ImageUpload 
+        control={field.control} 
+        name={field.name} 
+        label={""} // Empty because we show the label above
+        bucket={bucket || "uploads"} 
+        accept={type === "image" ? "image/*" : undefined}
+      />;
+    case "category":
+      return <CategoryField 
+        control={field.control} 
+        name={field.name} 
+      />;
+    case "subcategory":
+      return <SubcategoryField 
+        control={field.control} 
+        name={field.name} 
+        categoryField={field.dependsOn}
+      />;
+    default:
+      return <Input {...field} placeholder={placeholder} />;
+  }
 }
