@@ -6,7 +6,9 @@ export function ProfileAvatar({
   avatarUrl, 
   imageAlt = "", 
   size = "md", 
-  editable = false, 
+  editable = false,
+  fallback,
+  profileId,
   onChange 
 }: ProfileAvatarProps) {
   const sizeClasses = {
@@ -15,10 +17,16 @@ export function ProfileAvatar({
     lg: "h-16 w-16"
   };
 
+  const getFallback = () => {
+    if (fallback) return fallback;
+    if (imageAlt && imageAlt.length > 0) return imageAlt[0].toUpperCase();
+    return 'U';
+  };
+
   return (
     <Avatar className={sizeClasses[size]}>
       <AvatarImage src={avatarUrl} alt={imageAlt} />
-      <AvatarFallback>{imageAlt[0]}</AvatarFallback>
+      <AvatarFallback>{getFallback()}</AvatarFallback>
     </Avatar>
   );
 }
