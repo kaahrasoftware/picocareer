@@ -44,7 +44,7 @@ export function ProfileDialogContent({
   };
 
   return (
-    <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[85vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6">
+    <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[85vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6 flex flex-col">
       <DialogHeader className="pb-0">
         <div className="relative pb-6 sm:pb-8">
           <ProfileHeader 
@@ -81,9 +81,9 @@ export function ProfileDialogContent({
           onSuccess={() => setIsEditing(false)}
         />
       ) : (
-        <div className="h-[calc(85vh-160px)] sm:h-[calc(85vh-180px)]">
-          <Tabs defaultValue="overview" className="h-full">
-            <TabsList className="mb-4">
+        <div className="flex-1 overflow-hidden">
+          <Tabs defaultValue="overview" className="h-full flex flex-col">
+            <TabsList className="mb-2">
               <TabsTrigger value="overview" className="flex items-center gap-1">
                 <User className="h-4 w-4" />
                 Overview
@@ -100,19 +100,21 @@ export function ProfileDialogContent({
               )}
             </TabsList>
             
-            <TabsContent value="overview" className="h-full mt-0">
-              <ProfileOverviewTab profile={profile} />
-            </TabsContent>
-            
-            <TabsContent value="content" className="h-full mt-0">
-              <ProfileContentTab profileId={profile.id} />
-            </TabsContent>
-            
-            {isMentor && (
-              <TabsContent value="insights" className="h-full mt-0">
-                <ProfileInsightsTab profileId={profile.id} />
+            <div className="flex-1 overflow-hidden">
+              <TabsContent value="overview" className="h-full m-0 overflow-hidden">
+                <ProfileOverviewTab profile={profile} />
               </TabsContent>
-            )}
+              
+              <TabsContent value="content" className="h-full m-0 overflow-hidden">
+                <ProfileContentTab profileId={profile.id} />
+              </TabsContent>
+              
+              {isMentor && (
+                <TabsContent value="insights" className="h-full m-0 overflow-hidden">
+                  <ProfileInsightsTab profileId={profile.id} />
+                </TabsContent>
+              )}
+            </div>
           </Tabs>
         </div>
       )}
