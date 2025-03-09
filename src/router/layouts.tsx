@@ -8,6 +8,7 @@ import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { useState } from "react";
 import { AddContentDialog } from "@/components/profile-details/content/AddContentDialog";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -15,11 +16,14 @@ interface LayoutProps {
 
 export function MainLayout({ children }: LayoutProps) {
   const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
   const [showAddContentDialog, setShowAddContentDialog] = useState(false);
   
   const handleContentAdded = () => {
     setShowAddContentDialog(false);
   };
+
+  const isMentor = profile?.user_type === "mentor";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,7 +34,7 @@ export function MainLayout({ children }: LayoutProps) {
       <Footer />
       <GoToTopButton />
       
-      {session?.user && (
+      {session?.user && isMentor && (
         <>
           <FloatingActionButton 
             icon={<Plus className="h-6 w-6" />} 
