@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
@@ -10,10 +11,16 @@ import { supabase } from "@/integrations/supabase/client";
 interface GenericUploadFormProps {
   fields: any[];
   onSubmit: (data: any) => Promise<void>;
-  submitButtonText?: string;
+  buttonText?: string;
+  isSubmitting?: boolean;
 }
 
-export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit" }: GenericUploadFormProps) {
+export function GenericUploadForm({ 
+  fields, 
+  onSubmit, 
+  buttonText = "Submit",
+  isSubmitting = false
+}: GenericUploadFormProps) {
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
@@ -109,6 +116,10 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
                   value={form.watch(field.name) || ""}
                   onChange={(value: string) => form.setValue(field.name, value)}
                   placeholder={field.placeholder}
+                  uploadConfig={field.bucket ? {
+                    bucket: field.bucket,
+                    folderPath: `blog-content/${profile?.id || 'anonymous'}/`
+                  } : undefined}
                 />
                 {field.required && !form.watch(field.name) && (
                   <p className="text-sm text-red-500">This field is required</p>
@@ -128,15 +139,17 @@ export function GenericUploadForm({ fields, onSubmit, submitButtonText = "Submit
               required={field.required}
               options={field.options}
               bucket={field.bucket}
+              dependsOn={field.dependsOn}
+              watch={form.watch}
             />
           );
         })}
         <Button 
           type="submit" 
-          disabled={form.formState.isSubmitting}
+          disabled={isSubmitting}
           className="w-full"
         >
-          {form.formState.isSubmitting ? "Submitting..." : submitButtonText}
+          {isSubmitting ? "Submitting..." : buttonText}
         </Button>
       </form>
     </Form>

@@ -1,5 +1,7 @@
+
 import { FormFieldProps } from "@/components/forms/FormField";
 import { z } from "zod";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
 
 export const blogSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -38,8 +40,8 @@ export const blogFormFields: FormFieldProps[] = [
   {
     name: "content",
     label: "Content",
-    type: "textarea",
-    placeholder: "Write your blog post content here",
+    type: "richtext",
+    component: RichTextEditor,
     description: "Use the rich text editor to format your content",
     required: true,
   },
