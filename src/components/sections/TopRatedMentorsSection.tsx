@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { MentorCard } from "@/components/MentorCard";
 import { MentorListDialog } from "@/components/MentorListDialog";
@@ -40,7 +41,10 @@ export const TopRatedMentorsSection = () => {
           <CarouselContent className="-ml-4">
             {mentors.map((mentor) => (
               <CarouselItem key={mentor.id} className="pl-4 basis-full md:basis-1/3">
-                <MentorCard {...mentor} />
+                <MentorCard 
+                  {...mentor} 
+                  position={mentor.career_title} // Use career_title instead of position ID
+                />
               </CarouselItem>
             ))}
           </CarouselContent>
