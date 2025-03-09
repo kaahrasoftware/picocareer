@@ -1,5 +1,5 @@
 
-import { Plus } from "lucide-react";
+import { Plus, BookPlus, Briefcase, GraduationCap, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -32,36 +32,40 @@ export function FloatingActionButton() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Content</DialogTitle>
+          <DialogTitle className="text-center text-xl font-semibold">Create New Content</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-4">
+        <div className="grid grid-cols-2 gap-4 py-6">
           <Button 
             onClick={() => handleOptionClick("/blog-upload")}
-            className="flex flex-col items-center justify-center h-24 p-4"
+            className="flex flex-col items-center justify-center h-32 p-4 gap-2 hover:bg-primary/10 transition-colors"
             variant="outline"
           >
-            <span className="text-lg font-medium">Blog Post</span>
+            <BookPlus className="h-8 w-8 text-primary" />
+            <span className="text-base font-medium">Blog Post</span>
           </Button>
           <Button 
             onClick={() => handleOptionClick("/career-upload")}
-            className="flex flex-col items-center justify-center h-24 p-4"
+            className="flex flex-col items-center justify-center h-32 p-4 gap-2 hover:bg-primary/10 transition-colors"
             variant="outline"
           >
-            <span className="text-lg font-medium">Career</span>
+            <Briefcase className="h-8 w-8 text-primary" />
+            <span className="text-base font-medium">Career</span>
           </Button>
           <Button 
             onClick={() => handleOptionClick("/major-upload")}
-            className="flex flex-col items-center justify-center h-24 p-4"
+            className="flex flex-col items-center justify-center h-32 p-4 gap-2 hover:bg-primary/10 transition-colors"
             variant="outline"
           >
-            <span className="text-lg font-medium">Major</span>
+            <GraduationCap className="h-8 w-8 text-primary" />
+            <span className="text-base font-medium">Major</span>
           </Button>
           <Button 
             onClick={() => handleOptionClick("/event-upload")}
-            className="flex flex-col items-center justify-center h-24 p-4"
+            className="flex flex-col items-center justify-center h-32 p-4 gap-2 hover:bg-primary/10 transition-colors"
             variant="outline"
           >
-            <span className="text-lg font-medium">Event</span>
+            <CalendarPlus className="h-8 w-8 text-primary" />
+            <span className="text-base font-medium">Event</span>
           </Button>
         </div>
       </DialogContent>
