@@ -188,7 +188,7 @@ export function useMentorRegistration() {
             .filter(Boolean)
           : null,
         onboarding_status: 'Pending' as const,
-        background_check_consent: true // Add this field explicitly
+        background_check_consent: data.background_check_consent // Add the new field
       };
 
       console.log('Formatted data for submission:', formattedData);

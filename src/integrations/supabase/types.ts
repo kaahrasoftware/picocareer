@@ -2511,6 +2511,7 @@ export type Database = {
         Row: {
           academic_major_id: string | null
           avatar_url: string | null
+          background_check_consent: boolean | null
           bio: string | null
           company_id: string | null
           created_at: string
@@ -2548,6 +2549,7 @@ export type Database = {
         Insert: {
           academic_major_id?: string | null
           avatar_url?: string | null
+          background_check_consent?: boolean | null
           bio?: string | null
           company_id?: string | null
           created_at?: string
@@ -2585,6 +2587,7 @@ export type Database = {
         Update: {
           academic_major_id?: string | null
           avatar_url?: string | null
+          background_check_consent?: boolean | null
           bio?: string | null
           company_id?: string | null
           created_at?: string
