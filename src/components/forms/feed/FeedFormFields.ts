@@ -25,7 +25,7 @@ export const DOCUMENT_TYPES = [
 // Base schema for all resource types
 export const feedBaseSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
+  hashtags: z.string().optional(),
   resource_type: z.string().min(1, "Resource type is required"),
   categories: z.string().optional(),
   tags: z.string().optional(),
@@ -72,11 +72,12 @@ const baseFields: FormFieldProps[] = [
     required: true,
   },
   {
-    name: "description",
-    label: "Description",
-    type: "textarea",
-    placeholder: "Write a brief description",
-    required: true,
+    name: "hashtags",
+    label: "Hashtags",
+    type: "text",
+    placeholder: "Enter hashtags separated by commas",
+    description: "Example: coding, education, career",
+    required: false,
   },
   {
     name: "categories",

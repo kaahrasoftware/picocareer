@@ -46,9 +46,19 @@ export function FeedUploadDialog({ open, onOpenChange }: FeedUploadDialogProps) 
         throw new Error("You must be logged in to upload resources");
       }
 
+      // Process hashtags into an array
+      let hashtagsArray: string[] = [];
+      if (data.hashtags) {
+        hashtagsArray = data.hashtags
+          .split(',')
+          .map((tag: string) => tag.trim())
+          .filter((tag: string) => tag.length > 0);
+      }
+
       // Add additional metadata
       const resourceData = {
         ...data,
+        hashtags: hashtagsArray,
         author_id: session.user.id,
         mentor_id: profile.id,
         resource_type: resourceType,
