@@ -42,9 +42,17 @@ export function FeedUploadDialog({ open, onOpenChange }: FeedUploadDialogProps) 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
+      console.log('Submitting resource data:', data);
+      
       if (!session?.user?.id || !profile?.id) {
         throw new Error("You must be logged in to upload resources");
       }
+
+      console.log('Session and profile verified:', { 
+        userId: session.user.id, 
+        profileId: profile.id,
+        isVerified: true 
+      });
 
       // Process hashtags into an array
       let hashtagsArray: string[] = [];
@@ -67,12 +75,19 @@ export function FeedUploadDialog({ open, onOpenChange }: FeedUploadDialogProps) 
         size_in_bytes: data.file_url ? await getFileSizeFromUrl(data.file_url) : 0,
       };
 
+      console.log('Prepared resource data for upload:', resourceData);
+
       // Insert into mentor_resources table
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('mentor_resources')
         .insert([resourceData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insertion error:', error);
+        throw error;
+      }
+
+      console.log('Resource successfully uploaded:', insertedData);
 
       toast({
         title: "Success",

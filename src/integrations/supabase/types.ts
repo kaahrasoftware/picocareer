@@ -1851,6 +1851,62 @@ export type Database = {
           },
         ]
       }
+      mentor_resources: {
+        Row: {
+          author_id: string
+          categories: string | null
+          created_at: string
+          external_url: string | null
+          file_url: string | null
+          hashtags: string[] | null
+          id: string
+          mentor_id: string
+          resource_type: string
+          size_in_bytes: number | null
+          status: string | null
+          tags: string | null
+          title: string
+        }
+        Insert: {
+          author_id: string
+          categories?: string | null
+          created_at?: string
+          external_url?: string | null
+          file_url?: string | null
+          hashtags?: string[] | null
+          id?: string
+          mentor_id: string
+          resource_type: string
+          size_in_bytes?: number | null
+          status?: string | null
+          tags?: string | null
+          title: string
+        }
+        Update: {
+          author_id?: string
+          categories?: string | null
+          created_at?: string
+          external_url?: string | null
+          file_url?: string | null
+          hashtags?: string[] | null
+          id?: string
+          mentor_id?: string
+          resource_type?: string
+          size_in_bytes?: number | null
+          status?: string | null
+          tags?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_resources_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_session_types: {
         Row: {
           created_at: string
