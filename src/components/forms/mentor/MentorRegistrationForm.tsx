@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -5,14 +6,11 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/forms/FormField";
 import { mentorFormFields, mentorRegistrationSchema } from "./MentorFormFields";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { PersonalInfoSection } from "./sections/PersonalInfoSection";
 import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SkillsSection } from "./sections/SkillsSection";
 import { SocialSection } from "./sections/SocialSection";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import type { FormValues } from "./types";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
@@ -33,8 +31,6 @@ export function MentorRegistrationForm({
   schools = [],
   majors = [],
 }: MentorRegistrationFormProps) {
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const { session } = useAuthSession();
   const form = useForm<FormValues>({
     resolver: zodResolver(mentorRegistrationSchema),
@@ -69,105 +65,24 @@ export function MentorRegistrationForm({
     }
   });
 
+  // Handle submission, delegating to the passed onSubmit function
   const handleSubmit = async (data: FormValues) => {
+    console.log('Form submission initiated with data:', { 
+      email: data.email,
+      consented: data.background_check_consent 
+    });
+    
+    if (!data.background_check_consent) {
+      console.error('Background check consent not provided');
+      return;
+    }
+    
     try {
-      const userEmail = data.email.toLowerCase();
-      console.log('Starting registration process for:', userEmail);
-
-      // First, check if user exists in profiles
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, user_type, email')
-        .eq('email', userEmail)
-        .maybeSingle();
-
-      console.log('Profile check result:', { existingProfile, profileError });
-
-      if (profileError) {
-        console.error('Profile check error:', profileError);
-        throw new Error('Error checking user profile');
-      }
-
-      // Handle existing profile scenarios
-      if (existingProfile) {
-        if (existingProfile.user_type === 'mentor') {
-          toast({
-            title: "Already Registered",
-            description: "You are already registered as a mentor. Your application is under review.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (!session) {
-          toast({
-            title: "Login Required",
-            description: "Please login to your existing account to continue with mentor registration.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-          return;
-        }
-      }
-
-      // Create new user if needed
-      if (!existingProfile && !session) {
-        console.log('Creating new user account');
-        
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
-          email: userEmail,
-          password: data.password,
-          options: {
-            data: {
-              first_name: data.first_name,
-              last_name: data.last_name
-            }
-          }
-        });
-
-        console.log('Signup result:', { authData, signUpError });
-
-        if (signUpError) {
-          console.error('Signup error:', signUpError);
-          
-          if (signUpError.message.includes('User already registered')) {
-            toast({
-              title: "Login Required",
-              description: "An account with this email already exists. Please login to continue.",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return;
-          }
-          throw signUpError;
-        }
-      }
-
-      // Process mentor registration
-      console.log('Proceeding with mentor registration');
       await onSubmit(data);
-
-      // Show appropriate success message
-      if (!existingProfile && !session) {
-        toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
-        });
-      } else {
-        toast({
-          title: "Application Received",
-          description: "Thank you for applying to be a mentor! Our team will review your application.",
-        });
-      }
-
       form.reset();
     } catch (error: any) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit mentor application. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Form submission error:', error);
+      // Error handling is now managed in the useMentorRegistration hook
     }
   };
 
