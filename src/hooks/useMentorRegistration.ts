@@ -99,91 +99,29 @@ export function useMentorRegistration() {
     }
   };
 
-  // Create or update user for mentor registration
-  const createOrUpdateUser = async (data: any) => {
-    const userEmail = data.email.toLowerCase();
-    console.log('Processing registration for:', userEmail);
-    
-    try {
-      // Check if user is already logged in
-      if (session?.user) {
-        console.log('User is logged in, using current session for mentor registration');
-        return { userId: session.user.id, isNewUser: false };
-      }
-      
-      // Check if user exists in profiles
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, user_type')
-        .eq('email', userEmail)
-        .maybeSingle();
+  const registerNewUser = async (data: any) => {
+    console.log('Registering new user with data:', {
+      email: data.email,
+      password: data.password
+    });
 
-      if (profileError) {
-        console.error('Profile check error:', profileError);
-        throw new Error('Error checking user profile');
-      }
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+    });
 
-      // If user exists and is a mentor, show error
-      if (existingProfile?.user_type === 'mentor') {
-        toast({
-          title: "Already Registered",
-          description: "You are already registered as a mentor. Your application is under review.",
-          variant: "destructive",
-        });
-        throw new Error('Already registered as mentor');
-      }
-
-      // If existing profile but not logged in, ask to login
-      if (existingProfile && !session) {
-        toast({
-          title: "Login Required",
-          description: "Please login to your existing account to continue with mentor registration.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        throw new Error('Login required for existing account');
-      }
-
-      // If no existing profile and not logged in, create new user
-      if (!existingProfile && !session) {
-        console.log('Creating new user account');
-        
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
-          email: userEmail,
-          password: data.password,
-          options: {
-            data: {
-              first_name: data.first_name,
-              last_name: data.last_name
-            }
-          }
-        });
-
-        if (signUpError) {
-          console.error('Signup error:', signUpError);
-          
-          if (signUpError.message.includes('User already registered')) {
-            toast({
-              title: "Login Required",
-              description: "An account with this email already exists. Please login to continue.",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            throw new Error('Login required for existing account');
-          }
-          throw signUpError;
-        }
-
-        console.log('New user created successfully');
-        return { userId: authData.user?.id, isNewUser: true };
-      }
-
-      // Use current user session
-      return { userId: session?.user?.id, isNewUser: false };
-    } catch (error: any) {
-      console.error('User creation/verification error:', error);
-      throw error;
+    if (signUpError) {
+      console.error('Auth signup error:', signUpError);
+      throw signUpError;
     }
+
+    if (!authData.user) {
+      throw new Error("Failed to create user account");
+    }
+
+    console.log('User signed up successfully:', authData.user.id);
+    
+    return authData.user;
   };
 
   const onSubmit = async (data: any) => {
@@ -193,18 +131,32 @@ export function useMentorRegistration() {
     console.log('Raw form data:', data);
     
     try {
-      // Step 1: Create or verify user account
-      const { userId, isNewUser } = await createOrUpdateUser(data);
+      // Determine if this is a new user or existing user
+      let user;
       
-      if (!userId) {
-        throw new Error("Unable to determine user ID for mentor registration");
+      if (session?.user) {
+        console.log('Using existing authenticated user:', session.user.id);
+        user = session.user;
+      } else {
+        // For new users, validate password
+        if (!data.password) {
+          throw new Error("Password is required for new user registration");
+        }
+        
+        // Register the new user first
+        user = await registerNewUser(data);
+        
+        // Wait briefly for auth state to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Verify user exists
+      if (!user?.id) {
+        throw new Error("User authentication failed");
       }
 
-      console.log('Processing mentor registration for user:', userId);
-
-      // Step 2: Format mentor profile data
       const formattedData = {
-        id: userId,
+        id: user.id,
         first_name: data.first_name.trim(),
         last_name: data.last_name.trim(),
         email: data.email.trim(),
@@ -235,56 +187,40 @@ export function useMentorRegistration() {
             .map((lang: string) => lang.trim())
             .filter(Boolean)
           : null,
-        onboarding_status: 'Pending' as const
+        onboarding_status: 'Pending' as const,
+        background_check_consent: true // Add this field explicitly
       };
 
       console.log('Formatted data for submission:', formattedData);
 
-      // Step 3: Insert/update mentor profile
       const { data: upsertData, error: upsertError } = await supabase
         .from('profiles')
-        .upsert(formattedData, { onConflict: 'id' });
+        .upsert(formattedData);
 
       if (upsertError) {
         console.error('Database upsert error:', upsertError);
         throw upsertError;
       }
 
-      console.log('Mentor profile updated successfully');
+      console.log('Upsert response:', upsertData);
 
-      // Step 4: Send admin notification
       await sendAdminNotification(formattedData);
 
-      // Step 5: Show success message
-      if (isNewUser) {
-        toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
-        });
-      } else {
-        toast({
-          title: "Application Received",
-          description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
-          variant: "default"
-        });
-      }
+      toast({
+        title: "Application Received",
+        description: "Thank you for applying to be a mentor! Our team will review your application and conduct a background check. We'll reach out to you soon.",
+        variant: "default"
+      });
 
-      // For existing users, reload to update UI
-      if (!isNewUser) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      }
+      // Redirect to home page for better experience
+      navigate('/');
     } catch (error: any) {
       console.error('Error registering mentor:', error);
-      if (error.message !== 'Already registered as mentor' && 
-          error.message !== 'Login required for existing account') {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to submit mentor application. Please try again.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit mentor application. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -38,7 +38,7 @@ export function MentorRegistrationForm({
       background_check_consent: false,
       first_name: "",
       last_name: "",
-      email: "",
+      email: session?.user?.email || "",
       password: "",
       avatar_url: "",
       bio: "",
@@ -79,7 +79,6 @@ export function MentorRegistrationForm({
     
     try {
       await onSubmit(data);
-      form.reset();
     } catch (error: any) {
       console.error('Form submission error:', error);
       // Error handling is now managed in the useMentorRegistration hook
@@ -106,12 +105,13 @@ export function MentorRegistrationForm({
         {/* Show password field only for new users who aren't logged in */}
         {!session && (
           <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Account Information</h2>
             <FormField
               control={form.control}
               name="password"
               label="Password"
               type="password"
-              description="Password must contain at least one lowercase letter, one uppercase letter, and one number."
+              description="Create a secure password with at least 8 characters, including one lowercase letter, one uppercase letter, and one number."
               required={true}
             />
           </Card>
