@@ -37,7 +37,6 @@ export default function Event() {
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  // Query for events with registration counts
   const { data: events, isLoading } = useQuery({
     queryKey: ['events', filter],
     queryFn: async () => {
@@ -62,7 +61,6 @@ export default function Event() {
     }
   });
 
-  // Query for registrations
   const { data: registrations } = useQuery({
     queryKey: ['event-registrations', session?.user?.id],
     queryFn: async () => {
@@ -78,7 +76,6 @@ export default function Event() {
     enabled: !!session?.user?.id
   });
 
-  // Query for host details when viewing an event
   const { data: hostProfile } = useQuery({
     queryKey: ['host-profile', viewingEvent?.host_id],
     queryFn: async () => {
@@ -114,7 +111,6 @@ export default function Event() {
 
     setRegistering(selectedEvent.id);
     try {
-      // Check for existing registration
       const { data: existingReg } = await supabase
         .from('event_registrations')
         .select('event_id')
@@ -125,14 +121,13 @@ export default function Event() {
       if (existingReg) {
         toast({
           title: "Already Registered",
-          description: "You have already registered for this event with this email address.",
+          description: "You have already registered for this specific event with this email address.",
           variant: "destructive"
         });
         setSelectedEvent(null);
         return;
       }
 
-      // Create registration
       const { data: registration, error: regError } = await supabase
         .from('event_registrations')
         .insert({
@@ -152,7 +147,6 @@ export default function Event() {
 
       if (regError) throw regError;
 
-      // Send confirmation email
       try {
         const { error: emailError } = await supabase.functions.invoke('send-event-confirmation', {
           body: { registrationId: registration.id }
@@ -215,7 +209,6 @@ export default function Event() {
         {events?.length === 0 && <EmptyState filter={filter} />}
       </div>
 
-      {/* Registration Dialog */}
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -233,7 +226,6 @@ export default function Event() {
         </DialogContent>
       </Dialog>
 
-      {/* Details Dialog */}
       <Dialog open={!!viewingEvent} onOpenChange={() => setViewingEvent(null)}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
