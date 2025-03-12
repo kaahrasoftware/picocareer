@@ -1746,13 +1746,11 @@ export type Database = {
           booked_session_id: string | null
           created_at: string
           day_of_week: number | null
-          dst_aware: boolean
           end_date_time: string | null
           id: string
           is_available: boolean | null
           profile_id: string
           recurring: boolean | null
-          reference_timezone: string
           start_date_time: string | null
           timezone_offset: number
           updated_at: string
@@ -1761,13 +1759,11 @@ export type Database = {
           booked_session_id?: string | null
           created_at?: string
           day_of_week?: number | null
-          dst_aware?: boolean
           end_date_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id: string
           recurring?: boolean | null
-          reference_timezone?: string
           start_date_time?: string | null
           timezone_offset: number
           updated_at?: string
@@ -1776,13 +1772,11 @@ export type Database = {
           booked_session_id?: string | null
           created_at?: string
           day_of_week?: number | null
-          dst_aware?: boolean
           end_date_time?: string | null
           id?: string
           is_available?: boolean | null
           profile_id?: string
           recurring?: boolean | null
-          reference_timezone?: string
           start_date_time?: string | null
           timezone_offset?: number
           updated_at?: string
@@ -3541,10 +3535,6 @@ export type Database = {
           "": string
         }
         Returns: string[]
-      }
-      update_availability_dst_offset: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       update_careers_profiles_count: {
         Args: Record<PropertyKey, never>
