@@ -4,7 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Info } from "lucide-react";
+import { InfoCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TimeSlotButtonProps {
@@ -67,7 +67,7 @@ export function TimeSlotButton({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <Info className="h-4 w-4 text-muted-foreground" />
+                <InfoCircle className="h-4 w-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Timezone: {mentorTimezone} (GMT{formatOffset(mentorCurrentOffset)})</p>
@@ -93,12 +93,12 @@ function getTimezoneOffset(timezone: string): number {
   const date = new Date();
   const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
   const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-  return (utcDate.getTime() - tzDate.getTime()) / 60000;
+  return (tzDate.getTime() - utcDate.getTime()) / 60000;
 }
 
 // Helper function to format timezone offset for display
 function formatOffset(offsetMinutes: number): string {
-  const sign = offsetMinutes > 0 ? '-' : '+';
+  const sign = offsetMinutes > 0 ? '+' : '-';
   const absMinutes = Math.abs(offsetMinutes);
   const hours = Math.floor(absMinutes / 60);
   const minutes = absMinutes % 60;

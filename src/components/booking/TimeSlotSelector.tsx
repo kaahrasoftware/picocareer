@@ -52,9 +52,9 @@ export function TimeSlotSelector({
     const now = new Date();
     const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
     const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
-    const offsetMinutes = (utcDate.getTime() - tzDate.getTime()) / 60000;
+    const offsetMinutes = (tzDate.getTime() - utcDate.getTime()) / 60000;
     
-    const sign = offsetMinutes > 0 ? '-' : '+';
+    const sign = offsetMinutes > 0 ? '+' : '-';
     const absMinutes = Math.abs(offsetMinutes);
     const hours = Math.floor(absMinutes / 60);
     const minutes = absMinutes % 60;

@@ -10,6 +10,8 @@ interface TimeSlot {
   available: boolean;
   timezoneOffset?: number;
   originalDateTime?: Date; // Store the original datetime for accurate conversion
+  reference_timezone?: string;
+  dst_aware?: boolean;
 }
 
 export function useAvailableTimeSlots(
@@ -115,32 +117,48 @@ export function useAvailableTimeSlots(
               endTime: endTime.toISOString(),
               mentorTimezone,
               originalOffset: availability.timezone_offset,
-              currentOffset
+              currentOffset,
+              reference_timezone: availability.reference_timezone || mentorTimezone,
+              dst_aware: availability.dst_aware
             });
           } else {
-            // For one-time slots, respect the stored datetime but adjust for any DST changes
-            startTime = new Date(availability.start_date_time);
-            endTime = new Date(availability.end_date_time);
-            
-            // If the stored timezone offset differs from the current one, adjust the time
-            if (availability.timezone_offset !== undefined && 
-                Math.abs(availability.timezone_offset - currentOffset) > 0) {
-              const offsetDifference = currentOffset - availability.timezone_offset;
-              console.log('DST change detected:', {
-                storedOffset: availability.timezone_offset,
-                currentOffset,
-                offsetDifference,
-                beforeAdjustment: startTime.toISOString()
-              });
+            // For one-time slots, check if it's DST-aware or needs adjustment
+            if (availability.dst_aware) {
+              // DST-aware slots can be used directly
+              startTime = new Date(availability.start_date_time);
+              endTime = new Date(availability.end_date_time);
               
-              // Adjust the time for DST changes
-              startTime = new Date(startTime.getTime() - offsetDifference * 60 * 1000);
-              endTime = new Date(endTime.getTime() - offsetDifference * 60 * 1000);
-              
-              console.log('After DST adjustment:', {
+              console.log('Processing DST-aware one-time slot:', {
                 startTime: startTime.toISOString(),
-                endTime: endTime.toISOString()
+                endTime: endTime.toISOString(),
+                reference_timezone: availability.reference_timezone,
+                timezone_offset: availability.timezone_offset
               });
+            } else {
+              // For non-DST-aware slots, respect the stored datetime but adjust for any DST changes
+              startTime = new Date(availability.start_date_time);
+              endTime = new Date(availability.end_date_time);
+              
+              // If the stored timezone offset differs from the current one, adjust the time
+              if (availability.timezone_offset !== undefined && 
+                  Math.abs(availability.timezone_offset - currentOffset) > 0) {
+                const offsetDifference = currentOffset - availability.timezone_offset;
+                console.log('DST change detected:', {
+                  storedOffset: availability.timezone_offset,
+                  currentOffset,
+                  offsetDifference,
+                  beforeAdjustment: startTime.toISOString()
+                });
+                
+                // Adjust the time for DST changes
+                startTime = new Date(startTime.getTime() + offsetDifference * 60 * 1000);
+                endTime = new Date(endTime.getTime() + offsetDifference * 60 * 1000);
+                
+                console.log('After DST adjustment:', {
+                  startTime: startTime.toISOString(),
+                  endTime: endTime.toISOString()
+                });
+              }
             }
           }
 
@@ -175,7 +193,9 @@ export function useAvailableTimeSlots(
                 time: slotTime,
                 available: true,
                 timezoneOffset: currentOffset, // Store the current offset, not the historical one
-                originalDateTime: slotStart
+                originalDateTime: slotStart,
+                reference_timezone: availability.reference_timezone || mentorTimezone,
+                dst_aware: true // Mark as DST-aware
               });
             }
 
