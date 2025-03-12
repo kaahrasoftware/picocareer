@@ -9,8 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { timeZones } from "./timezones";
 import { Button } from "@/components/ui/button";
 import { useTimezoneUpdate } from "@/hooks/useTimezoneUpdate";
-import { RefreshCw, Bug, Info } from "lucide-react";
-import { useState } from "react";
+import { RefreshCw, Bug, Info, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function TimezoneSection() {
   const { session } = useAuthSession();
@@ -19,8 +20,30 @@ export function TimezoneSection() {
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [showDebug, setShowDebug] = useState(false);
+  const [dstStatus, setDstStatus] = useState<{active: boolean, nextChange: string | null}>();
 
   const { updateTimezones, debugTimezone } = useTimezoneUpdate();
+
+  useEffect(() => {
+    if (currentTimezone) {
+      checkDSTStatus(currentTimezone);
+    }
+  }, [currentTimezone]);
+
+  const checkDSTStatus = async (timezone: string) => {
+    const result = await debugTimezone.mutateAsync(timezone);
+    
+    if (!result.error) {
+      setDstStatus({
+        active: result.isDST,
+        nextChange: result.dstTransitions?.hasDST ? 
+          (result.isDST ? 
+            result.dstTransitions?.dstEnd?.toLocaleDateString() : 
+            result.dstTransitions?.dstStart?.toLocaleDateString()) :
+          null
+      });
+    }
+  };
 
   const handleTimezoneChange = async (value: string) => {
     try {
@@ -33,6 +56,9 @@ export function TimezoneSection() {
         title: "Timezone updated",
         description: "Your timezone has been successfully updated. This will be used for all your mentoring sessions.",
       });
+      
+      // After setting timezone, check its DST status
+      checkDSTStatus(value);
     } catch (error) {
       console.error('Error updating timezone:', error);
       toast({
@@ -48,8 +74,90 @@ export function TimezoneSection() {
   };
 
   const handleForceUpdateTimezones = () => {
-    if (confirm("This will update timezone offsets for all mentor availability slots. Continue?")) {
+    if (confirm("This will update timezone offsets for all mentor availability slots, focusing on recurring slots first. Continue?")) {
       updateTimezones.mutate();
+    }
+  };
+
+  // Update the function to update a mentor's own slots only
+  const handleUpdateMySlots = async () => {
+    if (!profile?.id) return;
+    
+    toast({
+      title: "Updating Your Slots",
+      description: "Updating timezone information for your availability slots...",
+    });
+    
+    try {
+      // Get the current user's timezone
+      const { data: userTimezone } = await supabase
+        .from('user_settings')
+        .select('setting_value')
+        .eq('profile_id', profile.id)
+        .eq('setting_type', 'timezone')
+        .single();
+      
+      if (!userTimezone?.setting_value) {
+        toast({
+          title: "Error",
+          description: "You must set your timezone first.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Calculate current offset
+      const debugResult = await debugTimezone.mutateAsync(userTimezone.setting_value);
+      if (debugResult.error) throw new Error(debugResult.error);
+      
+      const offsetMinutes = debugResult.offsetMinutes;
+      const isDST = debugResult.isDST;
+      
+      // Update recurring slots first
+      const { data: recurringSlots, error: recurringError } = await supabase
+        .from('mentor_availability')
+        .update({
+          timezone_offset: offsetMinutes,
+          reference_timezone: userTimezone.setting_value,
+          dst_aware: true,
+          last_dst_check: new Date().toISOString(),
+          is_dst: isDST
+        })
+        .eq('profile_id', profile.id)
+        .eq('recurring', true)
+        .select('count');
+      
+      if (recurringError) throw recurringError;
+      
+      // Then update non-recurring slots
+      const { data: nonRecurringSlots, error: nonRecurringError } = await supabase
+        .from('mentor_availability')
+        .update({
+          timezone_offset: offsetMinutes,
+          reference_timezone: userTimezone.setting_value,
+          dst_aware: true,
+          last_dst_check: new Date().toISOString(),
+          is_dst: isDST
+        })
+        .eq('profile_id', profile.id)
+        .eq('recurring', false)
+        .select('count');
+      
+      if (nonRecurringError) throw nonRecurringError;
+      
+      const totalUpdated = (recurringSlots?.length || 0) + (nonRecurringSlots?.length || 0);
+      
+      toast({
+        title: "Success",
+        description: `Updated ${totalUpdated} availability slots with the current timezone information.`,
+      });
+    } catch (error) {
+      console.error('Error updating personal slots:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update your slots. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -78,8 +186,38 @@ export function TimezoneSection() {
         <AlertDescription>
           Current time in {currentTimezone}:{' '}
           {new Date().toLocaleTimeString('en-US', { timeZone: currentTimezone })}
+          {dstStatus && (
+            <div className="mt-1 text-sm">
+              <span className={dstStatus.active ? "text-amber-500" : "text-green-500"}>
+                {dstStatus.active ? 
+                  "Daylight Saving Time is currently active" : 
+                  "Standard Time is currently active"}
+              </span>
+              {dstStatus.nextChange && (
+                <span className="ml-1">
+                  (Next change: {dstStatus.nextChange})
+                </span>
+              )}
+            </div>
+          )}
         </AlertDescription>
       </Alert>
+
+      {profile?.user_type === 'mentor' && (
+        <div className="mt-2">
+          <Button
+            onClick={handleUpdateMySlots}
+            variant="outline"
+            className="w-full"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Update My Availability Slots
+          </Button>
+          <p className="text-xs text-muted-foreground mt-1">
+            This will update all your availability slots with the current timezone information.
+          </p>
+        </div>
+      )}
 
       {profile?.user_type === 'admin' && (
         <div className="mt-4 space-y-4">
@@ -93,7 +231,8 @@ export function TimezoneSection() {
             {updateTimezones.isPending ? 'Updating Timezone Offsets...' : 'Update All Mentor Timezone Offsets'}
           </Button>
           <p className="text-xs text-muted-foreground mt-2">
-            This will update timezone offsets for all mentors to account for DST changes.
+            This will update timezone offsets for all mentors to account for DST changes,
+            focusing on recurring slots first.
           </p>
           
           <div className="mt-2 flex justify-between">
@@ -113,7 +252,7 @@ export function TimezoneSection() {
               size="sm"
               className="text-xs text-yellow-500 hover:text-yellow-600"
             >
-              <Info className="h-3 w-3 mr-1" />
+              <AlertTriangle className="h-3 w-3 mr-1" />
               Force Update
             </Button>
           </div>
@@ -125,7 +264,8 @@ export function TimezoneSection() {
                 <p className="text-xs text-muted-foreground">
                   Timezone: {currentTimezone}<br />
                   Local offset: {-(new Date().getTimezoneOffset())} minutes<br />
-                  Browser locale: {navigator.language || 'unknown'}
+                  Browser locale: {navigator.language || 'unknown'}<br />
+                  DST active: {dstStatus?.active ? 'Yes' : 'No'}
                 </p>
                 <Button 
                   onClick={handleDebugTimezone}
@@ -153,7 +293,7 @@ export function TimezoneSection() {
       )}
 
       {profile?.user_type === 'mentor' && (
-        <Alert>
+        <Alert className="mt-4">
           <AlertDescription className="text-sm text-muted-foreground">
             As a mentor, your timezone is important for scheduling sessions. Make sure it's correctly set to ensure accurate session times for your mentees.
           </AlertDescription>

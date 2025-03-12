@@ -64,7 +64,13 @@ export function useTimezoneUpdate() {
       
       toast({
         title: "Timezone Debug Info",
-        description: `Timezone: ${result.timezone}\nCalculated offset: ${result.offsetMinutes} minutes\nAlternate method: ${result.alternateOffset} minutes\nDST active: ${result.isDST ? 'Yes' : 'No'}`,
+        description: `Timezone: ${result.timezone}
+Calculated offset: ${result.offsetMinutes} minutes
+Alternate method: ${result.alternateOffset} minutes
+DST active: ${result.isDST ? 'Yes' : 'No'}
+DST transitions: ${result.dstTransitions?.hasDST ? 
+  `Start: ${result.dstTransitions?.dstStart?.toLocaleDateString() || 'Unknown'}, End: ${result.dstTransitions?.dstEnd?.toLocaleDateString() || 'Unknown'}` : 
+  'No DST in this timezone'}`,
       });
     }
   });
