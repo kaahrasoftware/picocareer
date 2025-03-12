@@ -35,9 +35,18 @@ export function useBookSession() {
       return { success: false, error: "Missing required fields" };
     }
 
+    // Construct the scheduled time from date and selected time
     const scheduledAt = new Date(date);
     const [hours, minutes] = selectedTime.split(':');
     scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    console.log('Booking session with parameters:', {
+      mentorId,
+      date: date.toISOString(),
+      selectedTime,
+      sessionTypeId,
+      scheduledAt: scheduledAt.toISOString(),
+    });
 
     try {
       // Step 1: Get session type details for duration
@@ -54,6 +63,12 @@ export function useBookSession() {
 
       const endTime = new Date(scheduledAt);
       endTime.setMinutes(endTime.getMinutes() + sessionType.duration);
+
+      console.log('Session timing:', {
+        scheduledAt: scheduledAt.toISOString(),
+        endTime: endTime.toISOString(),
+        duration: sessionType.duration
+      });
 
       // Step 2: Check for existing bookings
       const { data: existingBookings, error: bookingsError } = await supabase
@@ -95,7 +110,17 @@ export function useBookSession() {
         return { success: false, error: 'No available slots found for the selected time' };
       }
 
-      // Step 4: Book the session
+      // Step 4: Book the session using RPC function
+      const formattedStartTime = format(scheduledAt, 'HH:mm');
+      const formattedDate = format(scheduledAt, 'yyyy-MM-dd');
+
+      console.log('Calling create_session_and_update_availability with:', {
+        p_mentor_id: mentorId,
+        p_scheduled_at: scheduledAt.toISOString(),
+        p_session_date: formattedDate,
+        p_start_time: formattedStartTime
+      });
+
       const { data: sessionData, error: sessionError } = await supabase
         .rpc('create_session_and_update_availability', {
           p_meeting_platform: meetingPlatform,
@@ -105,18 +130,24 @@ export function useBookSession() {
           p_mentor_id: mentorId,
           p_notes: note,
           p_scheduled_at: scheduledAt.toISOString(),
-          p_session_date: format(scheduledAt, 'yyyy-MM-dd'),
+          p_session_date: formattedDate,
           p_session_type_id: sessionTypeId,
-          p_start_time: format(scheduledAt, 'HH:mm')
+          p_start_time: formattedStartTime
         });
 
       if (sessionError) {
         console.error('Session booking error:', sessionError);
-        throw sessionError;
+        return { 
+          success: false, 
+          error: sessionError.message || 'Failed to book session'
+        };
       }
 
       if (!sessionData) {
-        throw new Error('No session data returned');
+        return { 
+          success: false, 
+          error: 'No session data returned'
+        };
       }
 
       const { session_id } = sessionData as { session_id: string };

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { formatInTimeZone } from 'date-fns-tz';
 import { useUserSettings } from "@/hooks/useUserSettings";
@@ -12,6 +13,7 @@ interface TimeSlotButtonProps {
   mentorTimezone: string;
   date: Date;
   timezoneOffset?: number;
+  originalDateTime?: Date;
 }
 
 export function TimeSlotButton({ 
@@ -21,20 +23,28 @@ export function TimeSlotButton({
   onSelect,
   mentorTimezone,
   date,
-  timezoneOffset = 0
+  timezoneOffset = 0,
+  originalDateTime
 }: TimeSlotButtonProps) {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { getSetting } = useUserSettings(profile?.id || '');
   const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // Create a date object for the slot
-  const [hours, minutes] = time.split(':').map(Number);
-  const slotDate = new Date(date);
-  slotDate.setHours(hours, minutes, 0, 0);
+  // Create a date object for the slot using the provided originalDateTime or by parsing the time
+  let slotDate: Date;
+  if (originalDateTime) {
+    slotDate = new Date(originalDateTime);
+  } else {
+    // Fallback to manually constructing the date from parts
+    const [hours, minutes] = time.split(':').map(Number);
+    slotDate = new Date(date);
+    slotDate.setHours(hours, minutes, 0, 0);
+  }
 
   console.log('TimeSlotButton - Conversion details:', {
     originalTime: time,
+    originalDateTime: originalDateTime?.toISOString(),
     mentorTimezone,
     userTimezone,
     slotDate: slotDate.toISOString(),
