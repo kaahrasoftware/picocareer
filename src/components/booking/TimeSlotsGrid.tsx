@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimeSlotButton } from "./TimeSlotButton";
 
@@ -6,7 +5,6 @@ interface TimeSlot {
   time: string;
   available: boolean;
   timezoneOffset?: number;
-  originalDateTime?: Date;
 }
 
 interface TimeSlotsGridProps {
@@ -59,7 +57,6 @@ export function TimeSlotsGrid({
               mentorTimezone={mentorTimezone}
               date={date}
               timezoneOffset={slot.timezoneOffset}
-              originalDateTime={slot.originalDateTime}
             />
           ))}
         </div>

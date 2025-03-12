@@ -1,21 +1,20 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { TimeSlotSelector } from "./TimeSlotSelector";
-import { DateSelector } from "./DateSelector";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { MeetingPlatform } from "@/types/calendar";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { SessionType } from "@/types/database/mentors";
-import { format } from "date-fns";
+import { DateSelector } from "./DateSelector";
+import { TimeSlotSelector } from "./TimeSlotSelector";
+import { SessionTypeSelector } from "./SessionTypeSelector";
+import { SessionNote } from "./SessionNote";
+import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
+import { useSessionTypes } from "@/hooks/useSessionTypes";
+import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface BookingFormProps {
   mentorId: string;
-  onFormChange: (data: {
+  onFormChange: (formData: {
     date?: Date;
     selectedTime?: string;
     sessionType?: string;
@@ -23,194 +22,151 @@ interface BookingFormProps {
     meetingPlatform: MeetingPlatform;
     menteePhoneNumber?: string;
     menteeTelegramUsername?: string;
-    mentorTimezone?: string;
   }) => void;
-  onMentorTimezoneChange?: (timezone: string) => void;
 }
 
-export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: BookingFormProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedTime, setSelectedTime] = useState<string | undefined>();
-  const [sessionTypeId, setSessionTypeId] = useState<string | undefined>();
-  const [note, setNote] = useState<string>("");
+export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
+  const [date, setDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>();
+  const [sessionType, setSessionType] = useState<string>();
+  const [note, setNote] = useState("");
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [telegramUsername, setTelegramUsername] = useState<string>("");
-  const [mentorTimezone, setMentorTimezone] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
+  const { session } = useAuthSession();
 
-  // Query to get session types for this mentor
-  const { data: sessionTypes } = useQuery({
-    queryKey: ['session-types', mentorId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mentor_session_types')
-        .select('*')
-        .eq('profile_id', mentorId);
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!mentorId,
-  });
+  const sessionTypes = useSessionTypes(mentorId, true);
+  const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
+  const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
 
-  const selectedSessionType = sessionTypes?.find(type => type.id === sessionTypeId);
-  
-  const handleMeetingPlatformChange = (value: string) => {
-    setMeetingPlatform(value as MeetingPlatform);
-  };
-
-  const handleTimeSelect = (time: string) => {
-    setSelectedTime(time);
-  };
-
-  const handleMentorTimezoneUpdate = (timezone: string) => {
-    setMentorTimezone(timezone);
-    if (onMentorTimezoneChange) {
-      onMentorTimezoneChange(timezone);
+  // Reset meeting platform when session type changes
+  useEffect(() => {
+    if (availablePlatforms.length > 0) {
+      setMeetingPlatform(availablePlatforms[0]);
+      setPhoneNumber("");
+      setTelegramUsername("");
     }
-  };
+  }, [sessionType, availablePlatforms]);
 
-  // Update parent component whenever form data changes
+  // Update parent component whenever form values change
   useEffect(() => {
     onFormChange({
-      date: selectedDate,
+      date,
       selectedTime,
-      sessionType: sessionTypeId,
+      sessionType,
       note,
       meetingPlatform,
-      menteePhoneNumber: phoneNumber || undefined,
-      menteeTelegramUsername: telegramUsername || undefined,
-      mentorTimezone
+      menteePhoneNumber: (meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") ? phoneNumber : undefined,
+      menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
     });
-  }, [selectedDate, selectedTime, sessionTypeId, note, meetingPlatform, phoneNumber, telegramUsername, mentorTimezone, onFormChange]);
-
-  // Get the available meeting platforms for the selected session type
-  const availablePlatforms = selectedSessionType?.meeting_platform || ['Google Meet'];
+  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
 
   return (
-    <div className="space-y-6">
-      {/* Session Type Selector */}
-      <div>
-        <Label htmlFor="session-type" className="text-base font-medium mb-2 block">
-          Session Type
-        </Label>
-        <Select value={sessionTypeId} onValueChange={setSessionTypeId}>
-          <SelectTrigger id="session-type">
-            <SelectValue placeholder="Select a session type" />
-          </SelectTrigger>
-          <SelectContent>
-            {sessionTypes?.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
-                {type.type} ({type.duration} minutes)
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Left column - Calendar */}
+      <div className="bg-white/5 rounded-lg p-4">
+        <DateSelector
+          selectedDate={date}
+          onDateSelect={setDate}
+          mentorId={mentorId}
+        />
+        
+        <div className="mt-4">
+          <RequestAvailabilityButton
+            mentorId={mentorId}
+            userId={session?.user?.id}
+            onRequestComplete={() => {}}
+          />
+        </div>
       </div>
 
-      {sessionTypeId && (
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Date Selection */}
-          <Card>
-            <CardContent className="pt-6">
-              <DateSelector
-                mentorId={mentorId}
-                selectedDate={selectedDate}
-                onDateSelect={setSelectedDate}
+      {/* Right column - Form elements */}
+      <div className="space-y-4">
+        <div className="bg-white/5 rounded-lg p-4 transition-all duration-300">
+          <h3 className="text-lg font-semibold mb-4">Session Details</h3>
+          <div className="space-y-6">
+            <div className="bg-white/5 rounded-lg p-4">
+              <SessionTypeSelector
+                sessionTypes={sessionTypes}
+                onSessionTypeSelect={(type) => {
+                  setSessionType(type);
+                  setMeetingPlatform(availablePlatforms[0] || "Google Meet");
+                }}
               />
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Time Selection */}
-          {selectedDate && (
-            <Card>
-              <CardContent className="pt-6">
-                <TimeSlotSelector
-                  date={selectedDate}
-                  mentorId={mentorId}
-                  selectedTime={selectedTime}
-                  onTimeSelect={handleTimeSelect}
-                  selectedSessionType={selectedSessionType as SessionType}
-                  onMentorTimezoneChange={handleMentorTimezoneUpdate}
+            {sessionType && availablePlatforms.length > 0 && (
+              <div 
+                className="bg-white/5 rounded-lg p-4 transform transition-all duration-300 ease-in-out"
+                style={{
+                  opacity: sessionType ? 1 : 0,
+                  transform: sessionType ? 'translateY(0)' : 'translateY(-10px)'
+                }}
+              >
+                <MeetingPlatformSelector
+                  value={meetingPlatform}
+                  onValueChange={setMeetingPlatform}
+                  onGoogleAuthErrorClear={() => {}}
+                  availablePlatforms={availablePlatforms}
                 />
-                {selectedTime && (
-                  <div className="mt-4 p-3 bg-primary/10 rounded-md">
-                    <p className="text-sm font-medium">
-                      Selected session time: {selectedDate && format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}
-                    </p>
+
+                {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
+                  <div className="mt-4">
+                    <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="+1234567890"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="mt-1"
+                    />
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
+
+                {meetingPlatform === "Telegram" && (
+                  <div className="mt-4">
+                    <Label htmlFor="telegramUsername">Telegram Username</Label>
+                    <Input
+                      id="telegramUsername"
+                      type="text"
+                      placeholder="@username"
+                      value={telegramUsername}
+                      onChange={(e) => {
+                        let username = e.target.value;
+                        if (!username.startsWith('@') && username !== '') {
+                          username = '@' + username;
+                        }
+                        setTelegramUsername(username);
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {date && (
+              <div className="bg-white/5 rounded-lg p-4">
+                <TimeSlotSelector
+                  date={date}
+                  mentorId={mentorId}
+                  selectedTime={selectedTime}
+                  onTimeSelect={setSelectedTime}
+                  selectedSessionType={selectedSessionTypeDetails}
+                />
+              </div>
+            )}
+
+            <div className="bg-white/5 rounded-lg p-4">
+              <SessionNote
+                note={note}
+                onNoteChange={setNote}
+              />
+            </div>
+          </div>
         </div>
-      )}
-
-      {/* Meeting Platform */}
-      {selectedTime && (
-        <>
-          <div>
-            <Label htmlFor="meeting-platform" className="text-base font-medium mb-2 block">
-              Meeting Platform
-            </Label>
-            <Select value={meetingPlatform} onValueChange={handleMeetingPlatformChange}>
-              <SelectTrigger id="meeting-platform">
-                <SelectValue placeholder="Select meeting platform" />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePlatforms.map((platform) => (
-                  <SelectItem key={platform} value={platform}>
-                    {platform}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Conditional fields based on meeting platform */}
-          {(meetingPlatform === 'WhatsApp' || meetingPlatform === 'Phone Call') && (
-            <div>
-              <Label htmlFor="phone-number" className="text-base font-medium mb-2 block">
-                Your Phone Number {meetingPlatform === 'WhatsApp' ? '(for WhatsApp)' : '(for Phone Call)'}
-              </Label>
-              <Input
-                id="phone-number"
-                placeholder="Enter your phone number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-            </div>
-          )}
-
-          {meetingPlatform === 'Telegram' && (
-            <div>
-              <Label htmlFor="telegram-username" className="text-base font-medium mb-2 block">
-                Your Telegram Username
-              </Label>
-              <Input
-                id="telegram-username"
-                placeholder="Enter your Telegram username"
-                value={telegramUsername}
-                onChange={(e) => setTelegramUsername(e.target.value)}
-              />
-            </div>
-          )}
-
-          {/* Notes field */}
-          <div>
-            <Label htmlFor="session-notes" className="text-base font-medium mb-2 block">
-              Session Notes (Optional)
-            </Label>
-            <Textarea
-              id="session-notes"
-              placeholder="Add any specific topics or questions you'd like to discuss..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 }

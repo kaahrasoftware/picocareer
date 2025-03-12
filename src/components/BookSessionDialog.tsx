@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookingForm } from "./booking/BookingForm";
@@ -34,7 +35,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     meetingPlatform: MeetingPlatform;
     menteePhoneNumber?: string;
     menteeTelegramUsername?: string;
-    mentorTimezone?: string;
   }>({
     note: "",
     meetingPlatform: "Google Meet"
@@ -44,13 +44,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const bookSession = useBookSession();
-
-  const handleMentorTimezoneChange = (timezone: string) => {
-    setFormData(prev => ({
-      ...prev,
-      mentorTimezone: timezone
-    }));
-  };
 
   const handleSubmit = async () => {
     if (!formData.date || !formData.selectedTime || !formData.sessionType || !mentor.id) {
@@ -99,8 +92,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         sessionType: formData.sessionType,
         platform: formData.meetingPlatform,
         menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername,
-        mentorTimezone: formData.mentorTimezone
+        menteeTelegramUsername: formData.menteeTelegramUsername
       });
       
       const sessionResult = await bookSession({
@@ -112,7 +104,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
         meetingPlatform: formData.meetingPlatform,
         menteePhoneNumber: formData.menteePhoneNumber,
         menteeTelegramUsername: formData.menteeTelegramUsername,
-        mentorTimezone: formData.mentorTimezone
       });
 
       if (!sessionResult.success) {
@@ -122,6 +113,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
       console.log('Session booked successfully:', sessionResult);
 
+      // Notify admins about the new session booking
       const { data: sessionType } = await supabase
         .from<'mentor_session_types', SessionType>('mentor_session_types')
         .select('type')
@@ -159,6 +151,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
           console.log('Meet link created successfully:', meetData.meetLink);
 
+          // Update session with meet link
           const { error: updateError } = await supabase
             .from<'mentor_sessions', MentorSession>('mentor_sessions')
             .update({ meeting_link: meetData.meetLink })
@@ -176,6 +169,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             description: "Session booked successfully, but there was an issue creating the Google Meet link. The link will be sent to you via email.",
             variant: "destructive"
           });
+          // Continue with notifications despite meet link error
         }
       }
 
@@ -250,7 +244,6 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             <BookingForm 
               mentorId={mentor.id}
               onFormChange={setFormData}
-              onMentorTimezoneChange={handleMentorTimezoneChange}
             />
           </div>
 
@@ -268,4 +261,3 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     </Dialog>
   );
 }
-
