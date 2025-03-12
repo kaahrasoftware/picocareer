@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimeSlotButton } from "./TimeSlotButton";
 
@@ -18,7 +19,8 @@ interface TimeSlotsGridProps {
   date: Date;
 }
 
-export function TimeSlotsGrid({ 
+// Use memo to prevent unnecessary re-renders
+export const TimeSlotsGrid = memo(function TimeSlotsGrid({ 
   title,
   timeSlots, 
   selectedTime, 
@@ -66,4 +68,14 @@ export function TimeSlotsGrid({
       </ScrollArea>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.selectedTime === nextProps.selectedTime &&
+    prevProps.title === nextProps.title &&
+    prevProps.mentorTimezone === nextProps.mentorTimezone &&
+    prevProps.date.getTime() === nextProps.date.getTime() &&
+    prevProps.timeSlots.length === nextProps.timeSlots.length &&
+    JSON.stringify(prevProps.timeSlots) === JSON.stringify(nextProps.timeSlots)
+  );
+});

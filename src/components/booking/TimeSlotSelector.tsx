@@ -7,6 +7,7 @@ import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -40,7 +41,7 @@ export function TimeSlotSelector({
     onMentorTimezoneChange(mentorTimezone);
   }
 
-  const availableTimeSlots = useAvailableTimeSlots(
+  const { timeSlots: availableTimeSlots, isLoading: isLoadingTimeSlots, error } = useAvailableTimeSlots(
     date, 
     mentorId, 
     selectedSessionType?.duration || 60,
@@ -68,6 +69,31 @@ export function TimeSlotSelector({
 
   const mentorOffset = mentorTimezone ? getCurrentOffset(mentorTimezone) : '';
   const userOffset = getCurrentOffset(userTimezone);
+
+  if (isLoadingTimezone || isLoadingTimeSlots) {
+    return (
+      <div className="space-y-4">
+        {selectedSessionType && (
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2">
+            {selectedSessionType.duration}-minute slots
+          </p>
+        )}
+        <Skeleton className="h-[200px] sm:h-[250px] w-full rounded-md" />
+        <div className="flex flex-col xs:flex-row justify-between mt-2 gap-2">
+          <Skeleton className="h-4 w-[150px]" />
+          <Skeleton className="h-4 w-[120px]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-4 text-red-500 bg-red-50 rounded-md">
+        <p className="text-sm">Error loading time slots. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
