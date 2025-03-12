@@ -23,28 +23,20 @@ export async function updateMentorTimezoneOffsets() {
         const timezone = setting.setting_value;
         if (!timezone) continue;
 
-        // Get current date for DST-aware offset calculation
-        const now = new Date();
+        // IMPORTANT: Fix for DST calculation - get current timezone offset directly
+        // This is a more reliable way to calculate the correct offset with DST handling
+        const offsetMinutes = getTimezoneOffsetMinutes(timezone);
         
-        // Calculate the timezone offset in minutes
-        let offsetMinutes;
-        
-        try {
-          // Get timezone offset for the current time in minutes
-          // For correct DST handling, we need to use negative values for west of UTC
-          const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
-          const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-          offsetMinutes = -(tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
-          
-          console.log(`Timezone ${timezone} has offset: ${offsetMinutes} minutes`);
-        } catch (err) {
-          console.error(`Invalid timezone: ${timezone}`, err);
+        if (offsetMinutes === null) {
+          console.error(`Invalid timezone: ${timezone}`);
           errors.push({
             profileId: setting.profile_id,
             error: `Invalid timezone: ${timezone}`
           });
           continue;
         }
+        
+        console.log(`Timezone ${timezone} has offset: ${offsetMinutes} minutes`);
 
         // 3. Update both recurring and non-recurring availability slots
         const { data: availabilityData, error: availabilityError } = await supabase
@@ -112,21 +104,86 @@ export async function updateMentorTimezoneOffsets() {
   }
 }
 
+// Helper function for accurate timezone offset calculation
+function getTimezoneOffsetMinutes(timezone) {
+  try {
+    if (!timezone) return null;
+    
+    // Use the most accurate method to determine timezone offset with DST
+    const date = new Date();
+    
+    // Get current date in UTC 
+    const utcDate = new Date(
+      Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds()
+      )
+    );
+    
+    // Format the date in the target timezone
+    const options = { timeZone: timezone };
+    
+    // Get parts of the date in the target timezone
+    const targetYear = new Date(date.toLocaleString('en-US', { ...options, year: 'numeric' })).getFullYear();
+    const targetMonth = new Date(date.toLocaleString('en-US', { ...options, month: 'numeric' })).getMonth();
+    const targetDay = new Date(date.toLocaleString('en-US', { ...options, day: 'numeric' })).getDate();
+    const targetHour = new Date(date.toLocaleString('en-US', { ...options, hour: 'numeric', hour12: false })).getHours();
+    const targetMinute = new Date(date.toLocaleString('en-US', { ...options, minute: 'numeric' })).getMinutes();
+    
+    // Create date objects for comparison
+    const targetDate = new Date(targetYear, targetMonth, targetDay, targetHour, targetMinute);
+    
+    // Calculate offset in minutes
+    // Negative for west of UTC (e.g., America/New_York)
+    // Positive for east of UTC (e.g., Europe/London during summer)
+    const offsetMinutes = -Math.round((targetDate.getTime() - utcDate.getTime()) / (60 * 1000));
+    
+    return offsetMinutes;
+  } catch (error) {
+    console.error('Error calculating timezone offset:', error);
+    return null;
+  }
+}
+
 // Helper function to get timezone offset for debugging
 export async function getTimezoneOffsetForDebugging(timezone) {
   try {
     if (!timezone) return null;
     
+    const offsetMinutes = getTimezoneOffsetMinutes(timezone);
+    
+    // Additional calculations for validation
     const now = new Date();
     const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
     const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const offsetMinutes = -(tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
+    const alternateOffset = -(tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
     
     return {
       timezone,
       offsetMinutes,
+      alternateOffset,
       date: now.toISOString(),
-      isDST: isDaylightSavingTime(timezone)
+      isDST: isDaylightSavingTime(timezone),
+      dateComponents: {
+        utc: {
+          year: now.getUTCFullYear(),
+          month: now.getUTCMonth(),
+          day: now.getUTCDate(),
+          hour: now.getUTCHours(),
+          minute: now.getUTCMinutes()
+        },
+        local: {
+          year: now.getFullYear(),
+          month: now.getMonth(),
+          day: now.getDate(),
+          hour: now.getHours(),
+          minute: now.getMinutes()
+        }
+      }
     };
   } catch (error) {
     return { error: error.message };
