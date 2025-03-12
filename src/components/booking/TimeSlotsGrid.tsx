@@ -1,5 +1,5 @@
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimeSlotButton } from "./TimeSlotButton";
 
@@ -28,7 +28,11 @@ export const TimeSlotsGrid = memo(function TimeSlotsGrid({
   mentorTimezone,
   date
 }: TimeSlotsGridProps) {
-  const availableSlots = timeSlots.filter(slot => slot.available);
+  // Memoize the filtered slots to prevent recalculation on re-renders
+  const availableSlots = useMemo(() => 
+    timeSlots.filter(slot => slot.available), 
+    [timeSlots]
+  );
 
   if (timeSlots.length === 0) {
     return (
@@ -69,13 +73,35 @@ export const TimeSlotsGrid = memo(function TimeSlotsGrid({
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison to prevent unnecessary re-renders
-  return (
-    prevProps.selectedTime === nextProps.selectedTime &&
-    prevProps.title === nextProps.title &&
-    prevProps.mentorTimezone === nextProps.mentorTimezone &&
-    prevProps.date.getTime() === nextProps.date.getTime() &&
-    prevProps.timeSlots.length === nextProps.timeSlots.length &&
-    JSON.stringify(prevProps.timeSlots) === JSON.stringify(nextProps.timeSlots)
-  );
+  // Improved comparison function to prevent unnecessary re-renders
+  // First check shallow props that are most likely to change
+  if (prevProps.selectedTime !== nextProps.selectedTime || 
+      prevProps.title !== nextProps.title || 
+      prevProps.mentorTimezone !== nextProps.mentorTimezone) {
+    return false; // Props changed, should re-render
+  }
+  
+  // Check date (common source of re-renders)
+  if (prevProps.date.getTime() !== nextProps.date.getTime()) {
+    return false; // Date changed, should re-render
+  }
+  
+  // Check timeSlots length first (quick check)
+  if (prevProps.timeSlots.length !== nextProps.timeSlots.length) {
+    return false; // Length changed, should re-render
+  }
+  
+  // Check actual slot contents (more expensive)
+  // Only do this check if everything else matches
+  for (let i = 0; i < prevProps.timeSlots.length; i++) {
+    const prevSlot = prevProps.timeSlots[i];
+    const nextSlot = nextProps.timeSlots[i];
+    
+    if (prevSlot.time !== nextSlot.time || 
+        prevSlot.available !== nextSlot.available) {
+      return false; // Slot changed, should re-render
+    }
+  }
+  
+  return true; // No changes, don't re-render
 });

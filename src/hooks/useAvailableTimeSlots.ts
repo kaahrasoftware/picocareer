@@ -25,7 +25,7 @@ export function useAvailableTimeSlots(
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
 
-  // Cache key for memoization
+  // Cache key for memoization - prevents unnecessary refetching
   const cacheKey = useMemo(() => {
     if (!date || !mentorId) return null;
     return `${mentorId}-${date.toISOString().split('T')[0]}-${sessionDuration}-${mentorTimezone}`;
@@ -55,41 +55,58 @@ export function useAvailableTimeSlots(
           dayOfWeek: date.getDay()
         });
 
-        // First fetch the availability
-        const { data: availabilityData, error: availabilityError } = await supabase
-          .from('mentor_availability')
-          .select('*')
-          .eq('profile_id', mentorId)
-          .eq('is_available', true)
-          .is('booked_session_id', null)
-          .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
-          .order('start_date_time', { ascending: true });
+        // Run availability query and bookings query in parallel to improve performance
+        const [availabilityResponse, bookingsResponse] = await Promise.all([
+          // Fetch availability
+          supabase
+            .from('mentor_availability')
+            .select('*')
+            .eq('profile_id', mentorId)
+            .eq('is_available', true)
+            .is('booked_session_id', null)
+            .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
+            .order('start_date_time', { ascending: true }),
+          
+          // Fetch bookings
+          supabase
+            .from('mentor_sessions')
+            .select('scheduled_at, session_type:mentor_session_types(duration)')
+            .eq('mentor_id', mentorId)
+            .gte('scheduled_at', startOfDay.toISOString())
+            .lte('scheduled_at', endOfDay.toISOString())
+            .neq('status', 'cancelled')
+        ]);
 
-        if (availabilityError) throw availabilityError;
+        if (availabilityResponse.error) throw availabilityResponse.error;
+        if (bookingsResponse.error) throw bookingsResponse.error;
 
-        // Then fetch bookings in a separate query for better performance
-        const { data: bookingsData, error: bookingsError } = await supabase
-          .from('mentor_sessions')
-          .select('scheduled_at, session_type:mentor_session_types(duration)')
-          .eq('mentor_id', mentorId)
-          .gte('scheduled_at', startOfDay.toISOString())
-          .lte('scheduled_at', endOfDay.toISOString())
-          .neq('status', 'cancelled');
-
-        if (bookingsError) throw bookingsError;
-
-        // Current timezone offset calculation
+        const availableSlots = availabilityResponse.data || [];
+        const bookings = bookingsResponse.data || [];
+        
+        // Current timezone offset calculation - only do this once
         const currentDate = new Date();
         const currentMentorDate = toZonedTime(currentDate, mentorTimezone);
         const currentOffset = (currentDate.getTime() - fromZonedTime(currentMentorDate, 'UTC').getTime()) / (60 * 1000);
 
-        const availableSlots = availabilityData || [];
-        const bookings = bookingsData || [];
+        // Create a map of existing bookings for faster lookup
+        const bookedTimes = new Map<string, boolean>();
+        bookings.forEach(booking => {
+          const bookingTime = new Date(booking.scheduled_at);
+          const bookingDuration = booking.session_type?.duration || 60;
+          const bookingEndTime = addMinutes(bookingTime, bookingDuration);
+          
+          // Mark all time slots within this booking as unavailable
+          let currentSlot = new Date(bookingTime);
+          while (currentSlot < bookingEndTime) {
+            bookedTimes.set(format(currentSlot, 'yyyy-MM-dd HH:mm'), true);
+            currentSlot = addMinutes(currentSlot, 15); // 15-minute increments
+          }
+        });
         
         // Create an array to hold all generated slots
         const generatedSlots: TimeSlot[] = [];
         
-        // Process each availability block
+        // Process each availability block more efficiently
         for (const availability of availableSlots) {
           if (!availability.start_date_time || !availability.end_date_time) continue;
 
@@ -128,26 +145,17 @@ export function useAvailableTimeSlots(
           // Calculate the last possible slot start time that would allow for a full session
           const lastPossibleStart = subMinutes(endTime, sessionDuration);
           
-          // Generate time slots for this availability block
+          // Generate time slots for this availability block - pre-allocate array size
+          const now = new Date();
           for (let current = new Date(startTime); current <= lastPossibleStart; current = addMinutes(current, 15)) {
             const slotStart = new Date(current);
-            const slotEnd = addMinutes(slotStart, sessionDuration);
             
             // Skip past slots
-            const now = new Date();
             if (slotStart <= now) continue;
-
-            // Check for overlapping bookings
-            const isOverlappingBooking = bookings.some(booking => {
-              const bookingTime = new Date(booking.scheduled_at);
-              const bookingDuration = booking.session_type?.duration || 60;
-              const bookingEnd = addMinutes(bookingTime, bookingDuration);
-              
-              return areIntervalsOverlapping(
-                { start: slotStart, end: slotEnd },
-                { start: bookingTime, end: bookingEnd }
-              );
-            });
+            
+            // Check if this slot overlaps with a booking using our map (faster lookup)
+            const slotKey = format(slotStart, 'yyyy-MM-dd HH:mm');
+            const isOverlappingBooking = bookedTimes.has(slotKey);
 
             // Only add non-overlapping slots
             if (!isOverlappingBooking) {

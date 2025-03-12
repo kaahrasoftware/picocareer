@@ -26,7 +26,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
   const [availabilityMap, setAvailabilityMap] = useState<Record<string, boolean>>({});
   const [unavailabilityMap, setUnavailabilityMap] = useState<Record<string, boolean>>({});
 
-  // Fetch mentor availability data with proper loading and error handling
+  // Use React Query for fetching availability with proper caching
   const { data: mentorAvailability, isLoading: isLoadingAvailability, error } = useQuery({
     queryKey: ['mentor-availability', mentorId],
     queryFn: async () => {
@@ -52,7 +52,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
     refetchOnWindowFocus: false,
   });
 
-  // Build availability lookups
+  // Build availability lookups - optimized to run only when data changes
   useEffect(() => {
     if (!mentorAvailability?.availabilities) return;
     
@@ -61,67 +61,66 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
     const availableMap: Record<string, boolean> = {};
     const unavailableMap: Record<string, boolean> = {};
     
-    // Pre-calculate dates for the next 90 days
+    // Process recurring availability for the next 90 days in one pass
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const dates = [];
+    // Pre-calculate recurring availability by day of week
+    const recurringAvailableDays = new Set<number>();
+    const recurringUnavailableDays = new Set<number>();
+    
+    mentorAvailability.availabilities.forEach(availability => {
+      if (availability.recurring && availability.day_of_week !== null) {
+        if (availability.is_available) {
+          recurringAvailableDays.add(availability.day_of_week);
+        } else {
+          recurringUnavailableDays.add(availability.day_of_week);
+        }
+      }
+    });
+    
+    // Process all dates at once with the lookup sets
     for (let i = 0; i < 90; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
-      dates.push(date);
-    }
-    
-    // Process availability for each date
-    dates.forEach(date => {
       const dateKey = date.toISOString().split('T')[0];
       const dayOfWeek = date.getDay();
       
-      // Check recurring availability
-      const hasRecurringSlot = mentorAvailability.availabilities.some(availability => 
-        availability.recurring === true && 
-        availability.day_of_week === dayOfWeek &&
-        availability.is_available === true
-      );
-      
-      // Check specific date availability
+      // Check for specific date availability first (overrides recurring)
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
       
-      const hasSpecificSlot = mentorAvailability.availabilities.some(availability => {
-        if (!availability.start_date_time) return false;
-        const availabilityStart = new Date(availability.start_date_time);
-        return availabilityStart >= startOfDay && 
-               availabilityStart <= endOfDay && 
-               availability.is_available === true;
-      });
+      let hasSpecificAvailability = false;
+      let hasSpecificUnavailability = false;
       
-      if (hasRecurringSlot || hasSpecificSlot) {
+      for (const availability of mentorAvailability.availabilities) {
+        if (!availability.start_date_time) continue;
+        
+        const availabilityStart = new Date(availability.start_date_time);
+        if (availabilityStart >= startOfDay && availabilityStart <= endOfDay) {
+          if (availability.is_available) {
+            hasSpecificAvailability = true;
+          } else {
+            hasSpecificUnavailability = true;
+          }
+        }
+      }
+      
+      // Apply specific availability first, then recurring if no specific exists
+      if (hasSpecificAvailability) {
+        availableMap[dateKey] = true;
+      } else if (recurringAvailableDays.has(dayOfWeek)) {
         availableMap[dateKey] = true;
       }
       
-      // Check recurring unavailability
-      const hasRecurringUnavailable = mentorAvailability.availabilities.some(availability => 
-        availability.recurring === true && 
-        availability.day_of_week === dayOfWeek &&
-        availability.is_available === false
-      );
-      
-      // Check specific date unavailability
-      const hasSpecificUnavailable = mentorAvailability.availabilities.some(availability => {
-        if (!availability.start_date_time) return false;
-        const availabilityStart = new Date(availability.start_date_time);
-        return availabilityStart >= startOfDay && 
-               availabilityStart <= endOfDay && 
-               availability.is_available === false;
-      });
-      
-      if (hasRecurringUnavailable || hasSpecificUnavailable) {
+      if (hasSpecificUnavailability) {
+        unavailableMap[dateKey] = true;
+      } else if (recurringUnavailableDays.has(dayOfWeek)) {
         unavailableMap[dateKey] = true;
       }
-    });
+    }
     
     setAvailabilityMap(availableMap);
     setUnavailabilityMap(unavailableMap);
@@ -131,7 +130,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
       Object.keys(unavailableMap).length, 'unavailable dates');
   }, [mentorAvailability]);
 
-  // Memoize the calendar modifiers to avoid recalculations
+  // Memoize calendar modifiers to prevent recalculation on every render
   const calendarModifiers = useMemo(() => ({
     available: (date: Date) => {
       const dateKey = date.toISOString().split('T')[0];
@@ -155,9 +154,7 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
     }
   };
 
-  // Calculate available dates for the empty state message
-  const availableDates = mentorAvailability?.availabilities.filter(a => a.is_available) || [];
-
+  // Show skeleton loaders during loading state
   if (isLoadingAvailability) {
     return (
       <div className="space-y-3 sm:space-y-4">
@@ -177,6 +174,9 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
       </div>
     );
   }
+
+  // Calculate available dates for the empty state message
+  const availableDates = mentorAvailability?.availabilities.filter(a => a.is_available) || [];
 
   return (
     <div className="space-y-3 sm:space-y-4">

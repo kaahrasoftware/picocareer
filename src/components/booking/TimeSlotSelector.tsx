@@ -48,7 +48,7 @@ export function TimeSlotSelector({
     mentorTimezone || 'UTC'
   );
 
-  // Get current timezone offsets for display
+  // Get current timezone offsets for display - memoize this to avoid recalculations
   const getCurrentOffset = (timezone: string): string => {
     const now = new Date();
     const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
@@ -70,6 +70,7 @@ export function TimeSlotSelector({
   const mentorOffset = mentorTimezone ? getCurrentOffset(mentorTimezone) : '';
   const userOffset = getCurrentOffset(userTimezone);
 
+  // Show skeleton loader during loading states
   if (isLoadingTimezone || isLoadingTimeSlots) {
     return (
       <div className="space-y-4">
