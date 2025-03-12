@@ -4,7 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Info } from "lucide-react";
+import { InfoCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TimeSlotButtonProps {
@@ -60,26 +60,26 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start w-full">
-        <div className="flex justify-between w-full items-center">
-          <span className="font-medium text-sm sm:text-base">
-            {mentorFormattedTime}
+        <div className="flex justify-between w-full">
+          <span className="font-medium">
+            Mentor's time: {mentorFormattedTime}
           </span>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="ml-1">
-                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+              <TooltipTrigger>
+                <InfoCircle className="h-4 w-4 text-muted-foreground" />
               </TooltipTrigger>
-              <TooltipContent side="right">
-                <p className="text-xs">Mentor's timezone: {mentorTimezone} (GMT{formatOffset(mentorCurrentOffset)})</p>
+              <TooltipContent>
+                <p>Timezone: {mentorTimezone} (GMT{formatOffset(mentorCurrentOffset)})</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="flex flex-col xs:flex-row justify-between w-full text-[10px] xs:text-xs">
-          <span className="text-muted-foreground">
+        <div className="flex justify-between w-full">
+          <span className="text-xs text-muted-foreground">
             Your time: {userFormattedTime}
           </span>
-          <span className="text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {userTimezone} (GMT{formatOffset(userCurrentOffset)})
           </span>
         </div>

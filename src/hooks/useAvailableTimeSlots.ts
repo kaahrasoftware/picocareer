@@ -1,15 +1,15 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, addMinutes, isWithinInterval, areIntervalsOverlapping, subMinutes } from "date-fns";
+import { format, addMinutes, isWithinInterval, areIntervalsOverlapping, subMinutes, parse } from "date-fns";
 import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
   available: boolean;
   timezoneOffset?: number;
-  originalDateTime?: Date; 
+  originalDateTime?: Date; // Store the original datetime for accurate conversion
   reference_timezone?: string;
   dst_aware?: boolean;
 }
@@ -21,94 +21,75 @@ export function useAvailableTimeSlots(
   mentorTimezone: string = 'UTC'
 ) {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
-
-  // Cache key for memoization - prevents unnecessary refetching
-  const cacheKey = useMemo(() => {
-    if (!date || !mentorId) return null;
-    return `${mentorId}-${date.toISOString().split('T')[0]}-${sessionDuration}-${mentorTimezone}`;
-  }, [date, mentorId, sessionDuration, mentorTimezone]);
 
   useEffect(() => {
     async function fetchAvailability() {
-      if (!date || !mentorId || !cacheKey) return;
+      if (!date || !mentorId) return;
+
+      // Create date range in the mentor's timezone
+      const zonedDate = toZonedTime(date, mentorTimezone);
+      const startOfDay = new Date(zonedDate);
+      startOfDay.setHours(0, 0, 0, 0);
       
-      setIsLoading(true);
-      setError(null);
+      const endOfDay = new Date(zonedDate);
+      endOfDay.setHours(23, 59, 59, 999);
 
       try {
-        // Create date range in the mentor's timezone
-        const zonedDate = toZonedTime(date, mentorTimezone);
-        const startOfDay = new Date(zonedDate);
-        startOfDay.setHours(0, 0, 0, 0);
-        
-        const endOfDay = new Date(zonedDate);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        console.log('Fetching time slots for:', {
+        console.log('Fetching available time slots:', {
           date: date.toISOString(),
           mentorId,
           sessionDuration,
           mentorTimezone,
+          startOfDay: startOfDay.toISOString(),
+          endOfDay: endOfDay.toISOString(),
           dayOfWeek: date.getDay()
         });
 
-        // Run availability query and bookings query in parallel to improve performance
-        const [availabilityResponse, bookingsResponse] = await Promise.all([
-          // Fetch availability
-          supabase
-            .from('mentor_availability')
-            .select('*')
-            .eq('profile_id', mentorId)
-            .eq('is_available', true)
-            .is('booked_session_id', null)
-            .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
-            .order('start_date_time', { ascending: true }),
-          
-          // Fetch bookings
-          supabase
-            .from('mentor_sessions')
-            .select('scheduled_at, session_type:mentor_session_types(duration)')
-            .eq('mentor_id', mentorId)
-            .gte('scheduled_at', startOfDay.toISOString())
-            .lte('scheduled_at', endOfDay.toISOString())
-            .neq('status', 'cancelled')
-        ]);
+        // Fetch both one-time and recurring availability, excluding booked slots
+        const { data: availabilityData, error: availabilityError } = await supabase
+          .from('mentor_availability')
+          .select('*')
+          .eq('profile_id', mentorId)
+          .eq('is_available', true)
+          .is('booked_session_id', null)
+          .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${date.getDay()})`)
+          .order('start_date_time', { ascending: true });
 
-        if (availabilityResponse.error) throw availabilityResponse.error;
-        if (bookingsResponse.error) throw bookingsResponse.error;
+        if (availabilityError) throw availabilityError;
 
-        const availableSlots = availabilityResponse.data || [];
-        const bookings = bookingsResponse.data || [];
-        
-        // Current timezone offset calculation - only do this once
+        console.log('Available slots fetched:', availabilityData);
+
+        // Get existing bookings
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('mentor_sessions')
+          .select('scheduled_at, session_type:mentor_session_types(duration)')
+          .eq('mentor_id', mentorId)
+          .gte('scheduled_at', startOfDay.toISOString())
+          .lte('scheduled_at', endOfDay.toISOString())
+          .neq('status', 'cancelled');
+
+        if (bookingsError) throw bookingsError;
+
+        console.log('Existing bookings:', bookingsData);
+
+        // Calculate current timezone offset for the mentor timezone
         const currentDate = new Date();
         const currentMentorDate = toZonedTime(currentDate, mentorTimezone);
         const currentOffset = (currentDate.getTime() - fromZonedTime(currentMentorDate, 'UTC').getTime()) / (60 * 1000);
 
-        // Create a map of existing bookings for faster lookup
-        const bookedTimes = new Map<string, boolean>();
-        bookings.forEach(booking => {
-          const bookingTime = new Date(booking.scheduled_at);
-          const bookingDuration = booking.session_type?.duration || 60;
-          const bookingEndTime = addMinutes(bookingTime, bookingDuration);
-          
-          // Mark all time slots within this booking as unavailable
-          let currentSlot = new Date(bookingTime);
-          while (currentSlot < bookingEndTime) {
-            bookedTimes.set(format(currentSlot, 'yyyy-MM-dd HH:mm'), true);
-            currentSlot = addMinutes(currentSlot, 15); // 15-minute increments
-          }
+        console.log('Current timezone offset calculation:', {
+          mentorTimezone,
+          currentOffset,
+          currentDate: currentDate.toISOString(),
+          currentMentorDate: currentMentorDate.toISOString(),
         });
-        
-        // Create an array to hold all generated slots
-        const generatedSlots: TimeSlot[] = [];
-        
-        // Process each availability block more efficiently
-        for (const availability of availableSlots) {
-          if (!availability.start_date_time || !availability.end_date_time) continue;
+
+        const slots: TimeSlot[] = [];
+        const availableSlots = availabilityData || [];
+
+        availableSlots.forEach((availability) => {
+          if (!availability.start_date_time || !availability.end_date_time) return;
 
           let startTime: Date;
           let endTime: Date;
@@ -118,82 +99,126 @@ export function useAvailableTimeSlots(
             const recurringStart = new Date(availability.start_date_time);
             const recurringEnd = new Date(availability.end_date_time);
             
+            // Create a date in the mentor's timezone for the specific day
             startTime = toZonedTime(date, mentorTimezone);
             startTime.setHours(recurringStart.getHours(), recurringStart.getMinutes(), 0, 0);
             
             endTime = toZonedTime(date, mentorTimezone);
             endTime.setHours(recurringEnd.getHours(), recurringEnd.getMinutes(), 0, 0);
+
+            console.log('Processing recurring slot:', {
+              dayOfWeek: availability.day_of_week,
+              selectedDay: date.getDay(),
+              recurringStartHours: recurringStart.getHours(),
+              recurringStartMinutes: recurringStart.getMinutes(),
+              recurringEndHours: recurringEnd.getHours(),
+              recurringEndMinutes: recurringEnd.getMinutes(),
+              startTime: startTime.toISOString(),
+              endTime: endTime.toISOString(),
+              mentorTimezone,
+              originalOffset: availability.timezone_offset,
+              currentOffset,
+              reference_timezone: availability.reference_timezone || mentorTimezone,
+              dst_aware: availability.dst_aware
+            });
           } else {
-            // For one-time slots, handle DST awareness
+            // For one-time slots, check if it's DST-aware or needs adjustment
             if (availability.dst_aware) {
-              startTime = new Date(availability.start_date_time);
-              endTime = new Date(availability.end_date_time);
-            } else {
-              // For non-DST-aware slots, adjust for DST changes if needed
+              // DST-aware slots can be used directly
               startTime = new Date(availability.start_date_time);
               endTime = new Date(availability.end_date_time);
               
+              console.log('Processing DST-aware one-time slot:', {
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
+                reference_timezone: availability.reference_timezone,
+                timezone_offset: availability.timezone_offset
+              });
+            } else {
+              // For non-DST-aware slots, respect the stored datetime but adjust for any DST changes
+              startTime = new Date(availability.start_date_time);
+              endTime = new Date(availability.end_date_time);
+              
+              // If the stored timezone offset differs from the current one, adjust the time
               if (availability.timezone_offset !== undefined && 
                   Math.abs(availability.timezone_offset - currentOffset) > 0) {
                 const offsetDifference = currentOffset - availability.timezone_offset;
+                console.log('DST change detected:', {
+                  storedOffset: availability.timezone_offset,
+                  currentOffset,
+                  offsetDifference,
+                  beforeAdjustment: startTime.toISOString()
+                });
+                
+                // Adjust the time for DST changes
                 startTime = new Date(startTime.getTime() + offsetDifference * 60 * 1000);
                 endTime = new Date(endTime.getTime() + offsetDifference * 60 * 1000);
+                
+                console.log('After DST adjustment:', {
+                  startTime: startTime.toISOString(),
+                  endTime: endTime.toISOString()
+                });
               }
             }
           }
 
+          let currentTime = new Date(startTime);
           // Calculate the last possible slot start time that would allow for a full session
           const lastPossibleStart = subMinutes(endTime, sessionDuration);
-          
-          // Generate time slots for this availability block - pre-allocate array size
-          const now = new Date();
-          for (let current = new Date(startTime); current <= lastPossibleStart; current = addMinutes(current, 15)) {
-            const slotStart = new Date(current);
-            
-            // Skip past slots
-            if (slotStart <= now) continue;
-            
-            // Check if this slot overlaps with a booking using our map (faster lookup)
-            const slotKey = format(slotStart, 'yyyy-MM-dd HH:mm');
-            const isOverlappingBooking = bookedTimes.has(slotKey);
 
-            // Only add non-overlapping slots
-            if (!isOverlappingBooking) {
-              generatedSlots.push({
-                time: format(slotStart, 'HH:mm'),
+          while (currentTime <= lastPossibleStart) {
+            const slotStart = new Date(currentTime);
+            const slotEnd = addMinutes(slotStart, sessionDuration);
+
+            // Check for overlapping bookings
+            const isOverlappingBooking = bookingsData?.some(booking => {
+              const bookingTime = new Date(booking.scheduled_at);
+              const bookingDuration = booking.session_type?.duration || 60;
+              const bookingEnd = addMinutes(bookingTime, bookingDuration);
+              
+              return areIntervalsOverlapping(
+                { start: slotStart, end: slotEnd },
+                { start: bookingTime, end: bookingEnd }
+              );
+            });
+
+            // Only add future slots
+            const now = new Date();
+            if (slotStart > now && !isOverlappingBooking) {
+              // Format time in mentor's timezone for consistent display
+              const slotTime = format(slotStart, 'HH:mm');
+              
+              // Store the actual datetime for accurate booking
+              slots.push({
+                time: slotTime,
                 available: true,
-                timezoneOffset: currentOffset,
+                timezoneOffset: currentOffset, // Store the current offset, not the historical one
                 originalDateTime: slotStart,
                 reference_timezone: availability.reference_timezone || mentorTimezone,
-                dst_aware: true
+                dst_aware: true // Mark as DST-aware
               });
             }
-          }
-        }
 
-        console.log(`Generated ${generatedSlots.length} available time slots`);
-        setAvailableTimeSlots(generatedSlots);
+            currentTime = addMinutes(currentTime, 15);
+          }
+        });
+
+        console.log('Generated time slots:', slots);
+        setAvailableTimeSlots(slots);
       } catch (error) {
         console.error("Error fetching availability:", error);
-        setError(error instanceof Error ? error : new Error('Unknown error'));
         toast({
           title: "Error",
           description: "Failed to load availability",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
       }
     }
 
-    if (cacheKey) {
+    if (date && mentorId) {
       fetchAvailability();
     }
-  }, [cacheKey, toast]);
+  }, [date, mentorId, sessionDuration, toast, mentorTimezone]);
 
-  return {
-    timeSlots: availableTimeSlots,
-    isLoading,
-    error
-  };
+  return availableTimeSlots;
 }

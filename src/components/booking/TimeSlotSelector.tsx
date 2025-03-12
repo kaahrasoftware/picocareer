@@ -7,7 +7,6 @@ import { useMentorTimezone } from "@/hooks/useMentorTimezone";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -41,14 +40,14 @@ export function TimeSlotSelector({
     onMentorTimezoneChange(mentorTimezone);
   }
 
-  const { timeSlots: availableTimeSlots, isLoading: isLoadingTimeSlots, error } = useAvailableTimeSlots(
+  const availableTimeSlots = useAvailableTimeSlots(
     date, 
     mentorId, 
     selectedSessionType?.duration || 60,
     mentorTimezone || 'UTC'
   );
 
-  // Get current timezone offsets for display - memoize this to avoid recalculations
+  // Get current timezone offsets for display
   const getCurrentOffset = (timezone: string): string => {
     const now = new Date();
     const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
@@ -70,36 +69,10 @@ export function TimeSlotSelector({
   const mentorOffset = mentorTimezone ? getCurrentOffset(mentorTimezone) : '';
   const userOffset = getCurrentOffset(userTimezone);
 
-  // Show skeleton loader during loading states
-  if (isLoadingTimezone || isLoadingTimeSlots) {
-    return (
-      <div className="space-y-4">
-        {selectedSessionType && (
-          <p className="text-xs sm:text-sm text-muted-foreground mb-2">
-            {selectedSessionType.duration}-minute slots
-          </p>
-        )}
-        <Skeleton className="h-[200px] sm:h-[250px] w-full rounded-md" />
-        <div className="flex flex-col xs:flex-row justify-between mt-2 gap-2">
-          <Skeleton className="h-4 w-[150px]" />
-          <Skeleton className="h-4 w-[120px]" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center p-4 text-red-500 bg-red-50 rounded-md">
-        <p className="text-sm">Error loading time slots. Please try again.</p>
-      </div>
-    );
-  }
-
   return (
     <div>
       {selectedSessionType && (
-        <p className="text-xs sm:text-sm text-muted-foreground mb-2">
+        <p className="text-sm text-muted-foreground mb-2">
           {selectedSessionType.duration}-minute slots
         </p>
       )}
@@ -111,13 +84,13 @@ export function TimeSlotSelector({
         mentorTimezone={mentorTimezone || 'UTC'}
         date={date}
       />
-      <div className="flex flex-col xs:flex-row justify-between mt-2 text-[10px] xs:text-xs text-muted-foreground">
+      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
         <p>
-          Mentor: {isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'} 
+          Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'} 
           {mentorOffset && ` (${mentorOffset})`}
         </p>
         <p>
-          You: {userTimezone} {userOffset && `(${userOffset})`}
+          Your timezone: {userTimezone} {userOffset && `(${userOffset})`}
         </p>
       </div>
     </div>

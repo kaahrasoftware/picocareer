@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookingForm } from "./booking/BookingForm";
@@ -228,26 +227,26 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="space-y-2 sm:space-y-4">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-12 w-12">
               <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
               <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <DialogTitle className="text-lg sm:text-2xl font-bold">
+              <DialogTitle className="text-2xl font-bold">
                 Book a Session with {mentor.name}
               </DialogTitle>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Fill in the details below to schedule your mentoring session
               </p>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="mt-4 sm:mt-6">
-          <div className="bg-muted/30 rounded-lg p-3 sm:p-6">
+        <div className="mt-6">
+          <div className="bg-muted/30 rounded-lg p-6">
             <BookingForm 
               mentorId={mentor.id}
               onFormChange={setFormData}
@@ -255,7 +254,7 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
             />
           </div>
 
-          <div className="mt-4 sm:mt-6">
+          <div className="mt-6">
             <BookingConfirmation
               isSubmitting={isSubmitting}
               onCancel={() => onOpenChange(false)}
@@ -269,3 +268,4 @@ export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDia
     </Dialog>
   );
 }
+
