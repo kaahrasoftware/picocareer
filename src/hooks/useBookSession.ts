@@ -105,7 +105,7 @@ export function useBookSession() {
       // Get current timezone offset for the mentor timezone for DST awareness
       const now = new Date();
       const nowInMentorTz = toZonedTime(now, mentorTimezone);
-      const currentOffset = (now.getTime() - fromZonedTime(nowInMentorTz, 'UTC').getTime()) / (60 * 1000);
+      const currentOffset = (tzDate(now, mentorTimezone) - tzDate(now, 'UTC')) / (60 * 1000);
       
       console.log('Current mentor timezone offset:', {
         mentorTimezone,
@@ -173,48 +173,20 @@ export function useBookSession() {
             endTime <= recurringEndUTC
           ) {
             validSlotFound = true;
-            adjustedSlot = slot;
+            adjustedSlot = {
+              ...slot,
+              // Use the DST-adjusted times
+              reference_timezone: mentorTimezone,
+              dst_aware: true,
+              timezone_offset: currentOffset
+            };
             break;
           }
         } else {
-          // For one-time slots, we need to check if the stored offset differs from current offset
-          if (slot.timezone_offset !== undefined && 
-              Math.abs(slot.timezone_offset - currentOffset) > 0) {
-            
-            // If there's a DST change, we need to adjust slot times
-            const offsetDifference = currentOffset - slot.timezone_offset;
-            
-            console.log('DST change detected for one-time slot:', {
-              storedOffset: slot.timezone_offset,
-              currentOffset,
-              offsetDifference
-            });
-            
-            // Adjust the one-time slot for DST changes
-            const adjustedStartTime = new Date(new Date(slot.start_date_time).getTime() - offsetDifference * 60 * 1000);
-            const adjustedEndTime = new Date(new Date(slot.end_date_time).getTime() - offsetDifference * 60 * 1000);
-            
-            console.log('Comparing adjusted one-time slot with requested time:', {
-              adjustedStartTime: adjustedStartTime.toISOString(),
-              adjustedEndTime: adjustedEndTime.toISOString(),
-              scheduledAtUTC: scheduledAt.toISOString(),
-              endTimeUTC: endTime.toISOString()
-            });
-            
-            if (scheduledAt >= adjustedStartTime && endTime <= adjustedEndTime) {
-              validSlotFound = true;
-              // Create an adjusted version of the slot
-              adjustedSlot = {
-                ...slot,
-                start_date_time: adjustedStartTime.toISOString(),
-                end_date_time: adjustedEndTime.toISOString(),
-                timezone_offset: currentOffset // Update with current offset
-              };
-              break;
-            }
-          } else {
-            // No DST change, use original times
-            console.log('Checking one-time slot (no DST change):', {
+          // For one-time slots, check if it's already DST-aware
+          if (slot.dst_aware) {
+            // If it's DST-aware, use it directly
+            console.log('Checking DST-aware one-time slot:', {
               slotStart: slot.start_date_time,
               slotEnd: slot.end_date_time,
               scheduledAtUTC: scheduledAt.toISOString(),
@@ -225,6 +197,64 @@ export function useBookSession() {
               validSlotFound = true;
               adjustedSlot = slot;
               break;
+            }
+          } else {
+            // If not DST-aware, check if there's a DST change to account for
+            if (slot.timezone_offset !== undefined && 
+                Math.abs(slot.timezone_offset - currentOffset) > 0) {
+              
+              // If there's a DST change, we need to adjust slot times
+              const offsetDifference = currentOffset - slot.timezone_offset;
+              
+              console.log('DST change detected for one-time slot:', {
+                storedOffset: slot.timezone_offset,
+                currentOffset,
+                offsetDifference
+              });
+              
+              // Adjust the one-time slot for DST changes
+              const adjustedStartTime = new Date(new Date(slot.start_date_time).getTime() + offsetDifference * 60 * 1000);
+              const adjustedEndTime = new Date(new Date(slot.end_date_time).getTime() + offsetDifference * 60 * 1000);
+              
+              console.log('Comparing adjusted one-time slot with requested time:', {
+                adjustedStartTime: adjustedStartTime.toISOString(),
+                adjustedEndTime: adjustedEndTime.toISOString(),
+                scheduledAtUTC: scheduledAt.toISOString(),
+                endTimeUTC: endTime.toISOString()
+              });
+              
+              if (scheduledAt >= adjustedStartTime && endTime <= adjustedEndTime) {
+                validSlotFound = true;
+                // Create an adjusted version of the slot
+                adjustedSlot = {
+                  ...slot,
+                  start_date_time: adjustedStartTime.toISOString(),
+                  end_date_time: adjustedEndTime.toISOString(),
+                  timezone_offset: currentOffset, // Update with current offset
+                  reference_timezone: mentorTimezone,
+                  dst_aware: true
+                };
+                break;
+              }
+            } else {
+              // No DST change, use original times
+              console.log('Checking one-time slot (no DST change):', {
+                slotStart: slot.start_date_time,
+                slotEnd: slot.end_date_time,
+                scheduledAtUTC: scheduledAt.toISOString(),
+                endTimeUTC: endTime.toISOString()
+              });
+              
+              if (scheduledAt >= new Date(slot.start_date_time) && endTime <= new Date(slot.end_date_time)) {
+                validSlotFound = true;
+                adjustedSlot = {
+                  ...slot,
+                  reference_timezone: mentorTimezone,
+                  dst_aware: true,
+                  timezone_offset: currentOffset
+                };
+                break;
+              }
             }
           }
         }
@@ -291,6 +321,11 @@ export function useBookSession() {
       };
     }
   };
+
+  // Helper function to get timezone-adjusted date
+  function tzDate(date: Date, timezone: string): number {
+    return new Date(date.toLocaleString('en-US', { timeZone: timezone })).getTime();
+  }
 
   return bookSession;
 }

@@ -93,12 +93,12 @@ function getTimezoneOffset(timezone: string): number {
   const date = new Date();
   const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
   const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-  return (utcDate.getTime() - tzDate.getTime()) / 60000;
+  return (tzDate.getTime() - utcDate.getTime()) / 60000;
 }
 
 // Helper function to format timezone offset for display
 function formatOffset(offsetMinutes: number): string {
-  const sign = offsetMinutes > 0 ? '-' : '+';
+  const sign = offsetMinutes > 0 ? '+' : '-';
   const absMinutes = Math.abs(offsetMinutes);
   const hours = Math.floor(absMinutes / 60);
   const minutes = absMinutes % 60;
