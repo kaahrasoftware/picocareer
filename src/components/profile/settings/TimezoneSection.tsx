@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { timeZones } from "./timezones";
 import { Button } from "@/components/ui/button";
 import { useTimezoneUpdate } from "@/hooks/useTimezoneUpdate";
-import { RefreshCw, Bug } from "lucide-react";
+import { RefreshCw, Bug, Info } from "lucide-react";
 import { useState } from "react";
 
 export function TimezoneSection() {
@@ -45,6 +45,12 @@ export function TimezoneSection() {
 
   const handleDebugTimezone = () => {
     debugTimezone.mutate(currentTimezone);
+  };
+
+  const handleForceUpdateTimezones = () => {
+    if (confirm("This will update timezone offsets for all mentor availability slots. Continue?")) {
+      updateTimezones.mutate();
+    }
   };
 
   return (
@@ -90,7 +96,7 @@ export function TimezoneSection() {
             This will update timezone offsets for all mentors to account for DST changes.
           </p>
           
-          <div className="mt-2">
+          <div className="mt-2 flex justify-between">
             <Button 
               onClick={() => setShowDebug(!showDebug)} 
               variant="ghost" 
@@ -99,6 +105,16 @@ export function TimezoneSection() {
             >
               <Bug className="h-3 w-3 mr-1" />
               {showDebug ? 'Hide Debug' : 'Show Debug'}
+            </Button>
+            
+            <Button
+              onClick={handleForceUpdateTimezones}
+              variant="ghost"
+              size="sm"
+              className="text-xs text-yellow-500 hover:text-yellow-600"
+            >
+              <Info className="h-3 w-3 mr-1" />
+              Force Update
             </Button>
           </div>
           
@@ -120,6 +136,16 @@ export function TimezoneSection() {
                 >
                   Debug Current Timezone
                 </Button>
+                
+                <div className="text-xs mt-2 p-2 bg-muted rounded border border-border">
+                  <p className="font-medium">Expected timezone offsets:</p>
+                  <ul className="list-disc pl-4 mt-1 space-y-1">
+                    <li>America/New_York: -240 (EDT) or -300 (EST)</li>
+                    <li>Europe/London: +60 (BST) or +0 (GMT)</li>
+                    <li>America/Los_Angeles: -420 (PDT) or -480 (PST)</li>
+                    <li>Asia/Tokyo: +540 (JST)</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}

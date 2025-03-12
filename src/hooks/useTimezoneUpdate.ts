@@ -20,6 +20,16 @@ export function useTimezoneUpdate() {
           description: `Successfully updated ${result.updatedCount} mentor timezone offsets. Total DST-aware slots: ${result.totalDSTAwareSlots}.${result.errors ? ' Some updates failed.' : ''}`,
           variant: result.errors ? "warning" : "default",
         });
+        
+        // Show additional toast with detailed counts if there were errors
+        if (result.errors && result.errors.length > 0) {
+          toast({
+            title: "Update Details",
+            description: `Updated ${result.updatedCount} slots successfully. ${result.errors.length} errors occurred. Check console for details.`,
+            variant: "warning",
+          });
+          console.log("Timezone update errors:", result.errors);
+        }
       } else {
         toast({
           title: "Update Failed",
@@ -42,9 +52,19 @@ export function useTimezoneUpdate() {
     mutationFn: checkTimezone,
     onSuccess: (result) => {
       console.log('Timezone debug result:', result);
+      
+      if (result.error) {
+        toast({
+          title: "Timezone Check Failed",
+          description: `Error: ${result.error}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       toast({
-        title: "Timezone Check",
-        description: `Timezone: ${result.timezone}, Offset: ${result.offsetMinutes} minutes, DST: ${result.isDST ? 'Yes' : 'No'}`,
+        title: "Timezone Debug Info",
+        description: `Timezone: ${result.timezone}\nCalculated offset: ${result.offsetMinutes} minutes\nAlternate method: ${result.alternateOffset} minutes\nDST active: ${result.isDST ? 'Yes' : 'No'}`,
       });
     }
   });
