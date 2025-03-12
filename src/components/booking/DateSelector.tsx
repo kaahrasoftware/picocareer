@@ -89,7 +89,8 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         if (slot.is_available) {
           map.set(dateStr, true);
         } else {
-          map.set(dateStr, false);  // Explicitly unavailable
+          // For unavailable slots, we'll set to false to disable the date
+          map.set(dateStr, false);
         }
       });
     
@@ -102,27 +103,15 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
     return availabilityMap.get(dateStr) === true;
   };
 
-  // Helper function to check if a specific date is marked as unavailable
-  const isDateUnavailable = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return availabilityMap.get(dateStr) === false;
-  };
-
-  // Calendar styles
+  // Calendar styles - only highlight available dates
   const calendarModifiers = {
-    available: (date: Date) => isDateAvailable(date),
-    unavailable: (date: Date) => isDateUnavailable(date)
+    available: (date: Date) => isDateAvailable(date)
   };
 
   const calendarModifiersStyles = {
     available: {
       border: '2px solid #22c55e',
       borderRadius: '4px'
-    },
-    unavailable: {
-      border: '2px solid #ef4444',
-      borderRadius: '4px',
-      backgroundColor: 'rgba(239, 68, 68, 0.1)'
     }
   };
 
@@ -154,7 +143,8 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         disabled={(date) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          return date < today || (!isDateAvailable(date) && !isDateUnavailable(date));
+          // Disable dates that are in the past or not explicitly marked as available
+          return date < today || !isDateAvailable(date);
         }}
         modifiers={calendarModifiers}
         modifiersStyles={calendarModifiersStyles}
@@ -165,10 +155,6 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         <p className="flex items-center gap-1">
           <span className="inline-block w-3 h-3 bg-green-500/30 border border-green-500 rounded-sm"></span>
           Days highlighted in green are available for booking
-        </p>
-        <p className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 bg-red-500/10 border border-red-500 rounded-sm"></span>
-          Days highlighted in red are marked as unavailable
         </p>
         {mentorTimezone && (
           <p>Current time in mentor's timezone: {formatInTimeZone(new Date(), mentorTimezone, 'h:mm a')}</p>

@@ -42,11 +42,9 @@ export function CalendarContainer({
     });
 
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
-    const hasUnavailable = dayAvailabilities.some(slot => !slot.is_available);
-
-    if (hasAvailable && hasUnavailable) return 'mixed';
+    
+    // We only need to check if there are available slots
     if (hasAvailable) return 'available';
-    if (hasUnavailable) return 'unavailable';
     return null;
   };
 
@@ -79,9 +77,7 @@ export function CalendarContainer({
           className="rounded-md border bg-kahra-darker mx-auto"
           modifiers={{
             sessions: hasSessionsOnDate,
-            available: (date) => getAvailabilityStatus(date) === 'available',
-            unavailable: (date) => getAvailabilityStatus(date) === 'unavailable',
-            mixed: (date) => getAvailabilityStatus(date) === 'mixed'
+            available: (date) => getAvailabilityStatus(date) === 'available'
           }}
           modifiersStyles={{
             sessions: {
@@ -91,14 +87,6 @@ export function CalendarContainer({
             available: {
               backgroundColor: 'rgba(34, 197, 94, 0.2)',
               color: '#166534'
-            },
-            unavailable: {
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              color: '#991b1b'
-            },
-            mixed: {
-              backgroundColor: 'rgba(234, 179, 8, 0.2)',
-              color: '#854d0e'
             }
           }}
         />
