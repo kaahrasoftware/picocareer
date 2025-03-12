@@ -27,16 +27,14 @@ export async function updateMentorTimezoneOffsets() {
         const now = new Date();
         
         // Calculate the timezone offset in minutes
-        // This properly accounts for DST by using the current date
         let offsetMinutes;
         
         try {
           // Get timezone offset for the current time in minutes
-          // Positive values for timezones west of UTC (Americas)
-          // Negative values for timezones east of UTC (Europe, Asia, etc.)
+          // For correct DST handling, we need to use negative values for west of UTC
           const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
           const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-          offsetMinutes = (utcDate.getTime() - tzDate.getTime()) / (1000 * 60);
+          offsetMinutes = -(tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
           
           console.log(`Timezone ${timezone} has offset: ${offsetMinutes} minutes`);
         } catch (err) {
@@ -48,24 +46,45 @@ export async function updateMentorTimezoneOffsets() {
           continue;
         }
 
-        // Update all availability slots for this mentor
-        const { data: updateResult, error: updateError } = await supabase
+        // 3. Update both recurring and non-recurring availability slots
+        const { data: availabilityData, error: availabilityError } = await supabase
           .from('mentor_availability')
-          .update({ 
-            timezone_offset: offsetMinutes,
-            reference_timezone: timezone,
-            dst_aware: true
-          })
+          .select('*')
           .eq('profile_id', setting.profile_id);
 
-        if (updateError) {
-          errors.push({
-            profileId: setting.profile_id,
-            error: updateError
-          });
-        } else {
-          updatedCount++;
-          console.log(`Updated timezone offset for mentor ${setting.profile_id} to ${offsetMinutes} minutes (${timezone})`);
+        if (availabilityError) {
+          console.error('Error fetching availability:', availabilityError);
+          continue;
+        }
+
+        for (const slot of availabilityData || []) {
+          try {
+            // Update the slot with new timezone information
+            const { error: updateError } = await supabase
+              .from('mentor_availability')
+              .update({ 
+                timezone_offset: offsetMinutes,
+                reference_timezone: timezone,
+                dst_aware: true
+              })
+              .eq('id', slot.id);
+
+            if (updateError) {
+              errors.push({
+                profileId: setting.profile_id,
+                error: updateError
+              });
+            } else {
+              updatedCount++;
+              console.log(`Updated timezone offset for slot ${slot.id} to ${offsetMinutes} minutes (${timezone})`);
+            }
+          } catch (err) {
+            errors.push({
+              profileId: setting.profile_id,
+              slotId: slot.id,
+              error: err
+            });
+          }
         }
       } catch (err) {
         errors.push({
@@ -75,7 +94,7 @@ export async function updateMentorTimezoneOffsets() {
       }
     }
 
-    // 3. Get update counts
+    // 4. Get update counts
     const { count, error: countError } = await supabase
       .from('mentor_availability')
       .select('*', { count: 'exact', head: true })
@@ -101,7 +120,7 @@ export async function getTimezoneOffsetForDebugging(timezone) {
     const now = new Date();
     const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
     const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const offsetMinutes = (utcDate.getTime() - tzDate.getTime()) / (1000 * 60);
+    const offsetMinutes = -(tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
     
     return {
       timezone,
