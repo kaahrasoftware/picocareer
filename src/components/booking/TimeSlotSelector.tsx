@@ -4,8 +4,9 @@ import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface TimeSlotSelectorProps {
   date: Date | undefined;
@@ -14,6 +15,7 @@ interface TimeSlotSelectorProps {
   onTimeSelect: (time: string) => void;
   selectedSessionType: SessionType | undefined;
   title?: string;
+  onMentorTimezoneChange?: (timezone: string) => void;
 }
 
 export function TimeSlotSelector({ 
@@ -22,11 +24,21 @@ export function TimeSlotSelector({
   selectedTime, 
   onTimeSelect,
   selectedSessionType,
-  title = "Start Time"
+  title = "Start Time",
+  onMentorTimezoneChange
 }: TimeSlotSelectorProps) {
   if (!date) return null;
 
   const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting } = useUserSettings(profile?.id || '');
+  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Notify parent component when mentor timezone is loaded
+  if (mentorTimezone && onMentorTimezoneChange) {
+    onMentorTimezoneChange(mentorTimezone);
+  }
 
   const availableTimeSlots = useAvailableTimeSlots(
     date, 
@@ -35,7 +47,27 @@ export function TimeSlotSelector({
     mentorTimezone || 'UTC'
   );
 
-  console.log("TimeSlotSelector - Available time slots:", availableTimeSlots);
+  // Get current timezone offsets for display
+  const getCurrentOffset = (timezone: string): string => {
+    const now = new Date();
+    const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+    const offsetMinutes = (utcDate.getTime() - tzDate.getTime()) / 60000;
+    
+    const sign = offsetMinutes > 0 ? '-' : '+';
+    const absMinutes = Math.abs(offsetMinutes);
+    const hours = Math.floor(absMinutes / 60);
+    const minutes = absMinutes % 60;
+    
+    if (minutes === 0) {
+      return `GMT${sign}${hours}`;
+    } else {
+      return `GMT${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
+    }
+  };
+
+  const mentorOffset = mentorTimezone ? getCurrentOffset(mentorTimezone) : '';
+  const userOffset = getCurrentOffset(userTimezone);
 
   return (
     <div>
@@ -52,9 +84,15 @@ export function TimeSlotSelector({
         mentorTimezone={mentorTimezone || 'UTC'}
         date={date}
       />
-      <p className="text-xs text-muted-foreground mt-2">
-        Times shown in mentor's timezone ({isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'})
-      </p>
+      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+        <p>
+          Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'} 
+          {mentorOffset && ` (${mentorOffset})`}
+        </p>
+        <p>
+          Your timezone: {userTimezone} {userOffset && `(${userOffset})`}
+        </p>
+      </div>
     </div>
   );
 }

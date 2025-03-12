@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { MeetingPlatform } from "@/types/calendar";
 import { format } from "date-fns";
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface BookSessionParams {
   mentorId: string;
@@ -12,6 +13,7 @@ interface BookSessionParams {
   meetingPlatform: MeetingPlatform;
   menteePhoneNumber?: string;
   menteeTelegramUsername?: string;
+  mentorTimezone?: string;
 }
 
 interface BookSessionResult {
@@ -29,23 +31,33 @@ export function useBookSession() {
     note,
     meetingPlatform,
     menteePhoneNumber,
-    menteeTelegramUsername
+    menteeTelegramUsername,
+    mentorTimezone = 'UTC'
   }: BookSessionParams): Promise<BookSessionResult> => {
     if (!date || !selectedTime || !sessionTypeId || !mentorId) {
       return { success: false, error: "Missing required fields" };
     }
 
     // Construct the scheduled time from date and selected time
-    const scheduledAt = new Date(date);
+    // Ensure the time is properly interpreted in the mentor's timezone
+    const scheduledAtLocal = new Date(date);
     const [hours, minutes] = selectedTime.split(':');
-    scheduledAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
+    scheduledAtLocal.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    
+    // Convert time to mentor's timezone (handles DST correctly)
+    const scheduledAtMentorTz = toZonedTime(scheduledAtLocal, mentorTimezone);
+    // Then convert to UTC for storage
+    const scheduledAt = fromZonedTime(scheduledAtMentorTz, 'UTC');
+    
     console.log('Booking session with parameters:', {
       mentorId,
       date: date.toISOString(),
       selectedTime,
       sessionTypeId,
-      scheduledAt: scheduledAt.toISOString(),
+      mentorTimezone,
+      scheduledAtLocal: scheduledAtLocal.toISOString(),
+      scheduledAtMentorTz: scheduledAtMentorTz.toISOString(),
+      scheduledAtUTC: scheduledAt.toISOString(),
     });
 
     try {
@@ -90,6 +102,18 @@ export function useBookSession() {
       }
 
       // Step 3: Check for availability
+      // Get current timezone offset for the mentor timezone for DST awareness
+      const now = new Date();
+      const nowInMentorTz = toZonedTime(now, mentorTimezone);
+      const currentOffset = (now.getTime() - fromZonedTime(nowInMentorTz, 'UTC').getTime()) / (60 * 1000);
+      
+      console.log('Current mentor timezone offset:', {
+        mentorTimezone,
+        currentOffset,
+        now: now.toISOString(),
+        nowInMentorTz: nowInMentorTz.toISOString()
+      });
+
       const { data: availabilityData, error: availabilityError } = await supabase
         .from('mentor_availability')
         .select('*')
@@ -110,6 +134,106 @@ export function useBookSession() {
         return { success: false, error: 'No available slots found for the selected time' };
       }
 
+      let validSlotFound = false;
+      let adjustedSlot = null;
+
+      // Process each availability slot to check for DST adjustments
+      for (const slot of availabilityData) {
+        if (slot.recurring) {
+          // For recurring slots, we need to extract the time and apply it to the requested date
+          const slotStartTime = new Date(slot.start_date_time);
+          const slotEndTime = new Date(slot.end_date_time);
+          
+          // Create a date in the mentor's timezone for the specific day
+          const recurringStartTime = new Date(date);
+          recurringStartTime.setHours(slotStartTime.getHours(), slotStartTime.getMinutes(), 0, 0);
+          
+          const recurringEndTime = new Date(date);
+          recurringEndTime.setHours(slotEndTime.getHours(), slotEndTime.getMinutes(), 0, 0);
+          
+          // Convert to mentor's timezone then to UTC for comparison
+          const recurringStartInMentorTz = toZonedTime(recurringStartTime, mentorTimezone);
+          const recurringEndInMentorTz = toZonedTime(recurringEndTime, mentorTimezone);
+          const recurringStartUTC = fromZonedTime(recurringStartInMentorTz, 'UTC');
+          const recurringEndUTC = fromZonedTime(recurringEndInMentorTz, 'UTC');
+          
+          console.log('Checking recurring slot:', {
+            dayOfWeek: slot.day_of_week,
+            scheduledDayOfWeek: scheduledAt.getDay(),
+            recurringStartUTC: recurringStartUTC.toISOString(),
+            recurringEndUTC: recurringEndUTC.toISOString(),
+            scheduledAtUTC: scheduledAt.toISOString(),
+            endTimeUTC: endTime.toISOString()
+          });
+          
+          // Check if the requested time falls within this recurring slot
+          if (
+            scheduledAt.getDay() === slot.day_of_week && 
+            scheduledAt >= recurringStartUTC && 
+            endTime <= recurringEndUTC
+          ) {
+            validSlotFound = true;
+            adjustedSlot = slot;
+            break;
+          }
+        } else {
+          // For one-time slots, we need to check if the stored offset differs from current offset
+          if (slot.timezone_offset !== undefined && 
+              Math.abs(slot.timezone_offset - currentOffset) > 0) {
+            
+            // If there's a DST change, we need to adjust slot times
+            const offsetDifference = currentOffset - slot.timezone_offset;
+            
+            console.log('DST change detected for one-time slot:', {
+              storedOffset: slot.timezone_offset,
+              currentOffset,
+              offsetDifference
+            });
+            
+            // Adjust the one-time slot for DST changes
+            const adjustedStartTime = new Date(new Date(slot.start_date_time).getTime() - offsetDifference * 60 * 1000);
+            const adjustedEndTime = new Date(new Date(slot.end_date_time).getTime() - offsetDifference * 60 * 1000);
+            
+            console.log('Comparing adjusted one-time slot with requested time:', {
+              adjustedStartTime: adjustedStartTime.toISOString(),
+              adjustedEndTime: adjustedEndTime.toISOString(),
+              scheduledAtUTC: scheduledAt.toISOString(),
+              endTimeUTC: endTime.toISOString()
+            });
+            
+            if (scheduledAt >= adjustedStartTime && endTime <= adjustedEndTime) {
+              validSlotFound = true;
+              // Create an adjusted version of the slot
+              adjustedSlot = {
+                ...slot,
+                start_date_time: adjustedStartTime.toISOString(),
+                end_date_time: adjustedEndTime.toISOString(),
+                timezone_offset: currentOffset // Update with current offset
+              };
+              break;
+            }
+          } else {
+            // No DST change, use original times
+            console.log('Checking one-time slot (no DST change):', {
+              slotStart: slot.start_date_time,
+              slotEnd: slot.end_date_time,
+              scheduledAtUTC: scheduledAt.toISOString(),
+              endTimeUTC: endTime.toISOString()
+            });
+            
+            if (scheduledAt >= new Date(slot.start_date_time) && endTime <= new Date(slot.end_date_time)) {
+              validSlotFound = true;
+              adjustedSlot = slot;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!validSlotFound || !adjustedSlot) {
+        return { success: false, error: 'No available slots match the requested time with timezone adjustments' };
+      }
+
       // Step 4: Book the session using RPC function
       const formattedStartTime = format(scheduledAt, 'HH:mm');
       const formattedDate = format(scheduledAt, 'yyyy-MM-dd');
@@ -118,7 +242,8 @@ export function useBookSession() {
         p_mentor_id: mentorId,
         p_scheduled_at: scheduledAt.toISOString(),
         p_session_date: formattedDate,
-        p_start_time: formattedStartTime
+        p_start_time: formattedStartTime,
+        slot_data: adjustedSlot
       });
 
       const { data: sessionData, error: sessionError } = await supabase

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, addMinutes, isWithinInterval, areIntervalsOverlapping, subMinutes, parse } from "date-fns";
-import { formatInTimeZone, zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 interface TimeSlot {
   time: string;
@@ -25,10 +25,12 @@ export function useAvailableTimeSlots(
     async function fetchAvailability() {
       if (!date || !mentorId) return;
 
-      const startOfDay = new Date(date);
+      // Create date range in the mentor's timezone
+      const zonedDate = toZonedTime(date, mentorTimezone);
+      const startOfDay = new Date(zonedDate);
       startOfDay.setHours(0, 0, 0, 0);
       
-      const endOfDay = new Date(date);
+      const endOfDay = new Date(zonedDate);
       endOfDay.setHours(23, 59, 59, 999);
 
       try {
@@ -69,6 +71,18 @@ export function useAvailableTimeSlots(
 
         console.log('Existing bookings:', bookingsData);
 
+        // Calculate current timezone offset for the mentor timezone
+        const currentDate = new Date();
+        const currentMentorDate = toZonedTime(currentDate, mentorTimezone);
+        const currentOffset = (currentDate.getTime() - fromZonedTime(currentMentorDate, 'UTC').getTime()) / (60 * 1000);
+
+        console.log('Current timezone offset calculation:', {
+          mentorTimezone,
+          currentOffset,
+          currentDate: currentDate.toISOString(),
+          currentMentorDate: currentMentorDate.toISOString(),
+        });
+
         const slots: TimeSlot[] = [];
         const availableSlots = availabilityData || [];
 
@@ -84,10 +98,10 @@ export function useAvailableTimeSlots(
             const recurringEnd = new Date(availability.end_date_time);
             
             // Create a date in the mentor's timezone for the specific day
-            startTime = new Date(date);
+            startTime = toZonedTime(date, mentorTimezone);
             startTime.setHours(recurringStart.getHours(), recurringStart.getMinutes(), 0, 0);
             
-            endTime = new Date(date);
+            endTime = toZonedTime(date, mentorTimezone);
             endTime.setHours(recurringEnd.getHours(), recurringEnd.getMinutes(), 0, 0);
 
             console.log('Processing recurring slot:', {
@@ -99,17 +113,35 @@ export function useAvailableTimeSlots(
               recurringEndMinutes: recurringEnd.getMinutes(),
               startTime: startTime.toISOString(),
               endTime: endTime.toISOString(),
-              mentorTimezone
+              mentorTimezone,
+              originalOffset: availability.timezone_offset,
+              currentOffset
             });
           } else {
+            // For one-time slots, respect the stored datetime but adjust for any DST changes
             startTime = new Date(availability.start_date_time);
             endTime = new Date(availability.end_date_time);
             
-            console.log('Processing one-time slot:', {
-              startTime: startTime.toISOString(),
-              endTime: endTime.toISOString(),
-              timezone_offset: availability.timezone_offset
-            });
+            // If the stored timezone offset differs from the current one, adjust the time
+            if (availability.timezone_offset !== undefined && 
+                Math.abs(availability.timezone_offset - currentOffset) > 0) {
+              const offsetDifference = currentOffset - availability.timezone_offset;
+              console.log('DST change detected:', {
+                storedOffset: availability.timezone_offset,
+                currentOffset,
+                offsetDifference,
+                beforeAdjustment: startTime.toISOString()
+              });
+              
+              // Adjust the time for DST changes
+              startTime = new Date(startTime.getTime() - offsetDifference * 60 * 1000);
+              endTime = new Date(endTime.getTime() - offsetDifference * 60 * 1000);
+              
+              console.log('After DST adjustment:', {
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString()
+              });
+            }
           }
 
           let currentTime = new Date(startTime);
@@ -142,7 +174,7 @@ export function useAvailableTimeSlots(
               slots.push({
                 time: slotTime,
                 available: true,
-                timezoneOffset: availability.timezone_offset,
+                timezoneOffset: currentOffset, // Store the current offset, not the historical one
                 originalDateTime: slotStart
               });
             }
