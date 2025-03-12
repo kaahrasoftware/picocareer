@@ -6,6 +6,9 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
 import { timeZones } from "./timezones";
+import { Button } from "@/components/ui/button";
+import { useTimezoneUpdate } from "@/hooks/useTimezoneUpdate";
+import { RefreshCw } from "lucide-react";
 
 export function TimezoneSection() {
   const { session } = useAuthSession();
@@ -13,6 +16,8 @@ export function TimezoneSection() {
   const { getSetting, updateSetting } = useUserSettings(profile?.id);
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const { mutate: updateTimezones, isLoading } = useTimezoneUpdate();
 
   const handleTimezoneChange = async (value: string) => {
     try {
@@ -62,6 +67,23 @@ export function TimezoneSection() {
           {new Date().toLocaleTimeString('en-US', { timeZone: currentTimezone })}
         </AlertDescription>
       </Alert>
+
+      {profile?.user_type === 'admin' && (
+        <div className="mt-4">
+          <Button 
+            onClick={() => updateTimezones()}
+            disabled={isLoading}
+            variant="outline"
+            className="w-full"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Updating Timezone Offsets...' : 'Update All Mentor Timezone Offsets'}
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            This will update timezone offsets for all mentors to account for DST changes.
+          </p>
+        </div>
+      )}
 
       {profile?.user_type === 'mentor' && (
         <Alert>
