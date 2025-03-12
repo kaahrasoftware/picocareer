@@ -1750,6 +1750,8 @@ export type Database = {
           end_date_time: string | null
           id: string
           is_available: boolean | null
+          is_dst: boolean | null
+          last_dst_check: string | null
           profile_id: string
           recurring: boolean | null
           reference_timezone: string
@@ -1765,6 +1767,8 @@ export type Database = {
           end_date_time?: string | null
           id?: string
           is_available?: boolean | null
+          is_dst?: boolean | null
+          last_dst_check?: string | null
           profile_id: string
           recurring?: boolean | null
           reference_timezone?: string
@@ -1780,6 +1784,8 @@ export type Database = {
           end_date_time?: string | null
           id?: string
           is_available?: boolean | null
+          is_dst?: boolean | null
+          last_dst_check?: string | null
           profile_id?: string
           recurring?: boolean | null
           reference_timezone?: string
@@ -3366,6 +3372,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_timezone_dst_changes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       check_verification_rate_limit: {
         Args: {
           _token: string
@@ -3541,6 +3551,10 @@ export type Database = {
           "": string
         }
         Returns: string[]
+      }
+      update_availability_dst: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_availability_dst_offset: {
         Args: Record<PropertyKey, never>

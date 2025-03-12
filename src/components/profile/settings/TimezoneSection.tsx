@@ -9,9 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { timeZones } from "./timezones";
 import { Button } from "@/components/ui/button";
 import { useTimezoneUpdate } from "@/hooks/useTimezoneUpdate";
-import { RefreshCw, Bug, Info, AlertTriangle } from "lucide-react";
+import { RefreshCw, Bug, Info, AlertTriangle, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isTimezoneDST, getDSTTransitions, getTimezoneOffset } from "@/utils/timezoneUpdater";
 
 export function TimezoneSection() {
   const { session } = useAuthSession();
@@ -20,7 +21,7 @@ export function TimezoneSection() {
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [showDebug, setShowDebug] = useState(false);
-  const [dstStatus, setDstStatus] = useState<{active: boolean, nextChange: string | null}>();
+  const [dstStatus, setDstStatus] = useState<{active: boolean, nextChange: string | null, offsetMinutes: number}>();
 
   const { updateTimezones, debugTimezone } = useTimezoneUpdate();
 
@@ -31,17 +32,29 @@ export function TimezoneSection() {
   }, [currentTimezone]);
 
   const checkDSTStatus = async (timezone: string) => {
-    const result = await debugTimezone.mutateAsync(timezone);
-    
-    if (!result.error) {
+    try {
+      const isDST = isTimezoneDST(timezone);
+      const offsetMinutes = getTimezoneOffset(new Date(), timezone);
+      const transitions = getDSTTransitions(timezone);
+      
+      let nextChangeDate = null;
+      
+      if (transitions.hasDST) {
+        // Determine next transition date based on current DST status
+        if (isDST && transitions.dstEnd) {
+          nextChangeDate = transitions.dstEnd.toLocaleDateString();
+        } else if (!isDST && transitions.dstStart) {
+          nextChangeDate = transitions.dstStart.toLocaleDateString();
+        }
+      }
+      
       setDstStatus({
-        active: result.isDST,
-        nextChange: result.dstTransitions?.hasDST ? 
-          (result.isDST ? 
-            result.dstTransitions?.dstEnd?.toLocaleDateString() : 
-            result.dstTransitions?.dstStart?.toLocaleDateString()) :
-          null
+        active: isDST,
+        nextChange: nextChangeDate,
+        offsetMinutes
       });
+    } catch (error) {
+      console.error('Error checking DST status:', error);
     }
   };
 
@@ -107,11 +120,14 @@ export function TimezoneSection() {
       }
       
       // Calculate current offset
-      const debugResult = await debugTimezone.mutateAsync(userTimezone.setting_value);
-      if (debugResult.error) throw new Error(debugResult.error);
+      const isDST = isTimezoneDST(userTimezone.setting_value);
+      const offsetMinutes = getTimezoneOffset(new Date(), userTimezone.setting_value);
       
-      const offsetMinutes = debugResult.offsetMinutes;
-      const isDST = debugResult.isDST;
+      console.log('Updating slots with:', {
+        timezone: userTimezone.setting_value,
+        offsetMinutes,
+        isDST
+      });
       
       // Update recurring slots first
       const { data: recurringSlots, error: recurringError } = await supabase
@@ -125,7 +141,7 @@ export function TimezoneSection() {
         })
         .eq('profile_id', profile.id)
         .eq('recurring', true)
-        .select('count');
+        .select('id');
       
       if (recurringError) throw recurringError;
       
@@ -141,7 +157,7 @@ export function TimezoneSection() {
         })
         .eq('profile_id', profile.id)
         .eq('recurring', false)
-        .select('count');
+        .select('id');
       
       if (nonRecurringError) throw nonRecurringError;
       
@@ -151,6 +167,9 @@ export function TimezoneSection() {
         title: "Success",
         description: `Updated ${totalUpdated} availability slots with the current timezone information.`,
       });
+      
+      // Refresh DST status after update
+      checkDSTStatus(userTimezone.setting_value);
     } catch (error) {
       console.error('Error updating personal slots:', error);
       toast({
@@ -183,23 +202,34 @@ export function TimezoneSection() {
       </div>
 
       <Alert>
+        <Clock className="h-4 w-4 mr-2"/>
         <AlertDescription>
-          Current time in {currentTimezone}:{' '}
-          {new Date().toLocaleTimeString('en-US', { timeZone: currentTimezone })}
-          {dstStatus && (
-            <div className="mt-1 text-sm">
-              <span className={dstStatus.active ? "text-amber-500" : "text-green-500"}>
-                {dstStatus.active ? 
-                  "Daylight Saving Time is currently active" : 
-                  "Standard Time is currently active"}
-              </span>
-              {dstStatus.nextChange && (
-                <span className="ml-1">
-                  (Next change: {dstStatus.nextChange})
-                </span>
-              )}
+          <div className="flex flex-col space-y-1">
+            <div className="font-medium">
+              Current time in {currentTimezone}:{' '}
+              {new Date().toLocaleTimeString('en-US', { timeZone: currentTimezone })}
             </div>
-          )}
+            {dstStatus && (
+              <div className="mt-1 text-sm flex flex-col gap-1">
+                <span className={dstStatus.active ? "text-amber-500 flex items-center" : "text-green-500 flex items-center"}>
+                  <Info className="h-3.5 w-3.5 mr-1" />
+                  {dstStatus.active ? 
+                    "Daylight Saving Time is currently active" : 
+                    "Standard Time is currently active"}
+                </span>
+                {dstStatus.offsetMinutes && (
+                  <span className="ml-1 text-muted-foreground">
+                    Current UTC offset: {dstStatus.offsetMinutes} minutes
+                  </span>
+                )}
+                {dstStatus.nextChange && (
+                  <span className="ml-1 text-muted-foreground">
+                    Next DST change: {dstStatus.nextChange}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </AlertDescription>
       </Alert>
 
@@ -214,7 +244,7 @@ export function TimezoneSection() {
             Update My Availability Slots
           </Button>
           <p className="text-xs text-muted-foreground mt-1">
-            This will update all your availability slots with the current timezone information.
+            This will update all your availability slots with the current timezone information to handle DST changes.
           </p>
         </div>
       )}
@@ -265,7 +295,8 @@ export function TimezoneSection() {
                   Timezone: {currentTimezone}<br />
                   Local offset: {-(new Date().getTimezoneOffset())} minutes<br />
                   Browser locale: {navigator.language || 'unknown'}<br />
-                  DST active: {dstStatus?.active ? 'Yes' : 'No'}
+                  DST active: {dstStatus?.active ? 'Yes' : 'No'}<br />
+                  Calculated offset: {dstStatus?.offsetMinutes || 'Unknown'} minutes
                 </p>
                 <Button 
                   onClick={handleDebugTimezone}

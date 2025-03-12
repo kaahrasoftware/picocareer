@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { format, areIntervalsOverlapping } from "date-fns";
+import { getTimezoneOffset, isTimezoneDST } from "@/utils/timezoneUpdater";
 
 interface TimeSlotFormProps {
   selectedDate: Date;
@@ -114,9 +115,15 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
 
       const dayOfWeek = selectedDate.getDay();
       
-      // Get current timezone offset in minutes
-      const now = new Date();
-      const timezoneOffsetMinutes = now.getTimezoneOffset() * -1; // Convert to positive for east, negative for west
+      // Get current timezone offset and DST status
+      const timezoneOffsetMinutes = getTimezoneOffset(startDateTime, userTimezone);
+      const isDST = isTimezoneDST(userTimezone);
+
+      console.log('Creating availability with:', {
+        timezoneOffsetMinutes,
+        isDST,
+        userTimezone
+      });
 
       const { error } = await supabase
         .from('mentor_availability')
@@ -129,7 +136,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
           day_of_week: isRecurring ? dayOfWeek : null,
           timezone_offset: timezoneOffsetMinutes,
           reference_timezone: userTimezone,
-          dst_aware: true
+          dst_aware: true,
+          last_dst_check: new Date().toISOString(),
+          is_dst: isDST
         });
 
       if (error) throw error;

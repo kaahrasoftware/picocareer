@@ -6,7 +6,7 @@ import { updateMentorTimezoneOffsets, getTimezoneOffsetForDebugging } from "@/ut
 export function useTimezoneUpdate() {
   const { toast } = useToast();
 
-  const checkTimezone = async (timezone) => {
+  const checkTimezone = async (timezone: string) => {
     const result = await getTimezoneOffsetForDebugging(timezone);
     return result;
   };
@@ -17,8 +17,8 @@ export function useTimezoneUpdate() {
       if (result.success) {
         toast({
           title: "Timezones Updated",
-          description: `Successfully updated ${result.updatedCount} mentor timezone offsets. Total DST-aware slots: ${result.totalDSTAwareSlots}.${result.errors ? ' Some updates failed.' : ''}`,
-          variant: result.errors ? "warning" : "default",
+          description: `Successfully updated ${result.updatedCount} mentor timezone offsets. Total DST-aware slots: ${result.totalDSTAwareSlots}.${result.errors?.length ? ' Some updates failed.' : ''}`,
+          variant: result.errors?.length ? "warning" : "default",
         });
         
         // Show additional toast with detailed counts if there were errors
@@ -71,6 +71,14 @@ DST active: ${result.isDST ? 'Yes' : 'No'}
 DST transitions: ${result.dstTransitions?.hasDST ? 
   `Start: ${result.dstTransitions?.dstStart?.toLocaleDateString() || 'Unknown'}, End: ${result.dstTransitions?.dstEnd?.toLocaleDateString() || 'Unknown'}` : 
   'No DST in this timezone'}`,
+      });
+    },
+    onError: (error) => {
+      console.error('Error debugging timezone:', error);
+      toast({
+        title: "Error",
+        description: "Failed to debug timezone information.",
+        variant: "destructive",
       });
     }
   });

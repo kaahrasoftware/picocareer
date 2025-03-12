@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { getTimezoneOffset, isTimezoneDST } from "@/utils/timezoneUpdater";
 
 interface UnavailableTimeFormProps {
   selectedDate: Date;
@@ -49,9 +50,15 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
-      // Calculate timezone offset in minutes
-      const now = new Date();
-      const timezoneOffsetMinutes = now.getTimezoneOffset() * -1; // Convert to positive for east, negative for west
+      // Calculate timezone offset in minutes and check DST status
+      const timezoneOffsetMinutes = getTimezoneOffset(startDateTime, userTimezone);
+      const isDST = isTimezoneDST(userTimezone);
+
+      console.log('Creating unavailability with:', {
+        timezoneOffsetMinutes,
+        isDST,
+        userTimezone
+      });
 
       const { error } = await supabase
         .from('mentor_availability')
@@ -62,7 +69,9 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
           is_available: false,
           timezone_offset: timezoneOffsetMinutes,
           reference_timezone: userTimezone,
-          dst_aware: true
+          dst_aware: true,
+          last_dst_check: new Date().toISOString(),
+          is_dst: isDST
         });
 
       if (error) throw error;
