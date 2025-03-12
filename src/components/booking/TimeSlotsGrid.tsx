@@ -46,9 +46,9 @@ export function TimeSlotsGrid({
 
   return (
     <div>
-      <h4 className="font-medium mb-2">{title}</h4>
-      <ScrollArea className="h-[250px] rounded-md border">
-        <div className="flex flex-col gap-1.5 p-3">
+      <h4 className="font-medium mb-2 text-sm sm:text-base">{title}</h4>
+      <ScrollArea className="h-[200px] sm:h-[250px] rounded-md border">
+        <div className="flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3">
           {timeSlots.map((slot) => (
             <TimeSlotButton
               key={slot.time}

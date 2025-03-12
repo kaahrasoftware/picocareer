@@ -88,19 +88,19 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
   const availablePlatforms = selectedSessionType?.meeting_platform || ['Google Meet'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Session Type Selector */}
       <div>
-        <Label htmlFor="session-type" className="text-base font-medium mb-2 block">
+        <Label htmlFor="session-type" className="text-sm sm:text-base font-medium mb-1 sm:mb-2 block">
           Session Type
         </Label>
         <Select value={sessionTypeId} onValueChange={setSessionTypeId}>
-          <SelectTrigger id="session-type">
+          <SelectTrigger id="session-type" className="text-sm">
             <SelectValue placeholder="Select a session type" />
           </SelectTrigger>
           <SelectContent>
             {sessionTypes?.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
+              <SelectItem key={type.id} value={type.id} className="text-sm">
                 {type.type} ({type.duration} minutes)
               </SelectItem>
             ))}
@@ -109,10 +109,10 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
       </div>
 
       {sessionTypeId && (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Date Selection */}
-          <Card>
-            <CardContent className="pt-6">
+          <Card className="overflow-hidden">
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
               <DateSelector
                 mentorId={mentorId}
                 selectedDate={selectedDate}
@@ -123,8 +123,8 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
 
           {/* Time Selection */}
           {selectedDate && (
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="overflow-hidden">
+              <CardContent className="p-3 sm:pt-6 sm:p-6">
                 <TimeSlotSelector
                   date={selectedDate}
                   mentorId={mentorId}
@@ -134,9 +134,9 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
                   onMentorTimezoneChange={handleMentorTimezoneUpdate}
                 />
                 {selectedTime && (
-                  <div className="mt-4 p-3 bg-primary/10 rounded-md">
-                    <p className="text-sm font-medium">
-                      Selected session time: {selectedDate && format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}
+                  <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-primary/10 rounded-md">
+                    <p className="text-xs sm:text-sm font-medium">
+                      Selected: {selectedDate && format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}
                     </p>
                   </div>
                 )}
@@ -150,16 +150,16 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
       {selectedTime && (
         <>
           <div>
-            <Label htmlFor="meeting-platform" className="text-base font-medium mb-2 block">
+            <Label htmlFor="meeting-platform" className="text-sm sm:text-base font-medium mb-1 sm:mb-2 block">
               Meeting Platform
             </Label>
             <Select value={meetingPlatform} onValueChange={handleMeetingPlatformChange}>
-              <SelectTrigger id="meeting-platform">
+              <SelectTrigger id="meeting-platform" className="text-sm">
                 <SelectValue placeholder="Select meeting platform" />
               </SelectTrigger>
               <SelectContent>
                 {availablePlatforms.map((platform) => (
-                  <SelectItem key={platform} value={platform}>
+                  <SelectItem key={platform} value={platform} className="text-sm">
                     {platform}
                   </SelectItem>
                 ))}
@@ -170,7 +170,7 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
           {/* Conditional fields based on meeting platform */}
           {(meetingPlatform === 'WhatsApp' || meetingPlatform === 'Phone Call') && (
             <div>
-              <Label htmlFor="phone-number" className="text-base font-medium mb-2 block">
+              <Label htmlFor="phone-number" className="text-sm sm:text-base font-medium mb-1 sm:mb-2 block">
                 Your Phone Number {meetingPlatform === 'WhatsApp' ? '(for WhatsApp)' : '(for Phone Call)'}
               </Label>
               <Input
@@ -178,13 +178,14 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
                 placeholder="Enter your phone number"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                className="text-sm"
               />
             </div>
           )}
 
           {meetingPlatform === 'Telegram' && (
             <div>
-              <Label htmlFor="telegram-username" className="text-base font-medium mb-2 block">
+              <Label htmlFor="telegram-username" className="text-sm sm:text-base font-medium mb-1 sm:mb-2 block">
                 Your Telegram Username
               </Label>
               <Input
@@ -192,13 +193,14 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
                 placeholder="Enter your Telegram username"
                 value={telegramUsername}
                 onChange={(e) => setTelegramUsername(e.target.value)}
+                className="text-sm"
               />
             </div>
           )}
 
           {/* Notes field */}
           <div>
-            <Label htmlFor="session-notes" className="text-base font-medium mb-2 block">
+            <Label htmlFor="session-notes" className="text-sm sm:text-base font-medium mb-1 sm:mb-2 block">
               Session Notes (Optional)
             </Label>
             <Textarea
@@ -206,7 +208,7 @@ export function BookingForm({ mentorId, onFormChange, onMentorTimezoneChange }: 
               placeholder="Add any specific topics or questions you'd like to discuss..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[80px] sm:min-h-[100px] text-sm"
             />
           </div>
         </>

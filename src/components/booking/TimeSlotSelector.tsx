@@ -72,7 +72,7 @@ export function TimeSlotSelector({
   return (
     <div>
       {selectedSessionType && (
-        <p className="text-sm text-muted-foreground mb-2">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-2">
           {selectedSessionType.duration}-minute slots
         </p>
       )}
@@ -84,13 +84,13 @@ export function TimeSlotSelector({
         mentorTimezone={mentorTimezone || 'UTC'}
         date={date}
       />
-      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+      <div className="flex flex-col xs:flex-row justify-between mt-2 text-[10px] xs:text-xs text-muted-foreground">
         <p>
-          Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'} 
+          Mentor: {isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'} 
           {mentorOffset && ` (${mentorOffset})`}
         </p>
         <p>
-          Your timezone: {userTimezone} {userOffset && `(${userOffset})`}
+          You: {userTimezone} {userOffset && `(${userOffset})`}
         </p>
       </div>
     </div>

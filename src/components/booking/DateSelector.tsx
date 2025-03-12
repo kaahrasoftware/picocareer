@@ -118,12 +118,12 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <Calendar
         mode="single"
         selected={selectedDate}
         onSelect={onDateSelect}
-        className="rounded-md border w-full max-w-[350px] mx-auto sm:max-w-none [&_.rdp-cell]:w-9 [&_.rdp-head_th]:w-9 [&_.rdp-button]:w-9 [&_.rdp-button]:h-9 [&_.rdp-head_th]:text-xs sm:[&_.rdp-head_th]:text-sm [&_.rdp-button]:text-sm"
+        className="rounded-md border w-full max-w-full mx-auto [&_.rdp-cell]:w-8 [&_.rdp-head_th]:w-8 [&_.rdp-button]:w-8 [&_.rdp-button]:h-8 [&_.rdp-head_th]:text-xs [&_.rdp-button]:text-xs sm:[&_.rdp-cell]:w-9 sm:[&_.rdp-head_th]:w-9 sm:[&_.rdp-button]:w-9 sm:[&_.rdp-button]:h-9 sm:[&_.rdp-head_th]:text-xs sm:[&_.rdp-button]:text-sm"
         disabled={(date) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -133,10 +133,12 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         modifiersStyles={calendarModifiersStyles}
       />
 
-      <div className="mt-4 space-y-2 text-xs sm:text-sm text-gray-400">
+      <div className="mt-2 sm:mt-4 space-y-1 sm:space-y-2 text-[10px] xs:text-xs sm:text-sm text-gray-400">
         <p>Mentor's timezone: {isLoadingTimezone ? 'Loading...' : mentorTimezone}</p>
-        <p>Days highlighted in green are available for booking</p>
-        <p>Days highlighted in red are marked as unavailable</p>
+        <div className="flex flex-col xs:flex-row xs:gap-2">
+          <p className="text-green-500">⬤ Available for booking</p>
+          <p className="text-red-500">⬤ Unavailable</p>
+        </div>
         {availableDates.length === 0 && (
           <p className="text-yellow-500">This mentor has no available dates</p>
         )}

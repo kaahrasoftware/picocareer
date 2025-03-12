@@ -60,26 +60,26 @@ export function TimeSlotButton({
       onClick={() => onSelect(time)}
     >
       <div className="flex flex-col items-start w-full">
-        <div className="flex justify-between w-full">
-          <span className="font-medium">
-            Mentor's time: {mentorFormattedTime}
+        <div className="flex justify-between w-full items-center">
+          <span className="font-medium text-sm sm:text-base">
+            {mentorFormattedTime}
           </span>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <Info className="h-4 w-4 text-muted-foreground" />
+              <TooltipTrigger className="ml-1">
+                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Timezone: {mentorTimezone} (GMT{formatOffset(mentorCurrentOffset)})</p>
+              <TooltipContent side="right">
+                <p className="text-xs">Mentor's timezone: {mentorTimezone} (GMT{formatOffset(mentorCurrentOffset)})</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="flex justify-between w-full">
-          <span className="text-xs text-muted-foreground">
+        <div className="flex flex-col xs:flex-row justify-between w-full text-[10px] xs:text-xs">
+          <span className="text-muted-foreground">
             Your time: {userFormattedTime}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground">
             {userTimezone} (GMT{formatOffset(userCurrentOffset)})
           </span>
         </div>
