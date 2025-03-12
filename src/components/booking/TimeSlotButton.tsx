@@ -4,7 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TimeSlotButtonProps {
@@ -67,7 +67,7 @@ export function TimeSlotButton({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                <Info className="h-4 w-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Timezone: {mentorTimezone} (GMT{formatOffset(mentorCurrentOffset)})</p>
