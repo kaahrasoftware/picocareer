@@ -120,13 +120,11 @@ export function TimezoneSection() {
       }
       
       // Calculate current offset
-      const isDST = isTimezoneDST(userTimezone.setting_value);
       const offsetMinutes = getTimezoneOffset(new Date(), userTimezone.setting_value);
       
       console.log('Updating slots with:', {
         timezone: userTimezone.setting_value,
-        offsetMinutes,
-        isDST
+        offsetMinutes
       });
       
       // Update recurring slots first
@@ -136,8 +134,7 @@ export function TimezoneSection() {
           timezone_offset: offsetMinutes,
           reference_timezone: userTimezone.setting_value,
           dst_aware: true,
-          last_dst_check: new Date().toISOString(),
-          is_dst: isDST
+          last_dst_check: new Date().toISOString()
         })
         .eq('profile_id', profile.id)
         .eq('recurring', true)
@@ -152,8 +149,7 @@ export function TimezoneSection() {
           timezone_offset: offsetMinutes,
           reference_timezone: userTimezone.setting_value,
           dst_aware: true,
-          last_dst_check: new Date().toISOString(),
-          is_dst: isDST
+          last_dst_check: new Date().toISOString()
         })
         .eq('profile_id', profile.id)
         .eq('recurring', false)

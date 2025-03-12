@@ -158,7 +158,7 @@ export async function getTimezoneOffsetForDebugging(timezone: string) {
     const localDate = new Date(formattedDate);
     const alternateOffset = now.getTimezoneOffset() * -1;
     
-    // Check DST status
+    // Check current DST status
     const isDST = isTimezoneDST(timezone);
     
     // Get DST transitions
@@ -242,12 +242,11 @@ async function processRecurringSlots() {
         // Skip if timezone is invalid
         if (!timezone) continue;
         
-        // Get DST information for this timezone
+        // Get current offset for this timezone
         const now = new Date();
         const offsetMinutes = getTimezoneOffset(now, timezone);
-        const isDST = isTimezoneDST(timezone);
         
-        console.log(`Updating recurring slots for mentor ${profile_id} with timezone ${timezone} (offset: ${offsetMinutes}, DST: ${isDST})`);
+        console.log(`Updating recurring slots for mentor ${profile_id} with timezone ${timezone} (offset: ${offsetMinutes})`);
         
         // Update all recurring slots for this mentor
         const { data: updateResult, error: updateError } = await supabase
@@ -256,8 +255,7 @@ async function processRecurringSlots() {
             timezone_offset: offsetMinutes,
             reference_timezone: timezone,
             dst_aware: true,
-            last_dst_check: new Date().toISOString(),
-            is_dst: isDST
+            last_dst_check: new Date().toISOString()
           })
           .eq('profile_id', profile_id)
           .eq('recurring', true)
@@ -342,7 +340,6 @@ async function processNonRecurringSlots() {
           try {
             const slotDate = new Date(slot.start_date_time);
             const offsetMinutes = getTimezoneOffset(slotDate, timezone);
-            const isDST = isTimezoneDST(timezone);
             
             const { error: updateError } = await supabase
               .from('mentor_availability')
@@ -350,8 +347,7 @@ async function processNonRecurringSlots() {
                 timezone_offset: offsetMinutes,
                 reference_timezone: timezone,
                 dst_aware: true,
-                last_dst_check: new Date().toISOString(),
-                is_dst: isDST
+                last_dst_check: new Date().toISOString()
               })
               .eq('id', slot.id);
             
