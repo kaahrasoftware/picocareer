@@ -1,3 +1,4 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -8,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { timeZones } from "./timezones";
 import { Button } from "@/components/ui/button";
 import { useTimezoneUpdate } from "@/hooks/useTimezoneUpdate";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Bug } from "lucide-react";
+import { useState } from "react";
 
 export function TimezoneSection() {
   const { session } = useAuthSession();
@@ -16,8 +18,9 @@ export function TimezoneSection() {
   const { getSetting, updateSetting } = useUserSettings(profile?.id);
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [showDebug, setShowDebug] = useState(false);
 
-  const { mutate: updateTimezones, isLoading } = useTimezoneUpdate();
+  const { updateTimezones, debugTimezone } = useTimezoneUpdate();
 
   const handleTimezoneChange = async (value: string) => {
     try {
@@ -38,6 +41,10 @@ export function TimezoneSection() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDebugTimezone = () => {
+    debugTimezone.mutate(currentTimezone);
   };
 
   return (
@@ -69,19 +76,53 @@ export function TimezoneSection() {
       </Alert>
 
       {profile?.user_type === 'admin' && (
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
           <Button 
-            onClick={() => updateTimezones()}
-            disabled={isLoading}
+            onClick={() => updateTimezones.mutate()}
+            disabled={updateTimezones.isPending}
             variant="outline"
             className="w-full"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Updating Timezone Offsets...' : 'Update All Mentor Timezone Offsets'}
+            <RefreshCw className={`mr-2 h-4 w-4 ${updateTimezones.isPending ? 'animate-spin' : ''}`} />
+            {updateTimezones.isPending ? 'Updating Timezone Offsets...' : 'Update All Mentor Timezone Offsets'}
           </Button>
           <p className="text-xs text-muted-foreground mt-2">
             This will update timezone offsets for all mentors to account for DST changes.
           </p>
+          
+          <div className="mt-2">
+            <Button 
+              onClick={() => setShowDebug(!showDebug)} 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs"
+            >
+              <Bug className="h-3 w-3 mr-1" />
+              {showDebug ? 'Hide Debug' : 'Show Debug'}
+            </Button>
+          </div>
+          
+          {showDebug && (
+            <div className="p-3 bg-muted/30 rounded-md border border-muted">
+              <h4 className="text-sm font-medium mb-2">Timezone Debugging</h4>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Timezone: {currentTimezone}<br />
+                  Local offset: {-(new Date().getTimezoneOffset())} minutes<br />
+                  Browser locale: {navigator.language || 'unknown'}
+                </p>
+                <Button 
+                  onClick={handleDebugTimezone}
+                  disabled={debugTimezone.isPending}
+                  variant="secondary"
+                  size="sm"
+                  className="w-full text-xs"
+                >
+                  Debug Current Timezone
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
