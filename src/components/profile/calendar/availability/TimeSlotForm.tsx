@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +36,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       .select('*')
       .eq('profile_id', profileId)
       .eq('is_available', true)
-      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`)
+      .order('start_date_time', { ascending: true });
 
     if (error) {
       console.error('Error checking availability:', error);
@@ -111,7 +113,10 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       }
 
       const dayOfWeek = selectedDate.getDay();
-      const timezoneOffset = new Date().getTimezoneOffset();
+      
+      // Get current timezone offset in minutes
+      const now = new Date();
+      const timezoneOffsetMinutes = now.getTimezoneOffset() * -1; // Convert to positive for east, negative for west
 
       const { error } = await supabase
         .from('mentor_availability')
@@ -122,7 +127,9 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
           is_available: true,
           recurring: isRecurring,
           day_of_week: isRecurring ? dayOfWeek : null,
-          timezone_offset: timezoneOffset
+          timezone_offset: timezoneOffsetMinutes,
+          reference_timezone: userTimezone,
+          dst_aware: true
         });
 
       if (error) throw error;

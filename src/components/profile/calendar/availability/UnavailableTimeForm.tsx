@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -49,7 +50,8 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
       // Calculate timezone offset in minutes
-      const timezoneOffset = new Date().getTimezoneOffset();
+      const now = new Date();
+      const timezoneOffsetMinutes = now.getTimezoneOffset() * -1; // Convert to positive for east, negative for west
 
       const { error } = await supabase
         .from('mentor_availability')
@@ -58,7 +60,9 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
           is_available: false,
-          timezone_offset: timezoneOffset
+          timezone_offset: timezoneOffsetMinutes,
+          reference_timezone: userTimezone,
+          dst_aware: true
         });
 
       if (error) throw error;
@@ -105,6 +109,7 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
         selectedEndTime={selectedEndTime}
         isRecurring={false}
         userTimezone={userTimezone || 'Not set'}
+        selectedDate={selectedDate}
         onStartTimeSelect={setSelectedStartTime}
         onEndTimeSelect={setSelectedEndTime}
         onRecurringChange={() => {}}

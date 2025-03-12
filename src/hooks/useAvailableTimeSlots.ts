@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { format, addMinutes, isWithinInterval, areIntervalsOverlapping, subMinutes } from "date-fns";
 
 interface TimeSlot {
@@ -16,20 +17,25 @@ export function useAvailableTimeSlots(
   sessionDuration: number = 15,
   mentorTimezone: string = 'UTC'
 ) {
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function fetchAvailability() {
-      if (!date || !mentorId) return;
-
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
+  const {
+    data: timeSlots = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['available-time-slots', date?.toISOString(), mentorId, sessionDuration, mentorTimezone],
+    queryFn: async () => {
+      if (!date || !mentorId) return [];
 
       try {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
         // Fetch both one-time and recurring availability, excluding booked slots
         const { data: availabilityData, error: availabilityError } = await supabase
           .from('mentor_availability')
@@ -55,9 +61,25 @@ export function useAvailableTimeSlots(
 
         const slots: TimeSlot[] = [];
         const availableSlots = availabilityData || [];
+        const bookingMap = new Map();
 
         console.log('Processing availability slots:', availableSlots);
+        
+        // Create a map of booked times for faster lookup
+        (bookingsData || []).forEach(booking => {
+          const bookingStart = new Date(booking.scheduled_at);
+          const bookingDuration = booking.session_type?.duration || 60;
+          const bookingEnd = addMinutes(bookingStart, bookingDuration);
+          
+          // Store start and end times for overlap checking
+          bookingMap.set(booking.scheduled_at, {
+            start: bookingStart,
+            end: bookingEnd,
+            duration: bookingDuration
+          });
+        });
 
+        // Process each availability slot
         availableSlots.forEach((availability) => {
           if (!availability.start_date_time || !availability.end_date_time) return;
 
@@ -87,17 +109,18 @@ export function useAvailableTimeSlots(
             const slotStart = new Date(currentTime);
             const slotEnd = addMinutes(slotStart, sessionDuration);
 
-            // Check for overlapping bookings
-            const isOverlappingBooking = bookingsData?.some(booking => {
-              const bookingTime = new Date(booking.scheduled_at);
-              const bookingDuration = booking.session_type?.duration || 60;
-              const bookingEnd = addMinutes(bookingTime, bookingDuration);
-              
-              return areIntervalsOverlapping(
+            // Check for overlapping bookings using the map
+            let isOverlappingBooking = false;
+            
+            for (const bookingData of bookingMap.values()) {
+              if (areIntervalsOverlapping(
                 { start: slotStart, end: slotEnd },
-                { start: bookingTime, end: bookingEnd }
-              );
-            });
+                { start: bookingData.start, end: bookingData.end }
+              )) {
+                isOverlappingBooking = true;
+                break;
+              }
+            }
 
             const now = new Date();
             if (slotStart > now && !isOverlappingBooking) {
@@ -113,21 +136,17 @@ export function useAvailableTimeSlots(
         });
 
         console.log('Generated time slots:', slots);
-        setAvailableTimeSlots(slots);
+        return slots;
       } catch (error) {
         console.error("Error fetching availability:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load availability",
-          variant: "destructive",
-        });
+        throw error;
       }
-    }
+    },
+    enabled: !!date && !!mentorId,
+    staleTime: 1000 * 60, // Cache for 1 minute
+    retry: 2,
+  });
 
-    if (date && mentorId) {
-      fetchAvailability();
-    }
-  }, [date, mentorId, sessionDuration, toast, mentorTimezone]);
-
-  return availableTimeSlots;
+  // Return the data, loading state, and error
+  return { timeSlots, isLoading, error, refetch };
 }

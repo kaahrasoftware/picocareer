@@ -1,5 +1,7 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimeSlotButton } from "./TimeSlotButton";
+import { memo } from "react";
 
 interface TimeSlot {
   time: string;
@@ -16,7 +18,7 @@ interface TimeSlotsGridProps {
   date: Date;
 }
 
-export function TimeSlotsGrid({ 
+export const TimeSlotsGrid = memo(function TimeSlotsGrid({ 
   title,
   timeSlots, 
   selectedTime, 
@@ -63,4 +65,4 @@ export function TimeSlotsGrid({
       </ScrollArea>
     </div>
   );
-}
+});
