@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize-html";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 export function NotificationContent({
   message,
@@ -198,6 +201,27 @@ export function NotificationContent({
     return null;
   };
   
+  // Render message with sanitized HTML if content contains HTML tags
+  const renderMessage = () => {
+    const hasHtmlContent = /<[a-z][\s\S]*>/i.test(message);
+    
+    if (hasHtmlContent) {
+      return (
+        <div 
+          className={isExpanded ? "" : "line-clamp-2"}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(message) }}
+        />
+      );
+    }
+    
+    // Render plain text if no HTML
+    return (
+      <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
+        {message}
+      </p>
+    );
+  };
+  
   // Render appropriate content based on notification type
   if (isHubInvite) {
     return (
@@ -205,9 +229,7 @@ export function NotificationContent({
         <div className="flex items-start gap-3">
           {getNotificationIcon()}
           <div className="flex-1">
-            <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-              {message}
-            </p>
+            {renderMessage()}
             
             {errorMessage && (
               <div className="mt-2 p-2 text-xs text-red-600 bg-red-50 rounded-md border border-red-200">
@@ -255,9 +277,7 @@ export function NotificationContent({
         <div className="flex items-start gap-3">
           {getNotificationIcon()}
           <div className="flex-1">
-            <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-              {message}
-            </p>
+            {renderMessage()}
             
             <div className="flex items-center space-x-2 mt-3">
               <Button 
@@ -282,9 +302,7 @@ export function NotificationContent({
         <div className="flex items-start gap-3">
           {getNotificationIcon()}
           <div className="flex-1">
-            <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-              {message}
-            </p>
+            {renderMessage()}
             
             {action_url && (
               <div className="flex items-center space-x-2 mt-3">
@@ -311,9 +329,7 @@ export function NotificationContent({
         <div className="flex items-start gap-3">
           {getNotificationIcon()}
           <div className="flex-1">
-            <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-              {message}
-            </p>
+            {renderMessage()}
             
             {action_url && (
               <div className="flex items-center space-x-2 mt-3">
@@ -333,9 +349,23 @@ export function NotificationContent({
       )}
       
       {!getNotificationIcon() && (
-        <p className={isExpanded ? "line-clamp-none" : "line-clamp-2"}>
-          {message}
-        </p>
+        <div className="notification-content">
+          {renderMessage()}
+          
+          {action_url && (
+            <div className="flex items-center space-x-2 mt-3">
+              <Button 
+                size="sm"
+                variant="secondary"
+                onClick={handleNavigateToUrl}
+                className="flex items-center"
+              >
+                <ExternalLink className="h-4 w-4 mr-1" />
+                View Details
+              </Button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

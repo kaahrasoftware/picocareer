@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot, Search, Calendar, X } from "lucide-react";
+import { Bell, BellDot, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -83,10 +83,13 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   // Apply search and filters to notifications
   const filteredNotifications = localNotifications.filter(notification => {
+    // For HTML content, we need to check against the plaintext version for search
+    const plainTextMessage = notification.message.replace(/<[^>]*>?/gm, '');
+    
     // Search text filter
     const matchesSearch = searchTerm === "" || 
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+      plainTextMessage.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Read status filter
     const matchesReadStatus = 
@@ -127,6 +130,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   const mentorshipUnreadCount = categorizedNotifications.mentorship?.filter(n => !n.read).length || 0;
   const generalUnreadCount = categorizedNotifications.general?.filter(n => !n.read).length || 0;
+  const hubUnreadCount = categorizedNotifications.hub?.filter(n => !n.read).length || 0;
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -250,7 +254,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
           {/* Notifications list */}
           {filteredNotifications.length > 0 && (
             <Tabs defaultValue="mentorship" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 mb-4 bg-gray-100">
+              <TabsList className="w-full grid grid-cols-3 mb-4 bg-gray-100">
                 <TabsTrigger value="mentorship" className="relative flex items-center gap-2 data-[state=active]:bg-white">
                   Mentorship
                   {mentorshipUnreadCount > 0 && (
@@ -259,6 +263,17 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                       className="h-5 w-5 flex items-center justify-center p-0 text-xs"
                     >
                       {mentorshipUnreadCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="hub" className="relative flex items-center gap-2 data-[state=active]:bg-white">
+                  Hub
+                  {hubUnreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {hubUnreadCount}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -289,6 +304,23 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                   {(!categorizedNotifications.mentorship || categorizedNotifications.mentorship.length === 0) && (
                     <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
                       No mentorship notifications
+                    </p>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="hub" className="mt-0 space-y-4">
+                  {categorizedNotifications.hub?.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      isExpanded={expandedIds.includes(notification.id)}
+                      onToggleExpand={() => toggleExpand(notification.id)}
+                      onToggleRead={toggleReadStatus}
+                    />
+                  ))}
+                  {(!categorizedNotifications.hub || categorizedNotifications.hub.length === 0) && (
+                    <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
+                      No hub notifications
                     </p>
                   )}
                 </TabsContent>
