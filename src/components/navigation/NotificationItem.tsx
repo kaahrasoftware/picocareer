@@ -3,6 +3,7 @@ import { forwardRef } from "react";
 import { NotificationHeader } from "./notification-details/NotificationHeader";
 import { NotificationContent } from "./notification-details/NotificationContent";
 import { NotificationActions } from "./notification-details/NotificationActions";
+import { cn } from "@/lib/utils";
 
 export interface Notification {
   id: string;
@@ -12,6 +13,7 @@ export interface Notification {
   read: boolean;
   type?: string;
   action_url?: string;
+  category?: string;
 }
 
 interface NotificationItemProps {
@@ -23,19 +25,26 @@ interface NotificationItemProps {
 
 export const NotificationItem = forwardRef<HTMLDivElement, NotificationItemProps>(
   ({ notification, isExpanded, onToggleExpand, onToggleRead }, ref) => {
+    // Style based on read status
+    const getItemStyles = () => {
+      return cn(
+        "p-3 rounded-lg border mb-2 transition-all duration-200",
+        notification.read 
+          ? 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm' 
+          : 'bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-sm'
+      );
+    };
+    
     return (
       <div 
         ref={ref}
-        className={`p-3 rounded-md border ${
-          notification.read 
-            ? 'bg-white border-gray-200' 
-            : 'bg-gray-50 border-gray-300'
-        } transition-colors duration-200 hover:shadow-sm`}
+        className={getItemStyles()}
       >
         <NotificationHeader 
           title={notification.title} 
           createdAt={notification.created_at}
           read={notification.read}
+          type={notification.type}
           onToggleRead={() => onToggleRead(notification)}
         />
         
