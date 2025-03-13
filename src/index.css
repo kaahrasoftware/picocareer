@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -110,4 +111,14 @@
 .sticky.scrolled button {
   height: 2rem;
   font-size: 0.875rem;
+}
+
+/* Animations for booking confirmation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
 }
