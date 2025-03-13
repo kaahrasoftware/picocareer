@@ -17,7 +17,11 @@ const purifyConfig = {
   ],
   FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'object', 'embed'],
   FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
-  ALLOW_DATA_ATTR: false
+  ALLOW_DATA_ATTR: false,
+  ADD_ATTR: ['target'], // Allow target attribute for links (e.g., target="_blank")
+  RETURN_DOM: false,    // Return HTML as string
+  RETURN_DOM_FRAGMENT: false,
+  RETURN_DOM_IMPORT: false
 };
 
 /**
@@ -29,8 +33,8 @@ export function sanitizeHtml(content: string): string {
   if (!content) return '';
   
   // Check if running in a browser environment
-  if (typeof window === 'undefined') {
-    return content;
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return content.replace(/<[^>]*>/g, ''); // Fallback to plain text if not in browser
   }
   
   try {
@@ -38,11 +42,11 @@ export function sanitizeHtml(content: string): string {
     const styledHtml = applyStylesToHtml(content, notificationContentStyles);
     
     // Configure and apply DOMPurify
-    DOMPurify.setConfig(purifyConfig);
-    return DOMPurify.sanitize(styledHtml);
+    const clean = DOMPurify.sanitize(styledHtml, purifyConfig);
+    return clean;
   } catch (error) {
     console.error('Error sanitizing HTML:', error);
     // Return plain text if sanitization fails
-    return content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return content.replace(/<[^>]*>/g, '&lt;$&gt;');
   }
 }

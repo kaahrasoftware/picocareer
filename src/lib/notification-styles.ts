@@ -5,7 +5,7 @@
  */
 export const notificationContentStyles = {
   // Basic text styling
-  p: "mb-2",
+  p: "mb-2 text-sm",
   h1: "text-lg font-bold mb-2",
   h2: "text-md font-semibold mb-2",
   h3: "text-base font-medium mb-2",
@@ -13,12 +13,12 @@ export const notificationContentStyles = {
   // List styling
   ul: "list-disc pl-4 mb-2",
   ol: "list-decimal pl-4 mb-2",
-  li: "mb-1",
+  li: "mb-1 text-sm",
   
   // Table styling
   table: "w-full border-collapse mb-2",
-  th: "border border-gray-300 px-2 py-1 bg-gray-100 font-medium text-left",
-  td: "border border-gray-300 px-2 py-1 text-left",
+  th: "border border-gray-300 px-2 py-1 bg-gray-100 font-medium text-left text-xs",
+  td: "border border-gray-300 px-2 py-1 text-left text-xs",
   
   // Link styling
   a: "text-blue-500 hover:text-blue-700 hover:underline",
@@ -33,7 +33,7 @@ export const notificationContentStyles = {
   hr: "my-2 border-t border-gray-200",
   
   // Image
-  img: "max-w-full rounded my-2",
+  img: "max-w-full h-auto rounded my-2",
   
   // Break
   br: ""
@@ -63,7 +63,9 @@ export function applyStylesToHtml(html: string, styles: Record<string, string> =
     modifiedHtml = modifiedHtml.replace(tagRegexWithAttrs, (match, attributes) => {
       // If there's already a class attribute, append to it
       if (attributes.includes('class="')) {
-        return match.replace('class="', `class="${cssClass} `);
+        return match.replace(/class="([^"]*)"/, (m, existingClasses) => {
+          return `class="${existingClasses} ${cssClass}"`;
+        });
       } else {
         // Add class attribute
         return `<${tag}${attributes} class="${cssClass}">`;

@@ -15,18 +15,18 @@ export function generateSessionBookingHtml(
 ): string {
   return `
     <p>Your session with <strong>${mentorName}</strong> has been confirmed!</p>
-    <table>
+    <table class="w-full border-collapse my-2">
       <tr>
-        <th>Date</th>
-        <td>${sessionDate}</td>
+        <th class="border border-gray-300 px-2 py-1 bg-gray-100 font-medium text-left">Date</th>
+        <td class="border border-gray-300 px-2 py-1">${sessionDate}</td>
       </tr>
       <tr>
-        <th>Time</th>
-        <td>${sessionTime}</td>
+        <th class="border border-gray-300 px-2 py-1 bg-gray-100 font-medium text-left">Time</th>
+        <td class="border border-gray-300 px-2 py-1">${sessionTime}</td>
       </tr>
       <tr>
-        <th>Session Type</th>
-        <td>${sessionType}</td>
+        <th class="border border-gray-300 px-2 py-1 bg-gray-100 font-medium text-left">Session Type</th>
+        <td class="border border-gray-300 px-2 py-1">${sessionType}</td>
       </tr>
     </table>
     <p>Please make sure to prepare any questions or topics you'd like to discuss during the session.</p>
@@ -46,11 +46,11 @@ export function generateHubInvitationHtml(
   return `
     <p><strong>${inviterName}</strong> has invited you to join <strong>${hubName}</strong>!</p>
     <p>By joining this hub, you'll be able to:</p>
-    <ul>
-      <li>Connect with other members</li>
-      <li>Access exclusive resources</li>
-      <li>Participate in group discussions</li>
-      <li>Stay updated on hub activities</li>
+    <ul class="list-disc pl-4 my-2">
+      <li class="mb-1">Connect with other members</li>
+      <li class="mb-1">Access exclusive resources</li>
+      <li class="mb-1">Participate in group discussions</li>
+      <li class="mb-1">Stay updated on hub activities</li>
     </ul>
     <p>Use the buttons below to respond to this invitation.</p>
   `;
@@ -69,8 +69,8 @@ export function generateAnnouncementHtml(
   authorName: string
 ): string {
   return `
-    <h3>${title}</h3>
-    <p>${content}</p>
-    <p><em>Posted by ${authorName}</em></p>
+    <h3 class="text-base font-medium mb-2">${title}</h3>
+    <p class="mb-2">${content}</p>
+    <p class="text-sm italic text-gray-600">Posted by ${authorName}</p>
   `;
 }

@@ -45,6 +45,8 @@ export const NotificationItem = forwardRef<HTMLDivElement, NotificationItemProps
         ref={ref}
         className={getItemStyles()}
         data-category={category}
+        data-notification-id={notification.id}
+        data-notification-type={notification.type || 'general'}
       >
         <NotificationHeader 
           title={notification.title} 
