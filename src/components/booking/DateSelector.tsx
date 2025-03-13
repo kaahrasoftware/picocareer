@@ -78,21 +78,27 @@ export function DateSelector({ mentorId, selectedDate, onDateSelect }: DateSelec
         });
       });
     
-    // Process one-time slots (both available and unavailable)
+    // Create a temporary map to collect available slots per day
+    const dateHasAvailableSlots = new Map();
+    
+    // Process one-time slots to track which dates have available slots
     mentorAvailabilityData.availabilities
       .filter(slot => !slot.recurring)
       .forEach(slot => {
         const slotDate = new Date(slot.start_date_time);
         const dateStr = format(slotDate, 'yyyy-MM-dd');
         
-        // One-time slots override recurring ones
         if (slot.is_available) {
-          map.set(dateStr, true);
-        } else {
-          // For unavailable slots, we'll set to false to disable the date
-          map.set(dateStr, false);
+          dateHasAvailableSlots.set(dateStr, true);
         }
       });
+    
+    // Now update the main map based on available slots
+    dateHasAvailableSlots.forEach((hasAvailable, dateStr) => {
+      if (hasAvailable) {
+        map.set(dateStr, true);
+      }
+    });
     
     return map;
   }, [mentorAvailabilityData, nextTwoMonths]);

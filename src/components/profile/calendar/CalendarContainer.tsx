@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -41,9 +42,9 @@ export function CalendarContainer({
       return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
     });
 
+    // If there's at least one available slot, consider the day available
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
     
-    // We only need to check if there are available slots
     if (hasAvailable) return 'available';
     return null;
   };
