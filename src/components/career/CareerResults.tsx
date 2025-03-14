@@ -1,7 +1,9 @@
+
 import { CareerCard } from "@/components/CareerCard";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface CareerResultsProps {
   filteredCareers: Tables<"careers">[];
@@ -9,6 +11,8 @@ interface CareerResultsProps {
 }
 
 export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps) => {
+  const navigate = useNavigate();
+  
   // Filter for complete careers only
   const completeCareers = filteredCareers.filter(career => career.complete_career);
 
@@ -25,6 +29,10 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
+  };
+
+  const handleCareerClick = (careerId: string) => {
+    navigate(`/career?dialog=true&careerId=${careerId}`);
   };
 
   if (isLoading) {
@@ -47,7 +55,10 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
       >
         {completeCareers.map((career) => (
           <motion.div key={career.id} variants={item}>
-            <CareerCard {...career} />
+            <CareerCard 
+              {...career} 
+              onClick={() => handleCareerClick(career.id)}
+            />
           </motion.div>
         ))}
       </motion.div>

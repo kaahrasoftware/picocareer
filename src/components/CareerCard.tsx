@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ArrowRight } from 'lucide-react';
 
 export interface CareerCardProps {
   id: string;
@@ -35,8 +36,15 @@ export function CareerCard({
   // Use salary_range if provided, otherwise use salary
   const displaySalary = salary_range || salary;
 
+  const handleCardClick = () => {
+    if (onClick) onClick();
+  };
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+    <Card 
+      className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="flex-1 pt-6">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold">{title}</h3>
@@ -98,10 +106,14 @@ export function CareerCard({
       <CardFooter className="border-t pt-4">
         <Button 
           variant="outline" 
-          className="w-full" 
-          onClick={onClick}
+          className="w-full flex items-center justify-center gap-1" 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onClick) onClick();
+          }}
         >
           View Details
+          <ArrowRight className="h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>
