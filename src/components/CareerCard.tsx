@@ -36,14 +36,10 @@ export function CareerCard({
   // Use salary_range if provided, otherwise use salary
   const displaySalary = salary_range || salary;
 
-  const handleCardClick = () => {
-    if (onClick) onClick();
-  };
-
   return (
     <Card 
       className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer"
-      onClick={handleCardClick}
+      onClick={onClick}
     >
       <CardContent className="flex-1 pt-6">
         <div className="flex justify-between items-start mb-2">

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { CareerCard } from "@/components/CareerCard";
 import { CareerListDialog } from "@/components/CareerListDialog";
@@ -10,10 +11,16 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useNavigate } from "react-router-dom";
 
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: careers = [], isLoading, error } = useFeaturedCareers();
+  const navigate = useNavigate();
+
+  const handleCareerClick = (careerId: string) => {
+    navigate(`/career?dialog=true&careerId=${careerId}`);
+  };
 
   // Return loading state first
   if (isLoading) {
@@ -55,23 +62,29 @@ export const FeaturedCareersSection = () => {
           View all
         </Link>
       </div>
-      <div className="relative -mx-8">
+      <div className="relative -mx-4 sm:-mx-6 md:-mx-8">
         <Carousel
           opts={{
             align: "start",
             loop: true,
           }}
-          className="w-full px-8"
+          className="w-full px-4 sm:px-6 md:px-8"
         >
           <CarouselContent className="-ml-4">
             {careers.map((career) => (
-              <CarouselItem key={career.id} className="pl-4 basis-full md:basis-1/3">
-                <CareerCard {...career} />
+              <CarouselItem 
+                key={career.id} 
+                className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 transition-all duration-300"
+              >
+                <CareerCard 
+                  {...career} 
+                  onClick={() => handleCareerClick(career.id)} 
+                />
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 h-8 w-8" />
-          <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselPrevious className="hidden sm:flex absolute -left-2 sm:-left-3 md:-left-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselNext className="hidden sm:flex absolute -right-2 sm:-right-3 md:-right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
         </Carousel>
       </div>
       <CareerListDialog
