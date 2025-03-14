@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 export default function Career() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
@@ -83,6 +84,15 @@ export default function Career() {
     setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
   };
 
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("dialog");
+      newSearchParams.delete("careerId");
+      navigate(`${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`, { replace: true });
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="flex flex-col space-y-12">
@@ -144,15 +154,7 @@ export default function Career() {
         <CareerDetailsDialog
           careerId={dialogCareerId}
           open={shouldOpenDialog}
-          onOpenChange={(open) => {
-            // Update URL when dialog is closed
-            if (!open) {
-              const newSearchParams = new URLSearchParams(searchParams);
-              newSearchParams.delete("dialog");
-              newSearchParams.delete("careerId");
-              window.history.replaceState({}, "", `${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`);
-            }
-          }}
+          onOpenChange={handleDialogOpenChange}
         />
       )}
     </div>

@@ -1,6 +1,8 @@
+
 import {
   Dialog,
   DialogContent,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +13,8 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { toast } from "sonner";
 import { DialogHeaderSection } from "./career-details/DialogHeaderSection";
 import { DialogContent as CareerDialogContent } from "./career-details/DialogContent";
+import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -31,6 +35,7 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   const queryClient = useQueryClient();
   const { session } = useAuthSession();
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const navigate = useNavigate();
 
   const { data: career, isLoading } = useQuery({
     queryKey: ['career', careerId],
@@ -159,6 +164,15 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
     toast.success("Career details copied to clipboard!");
   };
 
+  const handleCloseDialog = () => {
+    // Call the onOpenChange prop to update the parent component's state
+    onOpenChange(false);
+    
+    // Update the URL by removing the dialog and careerId params
+    const currentPath = window.location.pathname;
+    navigate(currentPath, { replace: true });
+  };
+
   useEffect(() => {
     if (!open || !careerId) return;
 
@@ -195,8 +209,12 @@ export function CareerDetailsDialog({ careerId, open, onOpenChange }: CareerDeta
   if (!career) return <div>Career not found</div>;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleCloseDialog}>
       <DialogContent className="max-w-4xl max-h-[90vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-0">
+        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
         <DialogHeaderSection
           title={career.title}
           profilesCount={career.profiles_count || 0}
