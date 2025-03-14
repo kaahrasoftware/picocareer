@@ -11,15 +11,24 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useNavigate } from "react-router-dom";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 
 export const FeaturedCareersSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: careers = [], isLoading, error } = useFeaturedCareers();
-  const navigate = useNavigate();
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   const handleCareerClick = (careerId: string) => {
-    navigate(`/career?dialog=true&careerId=${careerId}`);
+    setSelectedCareerId(careerId);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleDetailsDialogOpenChange = (open: boolean) => {
+    setIsDetailsDialogOpen(open);
+    if (!open) {
+      setSelectedCareerId(null);
+    }
   };
 
   // Return loading state first
@@ -87,11 +96,20 @@ export const FeaturedCareersSection = () => {
           <CarouselNext className="hidden sm:flex absolute -right-2 sm:-right-3 md:-right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
         </Carousel>
       </div>
+      
       <CareerListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         careers={careers}
       />
+      
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={isDetailsDialogOpen}
+          onOpenChange={handleDetailsDialogOpenChange}
+        />
+      )}
     </section>
   );
 };
