@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { TimeSlotsGrid } from "./TimeSlotsGrid";
 import { SessionType } from "@/types/database/mentors";
@@ -41,13 +40,11 @@ export function TimeSlotSelector({
     mentorTimezone || 'UTC'
   );
 
-  // Check for DST transition around the selected date
   const { data: dstTransitionInfo, isLoading: isLoadingDSTInfo } = useQuery({
     queryKey: ['dst-transition', date.toISOString(), mentorTimezone],
     queryFn: async () => {
       if (!mentorTimezone) return { isDSTTransition: false };
       
-      // Check the day before and after for offset changes
       const prevDay = new Date(date);
       prevDay.setDate(prevDay.getDate() - 1);
       
@@ -55,7 +52,6 @@ export function TimeSlotSelector({
       nextDay.setDate(nextDay.getDate() + 1);
       
       try {
-        // Get timezone offset for each day (in minutes)
         const dateDate = new Date(date.setHours(12,0,0,0));
         const prevDate = new Date(prevDay.setHours(12,0,0,0));
         const nextDate = new Date(nextDay.setHours(12,0,0,0));
@@ -64,7 +60,6 @@ export function TimeSlotSelector({
         const prevOffset = prevDate.getTimezoneOffset();
         const nextOffset = nextDate.getTimezoneOffset();
         
-        // If offset changes on either side, it's a DST transition day
         const isDSTTransition = dateOffset !== prevOffset || dateOffset !== nextOffset;
         
         const direction = isDSTTransition ? 
