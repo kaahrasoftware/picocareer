@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -68,7 +69,7 @@ export function useProfileDetailsData(userId: string, open: boolean, session: an
         throw error;
       }
     },
-    enabled: !!userId && open && !!session,
+    enabled: !!userId && open, // Remove session dependency to allow public access
     retry: 1,
   });
 
