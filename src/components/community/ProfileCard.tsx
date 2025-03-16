@@ -31,24 +31,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
     : profile.school_name || "No school set";
 
   const handleViewProfile = () => {
-    if (!session) {
-      toast({
-        title: "Authentication Required",
-        description: "Join our community to connect with amazing mentors and unlock your career potential!",
-        variant: "default",
-        className: "bg-green-50 border-green-200",
-        action: (
-          <Button
-            onClick={() => navigate("/auth")}
-            className="bg-green-500 text-white hover:bg-green-600"
-            size="sm"
-          >
-            Login
-          </Button>
-        ),
-      });
-      return;
-    }
     setShowDetails(true);
   };
 
@@ -57,7 +39,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
         <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative flex flex-col h-full">
-          {/* Header Section with Avatar and Basic Info */}
           <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
               avatarUrl={profile.avatar_url}
@@ -95,14 +76,12 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </div>
           </div>
 
-          {/* Bio Section */}
           {profile.bio && (
             <div className="w-full mb-4">
               <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
             </div>
           )}
 
-          {/* Skills Section */}
           {profile.skills?.length > 0 && (
             <div className="w-full mb-4">
               <h4 className="text-sm font-medium mb-2">Skills</h4>
@@ -128,7 +107,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </div>
           )}
 
-          {/* Fields of Interest Section */}
           {profile.fields_of_interest?.length > 0 && (
             <div className="w-full mb-4">
               <h4 className="text-sm font-medium mb-2">Fields of Interest</h4>
@@ -154,7 +132,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </div>
           )}
 
-          {/* Keywords Section */}
           {profile.keywords?.length > 0 && (
             <div className="w-full mb-4">
               <h4 className="text-sm font-medium mb-2">Keywords</h4>
@@ -180,7 +157,6 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </div>
           )}
 
-          {/* Button Section */}
           <div className="mt-auto w-full">
             <Button 
               variant="outline" 
