@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -15,7 +16,26 @@ export function useSearchCareers() {
 
       console.log("Searching careers with query:", searchQuery);
 
-      const { data: careers, error } = await supabase
+      // First, get exact matches (higher relevance)
+      const { data: exactMatches, error: exactError } = await supabase
+        .from("careers")
+        .select(`
+          id,
+          title,
+          description,
+          salary_range,
+          complete_career
+        `)
+        .eq('complete_career', true)
+        .ilike('title', `%${searchQuery}%`)
+        .limit(10);
+
+      if (exactError) {
+        console.error("Error searching exact career matches:", exactError);
+      }
+
+      // Then get partial matches in description and other fields
+      const { data: partialMatches, error: partialError } = await supabase
         .from("careers")
         .select(`
           id,
@@ -26,16 +46,21 @@ export function useSearchCareers() {
         `)
         .eq('complete_career', true)
         .or(
-          `title.ilike.%${searchQuery}%,` +
           `description.ilike.%${searchQuery}%,` +
           `academic_majors.cs.{${searchQuery}}`
         )
-        .limit(20);
+        .not('title', 'ilike', `%${searchQuery}%`) // Exclude titles we already got in exactMatches
+        .limit(15);
 
-      if (error) {
-        console.error("Error searching careers:", error);
-        return [];
+      if (partialError) {
+        console.error("Error searching partial career matches:", partialError);
       }
+
+      // Combine results with exact matches first
+      const careers = [
+        ...(exactMatches || []),
+        ...(partialMatches || [])
+      ];
 
       console.log("Career search results:", careers);
       return careers;
