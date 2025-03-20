@@ -16,6 +16,7 @@ import { ContentManagementDropdown } from "./content/ContentManagementDropdown";
 import { ContentEmptyState } from "./content/ContentEmptyState";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface ProfileContentTabProps {
   profileId: string;
@@ -25,15 +26,15 @@ type ContentType = "blogs" | "hub_resources" | "mentor_resources" | "all";
 type TimeFilter = "all" | "week" | "month" | "3months";
 
 export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
+  const [activeTab, setActiveTab] = useState("all");
   const [contentType, setContentType] = useState<ContentType>("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
-  const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
-
-  useEffect(() => {
-    console.log("ProfileContentTab render with profileId:", profileId);
-  }, [profileId]);
+  const { session } = useAuthSession();
+  
+  // Check if the current user is viewing their own profile
+  const isOwnProfile = session?.user?.id === profileId;
 
   // Function to get date threshold based on time filter
   const getDateThreshold = (filter: TimeFilter): Date | null => {
@@ -46,16 +47,24 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     }
   };
 
-  // Blogs query
-  const { data: blogs, isLoading: isLoadingBlogs, error: blogsError } = useQuery({
+  // Blogs query - using fixed table name instead of dynamic variable
+  const { data: blogs = [], isLoading: isLoadingBlogs } = useQuery({
     queryKey: ['profile-blogs', profileId, timeFilter],
     queryFn: async () => {
       console.log('Fetching blogs for profile:', profileId);
-      const { data, error } = await supabase
+      
+      // Build the query - for non-owners, only show published content
+      let query = supabase
         .from('blogs')
         .select('*')
-        .eq('author_id', profileId)
-        .order('created_at', { ascending: false });
+        .eq('author_id', profileId);
+      
+      // If not the owner, only show public content
+      if (!isOwnProfile) {
+        query = query.eq('status', 'Published');
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching blogs:', error);
@@ -68,16 +77,24 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     enabled: !!profileId,
   });
 
-  // Hub Resources query
-  const { data: hubResources, isLoading: isLoadingHubResources, error: hubResourcesError } = useQuery({
+  // Hub Resources query - using fixed table name instead of dynamic variable
+  const { data: hubResources = [], isLoading: isLoadingHubResources } = useQuery({
     queryKey: ['profile-hub-resources', profileId, timeFilter],
     queryFn: async () => {
       console.log('Fetching hub resources for profile:', profileId);
-      const { data, error } = await supabase
+      
+      // Build the query - for non-owners, only show published content
+      let query = supabase
         .from('hub_resources')
         .select('*')
-        .eq('created_by', profileId)
-        .order('created_at', { ascending: false });
+        .eq('created_by', profileId);
+      
+      // If not the owner, only show public content
+      if (!isOwnProfile) {
+        query = query.eq('status', 'Published');
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching hub resources:', error);
@@ -90,16 +107,24 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     enabled: !!profileId,
   });
 
-  // Mentor Resources query
-  const { data: mentorResources, isLoading: isLoadingMentorResources, error: mentorResourcesError } = useQuery({
+  // Mentor Resources query - using fixed table name instead of dynamic variable
+  const { data: mentorResources = [], isLoading: isLoadingMentorResources } = useQuery({
     queryKey: ['profile-mentor-resources', profileId, timeFilter],
     queryFn: async () => {
       console.log('Fetching mentor resources for profile:', profileId);
-      const { data, error } = await supabase
+      
+      // Build the query - for non-owners, only show published content
+      let query = supabase
         .from('mentor_resources')
         .select('*')
-        .eq('mentor_id', profileId)
-        .order('created_at', { ascending: false });
+        .eq('mentor_id', profileId);
+      
+      // If not the owner, only show public content
+      if (!isOwnProfile) {
+        query = query.eq('status', 'Published');
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching mentor resources:', error);
@@ -111,19 +136,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     },
     enabled: !!profileId,
   });
-
-  // Check for errors
-  useEffect(() => {
-    if (blogsError) {
-      console.error('Error in blogs query:', blogsError);
-    }
-    if (hubResourcesError) {
-      console.error('Error in hub resources query:', hubResourcesError);
-    }
-    if (mentorResourcesError) {
-      console.error('Error in mentor resources query:', mentorResourcesError);
-    }
-  }, [blogsError, hubResourcesError, mentorResourcesError]);
 
   // Apply time filter to content
   const filterContentByTime = (items: any[] = []) => {
@@ -170,15 +182,25 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     }
   };
 
-  const handleManageContent = async (action: string, item: any, contentType: string) => {
+  const handleManageContent = async (action: string, item: any, contentTableName: string) => {
+    // Only allow content management for authenticated users who own the content
+    if (!session || session.user.id !== profileId) {
+      toast({
+        title: "Unauthorized",
+        description: "You must be signed in and own this content to manage it.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      console.log(`Managing ${contentType} action:`, action, 'item:', item.id);
+      console.log(`Managing ${contentTableName} action:`, action, 'item:', item.id);
       
       switch (action) {
         case "delete":
           if (window.confirm("Are you sure you want to delete this content? This action cannot be undone.")) {
             const { error } = await supabase
-              .from(contentType)
+              .from(contentTableName)
               .delete()
               .eq('id', item.id);
             
@@ -193,7 +215,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           
         case "hide":
           const { error: hideError } = await supabase
-            .from(contentType)
+            .from(contentTableName)
             .update({ status: "Hidden" })
             .eq('id', item.id);
           
@@ -207,7 +229,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           
         case "show":
           const { error: showError } = await supabase
-            .from(contentType)
+            .from(contentTableName)
             .update({ status: "Published" })
             .eq('id', item.id);
           
@@ -247,7 +269,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     }
     
     // For mentor_resources
-    if ('resource_type' in item && !('file_url' in item && 'resource_type' in item)) {
+    if ('resource_type' in item && !('file_url' in item)) {
       const resourceType = item.resource_type;
       if (resourceType === 'text') return <FileText className="h-5 w-5 text-blue-500" />;
       if (resourceType === 'document') return <File className="h-5 w-5 text-amber-500" />;
@@ -267,7 +289,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     if ('resource_type' in item && 'file_url' in item) {
       return `Hub ${item.resource_type.charAt(0).toUpperCase() + item.resource_type.slice(1)}`;
     }
-    if ('resource_type' in item && !('file_url' in item && 'resource_type' in item)) {
+    if ('resource_type' in item && !('file_url' in item)) {
       return `${item.resource_type.charAt(0).toUpperCase() + item.resource_type.slice(1)} Post`;
     }
     return 'Content';
@@ -277,16 +299,9 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   const getContentTable = (item: any): string => {
     if ('summary' in item) return 'blogs';
     if ('resource_type' in item && 'file_url' in item) return 'hub_resources';
-    if ('resource_type' in item && !('file_url' in item && 'resource_type' in item)) return 'mentor_resources';
+    if ('resource_type' in item && !('file_url' in item)) return 'mentor_resources';
     return '';
   };
-
-  console.log("Current content counts:", {
-    blogs: filteredBlogs?.length || 0,
-    hubResources: filteredHubResources?.length || 0,
-    mentorResources: filteredMentorResources?.length || 0,
-    all: allContent.length
-  });
 
   return (
     <ScrollArea className="h-full">
@@ -380,8 +395,8 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           ) : contentToDisplay && contentToDisplay.length > 0 ? (
             <div className="space-y-4">
               {contentToDisplay.map((item) => {
-                const contentType = getContentTypeText(item);
-                const contentTable = getContentTable(item);
+                const contentTypeText = getContentTypeText(item);
+                const contentTableName = getContentTable(item);
                 
                 return (
                   <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
@@ -398,9 +413,9 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                 <span>{format(new Date(item.created_at), 'MMM d, yyyy')}</span>
                                 <span className="mx-1.5">•</span>
                                 <Badge variant="outline" className="text-xs h-5">
-                                  {contentType}
+                                  {contentTypeText}
                                 </Badge>
-                                {item.status && item.status !== "Published" && (
+                                {item.status && item.status !== "Published" && isOwnProfile && (
                                   <>
                                     <span className="mx-1.5">•</span>
                                     <Badge variant="secondary" className="text-xs h-5">
@@ -411,11 +426,13 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                               </div>
                             </div>
                           </div>
-                          <ContentManagementDropdown 
-                            item={item} 
-                            contentType={contentTable} 
-                            onAction={(action) => handleManageContent(action, item, contentTable)}
-                          />
+                          {isOwnProfile && (
+                            <ContentManagementDropdown 
+                              item={item} 
+                              contentType={contentTableName} 
+                              onAction={(action) => handleManageContent(action, item, contentTableName)}
+                            />
+                          )}
                         </CardHeader>
                         <CardContent className="pt-0 pb-4">
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
@@ -428,10 +445,11 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                   <Badge key={idx} variant="secondary" className="text-xs">
                                     {category}
                                   </Badge>
-                                )) : 
-                                <Badge variant="secondary" className="text-xs">
-                                  {item.categories}
-                                </Badge>
+                                )) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {item.categories}
+                                  </Badge>
+                                )
                               }
                             </div>
                           )}
@@ -471,7 +489,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                 <span>{format(new Date(blog.created_at), 'MMM d, yyyy')}</span>
                                 <span className="mx-1.5">•</span>
                                 <Badge variant="outline" className="text-xs h-5">Blog</Badge>
-                                {blog.status && blog.status !== "Published" && (
+                                {blog.status && blog.status !== "Published" && isOwnProfile && (
                                   <>
                                     <span className="mx-1.5">•</span>
                                     <Badge variant="secondary" className="text-xs h-5">
@@ -482,11 +500,13 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                               </div>
                             </div>
                           </div>
-                          <ContentManagementDropdown 
-                            item={blog} 
-                            contentType="blogs" 
-                            onAction={(action) => handleManageContent(action, blog, "blogs")}
-                          />
+                          {isOwnProfile && (
+                            <ContentManagementDropdown 
+                              item={blog} 
+                              contentType="blogs" 
+                              onAction={(action) => handleManageContent(action, blog, "blogs")}
+                            />
+                          )}
                         </CardHeader>
                         <CardContent className="pt-0 pb-4">
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{blog.summary}</p>
@@ -497,10 +517,11 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                   <Badge key={idx} variant="secondary" className="text-xs">
                                     {category}
                                   </Badge>
-                                )) : 
-                                <Badge variant="secondary" className="text-xs">
-                                  {blog.categories}
-                                </Badge>
+                                )) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {blog.categories}
+                                  </Badge>
+                                )
                               }
                             </div>
                           )}
@@ -516,6 +537,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           ) : null}
         </TabsContent>
           
+        {/* Similar pattern for hub_resources and mentor_resources tabs */}
         <TabsContent value="hub_resources" className="mt-0 space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -545,7 +567,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                 <Badge variant="outline" className="text-xs h-5">
                                   Hub {resource.resource_type.charAt(0).toUpperCase() + resource.resource_type.slice(1)}
                                 </Badge>
-                                {resource.status && resource.status !== "Published" && (
+                                {resource.status && resource.status !== "Published" && isOwnProfile && (
                                   <>
                                     <span className="mx-1.5">•</span>
                                     <Badge variant="secondary" className="text-xs h-5">
@@ -556,11 +578,13 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                               </div>
                             </div>
                           </div>
-                          <ContentManagementDropdown 
-                            item={resource} 
-                            contentType="hub_resources" 
-                            onAction={(action) => handleManageContent(action, resource, "hub_resources")}
-                          />
+                          {isOwnProfile && (
+                            <ContentManagementDropdown 
+                              item={resource} 
+                              contentType="hub_resources" 
+                              onAction={(action) => handleManageContent(action, resource, "hub_resources")}
+                            />
+                          )}
                         </CardHeader>
                         <CardContent className="pt-0 pb-4">
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{resource.description}</p>
@@ -614,7 +638,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                 <Badge variant="outline" className="text-xs h-5">
                                   {resource.resource_type.charAt(0).toUpperCase() + resource.resource_type.slice(1)} Post
                                 </Badge>
-                                {resource.status && resource.status !== "Published" && (
+                                {resource.status && resource.status !== "Published" && isOwnProfile && (
                                   <>
                                     <span className="mx-1.5">•</span>
                                     <Badge variant="secondary" className="text-xs h-5">
@@ -625,11 +649,13 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                               </div>
                             </div>
                           </div>
-                          <ContentManagementDropdown 
-                            item={resource} 
-                            contentType="mentor_resources" 
-                            onAction={(action) => handleManageContent(action, resource, "mentor_resources")}
-                          />
+                          {isOwnProfile && (
+                            <ContentManagementDropdown 
+                              item={resource} 
+                              contentType="mentor_resources" 
+                              onAction={(action) => handleManageContent(action, resource, "mentor_resources")}
+                            />
+                          )}
                         </CardHeader>
                         <CardContent className="pt-0 pb-4">
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
@@ -642,10 +668,11 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                   <Badge key={idx} variant="secondary" className="text-xs">
                                     {category}
                                   </Badge>
-                                )) : 
-                                <Badge variant="secondary" className="text-xs">
-                                  {resource.categories}
-                                </Badge>
+                                )) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {resource.categories}
+                                  </Badge>
+                                )
                               }
                             </div>
                           )}
