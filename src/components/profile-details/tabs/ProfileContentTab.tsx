@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, BookOpen, Calendar, Filter, Search, SortDesc, Video, Image, File, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -31,6 +31,10 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
+  useEffect(() => {
+    console.log("ProfileContentTab render with profileId:", profileId);
+  }, [profileId]);
+
   // Function to get date threshold based on time filter
   const getDateThreshold = (filter: TimeFilter): Date | null => {
     const now = new Date();
@@ -43,52 +47,83 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   };
 
   // Blogs query
-  const { data: blogs, isLoading: isLoadingBlogs } = useQuery({
+  const { data: blogs, isLoading: isLoadingBlogs, error: blogsError } = useQuery({
     queryKey: ['profile-blogs', profileId, timeFilter],
     queryFn: async () => {
+      console.log('Fetching blogs for profile:', profileId);
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
         .eq('author_id', profileId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching blogs:', error);
+        throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} blogs for profile ${profileId}`);
       return data || [];
     },
     enabled: !!profileId,
   });
 
   // Hub Resources query
-  const { data: hubResources, isLoading: isLoadingHubResources } = useQuery({
+  const { data: hubResources, isLoading: isLoadingHubResources, error: hubResourcesError } = useQuery({
     queryKey: ['profile-hub-resources', profileId, timeFilter],
     queryFn: async () => {
+      console.log('Fetching hub resources for profile:', profileId);
       const { data, error } = await supabase
         .from('hub_resources')
         .select('*')
         .eq('created_by', profileId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hub resources:', error);
+        throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} hub resources for profile ${profileId}`);
       return data || [];
     },
     enabled: !!profileId,
   });
 
   // Mentor Resources query
-  const { data: mentorResources, isLoading: isLoadingMentorResources } = useQuery({
+  const { data: mentorResources, isLoading: isLoadingMentorResources, error: mentorResourcesError } = useQuery({
     queryKey: ['profile-mentor-resources', profileId, timeFilter],
     queryFn: async () => {
+      console.log('Fetching mentor resources for profile:', profileId);
       const { data, error } = await supabase
         .from('mentor_resources')
         .select('*')
         .eq('mentor_id', profileId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching mentor resources:', error);
+        throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} mentor resources for profile ${profileId}`);
       return data || [];
     },
     enabled: !!profileId,
   });
+
+  // Check for errors
+  useEffect(() => {
+    if (blogsError) {
+      console.error('Error in blogs query:', blogsError);
+    }
+    if (hubResourcesError) {
+      console.error('Error in hub resources query:', hubResourcesError);
+    }
+    if (mentorResourcesError) {
+      console.error('Error in mentor resources query:', mentorResourcesError);
+    }
+  }, [blogsError, hubResourcesError, mentorResourcesError]);
 
   // Apply time filter to content
   const filterContentByTime = (items: any[] = []) => {
@@ -137,6 +172,8 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
 
   const handleManageContent = async (action: string, item: any, contentType: string) => {
     try {
+      console.log(`Managing ${contentType} action:`, action, 'item:', item.id);
+      
       switch (action) {
         case "delete":
           if (window.confirm("Are you sure you want to delete this content? This action cannot be undone.")) {
@@ -243,6 +280,13 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     if ('resource_type' in item && !('file_url' in item && 'resource_type' in item)) return 'mentor_resources';
     return '';
   };
+
+  console.log("Current content counts:", {
+    blogs: filteredBlogs?.length || 0,
+    hubResources: filteredHubResources?.length || 0,
+    mentorResources: filteredMentorResources?.length || 0,
+    all: allContent.length
+  });
 
   return (
     <ScrollArea className="h-full">
@@ -448,11 +492,16 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{blog.summary}</p>
                           {blog.categories && (
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                              {blog.categories.map((category: string, idx: number) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {category}
+                              {Array.isArray(blog.categories) ? 
+                                blog.categories.map((category: string, idx: number) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {category}
+                                  </Badge>
+                                )) : 
+                                <Badge variant="secondary" className="text-xs">
+                                  {blog.categories}
                                 </Badge>
-                              ))}
+                              }
                             </div>
                           )}
                         </CardContent>
@@ -496,6 +545,14 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                 <Badge variant="outline" className="text-xs h-5">
                                   Hub {resource.resource_type.charAt(0).toUpperCase() + resource.resource_type.slice(1)}
                                 </Badge>
+                                {resource.status && resource.status !== "Published" && (
+                                  <>
+                                    <span className="mx-1.5">•</span>
+                                    <Badge variant="secondary" className="text-xs h-5">
+                                      {resource.status}
+                                    </Badge>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -575,12 +632,21 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                           />
                         </CardHeader>
                         <CardContent className="pt-0 pb-4">
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{resource.hashtags ? resource.hashtags.join(', ') : 'No hashtags'}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                            {resource.description || (resource.hashtags ? resource.hashtags.join(', ') : 'No description')}
+                          </p>
                           {resource.categories && (
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                              <Badge variant="secondary" className="text-xs">
-                                {resource.categories}
-                              </Badge>
+                              {Array.isArray(resource.categories) ? 
+                                resource.categories.map((category: string, idx: number) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {category}
+                                  </Badge>
+                                )) : 
+                                <Badge variant="secondary" className="text-xs">
+                                  {resource.categories}
+                                </Badge>
+                              }
                             </div>
                           )}
                         </CardContent>
