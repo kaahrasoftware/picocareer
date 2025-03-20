@@ -101,7 +101,8 @@ const textFields: FormFieldProps[] = [
 
 // Function to get folder path for specific user content
 const getMentorContentFolderPath = (profileId: string, contentType: string) => {
-  // Updated to use the new path format: /mentor_resources/{mentorId}
+  // Use the path format: /mentor_resources/{mentorId}
+  // No content type subfolder, just the mentor ID directly
   return `${profileId}`;
 };
 

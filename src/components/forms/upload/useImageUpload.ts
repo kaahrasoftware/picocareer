@@ -33,6 +33,7 @@ export function useImageUpload({
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       
       // Use folderPath if provided, otherwise create a default path
+      // This ensures we maintain the /mentor_resources/{mentorId}/{fileName} structure
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
       // Ensure file size is properly captured in bytes (browser's File API reports size in bytes)
