@@ -99,6 +99,11 @@ const textFields: FormFieldProps[] = [
   },
 ];
 
+// Function to get folder path for specific user content
+const getMentorContentFolderPath = (profileId: string, contentType: string) => {
+  return `mentors/${profileId}/${contentType}`;
+};
+
 // Document specific fields
 const documentFields: FormFieldProps[] = [
   {
@@ -116,6 +121,7 @@ const documentFields: FormFieldProps[] = [
     bucket: "mentor_resources",
     description: "Upload your document (PDF, Word, PowerPoint, Excel)",
     required: true,
+    getFolderPath: (profileId: string) => getMentorContentFolderPath(profileId, 'documents'),
   },
 ];
 
@@ -128,6 +134,7 @@ const imageFields: FormFieldProps[] = [
     bucket: "mentor_resources",
     description: "Upload an image",
     required: true,
+    getFolderPath: (profileId: string) => getMentorContentFolderPath(profileId, 'images'),
   },
 ];
 
@@ -140,6 +147,7 @@ const videoFields: FormFieldProps[] = [
     bucket: "mentor_resources",
     description: "Upload a video file",
     required: true,
+    getFolderPath: (profileId: string) => getMentorContentFolderPath(profileId, 'videos'),
   },
 ];
 
@@ -152,6 +160,7 @@ const audioFields: FormFieldProps[] = [
     bucket: "mentor_resources",
     description: "Upload an audio file",
     required: true,
+    getFolderPath: (profileId: string) => getMentorContentFolderPath(profileId, 'audio'),
   },
 ];
 

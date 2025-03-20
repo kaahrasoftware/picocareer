@@ -31,6 +31,8 @@ export function useImageUpload({
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      // Use folderPath if provided, otherwise create a default path
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
       // Ensure file size is properly captured in bytes (browser's File API reports size in bytes)
@@ -45,11 +47,19 @@ export function useImageUpload({
 
       // First try to remove any existing file if there is one
       if (field.value) {
-        const existingFilePath = field.value.split('/').slice(-4).join('/'); // Get last 4 segments (e.g., hubs/[hubId]/logos/[filename])
         try {
-          await supabase.storage
-            .from(bucket)
-            .remove([existingFilePath]);
+          // Extract path from the full URL
+          const existingUrl = new URL(field.value);
+          const pathnameParts = existingUrl.pathname.split('/');
+          const bucketIndex = pathnameParts.findIndex(part => part === 'storage') + 2;
+          const existingFilePath = bucketIndex > 1 ? pathnameParts.slice(bucketIndex).join('/') : null;
+          
+          if (existingFilePath) {
+            await supabase.storage
+              .from(bucket)
+              .remove([existingFilePath]);
+            console.log('Removed existing file:', existingFilePath);
+          }
         } catch (removeError) {
           console.warn('Could not remove existing file:', removeError);
           // Continue with upload even if remove fails
@@ -103,21 +113,24 @@ export function useImageUpload({
   ) => {
     try {
       if (field.value) {
-        // Extract path segments for hub resources (hubs/[hubId]/[type]/[filename])
-        const pathParts = field.value.split('/');
-        const filePath = pathParts.slice(-4).join('/');
-
-        console.log('Removing file:', {
-          bucket,
-          filePath
-        });
-
-        const { error } = await supabase.storage
-          .from(bucket)
-          .remove([filePath]);
-
-        if (error) {
-          throw error;
+        try {
+          // Extract path from the full URL
+          const existingUrl = new URL(field.value);
+          const pathnameParts = existingUrl.pathname.split('/');
+          const bucketIndex = pathnameParts.findIndex(part => part === 'storage') + 2;
+          const existingFilePath = bucketIndex > 1 ? pathnameParts.slice(bucketIndex).join('/') : null;
+          
+          if (existingFilePath) {
+            const { error } = await supabase.storage
+              .from(bucket)
+              .remove([existingFilePath]);
+              
+            if (error) throw error;
+            console.log('Removed file:', existingFilePath);
+          }
+        } catch (removeError) {
+          console.warn('Error parsing file path:', removeError);
+          // Continue even if remove fails
         }
       }
 

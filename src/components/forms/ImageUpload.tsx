@@ -6,6 +6,8 @@ import { Control } from "react-hook-form";
 import { UploadButton } from "./upload/UploadButton";
 import { ImagePreview } from "./upload/ImagePreview";
 import { useImageUpload } from "./upload/useImageUpload";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface ImageUploadProps {
   control: Control<any>;
@@ -16,6 +18,7 @@ interface ImageUploadProps {
   accept?: string;
   onUploadSuccess?: (url: string) => void;
   folderPath?: string;
+  getFolderPath?: (profileId: string) => string;
 }
 
 export function ImageUpload({
@@ -26,11 +29,23 @@ export function ImageUpload({
   bucket,
   accept = "image/*",
   onUploadSuccess,
-  folderPath
+  folderPath,
+  getFolderPath
 }: ImageUploadProps) {
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  
+  // Determine the appropriate folder path
+  let finalFolderPath = folderPath;
+  
+  // If getFolderPath is provided and a profile exists, use the dynamic path
+  if (getFolderPath && profile?.id) {
+    finalFolderPath = getFolderPath(profile.id);
+  }
+  
   const { uploading, handleUpload, handleRemove } = useImageUpload({
     bucket,
-    folderPath,
+    folderPath: finalFolderPath,
     onUploadSuccess
   });
 
