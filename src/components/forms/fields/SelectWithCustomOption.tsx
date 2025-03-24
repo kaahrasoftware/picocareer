@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce, useDebouncedCallback } from "@/hooks/useDebounce";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -37,35 +37,46 @@ export function SelectWithCustomOption({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [localOptions, setLocalOptions] = useState<Array<{ id: string; title?: string; name?: string; }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   
-  // Debounce the search query to prevent rapid API calls
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  // Use a longer debounce time to give user more time to type
+  const debouncedSearchQuery = useDebounce(searchQuery, 800);
 
-  // Fetch all options for the given table with debounced search
+  // Pre-populate with provided options
+  useEffect(() => {
+    if (options && options.length > 0) {
+      setLocalOptions(options);
+    }
+  }, [options]);
+
+  // Fetch options for the given table with debounced search
   const { data: allOptions, isLoading } = useQuery({
     queryKey: [tableName, 'all', debouncedSearchQuery],
     queryFn: async () => {
+      if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
+        return options; // Return the initial options if search query is too short
+      }
+      
+      setIsSearching(true);
       console.log(`Fetching ${tableName} with search: ${debouncedSearchQuery}`);
-      let allData = [];
-      let offset = 0;
-      const limit = 1000;
-      let hasMore = true;
-
-      while (hasMore) {
-        console.log(`Fetching batch with offset: ${offset}`);
+      
+      try {
+        // Ensure query is safe
+        const safeQuery = String(debouncedSearchQuery).toLowerCase();
+        
         let query = supabase
           .from(tableName)
           .select('id, name, title')
-          .limit(limit)
-          .offset(offset);
+          .limit(50); // Limit to 50 results for performance
 
         // Add search filter if query exists
-        if (debouncedSearchQuery) {
+        if (safeQuery) {
           if (tableName === 'majors' || tableName === 'careers') {
-            query = query.ilike('title', `%${debouncedSearchQuery}%`);
+            query = query.ilike('title', `%${safeQuery}%`);
           } else {
-            query = query.ilike('name', `%${debouncedSearchQuery}%`);
+            query = query.ilike('name', `%${safeQuery}%`);
           }
         }
 
@@ -79,30 +90,47 @@ export function SelectWithCustomOption({
           throw error;
         }
 
-        if (!data || data.length === 0) {
-          console.log('No more data to fetch');
-          hasMore = false;
-          break;
-        }
-
-        console.log(`Fetched ${data.length} records in this batch`);
-        allData = [...allData, ...data];
-        
-        if (data.length < limit) {
-          console.log('Last batch reached (less than limit records returned)');
-          hasMore = false;
-        } else {
-          offset += limit;
-          console.log(`Moving to next batch, offset: ${offset}`);
-        }
+        console.log(`Fetched ${data?.length || 0} ${tableName}`);
+        return data || [];
+      } catch (error) {
+        console.error(`Error in search query:`, error);
+        return [];
+      } finally {
+        setIsSearching(false);
       }
-      
-      console.log(`Total ${tableName} fetched:`, allData.length);
-      return allData;
     },
-    enabled: true,
+    enabled: debouncedSearchQuery.length >= 2,
     staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
   });
+
+  // Update local options when new data arrives from query
+  useEffect(() => {
+    if (allOptions && allOptions.length > 0) {
+      // Combine with existing options, removing duplicates
+      setLocalOptions(prevOptions => {
+        const combined = [...prevOptions];
+        allOptions.forEach(option => {
+          if (!combined.some(existing => existing.id === option.id)) {
+            combined.push(option);
+          }
+        });
+        return combined;
+      });
+    }
+  }, [allOptions]);
+
+  // Client-side filtering for faster response
+  const filteredOptions = searchQuery.length > 0
+    ? localOptions.filter(option => {
+        const searchValue = (option.title || option.name || '').toLowerCase();
+        return searchValue.includes(searchQuery.toLowerCase());
+      })
+    : localOptions;
+
+  // Debounced search handler to prevent excessive state updates
+  const handleSearchChange = useDebouncedCallback((value: string) => {
+    setSearchQuery(value);
+  }, 300);
 
   const handleCustomSubmit = async () => {
     if (!customValue.trim()) {
@@ -152,6 +180,9 @@ export function SelectWithCustomOption({
       onValueChange(data.id);
       setShowCustomInput(false);
       setCustomValue("");
+      
+      // Add the new item to local options
+      setLocalOptions(prev => [...prev, data]);
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
       toast({
@@ -161,16 +192,6 @@ export function SelectWithCustomOption({
       });
     }
   };
-
-  // Combine provided options with fetched options, removing duplicates
-  const combinedOptions = [...options];
-  if (allOptions) {
-    allOptions.forEach(option => {
-      if (!combinedOptions.some(existing => existing.id === option.id)) {
-        combinedOptions.push(option);
-      }
-    });
-  }
 
   if (showCustomInput) {
     return (
@@ -204,9 +225,6 @@ export function SelectWithCustomOption({
     );
   }
 
-  // Ensure we have data before rendering the select
-  const isDataReady = !isLoading && combinedOptions.length > 0;
-
   return (
     <div className="w-full">
       <Select
@@ -222,28 +240,32 @@ export function SelectWithCustomOption({
         <SelectTrigger className="w-full">
           <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
         </SelectTrigger>
-        {isDataReady && (
-          <SelectContent>
-            <div className="p-2">
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="mb-2"
-              />
-            </div>
-            <ScrollArea className="h-[200px]">
-              {combinedOptions.map((option) => (
+        <SelectContent>
+          <div className="p-2">
+            <Input
+              placeholder="Search..."
+              defaultValue={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="mb-2"
+            />
+          </div>
+          <ScrollArea className="h-[200px]">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {option.title || option.name || ''}
                 </SelectItem>
-              ))}
-              <SelectItem value="other">Other (Add New)</SelectItem>
-            </ScrollArea>
-          </SelectContent>
-        )}
+              ))
+            ) : (
+              <div className="p-2 text-center text-muted-foreground">
+                {isLoading || isSearching ? 'Searching...' : 'No results found'}
+              </div>
+            )}
+            <SelectItem value="other">Other (Add New)</SelectItem>
+          </ScrollArea>
+        </SelectContent>
       </Select>
-      {isLoading && (
+      {(isLoading || isSearching) && (
         <div className="flex items-center justify-center mt-2">
           <Loader2 className="h-4 w-4 animate-spin" />
         </div>

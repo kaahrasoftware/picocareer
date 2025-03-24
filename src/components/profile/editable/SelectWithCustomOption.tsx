@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
-import { useDebounce, useDebouncedCallback } from "@/hooks/useDebounce";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -39,15 +39,90 @@ export function SelectWithCustomOption({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState(options);
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   
-  // Use debounced search query for filtering
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  // Update filtered options when options change
+  useEffect(() => {
+    setFilteredOptions(options);
+  }, [options]);
 
-  const filteredOptions = options.filter(option => {
-    const searchValue = option[titleField]?.toLowerCase() || '';
-    return searchValue.includes(debouncedSearchQuery.toLowerCase());
-  });
+  // Handle search input changes with debouncing
+  const handleSearchChange = useDebouncedCallback(async (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query || query.length < 2) {
+      setFilteredOptions(options);
+      return;
+    }
+    
+    setIsSearching(true);
+    
+    try {
+      // For longer queries, fetch from database
+      if (query.length >= 2) {
+        const safeQuery = String(query).toLowerCase();
+        
+        let supabaseQuery = supabase
+          .from(tableName)
+          .select(`id, ${titleField}`)
+          .limit(50);
+        
+        if (titleField === 'title') {
+          supabaseQuery = supabaseQuery.ilike('title', `%${safeQuery}%`);
+        } else {
+          supabaseQuery = supabaseQuery.ilike('name', `%${safeQuery}%`);
+        }
+        
+        const { data, error } = await supabaseQuery;
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Combine with existing options, removing duplicates
+          const combinedOptions = [...options];
+          data.forEach(item => {
+            if (!combinedOptions.some(existing => existing.id === item.id)) {
+              combinedOptions.push(item);
+            }
+          });
+          
+          // Filter the combined results
+          const filtered = combinedOptions.filter(option => {
+            const searchValue = String(option[titleField] || '').toLowerCase();
+            return searchValue.includes(safeQuery);
+          });
+          
+          setFilteredOptions(filtered);
+        } else {
+          // If no results from API, filter local options
+          const filtered = options.filter(option => {
+            const searchValue = String(option[titleField] || '').toLowerCase();
+            return searchValue.includes(safeQuery);
+          });
+          setFilteredOptions(filtered);
+        }
+      } else {
+        // For short queries just filter the local options
+        const filtered = options.filter(option => {
+          const searchValue = String(option[titleField] || '').toLowerCase();
+          return searchValue.includes(query.toLowerCase());
+        });
+        setFilteredOptions(filtered);
+      }
+    } catch (error) {
+      console.error(`Search error:`, error);
+      // Fall back to local filtering on error
+      const filtered = options.filter(option => {
+        const searchValue = String(option[titleField] || '').toLowerCase();
+        return searchValue.includes(query.toLowerCase());
+      });
+      setFilteredOptions(filtered);
+    } finally {
+      setIsSearching(false);
+    }
+  }, 500);
 
   const handleCustomSubmit = async () => {
     if (!customValue.trim()) {
@@ -117,10 +192,6 @@ export function SelectWithCustomOption({
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
   if (showCustomInput) {
     return (
       <div className="space-y-2">
@@ -179,17 +250,23 @@ export function SelectWithCustomOption({
           <div className="p-2">
             <Input
               placeholder="Search..."
-              value={searchQuery}
-              onChange={handleSearchChange}
+              defaultValue={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="mb-2"
             />
           </div>
           <ScrollArea className="h-[200px]">
-            {filteredOptions.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option[titleField] || ''}
-              </SelectItem>
-            ))}
+            {isSearching ? (
+              <div className="p-2 text-center text-muted-foreground">Searching...</div>
+            ) : filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option[titleField] || ''}
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-center text-muted-foreground">No results found</div>
+            )}
             <SelectItem value="other">Other (Add New)</SelectItem>
           </ScrollArea>
         </SelectContent>

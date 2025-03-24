@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
@@ -22,7 +22,8 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const { searchMajors, isLoading: isMajorsLoading } = useSearchMajors();
   const { searchCareers, isLoading: isCareersLoading } = useSearchCareers();
 
-  const performSearch = async (value: string) => {
+  // Use debounced search function with a longer delay
+  const performSearch = useDebouncedCallback(async (value: string) => {
     if (value.length < 3) {
       setSearchResults([]);
       return;
@@ -50,14 +51,11 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       console.error("Search error:", error);
       setSearchResults([]);
     }
-  };
-
-  // Use debounced search function
-  const debouncedSearch = useDebouncedCallback(performSearch, 500);
+  }, 800); // Increased delay to 800ms for better user experience
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    debouncedSearch(value);
+    performSearch(value);
   };
 
   const handleCloseSearch = () => {
@@ -65,6 +63,13 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     setSearchQuery("");
     setSearchResults([]);
   };
+
+  // Effect to clear search results when query length is too short
+  useEffect(() => {
+    if (searchQuery.length < 3) {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
 
   const isLoading = isMentorsLoading || isMajorsLoading || isCareersLoading;
 
@@ -113,4 +118,4 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       )}
     </div>
   );
-};
+}
