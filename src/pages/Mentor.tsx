@@ -1,6 +1,7 @@
-import { Home, BookOpen, Users, RefreshCw, Search } from "lucide-react";
+
+import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,8 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MentorGrid } from "@/components/community/MentorGrid";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { addDays } from "date-fns";
 
 export default function Mentor() {
@@ -142,7 +145,77 @@ export default function Mentor() {
         <MenuSidebar />
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-            <div className="space-y-8">
+            <div className="space-y-12">
+              {/* Become a Mentor Section */}
+              <div className="relative overflow-hidden rounded-xl mb-12">
+                <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-80"></div>
+                <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm"></div>
+                
+                <div className="relative grid md:grid-cols-2 gap-8 p-8">
+                  <div className="flex flex-col justify-center space-y-4">
+                    <div className="inline-flex items-center gap-2 text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/20 w-fit mb-2">
+                      <GraduationCap className="h-4 w-4" /> Join Our Community
+                    </div>
+                    <h2 className="text-3xl font-bold text-white leading-tight">Share Your Expertise as a PicoCareer Mentor</h2>
+                    <p className="text-white/80 text-lg">
+                      Guide aspiring professionals, build your network, and make a meaningful impact while enhancing your own leadership skills.
+                    </p>
+                    <div className="pt-4 flex flex-col sm:flex-row gap-4">
+                      <Button 
+                        asChild 
+                        size="lg" 
+                        className="bg-white text-picocareer-dark hover:bg-gray-100 font-semibold"
+                      >
+                        <Link to="/mentor-registration" className="flex items-center">
+                          <GraduationCap className="mr-2 h-5 w-5" />
+                          Become a Mentor
+                        </Link>
+                      </Button>
+                    </div>
+                    
+                    <div className="flex gap-6 mt-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
+                          <Award className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="text-white/90 text-sm">Recognition</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="text-white/90 text-sm">Community</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
+                          <BookOpen className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="text-white/90 text-sm">Knowledge</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="hidden md:flex justify-center items-center">
+                    <div className="relative w-full max-w-md aspect-square">
+                      <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl transform rotate-3 animate-float">
+                        <img 
+                          src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6" 
+                          alt="Mentor teaching programming" 
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                      </div>
+                      <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl -rotate-3 animate-float" style={{animationDelay: "0.5s"}}>
+                        <img 
+                          src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
+                          alt="Person mentoring" 
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <h1 className="text-3xl font-bold">PicoCareer Mentors</h1>
               
               <CommunityFilters
