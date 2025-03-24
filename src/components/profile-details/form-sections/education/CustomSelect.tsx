@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Select,
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type TableName = 'majors' | 'schools' | 'companies' | 'careers';
 type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
@@ -48,7 +50,15 @@ export function CustomSelect({
 }: CustomSelectProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const { toast } = useToast();
+
+  // Filter options client-side based on debounced search query
+  const filteredOptions = options.filter(option => {
+    const searchValue = option[titleField]?.toLowerCase() || '';
+    return searchValue.includes(debouncedSearchQuery.toLowerCase());
+  });
 
   const handleCustomSubmit = async () => {
     try {
@@ -142,7 +152,15 @@ export function CustomSelect({
             <SelectValue placeholder={`Select your ${placeholder.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent>
-            {options.map((option) => (
+            <div className="p-2">
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="mb-2"
+              />
+            </div>
+            {filteredOptions.map((option) => (
               <SelectItem key={option.id} value={option.id}>
                 {option[titleField]}
               </SelectItem>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -36,12 +38,15 @@ export function SelectWithCustomOption({
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  
+  // Debounce the search query to prevent rapid API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Fetch all options for the given table
+  // Fetch all options for the given table with debounced search
   const { data: allOptions, isLoading } = useQuery({
-    queryKey: [tableName, 'all', searchQuery],
+    queryKey: [tableName, 'all', debouncedSearchQuery],
     queryFn: async () => {
-      console.log(`Fetching ${tableName} with search: ${searchQuery}`);
+      console.log(`Fetching ${tableName} with search: ${debouncedSearchQuery}`);
       let allData = [];
       let offset = 0;
       const limit = 1000;
@@ -56,11 +61,11 @@ export function SelectWithCustomOption({
           .offset(offset);
 
         // Add search filter if query exists
-        if (searchQuery) {
+        if (debouncedSearchQuery) {
           if (tableName === 'majors' || tableName === 'careers') {
-            query = query.ilike('title', `%${searchQuery}%`);
+            query = query.ilike('title', `%${debouncedSearchQuery}%`);
           } else {
-            query = query.ilike('name', `%${searchQuery}%`);
+            query = query.ilike('name', `%${debouncedSearchQuery}%`);
           }
         }
 
@@ -95,7 +100,8 @@ export function SelectWithCustomOption({
       console.log(`Total ${tableName} fetched:`, allData.length);
       return allData;
     },
-    enabled: true
+    enabled: true,
+    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
   });
 
   const handleCustomSubmit = async () => {

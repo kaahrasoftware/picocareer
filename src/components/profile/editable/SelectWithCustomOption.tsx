@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Select,
@@ -12,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -37,11 +39,12 @@ export function SelectWithCustomOption({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const { toast } = useToast();
 
   const filteredOptions = options.filter(option => {
     const searchValue = option[titleField]?.toLowerCase() || '';
-    return searchValue.includes(searchQuery.toLowerCase());
+    return searchValue.includes(debouncedSearchQuery.toLowerCase());
   });
 
   const handleCustomSubmit = async () => {
