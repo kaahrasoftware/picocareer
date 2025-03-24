@@ -27,7 +27,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   realtime: {
     params: {
-      eventsPerSecond: 2,
+      eventsPerSecond: 1, // Reduced from 2 to prevent rate limiting
     },
   },
   db: {
@@ -51,22 +51,46 @@ export const checkSupabaseConnection = async () => {
 // Cache control to prevent multiple simultaneous auth requests
 let isRefreshingToken = false;
 let lastRefreshTime = 0;
+const refreshQueue: (() => void)[] = [];
 
 // Helper function to throttle auth operations
 export const throttledAuthOperation = async (operation: () => Promise<any>) => {
   const now = Date.now();
-  const minInterval = 2000; // 2 seconds between auth operations
+  const minInterval = 5000; // 5 seconds between auth operations (increased from 2s)
   
   if (now - lastRefreshTime < minInterval) {
     console.log('Throttling auth operation to prevent rate limiting');
     await new Promise(resolve => setTimeout(resolve, minInterval));
   }
   
+  // If another auth operation is in progress, queue this one
+  if (isRefreshingToken) {
+    console.log('Auth operation already in progress, queueing this request');
+    return new Promise((resolve) => {
+      refreshQueue.push(() => {
+        operation().then(resolve);
+      });
+    });
+  }
+  
+  isRefreshingToken = true;
+  
   try {
     lastRefreshTime = Date.now();
-    return await operation();
+    const result = await operation();
+    return result;
   } catch (error) {
     console.error('Auth operation failed:', error);
     throw error;
+  } finally {
+    isRefreshingToken = false;
+    
+    // Process any queued operations
+    if (refreshQueue.length > 0) {
+      const nextOperation = refreshQueue.shift();
+      if (nextOperation) {
+        setTimeout(nextOperation, minInterval);
+      }
+    }
   }
 };

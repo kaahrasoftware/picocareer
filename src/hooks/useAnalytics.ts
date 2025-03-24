@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAnalyticsBatch } from './useAnalyticsBatch';
 import { useDebouncedCallback } from './useDebounce';
@@ -17,6 +17,7 @@ interface InteractionData {
 export function useAnalytics() {
   const { session } = useAuthSession();
   const { addEvent } = useAnalyticsBatch();
+  const pageViewRef = useRef<Record<string, boolean>>({});
 
   const trackInteractionImpl = useCallback(
     (data: InteractionData) => {
@@ -36,6 +37,17 @@ export function useAnalytics() {
   const trackPageView = useCallback(
     async (pagePath: string) => {
       if (!session?.user?.id) return;
+      
+      // Prevent duplicate page views in the same session
+      const pageKey = `${pagePath}-${session.user.id}`;
+      if (pageViewRef.current[pageKey]) return;
+      
+      pageViewRef.current[pageKey] = true;
+      
+      // Clear the record after 5 minutes to allow tracking again
+      setTimeout(() => {
+        delete pageViewRef.current[pageKey];
+      }, 5 * 60 * 1000);
 
       addEvent('page_view', {
         profile_id: session.user.id,
@@ -48,8 +60,8 @@ export function useAnalytics() {
     [session?.user?.id, addEvent]
   );
 
-  // Using useDebouncedCallback instead of useDebounce for function debouncing
-  const trackInteraction = useDebouncedCallback(trackInteractionImpl, 1000);
+  // Using useDebouncedCallback with longer timeout (2 seconds)
+  const trackInteraction = useDebouncedCallback(trackInteractionImpl, 2000);
 
   return {
     trackInteraction,

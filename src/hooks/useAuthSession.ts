@@ -14,7 +14,7 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
   
   // Handle route protection based on authentication state
   useEffect(() => {
-    // Only process after loading is complete
+    // Only process after loading is complete and not on every render
     if (loading) return;
     
     if (protectionLevel === 'required' && !session) {

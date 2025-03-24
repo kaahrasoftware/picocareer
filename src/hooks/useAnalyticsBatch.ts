@@ -16,22 +16,28 @@ interface BatchedEvent {
   timestamp: number;
 }
 
-const BATCH_SIZE = 10;
-const BATCH_INTERVAL = 5000; // 5 seconds
+// Increased batch size and interval to reduce API calls
+const BATCH_SIZE = 20; // Increased from 10
+const BATCH_INTERVAL = 10000; // Increased from 5000 to 10 seconds
 
 export function useAnalyticsBatch() {
   const batchRef = useRef<BatchedEvent[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const processingRef = useRef<boolean>(false);
   const location = useLocation();
   const { session } = useAuthSession();
 
   const flushEvents = useCallback(async () => {
-    if (batchRef.current.length === 0 || !session?.user) return;
-
+    // Prevent concurrent flushes and don't flush if no session or empty batch
+    if (processingRef.current || batchRef.current.length === 0 || !session?.user) return;
+    
+    processingRef.current = true;
     const events = [...batchRef.current];
     batchRef.current = [];
 
     try {
+      // No need to reprocess events that fail due to rate limiting
+      // Just log the error and continue
       const { error } = await supabase
         .from('user_interactions')
         .insert(events.map(event => ({
@@ -46,13 +52,16 @@ export function useAnalyticsBatch() {
 
       if (error) {
         console.error('Error sending batched events:', error);
-        // Re-add failed events to the batch
-        batchRef.current = [...events, ...batchRef.current];
+        // Don't re-add events to the batch if we hit rate limits
+        if (!error.message.includes('rate limit')) {
+          // Only re-add events if it's not a rate limit error
+          batchRef.current = [...events.slice(0, 5), ...batchRef.current]; // Only keep the first 5 to prevent overflow
+        }
       }
     } catch (error) {
       console.error('Error in flushEvents:', error);
-      // Re-add failed events to the batch
-      batchRef.current = [...events, ...batchRef.current];
+    } finally {
+      processingRef.current = false;
     }
   }, [session?.user]);
 
@@ -63,8 +72,13 @@ export function useAnalyticsBatch() {
     elementType?: string
   ) => {
     if (!session?.user) {
-      console.log('User not authenticated, skipping analytics event');
       return;
+    }
+    
+    // Prevent batch from growing too large
+    if (batchRef.current.length >= BATCH_SIZE * 2) {
+      // If we've accumulated too many events, start dropping the oldest ones
+      batchRef.current = batchRef.current.slice(-BATCH_SIZE);
     }
     
     batchRef.current.push({
@@ -91,7 +105,10 @@ export function useAnalyticsBatch() {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-      flushEvents();
+      // Final flush on unmount if needed
+      if (batchRef.current.length > 0) {
+        flushEvents();
+      }
     };
   }, [flushEvents]);
 
