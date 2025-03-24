@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash2, Share, Eye, EyeOff, Download } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Share, Eye, EyeOff } from "lucide-react";
 
 interface ContentManagementDropdownProps {
   item: any;
@@ -21,7 +21,6 @@ export function ContentManagementDropdown({
   onAction 
 }: ContentManagementDropdownProps) {
   const isHidden = item.status === "Hidden";
-  const hasFileUrl = !!item.file_url;
 
   return (
     <DropdownMenu>
@@ -46,16 +45,6 @@ export function ContentManagementDropdown({
           <Share className="h-4 w-4 mr-2" />
           Share
         </DropdownMenuItem>
-        
-        {hasFileUrl && (
-          <DropdownMenuItem 
-            className="cursor-pointer flex items-center"
-            onClick={() => onAction('download')}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </DropdownMenuItem>
-        )}
         
         <DropdownMenuItem 
           className="cursor-pointer flex items-center"

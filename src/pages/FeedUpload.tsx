@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { formatFileSize } from "@/utils/storageUtils";
 
 export default function FeedUpload() {
   const { toast } = useToast();
@@ -29,23 +28,8 @@ export default function FeedUpload() {
 
   // Update form fields when resource type changes
   useEffect(() => {
-    const fields = getFeedFormFields(resourceType);
-    
-    // Add profile ID to folder path for fields that need it
-    if (profile?.id) {
-      setFormFields(fields.map(field => {
-        if (field.getFolderPath && typeof field.getFolderPath === 'function') {
-          return {
-            ...field,
-            folderPath: field.getFolderPath(profile.id)
-          };
-        }
-        return field;
-      }));
-    } else {
-      setFormFields(fields);
-    }
-  }, [resourceType, profile?.id]);
+    setFormFields(getFeedFormFields(resourceType));
+  }, [resourceType]);
 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -54,28 +38,15 @@ export default function FeedUpload() {
         throw new Error("You must be logged in to upload resources");
       }
 
-      // Process hashtags into an array
-      let hashtagsArray: string[] = [];
-      if (data.hashtags) {
-        hashtagsArray = data.hashtags
-          .split(',')
-          .map((tag: string) => tag.trim())
-          .filter((tag: string) => tag.length > 0);
-      }
-
-      // Extract file size from upload data if available
-      const fileSizeInBytes = await getFileSizeFromUrl(data.file_url, resourceType);
-
       // Add additional metadata
       const resourceData = {
         ...data,
-        hashtags: hashtagsArray,
         author_id: session.user.id,
         mentor_id: profile.id,
         resource_type: resourceType,
         status: 'Published',
         created_at: new Date().toISOString(),
-        size_in_bytes: fileSizeInBytes,
+        size_in_bytes: data.file_url ? await getFileSizeFromUrl(data.file_url) : 0,
       };
 
       // Insert into mentor_resources table
@@ -104,59 +75,20 @@ export default function FeedUpload() {
   };
 
   // Helper to estimate file size from URL
-  const getFileSizeFromUrl = async (url: string, type: string): Promise<number> => {
+  const getFileSizeFromUrl = async (url: string): Promise<number> => {
     if (!url) return 0;
     
     try {
-      // Try to get file size from URL if it's a file hosted on Supabase
-      if (url.includes('storage') && url.includes('mentor_resources')) {
-        // Extract file path from URL to check its metadata
-        const urlObj = new URL(url);
-        const pathParts = urlObj.pathname.split('/');
-        const storageIdx = pathParts.indexOf('storage');
-        
-        if (storageIdx >= 0 && storageIdx + 2 < pathParts.length) {
-          const bucket = pathParts[storageIdx + 1];
-          const filePath = pathParts.slice(storageIdx + 2).join('/');
-          
-          try {
-            const { data, error } = await supabase
-              .storage
-              .from(bucket)
-              .getPublicUrl(filePath);
-              
-            if (!error && data) {
-              // Try to get headers to check file size
-              const response = await fetch(data.publicUrl, { method: 'HEAD' });
-              if (response.ok) {
-                const contentLength = response.headers.get('content-length');
-                if (contentLength) {
-                  return parseInt(contentLength, 10);
-                }
-              }
-            }
-          } catch (e) {
-            console.warn('Could not get file metadata:', e);
-          }
-        }
-      }
-      
-      // If metadata retrieval fails, use estimated sizes based on resource type
-      return getEstimatedFileSize(type);
+      // Try to get size from metadata if possible
+      // For simplicity, return default values based on resource type
+      if (resourceType === 'image') return 500000; // 500KB
+      if (resourceType === 'video') return 5000000; // 5MB
+      if (resourceType === 'audio') return 2000000; // 2MB
+      if (resourceType === 'document') return 1000000; // 1MB
+      return 100000; // Default 100KB
     } catch (error) {
       console.error('Error determining file size:', error);
-      return getEstimatedFileSize(type);
-    }
-  };
-  
-  // Helper to provide estimated file sizes by content type
-  const getEstimatedFileSize = (type: string): number => {
-    switch (type) {
-      case 'image': return 500000; // 500KB default for images
-      case 'video': return 5000000; // 5MB default for videos
-      case 'audio': return 2000000; // 2MB default for audio
-      case 'document': return 1000000; // 1MB default for documents
-      default: return 100000; // 100KB default for other content
+      return 0;
     }
   };
 

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BookOpen, Calendar, Filter, Search, SortDesc, Video, Image, File, ExternalLink, Download } from "lucide-react";
+import { FileText, BookOpen, Calendar, Filter, Search, SortDesc, Video, Image, File, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +17,6 @@ import { ContentEmptyState } from "./content/ContentEmptyState";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { FeedUploadDialog } from "@/components/forms/feed/FeedUploadDialog";
 
 interface ProfileContentTabProps {
   profileId: string;
@@ -31,7 +30,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   const [contentType, setContentType] = useState<ContentType>("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
   
@@ -50,8 +48,8 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   };
 
   // Blogs query - using fixed table name instead of dynamic variable
-  const { data: blogs = [], isLoading: isLoadingBlogs, refetch: refetchBlogs } = useQuery({
-    queryKey: ['profile-blogs', profileId, timeFilter, isOwnProfile],
+  const { data: blogs = [], isLoading: isLoadingBlogs } = useQuery({
+    queryKey: ['profile-blogs', profileId, timeFilter],
     queryFn: async () => {
       console.log('Fetching blogs for profile:', profileId);
       
@@ -80,8 +78,8 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   });
 
   // Hub Resources query - using fixed table name instead of dynamic variable
-  const { data: hubResources = [], isLoading: isLoadingHubResources, refetch: refetchHubResources } = useQuery({
-    queryKey: ['profile-hub-resources', profileId, timeFilter, isOwnProfile],
+  const { data: hubResources = [], isLoading: isLoadingHubResources } = useQuery({
+    queryKey: ['profile-hub-resources', profileId, timeFilter],
     queryFn: async () => {
       console.log('Fetching hub resources for profile:', profileId);
       
@@ -110,8 +108,8 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   });
 
   // Mentor Resources query - using fixed table name instead of dynamic variable
-  const { data: mentorResources = [], isLoading: isLoadingMentorResources, refetch: refetchMentorResources } = useQuery({
-    queryKey: ['profile-mentor-resources', profileId, timeFilter, isOwnProfile],
+  const { data: mentorResources = [], isLoading: isLoadingMentorResources } = useQuery({
+    queryKey: ['profile-mentor-resources', profileId, timeFilter],
     queryFn: async () => {
       console.log('Fetching mentor resources for profile:', profileId);
       
@@ -138,13 +136,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     },
     enabled: !!profileId,
   });
-
-  // Refetch all content when needed
-  const refetchAllContent = () => {
-    refetchBlogs();
-    refetchHubResources();
-    refetchMentorResources();
-  };
 
   // Apply time filter to content
   const filterContentByTime = (items: any[] = []) => {
@@ -208,33 +199,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
       switch (action) {
         case "delete":
           if (window.confirm("Are you sure you want to delete this content? This action cannot be undone.")) {
-            // If the item has a file_url, delete the file from storage
-            if (item.file_url) {
-              try {
-                // Extract path from the full URL
-                const urlObj = new URL(item.file_url);
-                const pathParts = urlObj.pathname.split('/');
-                const storageIdx = pathParts.findIndex(part => part === 'storage');
-                
-                if (storageIdx >= 0 && storageIdx + 2 < pathParts.length) {
-                  const bucket = pathParts[storageIdx + 1];
-                  const filePath = pathParts.slice(storageIdx + 2).join('/');
-                  
-                  console.log(`Attempting to delete file: ${bucket}/${filePath}`);
-                  
-                  await supabase.storage
-                    .from(bucket)
-                    .remove([filePath]);
-                    
-                  console.log('File deleted successfully');
-                }
-              } catch (fileError) {
-                console.error('Failed to delete file:', fileError);
-                // Continue with record deletion even if file delete fails
-              }
-            }
-            
-            // Delete the database record
             const { error } = await supabase
               .from(contentTableName)
               .delete()
@@ -246,9 +210,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
               title: "Content deleted",
               description: "Your content has been successfully deleted.",
             });
-            
-            // Refresh the content list
-            refetchAllContent();
           }
           break;
           
@@ -264,9 +225,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
             title: "Content hidden",
             description: "Your content is now hidden from public view.",
           });
-          
-          // Refresh the content list
-          refetchAllContent();
           break;
           
         case "show":
@@ -281,36 +239,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
             title: "Content published",
             description: "Your content is now visible to the public.",
           });
-          
-          // Refresh the content list
-          refetchAllContent();
-          break;
-          
-        case "download":
-          if (item.file_url) {
-            window.open(item.file_url, '_blank');
-          }
-          break;
-          
-        case "share":
-          // Create a shareable link
-          const shareableLink = `${window.location.origin}/mentor?dialog=true&profileId=${profileId}&content=${item.id}&type=${contentTableName}`;
-          
-          // Try to use the Web Share API if available
-          if (navigator.share) {
-            await navigator.share({
-              title: item.title,
-              text: item.description || item.summary || `Check out this ${contentTableName.replace('_', ' ')}`,
-              url: shareableLink
-            });
-          } else {
-            // Fallback to clipboard copy
-            await navigator.clipboard.writeText(shareableLink);
-            toast({
-              title: "Link copied",
-              description: "Shareable link copied to clipboard.",
-            });
-          }
           break;
       }
     } catch (error) {
@@ -332,7 +260,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     if ('summary' in item) return <BookOpen className="h-5 w-5 text-primary" />;
     
     // For hub_resources
-    if ('resource_type' in item && 'hub_id' in item) {
+    if ('resource_type' in item && 'file_url' in item) {
       const resourceType = item.resource_type;
       if (resourceType === 'document') return <FileText className="h-5 w-5 text-blue-500" />;
       if (resourceType === 'image') return <Image className="h-5 w-5 text-green-500" />;
@@ -341,7 +269,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     }
     
     // For mentor_resources
-    if ('resource_type' in item && !('hub_id' in item)) {
+    if ('resource_type' in item && !('file_url' in item)) {
       const resourceType = item.resource_type;
       if (resourceType === 'text') return <FileText className="h-5 w-5 text-blue-500" />;
       if (resourceType === 'document') return <File className="h-5 w-5 text-amber-500" />;
@@ -358,10 +286,10 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   // Determine content type text for display
   const getContentTypeText = (item: any): string => {
     if ('summary' in item) return 'Blog';
-    if ('resource_type' in item && 'hub_id' in item) {
+    if ('resource_type' in item && 'file_url' in item) {
       return `Hub ${item.resource_type.charAt(0).toUpperCase() + item.resource_type.slice(1)}`;
     }
-    if ('resource_type' in item && !('hub_id' in item)) {
+    if ('resource_type' in item && !('file_url' in item)) {
       return `${item.resource_type.charAt(0).toUpperCase() + item.resource_type.slice(1)} Post`;
     }
     return 'Content';
@@ -370,22 +298,9 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
   // Determine database table for each content type
   const getContentTable = (item: any): string => {
     if ('summary' in item) return 'blogs';
-    if ('resource_type' in item && 'hub_id' in item) return 'hub_resources';
-    if ('resource_type' in item && !('hub_id' in item)) return 'mentor_resources';
+    if ('resource_type' in item && 'file_url' in item) return 'hub_resources';
+    if ('resource_type' in item && !('file_url' in item)) return 'mentor_resources';
     return '';
-  };
-
-  // Handle direct downloads
-  const handleDownload = (fileUrl: string, fileName?: string) => {
-    if (!fileUrl) return;
-    
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.target = '_blank';
-    link.download = fileName || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -416,16 +331,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-
-            {/* Add Content button (only shown to profile owner) */}
-            {isOwnProfile && (
-              <Button 
-                className="w-full sm:w-auto" 
-                onClick={() => setUploadDialogOpen(true)}
-              >
-                Add Content
-              </Button>
-            )}
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -492,7 +397,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
               {contentToDisplay.map((item) => {
                 const contentTypeText = getContentTypeText(item);
                 const contentTableName = getContentTable(item);
-                const hasFileUrl = !!item.file_url;
                 
                 return (
                   <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
@@ -505,7 +409,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                             </div>
                             <div>
                               <CardTitle className="text-base line-clamp-1">{item.title}</CardTitle>
-                              <div className="flex flex-wrap items-center mt-1 text-xs text-muted-foreground">
+                              <div className="flex items-center mt-1 text-xs text-muted-foreground">
                                 <span>{format(new Date(item.created_at), 'MMM d, yyyy')}</span>
                                 <span className="mx-1.5">•</span>
                                 <Badge variant="outline" className="text-xs h-5">
@@ -517,20 +421,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                     <Badge variant="secondary" className="text-xs h-5">
                                       {item.status}
                                     </Badge>
-                                  </>
-                                )}
-                                {hasFileUrl && (
-                                  <>
-                                    <span className="mx-1.5">•</span>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-5 px-1 text-xs"
-                                      onClick={() => handleDownload(item.file_url, item.title)}
-                                    >
-                                      <Download className="h-3 w-3 mr-1" />
-                                      Download
-                                    </Button>
                                   </>
                                 )}
                               </div>
@@ -548,22 +438,21 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                             {item.description || item.summary || "No description available"}
                           </p>
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {item.categories && Array.isArray(item.categories) && item.categories.length > 0 && 
-                              item.categories.map((category: string, idx: number) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {category}
-                                </Badge>
-                              ))
-                            }
-                            {item.hashtags && Array.isArray(item.hashtags) && item.hashtags.length > 0 && 
-                              item.hashtags.map((tag: string, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  #{tag}
-                                </Badge>
-                              ))
-                            }
-                          </div>
+                          {item.categories && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {Array.isArray(item.categories) ? 
+                                item.categories.map((category: string, idx: number) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {category}
+                                  </Badge>
+                                )) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {item.categories}
+                                  </Badge>
+                                )
+                              }
+                            </div>
+                          )}
                         </CardContent>
                       </div>
                     </div>
@@ -576,7 +465,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           )}
         </TabsContent>
         
-        {/* Tabs for specific content types */}
         <TabsContent value="blogs" className="mt-0 space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -649,7 +537,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           ) : null}
         </TabsContent>
           
-        {/* Hub Resources Tab */}
+        {/* Similar pattern for hub_resources and mentor_resources tabs */}
         <TabsContent value="hub_resources" className="mt-0 space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -687,20 +575,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                     </Badge>
                                   </>
                                 )}
-                                {resource.file_url && (
-                                  <>
-                                    <span className="mx-1.5">•</span>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-5 px-1 text-xs"
-                                      onClick={() => handleDownload(resource.file_url, resource.title)}
-                                    >
-                                      <Download className="h-3 w-3 mr-1" />
-                                      Download
-                                    </Button>
-                                  </>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -733,7 +607,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           ) : null}
         </TabsContent>
 
-        {/* Mentor Resources Tab */}
         <TabsContent value="mentor_resources" className="mt-0 space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -759,7 +632,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                             </div>
                             <div>
                               <CardTitle className="text-base line-clamp-1">{resource.title}</CardTitle>
-                              <div className="flex flex-wrap items-center mt-1 text-xs text-muted-foreground">
+                              <div className="flex items-center mt-1 text-xs text-muted-foreground">
                                 <span>{format(new Date(resource.created_at), 'MMM d, yyyy')}</span>
                                 <span className="mx-1.5">•</span>
                                 <Badge variant="outline" className="text-xs h-5">
@@ -771,20 +644,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                                     <Badge variant="secondary" className="text-xs h-5">
                                       {resource.status}
                                     </Badge>
-                                  </>
-                                )}
-                                {resource.file_url && (
-                                  <>
-                                    <span className="mx-1.5">•</span>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-5 px-1 text-xs"
-                                      onClick={() => handleDownload(resource.file_url, resource.title)}
-                                    >
-                                      <Download className="h-3 w-3 mr-1" />
-                                      Download
-                                    </Button>
                                   </>
                                 )}
                               </div>
@@ -802,22 +661,21 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                             {resource.description || (resource.hashtags ? resource.hashtags.join(', ') : 'No description')}
                           </p>
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {resource.categories && Array.isArray(resource.categories) && resource.categories.length > 0 && 
-                              resource.categories.map((category: string, idx: number) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {category}
-                                </Badge>
-                              ))
-                            }
-                            {resource.hashtags && Array.isArray(resource.hashtags) && resource.hashtags.length > 0 && 
-                              resource.hashtags.map((tag: string, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  #{tag}
-                                </Badge>
-                              ))
-                            }
-                          </div>
+                          {resource.categories && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {Array.isArray(resource.categories) ? 
+                                resource.categories.map((category: string, idx: number) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {category}
+                                  </Badge>
+                                )) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {resource.categories}
+                                  </Badge>
+                                )
+                              }
+                            </div>
+                          )}
                         </CardContent>
                       </div>
                     </div>
@@ -830,18 +688,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           ) : null}
         </TabsContent>
       </div>
-      
-      {/* Upload Dialog */}
-      <FeedUploadDialog 
-        open={uploadDialogOpen} 
-        onOpenChange={(open) => {
-          setUploadDialogOpen(open);
-          if (!open) {
-            // Refresh content after dialog closes
-            refetchAllContent();
-          }
-        }} 
-      />
     </ScrollArea>
   );
 }
