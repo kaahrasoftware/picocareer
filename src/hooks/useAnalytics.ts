@@ -44,10 +44,10 @@ export function useAnalytics() {
       
       pageViewRef.current[pageKey] = true;
       
-      // Clear the record after 5 minutes to allow tracking again
+      // Clear the record after 15 minutes to allow tracking again (increased from 5 minutes)
       setTimeout(() => {
         delete pageViewRef.current[pageKey];
-      }, 5 * 60 * 1000);
+      }, 15 * 60 * 1000);
 
       addEvent('page_view', {
         profile_id: session.user.id,
@@ -60,8 +60,8 @@ export function useAnalytics() {
     [session?.user?.id, addEvent]
   );
 
-  // Using useDebouncedCallback with longer timeout (2 seconds)
-  const trackInteraction = useDebouncedCallback(trackInteractionImpl, 2000);
+  // Using useDebouncedCallback with longer timeout (10 seconds, increased from 2s)
+  const trackInteraction = useDebouncedCallback(trackInteractionImpl, 10000);
 
   return {
     trackInteraction,

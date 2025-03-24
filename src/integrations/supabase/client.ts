@@ -56,7 +56,7 @@ const refreshQueue: (() => void)[] = [];
 // Helper function to throttle auth operations
 export const throttledAuthOperation = async (operation: () => Promise<any>) => {
   const now = Date.now();
-  const minInterval = 10000; // 10 seconds between auth operations (increased from 5s)
+  const minInterval = 30000; // 30 seconds between auth operations (increased from 10s)
   
   if (now - lastRefreshTime < minInterval) {
     console.log('Throttling auth operation to prevent rate limiting');

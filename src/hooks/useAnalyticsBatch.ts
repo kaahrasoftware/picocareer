@@ -1,3 +1,4 @@
+
 import { useCallback, useRef, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from 'react-router-dom';
@@ -15,10 +16,10 @@ interface BatchedEvent {
   timestamp: number;
 }
 
-// Increased batch size and interval to reduce API calls
-const BATCH_SIZE = 25; // Increased from 20
-const BATCH_INTERVAL = 30000; // Increased from 10 seconds to 30 seconds
-const MAX_EVENTS_STORED = 50; // Maximum number of events to keep in memory
+// Significantly increased batch size and interval to reduce API calls
+const BATCH_SIZE = 50; // Increased from 25
+const BATCH_INTERVAL = 120000; // Increased from 30 seconds to 2 minutes
+const MAX_EVENTS_STORED = 100; // Maximum number of events to keep in memory
 
 export function useAnalyticsBatch() {
   const batchRef = useRef<BatchedEvent[]>([]);
@@ -115,14 +116,14 @@ export function useAnalyticsBatch() {
         timerRef.current = setTimeout(() => {
           flushEvents();
           timerRef.current = null;
-        }, 1000); // Small delay to aggregate multiple near-simultaneous events
+        }, 5000); // Increased delay to aggregate multiple near-simultaneous events
       }
     }
   }, [flushEvents, session?.user, location.pathname]);
 
   useEffect(() => {
     // Set up periodic flush with a randomized interval to avoid thundering herd
-    const randomizedInterval = BATCH_INTERVAL + (Math.random() * 5000);
+    const randomizedInterval = BATCH_INTERVAL + (Math.random() * 30000); // Add up to 30 seconds randomness
     timerRef.current = setInterval(flushEvents, randomizedInterval);
 
     // Clean up on unmount

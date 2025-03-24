@@ -21,7 +21,7 @@ export function SessionTimeoutDialog({
   isOpen,
   onContinue,
   onLogout,
-  timeoutMinutes = 10
+  timeoutMinutes = 30 // Default now 30 minutes
 }: SessionTimeoutDialogProps) {
   const [timeLeft, setTimeLeft] = useState(timeoutMinutes * 60);
   
