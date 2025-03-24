@@ -1,46 +1,83 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 export function useProfileAnalytics() {
   const location = useLocation();
   const { trackPageView, trackInteraction } = useAnalytics();
   const startTime = useRef(Date.now());
+  const lastScrollTrack = useRef(Date.now());
+  const hasTrackedInitialView = useRef(false);
+  const scrollThrottleMs = 60000; // Only track scroll events every 60 seconds (increased from 15s)
+  const pathRef = useRef(location.pathname);
 
   useEffect(() => {
+    if (!trackPageView) return;
+    
     const currentPath = location.pathname;
     
-    // Track initial page view
-    trackPageView(currentPath);
+    // Only track page view when the path changes or on first load
+    if (currentPath !== pathRef.current || !hasTrackedInitialView.current) {
+      hasTrackedInitialView.current = true;
+      pathRef.current = currentPath;
+      
+      // Small delay to ensure we don't flood with events on page load
+      setTimeout(() => {
+        trackPageView(currentPath);
+      }, 2000); // Increased delay
+    }
     
-    // Set up scroll tracking
+    // Reset timer for new path
+    startTime.current = Date.now();
+    
+    // Set up throttled scroll tracking
     const handleScroll = () => {
+      if (!trackInteraction) return;
+      
+      // Skip if we've tracked a scroll event recently
+      const now = Date.now();
+      if (now - lastScrollTrack.current < scrollThrottleMs) {
+        return;
+      }
+      
+      lastScrollTrack.current = now;
       const scrollPosition = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercentage = Math.round((scrollPosition / maxScroll) * 100);
       
-      trackInteraction({
-        elementId: 'profile-scroll',
-        elementType: 'scroll',
-        interactionType: 'content_view',
-        pagePath: currentPath,
-        interactionData: { scrollPercentage }
-      });
+      // Only track if user has scrolled significantly (>80%) - increased threshold
+      const scrollPercentage = Math.round((scrollPosition / maxScroll) * 100);
+      if (scrollPercentage > 80) {
+        trackInteraction({
+          elementId: 'profile-scroll',
+          elementType: 'scroll',
+          interactionType: 'content_view',
+          pagePath: currentPath,
+          interactionData: { scrollPercentage }
+        });
+      }
     };
 
-    // Track page exit
+    // Track page exit, but only once
     const cleanup = () => {
+      if (!trackInteraction) return;
+      
       const timeSpent = Math.floor((Date.now() - startTime.current) / 1000);
-      trackInteraction({
-        elementId: 'profile-page',
-        elementType: 'page',
-        interactionType: 'page_view',
-        pagePath: currentPath,
-        interactionData: { timeSpent }
-      });
+      // Only track if user spent significant time (>30 seconds) - increased threshold
+      if (timeSpent > 30) {
+        trackInteraction({
+          elementId: 'profile-page',
+          elementType: 'page',
+          interactionType: 'page_view',
+          pagePath: currentPath,
+          interactionData: { timeSpent }
+        });
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Use passive event listener for better performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('beforeunload', cleanup);
 
     return () => {
@@ -50,7 +87,10 @@ export function useProfileAnalytics() {
     };
   }, [location.pathname, trackPageView, trackInteraction]);
 
-  const handleTabChange = useCallback((value: string) => {
+  // Heavily throttled tab change handler (15 second delay - increased from 5s)
+  const handleTabChange = useDebouncedCallback((value: string) => {
+    if (!trackInteraction) return;
+    
     trackInteraction({
       elementId: `tab-${value}`,
       elementType: 'tab',
@@ -58,9 +98,12 @@ export function useProfileAnalytics() {
       pagePath: location.pathname,
       interactionData: { tabName: value }
     });
-  }, [trackInteraction, location.pathname]);
+  }, 15000);
 
-  const handleSearch = useCallback((query: string) => {
+  // Heavily throttled search handler (15 second delay - increased from 5s)
+  const handleSearch = useDebouncedCallback((query: string) => {
+    if (!trackInteraction || query.length < 3) return;
+    
     trackInteraction({
       elementId: 'profile-search',
       elementType: 'search',
@@ -68,7 +111,7 @@ export function useProfileAnalytics() {
       pagePath: location.pathname,
       interactionData: { searchQuery: query }
     });
-  }, [trackInteraction, location.pathname]);
+  }, 15000);
 
   return {
     handleTabChange,

@@ -1,3 +1,4 @@
+
 import { Dialog } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { BookSessionDialog } from "./BookSessionDialog";
@@ -27,7 +28,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
   const isMentor = profile?.user_type === 'mentor';
 
   useEffect(() => {
-    if (sessionError) {
+    if (sessionError && session) {
       const key = `sb-${process.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
       localStorage.removeItem(key);
       queryClient.clear();
@@ -40,7 +41,7 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
       
       navigate("/auth");
     }
-  }, [sessionError, queryClient, toast, navigate]);
+  }, [sessionError, queryClient, toast, navigate, session]);
 
   useEffect(() => {
     if (isError && open) {
@@ -139,12 +140,14 @@ export function ProfileDetailsDialog({ userId, open, onOpenChange }: ProfileDeta
         />
       </Dialog>
 
-      <ProfileRealtime 
-        userId={userId}
-        open={open}
-        session={session}
-        queryClient={queryClient}
-      />
+      {session && (
+        <ProfileRealtime 
+          userId={userId}
+          open={open}
+          session={session}
+          queryClient={queryClient}
+        />
+      )}
 
       {!isOwnProfile && (
         <BookSessionDialog
