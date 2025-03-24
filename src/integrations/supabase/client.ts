@@ -5,13 +5,16 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://wurdmlkfkzuivvwxjmxk.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1cmRtbGtma3p1aXZ2d3hqbXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4NTE4MzgsImV4cCI6MjA0OTQyNzgzOH0.x4jgZjedKprq19f2A7QpMrWRHfan3f24Th6sfoy-2eg";
 
+// Create a consistent storage key specific to the app
+const AUTH_STORAGE_KEY = 'picocareer_auth_token';
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'picocareer_auth_token',
+    storageKey: AUTH_STORAGE_KEY,
     flowType: 'pkce',
   },
   global: {
@@ -24,7 +27,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       eventsPerSecond: 2,
     },
   },
-  // Add timeout settings
   db: {
     schema: 'public',
   },
