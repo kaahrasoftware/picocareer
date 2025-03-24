@@ -26,10 +26,22 @@ export default function Mentor() {
   const showDialog = searchParams.get('dialog') === 'true';
 
   useEffect(() => {
-    if (profileId && showDialog) {
-      setIsProfileDialogOpen(true);
-    }
-  }, [profileId, showDialog]);
+    const checkSession = async () => {
+      if (profileId && showDialog) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to view mentor details.",
+            variant: "destructive",
+          });
+        }
+        setIsProfileDialogOpen(true);
+      }
+    };
+    
+    checkSession();
+  }, [profileId, showDialog, toast]);
 
   const { data: profiles = [], isLoading, error } = useQuery({
     queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailabilityFilter],
