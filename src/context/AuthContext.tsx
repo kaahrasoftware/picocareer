@@ -1,7 +1,10 @@
+
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, throttledAuthOperation } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { SessionTimeoutDialog } from '@/components/auth/SessionTimeoutDialog';
 
 type AuthContextType = {
   session: Session | null;
@@ -13,17 +16,78 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Session timeout configuration
+const SESSION_TIMEOUT_WARNING_MS = 10 * 60 * 1000; // 10 minutes
+const SESSION_ACTIVITY_EVENTS = ['click', 'keypress', 'scroll', 'mousemove', 'touchstart'];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isInitialized = useRef(false);
   const authChangeSubscription = useRef<{ unsubscribe: () => void } | null>(null);
-  
   const authRetryCount = useRef(0);
   const MAX_AUTH_RETRIES = 3;
+  
+  // Session timeout management
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const timeoutWarningRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+
+  // Track user activity
+  const updateLastActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    
+    // If there's a warning showing, hide it as user is active
+    if (showTimeoutWarning) {
+      setShowTimeoutWarning(false);
+    }
+    
+    // Reset timeout warning timer
+    if (timeoutWarningRef.current) {
+      clearTimeout(timeoutWarningRef.current);
+    }
+    
+    // Only set a new timeout if user is logged in
+    if (session?.user) {
+      timeoutWarningRef.current = setTimeout(() => {
+        setShowTimeoutWarning(true);
+      }, SESSION_TIMEOUT_WARNING_MS);
+    }
+  }, [showTimeoutWarning, session]);
+
+  // Reset the session timeout when user continues session
+  const handleContinueSession = useCallback(() => {
+    setShowTimeoutWarning(false);
+    updateLastActivity();
+  }, [updateLastActivity]);
+
+  // Handle user activity
+  useEffect(() => {
+    if (!session?.user) return;
+    
+    // Setup activity listeners
+    SESSION_ACTIVITY_EVENTS.forEach(event => {
+      window.addEventListener(event, updateLastActivity, { passive: true });
+    });
+    
+    // Initial activity timestamp and warning timeout
+    updateLastActivity();
+    
+    return () => {
+      // Cleanup
+      SESSION_ACTIVITY_EVENTS.forEach(event => {
+        window.removeEventListener(event, updateLastActivity);
+      });
+      
+      if (timeoutWarningRef.current) {
+        clearTimeout(timeoutWarningRef.current);
+      }
+    };
+  }, [session, updateLastActivity]);
 
   useEffect(() => {
     if (isInitialized.current) return;
@@ -57,10 +121,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
               setSession(null);
               setUser(null);
+              
+              // Clear any existing timeout warning
+              if (timeoutWarningRef.current) {
+                clearTimeout(timeoutWarningRef.current);
+                timeoutWarningRef.current = null;
+              }
+              setShowTimeoutWarning(false);
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               setSession(currentSession);
               setUser(currentSession?.user ?? null);
               authRetryCount.current = 0;
+              
+              // Update activity timestamp when signed in or token refreshed
+              updateLastActivity();
             }
           }
         );
@@ -81,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authChangeSubscription.current.unsubscribe();
       }
     };
-  }, [toast]);
+  }, [toast, updateLastActivity]);
 
   const signOut = async () => {
     try {
@@ -98,8 +172,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       });
       
+      // Clear any timeouts and hide warning dialog
+      if (timeoutWarningRef.current) {
+        clearTimeout(timeoutWarningRef.current);
+        timeoutWarningRef.current = null;
+      }
+      setShowTimeoutWarning(false);
+      
+      // Clear session state
       setSession(null);
       setUser(null);
+      
+      // Clear query cache to prevent stale data from previous session
+      queryClient.clear();
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast({
@@ -120,6 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
+      <SessionTimeoutDialog
+        isOpen={showTimeoutWarning}
+        onContinue={handleContinueSession}
+        onLogout={signOut}
+        timeoutMinutes={10}
+      />
       {children}
     </AuthContext.Provider>
   );

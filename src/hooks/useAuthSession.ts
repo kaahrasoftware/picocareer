@@ -1,8 +1,9 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 // Session protection levels
 export type AuthProtectionLevel = 'required' | 'optional' | 'public';
@@ -23,6 +24,21 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
     }
   }, [session, loading, protectionLevel, navigate]);
 
+  // Add session refresh helper
+  const refreshSession = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error('Error refreshing session:', error);
+        return false;
+      }
+      return !!data.session;
+    } catch (err) {
+      console.error('Exception during session refresh:', err);
+      return false;
+    }
+  }, []);
+
   return {
     session,
     user,
@@ -30,6 +46,7 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
     sessionError,
     isError: !!sessionError,
     signOut,
+    refreshSession,
     queryClient,
     isAuthenticated: !!session,
   };

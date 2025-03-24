@@ -56,7 +56,7 @@ const refreshQueue: (() => void)[] = [];
 // Helper function to throttle auth operations
 export const throttledAuthOperation = async (operation: () => Promise<any>) => {
   const now = Date.now();
-  const minInterval = 5000; // 5 seconds between auth operations (increased from 2s)
+  const minInterval = 10000; // 10 seconds between auth operations (increased from 5s)
   
   if (now - lastRefreshTime < minInterval) {
     console.log('Throttling auth operation to prevent rate limiting');
@@ -92,5 +92,16 @@ export const throttledAuthOperation = async (operation: () => Promise<any>) => {
         setTimeout(nextOperation, minInterval);
       }
     }
+  }
+};
+
+// Session persistence helpers
+export const getStoredSession = () => {
+  try {
+    const storedSession = localStorage.getItem(AUTH_STORAGE_KEY);
+    return storedSession ? JSON.parse(storedSession) : null;
+  } catch (error) {
+    console.error('Error reading stored session:', error);
+    return null;
   }
 };
