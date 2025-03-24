@@ -11,9 +11,6 @@ import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SkillsSection } from "./sections/SkillsSection";
 import { SocialSection } from "./sections/SocialSection";
-import { useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import type { FormValues } from "./types";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
@@ -35,9 +32,6 @@ export function MentorRegistrationForm({
   majors = [],
 }: MentorRegistrationFormProps) {
   const { session } = useAuthSession();
-  const [formError, setFormError] = useState<string | null>(null);
-  const [submissionProgress, setSubmissionProgress] = useState<string | null>(null);
-  
   const form = useForm<FormValues>({
     resolver: zodResolver(mentorRegistrationSchema),
     defaultValues: {
@@ -68,8 +62,7 @@ export function MentorRegistrationForm({
       instagram_url: "",
       tiktok_url: "",
       youtube_url: ""
-    },
-    mode: "onChange" // Enable validation as fields change
+    }
   });
 
   // Handle submission, delegating to the passed onSubmit function
@@ -79,35 +72,16 @@ export function MentorRegistrationForm({
       consented: data.background_check_consent 
     });
     
-    setFormError(null);
-    setSubmissionProgress("Preparing your submission...");
-    
     if (!data.background_check_consent) {
-      setFormError('You must consent to the background check to register as a mentor');
+      console.error('Background check consent not provided');
       return;
     }
     
     try {
-      setSubmissionProgress("Validating form data...");
-      // Additional client-side validation can be added here
-      
-      setSubmissionProgress("Uploading profile information...");
       await onSubmit(data);
-      setSubmissionProgress(null);
     } catch (error: any) {
       console.error('Form submission error:', error);
-      setSubmissionProgress(null);
-      
-      // Enhanced error handling with user-friendly messages
-      if (error.code === 'PGRST301') {
-        setFormError('You do not have permission to register. Please ensure you are logged in with a valid account.');
-      } else if (error.code === '23505') {
-        setFormError('An account with this email already exists. Please use a different email or log in to your existing account.');
-      } else if (error.message?.includes('row-level security')) {
-        setFormError('Authentication issue detected. Please try logging out and logging back in.');
-      } else {
-        setFormError(error.message || 'An unexpected error occurred. Please try again.');
-      }
+      // Error handling is now managed in the useMentorRegistration hook
     }
   };
 
@@ -123,40 +97,9 @@ export function MentorRegistrationForm({
   const socialFields = mentorFormFields.filter(field => 
     ['linkedin_url', 'github_url', 'website_url', 'X_url', 'facebook_url', 'instagram_url', 'tiktok_url', 'youtube_url'].includes(field.name));
 
-  // Check if form has any validation errors
-  const formHasErrors = Object.keys(form.formState.errors).length > 0;
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        {formError && (
-          <Alert variant="destructive" className="mb-6 animate-in fade-in-50 slide-in-from-top-5">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Registration Error</AlertTitle>
-            <AlertDescription>{formError}</AlertDescription>
-          </Alert>
-        )}
-        
-        {submissionProgress && (
-          <Alert className="mb-6 border-blue-200 bg-blue-50 text-blue-800">
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin"></div>
-              <AlertTitle>Registration in Progress</AlertTitle>
-            </div>
-            <AlertDescription>{submissionProgress}</AlertDescription>
-          </Alert>
-        )}
-        
-        {formHasErrors && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Form Contains Errors</AlertTitle>
-            <AlertDescription>
-              Please fix the highlighted fields before submitting.
-            </AlertDescription>
-          </Alert>
-        )}
-        
         <PersonalInfoSection control={form.control} fields={personalFields} />
         
         {/* Show password field only for new users who aren't logged in */}
@@ -204,7 +147,7 @@ export function MentorRegistrationForm({
             type="submit" 
             size="lg"
             className="w-full sm:w-auto min-w-[200px]" 
-            disabled={isSubmitting || !form.watch("background_check_consent") || formHasErrors}
+            disabled={isSubmitting || !form.watch("background_check_consent")}
           >
             {isSubmitting ? (
               <>

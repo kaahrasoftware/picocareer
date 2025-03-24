@@ -39,19 +39,7 @@ export function useMentorRegistration() {
         }
         
         // Register the new user first
-        try {
-          user = await registerNewUser(data);
-        } catch (error: any) {
-          console.error('User registration error:', error);
-          // Provide detailed error messages for auth errors
-          if (error.message.includes('password')) {
-            throw new Error(`Password error: ${error.message}`);
-          } else if (error.message.includes('email')) {
-            throw new Error(`Email error: ${error.message}`);
-          } else {
-            throw new Error(`Registration error: ${error.message}`);
-          }
-        }
+        user = await registerNewUser(data);
         
         // Wait briefly for auth state to update
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -59,42 +47,25 @@ export function useMentorRegistration() {
       
       // Verify user exists
       if (!user?.id) {
-        throw new Error("User authentication failed. Please try logging in again.");
+        throw new Error("User authentication failed");
       }
 
       const formattedData = formatMentorData(data, user.id);
 
       console.log('Formatted data for submission:', formattedData);
 
-      try {
-        const { data: upsertData, error: upsertError } = await supabase
-          .from('profiles')
-          .upsert(formattedData);
+      const { data: upsertData, error: upsertError } = await supabase
+        .from('profiles')
+        .upsert(formattedData);
 
-        if (upsertError) {
-          console.error('Database upsert error:', upsertError);
-          // Transform database errors into user-friendly messages
-          if (upsertError.code === '23505') {
-            throw new Error("A profile with this information already exists.");
-          } else if (upsertError.message.includes('violates row-level security policy')) {
-            throw new Error("Permission error: Unable to create your profile. Please ensure you're properly logged in.");
-          } else {
-            throw upsertError;
-          }
-        }
-
-        console.log('Upsert response:', upsertData);
-      } catch (error: any) {
-        console.error('Error during profile creation:', error);
-        throw error;
+      if (upsertError) {
+        console.error('Database upsert error:', upsertError);
+        throw upsertError;
       }
 
-      try {
-        await sendAdminNotification(formattedData);
-      } catch (notificationError) {
-        console.error('Admin notification error (non-critical):', notificationError);
-        // Don't fail the whole process for notification errors
-      }
+      console.log('Upsert response:', upsertData);
+
+      await sendAdminNotification(formattedData);
 
       toast({
         title: "Application Received",
@@ -106,32 +77,11 @@ export function useMentorRegistration() {
       navigate('/');
     } catch (error: any) {
       console.error('Error registering mentor:', error);
-      
-      // Ensure we extract a reasonable error message
-      let errorMessage = "Failed to submit mentor application. Please try again.";
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        errorMessage = error.message || errorMessage;
-        
-        // Handle Supabase specific errors
-        if (error.code === '42501') {
-          errorMessage = "You don't have permission to perform this action. Please check that you're logged in.";
-        } else if (error.code === '23505') {
-          errorMessage = "A profile with this information already exists.";
-        } else if (error.code && error.details) {
-          errorMessage = `Error (${error.code}): ${error.details}`;
-        }
-      }
-      
       toast({
-        title: "Registration Error",
-        description: errorMessage,
+        title: "Error",
+        description: error.message || "Failed to submit mentor application. Please try again.",
         variant: "destructive",
       });
-      
-      throw error; // Re-throw so the form can handle the error display
     } finally {
       setIsSubmitting(false);
     }

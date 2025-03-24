@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +7,7 @@ export const useSearchMentors = () => {
   const { toast } = useToast();
 
   const searchMentors = async (query: string) => {
-    if (!query || query.length < 3) {
+    if (query.length < 3) {
       return [];
     }
 
@@ -16,9 +15,6 @@ export const useSearchMentors = () => {
     console.log('Searching mentors with query:', query);
 
     try {
-      // Ensure query is a string before using string methods
-      const safeQuery = String(query).toLowerCase();
-      
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -41,15 +37,15 @@ export const useSearchMentors = () => {
         `)
         .eq('user_type', 'mentor')
         .or(
-          `first_name.ilike.%${safeQuery}%,` +
-          `last_name.ilike.%${safeQuery}%,` +
-          `bio.ilike.%${safeQuery}%,` +
-          `location.ilike.%${safeQuery}%,` +
-          `keywords.cs.{${safeQuery}},` +
-          `skills.cs.{${safeQuery}},` +
-          `tools_used.cs.{${safeQuery}},` +
-          `fields_of_interest.cs.{${safeQuery}},` +
-          `languages.cs.{${safeQuery}}`
+          `first_name.ilike.%${query}%,` +
+          `last_name.ilike.%${query}%,` +
+          `bio.ilike.%${query}%,` +
+          `location.ilike.%${query}%,` +
+          `keywords.cs.{${query.toLowerCase()}},` +
+          `skills.cs.{${query.toLowerCase()}},` +
+          `tools_used.cs.{${query.toLowerCase()}},` +
+          `fields_of_interest.cs.{${query.toLowerCase()}},` +
+          `languages.cs.{${query.toLowerCase()}}`
         )
         .limit(20);
 

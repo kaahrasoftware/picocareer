@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { router } from '@/router/routes';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
-import { AuthProvider } from '@/context/AuthContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -20,9 +19,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <AppContent />
     </QueryClientProvider>
   );
 }

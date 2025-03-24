@@ -1,8 +1,7 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchMentors } from "@/hooks/useSearchMentors";
 import { useSearchMajors } from "@/hooks/useSearchMajors";
 import { useSearchCareers } from "@/hooks/useSearchCareers";
@@ -22,8 +21,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const { searchMajors, isLoading: isMajorsLoading } = useSearchMajors();
   const { searchCareers, isLoading: isCareersLoading } = useSearchCareers();
 
-  // Use debounced search function with a longer delay
-  const performSearch = useDebouncedCallback(async (value: string) => {
+  const handleSearch = async (value: string) => {
     if (value.length < 3) {
       setSearchResults([]);
       return;
@@ -31,31 +29,29 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
 
     console.log("Searching with query:", value);
     
-    try {
-      const [mentorResults, majorResults, careerResults] = await Promise.all([
-        searchMentors(value),
-        searchMajors(value),
-        searchCareers(value)
-      ]);
+    const [mentorResults, majorResults, careerResults] = await Promise.all([
+      searchMentors(value),
+      searchMajors(value),
+      searchCareers(value)
+    ]);
 
-      console.log("Career search results:", careerResults);
-      
-      const formattedResults = [
-        ...mentorResults.map(result => ({ ...result, type: 'mentor' })),
-        ...majorResults.map(result => ({ ...result, type: 'major' })),
-        ...careerResults.map(result => ({ ...result, type: 'career' }))
-      ];
+    console.log("Career search results:", careerResults);
+    
+    const formattedResults = [
+      ...mentorResults.map(result => ({ ...result, type: 'mentor' })),
+      ...majorResults.map(result => ({ ...result, type: 'major' })),
+      ...careerResults.map(result => ({ ...result, type: 'career' }))
+    ];
 
-      setSearchResults(formattedResults);
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults([]);
-    }
-  }, 800); // Increased delay to 800ms for better user experience
+    setSearchResults(formattedResults);
+  };
+
+  // Use debounce for search
+  const debouncedSearch = useDebounce(handleSearch, 300);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    performSearch(value);
+    debouncedSearch(value);
   };
 
   const handleCloseSearch = () => {
@@ -63,13 +59,6 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
     setSearchQuery("");
     setSearchResults([]);
   };
-
-  // Effect to clear search results when query length is too short
-  useEffect(() => {
-    if (searchQuery.length < 3) {
-      setSearchResults([]);
-    }
-  }, [searchQuery]);
 
   const isLoading = isMentorsLoading || isMajorsLoading || isCareersLoading;
 
@@ -118,4 +107,4 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       )}
     </div>
   );
-}
+};

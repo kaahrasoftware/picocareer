@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,12 +28,9 @@ export function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
     try {
       await signIn(formData.email, formData.password);
     } catch (err) {
-      console.error("Authentication error details:", err);
-      
       if (err instanceof AuthError) {
         // Handle specific auth error cases
         switch (err.message) {
