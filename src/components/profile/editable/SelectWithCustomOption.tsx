@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Select,
   SelectContent,
@@ -42,6 +42,8 @@ export function SelectWithCustomOption({
   const [filteredOptions, setFilteredOptions] = useState(options);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   
   // Update filtered options when options change
   useEffect(() => {
@@ -50,8 +52,6 @@ export function SelectWithCustomOption({
 
   // Handle search input changes with debouncing
   const handleSearchChange = useDebouncedCallback(async (query: string) => {
-    setSearchQuery(query);
-    
     if (!query || query.length < 2) {
       setFilteredOptions(options);
       return;
@@ -123,6 +123,18 @@ export function SelectWithCustomOption({
       setIsSearching(false);
     }
   }, 500);
+
+  // Focus the search input when content opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Use a short timeout to ensure the select content is rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 10);
+    } else {
+      setSearchQuery("");
+    }
+  };
 
   const handleCustomSubmit = async () => {
     if (!customValue.trim()) {
@@ -242,17 +254,28 @@ export function SelectWithCustomOption({
             handleSelectChange(fieldName, newValue);
           }
         }}
+        onOpenChange={handleOpenChange}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent ref={contentRef}>
           <div className="p-2">
             <Input
+              ref={searchInputRef}
               placeholder="Search..."
-              defaultValue={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                handleSearchChange(e.target.value);
+              }}
               className="mb-2"
+              onKeyDown={(e) => {
+                // Prevent the select from closing on Enter key
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                }
+              }}
             />
           </div>
           <ScrollArea className="h-[200px]">

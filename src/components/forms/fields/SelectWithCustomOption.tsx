@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useDebounce, useDebouncedCallback } from "@/hooks/useDebounce";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 type Status = Database["public"]["Enums"]["status"];
 
@@ -40,9 +40,8 @@ export function SelectWithCustomOption({
   const [localOptions, setLocalOptions] = useState<Array<{ id: string; title?: string; name?: string; }>>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
-  
-  // Use a longer debounce time to give user more time to type
-  const debouncedSearchQuery = useDebounce(searchQuery, 800);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Pre-populate with provided options
   useEffect(() => {
@@ -51,33 +50,30 @@ export function SelectWithCustomOption({
     }
   }, [options]);
 
-  // Fetch options for the given table with debounced search
-  const { data: allOptions, isLoading } = useQuery({
-    queryKey: [tableName, 'all', debouncedSearchQuery],
+  // Fetch options for the given table with search
+  const { data: searchResults, isLoading } = useQuery({
+    queryKey: [tableName, 'search', searchQuery],
     queryFn: async () => {
-      if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
-        return options; // Return the initial options if search query is too short
+      if (!searchQuery || searchQuery.length < 2) {
+        return []; // Return empty if search query is too short
       }
       
-      setIsSearching(true);
-      console.log(`Fetching ${tableName} with search: ${debouncedSearchQuery}`);
+      console.log(`Fetching ${tableName} with search: ${searchQuery}`);
       
       try {
         // Ensure query is safe
-        const safeQuery = String(debouncedSearchQuery).toLowerCase();
+        const safeQuery = String(searchQuery).toLowerCase();
         
         let query = supabase
           .from(tableName)
           .select('id, name, title')
           .limit(50); // Limit to 50 results for performance
 
-        // Add search filter if query exists
-        if (safeQuery) {
-          if (tableName === 'majors' || tableName === 'careers') {
-            query = query.ilike('title', `%${safeQuery}%`);
-          } else {
-            query = query.ilike('name', `%${safeQuery}%`);
-          }
+        // Add search filter
+        if (tableName === 'majors' || tableName === 'careers') {
+          query = query.ilike('title', `%${safeQuery}%`);
+        } else {
+          query = query.ilike('name', `%${safeQuery}%`);
         }
 
         // Add ordering
@@ -95,21 +91,19 @@ export function SelectWithCustomOption({
       } catch (error) {
         console.error(`Error in search query:`, error);
         return [];
-      } finally {
-        setIsSearching(false);
       }
     },
-    enabled: debouncedSearchQuery.length >= 2,
+    enabled: searchQuery.length >= 2,
     staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
   });
 
-  // Update local options when new data arrives from query
+  // Update local options when new search results arrive
   useEffect(() => {
-    if (allOptions && allOptions.length > 0) {
-      // Combine with existing options, removing duplicates
+    if (searchResults && searchResults.length > 0) {
+      // Merge with existing options, removing duplicates
       setLocalOptions(prevOptions => {
         const combined = [...prevOptions];
-        allOptions.forEach(option => {
+        searchResults.forEach(option => {
           if (!combined.some(existing => existing.id === option.id)) {
             combined.push(option);
           }
@@ -117,9 +111,9 @@ export function SelectWithCustomOption({
         return combined;
       });
     }
-  }, [allOptions]);
+  }, [searchResults]);
 
-  // Client-side filtering for faster response
+  // Client-side filtering for immediate feedback
   const filteredOptions = searchQuery.length > 0
     ? localOptions.filter(option => {
         const searchValue = (option.title || option.name || '').toLowerCase();
@@ -127,10 +121,22 @@ export function SelectWithCustomOption({
       })
     : localOptions;
 
-  // Debounced search handler to prevent excessive state updates
+  // Debounced search handler to prevent excessive API calls
   const handleSearchChange = useDebouncedCallback((value: string) => {
     setSearchQuery(value);
   }, 300);
+
+  // Focus the search input when content opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Use a short timeout to ensure the select content is rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 10);
+    } else {
+      setSearchQuery("");
+    }
+  };
 
   const handleCustomSubmit = async () => {
     if (!customValue.trim()) {
@@ -236,17 +242,28 @@ export function SelectWithCustomOption({
             onValueChange(newValue);
           }
         }}
+        onOpenChange={handleOpenChange}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent ref={contentRef}>
           <div className="p-2">
             <Input
+              ref={searchInputRef}
               placeholder="Search..."
-              defaultValue={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                handleSearchChange(e.target.value);
+              }}
               className="mb-2"
+              onKeyDown={(e) => {
+                // Prevent the select from closing on Enter key
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                }
+              }}
             />
           </div>
           <ScrollArea className="h-[200px]">

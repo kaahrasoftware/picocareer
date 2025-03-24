@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 type TableName = 'majors' | 'schools' | 'companies' | 'careers';
 type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
@@ -51,14 +51,39 @@ export function CustomSelect({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [filteredOptions, setFilteredOptions] = useState(options);
   const { toast } = useToast();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter options client-side based on debounced search query
-  const filteredOptions = options.filter(option => {
-    const searchValue = option[titleField]?.toLowerCase() || '';
-    return searchValue.includes(debouncedSearchQuery.toLowerCase());
-  });
+  // Handle search input changes with debouncing
+  const handleSearchChange = useDebouncedCallback((query: string) => {
+    setSearchQuery(query);
+    
+    if (!query) {
+      setFilteredOptions(options);
+      return;
+    }
+    
+    const filtered = options.filter(option => {
+      const searchValue = (option[titleField] || '').toLowerCase();
+      return searchValue.includes(query.toLowerCase());
+    });
+    
+    setFilteredOptions(filtered);
+  }, 300);
+
+  // Focus the search input when content opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Use a short timeout to ensure the select content is rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 10);
+    } else {
+      setSearchQuery("");
+      setFilteredOptions(options);
+    }
+  };
 
   const handleCustomSubmit = async () => {
     try {
@@ -123,6 +148,9 @@ export function CustomSelect({
         handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
+        
+        // Add new item to filtered options
+        setFilteredOptions(prev => [...prev, data]);
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
@@ -147,6 +175,7 @@ export function CustomSelect({
               handleSelectChange(fieldName, value);
             }
           }}
+          onOpenChange={handleOpenChange}
         >
           <SelectTrigger className="mt-1">
             <SelectValue placeholder={`Select your ${placeholder.toLowerCase()}`} />
@@ -154,10 +183,20 @@ export function CustomSelect({
           <SelectContent>
             <div className="p-2">
               <Input
+                ref={searchInputRef}
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  handleSearchChange(e.target.value);
+                }}
                 className="mb-2"
+                onKeyDown={(e) => {
+                  // Prevent the select from closing on Enter key
+                  if (e.key === 'Enter') {
+                    e.stopPropagation();
+                  }
+                }}
               />
             </div>
             {filteredOptions.map((option) => (
