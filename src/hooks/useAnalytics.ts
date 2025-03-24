@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAnalyticsBatch } from './useAnalyticsBatch';
-import { useDebounce } from './useDebounce';
+import { useDebouncedCallback } from './useDebounce';
 
 type InteractionType = 'page_view' | 'click' | 'search' | 'bookmark' | 'content_view';
 
@@ -48,7 +48,8 @@ export function useAnalytics() {
     [session?.user?.id, addEvent]
   );
 
-  const trackInteraction = useDebounce(trackInteractionImpl, 1000);
+  // Using useDebouncedCallback instead of useDebounce for function debouncing
+  const trackInteraction = useDebouncedCallback(trackInteractionImpl, 1000);
 
   return {
     trackInteraction,

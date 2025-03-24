@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -8,6 +9,8 @@ export function useProfileAnalytics() {
   const startTime = useRef(Date.now());
 
   useEffect(() => {
+    if (!trackInteraction || !trackPageView) return; // Guard against undefined functions
+    
     const currentPath = location.pathname;
     
     // Track initial page view
@@ -15,6 +18,8 @@ export function useProfileAnalytics() {
     
     // Set up scroll tracking
     const handleScroll = () => {
+      if (!trackInteraction) return; // Guard against undefined function
+      
       const scrollPosition = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercentage = Math.round((scrollPosition / maxScroll) * 100);
@@ -30,6 +35,8 @@ export function useProfileAnalytics() {
 
     // Track page exit
     const cleanup = () => {
+      if (!trackInteraction) return; // Guard against undefined function
+      
       const timeSpent = Math.floor((Date.now() - startTime.current) / 1000);
       trackInteraction({
         elementId: 'profile-page',
@@ -51,6 +58,8 @@ export function useProfileAnalytics() {
   }, [location.pathname, trackPageView, trackInteraction]);
 
   const handleTabChange = useCallback((value: string) => {
+    if (!trackInteraction) return; // Guard against undefined function
+    
     trackInteraction({
       elementId: `tab-${value}`,
       elementType: 'tab',
@@ -61,6 +70,8 @@ export function useProfileAnalytics() {
   }, [trackInteraction, location.pathname]);
 
   const handleSearch = useCallback((query: string) => {
+    if (!trackInteraction) return; // Guard against undefined function
+    
     trackInteraction({
       elementId: 'profile-search',
       elementType: 'search',
