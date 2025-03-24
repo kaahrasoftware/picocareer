@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { SocialSignIn } from "./SocialSignIn";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
+import { Loader2 } from "lucide-react";
 
 export function SignInForm() {
   const { signIn, isLoading } = useAuth();
@@ -28,9 +30,18 @@ export function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.email || !formData.password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+    
     try {
       await signIn(formData.email, formData.password);
     } catch (err) {
+      console.error("SignInForm error:", err);
+      
       if (err instanceof AuthError) {
         // Handle specific auth error cases
         switch (err.message) {
@@ -45,11 +56,9 @@ export function SignInForm() {
             break;
           default:
             // Log unexpected errors for debugging
-            console.error("Authentication error:", err);
             setError(err.message || "An error occurred during sign in. Please try again.");
         }
       } else {
-        console.error("Unexpected error:", err);
         setError("An unexpected error occurred. Please try again.");
       }
     }
@@ -99,11 +108,15 @@ export function SignInForm() {
               required
             />
           </div>
-          <Button disabled={isLoading}>
-            {isLoading && (
-              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
+          <Button disabled={isLoading} type="submit">
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
             )}
-            Sign In
           </Button>
         </div>
       </form>
