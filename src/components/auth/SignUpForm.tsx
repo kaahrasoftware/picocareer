@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
-import { Loader2 } from "lucide-react";
 
 export function SignUpForm() {
   const navigate = useNavigate();
@@ -182,12 +180,7 @@ export function SignUpForm() {
         />
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating account...
-          </>
-        ) : "Create Account"}
+        {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
       <SocialSignIn />

@@ -1,5 +1,6 @@
-
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +15,22 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 
 export function UserMenu() {
   const navigate = useNavigate();
-  const { session, signOut } = useAuthSession();
+  const { toast } = useToast();
+  const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!profile) return null;
 
@@ -41,7 +56,7 @@ export function UserMenu() {
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

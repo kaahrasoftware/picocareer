@@ -11,7 +11,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     detectSessionInUrl: true,
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'picocareer.auth.token',
+    storageKey: 'picocareer_auth_token',
+    flowType: 'pkce',
   },
   global: {
     headers: {
@@ -22,6 +23,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     params: {
       eventsPerSecond: 2,
     },
+  },
+  // Add timeout settings
+  db: {
+    schema: 'public',
   },
 });
 

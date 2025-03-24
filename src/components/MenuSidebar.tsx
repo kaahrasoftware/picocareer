@@ -1,7 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { NotificationPanel } from "./navigation/NotificationPanel";
 import { UserMenu } from "./navigation/UserMenu";
@@ -13,13 +13,12 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { session, signOut } = useAuthSession();
+  const { toast } = useToast();
+  const { session, isError } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { data: notifications = [] } = useNotifications(session);
   const isMobile = useIsMobile();
@@ -48,8 +47,25 @@ export function MenuSidebar() {
     }
   };
 
-  // If there's no session, show sign in button
-  if (!session) {
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      queryClient.clear();
+      navigate("/auth");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // If there's an auth error, show sign in button
+  if (isError) {
     return (
       <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
         <div className="container h-full mx-auto flex items-center justify-between px-4">

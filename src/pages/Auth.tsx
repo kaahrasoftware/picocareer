@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
@@ -15,18 +16,16 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useEffect } from "react";
 
 export default function Auth() {
   const { session } = useAuthSession();
   const navigate = useNavigate();
 
   // Redirect authenticated users away from auth page
-  useEffect(() => {
-    if (session?.user) {
-      navigate('/', { replace: true });
-    }
-  }, [session, navigate]);
+  if (session?.user) {
+    navigate('/');
+    return null;
+  }
 
   const { data: mentors = [], isError } = useQuery({
     queryKey: ['random-mentors'],
@@ -60,11 +59,6 @@ export default function Auth() {
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
-
-  // If session exists, don't render the auth page
-  if (session?.user) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen">

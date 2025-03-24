@@ -1,14 +1,14 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { InvitationVerifier } from "@/components/hub/invite-response/InvitationVerifier";
 import { ErrorState } from "@/components/hub/invite-response/ErrorState";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 export default function HubInviteResponse() {
-  const { session } = useAuthSession();
-  const [error, setError] = useState<string | null>(null);
+  const { session, isError } = useAuthSession();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Extract token from URL if present for redirection purposes
   const getTokenFromUrl = (): string | null => {
@@ -32,26 +32,19 @@ export default function HubInviteResponse() {
     const hubIdMatch = location.pathname.match(/\/hubs\/([^/?]+)/);
     if (hubIdMatch && hubIdMatch[1]) {
       console.log("Detected hub ID in path, redirecting to proper invite page");
-      window.location.href = "/hub-invite";
+      navigate("/hub-invite");
     }
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
   
   // If not authenticated, redirect to auth page with return URL
-  useEffect(() => {
-    if (!session) {
-      const redirectPath = token ? `/hub-invite?token=${token}` : "/hub-invite";
-      window.location.href = `/auth?redirect=${redirectPath}`;
-    }
-  }, [session, token]);
+  if (!session && !isError) {
+    const redirectPath = token ? `/hub-invite?token=${token}` : "/hub-invite";
+    return <Navigate to={`/auth?redirect=${redirectPath}`} replace />;
+  }
   
   // Show error if there's an authentication error
-  if (error) {
-    return <ErrorState error={error} />;
-  }
-
-  // If no session, show loading while the redirect happens
-  if (!session) {
-    return <div>Loading...</div>;
+  if (isError) {
+    return <ErrorState error="There was a problem with your authentication. Please try signing in again." />;
   }
 
   // The InvitationVerifier component handles the rest of the verification internally

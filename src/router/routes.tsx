@@ -1,7 +1,6 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
-import { Suspense } from "react";
 
-import { MainLayout } from "./layouts"; 
+import { MainLayout } from "./layouts"; // Changed from DefaultLayout to MainLayout
 import Index from "../pages/Index";
 import Career from "../pages/Career";
 import Mentor from "../pages/Mentor";
@@ -35,16 +34,10 @@ import Hub from "../pages/Hub";
 import HubInviteResponse from "../pages/HubInviteResponse";
 import CareerChat from "../pages/CareerChat";
 
-const AuthenticatedLayout = () => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <MainLayout />
-  </Suspense>
-);
-
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <AuthenticatedLayout />,
+    element: <MainLayout />, // Changed from DefaultLayout to MainLayout
     errorElement: <Error />,
     children: [
       {
@@ -64,7 +57,7 @@ export const router = createBrowserRouter([
         element: <Career />,
       },
       {
-        path: "career-chat",
+        path: "career-chat", // New route
         element: <CareerChat />,
       },
       {

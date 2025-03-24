@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError } from "@supabase/supabase-js";
 
 export function SignInForm() {
   const { signIn, isLoading } = useAuth();
@@ -29,18 +28,30 @@ export function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Basic validation
-    if (!formData.email || !formData.password) {
-      setError("Please enter both email and password.");
-      return;
-    }
-    
     try {
       await signIn(formData.email, formData.password);
-    } catch (err: any) {
-      console.error("SignInForm error:", err);
-      setError(err.message || "An error occurred during sign in. Please try again.");
+    } catch (err) {
+      if (err instanceof AuthError) {
+        // Handle specific auth error cases
+        switch (err.message) {
+          case "Invalid login credentials":
+            setError("Invalid email or password. Please check your credentials.");
+            break;
+          case "Email not confirmed":
+            setError("Please verify your email address before signing in.");
+            break;
+          case "Invalid email or password":
+            setError("The email or password you entered is incorrect.");
+            break;
+          default:
+            // Log unexpected errors for debugging
+            console.error("Authentication error:", err);
+            setError(err.message || "An error occurred during sign in. Please try again.");
+        }
+      } else {
+        console.error("Unexpected error:", err);
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -88,15 +99,11 @@ export function SignInForm() {
               required
             />
           </div>
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign In"
+          <Button disabled={isLoading}>
+            {isLoading && (
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
             )}
+            Sign In
           </Button>
         </div>
       </form>
