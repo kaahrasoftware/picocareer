@@ -2,7 +2,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import type { Session, User, AuthError } from "@supabase/supabase-js";
 
@@ -11,7 +10,7 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, redirectTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 };
@@ -22,7 +21,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Handle sign in
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, redirectTo?: string) => {
     setIsLoading(true);
 
     try {
@@ -77,14 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have successfully signed in.",
       });
 
-      // Navigate after a brief delay to ensure session is fully established
-      setTimeout(() => {
-        navigate("/");
-      }, 300);
+      // Use window.location for navigation instead of useNavigate
+      if (redirectTo) {
+        window.location.href = redirectTo;
+      } else {
+        window.location.href = "/";
+      }
     } catch (error) {
       console.error('Sign in error:', error);
       
-      if (error instanceof AuthError || (error as any).message) {
+      if ((error as any).message) {
         const errorMessage = (error as any).message || "Failed to sign in";
         
         if (errorMessage.includes("rate limit")) {
@@ -127,7 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.removeQueries({ queryKey: ['profile'] });
       queryClient.removeQueries({ queryKey: ['notifications'] });
       setUser(null);
-      navigate("/auth");
+      
+      // Use window.location for navigation
+      window.location.href = "/auth";
     } catch (error) {
       console.error('Error signing out:', error);
       toast({
@@ -173,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, queryClient, toast]);
+  }, [queryClient, toast]);
 
   // Get the current session from cache
   const { data: session } = useQuery({

@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +7,6 @@ import { AuthError } from "@supabase/supabase-js";
 import { useAuthSession } from "./useAuthSession";
 
 export function useAuth() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -47,9 +45,9 @@ export function useAuth() {
         description: "You have successfully signed in.",
       });
 
-      // Navigate after a brief delay to ensure session is fully established
+      // Navigate using window.location
       setTimeout(() => {
-        navigate("/");
+        window.location.href = "/";
       }, 300);
     } catch (error) {
       if (error instanceof AuthError) {

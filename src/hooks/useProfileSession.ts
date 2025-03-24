@@ -1,11 +1,10 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 export function useProfileSession() {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: session, isError: sessionError } = useQuery({
@@ -63,8 +62,8 @@ export function useProfileSession() {
       variant: "destructive",
     });
     
-    // Redirect to auth page
-    navigate("/auth");
+    // Redirect to auth page using window.location instead of useNavigate
+    window.location.href = "/auth";
   };
 
   // Set up auth state change listener

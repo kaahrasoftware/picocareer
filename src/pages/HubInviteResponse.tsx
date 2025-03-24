@@ -1,14 +1,14 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { InvitationVerifier } from "@/components/hub/invite-response/InvitationVerifier";
 import { ErrorState } from "@/components/hub/invite-response/ErrorState";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function HubInviteResponse() {
-  const { session, isError } = useAuthSession();
+  const { session } = useAuthSession();
+  const [error, setError] = useState<string | null>(null);
   const location = useLocation();
-  const navigate = useNavigate();
   
   // Extract token from URL if present for redirection purposes
   const getTokenFromUrl = (): string | null => {
@@ -32,19 +32,26 @@ export default function HubInviteResponse() {
     const hubIdMatch = location.pathname.match(/\/hubs\/([^/?]+)/);
     if (hubIdMatch && hubIdMatch[1]) {
       console.log("Detected hub ID in path, redirecting to proper invite page");
-      navigate("/hub-invite");
+      window.location.href = "/hub-invite";
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname]);
   
   // If not authenticated, redirect to auth page with return URL
-  if (!session && !isError) {
-    const redirectPath = token ? `/hub-invite?token=${token}` : "/hub-invite";
-    return <Navigate to={`/auth?redirect=${redirectPath}`} replace />;
-  }
+  useEffect(() => {
+    if (!session) {
+      const redirectPath = token ? `/hub-invite?token=${token}` : "/hub-invite";
+      window.location.href = `/auth?redirect=${redirectPath}`;
+    }
+  }, [session, token]);
   
   // Show error if there's an authentication error
-  if (isError) {
-    return <ErrorState error="There was a problem with your authentication. Please try signing in again." />;
+  if (error) {
+    return <ErrorState error={error} />;
+  }
+
+  // If no session, show loading while the redirect happens
+  if (!session) {
+    return <div>Loading...</div>;
   }
 
   // The InvitationVerifier component handles the rest of the verification internally
