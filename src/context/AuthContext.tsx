@@ -4,7 +4,6 @@ import { Session, User } from '@supabase/supabase-js';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { SessionTimeoutDialog } from '@/components/auth/SessionTimeoutDialog';
-import { supabase } from '@/integrations/supabase/client';
 
 type AuthContextType = {
   session: Session | null;
