@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { router } from '@/router/routes';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
+import { AuthProvider } from '@/hooks/useAuthSession';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -27,11 +28,10 @@ function App() {
 // Separate component to allow proper Hook usage and context inheritance
 function AppContent() {
   return (
-    <>
-      <RouterProvider router={router} />
-      <HubStorageInitializer />
-      <Toaster />
-    </>
+    <RouterProvider
+      router={router}
+      fallbackElement={<div>Loading...</div>}
+    />
   );
 }
 

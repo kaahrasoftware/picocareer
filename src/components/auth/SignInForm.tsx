@@ -5,13 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthError } from "@supabase/supabase-js";
 import { Loader2 } from "lucide-react";
 
 export function SignInForm() {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading } = useAuthSession();
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -39,28 +38,9 @@ export function SignInForm() {
     
     try {
       await signIn(formData.email, formData.password);
-    } catch (err) {
+    } catch (err: any) {
       console.error("SignInForm error:", err);
-      
-      if (err instanceof AuthError) {
-        // Handle specific auth error cases
-        switch (err.message) {
-          case "Invalid login credentials":
-            setError("Invalid email or password. Please check your credentials.");
-            break;
-          case "Email not confirmed":
-            setError("Please verify your email address before signing in.");
-            break;
-          case "Invalid email or password":
-            setError("The email or password you entered is incorrect.");
-            break;
-          default:
-            // Log unexpected errors for debugging
-            setError(err.message || "An error occurred during sign in. Please try again.");
-        }
-      } else {
-        setError("An unexpected error occurred. Please try again.");
-      }
+      setError(err.message || "An error occurred during sign in. Please try again.");
     }
   };
 
