@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { MentorSearchResults } from "./search/MentorSearchResults";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 import { useSearchMentors } from "@/hooks/useSearchMentors";
 import { useSearchMajors } from "@/hooks/useSearchMajors";
 import { useSearchCareers } from "@/hooks/useSearchCareers";
@@ -21,7 +22,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const { searchMajors, isLoading: isMajorsLoading } = useSearchMajors();
   const { searchCareers, isLoading: isCareersLoading } = useSearchCareers();
 
-  const handleSearch = async (value: string) => {
+  const performSearch = async (value: string) => {
     if (value.length < 3) {
       setSearchResults([]);
       return;
@@ -29,25 +30,30 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
 
     console.log("Searching with query:", value);
     
-    const [mentorResults, majorResults, careerResults] = await Promise.all([
-      searchMentors(value),
-      searchMajors(value),
-      searchCareers(value)
-    ]);
+    try {
+      const [mentorResults, majorResults, careerResults] = await Promise.all([
+        searchMentors(value),
+        searchMajors(value),
+        searchCareers(value)
+      ]);
 
-    console.log("Career search results:", careerResults);
-    
-    const formattedResults = [
-      ...mentorResults.map(result => ({ ...result, type: 'mentor' })),
-      ...majorResults.map(result => ({ ...result, type: 'major' })),
-      ...careerResults.map(result => ({ ...result, type: 'career' }))
-    ];
+      console.log("Career search results:", careerResults);
+      
+      const formattedResults = [
+        ...mentorResults.map(result => ({ ...result, type: 'mentor' })),
+        ...majorResults.map(result => ({ ...result, type: 'major' })),
+        ...careerResults.map(result => ({ ...result, type: 'career' }))
+      ];
 
-    setSearchResults(formattedResults);
+      setSearchResults(formattedResults);
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    }
   };
 
-  // Use debounce for search
-  const debouncedSearch = useDebounce(handleSearch, 300);
+  // Use debounced search function
+  const debouncedSearch = useDebouncedCallback(performSearch, 500);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);

@@ -15,6 +15,9 @@ export function useSearchCareers() {
       }
 
       console.log("Searching careers with query:", searchQuery);
+      
+      // Ensure searchQuery is a string before using string methods
+      const safeQuery = String(searchQuery).toLowerCase();
 
       // First, get exact matches (higher relevance)
       const { data: exactMatches, error: exactError } = await supabase
@@ -27,7 +30,7 @@ export function useSearchCareers() {
           complete_career
         `)
         .eq('complete_career', true)
-        .ilike('title', `%${searchQuery}%`)
+        .ilike('title', `%${safeQuery}%`)
         .limit(10);
 
       if (exactError) {
@@ -46,10 +49,10 @@ export function useSearchCareers() {
         `)
         .eq('complete_career', true)
         .or(
-          `description.ilike.%${searchQuery}%,` +
-          `academic_majors.cs.{${searchQuery}}`
+          `description.ilike.%${safeQuery}%,` +
+          `academic_majors.cs.{${safeQuery}}`
         )
-        .not('title', 'ilike', `%${searchQuery}%`) // Exclude titles we already got in exactMatches
+        .not('title', 'ilike', `%${safeQuery}%`) // Exclude titles we already got in exactMatches
         .limit(15);
 
       if (partialError) {

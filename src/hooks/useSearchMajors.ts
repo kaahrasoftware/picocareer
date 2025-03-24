@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +8,7 @@ export const useSearchMajors = () => {
   const { toast } = useToast();
 
   const searchMajors = async (query: string) => {
-    if (query.length < 3) {
+    if (!query || query.length < 3) {
       return [];
     }
 
@@ -15,6 +16,9 @@ export const useSearchMajors = () => {
     console.log('Searching majors with query:', query);
 
     try {
+      // Ensure query is a string before using string methods
+      const safeQuery = String(query).toLowerCase();
+      
       const { data, error } = await supabase
         .from('majors')
         .select(`
@@ -43,24 +47,24 @@ export const useSearchMajors = () => {
           profiles_count
         `)
         .or(
-          `title.ilike.%${query}%,` +
-          `description.ilike.%${query}%,` +
-          `common_courses.cs.{${query}},` +
-          `interdisciplinary_connections.cs.{${query}},` +
-          `job_prospects.ilike.%${query}%,` +
-          `certifications_to_consider.cs.{${query}},` +
-          `affiliated_programs.cs.{${query}},` +
-          `transferable_skills.cs.{${query}},` +
-          `tools_knowledge.cs.{${query}},` +
-          `passion_for_subject.ilike.%${query}%,` +
-          `skill_match.cs.{${query}},` +
-          `professional_associations.cs.{${query}},` +
-          `global_applicability.ilike.%${query}%,` +
-          `majors_to_consider_switching_to.cs.{${query}},` +
-          `career_opportunities.cs.{${query}},` +
-          `intensity.ilike.%${query}%,` +
-          `stress_level.ilike.%${query}%,` +
-          `category.cs.{${query}}`
+          `title.ilike.%${safeQuery}%,` +
+          `description.ilike.%${safeQuery}%,` +
+          `common_courses.cs.{${safeQuery}},` +
+          `interdisciplinary_connections.cs.{${safeQuery}},` +
+          `job_prospects.ilike.%${safeQuery}%,` +
+          `certifications_to_consider.cs.{${safeQuery}},` +
+          `affiliated_programs.cs.{${safeQuery}},` +
+          `transferable_skills.cs.{${safeQuery}},` +
+          `tools_knowledge.cs.{${safeQuery}},` +
+          `passion_for_subject.ilike.%${safeQuery}%,` +
+          `skill_match.cs.{${safeQuery}},` +
+          `professional_associations.cs.{${safeQuery}},` +
+          `global_applicability.ilike.%${safeQuery}%,` +
+          `majors_to_consider_switching_to.cs.{${safeQuery}},` +
+          `career_opportunities.cs.{${safeQuery}},` +
+          `intensity.ilike.%${safeQuery}%,` +
+          `stress_level.ilike.%${safeQuery}%,` +
+          `category.cs.{${safeQuery}}`
         )
         .limit(20);
 

@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce, useDebouncedCallback } from "@/hooks/useDebounce";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -39,8 +39,10 @@ export function SelectWithCustomOption({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const { toast } = useToast();
+  
+  // Use debounced search query for filtering
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const filteredOptions = options.filter(option => {
     const searchValue = option[titleField]?.toLowerCase() || '';
@@ -115,6 +117,10 @@ export function SelectWithCustomOption({
     }
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
   if (showCustomInput) {
     return (
       <div className="space-y-2">
@@ -174,7 +180,7 @@ export function SelectWithCustomOption({
             <Input
               placeholder="Search..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="mb-2"
             />
           </div>
