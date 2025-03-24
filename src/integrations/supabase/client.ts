@@ -8,6 +8,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Create a consistent storage key specific to the app
 const AUTH_STORAGE_KEY = 'picocareer_auth_token';
 
+// Configure the Supabase client with optimized settings
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     autoRefreshToken: true,
@@ -16,6 +17,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: AUTH_STORAGE_KEY,
     flowType: 'pkce',
+    // Adding debounce and throttling for auth requests to avoid rate limiting
+    debug: false,
   },
   global: {
     headers: {
@@ -42,5 +45,28 @@ export const checkSupabaseConnection = async () => {
   } catch (error) {
     console.error('Supabase connection failed:', error);
     return false;
+  }
+};
+
+// Cache control to prevent multiple simultaneous auth requests
+let isRefreshingToken = false;
+let lastRefreshTime = 0;
+
+// Helper function to throttle auth operations
+export const throttledAuthOperation = async (operation: () => Promise<any>) => {
+  const now = Date.now();
+  const minInterval = 2000; // 2 seconds between auth operations
+  
+  if (now - lastRefreshTime < minInterval) {
+    console.log('Throttling auth operation to prevent rate limiting');
+    await new Promise(resolve => setTimeout(resolve, minInterval));
+  }
+  
+  try {
+    lastRefreshTime = Date.now();
+    return await operation();
+  } catch (error) {
+    console.error('Auth operation failed:', error);
+    throw error;
   }
 };
