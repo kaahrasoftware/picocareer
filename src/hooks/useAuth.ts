@@ -5,12 +5,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
+import { useAuthSession } from "./useAuthSession";
 
 export function useAuth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const { refreshSession } = useAuthSession();
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
@@ -34,10 +36,10 @@ export function useAuth() {
 
       if (error) throw error;
 
-      // Clear existing queries to ensure fresh data
-      queryClient.clear();
-      
       // Refresh auth session data
+      await refreshSession();
+      
+      // Refresh queries
       queryClient.invalidateQueries({ queryKey: ['auth-session'] });
 
       toast({

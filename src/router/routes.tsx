@@ -34,13 +34,10 @@ import Hubs from "../pages/Hubs";
 import Hub from "../pages/Hub";
 import HubInviteResponse from "../pages/HubInviteResponse";
 import CareerChat from "../pages/CareerChat";
-import { AuthProvider } from "../hooks/useAuthSession";
 
 const AuthenticatedLayout = () => (
   <Suspense fallback={<div>Loading...</div>}>
-    <AuthProvider>
-      <MainLayout />
-    </AuthProvider>
+    <MainLayout />
   </Suspense>
 );
 
