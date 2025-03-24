@@ -56,15 +56,7 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
         {completeCareers.map((career) => (
           <motion.div key={career.id} variants={item}>
             <CareerCard 
-              id={career.id}
-              title={career.title}
-              description={career.description}
-              salary_range={career.salary_range}
-              requiredSkills={career.required_skills}
-              industry={career.industry}
-              required_education={career.required_education}
-              transferable_skills={career.transferable_skills}
-              profiles_count={career.profiles_count}
+              {...career} 
               onClick={() => handleCareerClick(career.id)}
             />
           </motion.div>

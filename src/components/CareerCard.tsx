@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Briefcase, GraduationCap, Building2, TrendingUp, Users, Shuffle } from 'lucide-react';
+import { ArrowRight, Briefcase, GraduationCap, Building2, TrendingUp } from 'lucide-react';
 
 export interface CareerCardProps {
   id: string;
@@ -16,9 +16,6 @@ export interface CareerCardProps {
   education?: string[];
   onClick?: () => void;
   industry?: string;
-  required_education?: string[];
-  transferable_skills?: string[];
-  profiles_count?: number;
 }
 
 export function CareerCard({
@@ -31,13 +28,9 @@ export function CareerCard({
   requiredSkills = [],
   education = [],
   industry,
-  onClick,
-  required_education = [],
-  transferable_skills = [],
-  profiles_count = 0
+  onClick
 }: CareerCardProps) {
   const truncateText = (text: string, maxLength: number) => {
-    if (!text) return '';
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
   };
@@ -77,7 +70,7 @@ export function CareerCard({
           
           {/* Description */}
           <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-            {truncateText(description, 160)}
+            {truncateText(description, 180)}
           </p>
           
           {/* Career Details Section */}
@@ -89,27 +82,20 @@ export function CareerCard({
               </div>
             )}
             
-            {/* Number of Mentors */}
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-purple-600 flex-shrink-0" />
-              <span className="text-sm">{profiles_count} {profiles_count === 1 ? 'Mentor' : 'Mentors'}</span>
-            </div>
-            
-            {/* Required Education */}
-            {required_education && required_education.length > 0 && (
+            {education && education.length > 0 && (
               <div className="flex items-start gap-2">
                 <GraduationCap className="h-4 w-4 text-indigo-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Required Education</p>
+                  <p className="text-xs text-muted-foreground mb-1">Education</p>
                   <div className="flex flex-wrap gap-1">
-                    {required_education.slice(0, 2).map((edu, index) => (
+                    {education.slice(0, 2).map((edu, index) => (
                       <Badge key={index} variant="outline" className="text-xs bg-indigo-50 border-indigo-200 text-indigo-700">
                         {edu}
                       </Badge>
                     ))}
-                    {required_education.length > 2 && (
+                    {education.length > 2 && (
                       <Badge variant="outline" className="text-xs">
-                        +{required_education.length - 2} more
+                        +{education.length - 2} more
                       </Badge>
                     )}
                   </div>
@@ -117,43 +103,20 @@ export function CareerCard({
               </div>
             )}
             
-            {/* Transferable Skills */}
-            {transferable_skills && transferable_skills.length > 0 && (
-              <div className="flex items-start gap-2">
-                <Shuffle className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Transferable Skills</p>
-                  <div className="flex flex-wrap gap-1">
-                    {transferable_skills.slice(0, 2).map((skill, index) => (
-                      <Badge key={index} variant="outline" className="text-xs bg-orange-50 border-orange-200 text-orange-700">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {transferable_skills.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{transferable_skills.length - 2} more
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Key Skills */}
             {requiredSkills && requiredSkills.length > 0 && (
               <div className="flex items-start gap-2">
                 <Briefcase className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Key Skills</p>
                   <div className="flex flex-wrap gap-1">
-                    {requiredSkills.slice(0, 2).map((skill, index) => (
+                    {requiredSkills.slice(0, 3).map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-xs bg-amber-50 border-amber-200 text-amber-700">
                         {skill}
                       </Badge>
                     ))}
-                    {requiredSkills.length > 2 && (
+                    {requiredSkills.length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{requiredSkills.length - 2} more
+                        +{requiredSkills.length - 3} more
                       </Badge>
                     )}
                   </div>
