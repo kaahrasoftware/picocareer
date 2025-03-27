@@ -1,3 +1,4 @@
+
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
+import { UserProfileDetailsDialog } from "@/components/admin/UserProfileDetailsDialog";
 import type { OnboardingStatus, UserType } from "@/types/database/enums";
 
 interface User {
@@ -32,10 +34,12 @@ const statusColors: Record<OnboardingStatus, string> = {
   "Rejected": "text-red-500"
 };
 
-export function UsersTab() {  // Changed from 'export default' to 'export function'
+export function UsersTab() {
   const { toast } = useToast();
   const [selectedUserType, setSelectedUserType] = useState<"all" | UserType>("all");
   const [selectedStatus, setSelectedStatus] = useState<"all" | OnboardingStatus>("all");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['dashboard-users', selectedUserType, selectedStatus],
@@ -137,10 +141,28 @@ export function UsersTab() {  // Changed from 'export default' to 'export functi
     }
   };
 
+  const handleUserClick = (userId: string) => {
+    setSelectedUserId(userId);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setSelectedUserId(null);
+  };
+
   const columns = [
     {
       accessorKey: "full_name",
       header: "Name",
+      cell: ({ row }) => (
+        <button 
+          onClick={() => handleUserClick(row.original.id)}
+          className="text-left hover:underline hover:text-primary"
+        >
+          {row.original.full_name || row.original.email}
+        </button>
+      ),
     },
     {
       accessorKey: "email",
@@ -251,6 +273,12 @@ export function UsersTab() {  // Changed from 'export default' to 'export functi
           </Card>
         </TabsContent>
       </Tabs>
+
+      <UserProfileDetailsDialog 
+        userId={selectedUserId}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }
