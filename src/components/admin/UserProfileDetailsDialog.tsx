@@ -8,10 +8,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
-import { Loader2, UserCircle } from "lucide-react";
+import { Loader2, UserCircle, Settings, UserPlus, Activity } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Badge } from "@/components/ui/badge";
+import { MentorSettingsTab } from "./MentorSettingsTab";
 
 interface UserProfileDetailsDialogProps {
   userId: string | null;
@@ -155,8 +156,20 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="profile">Profile Details</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-1">
+              <UserCircle className="h-4 w-4" />
+              Profile Details
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex items-center gap-1">
+              <Activity className="h-4 w-4" />
+              Activity
+            </TabsTrigger>
+            {profile.user_type === 'mentor' && (
+              <TabsTrigger value="mentor-settings" className="flex items-center gap-1">
+                <Settings className="h-4 w-4" />
+                Mentor Settings
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="profile" className="space-y-4">
@@ -319,6 +332,12 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
               <p className="text-muted-foreground">User activity data will be available soon</p>
             </div>
           </TabsContent>
+
+          {profile.user_type === 'mentor' && (
+            <TabsContent value="mentor-settings">
+              <MentorSettingsTab profile={profile} />
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
