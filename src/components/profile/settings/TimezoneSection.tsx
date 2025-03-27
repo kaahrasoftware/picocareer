@@ -1,4 +1,3 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,13 +20,14 @@ interface TimezoneSectionProps {
 export function TimezoneSection({ profileId }: TimezoneSectionProps) {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { getSetting, updateSetting } = useUserSettings(profileId || profile?.id);
+  const { getSetting } = useUserSettings(profileId || profile?.id);
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [showDebug, setShowDebug] = useState(false);
   const [dstStatus, setDstStatus] = useState<{active: boolean, nextChange: string | null, offsetMinutes: number}>();
 
   const { updateTimezones, debugTimezone } = useTimezoneUpdate();
+  const { updateTimezone } = useUpdateTimezone();
   const effectiveProfileId = profileId || profile?.id;
   const isCurrentUser = !profileId || profileId === profile?.id;
   const isAdmin = profile?.user_type === 'admin';
@@ -67,18 +67,12 @@ export function TimezoneSection({ profileId }: TimezoneSectionProps) {
 
   const handleTimezoneChange = async (value: string) => {
     try {
-      await updateSetting.mutate({ 
-        type: 'timezone', 
-        value 
-      });
+      const success = await updateTimezone(effectiveProfileId as string, value);
       
-      toast({
-        title: "Timezone updated",
-        description: "Your timezone has been successfully updated. This will be used for all your mentoring sessions.",
-      });
-      
-      // After setting timezone, check its DST status
-      checkDSTStatus(value);
+      if (success) {
+        // After setting timezone, check its DST status
+        checkDSTStatus(value);
+      }
     } catch (error) {
       console.error('Error updating timezone:', error);
       toast({
@@ -99,7 +93,6 @@ export function TimezoneSection({ profileId }: TimezoneSectionProps) {
     }
   };
 
-  // Update the function to update a mentor's own slots only
   const handleUpdateMySlots = async () => {
     if (!effectiveProfileId) {
       toast({
