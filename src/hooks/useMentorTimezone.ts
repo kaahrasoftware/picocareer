@@ -35,6 +35,8 @@ export function useMentorTimezone(profileId: string | undefined) {
       // If no timezone is set, use UTC as fallback
       const timezone = settings?.setting_value || 'UTC';
       
+      console.log('Mentor timezone found:', timezone);
+      
       // Verify if timezone is valid
       try {
         // This will throw an error if timezone is invalid

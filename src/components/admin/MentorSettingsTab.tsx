@@ -92,7 +92,7 @@ export function MentorSettingsTab({ profile }: MentorSettingsTabProps) {
               <CardTitle>Timezone Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <TimezoneSection />
+              <TimezoneSection profileId={profileId} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -35,28 +36,50 @@ export function TimeSlotInputs({
   onRecurringChange,
 }: TimeSlotInputsProps) {
   const [existingSlots, setExistingSlots] = useState<ExistingSlot[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchExistingSlots() {
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
+      if (!selectedDate) return;
       
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      setLoading(true);
+      try {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
 
-      const { data, error } = await supabase
-        .from('mentor_availability')
-        .select('*')
-        .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
-        .eq('is_available', true)
-        .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+        // Get user profile ID from the auth session
+        const { data: { session } } = await supabase.auth.getSession();
+        const profileId = session?.user?.id;
 
-      if (error) {
-        console.error('Error fetching availability:', error);
-        return;
+        if (!profileId) {
+          console.error('No profile ID available from session');
+          return;
+        }
+
+        console.log(`Fetching availability for date: ${selectedDate.toISOString()}, day of week: ${selectedDate.getDay()}, profile: ${profileId}`);
+
+        const { data, error } = await supabase
+          .from('mentor_availability')
+          .select('*')
+          .eq('profile_id', profileId)
+          .eq('is_available', true)
+          .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+
+        if (error) {
+          console.error('Error fetching availability:', error);
+          return;
+        }
+
+        console.log(`Found ${data?.length} existing slots`, data);
+        setExistingSlots(data || []);
+      } catch (error) {
+        console.error('Error in fetchExistingSlots:', error);
+      } finally {
+        setLoading(false);
       }
-
-      setExistingSlots(data || []);
     }
 
     if (selectedDate) {
@@ -65,6 +88,8 @@ export function TimeSlotInputs({
   }, [selectedDate]);
 
   const isTimeSlotDisabled = (timeSlot: string) => {
+    if (loading || !selectedDate) return false;
+    
     const timeToCheck = parse(timeSlot, 'HH:mm', selectedDate);
 
     return existingSlots.some(slot => {

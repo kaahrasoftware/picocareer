@@ -14,16 +14,23 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isTimezoneDST, getDSTTransitions, getTimezoneOffset } from "@/utils/timezoneUpdater";
 
-export function TimezoneSection() {
+interface TimezoneSectionProps {
+  profileId?: string;
+}
+
+export function TimezoneSection({ profileId }: TimezoneSectionProps) {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { getSetting, updateSetting } = useUserSettings(profile?.id);
+  const { getSetting, updateSetting } = useUserSettings(profileId || profile?.id);
   const { toast } = useToast();
   const currentTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [showDebug, setShowDebug] = useState(false);
   const [dstStatus, setDstStatus] = useState<{active: boolean, nextChange: string | null, offsetMinutes: number}>();
 
   const { updateTimezones, debugTimezone } = useTimezoneUpdate();
+  const effectiveProfileId = profileId || profile?.id;
+  const isCurrentUser = !profileId || profileId === profile?.id;
+  const isAdmin = profile?.user_type === 'admin';
 
   useEffect(() => {
     if (currentTimezone) {
@@ -94,11 +101,18 @@ export function TimezoneSection() {
 
   // Update the function to update a mentor's own slots only
   const handleUpdateMySlots = async () => {
-    if (!profile?.id) return;
+    if (!effectiveProfileId) {
+      toast({
+        title: "Error",
+        description: "No profile ID available",
+        variant: "destructive",
+      });
+      return;
+    }
     
     toast({
-      title: "Updating Your Slots",
-      description: "Updating timezone information for your availability slots...",
+      title: "Updating Slots",
+      description: `Updating timezone information for ${isCurrentUser ? 'your' : 'mentor\'s'} availability slots...`,
     });
     
     try {
@@ -106,14 +120,14 @@ export function TimezoneSection() {
       const { data: userTimezone } = await supabase
         .from('user_settings')
         .select('setting_value')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', effectiveProfileId)
         .eq('setting_type', 'timezone')
         .single();
       
       if (!userTimezone?.setting_value) {
         toast({
           title: "Error",
-          description: "You must set your timezone first.",
+          description: `${isCurrentUser ? 'You' : 'Mentor'} must set ${isCurrentUser ? 'your' : 'their'} timezone first.`,
           variant: "destructive",
         });
         return;
@@ -124,7 +138,8 @@ export function TimezoneSection() {
       
       console.log('Updating slots with:', {
         timezone: userTimezone.setting_value,
-        offsetMinutes
+        offsetMinutes,
+        profileId: effectiveProfileId
       });
       
       // Update recurring slots first
@@ -136,7 +151,7 @@ export function TimezoneSection() {
           dst_aware: true,
           last_dst_check: new Date().toISOString()
         })
-        .eq('profile_id', profile.id)
+        .eq('profile_id', effectiveProfileId)
         .eq('recurring', true)
         .select('id');
       
@@ -151,7 +166,7 @@ export function TimezoneSection() {
           dst_aware: true,
           last_dst_check: new Date().toISOString()
         })
-        .eq('profile_id', profile.id)
+        .eq('profile_id', effectiveProfileId)
         .eq('recurring', false)
         .select('id');
       
@@ -170,7 +185,7 @@ export function TimezoneSection() {
       console.error('Error updating personal slots:', error);
       toast({
         title: "Error",
-        description: "Failed to update your slots. Please try again.",
+        description: "Failed to update slots. Please try again.",
         variant: "destructive",
       });
     }
@@ -185,7 +200,7 @@ export function TimezoneSection() {
           onValueChange={handleTimezoneChange}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select your timezone" />
+            <SelectValue placeholder="Select timezone" />
           </SelectTrigger>
           <SelectContent>
             {timeZones.map((tz) => (
@@ -229,7 +244,7 @@ export function TimezoneSection() {
         </AlertDescription>
       </Alert>
 
-      {profile?.user_type === 'mentor' && (
+      {(isCurrentUser && profile?.user_type === 'mentor') || (!isCurrentUser && isAdmin) ? (
         <div className="mt-2">
           <Button
             onClick={handleUpdateMySlots}
@@ -237,15 +252,15 @@ export function TimezoneSection() {
             className="w-full"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
-            Update My Availability Slots
+            Update {isCurrentUser ? 'My' : 'Mentor\'s'} Availability Slots
           </Button>
           <p className="text-xs text-muted-foreground mt-1">
-            This will update all your availability slots with the current timezone information to handle DST changes.
+            This will update all {isCurrentUser ? 'your' : 'the mentor\'s'} availability slots with the current timezone information to handle DST changes.
           </p>
         </div>
-      )}
+      ) : null}
 
-      {profile?.user_type === 'admin' && (
+      {isAdmin && (
         <div className="mt-4 space-y-4">
           <Button 
             onClick={() => updateTimezones.mutate()}
