@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +40,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
+      console.log('Profile ID:', profileId);
 
+      // Check for existing type
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
         .select('id, type')
@@ -63,24 +66,35 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         return;
       }
 
-      const { error } = await supabase
+      // Create new session type
+      const { data: newSessionType, error } = await supabase
         .from('mentor_session_types')
         .insert({
           profile_id: profileId,
-          type: data.type as SessionTypeEnum,
+          type: data.type,
           duration: Number(data.duration),
           price: 0,
           description: data.description || null,
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
           phone_number: data.phone_number || null,
-        });
+        })
+        .select('*')
+        .single();
 
       if (error) {
         console.error('Error creating session type:', error);
-        throw error;
+        toast({
+          title: "Error",
+          description: `Failed to create session type: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
       }
 
+      console.log('Successfully created session type:', newSessionType);
+      
+      // Invalidate and refetch query to update the UI
       queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
@@ -93,7 +107,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       console.error('Form submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to create session type",
+        description: error instanceof Error ? error.message : "Failed to create session type",
         variant: "destructive",
       });
     } finally {

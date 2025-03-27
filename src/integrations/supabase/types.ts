@@ -3479,6 +3479,10 @@ export type Database = {
         }
         Returns: unknown
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_hub_admin: {
         Args: {
           hub_id: string

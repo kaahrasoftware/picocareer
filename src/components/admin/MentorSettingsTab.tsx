@@ -17,13 +17,20 @@ interface MentorSettingsTabProps {
 export function MentorSettingsTab({ profile }: MentorSettingsTabProps) {
   const profileId = profile?.id;
   const [activeTab, setActiveTab] = useState("session-types");
-  const { sessionTypes } = useSessionTypeManager(profileId);
+  const { sessionTypes, isLoading, error } = useSessionTypeManager(profileId);
+
+  console.log("MentorSettingsTab rendering for profile:", profile);
+  console.log("Session types:", sessionTypes);
+  console.log("Is loading:", isLoading);
+  console.log("Error:", error);
 
   if (!profileId) {
+    console.log("No profile ID available");
     return null;
   }
 
   if (profile.user_type !== 'mentor') {
+    console.log("User is not a mentor:", profile.user_type);
     return (
       <Alert className="mt-4">
         <InfoIcon className="h-4 w-4 mr-2" />
@@ -36,7 +43,7 @@ export function MentorSettingsTab({ profile }: MentorSettingsTabProps) {
 
   const handleRefresh = () => {
     // This will be triggered when changes are made
-    console.log("Refreshing mentor settings data");
+    console.log("Refreshing mentor settings data for profile:", profileId);
   };
 
   return (
@@ -54,11 +61,20 @@ export function MentorSettingsTab({ profile }: MentorSettingsTabProps) {
               <CardTitle>Session Types</CardTitle>
             </CardHeader>
             <CardContent>
-              <SessionTypeManager 
-                profileId={profileId} 
-                sessionTypes={sessionTypes || []}
-                onUpdate={handleRefresh}
-              />
+              {error ? (
+                <Alert variant="destructive">
+                  <InfoIcon className="h-4 w-4 mr-2" />
+                  <AlertDescription>
+                    Error loading session types: {error.message}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <SessionTypeManager 
+                  profileId={profileId} 
+                  sessionTypes={sessionTypes || []}
+                  onUpdate={handleRefresh}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
