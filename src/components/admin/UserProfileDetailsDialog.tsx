@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -65,6 +64,14 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
     },
     enabled: !!userId && open,
   });
+
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    queryClient.invalidateQueries({ queryKey: ['profile-admin-edit', userId] });
+    toast({
+      title: "Success",
+      description: "User avatar updated successfully",
+    });
+  };
 
   const handleSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['dashboard-users'] });
@@ -138,6 +145,9 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                 avatarUrl={profile.avatar_url || ""}
                 imageAlt={profile.full_name || profile.email}
                 size="md"
+                editable={true}
+                userId={profile.id}
+                onAvatarUpdate={handleAvatarUpdate}
               />
               <div>
                 <span>{profile.full_name || profile.email}</span>

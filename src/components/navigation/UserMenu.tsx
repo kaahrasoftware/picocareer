@@ -40,8 +40,9 @@ export function UserMenu() {
         <button className="outline-none">
           <ProfileAvatar
             avatarUrl={profile.avatar_url}
-            profileId={profile.id}
+            imageAlt={profile.full_name || profile.email}
             size="sm"
+            userId={profile.id}
             editable={false}
           />
         </button>

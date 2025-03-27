@@ -53,17 +53,15 @@ export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps)
   const badge = getBadgeContent();
 
   return (
-    <div className="flex items-start gap-6 sm:ml-6">
-      {/* Avatar Section */}
-      <div className="flex-shrink-0">
-        <ProfileAvatar 
-          avatarUrl={profile.avatar_url}
-          profileId={profile.id}
-          size="md"
-          editable={isOwnProfile}
-        />
-      </div>
-
+    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-6 bg-muted rounded-lg">
+      <ProfileAvatar 
+        avatarUrl={profile?.avatar_url || ""} 
+        imageAlt={profile?.full_name || profile?.email || ""}
+        size="lg"
+        editable={isOwnProfile}
+        userId={profile?.id}
+      />
+      
       {/* Profile Information Section */}
       <div className="flex-1 min-w-0">
         {/* Name and Badges Row */}
