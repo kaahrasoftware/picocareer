@@ -38,20 +38,27 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
         .from('profiles')
         .select(`
           *,
-          company_name: companies(name),
-          school_name: schools(name),
-          academic_major: majors(title),
-          career_title: careers(title)
+          companies:company_id(name),
+          schools:school_id(name),
+          majors:academic_major_id(title),
+          careers:position(title)
         `)
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
         throw error;
       }
 
-      return data;
+      // Transform data to match expected ProfileFormProps structure
+      return {
+        ...data,
+        company_name: data?.companies?.name,
+        school_name: data?.schools?.name,
+        academic_major: data?.majors?.title,
+        career_title: data?.careers?.title
+      };
     },
     enabled: !!userId && open,
   });
