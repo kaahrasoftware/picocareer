@@ -7,6 +7,8 @@ import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { format, areIntervalsOverlapping } from "date-fns";
 import { getTimezoneOffset } from "@/utils/timezoneUpdater";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface TimeSlotFormProps {
   selectedDate: Date;
@@ -23,6 +25,12 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
   const { toast } = useToast();
   const { getSetting } = useUserSettings(profileId);
   const userTimezone = getSetting('timezone');
+  
+  // Get current user session and profile to check if admin
+  const { session } = useAuthSession();
+  const { data: currentUserProfile } = useUserProfile(session);
+  const isAdmin = currentUserProfile?.user_type === 'admin';
+  const isCurrentUser = profileId === session?.user.id;
 
   const checkExistingAvailability = async (startDateTime: Date, endDateTime: Date) => {
     const startOfDay = new Date(selectedDate);
@@ -120,25 +128,50 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
 
       console.log('Creating availability with:', {
         timezoneOffsetMinutes,
-        userTimezone
+        userTimezone,
+        isAdmin,
+        isCurrentUser,
+        profileId
       });
 
-      const { error } = await supabase
-        .from('mentor_availability')
-        .insert({
-          profile_id: profileId,
-          start_date_time: startDateTime.toISOString(),
-          end_date_time: endDateTime.toISOString(),
-          is_available: true,
-          recurring: isRecurring,
-          day_of_week: isRecurring ? dayOfWeek : null,
-          timezone_offset: timezoneOffsetMinutes,
-          reference_timezone: userTimezone,
-          dst_aware: true,
-          last_dst_check: new Date().toISOString()
+      // If the current user is an admin and is managing someone else's availability,
+      // use the admin edge function instead of direct insert
+      if (isAdmin && !isCurrentUser) {
+        const { data, error } = await supabase.functions.invoke('admin-create-availability', {
+          body: JSON.stringify({
+            profileId,
+            startDateTime: startDateTime.toISOString(),
+            endDateTime: endDateTime.toISOString(),
+            isAvailable: true,
+            recurring: isRecurring,
+            dayOfWeek: isRecurring ? dayOfWeek : null,
+            timezoneOffset: timezoneOffsetMinutes,
+            referenceTimezone: userTimezone,
+            dstAware: true,
+            lastDstCheck: new Date().toISOString()
+          })
         });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Regular insert for the user's own availability
+        const { error } = await supabase
+          .from('mentor_availability')
+          .insert({
+            profile_id: profileId,
+            start_date_time: startDateTime.toISOString(),
+            end_date_time: endDateTime.toISOString(),
+            is_available: true,
+            recurring: isRecurring,
+            day_of_week: isRecurring ? dayOfWeek : null,
+            timezone_offset: timezoneOffsetMinutes,
+            reference_timezone: userTimezone,
+            dst_aware: true,
+            last_dst_check: new Date().toISOString()
+          });
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
