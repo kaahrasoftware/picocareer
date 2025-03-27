@@ -8,8 +8,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserCircle } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface UserProfileDetailsDialogProps {
   userId: string | null;
@@ -130,7 +132,17 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
       <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>{profile.full_name || profile.email}</span>
+            <div className="flex items-center gap-2">
+              <ProfileAvatar 
+                avatarUrl={profile.avatar_url || ""}
+                imageAlt={profile.full_name || profile.email}
+                size="md"
+              />
+              <div>
+                <span>{profile.full_name || profile.email}</span>
+                <Badge className="ml-2 capitalize">{profile.user_type}</Badge>
+              </div>
+            </div>
             <Button 
               onClick={() => setIsEditing(!isEditing)} 
               variant={isEditing ? "destructive" : "default"}
@@ -166,8 +178,16 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                     <p className="capitalize">{profile.user_type}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Name</h3>
-                    <p>{profile.first_name} {profile.last_name}</p>
+                    <h3 className="text-sm font-medium text-muted-foreground">First Name</h3>
+                    <p>{profile.first_name || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Last Name</h3>
+                    <p>{profile.last_name || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Location</h3>
+                    <p>{profile.location || 'Not specified'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">Onboarding Status</h3>
@@ -182,6 +202,7 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
+                {/* Professional Information */}
                 {profile.user_type === 'mentor' && (
                   <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
                     <div>
@@ -207,6 +228,85 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground">School</h3>
                       <p>{profile.school_name || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Highest Degree</h3>
+                      <p>{profile.highest_degree || 'Not specified'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills and Expertise */}
+                {profile.skills && profile.skills.length > 0 && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Skills</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {profile.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="bg-primary/10 text-primary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {profile.tools_used && profile.tools_used.length > 0 && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Tools</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {profile.tools_used.map((tool, index) => (
+                        <Badge key={index} variant="outline">
+                          {tool}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links */}
+                {(profile.linkedin_url || profile.github_url || profile.website_url) && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Links</h3>
+                    <div className="space-y-1">
+                      {profile.linkedin_url && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">LinkedIn:</span>
+                          <a 
+                            href={profile.linkedin_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            {profile.linkedin_url}
+                          </a>
+                        </div>
+                      )}
+                      {profile.github_url && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">GitHub:</span>
+                          <a 
+                            href={profile.github_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            {profile.github_url}
+                          </a>
+                        </div>
+                      )}
+                      {profile.website_url && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">Website:</span>
+                          <a 
+                            href={profile.website_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            {profile.website_url}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

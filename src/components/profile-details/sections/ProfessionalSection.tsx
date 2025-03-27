@@ -1,61 +1,114 @@
-import { Briefcase, MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import type { Profile } from "@/types/database/profiles";
 
-interface ProfessionalSectionProps {
-  profile: Profile & {
-    company_name?: string | null;
-  };
-  careerTitle?: string | null;
+import { Input } from "@/components/ui/input";
+import { UseFormRegister } from "react-hook-form";
+import { FormFields } from "../types/form-types";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Company {
+  id: string;
+  name: string;
 }
 
-export function ProfessionalSection({ profile, careerTitle }: ProfessionalSectionProps) {
-  if (profile.user_type !== 'mentor') return null;
+interface ProfessionalSectionProps {
+  register: UseFormRegister<FormFields>;
+  handleFieldChange: (field: keyof FormFields, value: any) => void;
+  companyId?: string;
+  position?: string;
+  yearsOfExperience: number;
+  companies: Company[];
+}
+
+export function ProfessionalSection({
+  register,
+  handleFieldChange,
+  companyId,
+  position,
+  yearsOfExperience,
+  companies,
+}: ProfessionalSectionProps) {
+  // Fetch careers for the position select
+  const { data: careers = [] } = useQuery({
+    queryKey: ['careers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   return (
-    <div className="bg-muted rounded-lg p-3 sm:p-4 space-y-3 sm:space-y-4 w-full">
-      <div className="flex items-center gap-2 mb-1 sm:mb-2">
-        <Briefcase className="h-4 w-4" />
-        <h4 className="font-semibold text-sm sm:text-base">Professional Information</h4>
-      </div>
-      <div className="space-y-2 sm:space-y-3">
+    <div className="bg-muted rounded-lg p-4">
+      <h4 className="font-semibold mb-4">Professional Experience</h4>
+      <div className="space-y-4">
         <div>
-          <p className="text-xs sm:text-sm text-muted-foreground">Position</p>
-          <p className="text-sm sm:text-base">{careerTitle || "None"}</p>
-        </div>
-        {profile.company_name && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Company</p>
-            <p className="text-sm sm:text-base">{profile.company_name}</p>
-          </div>
-        )}
-        {profile.years_of_experience !== undefined && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Years of Experience</p>
-            <p className="text-sm sm:text-base">{profile.years_of_experience}</p>
-          </div>
-        )}
-        {profile.location && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Location</p>
-            <p className="text-sm sm:text-base">{profile.location}</p>
-          </div>
-        )}
-        {profile.languages && profile.languages.length > 0 && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Languages</p>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1">
-              {profile.languages.map((language, index) => (
-                <Badge 
-                  key={`${language}-${index}`}
-                  className="text-xs sm:text-sm bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#C8E6C9] transition-colors border border-[#A5D6A7]"
-                >
-                  {language}
-                </Badge>
+          <label className="text-sm font-medium">Position</label>
+          <Select 
+            value={position} 
+            onValueChange={(value) => handleFieldChange("position", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select position" />
+            </SelectTrigger>
+            <SelectContent>
+              {careers.map((career) => (
+                <SelectItem key={career.id} value={career.id}>
+                  {career.title}
+                </SelectItem>
               ))}
-            </div>
-          </div>
-        )}
+            </SelectContent>
+          </Select>
+          <input
+            type="hidden"
+            {...register("position")}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Company</label>
+          <Select 
+            value={companyId} 
+            onValueChange={(value) => handleFieldChange("company_id", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select company" />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input
+            type="hidden"
+            {...register("company_id")}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Years of Experience</label>
+          <Input
+            {...register("years_of_experience", { valueAsNumber: true })}
+            onChange={(e) => handleFieldChange("years_of_experience", parseInt(e.target.value) || 0)}
+            className="mt-1"
+            type="number"
+            min="0"
+          />
+        </div>
       </div>
     </div>
   );

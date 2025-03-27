@@ -1,3 +1,4 @@
+
 import type { Profile } from "@/types/database/profiles";
 
 export type Degree = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";

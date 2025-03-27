@@ -1,48 +1,115 @@
-import { BookOpen, GraduationCap } from "lucide-react";
-import type { Profile } from "@/types/database/profiles";
+
+import { UseFormRegister } from "react-hook-form";
+import { FormFields, Degree } from "../types/form-types";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface EducationSectionProps {
-  profile: Profile & {
-    school_name?: string | null;
-    academic_major?: string | null;
-  };
+  register: UseFormRegister<FormFields>;
+  handleFieldChange: (field: keyof FormFields, value: any) => void;
+  schools: { id: string; name: string }[];
+  majors: { id: string; title: string }[];
+  schoolId?: string;
+  academicMajorId?: string;
+  highestDegree: Degree;
 }
 
-export function EducationSection({ profile }: EducationSectionProps) {
+export function EducationSection({
+  register,
+  handleFieldChange,
+  schools,
+  majors,
+  schoolId,
+  academicMajorId,
+  highestDegree,
+}: EducationSectionProps) {
+  const degrees: Degree[] = [
+    "No Degree",
+    "High School",
+    "Associate",
+    "Bachelor",
+    "Master",
+    "MD",
+    "PhD"
+  ];
+
   return (
-    <div className="bg-muted rounded-lg p-3 sm:p-4 w-full">
-      <div className="flex items-center gap-2 mb-3 sm:mb-4">
-        <GraduationCap className="h-4 w-4" />
-        <h4 className="font-semibold text-sm sm:text-base">Education</h4>
-      </div>
-      <div className="space-y-2 sm:space-y-3">
-        {profile.academic_major && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Major</p>
-            <p className="flex items-center gap-2 text-sm sm:text-base">
-              <BookOpen className="h-4 w-4" />
-              {profile.academic_major}
-            </p>
-          </div>
-        )}
-        {profile.highest_degree && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Degree</p>
-            <p className="flex items-center gap-2 text-sm sm:text-base">
-              <GraduationCap className="h-4 w-4" />
-              {profile.highest_degree}
-            </p>
-          </div>
-        )}
-        {profile.school_name && (
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">School</p>
-            <p className="flex items-center gap-2 text-sm sm:text-base">
-              <GraduationCap className="h-4 w-4" />
-              {profile.school_name}
-            </p>
-          </div>
-        )}
+    <div className="bg-muted rounded-lg p-4">
+      <h4 className="font-semibold mb-4">Education</h4>
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium">Highest Degree</label>
+          <Select 
+            value={highestDegree} 
+            onValueChange={(value) => handleFieldChange("highest_degree", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select degree" />
+            </SelectTrigger>
+            <SelectContent>
+              {degrees.map((degree) => (
+                <SelectItem key={degree} value={degree}>
+                  {degree}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input
+            type="hidden"
+            {...register("highest_degree")}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Academic Major</label>
+          <Select 
+            value={academicMajorId} 
+            onValueChange={(value) => handleFieldChange("academic_major_id", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select academic major" />
+            </SelectTrigger>
+            <SelectContent>
+              {majors.map((major) => (
+                <SelectItem key={major.id} value={major.id}>
+                  {major.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input
+            type="hidden"
+            {...register("academic_major_id")}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">School</label>
+          <Select 
+            value={schoolId} 
+            onValueChange={(value) => handleFieldChange("school_id", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select school" />
+            </SelectTrigger>
+            <SelectContent>
+              {schools.map((school) => (
+                <SelectItem key={school.id} value={school.id}>
+                  {school.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input
+            type="hidden"
+            {...register("school_id")}
+          />
+        </div>
       </div>
     </div>
   );

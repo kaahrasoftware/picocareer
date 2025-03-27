@@ -1,18 +1,68 @@
+
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { FormFields, ProfileFormProps, Degree } from "./types/form-types";
+import { useQuery } from "@tanstack/react-query";
 import { PersonalSection } from "./sections/PersonalSection";
 import { BioSection } from "./sections/BioSection";
-import { FormFields, ProfileFormProps, Degree } from "./types/form-types";
+import { SkillsSection } from "./sections/SkillsSection";
+import { LinksSection } from "./sections/LinksSection";
+import { LocationSection } from "./sections/LocationSection";
+import { ProfessionalSection } from "./sections/ProfessionalSection";
+import { EducationSection } from "./sections/EducationSection";
 
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [localProfile, setLocalProfile] = useState(profile);
   const isMentee = profile.user_type === 'mentee';
+  
+  // Fetch schools, companies, and majors for dropdowns
+  const { data: schools = [] } = useQuery({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: companies = [] } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: majors = [] } = useQuery({
+    queryKey: ['majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
   
   const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm<FormFields>({
     defaultValues: {
@@ -51,21 +101,19 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         last_name: data.last_name,
         bio: data.bio,
         location: data.location,
-        school_id: data.school_id,
-        ...(isMentee ? {} : {
-          position: data.position,
-          company_id: data.company_id,
-          years_of_experience: data.years_of_experience,
-          academic_major_id: data.academic_major_id,
-          highest_degree: data.highest_degree,
-          skills: data.skills ? data.skills.split(",").map(s => s.trim()) : [],
-          tools_used: data.tools_used ? data.tools_used.split(",").map(t => t.trim()) : [],
-          keywords: data.keywords ? data.keywords.split(",").map(k => k.trim()) : [],
-          fields_of_interest: data.fields_of_interest ? data.fields_of_interest.split(",").map(f => f.trim()) : [],
-          linkedin_url: data.linkedin_url,
-          github_url: data.github_url,
-          website_url: data.website_url,
-        })
+        school_id: data.school_id || null,
+        academic_major_id: data.academic_major_id || null,
+        position: data.position || null,
+        company_id: data.company_id || null,
+        years_of_experience: data.years_of_experience,
+        highest_degree: data.highest_degree,
+        skills: data.skills ? data.skills.split(",").map(s => s.trim()) : [],
+        tools_used: data.tools_used ? data.tools_used.split(",").map(t => t.trim()) : [],
+        keywords: data.keywords ? data.keywords.split(",").map(k => k.trim()) : [],
+        fields_of_interest: data.fields_of_interest ? data.fields_of_interest.split(",").map(f => f.trim()) : [],
+        linkedin_url: data.linkedin_url || null,
+        github_url: data.github_url || null,
+        website_url: data.website_url || null,
       };
 
       const { error } = await supabase
@@ -76,6 +124,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
       if (error) throw error;
 
       await queryClient.invalidateQueries({ queryKey: ['profile', profile.id] });
+      await queryClient.invalidateQueries({ queryKey: ['profile-admin-edit', profile.id] });
       
       toast({
         title: "Success",
@@ -101,10 +150,55 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         schoolId={localProfile.school_id}
       />
       
+      <LocationSection
+        register={register}
+        handleFieldChange={handleFieldChange}
+      />
+      
       <BioSection 
         register={register}
         handleFieldChange={handleFieldChange}
       />
+
+      {!isMentee && (
+        <>
+          <ProfessionalSection
+            register={register}
+            handleFieldChange={handleFieldChange}
+            companies={companies}
+            position={localProfile.position}
+            companyId={localProfile.company_id}
+            yearsOfExperience={localProfile.years_of_experience || 0}
+          />
+          
+          <EducationSection
+            register={register}
+            handleFieldChange={handleFieldChange}
+            schools={schools}
+            majors={majors}
+            schoolId={localProfile.school_id}
+            academicMajorId={localProfile.academic_major_id}
+            highestDegree={localProfile.highest_degree as Degree}
+          />
+          
+          <SkillsSection
+            register={register}
+            handleFieldChange={handleFieldChange}
+            skills={watch('skills')}
+            tools={watch('tools_used')}
+            keywords={watch('keywords')}
+            fieldsOfInterest={watch('fields_of_interest')}
+          />
+          
+          <LinksSection
+            register={register}
+            handleFieldChange={handleFieldChange}
+            linkedinUrl={watch('linkedin_url')}
+            githubUrl={watch('github_url')}
+            websiteUrl={watch('website_url')}
+          />
+        </>
+      )}
 
       {/* Form Actions */}
       <div className="flex justify-end gap-4">
