@@ -24,7 +24,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Reset editing state when dialog opens/closes
   useEffect(() => {
     if (!open) {
       setIsEditing(false);
@@ -53,7 +52,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
         throw error;
       }
 
-      // Transform data to match expected ProfileFormProps structure
       return {
         ...data,
         company_name: data?.companies?.name,
@@ -148,6 +146,7 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                 editable={true}
                 userId={profile.id}
                 onAvatarUpdate={handleAvatarUpdate}
+                isAdmin={true}
               />
               <div>
                 <span>{profile.full_name || profile.email}</span>
@@ -225,7 +224,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
-                {/* Professional Information */}
                 {profile.user_type === 'mentor' && (
                   <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
                     <div>
@@ -259,7 +257,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
-                {/* Skills and Expertise */}
                 {profile.skills && profile.skills.length > 0 && (
                   <div className="p-4 bg-muted rounded-lg">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Skills</h3>
@@ -286,7 +283,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
-                {/* Social Links */}
                 {(profile.linkedin_url || profile.github_url || profile.website_url) && (
                   <div className="p-4 bg-muted rounded-lg">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Links</h3>

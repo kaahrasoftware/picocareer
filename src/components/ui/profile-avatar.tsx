@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
@@ -12,6 +13,8 @@ export interface ProfileAvatarProps {
   onChange?: (file: File) => void;
   userId?: string;
   onAvatarUpdate?: (url: string) => void;
+  onEditClick?: () => void;
+  isAdmin?: boolean;
 }
 
 export function ProfileAvatar({ 
@@ -21,7 +24,9 @@ export function ProfileAvatar({
   editable = false,
   onChange,
   userId,
-  onAvatarUpdate
+  onAvatarUpdate,
+  onEditClick,
+  isAdmin = false
 }: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -32,7 +37,10 @@ export function ProfileAvatar({
     lg: "h-16 w-16"
   };
 
-  const firstLetter = imageAlt?.[0] || (typeof imageAlt === 'string' && imageAlt.length > 0 ? imageAlt[0] : 'U');
+  const getFirstLetter = () => {
+    if (!imageAlt) return 'U';
+    return typeof imageAlt === 'string' && imageAlt.length > 0 ? imageAlt[0].toUpperCase() : 'U';
+  };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -69,13 +77,26 @@ export function ProfileAvatar({
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', userId);
+      // If admin is updating someone else's profile
+      if (isAdmin) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', userId);
 
-      if (updateError) {
-        throw updateError;
+        if (updateError) {
+          throw updateError;
+        }
+      } else {
+        // Regular user updating their own profile
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', userId);
+
+        if (updateError) {
+          throw updateError;
+        }
       }
 
       if (onAvatarUpdate) {
@@ -102,7 +123,7 @@ export function ProfileAvatar({
     <div className="relative group">
       <Avatar className={sizeClasses[size]}>
         <AvatarImage src={avatarUrl} alt={imageAlt} />
-        <AvatarFallback>{firstLetter}</AvatarFallback>
+        <AvatarFallback>{getFirstLetter()}</AvatarFallback>
       </Avatar>
       
       {editable && (
