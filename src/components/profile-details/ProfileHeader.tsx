@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Award, Share2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
@@ -20,10 +21,10 @@ interface ProfileHeaderProps {
     academic_major?: string | null;
   } | null;
   session: Session | null;
-  onShare: () => void;
+  onShare?: () => void;
 }
 
-export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, session, onShare = () => {} }: ProfileHeaderProps) {
   if (!profile) return null;
 
   const isOwnProfile = session?.user?.id === profile.id;
@@ -56,7 +57,7 @@ export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps)
     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-6 bg-muted rounded-lg">
       <ProfileAvatar 
         avatarUrl={profile?.avatar_url || ""} 
-        imageAlt={profile?.full_name || profile?.email || ""}
+        imageAlt={profile?.full_name || ""}
         size="lg"
         editable={isOwnProfile}
         userId={profile?.id}
