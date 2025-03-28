@@ -2,10 +2,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileLinks } from "./ProfileLinks";
-import { PersonalSectionView } from "./sections/PersonalSectionView";
-import { ProfessionalSectionView } from "./sections/ProfessionalSectionView";
-import { EducationSectionView } from "./sections/EducationSectionView";
-import { SkillsSectionView } from "./sections/SkillsSectionView";
+import { PersonalSection } from "./sections/PersonalSection";
+import { ProfessionalSection } from "./sections/ProfessionalSection";
+import { EducationSection } from "./sections/EducationSection";
+import { SkillsSection } from "./sections/SkillsSection";
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileViewProps {
@@ -40,10 +40,10 @@ export function ProfileView({ profile }: ProfileViewProps) {
 
   return (
     <div className="space-y-4 sm:space-y-6 py-2">
-      <PersonalSectionView profile={profile} />
-      <ProfessionalSectionView profile={profile} careerTitle={careerDetails?.title} />
-      <SkillsSectionView profile={profile} />
-      <EducationSectionView profile={profile} />
+      <PersonalSection profile={profile} />
+      <ProfessionalSection profile={profile} careerTitle={careerDetails?.title} />
+      <SkillsSection profile={profile} />
+      <EducationSection profile={profile} />
       <ProfileLinks
         linkedinUrl={profile.linkedin_url}
         githubUrl={profile.github_url}
