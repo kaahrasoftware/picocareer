@@ -126,18 +126,18 @@ export function BookmarksTab() {
                 className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => setSelectedProfile(mentor.id)}
               >
-                <div className="flex items-center gap-3">
-                  <ProfileAvatar 
-                    avatarUrl={mentor.avatar_url || ""}
-                    imageAlt={mentor.full_name || ""}
+                <div className="flex flex-col items-center text-center">
+                  <ProfileAvatar
+                    avatarUrl={mentor.avatar_url}
+                    fallback={mentor.full_name?.charAt(0) || '?'}
                     size="md"
                   />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold truncate">{mentor.full_name}</h4>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {mentor.career_title || mentor.position || "Mentor"}
-                    </p>
-                  </div>
+                  <h3 className="font-semibold text-lg mt-3 mb-1">
+                    {mentor.full_name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {mentor.careers?.title || 'No position set'} | {mentor.company?.name || 'No company set'}
+                  </p>
                 </div>
               </Card>
             ))}

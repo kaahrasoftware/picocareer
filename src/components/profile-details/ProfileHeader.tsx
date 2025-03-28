@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Award, Share2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
@@ -21,7 +20,7 @@ interface ProfileHeaderProps {
     academic_major?: string | null;
   } | null;
   session: Session | null;
-  onShare?: () => void;
+  onShare: () => void;
 }
 
 export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps) {
@@ -57,7 +56,7 @@ export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps)
     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-6 bg-muted rounded-lg">
       <ProfileAvatar 
         avatarUrl={profile?.avatar_url || ""} 
-        imageAlt={profile?.full_name || ""}
+        imageAlt={profile?.full_name || profile?.email || ""}
         size="lg"
         editable={isOwnProfile}
         userId={profile?.id}
@@ -84,16 +83,14 @@ export function ProfileHeader({ profile, session, onShare }: ProfileHeaderProps)
           </div>
           
           <div className="flex items-center gap-2">
-            {onShare && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onShare}
-                className="h-9 w-9"
-              >
-                <Share2 className="h-5 w-5" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onShare}
+              className="h-9 w-9"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
             <BookmarkButton 
               profileId={profile.id} 
               session={session} 

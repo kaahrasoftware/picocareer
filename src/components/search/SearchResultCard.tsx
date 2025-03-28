@@ -34,16 +34,20 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
       case 'mentor':
         return (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 mb-3">
               <ProfileAvatar
-                avatarUrl={result.avatar_url || ""}
-                imageAlt={result.title || "Profile"}
+                avatarUrl={result.avatar_url}
+                fallback={result.title[0]}
                 size="sm"
                 editable={false}
               />
-              <div>
-                <h3 className="font-semibold">{result.title}</h3>
-                <p className="text-xs text-muted-foreground">{result.subtitle}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[#1A1F2C] truncate">{result.title}</p>
+                <div className="space-y-1">
+                  {result.career?.title && (
+                    <p className="text-sm text-[#8E9196] truncate">{result.career.title}</p>
+                  )}
+                </div>
               </div>
             </div>
             {result.keywords && result.keywords.length > 0 && (

@@ -1,4 +1,3 @@
-
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
@@ -11,14 +10,9 @@ export default function Profile() {
   const { handleTabChange } = useProfileAnalytics();
   const isMentor = profile?.user_type === "mentor";
 
-  const handleShare = () => {
-    // You can implement share functionality here if needed
-    console.log("Share profile functionality would be implemented here");
-  };
-
   return (
     <div className="container py-6 space-y-6">
-      <ProfileHeader profile={profile} session={session} onShare={handleShare} />
+      <ProfileHeader profile={profile} session={session} />
       <div className="grid w-full grid-cols-5 mb-6">
         <ProfileTabs 
           profile={profile} 
