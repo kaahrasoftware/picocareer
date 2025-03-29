@@ -2,7 +2,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 // Session protection levels
@@ -11,7 +10,6 @@ export type AuthProtectionLevel = 'required' | 'optional' | 'public';
 export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional') {
   const { session, user, loading, error: sessionError, signOut } = useAuth();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   
   // Handle route protection based on authentication state
   useEffect(() => {
@@ -19,10 +17,11 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
     if (loading) return;
     
     if (protectionLevel === 'required' && !session) {
-      // Redirect to auth page for protected routes when not logged in
-      navigate('/auth', { replace: true });
+      // Instead of using useNavigate, we can use window.location for critical redirects
+      // when we're not sure if we're in a router context
+      window.location.href = '/auth';
     }
-  }, [session, loading, protectionLevel, navigate]);
+  }, [session, loading, protectionLevel]);
 
   // Add session refresh helper
   const refreshSession = useCallback(async () => {

@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { router } from '@/router/routes';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
 import { AuthProvider } from '@/context/AuthContext';
-import { GuideProvider } from '@/context/GuideContext';
 import './styles/guide.css'; // Import guide styles
 
 // Create a client
@@ -23,9 +22,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <GuideProvider>
-          <AppContent />
-        </GuideProvider>
+        <AppContent />
       </AuthProvider>
     </QueryClientProvider>
   );

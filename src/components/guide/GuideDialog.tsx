@@ -1,8 +1,8 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { X, ChevronRight, ChevronLeft, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, X, Info, Lightbulb } from 'lucide-react';
-import type { GuideStep } from '@/context/GuideContext';
+import { GuideStep } from '@/context/GuideContext';
 
 interface GuideDialogProps {
   step: GuideStep;
@@ -13,307 +13,223 @@ interface GuideDialogProps {
   onClose: () => void;
 }
 
-export function GuideDialog({
-  step,
-  currentStep,
-  totalSteps,
-  onNext,
-  onPrev,
-  onClose
+export function GuideDialog({ 
+  step, 
+  currentStep, 
+  totalSteps, 
+  onNext, 
+  onPrev, 
+  onClose 
 }: GuideDialogProps) {
-  const targetRef = useRef<HTMLElement | null>(null);
-  const dialogContentRef = useRef<HTMLDivElement>(null);
-  const connectorRef = useRef<HTMLDivElement>(null);
-
-  // Find and highlight the target element
-  useEffect(() => {
-    if (step.element) {
-      try {
-        const element = document.querySelector(step.element) as HTMLElement;
-        if (element) {
-          targetRef.current = element;
-          
-          // Add highlight effect
-          element.classList.add('guide-highlight');
-          
-          // Position the dialog near the element
-          positionDialogNearElement(element);
-          
-          // Scroll the element into view if needed
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } catch (error) {
-        console.error('Error finding guide target element:', error);
-      }
-    }
-    
-    return () => {
-      // Clean up highlight effect
-      if (targetRef.current) {
-        targetRef.current.classList.remove('guide-highlight');
-        targetRef.current = null;
-      }
-    };
-  }, [step.element]);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 });
+  const [showImage, setShowImage] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   
-  // Function to position the dialog near the target element
-  const positionDialogNearElement = (element: HTMLElement) => {
-    if (!dialogContentRef.current || !connectorRef.current) return;
-    
-    // Get element position
-    const rect = element.getBoundingClientRect();
-    const dialogElement = dialogContentRef.current;
-    const connector = connectorRef.current;
-    
-    // Default to 'bottom' position if not specified
-    const position = step.position || 'bottom';
-    
-    // Reset any previous positioning
-    dialogElement.style.position = 'fixed';
-    dialogElement.style.top = '';
-    dialogElement.style.left = '';
-    dialogElement.style.right = '';
-    dialogElement.style.bottom = '';
-    dialogElement.style.transform = '';
-    
-    // Hide connector by default
-    connector.style.display = 'none';
-    
-    // Position connector based on dialog position
-    connector.style.position = 'absolute';
-    connector.style.width = '12px';
-    connector.style.height = '12px';
-    connector.style.transform = 'rotate(45deg)';
-    connector.style.backgroundColor = 'white';
-    connector.style.border = '1px solid rgba(229, 231, 235, 1)';
-    
-    // Position dialog and connector
-    switch (position) {
-      case 'top':
-        dialogElement.style.bottom = `${window.innerHeight - rect.top + 20}px`;
-        dialogElement.style.left = `${rect.left + rect.width / 2}px`;
-        dialogElement.style.transform = 'translateX(-50%)';
-        
-        // Show and position connector
-        connector.style.display = 'block';
-        connector.style.bottom = '-6px';
-        connector.style.left = '50%';
-        connector.style.transform = 'translateX(-50%) rotate(45deg)';
-        connector.style.borderTop = 'none';
-        connector.style.borderLeft = 'none';
-        break;
-        
-      case 'right':
-        dialogElement.style.left = `${rect.right + 20}px`;
-        dialogElement.style.top = `${rect.top + rect.height / 2}px`;
-        dialogElement.style.transform = 'translateY(-50%)';
-        
-        // Show and position connector
-        connector.style.display = 'block';
-        connector.style.left = '-6px';
-        connector.style.top = '50%';
-        connector.style.transform = 'translateY(-50%) rotate(45deg)';
-        connector.style.borderRight = 'none';
-        connector.style.borderBottom = 'none';
-        break;
-        
-      case 'bottom':
-        dialogElement.style.top = `${rect.bottom + 20}px`;
-        dialogElement.style.left = `${rect.left + rect.width / 2}px`;
-        dialogElement.style.transform = 'translateX(-50%)';
-        
-        // Show and position connector
-        connector.style.display = 'block';
-        connector.style.top = '-6px';
-        connector.style.left = '50%';
-        connector.style.transform = 'translateX(-50%) rotate(45deg)';
-        connector.style.borderBottom = 'none';
-        connector.style.borderRight = 'none';
-        break;
-        
-      case 'left':
-        dialogElement.style.right = `${window.innerWidth - rect.left + 20}px`;
-        dialogElement.style.top = `${rect.top + rect.height / 2}px`;
-        dialogElement.style.transform = 'translateY(-50%)';
-        
-        // Show and position connector
-        connector.style.display = 'block';
-        connector.style.right = '-6px';
-        connector.style.top = '50%';
-        connector.style.transform = 'translateY(-50%) rotate(45deg)';
-        connector.style.borderLeft = 'none';
-        connector.style.borderTop = 'none';
-        break;
-        
-      case 'center':
-        // Center in the viewport
-        dialogElement.style.top = '50%';
-        dialogElement.style.left = '50%';
-        dialogElement.style.transform = 'translate(-50%, -50%)';
-        
-        // Hide connector for center positioning
-        connector.style.display = 'none';
-        break;
-    }
-    
-    // Make sure the dialog stays within viewport bounds
-    const dialogRect = dialogElement.getBoundingClientRect();
-    
-    // Handle horizontal overflow
-    if (dialogRect.right > window.innerWidth - 20) {
-      dialogElement.style.left = '';
-      dialogElement.style.right = '20px';
-      dialogElement.style.transform = dialogElement.style.transform.replace('translateX(-50%)', '');
-      
-      // Reposition connector
-      if (position === 'top' || position === 'bottom') {
-        connector.style.left = 'auto';
-        connector.style.right = `${(window.innerWidth - rect.right - 20) / 2}px`;
+  useEffect(() => {
+    // Position the dialog based on the highlighted element and position prop
+    const positionDialog = () => {
+      if (!step.element || step.position === 'center') {
+        // Center the dialog on the screen
+        setPosition({
+          top: window.innerHeight / 2 - 150,
+          left: window.innerWidth / 2 - 175,
+        });
+        return;
       }
-    } else if (dialogRect.left < 20) {
-      dialogElement.style.left = '20px';
-      dialogElement.style.right = '';
-      dialogElement.style.transform = dialogElement.style.transform.replace('translateX(-50%)', '');
-      
-      // Reposition connector
-      if (position === 'top' || position === 'bottom') {
-        connector.style.left = `${rect.left + rect.width / 2 - 20}px`;
-        connector.style.transform = 'rotate(45deg)';
-      }
-    }
-    
-    // Handle vertical overflow
-    if (dialogRect.bottom > window.innerHeight - 20) {
-      dialogElement.style.top = '';
-      dialogElement.style.bottom = '20px';
-      dialogElement.style.transform = dialogElement.style.transform.replace('translateY(-50%)', '');
-      
-      // Reposition connector
-      if (position === 'left' || position === 'right') {
-        connector.style.top = 'auto';
-        connector.style.bottom = `${(window.innerHeight - rect.bottom - 20) / 2}px`;
-      }
-    } else if (dialogRect.top < 20) {
-      dialogElement.style.top = '20px';
-      dialogElement.style.bottom = '';
-      dialogElement.style.transform = dialogElement.style.transform.replace('translateY(-50%)', '');
-      
-      // Reposition connector
-      if (position === 'left' || position === 'right') {
-        connector.style.top = `${rect.top + rect.height / 2 - 20}px`;
-        connector.style.transform = 'rotate(45deg)';
-      }
-    }
-  };
 
-  // Create a custom dialog that doesn't use the standard Dialog components to avoid the backdrop
+      const targetElement = document.querySelector(step.element);
+      
+      if (!targetElement || !dialogRef.current) {
+        // Default positioning in case element is not found
+        setPosition({
+          top: 100,
+          left: window.innerWidth / 2 - 175,
+        });
+        return;
+      }
+
+      const targetRect = targetElement.getBoundingClientRect();
+      const dialogRect = dialogRef.current.getBoundingClientRect();
+      
+      // Calculate positions for dialog and connector
+      let top = 0;
+      let left = 0;
+      let arrowTop = 0;
+      let arrowLeft = 0;
+      let rotation = 0;
+
+      // Highlight the target element
+      targetElement.classList.add('guide-highlight');
+      
+      // Position based on preference, with bounds checking
+      switch (step.position) {
+        case 'top':
+          top = targetRect.top - dialogRect.height - 20;
+          left = targetRect.left + (targetRect.width / 2) - (dialogRect.width / 2);
+          arrowTop = dialogRect.height;
+          arrowLeft = dialogRect.width / 2;
+          rotation = 180;
+          break;
+        case 'bottom':
+          top = targetRect.bottom + 20;
+          left = targetRect.left + (targetRect.width / 2) - (dialogRect.width / 2);
+          arrowTop = -10;
+          arrowLeft = dialogRect.width / 2;
+          rotation = 0;
+          break;
+        case 'left':
+          top = targetRect.top + (targetRect.height / 2) - (dialogRect.height / 2);
+          left = targetRect.left - dialogRect.width - 20;
+          arrowTop = dialogRect.height / 2;
+          arrowLeft = dialogRect.width;
+          rotation = 90;
+          break;
+        case 'right':
+          top = targetRect.top + (targetRect.height / 2) - (dialogRect.height / 2);
+          left = targetRect.right + 20;
+          arrowTop = dialogRect.height / 2;
+          arrowLeft = -10;
+          rotation = 270;
+          break;
+        default:
+          top = targetRect.bottom + 20;
+          left = targetRect.left + (targetRect.width / 2) - (dialogRect.width / 2);
+          arrowTop = -10;
+          arrowLeft = dialogRect.width / 2;
+          rotation = 0;
+      }
+      
+      // Ensure dialog stays within viewport
+      if (left < 20) left = 20;
+      if (left + dialogRect.width > window.innerWidth - 20) {
+        left = window.innerWidth - dialogRect.width - 20;
+      }
+      
+      if (top < 20) top = 20;
+      if (top + dialogRect.height > window.innerHeight - 20) {
+        top = window.innerHeight - dialogRect.height - 20;
+      }
+      
+      setPosition({ top, left });
+      setArrowPosition({ top: arrowTop, left: arrowLeft, rotation });
+    };
+
+    // Position the dialog and add highlight to element
+    positionDialog();
+    
+    // Add window resize handler
+    window.addEventListener('resize', positionDialog);
+    
+    // Clean up function
+    return () => {
+      window.removeEventListener('resize', positionDialog);
+      
+      // Remove highlight from all elements
+      document.querySelectorAll('.guide-highlight').forEach((el) => {
+        el.classList.remove('guide-highlight');
+      });
+    };
+  }, [step]);
+
   return (
-    <div 
-      className="fixed z-50"
-      style={{ 
-        pointerEvents: 'none',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
-      }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       <div
-        ref={dialogContentRef}
-        className="guide-dialog bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg fixed z-50 overflow-hidden"
+        ref={dialogRef}
+        className="guide-dialog fixed bg-white rounded-lg shadow-lg p-4 pointer-events-auto border border-gray-200"
         style={{ 
-          position: 'fixed',
-          width: '320px',
-          maxWidth: '95vw',
-          pointerEvents: 'auto'
+          top: `${position.top}px`, 
+          left: `${position.left}px`,
+          width: '350px',
+          maxWidth: '90vw'
         }}
       >
-        {/* Connector element */}
-        <div ref={connectorRef} className="guide-connector"></div>
+        {/* Arrow connector (when not centered) */}
+        {step.position !== 'center' && (
+          <div
+            className="guide-connector absolute w-4 h-4 bg-white border-t border-l border-gray-200 transform -rotate-45"
+            style={{
+              top: `${arrowPosition.top}px`,
+              left: `${arrowPosition.left}px`,
+              transform: `rotate(${arrowPosition.rotation}deg)`,
+            }}
+          />
+        )}
         
-        {/* Dialog header */}
-        <div className="p-4 pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
-                <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{step.title}</h3>
-            </div>
-            <button 
-              onClick={onClose}
-              className="h-6 w-6 rounded-full hover:bg-gray-200/70 dark:hover:bg-gray-700/70 flex items-center justify-center"
-              aria-label="Close guide"
-            >
-              <X className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
-            </button>
-          </div>
-        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="absolute top-2 right-2 h-6 w-6 p-0 rounded-full" 
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </Button>
         
-        {/* Dialog content */}
-        <div className="p-4">
-          {/* Description */}
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{step.description}</p>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">{step.title}</h3>
+          <p className="text-sm text-muted-foreground">{step.description}</p>
           
-          {/* Image/screenshot */}
           {step.image && (
-            <div className="mb-4 border rounded-lg overflow-hidden shadow-sm">
-              <img 
-                src={step.image} 
-                alt={`Guide for ${step.title}`} 
-                className="w-full object-cover"
-              />
+            <div className="mt-3">
+              {showImage ? (
+                <div className="relative mt-2">
+                  <img 
+                    src={step.image} 
+                    alt={step.title} 
+                    className="rounded border border-gray-200 max-w-full max-h-48 object-contain" 
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-1 right-1 h-6 w-6 p-0 bg-white/80 rounded-full"
+                    onClick={() => setShowImage(false)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full flex items-center justify-center gap-2 text-xs"
+                  onClick={() => setShowImage(true)}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  View Screenshot
+                </Button>
+              )}
             </div>
           )}
-          
-          {/* Step indicators */}
-          <div className="flex items-center justify-center gap-2 mt-3">
-            {Array.from({ length: totalSteps }).map((_, index) => (
-              <span 
-                key={index}
-                className={`h-2 w-2 rounded-full transition-all duration-300 ${
-                  currentStep === index + 1 
-                    ? 'bg-blue-500 w-6' 
-                    : 'bg-gray-200 dark:bg-gray-700'
-                }`}
-              />
-            ))}
-          </div>
-          <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Step {currentStep} of {totalSteps}
-          </div>
         </div>
         
-        {/* Dialog footer */}
-        <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={onPrev}
-            disabled={currentStep === 1}
-            className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Prev
-          </Button>
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-xs text-muted-foreground">
+            {currentStep} of {totalSteps}
+          </div>
           
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={onClose}
-            className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            Skip
-          </Button>
-          
-          <Button 
-            size="sm"
-            onClick={onNext}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            {currentStep === totalSteps ? 'Finish' : 'Next'}
-            {currentStep !== totalSteps && <ArrowRight className="h-4 w-4 ml-1" />}
-          </Button>
+          <div className="flex gap-2">
+            {currentStep > 1 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onPrev}
+                className="h-8 px-3"
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Previous
+              </Button>
+            )}
+            
+            <Button 
+              size="sm" 
+              onClick={onNext}
+              className="h-8 px-3"
+            >
+              {currentStep === totalSteps ? 'Finish' : 'Next'}
+              {currentStep !== totalSteps && <ChevronRight className="ml-1 h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

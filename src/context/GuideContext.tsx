@@ -1,5 +1,5 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { GuideDialog } from '@/components/guide/GuideDialog';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -43,35 +43,8 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const [currentGuide, setCurrentGuide] = useState<GuideStep[]>([]);
   const [seenGuides, setSeenGuides] = useLocalStorage<string[]>('picocareer-seen-guides', []);
   
-  // These hooks will be available only in components rendered within a Router
-  // So we need to handle them carefully
-  const locationHook = { pathname: '/' }; // Default value
-  const navigateHook = (path: string) => {
-    console.log(`Navigation would go to: ${path}`);
-    // Navigation is not available outside Router context
-  };
-  
-  // Use try/catch to safely attempt to use React Router hooks
-  // This allows the provider to work both within and outside Router context
-  let location: typeof locationHook;
-  let navigate: typeof navigateHook;
-  
-  try {
-    location = useLocation();
-    navigate = useNavigate();
-  } catch (error) {
-    location = locationHook;
-    navigate = navigateHook;
-  }
-  
-  const { isAuthenticated } = useAuthSession();
-
-  // Reset the guide when location changes
-  useEffect(() => {
-    if (isGuideActive && currentPage !== location.pathname) {
-      setIsGuideActive(false);
-    }
-  }, [location.pathname, isGuideActive, currentPage]);
+  // Get auth state safely without requiring router context
+  const { isAuthenticated } = useAuthSession('optional');
 
   // Import the guides data based on the path
   const getGuideForPath = async (path: string): Promise<GuideStep[]> => {
@@ -107,7 +80,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   };
 
   const startGuide = async (path?: string) => {
-    const targetPath = path || location.pathname;
+    const targetPath = path || window.location.pathname;
     const guide = await getGuideForPath(targetPath);
     
     // Filter out steps that require auth if user is not authenticated
@@ -117,15 +90,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     
     if (filteredGuide.length === 0) return;
     
-    // Navigate to the path if needed
-    if (location.pathname !== targetPath) {
-      try {
-        navigate(targetPath);
-      } catch (error) {
-        console.error('Navigation error:', error);
-      }
-    }
-    
+    // We'll let the router handle navigation via links instead of programmatic navigation
     setCurrentGuide(filteredGuide);
     setCurrentPage(targetPath);
     setCurrentStep(0);
