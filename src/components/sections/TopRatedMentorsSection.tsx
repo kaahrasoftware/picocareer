@@ -14,8 +14,15 @@ import {
 export const TopRatedMentorsSection = () => {
   const { data: mentors = [], isLoading } = useTopRatedMentors();
 
+  // Filter to only show top mentors
+  const topMentors = mentors.filter(mentor => mentor.top_mentor === true);
+
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (topMentors.length === 0) {
+    return null; // Don't show the section if there are no top mentors
   }
 
   return (
@@ -38,7 +45,7 @@ export const TopRatedMentorsSection = () => {
           className="w-full px-8"
         >
           <CarouselContent className="-ml-4">
-            {mentors.map((mentor) => (
+            {topMentors.map((mentor) => (
               <CarouselItem key={mentor.id} className="pl-4 basis-full md:basis-1/3">
                 <MentorCard 
                   id={mentor.id}

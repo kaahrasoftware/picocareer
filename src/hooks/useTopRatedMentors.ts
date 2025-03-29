@@ -59,11 +59,8 @@ export const useTopRatedMentors = () => {
         };
       });
 
-      // Shuffle the results in JavaScript instead of using random() in SQL
-      const shuffledData = processedData.sort(() => Math.random() - 0.5);
-
-      console.log('Fetched mentors:', shuffledData?.length);
-      return shuffledData;
+      console.log('Fetched top mentors:', processedData?.length);
+      return processedData;
     },
     staleTime: 1000 * 60 * 5,
   });
