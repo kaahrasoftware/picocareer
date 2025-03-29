@@ -109,27 +109,69 @@ export function GuideDialog({
         dialogElement.style.transform = 'translate(-50%, -50%)';
         break;
     }
+    
+    // Make sure the dialog stays within viewport bounds
+    const dialogRect = dialogElement.getBoundingClientRect();
+    
+    // Handle horizontal overflow
+    if (dialogRect.right > window.innerWidth - 20) {
+      dialogElement.style.left = '';
+      dialogElement.style.right = '20px';
+      dialogElement.style.transform = dialogElement.style.transform.replace('translateX(-50%)', '');
+    } else if (dialogRect.left < 20) {
+      dialogElement.style.left = '20px';
+      dialogElement.style.right = '';
+      dialogElement.style.transform = dialogElement.style.transform.replace('translateX(-50%)', '');
+    }
+    
+    // Handle vertical overflow
+    if (dialogRect.bottom > window.innerHeight - 20) {
+      dialogElement.style.top = '';
+      dialogElement.style.bottom = '20px';
+      dialogElement.style.transform = dialogElement.style.transform.replace('translateY(-50%)', '');
+    } else if (dialogRect.top < 20) {
+      dialogElement.style.top = '20px';
+      dialogElement.style.bottom = '';
+      dialogElement.style.transform = dialogElement.style.transform.replace('translateY(-50%)', '');
+    }
   };
 
+  // Create a custom dialog that doesn't use the standard Dialog components to avoid the backdrop
   return (
-    <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent 
+    <div 
+      className="fixed z-50"
+      style={{ 
+        pointerEvents: 'none',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
+    >
+      <div
         ref={dialogContentRef}
-        className="guide-dialog sm:max-w-md bg-white/95 backdrop-blur"
+        className="guide-dialog bg-white dark:bg-gray-900 rounded-lg border shadow-lg fixed z-50"
         style={{ 
           position: 'fixed',
-          zIndex: 50,
-          borderRadius: '0.5rem',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-          padding: '1.5rem' 
+          width: '320px',
+          maxWidth: '95vw',
+          pointerEvents: 'auto',
+          zIndex: 50
         }}
       >
-        <DialogHeader>
-          <DialogTitle>{step.title}</DialogTitle>
-        </DialogHeader>
+        <div className="p-4 pb-2">
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold text-lg">{step.title}</h3>
+            <button 
+              onClick={onClose}
+              className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
         
-        <div className="py-4">
+        <div className="px-4 py-2">
           <p className="text-sm text-muted-foreground mb-4">{step.description}</p>
           
           {step.image && (
@@ -146,7 +188,7 @@ export function GuideDialog({
             {Array.from({ length: totalSteps }).map((_, index) => (
               <span 
                 key={index}
-                className={`h-2 w-2 rounded-full ${currentStep === index + 1 ? 'bg-primary' : 'bg-gray-200'}`}
+                className={`h-2 w-2 rounded-full ${currentStep === index + 1 ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
               />
             ))}
           </div>
@@ -155,7 +197,7 @@ export function GuideDialog({
           </div>
         </div>
         
-        <DialogFooter className="flex justify-between sm:justify-between items-center">
+        <div className="p-4 flex justify-between items-center border-t">
           <Button 
             variant="outline" 
             size="sm"
@@ -172,7 +214,7 @@ export function GuideDialog({
             onClick={onClose}
           >
             <X className="h-4 w-4 mr-1" />
-            Skip Tour
+            Skip
           </Button>
           
           <Button 
@@ -182,8 +224,8 @@ export function GuideDialog({
             {currentStep === totalSteps ? 'Finish' : 'Next'}
             {currentStep !== totalSteps && <ArrowRight className="h-4 w-4 ml-1" />}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }
