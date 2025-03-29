@@ -12,7 +12,7 @@ export type GuideStep = {
   element?: string; // CSS selector for the element to highlight
   position?: 'top' | 'right' | 'bottom' | 'left' | 'center';
   requiredAuth?: boolean; // If true, user needs to be logged in to see this step
-  image?: string; // Optional screenshot image
+  highlightColor?: 'gold' | 'green'; // Option to choose highlight color
 };
 
 export type GuidePage = {

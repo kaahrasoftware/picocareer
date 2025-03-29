@@ -6,8 +6,7 @@ const mentorGuide: GuideStep[] = [
     id: 'mentor-welcome',
     title: 'Welcome to Mentors',
     description: 'Find professionals who can guide you in your career journey.',
-    position: 'center',
-    image: '/mentor-welcome.png'
+    position: 'center'
   },
   {
     id: 'mentor-search',
@@ -15,7 +14,7 @@ const mentorGuide: GuideStep[] = [
     description: 'Find mentors by name, expertise, company, or skills.',
     element: '.SearchInput',
     position: 'bottom',
-    image: '/mentor-search.png'
+    highlightColor: 'gold'
   },
   {
     id: 'mentor-filters',
@@ -23,7 +22,7 @@ const mentorGuide: GuideStep[] = [
     description: 'Narrow down by skills, location, company, or availability.',
     element: '.CommunityFilters',
     position: 'bottom',
-    image: '/mentor-filters.png'
+    highlightColor: 'green'
   },
   {
     id: 'mentor-grid',
@@ -31,22 +30,20 @@ const mentorGuide: GuideStep[] = [
     description: 'See mentor expertise, ratings, and overview at a glance.',
     element: '.MentorGrid',
     position: 'top',
-    image: '/mentor-grid.png'
+    highlightColor: 'gold'
   },
   {
     id: 'mentor-profile',
     title: 'View Detailed Profile',
     description: 'Check experience, education, skills, and session availability.',
-    position: 'center',
-    image: '/mentor-profile.png'
+    position: 'center'
   },
   {
     id: 'mentor-booking',
     title: 'Book a Session',
     description: 'Sign in to view availability and book a mentoring session.',
     position: 'center',
-    requiredAuth: true,
-    image: '/mentor-booking.png'
+    requiredAuth: true
   },
   {
     id: 'mentor-become',
@@ -54,14 +51,13 @@ const mentorGuide: GuideStep[] = [
     description: 'Share your expertise by applying to be a mentor.',
     element: 'a[href="/mentor-registration"]',
     position: 'bottom',
-    image: '/mentor-become.png'
+    highlightColor: 'green'
   },
   {
     id: 'mentor-complete',
     title: 'Ready to Connect',
     description: 'Start exploring mentors in your field of interest!',
-    position: 'center',
-    image: '/mentor-complete.png'
+    position: 'center'
   }
 ];
 

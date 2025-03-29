@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { X, ChevronRight, ChevronLeft, Image as ImageIcon } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GuideStep } from '@/context/GuideContext';
 
@@ -23,10 +23,15 @@ export function GuideDialog({
 }: GuideDialogProps) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 });
-  const [showImage, setShowImage] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const highlightedElementRef = useRef<Element | null>(null);
   
   useEffect(() => {
+    // Clean up previous highlights
+    document.querySelectorAll('.guide-highlight').forEach((el) => {
+      el.classList.remove('guide-highlight', 'guide-highlight-green');
+    });
+    
     // Position the dialog based on the highlighted element and position prop
     const positionDialog = () => {
       if (!step.element || step.position === 'center') {
@@ -39,6 +44,7 @@ export function GuideDialog({
       }
 
       const targetElement = document.querySelector(step.element);
+      highlightedElementRef.current = targetElement;
       
       if (!targetElement || !dialogRef.current) {
         // Default positioning in case element is not found
@@ -59,8 +65,11 @@ export function GuideDialog({
       let arrowLeft = 0;
       let rotation = 0;
 
-      // Highlight the target element
+      // Highlight the target element with appropriate color
       targetElement.classList.add('guide-highlight');
+      if (step.highlightColor === 'green') {
+        targetElement.classList.add('guide-highlight-green');
+      }
       
       // Position based on preference, with bounds checking
       switch (step.position) {
@@ -113,6 +122,22 @@ export function GuideDialog({
       
       setPosition({ top, left });
       setArrowPosition({ top: arrowTop, left: arrowLeft, rotation });
+      
+      // Scroll element into view if needed
+      if (!isElementInViewport(targetElement)) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    // Check if element is in viewport
+    const isElementInViewport = (el: Element) => {
+      const rect = el.getBoundingClientRect();
+      return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+      );
     };
 
     // Position the dialog and add highlight to element
@@ -127,7 +152,7 @@ export function GuideDialog({
       
       // Remove highlight from all elements
       document.querySelectorAll('.guide-highlight').forEach((el) => {
-        el.classList.remove('guide-highlight');
+        el.classList.remove('guide-highlight', 'guide-highlight-green');
       });
     };
   }, [step]);
@@ -169,38 +194,6 @@ export function GuideDialog({
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">{step.title}</h3>
           <p className="text-sm text-muted-foreground">{step.description}</p>
-          
-          {step.image && (
-            <div className="mt-3">
-              {showImage ? (
-                <div className="relative mt-2">
-                  <img 
-                    src={step.image} 
-                    alt={step.title} 
-                    className="rounded border border-gray-200 max-w-full max-h-48 object-contain" 
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-1 right-1 h-6 w-6 p-0 bg-white/80 rounded-full"
-                    onClick={() => setShowImage(false)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full flex items-center justify-center gap-2 text-xs"
-                  onClick={() => setShowImage(true)}
-                >
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  View Screenshot
-                </Button>
-              )}
-            </div>
-          )}
         </div>
         
         <div className="flex justify-between items-center mt-4">

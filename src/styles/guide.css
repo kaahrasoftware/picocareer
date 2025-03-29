@@ -3,20 +3,41 @@
 .guide-highlight {
   position: relative;
   z-index: 40;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 0 4px rgba(218, 165, 32, 0.6);  /* Gold highlight */
   border-radius: 4px;
   animation: pulse 2s infinite;
 }
 
+.guide-highlight-green {
+  box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.6);  /* Green highlight */
+}
+
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 0 0 rgba(218, 165, 32, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 6px rgba(218, 165, 32, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 0 rgba(218, 165, 32, 0);
+  }
+}
+
+/* Green pulse animation */
+.guide-highlight-green {
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(72, 187, 120, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
   }
 }
 
