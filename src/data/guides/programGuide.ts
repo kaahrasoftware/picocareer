@@ -4,46 +4,53 @@ import { GuideStep } from '@/context/GuideContext';
 const programGuide: GuideStep[] = [
   {
     id: 'program-welcome',
-    title: 'Academic Programs Guide',
-    description: 'This guide will help you navigate the academic programs available on PicoCareer.',
-    position: 'center'
+    title: 'Academic Programs',
+    description: 'Discover programs that match your career goals.',
+    position: 'center',
+    image: '/program-welcome.png'
   },
   {
     id: 'program-search',
-    title: 'Search Programs',
-    description: 'Use the search functionality to find specific academic programs by name, field, or keywords.',
+    title: 'Find Programs',
+    description: 'Search by name, field, or keywords to find your ideal program.',
     element: 'input[type="search"]',
-    position: 'bottom'
+    position: 'bottom',
+    image: '/program-search.png'
   },
   {
     id: 'program-filters',
-    title: 'Filter Programs',
-    description: 'Narrow down your options using filters like discipline, degree level, and duration to find programs that match your educational goals.',
-    position: 'bottom'
+    title: 'Filter Options',
+    description: 'Narrow by discipline, degree level, and duration.',
+    position: 'bottom',
+    image: '/program-filters.png'
   },
   {
     id: 'program-browse',
-    title: 'Browse Program Cards',
-    description: 'Scroll through program cards to see a brief overview of different academic offerings. Each card provides key information about the program.',
-    position: 'top'
+    title: 'Program Cards',
+    description: 'View key information about each academic offering.',
+    position: 'top',
+    image: '/program-browse.png'
   },
   {
     id: 'program-details',
-    title: 'View Program Details',
-    description: 'Click on any program card to see detailed information including curriculum, requirements, career outcomes, and more.',
-    position: 'center'
+    title: 'Program Details',
+    description: 'Explore curriculum, requirements, and career outcomes.',
+    position: 'center',
+    image: '/program-details.png'
   },
   {
     id: 'program-related',
-    title: 'Explore Related Programs',
-    description: 'When viewing a program, you\'ll also see related or similar programs that might interest you based on field of study or career path.',
-    position: 'center'
+    title: 'Similar Programs',
+    description: 'Discover related options based on field or career path.',
+    position: 'center',
+    image: '/program-related.png'
   },
   {
     id: 'program-complete',
-    title: 'Discover Your Educational Path',
-    description: 'You\'ve completed the Academic Programs tour! Start exploring programs that match your interests and career goals.',
-    position: 'center'
+    title: 'Your Educational Path',
+    description: 'Ready to find programs that match your goals!',
+    position: 'center',
+    image: '/program-complete.png'
   }
 ];
 

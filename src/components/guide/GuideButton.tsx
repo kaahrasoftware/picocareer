@@ -43,16 +43,12 @@ export function GuideButton({ className }: GuideButtonProps) {
     <Button
       variant="ghost"
       size="sm"
-      className={`relative ${className}`}
+      className={`relative ${className} ${!hasSeen ? 'guide-button-new' : ''}`}
       onClick={handleStartGuide}
+      title="View page guide"
     >
-      <HelpCircle className="h-5 w-5" />
+      <HelpCircle className="h-5 w-5 text-blue-500" />
       <span className="sr-only">Help & Guide</span>
-      
-      {/* Show a dot indicator if the user hasn't seen this guide yet */}
-      {!hasSeen && (
-        <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary" />
-      )}
     </Button>
   );
 }

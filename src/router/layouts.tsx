@@ -6,7 +6,6 @@ import { Outlet } from "react-router-dom";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { GuideProvider } from "@/context/GuideContext";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -18,17 +17,15 @@ export function MainLayout({ children }: LayoutProps) {
   const isMentor = profile?.user_type === "mentor";
 
   return (
-    <GuideProvider>
-      <div className="min-h-screen flex flex-col">
-        <MenuSidebar />
-        <main className="pt-16 flex-grow">
-          {children || <Outlet />}
-        </main>
-        <Footer />
-        <GoToTopButton />
-        {session && isMentor && <FloatingActionButton />}
-      </div>
-    </GuideProvider>
+    <div className="min-h-screen flex flex-col">
+      <MenuSidebar />
+      <main className="pt-16 flex-grow">
+        {children || <Outlet />}
+      </main>
+      <Footer />
+      <GoToTopButton />
+      {session && isMentor && <FloatingActionButton />}
+    </div>
   );
 }
 

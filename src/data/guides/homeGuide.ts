@@ -5,50 +5,57 @@ const homeGuide: GuideStep[] = [
   {
     id: 'home-welcome',
     title: 'Welcome to PicoCareer',
-    description: 'This guide will help you discover the key features of PicoCareer. Let us show you around our platform that connects you with mentors, educational programs, and career opportunities.',
-    position: 'center'
+    description: 'Discover mentors, programs, and career opportunities on our platform.',
+    position: 'center',
+    image: '/home-welcome.png'
   },
   {
     id: 'home-search',
-    title: 'Search Functionality',
-    description: 'Use the search bar to find mentors, academic programs, careers, universities, and scholarships. Simply type what you\'re looking for and see relevant results instantly.',
+    title: 'Quick Search',
+    description: 'Find mentors, programs, careers, and more with just a few clicks.',
     element: '.main-content .SearchBar',
-    position: 'bottom'
+    position: 'bottom',
+    image: '/home-search.png'
   },
   {
     id: 'home-navigation',
-    title: 'Navigation Menu',
-    description: 'The navigation menu provides quick access to various sections of the platform. Explore Fields of Study, Careers, Mentors, and more from here.',
+    title: 'Main Navigation',
+    description: 'Access Fields of Study, Careers, Mentors, and more from the menu.',
     element: 'nav',
-    position: 'bottom'
+    position: 'bottom',
+    image: '/home-nav.png'
   },
   {
     id: 'home-featured-mentors',
-    title: 'Featured Mentors',
-    description: 'Discover our top-rated mentors in various fields. These professionals are ready to guide you through your career journey with their expertise and experience.',
+    title: 'Top Mentors',
+    description: 'Connect with highly-rated mentors in various professional fields.',
     element: '.TopRatedMentorsSection',
-    position: 'top'
+    position: 'top',
+    image: '/home-mentors.png'
   },
   {
     id: 'home-featured-careers',
-    title: 'Featured Careers',
-    description: 'Explore highlighted career paths that might interest you. Click on any career card to learn more about the requirements, prospects, and details.',
+    title: 'Career Options',
+    description: 'Explore careers that match your interests and skills.',
     element: '.FeaturedCareersSection',
-    position: 'top'
+    position: 'top',
+    image: '/home-careers.png'
   },
   {
     id: 'home-auth',
-    title: 'Sign In or Create an Account',
-    description: 'To access personalized features like bookmarking, profile building, and session booking, you\'ll need to sign in or create an account.',
+    title: 'Sign In',
+    description: 'Access personalized features by signing in or creating an account.',
     element: '.UserMenu',
     position: 'left',
-    requiredAuth: false
+    requiredAuth: false,
+    image: '/home-signin.png'
   },
   {
     id: 'home-complete',
-    title: 'You\'re Ready to Explore!',
-    description: 'You\'ve completed the home page tour. Feel free to explore the platform and discover opportunities that match your interests and goals. Remember, you can access this guide anytime by clicking the Help button in the navigation bar.',
-    position: 'center'
+    title: 'Start Exploring!',
+    description: 'You\'re all set! Click the help button anytime to revisit this guide.',
+    position: 'center',
+    image: '/home-complete.png'
   }
 ];
 
