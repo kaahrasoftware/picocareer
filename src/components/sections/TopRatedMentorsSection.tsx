@@ -55,6 +55,7 @@ export const TopRatedMentorsSection = () => {
                   rating={mentor.rating}
                   totalRatings={mentor.totalRatings}
                   avatarUrl={mentor.imageUrl}
+                  topMentor={mentor.top_mentor}
                 />
               </CarouselItem>
             ))}

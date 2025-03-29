@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, MapPin, BookOpen, Star, Tag } from 'lucide-react';
+import { Briefcase, MapPin, BookOpen, Star, Tag, Award } from 'lucide-react';
 import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 import { badgeStyles } from '@/components/career-details/BadgeStyles';
 
@@ -22,6 +23,7 @@ export interface MentorCardProps {
   hourlyRate?: number;
   onClick?: () => void;
   imageUrl?: string; // Added for backward compatibility
+  topMentor?: boolean;
 }
 
 export function MentorCard({
@@ -38,7 +40,8 @@ export function MentorCard({
   imageUrl, // Added to handle existing references
   education,
   hourlyRate,
-  onClick
+  onClick,
+  topMentor = false
 }: MentorCardProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   
@@ -55,7 +58,15 @@ export function MentorCard({
               <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold">{name}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-semibold">{name}</h3>
+                {topMentor && (
+                  <Badge className="bg-gradient-to-r from-amber-400 to-amber-600 text-white hover:from-amber-500 hover:to-amber-700 flex items-center gap-1">
+                    <Award className="h-3 w-3" />
+                    Top Mentor
+                  </Badge>
+                )}
+              </div>
               {position && company && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Briefcase className="h-3 w-3" />

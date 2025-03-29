@@ -17,7 +17,6 @@ export const useTopRatedMentors = () => {
         `)
         .eq('user_type', 'mentor')
         .eq('top_mentor', true)  // Fetch only top mentors
-        .limit(10)
         .order('created_at', { ascending: false });
 
       if (error) {
