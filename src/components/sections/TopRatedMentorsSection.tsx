@@ -12,10 +12,7 @@ import {
 } from "@/components/ui/carousel";
 
 export const TopRatedMentorsSection = () => {
-  const { data: mentors = [], isLoading } = useTopRatedMentors();
-
-  // Filter to only show top mentors
-  const topMentors = mentors.filter(mentor => mentor.top_mentor === true);
+  const { data: topMentors = [], isLoading } = useTopRatedMentors();
 
   if (isLoading) {
     return <div>Loading...</div>;

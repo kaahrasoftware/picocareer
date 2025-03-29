@@ -16,7 +16,7 @@ export const useTopRatedMentors = () => {
           avg_rating:session_feedback!session_feedback_to_profile_id_fkey(rating)
         `)
         .eq('user_type', 'mentor')
-        .eq('top_mentor', true)
+        .eq('top_mentor', true)  // Fetch only top mentors
         .limit(10)
         .order('created_at', { ascending: false });
 
