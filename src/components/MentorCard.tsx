@@ -61,7 +61,7 @@ export function MentorCard({
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-lg font-semibold">{name}</h3>
                 {topMentor && (
-                  <Badge className="bg-gradient-to-r from-amber-400 to-amber-600 text-white hover:from-amber-500 hover:to-amber-700 flex items-center gap-1">
+                  <Badge className="bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 flex items-center gap-1">
                     <Award className="h-3 w-3" />
                     Top Mentor
                   </Badge>
