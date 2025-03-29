@@ -23,9 +23,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <GuideProvider>
-          <AppContent />
-        </GuideProvider>
+        <AppContent />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { GuideDialog } from '@/components/guide/GuideDialog';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -36,15 +36,36 @@ type GuideContextType = {
 
 const GuideContext = createContext<GuideContextType | undefined>(undefined);
 
+// Create a component to wrap RouterProvider and provide Guide context
 export function GuideProvider({ children }: { children: React.ReactNode }) {
   const [isGuideActive, setIsGuideActive] = useState(false);
   const [currentPage, setCurrentPage] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [currentGuide, setCurrentGuide] = useState<GuideStep[]>([]);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isAuthenticated } = useAuthSession();
   const [seenGuides, setSeenGuides] = useLocalStorage<string[]>('picocareer-seen-guides', []);
+  
+  // These hooks will be available only in components rendered within a Router
+  // So we need to handle them carefully
+  const locationHook = { pathname: '/' }; // Default value
+  const navigateHook = (path: string) => {
+    console.log(`Navigation would go to: ${path}`);
+    // Navigation is not available outside Router context
+  };
+  
+  // Use try/catch to safely attempt to use React Router hooks
+  // This allows the provider to work both within and outside Router context
+  let location: typeof locationHook;
+  let navigate: typeof navigateHook;
+  
+  try {
+    location = useLocation();
+    navigate = useNavigate();
+  } catch (error) {
+    location = locationHook;
+    navigate = navigateHook;
+  }
+  
+  const { isAuthenticated } = useAuthSession();
 
   // Reset the guide when location changes
   useEffect(() => {
@@ -99,7 +120,11 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     
     // Navigate to the path if needed
     if (location.pathname !== targetPath) {
-      navigate(targetPath);
+      try {
+        navigate(targetPath);
+      } catch (error) {
+        console.error('Navigation error:', error);
+      }
     }
     
     setCurrentGuide(filteredGuide);
