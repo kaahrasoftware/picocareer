@@ -23,7 +23,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppContent />
+        <GuideProvider>
+          <AppContent />
+        </GuideProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
@@ -32,12 +34,11 @@ function App() {
 // Separate component to allow proper Hook usage and context inheritance
 function AppContent() {
   return (
-    <RouterProvider router={router}>
-      <GuideProvider>
-        <HubStorageInitializer />
-        <Toaster />
-      </GuideProvider>
-    </RouterProvider>
+    <>
+      <RouterProvider router={router} />
+      <HubStorageInitializer />
+      <Toaster />
+    </>
   );
 }
 
