@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { GuideButton } from "@/components/guide/GuideButton";
 
 export function MainNavigation() {
   const location = useLocation();
@@ -30,7 +31,7 @@ export function MainNavigation() {
 
   const resourceItems = [
     { path: "/personality-test", label: "Personality Test" },
-    { path: "/career-chat", label: "AI Career Guide" }, // Added this line
+    { path: "/career-chat", label: "AI Career Guide" },
     { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
   ];
@@ -99,6 +100,11 @@ export function MainNavigation() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+        </li>
+        
+        {/* Add the guide button */}
+        <li className={cn(isMobile ? "mt-4" : "ml-4")}>
+          <GuideButton />
         </li>
       </ul>
     </nav>

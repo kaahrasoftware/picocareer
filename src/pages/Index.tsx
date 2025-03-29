@@ -7,6 +7,7 @@ import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSecti
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
 
 const Index = () => {
   const { session } = useAuthSession();
@@ -41,6 +42,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add the welcome dialog */}
+      <WelcomeDialog />
     </div>
   );
 };

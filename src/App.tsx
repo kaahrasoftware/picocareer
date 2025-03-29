@@ -6,6 +6,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { router } from '@/router/routes';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
 import { AuthProvider } from '@/context/AuthContext';
+import { GuideProvider } from '@/context/GuideContext';
+import './styles/guide.css'; // Import guide styles
 
 // Create a client
 const queryClient = new QueryClient({
@@ -30,11 +32,12 @@ function App() {
 // Separate component to allow proper Hook usage and context inheritance
 function AppContent() {
   return (
-    <>
-      <RouterProvider router={router} />
-      <HubStorageInitializer />
-      <Toaster />
-    </>
+    <RouterProvider router={router}>
+      <GuideProvider>
+        <HubStorageInitializer />
+        <Toaster />
+      </GuideProvider>
+    </RouterProvider>
   );
 }
 

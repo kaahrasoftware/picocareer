@@ -1,0 +1,43 @@
+
+/* Guide highlight effect */
+.guide-highlight {
+  position: relative;
+  z-index: 40;
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.4);
+  border-radius: 4px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 78, 216, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(29, 78, 216, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 78, 216, 0);
+  }
+}
+
+/* Guide dialog styling */
+.guide-dialog {
+  max-width: 350px;
+}
+
+/* For the guide button pulsing effect */
+.guide-button-new {
+  position: relative;
+}
+
+.guide-button-new::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  animation: pulse 2s infinite;
+}
