@@ -83,7 +83,7 @@ export const FeaturedCareersSection = () => {
             {careers.map((career) => (
               <CarouselItem 
                 key={career.id} 
-                className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 transition-all duration-300"
+                className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 transition-all duration-300"
               >
                 <CareerCard 
                   {...career} 
