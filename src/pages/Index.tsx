@@ -8,6 +8,7 @@ import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSec
 import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
+import { SearchBar } from "@/components/SearchBar";
 
 const Index = () => {
   const { session } = useAuthSession();
@@ -34,10 +35,15 @@ const Index = () => {
         <div className="w-full px-8 sm:px-12 lg:px-16 py-8">
           <div className="w-full max-w-7xl mx-auto space-y-8">
             <HeroSection />
+            <div className="SearchBar">
+              <SearchBar />
+            </div>
             <StatisticsSection />
             <CallToActionSection />
             <TopRatedMentorsSection />
-            <FeaturedCareersSection />
+            <div className="FeaturedCareersSection">
+              <FeaturedCareersSection />
+            </div>
             <FeaturedMajorsSection />
           </div>
         </div>

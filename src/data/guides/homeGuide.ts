@@ -12,12 +12,12 @@ const homeGuide: GuideStep[] = [
     id: 'home-search',
     title: 'Quick Search',
     description: 'Find mentors, programs, careers, and more with just a few clicks.',
-    element: '.main-content .SearchBar',
+    element: '.SearchBar',
     position: 'bottom',
     highlightColor: 'gold',
     demoAction: {
       type: 'scroll-to',
-      target: '.main-content .SearchBar'
+      target: '.SearchBar'
     }
   },
   {
@@ -59,7 +59,11 @@ const homeGuide: GuideStep[] = [
     element: '.UserMenu',
     position: 'left',
     requiredAuth: false,
-    highlightColor: 'gold'
+    highlightColor: 'gold',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.UserMenu'
+    }
   },
   {
     id: 'home-complete',

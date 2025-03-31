@@ -46,6 +46,7 @@
   max-width: 350px;
   animation: fadeIn 0.3s ease-out;
   transform-origin: center top;
+  z-index: 999;
 }
 
 @keyframes fadeIn {
@@ -73,6 +74,7 @@
   z-index: 999;
   animation: bounce 1.5s infinite;
   pointer-events: none;
+  filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.3));
 }
 
 .guide-arrow svg {
@@ -144,4 +146,27 @@
 .guide-floating-button:hover {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   transform: translateY(-50%) scale(1.05);
+}
+
+/* Enhanced visibility for guide arrows */
+.guide-arrow svg {
+  stroke-width: 3;
+  stroke: #3b82f6;
+  filter: drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.3));
+}
+
+/* Add a pulse effect to the arrows for better visibility */
+.guide-arrow {
+  animation: arrow-pulse 2s infinite;
+}
+
+@keyframes arrow-pulse {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }

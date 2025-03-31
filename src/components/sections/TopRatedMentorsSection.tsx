@@ -23,7 +23,7 @@ export const TopRatedMentorsSection = () => {
   }
 
   return (
-    <section className="mb-16">
+    <section className="mb-16 TopRatedMentorsSection">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Top Rated Mentors</h2>
         <Link 
