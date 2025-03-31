@@ -6,7 +6,7 @@ export type GuideStep = {
   element?: string; // CSS selector for the element to highlight
   position?: 'top' | 'right' | 'bottom' | 'left' | 'center';
   requiredAuth?: boolean; // If true, user needs to be logged in to see this step
-  highlightColor?: 'gold' | 'green'; // Option to choose highlight color
+  highlightColor?: 'blue' | 'bright'; // Option to choose highlight color
   demoAction?: {
     type: 'open-dialog' | 'navigate' | 'scroll-to';
     target: string; // Dialog ID, route path, or element selector

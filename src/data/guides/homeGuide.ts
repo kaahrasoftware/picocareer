@@ -1,5 +1,5 @@
 
-import { GuideStep } from '@/context/GuideContext';
+import { GuideStep } from '@/components/guide/types';
 
 const homeGuide: GuideStep[] = [
   {
@@ -14,7 +14,7 @@ const homeGuide: GuideStep[] = [
     description: 'Find mentors, programs, careers, and more with just a few clicks.',
     element: '.SearchBar',
     position: 'bottom',
-    highlightColor: 'gold',
+    highlightColor: 'blue',
     demoAction: {
       type: 'scroll-to',
       target: '.SearchBar'
@@ -26,7 +26,7 @@ const homeGuide: GuideStep[] = [
     description: 'Access Fields of Study, Careers, Mentors, and more from the menu.',
     element: 'nav',
     position: 'bottom',
-    highlightColor: 'green'
+    highlightColor: 'bright'
   },
   {
     id: 'home-featured-mentors',
@@ -34,7 +34,7 @@ const homeGuide: GuideStep[] = [
     description: 'Connect with highly-rated mentors in various professional fields.',
     element: '.TopRatedMentorsSection',
     position: 'top',
-    highlightColor: 'gold',
+    highlightColor: 'blue',
     demoAction: {
       type: 'scroll-to',
       target: '.TopRatedMentorsSection'
@@ -46,7 +46,7 @@ const homeGuide: GuideStep[] = [
     description: 'Explore careers that match your interests and skills.',
     element: '.FeaturedCareersSection',
     position: 'top',
-    highlightColor: 'green',
+    highlightColor: 'bright',
     demoAction: {
       type: 'scroll-to',
       target: '.FeaturedCareersSection'
@@ -59,7 +59,7 @@ const homeGuide: GuideStep[] = [
     element: '.UserMenu',
     position: 'left',
     requiredAuth: false,
-    highlightColor: 'gold',
+    highlightColor: 'blue',
     demoAction: {
       type: 'scroll-to',
       target: '.UserMenu'

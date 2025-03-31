@@ -33,7 +33,7 @@ export function GuideDialog({
     // Clean up previous highlights and arrows
     const cleanupElements = () => {
       document.querySelectorAll('.guide-highlight').forEach((el) => {
-        el.classList.remove('guide-highlight', 'guide-highlight-green');
+        el.classList.remove('guide-highlight', 'guide-highlight-bright');
       });
       
       document.querySelectorAll('.guide-arrow').forEach((el) => {
@@ -68,8 +68,8 @@ export function GuideDialog({
 
       // Highlight the target element with appropriate color
       targetElement.classList.add('guide-highlight');
-      if (step.highlightColor === 'green') {
-        targetElement.classList.add('guide-highlight-green');
+      if (step.highlightColor === 'bright') {
+        targetElement.classList.add('guide-highlight-bright');
       }
       
       // Scroll the element into view if needed
@@ -91,7 +91,7 @@ export function GuideDialog({
       arrow.style.top = `${directionalArrowPosition.top}px`;
       arrow.style.left = `${directionalArrowPosition.left}px`;
       arrow.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>

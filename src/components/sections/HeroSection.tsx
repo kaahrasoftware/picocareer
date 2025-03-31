@@ -1,3 +1,4 @@
+
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
 
@@ -20,7 +21,7 @@ export const HeroSection = () => {
 
       {/* Header */}
       <header className="flex justify-between items-center mb-16 relative">
-        <div className="w-full">
+        <div className="w-full SearchBar">
           <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
         </div>
       </header>

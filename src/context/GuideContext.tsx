@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { GuideDialog } from '@/components/guide/GuideDialog';
@@ -56,7 +55,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     
     // Remove any highlight classes
     document.querySelectorAll('.guide-highlight').forEach((el) => {
-      el.classList.remove('guide-highlight', 'guide-highlight-green');
+      el.classList.remove('guide-highlight', 'guide-highlight-bright');
     });
     
     // Remove any guide arrows
