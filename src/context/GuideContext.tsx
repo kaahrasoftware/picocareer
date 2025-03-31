@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { GuideDialog } from '@/components/guide/GuideDialog';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { useNavigate } from 'react-router-dom';
 
 // Guide types
 export type GuideStep = {
@@ -13,6 +14,11 @@ export type GuideStep = {
   position?: 'top' | 'right' | 'bottom' | 'left' | 'center';
   requiredAuth?: boolean; // If true, user needs to be logged in to see this step
   highlightColor?: 'gold' | 'green'; // Option to choose highlight color
+  demoAction?: {
+    type: 'open-dialog' | 'navigate' | 'scroll-to';
+    target: string; // Dialog ID, route path, or element selector
+    data?: any; // Additional data for the action
+  };
 };
 
 export type GuidePage = {
@@ -42,6 +48,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [currentGuide, setCurrentGuide] = useState<GuideStep[]>([]);
   const [seenGuides, setSeenGuides] = useLocalStorage<string[]>('picocareer-seen-guides', []);
+  const navigate = useNavigate();
   
   // Get auth state safely without requiring router context
   const { isAuthenticated } = useAuthSession('optional');
@@ -79,6 +86,49 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Execute demo actions for the current step
+  useEffect(() => {
+    if (!isGuideActive || currentGuide.length === 0 || currentStep >= currentGuide.length) return;
+    
+    const currentStepData = currentGuide[currentStep];
+    if (currentStepData.demoAction) {
+      const { type, target, data } = currentStepData.demoAction;
+      
+      // Execute the appropriate demo action
+      switch (type) {
+        case 'open-dialog':
+          // Implementation for opening specific dialogs
+          // This would depend on the specific dialog components
+          console.log('Opening dialog:', target);
+          // Example: For mentor profile, we could trigger a click on a specific mentor card
+          if (target === 'mentor-profile' && data?.id) {
+            const mentorButton = document.querySelector(`[data-mentor-id="${data.id}"]`);
+            if (mentorButton) {
+              (mentorButton as HTMLElement).click();
+            }
+          }
+          break;
+          
+        case 'navigate':
+          // Navigate to a specific route
+          if (target && window.location.pathname !== target) {
+            navigate(target);
+          }
+          break;
+          
+        case 'scroll-to':
+          // Scroll to a specific element
+          setTimeout(() => {
+            const element = document.querySelector(target);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 300);
+          break;
+      }
+    }
+  }, [isGuideActive, currentStep, currentGuide, navigate]);
+
   const startGuide = async (path?: string) => {
     const targetPath = path || window.location.pathname;
     const guide = await getGuideForPath(targetPath);
@@ -102,6 +152,16 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     setCurrentStep(0);
     setCurrentGuide([]);
     setCurrentPage(null);
+    
+    // Remove any highlight classes
+    document.querySelectorAll('.guide-highlight').forEach((el) => {
+      el.classList.remove('guide-highlight', 'guide-highlight-green');
+    });
+    
+    // Remove any guide arrows
+    document.querySelectorAll('.guide-arrow').forEach((el) => {
+      el.remove();
+    });
   };
 
   const nextStep = () => {

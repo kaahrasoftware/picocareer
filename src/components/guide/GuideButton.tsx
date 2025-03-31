@@ -7,9 +7,10 @@ import { useLocation } from 'react-router-dom';
 
 interface GuideButtonProps {
   className?: string;
+  floating?: boolean;
 }
 
-export function GuideButton({ className }: GuideButtonProps) {
+export function GuideButton({ className, floating = false }: GuideButtonProps) {
   const { startGuide, hasSeenGuide } = useGuide();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -38,6 +39,19 @@ export function GuideButton({ className }: GuideButtonProps) {
   
   // Check if the user has seen this guide before
   const hasSeen = hasSeenGuide(getSimplifiedPath());
+  
+  if (floating) {
+    return (
+      <button
+        className={`guide-floating-button ${!hasSeen ? 'guide-button-new' : ''}`}
+        onClick={handleStartGuide}
+        title="View page guide"
+      >
+        <HelpCircle className="h-6 w-6 text-blue-500" />
+        <span className="sr-only">Help & Guide</span>
+      </button>
+    );
+  }
   
   return (
     <Button

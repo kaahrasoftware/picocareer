@@ -22,7 +22,11 @@ const mentorGuide: GuideStep[] = [
     description: 'Narrow down by skills, location, company, or availability.',
     element: '.CommunityFilters',
     position: 'bottom',
-    highlightColor: 'green'
+    highlightColor: 'green',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.CommunityFilters'
+    }
   },
   {
     id: 'mentor-grid',
@@ -30,13 +34,22 @@ const mentorGuide: GuideStep[] = [
     description: 'See mentor expertise, ratings, and overview at a glance.',
     element: '.MentorGrid',
     position: 'top',
-    highlightColor: 'gold'
+    highlightColor: 'gold',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.MentorGrid'
+    }
   },
   {
     id: 'mentor-profile',
     title: 'View Detailed Profile',
     description: 'Check experience, education, skills, and session availability.',
-    position: 'center'
+    position: 'center',
+    demoAction: {
+      type: 'open-dialog',
+      target: 'mentor-profile',
+      data: { id: 'raf97.to@gmail.com' }
+    }
   },
   {
     id: 'mentor-booking',

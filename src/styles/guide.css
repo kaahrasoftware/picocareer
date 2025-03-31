@@ -65,6 +65,47 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
+/* Guide arrow styling */
+.guide-arrow {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  z-index: 999;
+  animation: bounce 1.5s infinite;
+  pointer-events: none;
+}
+
+.guide-arrow svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+.guide-arrow-top svg {
+  transform: rotate(270deg);
+}
+
+.guide-arrow-right svg {
+  transform: rotate(0deg);
+}
+
+.guide-arrow-bottom svg {
+  transform: rotate(90deg);
+}
+
+.guide-arrow-left svg {
+  transform: rotate(180deg);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
 /* For the guide button pulsing effect */
 .guide-button-new {
   position: relative;
@@ -80,4 +121,27 @@
   border-radius: 50%;
   background-color: #3b82f6;
   animation: pulse 2s infinite;
+}
+
+/* Floating guide button */
+.guide-floating-button {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.guide-floating-button:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) scale(1.05);
 }

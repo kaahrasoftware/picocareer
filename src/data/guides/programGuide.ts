@@ -22,7 +22,11 @@ const programGuide: GuideStep[] = [
     description: 'Narrow by discipline, degree level, and duration.',
     element: '.ProgramFilters',
     position: 'bottom',
-    highlightColor: 'green'
+    highlightColor: 'green',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.CommunityFilters'
+    }
   },
   {
     id: 'program-browse',
@@ -30,13 +34,22 @@ const programGuide: GuideStep[] = [
     description: 'View key information about each academic offering.',
     element: '.ProgramGrid',
     position: 'top',
-    highlightColor: 'gold'
+    highlightColor: 'gold',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.grid'
+    }
   },
   {
     id: 'program-details',
     title: 'Program Details',
     description: 'Explore curriculum, requirements, and career outcomes.',
-    position: 'center'
+    position: 'center',
+    demoAction: {
+      type: 'open-dialog',
+      target: 'program-details',
+      data: { id: '1' }  // Show details for a specific program
+    }
   },
   {
     id: 'program-related',

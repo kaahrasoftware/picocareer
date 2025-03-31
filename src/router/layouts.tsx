@@ -8,6 +8,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { GuideProvider } from "@/context/GuideContext";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
+import { GuideButton } from "@/components/guide/GuideButton";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -29,6 +30,7 @@ export function MainLayout({ children }: LayoutProps) {
         <GoToTopButton />
         {session && isMentor && <FloatingActionButton />}
         <WelcomeDialog />
+        <GuideButton floating={true} />
       </div>
     </GuideProvider>
   );

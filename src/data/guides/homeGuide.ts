@@ -6,8 +6,7 @@ const homeGuide: GuideStep[] = [
     id: 'home-welcome',
     title: 'Welcome to PicoCareer',
     description: 'Discover mentors, programs, and career opportunities on our platform.',
-    position: 'center',
-    image: '/home-welcome.png'
+    position: 'center'
   },
   {
     id: 'home-search',
@@ -15,7 +14,11 @@ const homeGuide: GuideStep[] = [
     description: 'Find mentors, programs, careers, and more with just a few clicks.',
     element: '.main-content .SearchBar',
     position: 'bottom',
-    image: '/home-search.png'
+    highlightColor: 'gold',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.main-content .SearchBar'
+    }
   },
   {
     id: 'home-navigation',
@@ -23,7 +26,7 @@ const homeGuide: GuideStep[] = [
     description: 'Access Fields of Study, Careers, Mentors, and more from the menu.',
     element: 'nav',
     position: 'bottom',
-    image: '/home-nav.png'
+    highlightColor: 'green'
   },
   {
     id: 'home-featured-mentors',
@@ -31,7 +34,11 @@ const homeGuide: GuideStep[] = [
     description: 'Connect with highly-rated mentors in various professional fields.',
     element: '.TopRatedMentorsSection',
     position: 'top',
-    image: '/home-mentors.png'
+    highlightColor: 'gold',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.TopRatedMentorsSection'
+    }
   },
   {
     id: 'home-featured-careers',
@@ -39,7 +46,11 @@ const homeGuide: GuideStep[] = [
     description: 'Explore careers that match your interests and skills.',
     element: '.FeaturedCareersSection',
     position: 'top',
-    image: '/home-careers.png'
+    highlightColor: 'green',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.FeaturedCareersSection'
+    }
   },
   {
     id: 'home-auth',
@@ -48,14 +59,13 @@ const homeGuide: GuideStep[] = [
     element: '.UserMenu',
     position: 'left',
     requiredAuth: false,
-    image: '/home-signin.png'
+    highlightColor: 'gold'
   },
   {
     id: 'home-complete',
     title: 'Start Exploring!',
     description: 'You\'re all set! Click the help button anytime to revisit this guide.',
-    position: 'center',
-    image: '/home-complete.png'
+    position: 'center'
   }
 ];
 

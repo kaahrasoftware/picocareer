@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -100,7 +101,7 @@ export default function Program() {
                   <h1 className="text-xl font-bold">Fields of Study</h1>
                 </div>
                 
-                <div className="transform transition-all duration-200 -mx-2">
+                <div className="transform transition-all duration-200 -mx-2 ProgramFilters">
                   <CommunityFilters
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
@@ -129,7 +130,7 @@ export default function Program() {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ProgramGrid">
                     {displayedMajors?.map((major) => (
                       <MajorCard key={major.id} {...major} />
                     ))}

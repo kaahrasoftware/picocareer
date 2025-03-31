@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GuideStep } from '@/context/GuideContext';
 
@@ -23,13 +23,18 @@ export function GuideDialog({
 }: GuideDialogProps) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 });
+  const [guideArrowPosition, setGuideArrowPosition] = useState({ top: 0, left: 0, direction: 'right' });
   const dialogRef = useRef<HTMLDivElement>(null);
   const highlightedElementRef = useRef<Element | null>(null);
   
   useEffect(() => {
-    // Clean up previous highlights
+    // Clean up previous highlights and arrows
     document.querySelectorAll('.guide-highlight').forEach((el) => {
       el.classList.remove('guide-highlight', 'guide-highlight-green');
+    });
+    
+    document.querySelectorAll('.guide-arrow').forEach((el) => {
+      el.remove();
     });
     
     // Position the dialog based on the highlighted element and position prop
@@ -64,11 +69,19 @@ export function GuideDialog({
       let arrowTop = 0;
       let arrowLeft = 0;
       let rotation = 0;
+      let arrowDirection = 'right';
+      let arrowLeft2 = 0;
+      let arrowTop2 = 0;
 
       // Highlight the target element with appropriate color
       targetElement.classList.add('guide-highlight');
       if (step.highlightColor === 'green') {
         targetElement.classList.add('guide-highlight-green');
+      }
+      
+      // Scroll the element into view if needed
+      if (!isElementInViewport(targetElement)) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       
       // Position based on preference, with bounds checking
@@ -79,6 +92,9 @@ export function GuideDialog({
           arrowTop = dialogRect.height;
           arrowLeft = dialogRect.width / 2;
           rotation = 180;
+          arrowDirection = 'bottom';
+          arrowLeft2 = targetRect.left + targetRect.width / 2 - 20;
+          arrowTop2 = targetRect.top - 50;
           break;
         case 'bottom':
           top = targetRect.bottom + 20;
@@ -86,6 +102,9 @@ export function GuideDialog({
           arrowTop = -10;
           arrowLeft = dialogRect.width / 2;
           rotation = 0;
+          arrowDirection = 'top';
+          arrowLeft2 = targetRect.left + targetRect.width / 2 - 20;
+          arrowTop2 = targetRect.bottom + 10;
           break;
         case 'left':
           top = targetRect.top + (targetRect.height / 2) - (dialogRect.height / 2);
@@ -93,6 +112,9 @@ export function GuideDialog({
           arrowTop = dialogRect.height / 2;
           arrowLeft = dialogRect.width;
           rotation = 90;
+          arrowDirection = 'right';
+          arrowLeft2 = targetRect.left - 50;
+          arrowTop2 = targetRect.top + targetRect.height / 2 - 20;
           break;
         case 'right':
           top = targetRect.top + (targetRect.height / 2) - (dialogRect.height / 2);
@@ -100,6 +122,9 @@ export function GuideDialog({
           arrowTop = dialogRect.height / 2;
           arrowLeft = -10;
           rotation = 270;
+          arrowDirection = 'left';
+          arrowLeft2 = targetRect.right + 10;
+          arrowTop2 = targetRect.top + targetRect.height / 2 - 20;
           break;
         default:
           top = targetRect.bottom + 20;
@@ -107,6 +132,9 @@ export function GuideDialog({
           arrowTop = -10;
           arrowLeft = dialogRect.width / 2;
           rotation = 0;
+          arrowDirection = 'top';
+          arrowLeft2 = targetRect.left + targetRect.width / 2 - 20;
+          arrowTop2 = targetRect.bottom + 10;
       }
       
       // Ensure dialog stays within viewport
@@ -122,11 +150,24 @@ export function GuideDialog({
       
       setPosition({ top, left });
       setArrowPosition({ top: arrowTop, left: arrowLeft, rotation });
+      setGuideArrowPosition({ 
+        top: arrowTop2, 
+        left: arrowLeft2,
+        direction: arrowDirection
+      });
       
-      // Scroll element into view if needed
-      if (!isElementInViewport(targetElement)) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      // Create the directional arrow
+      const arrow = document.createElement('div');
+      arrow.className = `guide-arrow guide-arrow-${arrowDirection}`;
+      arrow.style.top = `${arrowTop2}px`;
+      arrow.style.left = `${arrowLeft2}px`;
+      arrow.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      `;
+      document.body.appendChild(arrow);
     };
 
     // Check if element is in viewport
@@ -153,6 +194,11 @@ export function GuideDialog({
       // Remove highlight from all elements
       document.querySelectorAll('.guide-highlight').forEach((el) => {
         el.classList.remove('guide-highlight', 'guide-highlight-green');
+      });
+      
+      // Remove any guide arrows
+      document.querySelectorAll('.guide-arrow').forEach((el) => {
+        el.remove();
       });
     };
   }, [step]);
