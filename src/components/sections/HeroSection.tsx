@@ -1,6 +1,9 @@
 
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { GraduationCap } from "lucide-react";
 
 export const HeroSection = () => {
   return (
@@ -20,11 +23,47 @@ export const HeroSection = () => {
       </section>
 
       {/* Header */}
-      <header className="flex justify-between items-center mb-16 relative">
+      <header className="flex justify-between items-center mb-8 relative">
         <div className="w-full SearchBar">
           <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
         </div>
       </header>
+      
+      {/* Mentee CTA Section */}
+      <section className="mb-12 py-10 px-6 rounded-xl relative overflow-hidden mentee-cta">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-picocareer-primary to-picocareer-dark opacity-90"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 max-w-5xl mx-auto">
+          <div className="text-white space-y-4 text-center md:text-left md:max-w-md">
+            <h2 className="text-2xl md:text-3xl font-bold">Ready to Find Your Path?</h2>
+            <p className="text-white/90">
+              Join thousands of students connecting with experienced mentors who can guide you towards academic and career success.
+            </p>
+            <ul className="list-disc list-inside text-sm md:text-base text-white/80 space-y-1">
+              <li>Personalized guidance from industry experts</li>
+              <li>Discover the right educational path for your goals</li>
+              <li>Build confidence in your career decisions</li>
+            </ul>
+          </div>
+          
+          <div className="flex flex-col items-center space-y-4">
+            <Button
+              asChild
+              size="lg"
+              className="bg-white text-picocareer-dark hover:bg-white/90 font-semibold px-8 py-6 h-auto text-lg shadow-lg group transition-all duration-300 transform hover:scale-105"
+            >
+              <Link to="/auth?tab=signup" className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                Become a Mentee
+              </Link>
+            </Button>
+            <p className="text-white/80 text-sm">
+              It's free to sign up and explore!
+            </p>
+          </div>
+        </div>
+      </section>
 
       <section className="mb-24">
         <Slides />

@@ -5,7 +5,7 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -16,10 +16,13 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useEffect } from "react";
 
 export default function Auth() {
   const { session } = useAuthSession();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
 
   // Redirect authenticated users away from auth page
   if (session?.user) {
@@ -157,7 +160,7 @@ export default function Auth() {
                 </p>
               </div>
 
-              <Tabs defaultValue="signin" className="space-y-4 lg:space-y-6">
+              <Tabs defaultValue={tabParam === 'signup' ? 'signup' : 'signin'} className="space-y-4 lg:space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="signin">Sign In</TabsTrigger>
                   <TabsTrigger value="signup">Sign Up</TabsTrigger>

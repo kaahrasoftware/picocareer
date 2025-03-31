@@ -21,6 +21,18 @@ const homeGuide: GuideStep[] = [
     }
   },
   {
+    id: 'home-become-mentee',
+    title: 'Become a Mentee',
+    description: 'Sign up as a mentee to connect with expert mentors in your field of interest.',
+    element: '.mentee-cta',
+    position: 'bottom',
+    highlightColor: 'bright',
+    demoAction: {
+      type: 'scroll-to',
+      target: '.mentee-cta'
+    }
+  },
+  {
     id: 'home-navigation',
     title: 'Main Navigation',
     description: 'Access Fields of Study, Careers, Mentors, and more from the menu.',
