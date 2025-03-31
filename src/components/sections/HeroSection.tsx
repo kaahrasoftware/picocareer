@@ -35,9 +35,9 @@ export const HeroSection = () => {
       
       {/* Mentee CTA Section */}
       <section className="mb-12 py-12 px-8 rounded-xl relative overflow-hidden mentee-cta">
-        {/* Glass effect with blue background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 opacity-90"></div>
-        <div className="absolute inset-0 backdrop-blur-sm bg-white/5"></div>
+        {/* Glass effect with light blue background */}
+        <div className="absolute inset-0 bg-primary/90 opacity-90"></div>
+        <div className="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10 max-w-6xl mx-auto p-4">
           <div className="text-white space-y-4 text-center md:text-left md:max-w-lg">
