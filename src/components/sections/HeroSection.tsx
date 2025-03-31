@@ -35,9 +35,9 @@ export const HeroSection = () => {
       
       {/* Mentee CTA Section */}
       <section className="mb-12 py-12 px-8 rounded-xl relative overflow-hidden mentee-cta">
-        {/* Glass effect with colorful background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 opacity-90"></div>
-        <div className="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+        {/* Glass effect with blue background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 opacity-90"></div>
+        <div className="absolute inset-0 backdrop-blur-sm bg-white/5"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10 max-w-6xl mx-auto p-4">
           <div className="text-white space-y-4 text-center md:text-left md:max-w-lg">
@@ -66,7 +66,7 @@ export const HeroSection = () => {
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-purple-700 hover:bg-white/90 font-semibold px-8 py-6 h-auto text-lg shadow-lg group transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                className="bg-white text-blue-700 hover:bg-white/90 font-semibold px-8 py-6 h-auto text-lg shadow-lg group transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
               >
                 <Link to="/mentor" className="flex items-center gap-2">
                   <UserSearch className="w-5 h-5 transition-transform group-hover:rotate-12" />
@@ -77,7 +77,7 @@ export const HeroSection = () => {
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-purple-700 hover:bg-white/90 font-semibold px-8 py-6 h-auto text-lg shadow-lg group transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                className="bg-white text-blue-700 hover:bg-white/90 font-semibold px-8 py-6 h-auto text-lg shadow-lg group transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
               >
                 <Link to="/auth?tab=signup" className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 transition-transform group-hover:rotate-12" />
