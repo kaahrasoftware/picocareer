@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
-import { GuideButton } from "@/components/guide/GuideButton";
 
 export function MainNavigation() {
   const location = useLocation();
@@ -100,11 +99,6 @@ export function MainNavigation() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-        </li>
-        
-        {/* Add the guide button */}
-        <li className={cn(isMobile ? "mt-4" : "ml-4")}>
-          <GuideButton />
         </li>
       </ul>
     </nav>
