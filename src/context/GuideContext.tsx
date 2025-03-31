@@ -4,40 +4,9 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { GuideDialog } from '@/components/guide/GuideDialog';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useNavigate } from 'react-router-dom';
-
-// Guide types
-export type GuideStep = {
-  id: string;
-  title: string;
-  description: string;
-  element?: string; // CSS selector for the element to highlight
-  position?: 'top' | 'right' | 'bottom' | 'left' | 'center';
-  requiredAuth?: boolean; // If true, user needs to be logged in to see this step
-  highlightColor?: 'gold' | 'green'; // Option to choose highlight color
-  demoAction?: {
-    type: 'open-dialog' | 'navigate' | 'scroll-to';
-    target: string; // Dialog ID, route path, or element selector
-    data?: any; // Additional data for the action
-  };
-};
-
-export type GuidePage = {
-  path: string;
-  steps: GuideStep[];
-};
-
-type GuideContextType = {
-  isGuideActive: boolean;
-  startGuide: (path?: string) => void;
-  stopGuide: () => void;
-  currentStep: number;
-  totalSteps: number;
-  nextStep: () => void;
-  prevStep: () => void;
-  skipToStep: (stepIndex: number) => void;
-  hasSeenGuide: (path: string) => boolean;
-  markGuideAsSeen: (path: string) => void;
-};
+import { GuideStep, GuideContextType } from '@/components/guide/types';
+import { getGuideForPath } from '@/components/guide/utils/guideLoader';
+import { executeDemoAction } from '@/components/guide/utils/demoActions';
 
 const GuideContext = createContext<GuideContextType | undefined>(undefined);
 
@@ -53,80 +22,12 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   // Get auth state safely without requiring router context
   const { isAuthenticated } = useAuthSession('optional');
 
-  // Import the guides data based on the path
-  const getGuideForPath = async (path: string): Promise<GuideStep[]> => {
-    try {
-      // Dynamic import based on the path
-      let guideModule;
-      
-      switch (path) {
-        case '/':
-          guideModule = await import('@/data/guides/homeGuide');
-          break;
-        case '/mentor':
-          guideModule = await import('@/data/guides/mentorGuide');
-          break;
-        case '/career':
-          guideModule = await import('@/data/guides/careerGuide');
-          break;
-        case '/program':
-          guideModule = await import('@/data/guides/programGuide');
-          break;
-        case '/profile':
-          guideModule = await import('@/data/guides/profileGuide');
-          break;
-        default:
-          guideModule = await import('@/data/guides/homeGuide');
-      }
-      
-      return guideModule.default;
-    } catch (error) {
-      console.error('Error loading guide data:', error);
-      return [];
-    }
-  };
-
   // Execute demo actions for the current step
   useEffect(() => {
     if (!isGuideActive || currentGuide.length === 0 || currentStep >= currentGuide.length) return;
     
     const currentStepData = currentGuide[currentStep];
-    if (currentStepData.demoAction) {
-      const { type, target, data } = currentStepData.demoAction;
-      
-      // Execute the appropriate demo action
-      switch (type) {
-        case 'open-dialog':
-          // Implementation for opening specific dialogs
-          // This would depend on the specific dialog components
-          console.log('Opening dialog:', target);
-          // Example: For mentor profile, we could trigger a click on a specific mentor card
-          if (target === 'mentor-profile' && data?.id) {
-            const mentorButton = document.querySelector(`[data-mentor-id="${data.id}"]`);
-            if (mentorButton) {
-              (mentorButton as HTMLElement).click();
-            }
-          }
-          break;
-          
-        case 'navigate':
-          // Navigate to a specific route
-          if (target && window.location.pathname !== target) {
-            navigate(target);
-          }
-          break;
-          
-        case 'scroll-to':
-          // Scroll to a specific element
-          setTimeout(() => {
-            const element = document.querySelector(target);
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }, 300);
-          break;
-      }
-    }
+    executeDemoAction(currentStepData, navigate);
   }, [isGuideActive, currentStep, currentGuide, navigate]);
 
   const startGuide = async (path?: string) => {
@@ -235,3 +136,6 @@ export function useGuide() {
   }
   return context;
 }
+
+// Re-export types from the types file
+export type { GuideStep, GuidePage } from '@/components/guide/types';
