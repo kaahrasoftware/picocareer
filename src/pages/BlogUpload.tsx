@@ -17,17 +17,37 @@ export default function BlogUpload() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('blogs')
-        .insert([
-          {
-            ...data,
-            author_id: session?.user?.id,
-            status: 'Pending'
-          }
-        ]);
+      console.log("Submitting blog with data:", data);
+      
+      // Create a properly structured blog object
+      const blogData = {
+        title: data.title,
+        summary: data.summary || "",
+        content: data.content || "",
+        author_id: session?.user?.id,
+        status: 'Pending',
+        categories: Array.isArray(data.categories) ? data.categories : 
+                  data.categories ? [data.categories] : [],
+        subcategories: Array.isArray(data.subcategories) ? data.subcategories : 
+                      data.subcategories ? [data.subcategories] : [],
+        cover_image_url: data.cover_image_url || null,
+        other_notes: data.other_notes || null,
+        is_recent: true
+      };
 
-      if (error) throw error;
+      console.log("Formatted blog data:", blogData);
+
+      const { data: insertedBlog, error } = await supabase
+        .from('blogs')
+        .insert([blogData])
+        .select();
+
+      if (error) {
+        console.error("Error inserting blog:", error);
+        throw error;
+      }
+
+      console.log("Blog successfully inserted:", insertedBlog);
 
       toast({
         title: "Success",
