@@ -1,4 +1,3 @@
-
 export function calculateSessionStats(sessions: any[], feedback: any[], now: Date) {
   const total_sessions = sessions.length;
   
@@ -16,9 +15,9 @@ export function calculateSessionStats(sessions: any[], feedback: any[], now: Dat
       sessionEndTime.setMinutes(sessionEndTime.getMinutes() + (s.session_type?.duration || 60));
       
       // Consider a session completed if:
-      // 1. Status is 'completed' OR
-      // 2. Session end time has passed and status is not cancelled
-      if (sessionEndTime < now && s.status !== 'cancelled') {
+      // 1. Status is explicitly 'completed' OR
+      // 2. Session end time has passed and status is 'scheduled' (our cron job will eventually update these)
+      if (s.status === 'completed' || (sessionEndTime < now && s.status === 'scheduled')) {
         // Check if there's any no-show feedback
         const sessionFeedback = feedback.find(f => f.session_id === s.id);
         if (sessionFeedback?.did_not_show_up) return false;
