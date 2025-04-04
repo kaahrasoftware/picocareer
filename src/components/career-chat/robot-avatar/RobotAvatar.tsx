@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface RobotAvatarProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl"; // Added "xl" size option
   isAnimated?: boolean;
   isPulsing?: boolean;
 }
@@ -15,11 +15,12 @@ export function RobotAvatar({
   isAnimated = true,
   isPulsing = false,
 }: RobotAvatarProps) {
-  // Size mapping
+  // Size mapping - increased all sizes and added xl
   const sizeClass = {
-    sm: "h-8 w-8",
-    md: "h-10 w-10",
-    lg: "h-16 w-16",
+    sm: "h-10 w-10", // Increased from h-8 w-8
+    md: "h-12 w-12", // Increased from h-10 w-10
+    lg: "h-20 w-20", // Increased from h-16 w-16
+    xl: "h-28 w-28", // New larger size
   };
 
   return (
