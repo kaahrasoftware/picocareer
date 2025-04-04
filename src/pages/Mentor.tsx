@@ -146,34 +146,36 @@ export default function Mentor() {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-12">
-              {/* Become a Mentor Section */}
+              {/* Become a Mentor Section - Mobile Friendly Improvements */}
               <div className="relative overflow-hidden rounded-xl mb-12">
                 <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-80"></div>
                 <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm"></div>
                 
-                <div className="relative grid md:grid-cols-2 gap-8 p-8">
-                  <div className="flex flex-col justify-center space-y-4">
-                    <div className="inline-flex items-center gap-2 text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/20 w-fit mb-2">
-                      <GraduationCap className="h-4 w-4" /> Join Our Community
-                    </div>
-                    <h2 className="text-3xl font-bold text-white leading-tight">Share Your Expertise as a PicoCareer Mentor</h2>
-                    <p className="text-white/80 text-lg">
-                      Guide aspiring professionals, build your network, and make a meaningful impact while enhancing your own leadership skills.
-                    </p>
-                    <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                      <Button 
-                        asChild 
-                        size="lg" 
-                        className="bg-white text-picocareer-dark hover:bg-gray-100 font-semibold"
-                      >
-                        <Link to="/mentor-registration" className="flex items-center">
-                          <GraduationCap className="mr-2 h-5 w-5" />
-                          Become a Mentor
-                        </Link>
-                      </Button>
+                <div className="relative p-4 sm:p-6 md:p-8">
+                  <div className="flex flex-col gap-6 md:gap-8">
+                    <div className="flex flex-col justify-center space-y-4">
+                      <div className="inline-flex items-center gap-2 text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/20 w-fit mb-2">
+                        <GraduationCap className="h-4 w-4" /> Join Our Community
+                      </div>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Share Your Expertise as a PicoCareer Mentor</h2>
+                      <p className="text-white/80 text-base sm:text-lg max-w-lg">
+                        Guide aspiring professionals, build your network, and make a meaningful impact while enhancing your own leadership skills.
+                      </p>
+                      <div className="pt-4 flex flex-col sm:flex-row gap-4">
+                        <Button 
+                          asChild 
+                          size="lg" 
+                          className="bg-white text-picocareer-dark hover:bg-gray-100 font-semibold w-full sm:w-auto"
+                        >
+                          <Link to="/mentor-registration" className="flex items-center justify-center">
+                            <GraduationCap className="mr-2 h-5 w-5" />
+                            Become a Mentor
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                     
-                    <div className="flex gap-6 mt-4">
+                    <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
                           <Award className="h-5 w-5 text-white" />
@@ -195,7 +197,7 @@ export default function Mentor() {
                     </div>
                   </div>
                   
-                  <div className="hidden md:flex justify-center items-center">
+                  <div className="hidden md:block">
                     <div className="relative w-full max-w-md aspect-square">
                       <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl transform rotate-3 animate-float">
                         <img 
