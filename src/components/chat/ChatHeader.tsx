@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Bot, GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase, Check, CheckCircle, X, Download } from 'lucide-react';
+import { GraduationCap, Brain, Star, MessagesSquare, Target, Briefcase, Check, CheckCircle, X, Download } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { RobotAvatar } from '@/components/career-chat/robot-avatar/RobotAvatar';
 
 interface ChatHeaderProps {
   isAnalyzing?: boolean;
@@ -73,7 +74,7 @@ export function ChatHeader({
           ) : (
             <>
               <div className={`h-8 w-8 rounded-full ${isSessionComplete && currentCategory === 'complete' ? 'bg-green-100' : 'bg-primary/10'} flex items-center justify-center`}>
-                {currentCategory ? getCategoryIcon() : <Bot className="h-5 w-5 text-primary" />}
+                {currentCategory ? getCategoryIcon() : <RobotAvatar size="sm" />}
               </div>
               <h2 className="font-medium">{getCategoryTitle()}</h2>
               

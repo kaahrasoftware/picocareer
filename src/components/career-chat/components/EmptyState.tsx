@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Bot, MessageCircle, History, Download, ArrowRight } from 'lucide-react';
+import { MessageCircle, History, Download, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RobotAvatar } from '../robot-avatar/RobotAvatar';
 
 interface EmptyStateProps {
   onStartChat: () => void;
@@ -12,7 +13,7 @@ export function EmptyState({ onStartChat, onViewPastSessions }: EmptyStateProps)
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
       <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-blue-100 flex items-center justify-center mb-4">
-        <Bot className="h-16 w-16 text-primary" />
+        <RobotAvatar size="lg" isAnimated={true} />
       </div>
       <h1 className="text-3xl font-bold text-gray-800">Hey there... I am Pico!</h1>
       <p className="text-lg text-muted-foreground max-w-md">
