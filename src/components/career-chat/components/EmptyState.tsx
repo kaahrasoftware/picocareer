@@ -12,7 +12,7 @@ interface EmptyStateProps {
 export function EmptyState({ onStartChat, onViewPastSessions }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
-      <div className="w-36 h-36 rounded-full bg-gradient-to-br from-indigo-100 to-cyan-50 flex items-center justify-center mb-4">
+      <div className="mb-4">
         <RobotAvatar size="xl" isAnimated={true} />
       </div>
       <h1 className="text-3xl font-bold text-gray-800">Hey there... I am Pico!</h1>
