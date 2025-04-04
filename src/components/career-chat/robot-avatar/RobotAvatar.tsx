@@ -33,13 +33,13 @@ export function RobotAvatar({
       )}
     >
       <img
-        src="/lovable-uploads/8530b57d-feee-4044-9bf2-49c0b52f5487.png"
+        src="/lovable-uploads/f28bd4f2-c52a-4695-94d0-1c8051d5f392.png"
         alt="AI Assistant"
         className="object-contain h-full w-full scale-[0.95]"
       />
       
       {/* Subtle glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 opacity-50 mix-blend-overlay" />
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 opacity-50 mix-blend-overlay" />
     </div>
   );
 }
