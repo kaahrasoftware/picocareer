@@ -15,7 +15,7 @@ export function RobotWithMessage({
   isTyping = false,
 }: RobotWithMessageProps) {
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-4", className)}>
       <RobotAvatar 
         size="md" 
         isPulsing={isTyping} 

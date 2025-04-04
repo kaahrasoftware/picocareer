@@ -17,12 +17,12 @@ export function RobotAvatar({
   isPulsing = false,
   showSpeechBubble = false,
 }: RobotAvatarProps) {
-  // Size mapping
+  // Size mapping - making sizes twice as big
   const sizeClass = {
-    sm: "h-10 w-10",
-    md: "h-12 w-12",
-    lg: "h-20 w-20",
-    xl: "h-28 w-28",
+    sm: "h-20 w-20", // was h-10 w-10
+    md: "h-24 w-24", // was h-12 w-12
+    lg: "h-40 w-40", // was h-20 w-20
+    xl: "h-56 w-56", // was h-28 w-28
   };
 
   return (
@@ -46,17 +46,17 @@ export function RobotAvatar({
         <div className="absolute -bottom-1 w-3/4 h-1 bg-black/20 rounded-full blur-sm"></div>
       </div>
       
-      {/* Speech bubble */}
+      {/* Cute cloud-like speech bubble */}
       {showSpeechBubble && (
         <div className={cn(
-          "absolute speech-bubble bg-white px-3 py-1.5 rounded-xl shadow-sm border border-gray-200 text-sm font-medium",
-          size === "sm" ? "left-12 top-1 whitespace-nowrap" : 
-          size === "md" ? "left-14 top-2 whitespace-nowrap" : 
-          size === "lg" ? "left-24 top-4" : 
-          "left-32 top-6"
+          "absolute speech-bubble bg-white px-4 py-2.5 rounded-2xl shadow-md border border-blue-100 text-sm font-medium",
+          "before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:border-b before:border-l before:border-blue-100 before:rotate-45 before:-left-2 before:top-1/2 before:-translate-y-1/2",
+          size === "sm" ? "left-22 top-2 whitespace-nowrap" : 
+          size === "md" ? "left-26 top-3 whitespace-nowrap" : 
+          size === "lg" ? "left-44 top-5" : 
+          "left-60 top-8"
         )}>
-          Hi, I'm Pico
-          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 bg-white border-l border-b border-gray-200"></div>
+          <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent font-bold">Hi, I'm Pico!</span>
         </div>
       )}
     </div>
