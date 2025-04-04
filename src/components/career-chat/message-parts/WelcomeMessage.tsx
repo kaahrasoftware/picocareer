@@ -18,7 +18,7 @@ export function WelcomeMessage({
   return (
     <div className="flex flex-col items-center justify-center mb-8 max-w-lg mx-auto text-center p-6 bg-white rounded-xl shadow-sm border border-primary/20">
       <div className="mb-4">
-        <RobotAvatar size="xl" />
+        <RobotAvatar size="xl" showSpeechBubble={true} />
       </div>
       
       <h2 className="text-xl font-semibold mb-3">Welcome to Your Career Assessment</h2>

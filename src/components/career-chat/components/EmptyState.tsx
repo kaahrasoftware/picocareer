@@ -13,7 +13,7 @@ export function EmptyState({ onStartChat, onViewPastSessions }: EmptyStateProps)
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
       <div className="mb-4">
-        <RobotAvatar size="xl" isAnimated={true} />
+        <RobotAvatar size="xl" isAnimated={true} showSpeechBubble={true} />
       </div>
       <h1 className="text-3xl font-bold text-gray-800">Hey there... I am Pico!</h1>
       <p className="text-lg text-muted-foreground max-w-md">
