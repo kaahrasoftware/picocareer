@@ -46,17 +46,18 @@ export function RobotAvatar({
         <div className="absolute -bottom-1 w-3/4 h-1 bg-black/20 rounded-full blur-sm"></div>
       </div>
       
-      {/* Cute cloud-like speech bubble */}
+      {/* Cute cloud-like speech bubble with entrance animation */}
       {showSpeechBubble && (
         <div className={cn(
-          "absolute speech-bubble bg-white px-4 py-2.5 rounded-2xl shadow-md border border-blue-100 text-sm font-medium",
+          "absolute speech-bubble bg-white px-4 py-2.5 rounded-2xl shadow-md border border-blue-100 text-sm font-medium whitespace-nowrap",
           "before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:border-b before:border-l before:border-blue-100 before:rotate-45 before:-left-2 before:top-1/2 before:-translate-y-1/2",
-          size === "sm" ? "left-22 top-2 whitespace-nowrap" : 
-          size === "md" ? "left-26 top-3 whitespace-nowrap" : 
+          "animate-[fadeIn_0.5s_ease-out,popIn_0.5s_ease-out]",
+          size === "sm" ? "left-22 top-2" : 
+          size === "md" ? "left-26 top-3" : 
           size === "lg" ? "left-44 top-5" : 
           "left-60 top-8"
         )}>
-          <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent font-bold">Hi, I'm Pico!</span>
+          <span className="font-bold text-black">Hi, I'm Pico!</span>
         </div>
       )}
     </div>

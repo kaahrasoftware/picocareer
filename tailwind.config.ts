@@ -1,13 +1,15 @@
 
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
+import plugin from "tailwindcss/plugin";
 
-export default {
+const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
   ],
   prefix: "",
   theme: {
@@ -53,13 +55,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        picocareer: {
-          dark: "#002366", // Navy blue from logo
-          darker: "#001947",
-          primary: "#0EA5E9", // Cyan blue from logo
-          secondary: "#002366", // Navy blue as secondary
-          accent: "#0284C7",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -75,22 +70,57 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
+        "float": {
+          "0%, 100%": {
+            transform: "translateY(0)"
+          },
+          "50%": {
+            transform: "translateY(-10px)"
+          }
         },
-        fadeIn: {
-          from: { opacity: "0", transform: "translateY(5px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+        "fadeIn": {
+          "0%": {
+            opacity: "0"
+          },
+          "100%": {
+            opacity: "1"
+          }
         },
+        "popIn": {
+          "0%": {
+            transform: "scale(0.5)",
+            opacity: "0"
+          },
+          "70%": {
+            transform: "scale(1.05)",
+            opacity: "1"
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1"
+          }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        float: "float 6s ease-in-out infinite",
-        fadeIn: "fadeIn 0.3s ease-in-out",
+        "float": "float 3s ease-in-out infinite",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", ...fontFamily.sans],
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        ".text-balance": {
+          "text-wrap": "balance",
+        },
+      })
+    }),
+  ],
+} satisfies Config
+
+export default config
