@@ -29,7 +29,6 @@ export function MainNavigation() {
   ];
 
   const resourceItems = [
-    { path: "/personality-test", label: "Personality Test" },
     { path: "/career-chat", label: "AI Career Guide" },
     { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
@@ -76,7 +75,7 @@ export function MainNavigation() {
             <DropdownMenu>
               <DropdownMenuTrigger className={cn(
                 "px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1",
-                isActive("/personality-test") || isActive("/event") || isActive("/blog") 
+                isActive("/career-chat") || isActive("/event") || isActive("/blog") 
                   ? "bg-primary/20 text-primary" 
                   : ""
               )}>
