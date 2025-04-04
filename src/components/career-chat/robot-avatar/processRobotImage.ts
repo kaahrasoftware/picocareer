@@ -3,7 +3,6 @@ import { processImage, MAX_FILE_SIZE } from "@/utils/imageProcessing";
 
 /**
  * Processes the robot image for optimal display
- * - Removes background (if applicable)
  * - Optimizes for size and performance
  */
 export async function processRobotImage(imageFile: File): Promise<string> {

@@ -25,7 +25,7 @@ export function RobotAvatar({
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center rounded-full bg-primary/10 overflow-hidden",
+        "relative flex items-center justify-center rounded-full bg-primary/5 overflow-hidden",
         sizeClass[size],
         isAnimated && "animate-float",
         isPulsing && "animate-pulse",
@@ -33,13 +33,13 @@ export function RobotAvatar({
       )}
     >
       <img
-        src="/lovable-uploads/1d7756ef-34d7-41dc-92a9-67e9216e0d7b.png"
-        alt="AI Robot Assistant"
-        className="object-contain h-full w-full scale-[0.85]"
+        src="/lovable-uploads/8530b57d-feee-4044-9bf2-49c0b52f5487.png"
+        alt="AI Assistant"
+        className="object-contain h-full w-full scale-[0.95]"
       />
       
       {/* Subtle glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-50 mix-blend-overlay" />
+      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 opacity-50 mix-blend-overlay" />
     </div>
   );
 }

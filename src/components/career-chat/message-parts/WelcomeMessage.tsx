@@ -17,7 +17,7 @@ export function WelcomeMessage({
 }: WelcomeMessageProps) {
   return (
     <div className="flex flex-col items-center justify-center mb-8 max-w-lg mx-auto text-center p-6 bg-white rounded-xl shadow-sm border border-primary/20">
-      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-100 to-cyan-50 flex items-center justify-center mb-4">
         <RobotAvatar size="lg" />
       </div>
       
