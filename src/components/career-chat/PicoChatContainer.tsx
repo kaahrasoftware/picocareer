@@ -9,6 +9,7 @@ import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { SessionManagementDialog } from './session-management';
 import { toast } from 'sonner';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 export function PicoChatContainer() {
   const {
@@ -36,6 +37,7 @@ export function PicoChatContainer() {
   } = useCareerChat();
   
   const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
+  const { isAuthenticated } = useAuthSession('optional');
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
   const [showInitialState, setShowInitialState] = useState(true);
@@ -90,11 +92,25 @@ export function PicoChatContainer() {
   };
 
   const handleInitiateChat = () => {
+    if (!isAuthenticated) {
+      toast({
+        description: "Please sign in to start a career assessment."
+      });
+      return;
+    }
+    
     setShowInitialState(false);
     handleStartNewChat();
   };
 
   const handleViewPastSessions = () => {
+    if (!isAuthenticated) {
+      toast({
+        description: "Please sign in to view past assessments."
+      });
+      return;
+    }
+    
     fetchPastSessions();
     setSessionDialogOpen(true);
   };
