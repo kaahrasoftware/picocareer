@@ -1,21 +1,28 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 type LoadingContextType = {
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
-  loadingMessage: string | null;
-  setLoadingMessage: (message: string | null) => void;
+  isPageLoading: boolean;
+  setPageLoading: (loading: boolean) => void;
+  isDataLoading: boolean;
+  setDataLoading: (loading: boolean) => void;
 };
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
-export function LoadingProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
+export function LoadingProvider({ children }: { children: React.ReactNode }) {
+  const [isPageLoading, setPageLoading] = useState(false);
+  const [isDataLoading, setDataLoading] = useState(false);
 
   return (
-    <LoadingContext.Provider value={{ isLoading, setIsLoading, loadingMessage, setLoadingMessage }}>
+    <LoadingContext.Provider
+      value={{
+        isPageLoading,
+        setPageLoading,
+        isDataLoading,
+        setDataLoading
+      }}
+    >
       {children}
     </LoadingContext.Provider>
   );

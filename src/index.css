@@ -1,104 +1,139 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
- 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
- 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
- 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --ring: 215 20.2% 65.1%;
- 
-    --radius: 0.5rem;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 98%;
+    --card-foreground: 222 47% 9%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 222 47% 9%;
+    --primary: 199 89% 48%; /* Cyan blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 100% 20%; /* Navy blue */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 33% 95%;
+    --muted-foreground: 215 25% 27%;
+    --accent: 217 33% 95%;
+    --accent-foreground: 222 47% 9%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 90%;
+    --input: 217 33% 90%;
+    --ring: 199 89% 48%;
+    --radius: 0.75rem;
+    --sidebar-width: 16rem;
   }
- 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
- 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
- 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
- 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
- 
-    --ring: 217.2 32.6% 17.5%;
-  }
-}
- 
-@layer base {
+
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-white to-gray-100 text-foreground min-h-screen;
   }
 }
 
-/* Loading animations */
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Add transitions for sidebar collapse */
+.sidebar-collapsed {
+  width: 5rem !important;
+  min-width: 5rem !important;
+}
+
+.sidebar-expanded {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+}
+
+/* Ensure content stays visible in collapsed state */
+.sidebar-collapsed [data-sidebar=content] {
+  width: 5rem;
+  min-width: 5rem;
+}
+
+/* Keep icons visible and centered in collapsed state */
+.sidebar-collapsed [data-sidebar=menu-button] {
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.sidebar-collapsed [data-sidebar=menu-button] span {
+  width: 0;
+  opacity: 0;
+}
+
+/* Transition properties */
+.sidebar-transition {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Layout structure */
+.app-layout {
+  @apply min-h-screen flex flex-col w-full;
+}
+
+.main-content {
+  @apply flex-1 w-full;
+}
+
+/* Filter section transitions */
+.sticky {
+  transition: all 0.2s ease-in-out;
+}
+
+.sticky.scrolled {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.sticky.scrolled h1,
+.sticky.scrolled h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.sticky.scrolled input,
+.sticky.scrolled select,
+.sticky.scrolled button {
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+/* Animations for booking confirmation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
 @keyframes progress-bar {
-  0% { width: 0%; }
-  20% { width: 20%; }
-  50% { width: 50%; }
-  80% { width: 80%; }
-  100% { width: 100%; }
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(-10%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
-@layer utilities {
-  .animate-progress-bar {
-    animation: progress-bar 3s ease-in-out;
-    width: 100%;
-  }
-  
-  .skeleton-pulse {
-    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+.animate-progress-bar {
+  animation: progress-bar 1.5s ease-in-out infinite;
 }

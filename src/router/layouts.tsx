@@ -22,31 +22,35 @@ export function MainLayout({ children }: LayoutProps) {
   const isMentor = profile?.user_type === "mentor";
 
   return (
-    <GuideProvider>
+    <LoadingProvider>
+      <GuideProvider>
+        <div className="min-h-screen flex flex-col">
+          <MenuSidebar />
+          <PageTransitionLoader />
+          <main className="pt-16 flex-grow">
+            {children || <Outlet />}
+          </main>
+          <Footer />
+          <GoToTopButton />
+          {session && isMentor && <FloatingActionButton />}
+          <WelcomeDialog />
+          <GuideButton floating={true} />
+        </div>
+      </GuideProvider>
+    </LoadingProvider>
+  );
+}
+
+export function AuthLayout({ children }: LayoutProps) {
+  return (
+    <LoadingProvider>
       <div className="min-h-screen flex flex-col">
         <MenuSidebar />
         <PageTransitionLoader />
         <main className="pt-16 flex-grow">
           {children || <Outlet />}
         </main>
-        <Footer />
-        <GoToTopButton />
-        {session && isMentor && <FloatingActionButton />}
-        <WelcomeDialog />
-        <GuideButton floating={true} />
       </div>
-    </GuideProvider>
-  );
-}
-
-export function AuthLayout({ children }: LayoutProps) {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <MenuSidebar />
-      <PageTransitionLoader />
-      <main className="pt-16 flex-grow">
-        {children || <Outlet />}
-      </main>
-    </div>
+    </LoadingProvider>
   );
 }

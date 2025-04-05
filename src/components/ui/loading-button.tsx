@@ -5,7 +5,6 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 interface LoadingButtonProps extends ButtonProps {
   isLoading?: boolean;
   loadingText?: string;
-  spinnerSize?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export function LoadingButton({
@@ -13,14 +12,13 @@ export function LoadingButton({
   isLoading = false,
   loadingText,
   disabled,
-  spinnerSize = 'sm',
   ...props
 }: LoadingButtonProps) {
   return (
     <Button {...props} disabled={isLoading || disabled}>
       {isLoading ? (
         <>
-          <LoadingSpinner size={spinnerSize} className="mr-2" />
+          <LoadingSpinner size="sm" className="mr-2" />
           {loadingText || children}
         </>
       ) : (
