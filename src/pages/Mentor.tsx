@@ -1,5 +1,4 @@
-
-import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award } from "lucide-react";
+import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -146,72 +145,68 @@ export default function Mentor() {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-12">
-              {/* Become a Mentor Section - Mobile Friendly Improvements */}
-              <div className="relative overflow-hidden rounded-xl mb-12">
-                <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-80"></div>
-                <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm"></div>
+              <div className="relative overflow-hidden rounded-xl mb-12 shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-500 opacity-90"></div>
                 
-                <div className="relative p-4 sm:p-6 md:p-8">
-                  <div className="flex flex-col gap-6 md:gap-8">
-                    <div className="flex flex-col justify-center space-y-4">
-                      <div className="inline-flex items-center gap-2 text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/20 w-fit mb-2">
-                        <GraduationCap className="h-4 w-4" /> Join Our Community
+                <div className="relative p-6 md:p-8 lg:p-10 flex flex-col md:flex-row gap-8 items-center">
+                  <div className="flex-1 z-10">
+                    <span className="inline-flex items-center gap-2 text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/20 w-fit mb-3">
+                      <GraduationCap className="h-4 w-4" /> Join Our Mentor Community
+                    </span>
+                    
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-3">
+                      Share Your Expertise as a Mentor
+                    </h2>
+                    
+                    <p className="text-white/90 text-base sm:text-lg max-w-lg mb-4">
+                      Guide aspiring professionals, build your network, and make a meaningful impact 
+                      while enhancing your own leadership skills.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-4 mb-6">
+                      <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
+                        <Award className="h-5 w-5 text-yellow-300" />
+                        <span className="text-white font-medium">Build Your Reputation</span>
                       </div>
-                      <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Share Your Expertise as a PicoCareer Mentor</h2>
-                      <p className="text-white/80 text-base sm:text-lg max-w-lg">
-                        Guide aspiring professionals, build your network, and make a meaningful impact while enhancing your own leadership skills.
-                      </p>
-                      <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                        <Button 
-                          asChild 
-                          size="lg" 
-                          className="bg-white text-picocareer-dark hover:bg-gray-100 font-semibold w-full sm:w-auto"
-                        >
-                          <Link to="/mentor-registration" className="flex items-center justify-center">
-                            <GraduationCap className="mr-2 h-5 w-5" />
-                            Become a Mentor
-                          </Link>
-                        </Button>
+                      <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
+                        <Users className="h-5 w-5 text-blue-200" />
+                        <span className="text-white font-medium">Expand Your Network</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
+                        <BookOpen className="h-5 w-5 text-green-200" />
+                        <span className="text-white font-medium">Share Knowledge</span>
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
-                          <Award className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-white/90 text-sm">Recognition</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
-                          <Users className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-white/90 text-sm">Community</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
-                          <BookOpen className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-white/90 text-sm">Knowledge</span>
-                      </div>
-                    </div>
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      className="bg-white text-blue-700 hover:bg-blue-50 font-semibold gap-2"
+                    >
+                      <Link to="/mentor-registration">
+                        Become a Mentor
+                        <ChevronRight className="h-5 w-5" />
+                      </Link>
+                    </Button>
                   </div>
                   
-                  <div className="hidden md:block">
-                    <div className="relative w-full max-w-md aspect-square">
-                      <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl transform rotate-3 animate-float">
-                        <img 
-                          src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6" 
-                          alt="Mentor teaching programming" 
-                          className="w-full h-full object-cover opacity-80"
-                        />
-                      </div>
-                      <div className="absolute inset-0 w-full h-full bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl -rotate-3 animate-float" style={{animationDelay: "0.5s"}}>
-                        <img 
-                          src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
-                          alt="Person mentoring" 
-                          className="w-full h-full object-cover opacity-80"
-                        />
+                  <div className="md:w-1/3 lg:w-2/5 relative h-56 md:h-64 lg:h-72 z-10">
+                    <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
+                      <div className="w-full max-w-md aspect-video relative">
+                        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl rotate-3 animate-float">
+                          <img 
+                            src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6" 
+                            alt="Mentor teaching programming" 
+                            className="w-full h-full object-cover opacity-90"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl -rotate-3 animate-float" style={{animationDelay: "0.5s"}}>
+                          <img 
+                            src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
+                            alt="Person mentoring" 
+                            className="w-full h-full object-cover opacity-90"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
