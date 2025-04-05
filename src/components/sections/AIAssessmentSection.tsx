@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export function AIAssessmentSection() {
   return (
-    <div className="w-full py-16 md:py-24 bg-gradient-to-b from-blue-600 to-blue-800 rounded-3xl overflow-hidden relative">
+    <div className="w-full py-16 md:py-24 bg-gradient-to-b from-[#0EA5E9] to-[#0284c7] rounded-3xl overflow-hidden relative">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#0EA5E9]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#0EA5E9]/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
@@ -53,7 +53,7 @@ export function AIAssessmentSection() {
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-white hover:bg-blue-50 text-[#0EA5E9] font-semibold gap-2 shadow-lg transition-all group"
+                className="bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white font-semibold gap-2 shadow-lg border border-white/30 transition-all group"
               >
                 <Link to="/career-chat">
                   Start Your Assessment
@@ -93,8 +93,8 @@ export function AIAssessmentSection() {
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl transition-all hover:translate-y-[-2px] sm:col-span-2">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="bg-white h-14 w-14 rounded-full flex items-center justify-center shrink-0 shadow-md">
-                      <Star className="h-7 w-7 text-[#0EA5E9]" />
+                    <div className="bg-[#0EA5E9] h-14 w-14 rounded-full flex items-center justify-center shrink-0 shadow-md">
+                      <Star className="h-7 w-7 text-white" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold mb-1 text-white">Start your career journey today</h3>
