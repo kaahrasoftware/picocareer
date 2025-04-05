@@ -8,11 +8,11 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export function AIAssessmentSection() {
   return (
-    <div className="w-full py-16 md:py-24 bg-gradient-to-b from-blue-600 to-blue-700 rounded-3xl overflow-hidden relative">
+    <div className="w-full py-16 md:py-24 bg-gradient-to-b from-blue-600 to-blue-800 rounded-3xl overflow-hidden relative">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-300/30 rounded-full blur-xl" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#0EA5E9]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#0EA5E9]/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#38BDF8]/30 rounded-full blur-xl" />
       
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
@@ -20,7 +20,7 @@ export function AIAssessmentSection() {
           <div className="flex-1 text-center lg:text-left">
             <div className="flex flex-col items-center lg:items-start">
               <div className="relative mb-8">
-                <div className="absolute -top-4 -right-4 bg-white text-blue-600 text-xs font-bold px-2 py-1 rounded-full animate-bounce shadow-lg">
+                <div className="absolute -top-4 -right-4 bg-white text-[#0EA5E9] text-xs font-bold px-2 py-1 rounded-full animate-bounce shadow-lg">
                   New!
                 </div>
                 <RobotAvatar size="xl" showSpeechBubble isAnimated={true} />
@@ -53,7 +53,7 @@ export function AIAssessmentSection() {
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-white hover:bg-blue-50 text-blue-600 font-semibold gap-2 shadow-lg transition-all group"
+                className="bg-white hover:bg-blue-50 text-[#0EA5E9] font-semibold gap-2 shadow-lg transition-all group"
               >
                 <Link to="/career-chat">
                   Start Your Assessment
@@ -68,7 +68,7 @@ export function AIAssessmentSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl transition-all hover:translate-y-[-2px]">
                 <CardContent className="p-6">
-                  <div className="bg-white/20 h-12 w-12 rounded-full flex items-center justify-center mb-4">
+                  <div className="bg-[#0EA5E9]/20 h-12 w-12 rounded-full flex items-center justify-center mb-4">
                     <MessageCircle className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2 text-white">Conversational Experience</h3>
@@ -80,7 +80,7 @@ export function AIAssessmentSection() {
               
               <Card className="bg-white/10 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl transition-all hover:translate-y-[-2px]">
                 <CardContent className="p-6">
-                  <div className="bg-white/20 h-12 w-12 rounded-full flex items-center justify-center mb-4">
+                  <div className="bg-[#0EA5E9]/20 h-12 w-12 rounded-full flex items-center justify-center mb-4">
                     <Target className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2 text-white">Career Match Scoring</h3>
@@ -94,7 +94,7 @@ export function AIAssessmentSection() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="bg-white h-14 w-14 rounded-full flex items-center justify-center shrink-0 shadow-md">
-                      <Star className="h-7 w-7 text-blue-600" />
+                      <Star className="h-7 w-7 text-[#0EA5E9]" />
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold mb-1 text-white">Start your career journey today</h3>
