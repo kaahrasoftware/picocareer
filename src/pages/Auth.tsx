@@ -15,11 +15,11 @@ import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/context/AuthContext"; // Changed from useAuthSession to useAuth
+import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 
 export default function Auth() {
-  const { session, loading } = useAuth(); // Changed from useAuthSession to useAuth
+  const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -43,35 +43,39 @@ export default function Auth() {
     return null;
   }
 
-  const { data: mentors = [], isError } = useQuery({
-    queryKey: ['random-mentors'],
-    queryFn: async () => {
-      try {
-        console.log('Fetching mentors...');
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, avatar_url, first_name, last_name')
-          .eq('user_type', 'mentor')
-          .limit(10)
-          .order('created_at', { ascending: false });
+  // Define the query function outside conditional rendering
+  const fetchMentors = async () => {
+    try {
+      console.log('Fetching mentors...');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar_url, first_name, last_name')
+        .eq('user_type', 'mentor')
+        .limit(10)
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Supabase query error:', error);
-          throw error;
-        }
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
 
-        if (!data) {
-          console.log('No mentors found');
-          return [];
-        }
-
-        console.log('Fetched mentors:', data?.length);
-        return data;
-      } catch (error) {
-        console.error('Error fetching mentors:', error);
+      if (!data) {
+        console.log('No mentors found');
         return [];
       }
-    },
+
+      console.log('Fetched mentors:', data?.length);
+      return data;
+    } catch (error) {
+      console.error('Error fetching mentors:', error);
+      return [];
+    }
+  };
+
+  // Always define the query regardless of auth state
+  const { data: mentors = [], isError } = useQuery({
+    queryKey: ['random-mentors'],
+    queryFn: fetchMentors,
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
