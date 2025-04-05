@@ -7,8 +7,9 @@ import { Brain, ChevronRight, MessageCircle, Target } from 'lucide-react';
 
 export function AIAssessmentSection() {
   return (
-    <div className="w-full py-16 md:py-24 bg-gradient-to-b from-[#0EA5E9] to-[#0284c7] rounded-3xl overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <div className="w-full py-16 md:py-24 relative overflow-hidden rounded-xl mx-4">
+      <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="flex flex-col items-center text-center mb-12">
           <div className="relative mb-6">
             <div className="absolute -top-2 -right-2 bg-white text-[#0EA5E9] text-xs font-bold px-2 py-1 rounded-full animate-bounce shadow-md">
