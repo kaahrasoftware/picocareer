@@ -5,6 +5,7 @@ import { CallToActionSection } from "@/components/sections/CallToActionSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
+import { AIAssessmentSection } from "@/components/sections/AIAssessmentSection";
 import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
@@ -32,9 +33,10 @@ const Index = () => {
     <div className="app-layout">
       <div className="main-content">
         <div className="w-full px-8 sm:px-12 lg:px-16 py-8">
-          <div className="w-full max-w-7xl mx-auto space-y-8">
+          <div className="w-full max-w-7xl mx-auto space-y-16">
             <HeroSection />
             <StatisticsSection />
+            <AIAssessmentSection />
             <CallToActionSection />
             <div className="TopRatedMentorsSection">
               <TopRatedMentorsSection />
