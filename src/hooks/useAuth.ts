@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, throttledAuthOperation } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
 import { useAuth as useAuthContext } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,15 +15,16 @@ export function useAuth() {
   const navigate = useNavigate();
 
   const signIn = async (email: string, password: string) => {
+    if (isLoading) return; // Prevent multiple concurrent sign-in attempts
+    
     setIsLoading(true);
+    console.log('Attempting sign in for:', email);
 
     try {
-      // Use throttled operation to prevent rate limiting
-      const { data, error } = await throttledAuthOperation(async () => {
-        return await supabase.auth.signInWithPassword({
-          email: email.toLowerCase().trim(),
-          password,
-        });
+      // Use direct auth operation for better reliability
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password,
       });
 
       if (error) throw error;
@@ -37,20 +38,22 @@ export function useAuth() {
         queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         
+        console.log('Sign in successful, navigating to home');
+        
         // Show success toast after a small delay to ensure UI has updated
-        setTimeout(() => {
-          toast({
-            title: "Welcome back!",
-            description: "You have successfully signed in.",
-          });
-          
-          // Navigate to home after successful login
-          navigate('/');
-        }, 100);
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+        
+        // Navigate to home after successful login
+        navigate('/');
       }
 
       return data;
     } catch (error) {
+      console.error('Sign in error details:', error);
+      
       if (error instanceof AuthError) {
         // Handle specific auth errors
         if (error.message.includes("Invalid login credentials")) {

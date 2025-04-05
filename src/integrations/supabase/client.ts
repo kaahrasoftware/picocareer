@@ -17,7 +17,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: AUTH_STORAGE_KEY,
     flowType: 'pkce',
-    // Adding debounce and throttling for auth requests to avoid rate limiting
+    // Lower debug level to reduce console noise
     debug: false,
   },
   global: {
@@ -56,7 +56,7 @@ const refreshQueue: (() => void)[] = [];
 // Helper function to throttle auth operations
 export const throttledAuthOperation = async (operation: () => Promise<any>) => {
   const now = Date.now();
-  const minInterval = 30000; // 30 seconds between auth operations (increased from 10s)
+  const minInterval = 5000; // 5 seconds between auth operations (reduced from 30s)
   
   if (now - lastRefreshTime < minInterval) {
     console.log('Throttling auth operation to prevent rate limiting');
@@ -89,7 +89,7 @@ export const throttledAuthOperation = async (operation: () => Promise<any>) => {
     if (refreshQueue.length > 0) {
       const nextOperation = refreshQueue.shift();
       if (nextOperation) {
-        setTimeout(nextOperation, minInterval);
+        setTimeout(nextOperation, 100); // Process next operation after a small delay
       }
     }
   }

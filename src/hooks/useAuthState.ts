@@ -29,14 +29,15 @@ export function useAuthState() {
       try {
         // First set up auth state change listener
         const { data } = supabase.auth.onAuthStateChange(
-          async (event, currentSession) => {
+          (event, currentSession) => {
             console.log('Auth state changed:', event);
             
-            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+            if (event === 'SIGNED_OUT') {
               setSession(null);
               setUser(null);
               // Clear queries when user signs out
               queryClient.clear();
+              authRetryCount.current = 0;
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               // Set session state immediately to update UI
               setSession(currentSession);
@@ -45,9 +46,12 @@ export function useAuthState() {
               
               // Invalidate queries to refresh data after sign in
               if (currentSession?.user?.id) {
-                queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
-                queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
-                queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+                // Use setTimeout to avoid potential auth deadlocks
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
+                  queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
+                  queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+                }, 0);
               }
             }
           }
@@ -93,25 +97,28 @@ export function useAuthState() {
 
   const signOut = async () => {
     try {
-      await throttledAuthOperation(async () => {
-        const { error } = await supabase.auth.signOut({
-          scope: 'local'
-        });
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Signed out successfully",
-          description: "You have been signed out of your account."
-        });
+      console.log('Signing out...');
+      setLoading(true); // Set loading state to true while signing out
+      
+      // Use simpler direct call for sign out instead of throttled version
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'
       });
       
-      // Clear session state
+      if (error) throw error;
+      
+      // Ensure we clear states immediately to update UI
       setSession(null);
       setUser(null);
       
       // Clear query cache to prevent stale data from previous session
       queryClient.clear();
+      
+      // Show success toast after state updates
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account."
+      });
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast({
@@ -119,6 +126,8 @@ export function useAuthState() {
         description: error.message || "An error occurred while signing out",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 

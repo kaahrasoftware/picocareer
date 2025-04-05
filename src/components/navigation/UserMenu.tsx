@@ -28,25 +28,33 @@ export function UserMenu() {
     
     try {
       setIsSigningOut(true);
-      await signOut();
-      // Clear all cached data on signout
+      console.log('User menu: signing out');
+      
+      // Clear all cached data on signout immediately for better UX
       queryClient.clear();
+      
+      await signOut();
       
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
       
-      // Navigate after a slight delay to allow state updates to complete
-      setTimeout(() => {
-        navigate("/auth");
-      }, 100);
+      // Navigate after signing out
+      navigate("/auth");
+      
     } catch (error: any) {
+      console.error('Error in UserMenu sign out:', error);
       toast({
         title: "Error signing out",
-        description: error.message,
+        description: error.message || "An error occurred while signing out",
         variant: "destructive",
       });
+      
+      // If there was an error, force a hard reload as fallback
+      if (error.message?.includes('network') || error.message?.includes('timeout')) {
+        window.location.href = "/auth";
+      }
     } finally {
       setIsSigningOut(false);
     }
@@ -91,6 +99,7 @@ export function UserMenu() {
         <DropdownMenuItem 
           onClick={handleSignOut}
           disabled={isSigningOut}
+          className={isSigningOut ? "opacity-50 cursor-not-allowed" : ""}
         >
           {isSigningOut ? "Signing out..." : "Sign out"}
         </DropdownMenuItem>

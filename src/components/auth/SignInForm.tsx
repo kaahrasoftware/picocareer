@@ -30,32 +30,23 @@ export function SignInForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    if (isLoading) {
+      // Prevent multiple submission attempts
+      console.log('Sign in already in progress, ignoring additional submit');
+      return;
+    }
+    
     try {
+      console.log('Submitting sign in form');
       await signIn(formData.email, formData.password);
       // Navigation is now handled in the useAuth hook
     } catch (err) {
-      console.error("Authentication error details:", err);
+      // Error handling is already done in the useAuth hook
+      console.error("Authentication error caught in SignInForm:", err);
       
-      if (err instanceof AuthError) {
-        // Handle specific auth error cases
-        switch (err.message) {
-          case "Invalid login credentials":
-            setError("Invalid email or password. Please check your credentials.");
-            break;
-          case "Email not confirmed":
-            setError("Please verify your email address before signing in.");
-            break;
-          case "Invalid email or password":
-            setError("The email or password you entered is incorrect.");
-            break;
-          default:
-            // Log unexpected errors for debugging
-            console.error("Authentication error:", err);
-            setError(err.message || "An error occurred during sign in. Please try again.");
-        }
-      } else {
-        console.error("Unexpected error:", err);
-        setError("An unexpected error occurred. Please try again.");
+      // Set specific UI errors if needed beyond what's in the hook
+      if (err instanceof AuthError && err.message.includes("rate limit")) {
+        setError("You've attempted to sign in too many times. Please wait a moment before trying again.");
       }
     }
   };
@@ -112,7 +103,7 @@ export function SignInForm() {
             {isLoading && (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
             )}
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </div>
       </form>
