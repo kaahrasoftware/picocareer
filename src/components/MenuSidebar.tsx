@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -81,7 +82,7 @@ export function MenuSidebar() {
             <Button 
               variant="default" 
               onClick={() => navigate("/auth")}
-              className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               Sign in
             </Button>
@@ -130,7 +131,7 @@ export function MenuSidebar() {
               <Button 
                 variant="default" 
                 onClick={() => navigate("/auth")}
-                className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Sign in
               </Button>
@@ -165,7 +166,7 @@ export function MenuSidebar() {
               <Button 
                 variant="default" 
                 onClick={() => navigate("/auth")}
-                className="bg-picocareer-primary hover:bg-picocareer-primary/90"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Sign in
               </Button>
