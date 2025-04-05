@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,29 +25,28 @@ export function SessionItem({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const getDefaultTitle = (session: CareerChatSession) => {
+    if (session.session_metadata?.title) {
+      return session.session_metadata.title;
+    }
+    
     const date = new Date(session.created_at);
-    return session.title || session.session_metadata?.title || `Conversation on ${date.toLocaleDateString()}`;
+    return `Conversation on ${date.toLocaleDateString()}`;
   };
 
   const getSessionProgress = (session: CareerChatSession) => {
-    // Check if the session is complete
     if (session.session_metadata?.isComplete) {
       return 100;
     }
     
-    // Try to get from session_metadata
     if (session.session_metadata?.overallProgress) {
       return session.session_metadata.overallProgress;
     }
     
-    // Try to calculate from progress_data
     if (session.progress_data) {
       const total = Object.values(session.progress_data).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
-      // Estimate that a full session has around 24 questions
       return Math.min(Math.round((total / 24) * 100), 100);
     }
     
-    // Fallback estimate based on message count
     if (session.total_messages) {
       return Math.min(Math.round((session.total_messages / 20) * 100), 100);
     }
@@ -150,7 +148,7 @@ export function SessionItem({
               className="h-7 w-7"
               onClick={() => {
                 setSessionToEdit(session.id);
-                setNewTitle(session.title || '');
+                setNewTitle(session.session_metadata?.title || '');
               }}
               title="Rename"
             >
@@ -172,7 +170,6 @@ export function SessionItem({
       
       <SessionMetadata session={session} />
       
-      {/* Progress indicator */}
       {progress > 0 && (
         <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
           <div 
