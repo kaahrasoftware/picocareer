@@ -24,25 +24,6 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
 
-  // Redirect authenticated users away from auth page after loading completes
-  useEffect(() => {
-    if (!loading && session?.user) {
-      navigate('/');
-    }
-  }, [session, loading, navigate]);
-
-  // If still loading, don't render the full page yet
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>;
-  }
-  
-  // Don't render if we have a session (will be redirected by useEffect)
-  if (session?.user) {
-    return null;
-  }
-
   // Define the query function outside conditional rendering
   const fetchMentors = async () => {
     try {
@@ -77,8 +58,27 @@ export default function Auth() {
     queryKey: ['random-mentors'],
     queryFn: fetchMentors,
     retry: false,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
+  
+  // Redirect authenticated users away from auth page after loading completes
+  useEffect(() => {
+    if (!loading && session?.user) {
+      navigate('/');
+    }
+  }, [session, loading, navigate]);
+
+  // If still loading, don't render the full page yet
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
+  }
+  
+  // Don't render if we have a session (will be redirected by useEffect)
+  if (session?.user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen">

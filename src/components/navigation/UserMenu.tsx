@@ -31,7 +31,16 @@ export function UserMenu() {
       await signOut();
       // Clear all cached data on signout
       queryClient.clear();
-      navigate("/auth");
+      
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+      
+      // Navigate after a slight delay to allow state updates to complete
+      setTimeout(() => {
+        navigate("/auth");
+      }, 100);
     } catch (error: any) {
       toast({
         title: "Error signing out",

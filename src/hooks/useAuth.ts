@@ -32,9 +32,12 @@ export function useAuth() {
         await supabase.auth.setSession(data.session);
         
         // Then invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
+        queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        
+        // Add a small delay before showing the success toast to ensure the UI has time to update
         setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
-          queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",

@@ -113,7 +113,11 @@ export function SignInForm() {
               required
             />
           </div>
-          <Button disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
             {isLoading && (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
             )}

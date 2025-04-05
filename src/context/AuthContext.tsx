@@ -47,6 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const timeoutId = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['profile', authState.session?.user?.id] });
         queryClient.invalidateQueries({ queryKey: ['notifications', authState.session?.user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       }, 100);
       
       return () => clearTimeout(timeoutId);
