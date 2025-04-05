@@ -15,18 +15,31 @@ import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/context/AuthContext"; // Changed from useAuthSession to useAuth
 import { useEffect } from "react";
 
 export default function Auth() {
-  const { session } = useAuthSession();
+  const { session, loading } = useAuth(); // Changed from useAuthSession to useAuth
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
 
-  // Redirect authenticated users away from auth page
+  // Redirect authenticated users away from auth page after loading completes
+  useEffect(() => {
+    if (!loading && session?.user) {
+      navigate('/');
+    }
+  }, [session, loading, navigate]);
+
+  // If still loading, don't render the full page yet
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
+  }
+  
+  // Don't render if we have a session (will be redirected by useEffect)
   if (session?.user) {
-    navigate('/');
     return null;
   }
 

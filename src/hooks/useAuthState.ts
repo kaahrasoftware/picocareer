@@ -5,6 +5,10 @@ import { supabase, throttledAuthOperation } from '@/integrations/supabase/client
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
+/**
+ * Primary hook to manage authentication state
+ * Returns session, user, loading state, and sign out function
+ */
 export function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -23,7 +27,25 @@ export function useAuthState() {
 
     const setupAuthListener = async () => {
       try {
-        // Get initial session first before setting up listeners
+        // First set up auth state change listener
+        const { data } = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            console.log('Auth state changed:', event);
+            
+            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+              setSession(null);
+              setUser(null);
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              setSession(currentSession);
+              setUser(currentSession?.user ?? null);
+              authRetryCount.current = 0;
+            }
+          }
+        );
+
+        authChangeSubscription.current = data.subscription;
+
+        // Then check for existing session
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -42,24 +64,6 @@ export function useAuthState() {
           setSession(sessionData.session);
           setUser(sessionData.session.user);
         }
-        
-        // Set up auth state change listener
-        const { data } = supabase.auth.onAuthStateChange(
-          async (event, currentSession) => {
-            console.log('Auth state changed:', event);
-            
-            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-              setSession(null);
-              setUser(null);
-            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              setSession(currentSession);
-              setUser(currentSession?.user ?? null);
-              authRetryCount.current = 0;
-            }
-          }
-        );
-
-        authChangeSubscription.current = data.subscription;
       } catch (err) {
         console.error('Unexpected error during auth setup:', err);
         setError(err instanceof Error ? err : new Error(String(err)));

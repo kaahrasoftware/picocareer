@@ -1,18 +1,17 @@
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 // Session protection levels
 export type AuthProtectionLevel = 'required' | 'optional' | 'public';
 
 export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional') {
-  const { session, user, loading, error: sessionError, signOut } = useAuth();
+  const { session, user, loading, error, signOut } = useAuth();
   const queryClient = useQueryClient();
   
   // Handle route protection based on authentication state
-  useEffect(() => {
+  React.useEffect(() => {
     // Only process after loading is complete and not on every render
     if (loading) return;
     
@@ -24,7 +23,7 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
   }, [session, loading, protectionLevel]);
 
   // Add session refresh helper
-  const refreshSession = useCallback(async () => {
+  const refreshSession = React.useCallback(async () => {
     try {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
@@ -42,8 +41,9 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
     session,
     user,
     loading,
-    sessionError,
-    isError: !!sessionError,
+    error: error,
+    isError: !!error,
+    isLoading: loading,
     signOut,
     refreshSession,
     queryClient,

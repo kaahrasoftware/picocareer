@@ -1,26 +1,31 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuthSession } from '@/hooks/useAuthSession';
+import { Session, User } from '@supabase/supabase-js';
+import { useAuthState } from '@/hooks/useAuthState';
 
 interface AuthContextType {
-  session: any;
-  isLoading: boolean;
-  isError: boolean;
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  error: Error | null;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
-  isLoading: false,
-  isError: false
+  user: null,
+  loading: false,
+  error: null,
+  signOut: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { session, isLoading, isError } = useAuthSession();
+  const authState = useAuthState();
 
   return (
-    <AuthContext.Provider value={{ session, isLoading, isError }}>
+    <AuthContext.Provider value={authState}>
       {children}
     </AuthContext.Provider>
   );

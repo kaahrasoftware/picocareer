@@ -8,6 +8,7 @@ import { SocialSignIn } from "./SocialSignIn";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 
 export function SignInForm() {
   const { signIn, isLoading } = useAuth();
@@ -16,6 +17,7 @@ export function SignInForm() {
     email: '',
     password: '',
   });
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,6 +34,8 @@ export function SignInForm() {
     
     try {
       await signIn(formData.email, formData.password);
+      // Navigate to home page after successful login
+      navigate('/');
     } catch (err) {
       console.error("Authentication error details:", err);
       

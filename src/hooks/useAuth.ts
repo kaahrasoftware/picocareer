@@ -8,7 +8,7 @@ import { useAuth as useAuthContext } from "@/context/AuthContext";
 export function useAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const authContext = useAuthContext();
+  const { session, user, signOut } = useAuthContext();
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
@@ -70,8 +70,8 @@ export function useAuth() {
   return {
     signIn,
     isLoading,
-    signOut: authContext.signOut,
-    user: authContext.user,
-    session: authContext.session,
+    signOut,
+    user,
+    session,
   };
 }
