@@ -31,12 +31,18 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
         console.error('Error refreshing session:', error);
         return false;
       }
+      
+      // Invalidate user data queries after session refresh
+      if (data.session?.user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
+      }
+      
       return !!data.session;
     } catch (err) {
       console.error('Exception during session refresh:', err);
       return false;
     }
-  }, []);
+  }, [queryClient]);
 
   return {
     session,

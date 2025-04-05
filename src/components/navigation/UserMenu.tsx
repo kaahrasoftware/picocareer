@@ -12,16 +12,25 @@ import {
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export function UserMenu() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, signOut } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
+  const queryClient = useQueryClient();
+  const { data: profile, isLoading } = useUserProfile(session);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
+    if (isSigningOut) return;
+    
     try {
+      setIsSigningOut(true);
       await signOut();
+      // Clear all cached data on signout
+      queryClient.clear();
       navigate("/auth");
     } catch (error: any) {
       toast({
@@ -29,15 +38,21 @@ export function UserMenu() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsSigningOut(false);
     }
   };
+
+  if (isLoading) {
+    return <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>;
+  }
 
   if (!profile) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="outline-none">
+        <button className="outline-none" data-testid="user-menu-button">
           <ProfileAvatar
             avatarUrl={profile.avatar_url}
             imageAlt={profile.full_name || profile.email}
@@ -48,7 +63,14 @@ export function UserMenu() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>
+          <div className="truncate max-w-[95%]">
+            {profile.full_name || profile.email}
+          </div>
+          <div className="text-xs text-gray-500 truncate max-w-[95%]">
+            {profile.email}
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate("/profile")}>
           Profile
@@ -57,7 +79,12 @@ export function UserMenu() {
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+        >
+          {isSigningOut ? "Signing out..." : "Sign out"}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

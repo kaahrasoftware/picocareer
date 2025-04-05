@@ -33,9 +33,15 @@ export function SignInForm() {
     e.preventDefault();
     
     try {
-      await signIn(formData.email, formData.password);
-      // Navigate to home page after successful login
-      navigate('/');
+      const { session } = await signIn(formData.email, formData.password);
+      
+      // Wait a moment before navigating to ensure auth state is updated
+      if (session) {
+        console.log("Sign-in successful, navigating to home...");
+        setTimeout(() => {
+          navigate('/');
+        }, 200);
+      }
     } catch (err) {
       console.error("Authentication error details:", err);
       

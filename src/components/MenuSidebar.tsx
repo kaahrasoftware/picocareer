@@ -14,17 +14,26 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect, useState } from "react";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { session, isError } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { data: notifications = [] } = useNotifications(session);
+  const { session, isError, isLoading: authLoading } = useAuthSession();
+  const { data: profile, isLoading: profileLoading } = useUserProfile(session);
+  const { data: notifications = [], isLoading: notificationsLoading } = useNotifications(session);
+  const [isInitialized, setIsInitialized] = useState(false);
   const isMobile = useIsMobile();
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Mark UI as initialized after initial render to prevent flashing
+  useEffect(() => {
+    if (!authLoading && !profileLoading) {
+      setIsInitialized(true);
+    }
+  }, [authLoading, profileLoading]);
 
   const handleMarkAsRead = async (notificationId: string) => {
     if (!session?.user?.id) return;
@@ -64,6 +73,25 @@ export function MenuSidebar() {
       });
     }
   };
+
+  // Show loading state until auth is initialized
+  if (!isInitialized) {
+    return (
+      <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+        <div className="container h-full mx-auto flex items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/f2122040-63e7-4f46-8b7c-d7c748d45e28.png" 
+              alt="PicoCareer Logo" 
+              className="h-10"
+            />
+            <span className="text-xl font-semibold text-foreground">PicoCareer</span>
+          </Link>
+          <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
+        </div>
+      </header>
+    );
+  }
 
   // If there's an auth error, show sign in button
   if (isError) {
@@ -145,7 +173,7 @@ export function MenuSidebar() {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col gap-6 pt-6">
                   <MainNavigation />
-                  {session?.user && <UserMenu />}
+                  {session?.user && profile && <UserMenu />}
                 </div>
               </SheetContent>
             </Sheet>
@@ -160,7 +188,7 @@ export function MenuSidebar() {
                 onMarkAsRead={handleMarkAsRead}
               />
             )}
-            {session?.user ? (
+            {session?.user && profile ? (
               <UserMenu />
             ) : (
               <Button 
