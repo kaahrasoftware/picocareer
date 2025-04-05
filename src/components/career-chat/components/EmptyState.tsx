@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { MessageCircle, History, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RobotAvatar } from '../robot-avatar/RobotAvatar';
-import { useNavigate } from 'react-router-dom';
-import { useAuthSession } from '@/hooks/useAuthSession';
+import { RobotWithMessage } from '../robot-avatar/RobotWithMessage';
+import { PlusCircle, History, SlidersHorizontal } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface EmptyStateProps {
   onStartChat: () => void;
@@ -12,72 +11,79 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ onStartChat, onViewPastSessions }: EmptyStateProps) {
-  const { isAuthenticated } = useAuthSession();
-  const navigate = useNavigate();
-
-  const handleLoginClick = () => {
-    navigate('/auth');
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center h-full space-y-6 text-center px-4">
-      <div className="mb-4">
-        <RobotAvatar size="xl" isAnimated={true} showSpeechBubble={true} />
+    <div className="flex flex-col items-center justify-center h-full p-4 max-w-4xl mx-auto">
+      <div className="mb-8">
+        <RobotWithMessage 
+          message="Ready to explore your career options?" 
+          size="lg"
+        />
       </div>
-      <h1 className="text-3xl font-bold text-gray-800">Hey there... I am Pico!</h1>
       
-      {isAuthenticated ? (
-        <>
-          <p className="text-lg text-muted-foreground max-w-md">
-            I'm here to help you explore career options and find the perfect path for your skills and interests.
-          </p>
-          
-          <div className="bg-white/80 p-6 rounded-lg border shadow-sm max-w-md">
-            <h3 className="font-semibold text-lg mb-3">What would you like to do?</h3>
-            <div className="space-y-3">
-              <Button 
-                className="w-full bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all justify-start" 
-                size="lg" 
-                onClick={onStartChat}
-              >
-                <MessageCircle className="h-5 w-5" />
-                <span className="flex-1 text-left">Start New Career Assessment</span>
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
-              
-              <Button 
-                className="w-full gap-2 rounded-full px-6 shadow-sm hover:shadow-md transition-all justify-start" 
-                size="lg" 
-                variant="outline" 
-                onClick={onViewPastSessions}
-              >
-                <History className="h-5 w-5" />
-                <span className="flex-1 text-left">View Past Assessments</span>
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="text-lg text-muted-foreground max-w-md">
-            Please sign in to start your career assessment journey with me!
-          </p>
-          
-          <div className="bg-white/80 p-6 rounded-lg border shadow-sm max-w-md">
-            <h3 className="font-semibold text-lg mb-3">Ready to discover your ideal career path?</h3>
-            <Button 
-              className="w-full bg-primary hover:bg-primary/90 gap-2 rounded-full px-6 py-6 shadow-sm hover:shadow-md transition-all justify-start" 
-              size="lg" 
-              onClick={handleLoginClick}
-            >
-              <LogIn className="h-5 w-5" />
-              <span className="flex-1 text-left">Sign In to Start Assessment</span>
-              <ArrowRight className="h-5 w-5 ml-2" />
+      <h1 className="text-3xl font-bold text-center mb-3">Career Assessment</h1>
+      <p className="text-muted-foreground text-center mb-8 max-w-md">
+        Have a conversation with our AI to discover career paths that match your skills, 
+        interests, and goals.
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+        <Card className="border-2 border-primary/20 transition-transform hover:scale-105">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PlusCircle className="h-5 w-5 text-primary" />
+              New Assessment
+            </CardTitle>
+            <CardDescription>
+              Start a fresh conversation to explore career options
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Answer questions about your interests, skills, and work preferences 
+              to get personalized career recommendations.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={onStartChat}>
+              Start New Assessment
             </Button>
-          </div>
-        </>
-      )}
+          </CardFooter>
+        </Card>
+        
+        <Card className="transition-transform hover:scale-105">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-muted-foreground" />
+              Past Assessments
+            </CardTitle>
+            <CardDescription>
+              Resume or review your previous career chats
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Review past assessments, compare recommendations, or continue 
+              conversations you've already started.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={onViewPastSessions}
+            >
+              View Past Assessments
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      <div className="mt-8 text-center">
+        <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+          <SlidersHorizontal className="h-3 w-3" />
+          Customize your career path exploration with Pico
+        </p>
+      </div>
     </div>
   );
 }

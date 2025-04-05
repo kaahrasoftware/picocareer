@@ -7,11 +7,17 @@ import { EmptyState } from './components/EmptyState';
 import { ChatInterface } from './components/ChatInterface';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
-import { SessionManagementDialog } from './session-management';
 import { toast } from 'sonner';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { Button } from '@/components/ui/button';
+import { PanelLeftOpen } from 'lucide-react';
 
-export function PicoChatContainer() {
+interface PicoChatContainerProps {
+  isSidebarOpen?: boolean;
+  onOpenSidebar?: () => void;
+}
+
+export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatContainerProps) {
   const {
     messages,
     inputMessage,
@@ -21,14 +27,7 @@ export function PicoChatContainer() {
     messagesEndRef,
     currentCategory,
     questionProgress,
-    pastSessions,
-    isFetchingPastSessions,
-    fetchPastSessions,
     endCurrentSession,
-    startNewSession,
-    resumeSession,
-    deleteSession,
-    updateSessionTitle,
     setInputMessage,
     sendMessage,
     isSessionComplete,
@@ -38,7 +37,6 @@ export function PicoChatContainer() {
   
   const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
   const { isAuthenticated } = useAuthSession('optional');
-  const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
   const [showInitialState, setShowInitialState] = useState(true);
 
@@ -105,16 +103,9 @@ export function PicoChatContainer() {
   };
 
   const handleViewPastSessions = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to view past assessments."
-      });
-      return;
+    if (onOpenSidebar) {
+      onOpenSidebar();
     }
-    
-    fetchPastSessions();
-    setSessionDialogOpen(true);
   };
 
   const handleDownloadResults = () => {
@@ -153,12 +144,24 @@ export function PicoChatContainer() {
   }
 
   return (
-    <div className="flex flex-col max-w-6xl mx-auto h-[calc(100vh-120px)] p-4">
+    <div className="flex flex-col h-[calc(100vh-120px)] p-2 md:p-4">
       {showInitialState ? (
-        <EmptyState 
-          onStartChat={handleInitiateChat} 
-          onViewPastSessions={handleViewPastSessions} 
-        />
+        <div className="relative">
+          {!isSidebarOpen && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onOpenSidebar}
+              className="absolute top-2 left-2 z-10 h-8 w-8 md:hidden"
+            >
+              <PanelLeftOpen size={16} />
+            </Button>
+          )}
+          <EmptyState 
+            onStartChat={handleInitiateChat} 
+            onViewPastSessions={handleViewPastSessions} 
+          />
+        </div>
       ) : (
         <ChatInterface 
           messages={messages}
@@ -179,21 +182,6 @@ export function PicoChatContainer() {
           setInputMessage={setInputMessage}
         />
       )}
-      
-      <SessionManagementDialog 
-        open={sessionDialogOpen} 
-        onOpenChange={setSessionDialogOpen} 
-        pastSessions={pastSessions} 
-        isFetchingPastSessions={isFetchingPastSessions} 
-        onFetchPastSessions={fetchPastSessions} 
-        onResumeSession={(sessionId) => {
-          resumeSession(sessionId);
-          setShowInitialState(false);
-          setSessionDialogOpen(false);
-        }} 
-        onDeleteSession={deleteSession} 
-        onUpdateSessionTitle={updateSessionTitle} 
-      />
     </div>
   );
 }
