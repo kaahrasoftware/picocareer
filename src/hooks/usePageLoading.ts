@@ -5,6 +5,7 @@ import { useLoading } from '@/context/LoadingContext';
 
 /**
  * Hook to manage page transition loading states
+ * Returns an object with loading state and control functions
  */
 export function usePageLoading() {
   const location = useLocation();
@@ -14,14 +15,32 @@ export function usePageLoading() {
     // Start loading on route change
     startLoading('Loading page...');
     
-    // Simulate page load progress
-    const timer = setTimeout(() => {
-      updateProgress(100);
-      stopLoading();
-    }, 500);
+    // Generate random progress updates to simulate loading
+    const interval = setInterval(() => {
+      const nextProgress = Math.min(95, Math.random() * 10 + globalLoading.progress);
+      updateProgress(nextProgress);
+    }, 200);
     
-    return () => clearTimeout(timer);
+    // Simulate page load completion
+    const timer = setTimeout(() => {
+      clearInterval(interval);
+      updateProgress(100);
+      
+      // Add a small delay to ensure the progress bar animation completes
+      setTimeout(() => {
+        stopLoading();
+      }, 300);
+    }, 700);
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
   }, [location.pathname]);
   
-  return globalLoading;
+  return { 
+    isLoading: globalLoading.isLoading,
+    progress: globalLoading.progress,
+    message: globalLoading.message
+  };
 }

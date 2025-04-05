@@ -11,6 +11,7 @@ import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
 import { GuideButton } from "@/components/guide/GuideButton";
 import { usePageLoading } from "@/hooks/usePageLoading";
 import { LoadingBar } from "@/components/ui/loading-bar";
+import { useEffect, useState } from "react";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -20,14 +21,19 @@ export function MainLayout({ children }: LayoutProps) {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const isMentor = profile?.user_type === "mentor";
-  const { isLoading } = usePageLoading();
+  const { isLoading, progress } = usePageLoading();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <GuideProvider>
       <div className="min-h-screen flex flex-col">
-        <LoadingBar isLoading={isLoading} />
+        <LoadingBar isLoading={isLoading} progress={progress} />
         <MenuSidebar />
-        <main className="pt-16 flex-grow relative">
+        <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
           {children || <Outlet />}
         </main>
         <Footer />
@@ -41,14 +47,19 @@ export function MainLayout({ children }: LayoutProps) {
 }
 
 export function AuthLayout({ children }: LayoutProps) {
-  const { isLoading } = usePageLoading();
+  const { isLoading, progress } = usePageLoading();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
-      <LoadingBar isLoading={isLoading} />
+      <LoadingBar isLoading={isLoading} progress={progress} />
       <MenuSidebar />
-      <main className="pt-16 flex-grow">
-        {children || <Outlet />} {/* Use children if provided, otherwise use Outlet */}
+      <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
+        {children || <Outlet />}
       </main>
     </div>
   );

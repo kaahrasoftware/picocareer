@@ -5,9 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { router } from '@/router/routes';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/LoadingContext';
 import { LoadingProvider } from '@/context/LoadingContext';
-import { LoadingBar } from '@/components/ui/loading-bar';
 import { useLoading } from '@/context/LoadingContext';
 import './styles/guide.css'; // Import guide styles
 
@@ -39,10 +38,6 @@ function AppContent() {
   
   return (
     <>
-      <LoadingBar 
-        isLoading={globalLoading.isLoading} 
-        progress={globalLoading.progress} 
-      />
       <RouterProvider router={router} />
       <HubStorageInitializer />
       <Toaster />
