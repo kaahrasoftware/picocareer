@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useConfigCheck } from './hooks/useConfigCheck';
 import { downloadPdfResults } from './utils/pdfGenerator';
-import { EmptyState } from './components/EmptyState';
 import { ChatInterface } from './components/ChatInterface';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
@@ -38,7 +37,13 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
   const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
   const { isAuthenticated } = useAuthSession('optional');
   const [localIsTyping, setLocalIsTyping] = useState(false);
-  const [showInitialState, setShowInitialState] = useState(true);
+
+  // Effect to auto-initialize a chat session when the component loads
+  useEffect(() => {
+    if (!isChatLoading && configChecked && !hasConfigError && messages.length === 0) {
+      handleStartNewChat();
+    }
+  }, [isChatLoading, configChecked, hasConfigError, messages.length, handleStartNewChat]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -49,12 +54,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
   useEffect(() => {
     setLocalIsTyping(isTyping);
   }, [isTyping]);
-
-  useEffect(() => {
-    if (messages.length > 0 && showInitialState) {
-      setShowInitialState(false);
-    }
-  }, [messages.length]);
 
   const handleSuggestionClick = (suggestion: string) => {
     if (isTyping || localIsTyping) {
@@ -98,7 +97,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
       return;
     }
     
-    setShowInitialState(false);
     handleStartNewChat();
   };
 
@@ -145,24 +143,17 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] p-2 md:p-4">
-      {showInitialState ? (
-        <div className="relative">
-          {!isSidebarOpen && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onOpenSidebar}
-              className="absolute top-2 left-2 z-10 h-8 w-8 md:hidden"
-            >
-              <PanelLeftOpen size={16} />
-            </Button>
-          )}
-          <EmptyState 
-            onStartChat={handleInitiateChat} 
-            onViewPastSessions={handleViewPastSessions} 
-          />
-        </div>
-      ) : (
+      <div className="relative flex-1">
+        {!isSidebarOpen && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onOpenSidebar}
+            className="absolute top-2 left-2 z-10 h-8 w-8 md:hidden"
+          >
+            <PanelLeftOpen size={16} />
+          </Button>
+        )}
         <ChatInterface 
           messages={messages}
           inputMessage={inputMessage}
@@ -181,7 +172,7 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
           onDownloadResults={handleDownloadResults}
           setInputMessage={setInputMessage}
         />
-      )}
+      </div>
     </div>
   );
 }

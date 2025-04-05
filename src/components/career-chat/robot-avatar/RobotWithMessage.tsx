@@ -7,18 +7,20 @@ interface RobotWithMessageProps {
   message?: string;
   className?: string;
   isTyping?: boolean;
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 export function RobotWithMessage({
   message,
   className,
   isTyping = false,
+  size = "md"
 }: RobotWithMessageProps) {
   return (
     <div className={cn("flex items-center gap-4", className)}>
       <div className="relative">
         <RobotAvatar 
-          size="md" 
+          size={size} 
           isPulsing={isTyping} 
           showSpeechBubble={!message && !isTyping} 
         />
