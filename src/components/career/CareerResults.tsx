@@ -1,6 +1,6 @@
 
 import { CareerCard } from "@/components/CareerCard";
-import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { PageLoader } from "@/components/ui/page-loader";
 import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -36,13 +36,7 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
   };
 
   if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-        {[...Array(6)].map((_, index) => (
-          <SkeletonCard key={index} />
-        ))}
-      </div>
-    );
+    return <PageLoader isLoading={true} variant="cards" count={6} />;
   }
 
   return (

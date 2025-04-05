@@ -6,21 +6,24 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Hub } from "@/types/database/hubs";
 import { Button } from "@/components/ui/button";
 import { HubHeader } from "@/components/hub/HubHeader";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { HubTabs } from "@/components/hub/HubTabs";
 import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
+import { PageLoader } from "@/components/ui/page-loader";
+import { useLoading } from "@/context/LoadingContext";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
   const { session } = useAuthSession();
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const isValidUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
+  const { updateProgress } = useLoading();
 
   const { data: memberData, isLoading: isMemberLoading } = useQuery({
     queryKey: ['hub-member-role', id, session?.user?.id],
     queryFn: async () => {
       if (!id || !session?.user?.id) return null;
+      updateProgress(33, 'Checking membership status...');
       const { data, error } = await supabase
         .from('hub_members')
         .select('role, status, confirmed')
@@ -47,7 +50,8 @@ export default function Hub() {
       if (!isValidUUID) {
         throw new Error('Invalid hub ID');
       }
-
+      
+      updateProgress(66, 'Loading hub details...');
       const { data, error } = await supabase
         .from('hubs')
         .select('*')
@@ -81,7 +85,8 @@ export default function Hub() {
     queryKey: ['hub-stats', id],
     queryFn: async () => {
       if (!id) return null;
-
+      
+      updateProgress(100, 'Loading hub statistics...');
       const membersCount = await supabase
         .from('hub_members')
         .select('id', { count: 'exact', head: true })
@@ -102,6 +107,8 @@ export default function Hub() {
     enabled: !!id && !hubError, // Only fetch stats if hub exists
   });
 
+  const isLoading = hubLoading || statsLoading || isMemberLoading;
+
   if (!id || !isValidUUID) {
     return (
       <div className="container mx-auto py-8 text-center">
@@ -114,12 +121,10 @@ export default function Hub() {
     );
   }
 
-  if (hubLoading || statsLoading || isMemberLoading) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto py-8 space-y-8">
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-12 w-48" />
-        <Skeleton className="h-96 w-full" />
+      <div className="container mx-auto py-8">
+        <PageLoader isLoading={true} variant="default" />
       </div>
     );
   }

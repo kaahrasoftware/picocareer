@@ -1,6 +1,8 @@
+
 import { ProfileCard } from "@/components/community/ProfileCard";
 import { LoadMoreButton } from "./LoadMoreButton";
 import { useState, useMemo } from "react";
+import { PageLoader } from "@/components/ui/page-loader";
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorGridProps {
@@ -27,6 +29,10 @@ export function MentorGrid({ profiles, isLoading }: MentorGridProps) {
   const handleLoadMore = () => {
     setDisplayCount(prev => Math.min(prev + 3, profiles.length));
   };
+
+  if (isLoading) {
+    return <PageLoader isLoading={true} variant="cards" count={6} />;
+  }
 
   if (profiles.length === 0) {
     return (
