@@ -9,7 +9,6 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { GuideProvider } from "@/context/GuideContext";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
 import { GuideButton } from "@/components/guide/GuideButton";
-import { LoadingProvider } from "@/context/LoadingContext";
 import { PageTransitionLoader } from "@/components/PageTransitionLoader";
 
 interface LayoutProps {
