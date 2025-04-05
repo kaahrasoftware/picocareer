@@ -77,11 +77,6 @@ export function useSessionManagement(
   
   const startNewSession = async () => {
     try {
-      // End current session first if there is one
-      if (sessionId) {
-        await endCurrentSession();
-      }
-      
       // Initialize a new chat session
       await initializeChat(true);
     } catch (error) {
@@ -93,7 +88,7 @@ export function useSessionManagement(
     if (!userId) return;
     
     try {
-      // Get all completed or archived sessions for the user
+      // Get all sessions for the user (active, completed, or archived)
       const { data, error } = await supabase
         .from('career_chat_sessions')
         .select(`
@@ -107,7 +102,6 @@ export function useSessionManagement(
           progress_data
         `)
         .eq('profile_id', userId)
-        .in('status', ['completed', 'archived'])
         .order('last_active_at', { ascending: false });
         
       if (error) {
@@ -138,25 +132,16 @@ export function useSessionManagement(
         return;
       }
       
-      // If the current session is active, end it first
-      if (sessionId) {
+      // If it's not active, reactivate it
+      if (sessionData.status !== 'active') {
         await supabase
           .from('career_chat_sessions')
           .update({ 
-            status: 'completed',
+            status: 'active',
             last_active_at: new Date().toISOString()
           })
-          .eq('id', sessionId);
+          .eq('id', targetSessionId);
       }
-      
-      // Reactivate the target session
-      await supabase
-        .from('career_chat_sessions')
-        .update({ 
-          status: 'active',
-          last_active_at: new Date().toISOString()
-        })
-        .eq('id', targetSessionId);
       
       // Fetch messages for the resumed session
       const { data: messagesData, error: messagesError } = await supabase

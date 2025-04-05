@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Trash2, Edit2, MessageSquare, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import { SessionMetadata } from './SessionMetadata';
 import { CareerChatSession } from '@/types/database/analytics';
+import { Badge } from '@/components/ui/badge';
 
 interface SessionItemProps {
   session: CareerChatSession;
@@ -95,9 +96,10 @@ export function SessionItem({
   const isEditing = sessionToEdit === session.id;
   const progress = getSessionProgress(session);
   const isComplete = progress === 100 || session.session_metadata?.isComplete;
+  const isActive = session.status === 'active';
 
   return (
-    <div className="border rounded-lg p-4 hover:bg-accent/40 transition-colors">
+    <div className={`border rounded-lg p-4 hover:bg-accent/40 transition-colors ${isActive ? 'border-primary/30 bg-primary/5' : ''}`}>
       {isEditing ? (
         <div className="flex items-center gap-2 mb-2">
           <Input
@@ -129,7 +131,17 @@ export function SessionItem({
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-2">
             <h3 className="font-medium">{getDefaultTitle(session)}</h3>
-            {isComplete && <CheckCircle2 className="h-4 w-4 text-green-500" title="Completed" />}
+            {isComplete ? (
+              <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-300">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Complete
+              </Badge>
+            ) : isActive ? (
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-700 border-blue-300">
+                <Clock className="h-3 w-3 mr-1" />
+                Active
+              </Badge>
+            ) : null}
           </div>
           <div className="flex gap-1">
             <Button 
@@ -175,8 +187,13 @@ export function SessionItem({
         onClick={() => handleResumeSession(session.id)}
         disabled={isProcessing}
         className="w-full"
+        variant={isActive ? "default" : "outline"}
       >
-        Resume Conversation
+        {isActive ? (
+          <>Continue Conversation</>
+        ) : (
+          <>Resume Conversation</>
+        )}
       </Button>
     </div>
   );

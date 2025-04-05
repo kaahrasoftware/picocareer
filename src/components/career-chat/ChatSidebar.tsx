@@ -1,8 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Plus, History, X, MessagesSquare } from 'lucide-react';
+import { Plus, History, X, MessagesSquare, CheckCircle2, Clock } from 'lucide-react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { ProfileAvatar } from '@/components/ui/profile-avatar';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SessionItem } from './session-management/SessionItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface ChatSidebarProps {
   onClose?: () => void;
@@ -30,6 +31,7 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
   const { session } = useAuthSession();
   const { data: profile, isLoading: isProfileLoading } = useUserProfile(session);
   const { toast } = useToast();
+  const [selectedTab, setSelectedTab] = useState("all");
 
   // Fetch sessions when component mounts
   useEffect(() => {
@@ -55,6 +57,10 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
     await resumeSession(sessionId);
     if (onClose) onClose();
   };
+
+  // Count active sessions
+  const activeSessions = pastSessions.filter(s => s.status === 'active');
+  const completedSessions = pastSessions.filter(s => s.status === 'completed');
 
   return (
     <div className="flex flex-col h-full">
@@ -118,13 +124,26 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
         </Button>
       </div>
 
+      {/* Active sessions counter */}
+      {activeSessions.length > 0 && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>{activeSessions.length} active {activeSessions.length === 1 ? 'session' : 'sessions'}</span>
+            </Badge>
+          </div>
+        </div>
+      )}
+
       {/* Past sessions */}
       <div className="flex-1 overflow-hidden">
         {session?.user ? (
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
             <div className="px-4 pt-2">
               <TabsList className="w-full">
                 <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
+                <TabsTrigger value="active" className="flex-1">Active</TabsTrigger>
                 <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
               </TabsList>
             </div>
@@ -159,6 +178,36 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
               </ScrollArea>
             </TabsContent>
             
+            <TabsContent value="active" className="h-full">
+              <ScrollArea className="h-[calc(100vh-300px)]">
+                <div className="p-4 space-y-3">
+                  {isFetchingPastSessions ? (
+                    Array(2).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-28 w-full rounded-lg" />
+                    ))
+                  ) : activeSessions.length > 0 ? (
+                    activeSessions.map(session => (
+                      <SessionItem
+                        key={session.id}
+                        session={session}
+                        onResumeSession={handleResumeSession}
+                        onDeleteSession={deleteSession}
+                        onUpdateSessionTitle={updateSessionTitle}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <Clock className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
+                      <p className="text-muted-foreground">No active chats</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Start a new chat to begin a career assessment
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            
             <TabsContent value="completed" className="h-full">
               <ScrollArea className="h-[calc(100vh-300px)]">
                 <div className="p-4 space-y-3">
@@ -166,21 +215,19 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
                     Array(3).fill(0).map((_, i) => (
                       <Skeleton key={i} className="h-28 w-full rounded-lg" />
                     ))
-                  ) : pastSessions.filter(s => s.status === 'completed').length > 0 ? (
-                    pastSessions
-                      .filter(s => s.status === 'completed')
-                      .map(session => (
-                        <SessionItem
-                          key={session.id}
-                          session={session}
-                          onResumeSession={handleResumeSession}
-                          onDeleteSession={deleteSession}
-                          onUpdateSessionTitle={updateSessionTitle}
-                        />
-                      ))
+                  ) : completedSessions.length > 0 ? (
+                    completedSessions.map(session => (
+                      <SessionItem
+                        key={session.id}
+                        session={session}
+                        onResumeSession={handleResumeSession}
+                        onDeleteSession={deleteSession}
+                        onUpdateSessionTitle={updateSessionTitle}
+                      />
+                    ))
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <MessagesSquare className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
+                      <CheckCircle2 className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
                       <p className="text-muted-foreground">No completed chats yet</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Finish a chat to see it here

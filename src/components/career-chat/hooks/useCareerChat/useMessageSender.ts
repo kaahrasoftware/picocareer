@@ -9,23 +9,22 @@ export function useMessageSender({
   sessionId,
   messages,
   isSessionComplete,
-  currentCategory,
-  getProgress,
-  isAnalyzing,
-  analyzeResponses,
-  addMessage,
-  setIsTyping,
   setInputMessage,
+  setIsTyping,
+  addMessage,
+  updateSessionTitle,
+  updateSessionMetadata,
+  sessionMetadata,
   setIsSessionComplete,
   setCurrentCategory,
   setQuestionProgress,
-  updateSessionMetadata,
-  sessionMetadata,
-  updateSessionTitle,
-  advanceQuestion,
+  endCurrentSession,
   getCurrentCategory,
-  createQuestionMessage,
-  endCurrentSession
+  getProgress,
+  isAnalyzing,
+  analyzeResponses,
+  advanceQuestion,
+  createQuestionMessage
 }: MessageSenderProps): UseMessageSenderReturn {
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -78,7 +77,7 @@ export function useMessageSender({
       setInputMessage('');
       setIsTyping(true);
       
-      // Check if we need to generate recommendations after a certain number of questions
+      // Check if we need to generate recommendations
       if (getProgress() >= 90 && !isAnalyzing) {
         // Time to generate recommendations
         await analyzeResponses(messages);
@@ -190,11 +189,8 @@ export function useMessageSender({
     try {
       setIsProcessing(true);
       setIsTyping(true);
-      await endCurrentSession().catch(err => {
-        console.log('No active session to end or error ending session:', err);
-        // Continue anyway since we're starting a new session
-      });
       
+      // Start a new session without ending the current one
       await startNewSession();
       
       // We need to initialize the session with a welcome message
@@ -206,7 +202,7 @@ export function useMessageSender({
             id: uuidv4(),
             session_id: sessionId,
             message_type: 'system',
-            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you. Let's get started!",
+            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you!",
             metadata: {},
             created_at: new Date().toISOString()
           };
@@ -237,7 +233,6 @@ export function useMessageSender({
     }
   }, [
     sessionId,
-    endCurrentSession,
     startNewSession,
     addMessage,
     createQuestionMessage,
@@ -246,7 +241,8 @@ export function useMessageSender({
 
   return {
     sendMessage,
-    handleStartNewChat
+    handleStartNewChat,
+    isAnalyzing
   };
 }
 

@@ -265,10 +265,10 @@ export function useCareerChat() {
   const handleStartNewChat = async () => {
     try {
       setIsTyping(true);
+      // Start a new session without ending the current one
       await startNewSession();
       
-      // We need to initialize the session with a welcome message
-      // This runs after startNewSession has created a new session and set sessionId
+      // Initialize the session with a welcome message
       setTimeout(async () => {
         if (sessionId) {
           // Welcome message
