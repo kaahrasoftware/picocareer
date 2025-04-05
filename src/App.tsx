@@ -1,41 +1,21 @@
 
-import React from 'react';
 import { RouterProvider } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import router from './router/routes';
 import { Toaster } from '@/components/ui/toaster';
-import { router } from '@/router/routes';
-import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
-import { AuthProvider } from '@/context/AuthContext';
-import './styles/guide.css'; // Import guide styles
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LoadingProvider } from '@/context/LoadingContext';
 
 // Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <LoadingProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </LoadingProvider>
     </QueryClientProvider>
-  );
-}
-
-// Separate component to allow proper Hook usage and context inheritance
-function AppContent() {
-  return (
-    <>
-      <RouterProvider router={router} />
-      <HubStorageInitializer />
-      <Toaster />
-    </>
   );
 }
 

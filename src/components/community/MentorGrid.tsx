@@ -1,7 +1,9 @@
+
 import { ProfileCard } from "@/components/community/ProfileCard";
 import { LoadMoreButton } from "./LoadMoreButton";
 import { useState, useMemo } from "react";
 import type { Profile } from "@/types/database/profiles";
+import { InfiniteScroll } from "@/components/ui/infinite-scroll";
 
 interface MentorGridProps {
   profiles: (Profile & {
@@ -37,19 +39,18 @@ export function MentorGrid({ profiles, isLoading }: MentorGridProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <InfiniteScroll
+      hasMore={hasMore}
+      isLoading={isLoading}
+      loadMore={handleLoadMore}
+      loadingText="Loading more mentors..."
+      className="space-y-4"
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedProfiles.map((profile) => (
           <ProfileCard key={profile.id} profile={profile} />
         ))}
       </div>
-      <div className="flex justify-center mt-8">
-        <LoadMoreButton 
-          hasMore={hasMore} 
-          isLoading={isLoading} 
-          onClick={handleLoadMore} 
-        />
-      </div>
-    </div>
+    </InfiniteScroll>
   );
 }

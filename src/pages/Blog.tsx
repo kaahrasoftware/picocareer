@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +11,8 @@ import { BlogGrid } from "@/components/blog/BlogGrid";
 import { BlogHeader } from "@/components/blog/BlogHeader";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import { PageLoader } from "@/components/ui/page-loader";
+import { SkeletonGrid } from "@/components/ui/skeleton-grid";
 
 type Categories = Database["public"]["Enums"]["categories"];
 
@@ -123,7 +126,12 @@ const Blog = () => {
                 </div>
               </div>
 
-              <BlogGrid blogs={currentItems} isLoading={isLoading} />
+              {isLoading ? (
+                <SkeletonGrid itemCount={6} columns={3} />
+              ) : (
+                <BlogGrid blogs={currentItems} isLoading={isLoading} />
+              )}
+              
               {!isLoading && blogs && blogs.length > 0 && (
                 <BlogPagination
                   currentPage={currentPage}

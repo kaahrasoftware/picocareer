@@ -1,4 +1,6 @@
+
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface LoadMoreButtonProps {
   hasMore: boolean;
@@ -16,7 +18,14 @@ export function LoadMoreButton({ hasMore, isLoading, onClick }: LoadMoreButtonPr
       onClick={onClick}
       disabled={isLoading}
     >
-      {isLoading ? "Loading..." : "Load More"}
+      {isLoading ? (
+        <>
+          <LoadingSpinner size="sm" className="mr-2" />
+          Loading...
+        </>
+      ) : (
+        "Load More"
+      )}
     </Button>
   );
 }

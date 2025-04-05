@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { CareerListDialog } from "@/components/CareerListDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import type { Tables } from "@/integrations/supabase/types";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { PageLoader } from "@/components/ui/page-loader";
 
 export default function Career() {
   const [searchParams] = useSearchParams();
@@ -20,6 +23,7 @@ export default function Career() {
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(9);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const LOAD_MORE_INCREMENT = 3;
 
   // Get careerId from URL params
@@ -32,12 +36,12 @@ export default function Career() {
       const { data, error } = await supabase
         .from("careers")
         .select("*")
-        .eq('status', 'Approved' as Tables<"careers">["Row"]["status"])
+        .eq('status', 'Approved' as any)
         .eq('complete_career', true)
         .order('id', { ascending: undefined }); // This will randomize the results
 
       if (error) throw error;
-      return (data || []) as Tables<"careers">["Row"][];
+      return (data || []) as Tables<"careers">[];
     },
   });
 
@@ -81,7 +85,12 @@ export default function Career() {
   const hasMore = visibleCount < filteredCareers.length;
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
+    setIsLoadingMore(true);
+    // Simulate loading delay
+    setTimeout(() => {
+      setVisibleCount(prev => Math.min(prev + LOAD_MORE_INCREMENT, filteredCareers.length));
+      setIsLoadingMore(false);
+    }, 600);
   };
 
   const handleDialogOpenChange = (open: boolean) => {
@@ -92,6 +101,10 @@ export default function Career() {
       navigate(`${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`, { replace: true });
     }
   };
+
+  if (isLoading) {
+    return <PageLoader text="Loading careers..." />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
@@ -132,13 +145,15 @@ export default function Career() {
           
           {hasMore && (
             <div className="flex justify-center mt-8">
-              <Button 
+              <LoadingButton 
                 variant="outline" 
                 onClick={handleLoadMore}
+                isLoading={isLoadingMore}
+                loadingText="Loading more careers..."
                 className="min-w-[200px]"
               >
                 Load More Careers
-              </Button>
+              </LoadingButton>
             </div>
           )}
         </section>
