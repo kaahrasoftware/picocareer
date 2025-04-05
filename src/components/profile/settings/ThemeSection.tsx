@@ -1,22 +1,37 @@
+
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useTheme } from "@/context/ThemeContext";
+import { useEffect } from "react";
 
 export function ThemeSection() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const { getSetting, updateSetting } = useUserSettings(profile?.id);
+  const { theme, setTheme } = useTheme();
 
-  const darkMode = getSetting('theme') === 'dark';
+  const darkMode = theme === 'dark';
   const compactMode = getSetting('compact_mode') === 'true';
 
+  // When user settings load, sync with the theme context
+  useEffect(() => {
+    const userTheme = getSetting('theme');
+    if (userTheme && (userTheme === 'dark' || userTheme === 'light')) {
+      setTheme(userTheme);
+    }
+  }, [getSetting, setTheme]);
+
   const handleThemeChange = (checked: boolean) => {
+    const newTheme = checked ? 'dark' : 'light';
+    setTheme(newTheme);
+    
     updateSetting.mutate({
       type: 'theme',
       value: JSON.stringify({
-        theme: checked ? 'dark' : 'light',
+        theme: newTheme,
         compact_mode: compactMode
       })
     });

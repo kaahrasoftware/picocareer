@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoadingProvider } from '@/context/LoadingContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -22,8 +23,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LoadingProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
-          <Toaster />
+          <ThemeProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </ThemeProvider>
         </AuthProvider>
       </LoadingProvider>
     </QueryClientProvider>
