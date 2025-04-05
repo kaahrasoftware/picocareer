@@ -4,7 +4,6 @@ import { SkeletonCard } from "@/components/ui/skeleton-card";
 import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { SkeletonGrid } from "@/components/ui/skeleton-grid";
 
 interface CareerResultsProps {
   filteredCareers: Tables<"careers">[];
@@ -37,7 +36,13 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
   };
 
   if (isLoading) {
-    return <SkeletonGrid itemCount={6} columns={3} />;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+        {[...Array(6)].map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
+      </div>
+    );
   }
 
   return (

@@ -1,20 +1,11 @@
 
 import React from 'react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Loader2 } from 'lucide-react';
 
-interface LoadingStateProps {
-  message?: string;
-}
-
-export function LoadingState({ message = "Loading career assistant..." }: LoadingStateProps) {
+export function LoadingState() {
   return (
     <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-      <div className="flex flex-col items-center gap-4">
-        <LoadingSpinner size="lg" />
-        <p className="text-muted-foreground text-sm animate-pulse">
-          {message}
-        </p>
-      </div>
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   );
 }

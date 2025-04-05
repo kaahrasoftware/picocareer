@@ -9,7 +9,6 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { GuideProvider } from "@/context/GuideContext";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
 import { GuideButton } from "@/components/guide/GuideButton";
-import { PageTransitionLoader } from "@/components/PageTransitionLoader";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -24,7 +23,6 @@ export function MainLayout({ children }: LayoutProps) {
     <GuideProvider>
       <div className="min-h-screen flex flex-col">
         <MenuSidebar />
-        <PageTransitionLoader />
         <main className="pt-16 flex-grow">
           {children || <Outlet />}
         </main>
@@ -42,9 +40,8 @@ export function AuthLayout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <MenuSidebar />
-      <PageTransitionLoader />
       <main className="pt-16 flex-grow">
-        {children || <Outlet />}
+        {children || <Outlet />} {/* Use children if provided, otherwise use Outlet */}
       </main>
     </div>
   );

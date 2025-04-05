@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Hub } from "@/types/database/hubs";
 import { Button } from "@/components/ui/button";
 import { HubHeader } from "@/components/hub/HubHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { HubTabs } from "@/components/hub/HubTabs";
 import { MembershipConfirmationDialog } from "@/components/hub/MembershipConfirmationDialog";
-import { PageLoader } from "@/components/ui/page-loader";
 
 export default function Hub() {
   const { id } = useParams<{ id: string }>();
@@ -114,10 +114,14 @@ export default function Hub() {
     );
   }
 
-  const isLoading = hubLoading || statsLoading || isMemberLoading;
-
-  if (isLoading) {
-    return <PageLoader text="Loading hub information..." />;
+  if (hubLoading || statsLoading || isMemberLoading) {
+    return (
+      <div className="container mx-auto py-8 space-y-8">
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-12 w-48" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
   }
 
   if (hubError || !hub) {
