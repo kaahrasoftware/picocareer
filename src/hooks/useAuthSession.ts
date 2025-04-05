@@ -1,4 +1,5 @@
 
+import React, { useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +24,7 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
   }, [session, loading, protectionLevel]);
 
   // Add session refresh helper
-  const refreshSession = React.useCallback(async () => {
+  const refreshSession = useCallback(async () => {
     try {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
