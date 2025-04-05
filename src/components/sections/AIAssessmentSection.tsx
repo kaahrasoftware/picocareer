@@ -8,39 +8,46 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export function AIAssessmentSection() {
   return (
-    <div className="w-full py-12 md:py-20 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-3xl overflow-hidden relative">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+    <div className="w-full py-16 md:py-24 bg-gradient-to-br from-kahra-light to-kahra-primary/5 dark:from-kahra-dark/40 dark:to-blue-950/20 rounded-3xl overflow-hidden relative">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-kahra-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-kahra-primary/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-kahra-accent/20 rounded-full blur-xl" />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Left column with avatar and title */}
           <div className="flex-1 text-center lg:text-left">
             <div className="flex flex-col items-center lg:items-start">
-              <div className="relative mb-6">
-                <RobotAvatar size="xl" showSpeechBubble />
+              <div className="relative mb-8">
+                <div className="absolute -top-4 -right-4 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
+                  New!
+                </div>
+                <RobotAvatar size="xl" showSpeechBubble isAnimated={true} />
               </div>
               
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-picocareer-dark dark:text-white">
-                AI-Powered Career Assessment
+              <h2 className="text-3xl md:text-5xl font-extrabold mb-6 text-kahra-dark dark:text-white">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-kahra-primary to-kahra-secondary">
+                  AI-Powered Career Assessment
+                </span>
               </h2>
               
-              <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-2xl">
-                Discover career paths that match your unique skills, interests, and goals with our 
-                intelligent career assessment powered by advanced AI technology.
+              <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 max-w-2xl">
+                Discover your ideal career path with our intelligent assessment powered by 
+                advanced AI. Get personalized recommendations based on your unique skills, 
+                interests, and goals.
               </p>
               
               <div className="flex flex-wrap gap-3 mb-8 justify-center lg:justify-start">
-                <div className="flex items-center gap-2 bg-white dark:bg-blue-900/30 shadow-sm px-4 py-2 rounded-full">
+                <div className="flex items-center gap-2 bg-white dark:bg-white/10 shadow-sm px-4 py-2 rounded-full animate-fade-in" style={{animationDelay: "0.1s"}}>
                   <Check className="h-5 w-5 text-green-500" />
                   <span className="font-medium">Personalized Results</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white dark:bg-blue-900/30 shadow-sm px-4 py-2 rounded-full">
-                  <Brain className="h-5 w-5 text-blue-500" />
+                <div className="flex items-center gap-2 bg-white dark:bg-white/10 shadow-sm px-4 py-2 rounded-full animate-fade-in" style={{animationDelay: "0.2s"}}>
+                  <Brain className="h-5 w-5 text-kahra-primary" />
                   <span className="font-medium">AI-Powered Insights</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white dark:bg-blue-900/30 shadow-sm px-4 py-2 rounded-full">
+                <div className="flex items-center gap-2 bg-white dark:bg-white/10 shadow-sm px-4 py-2 rounded-full animate-fade-in" style={{animationDelay: "0.3s"}}>
                   <Star className="h-5 w-5 text-amber-500" />
                   <span className="font-medium">Skill Matching</span>
                 </div>
@@ -49,11 +56,11 @@ export function AIAssessmentSection() {
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-picocareer-primary hover:bg-blue-700 text-white gap-2 animate-pulse"
+                className="bg-gradient-to-r from-kahra-primary to-kahra-secondary hover:opacity-90 text-white gap-2 shadow-lg hover:shadow-xl transition-all group"
               >
                 <Link to="/career-chat">
                   Start Your Assessment
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>
@@ -61,39 +68,39 @@ export function AIAssessmentSection() {
           
           {/* Right column with feature cards */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="bg-white/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 shadow-sm hover:shadow-md transition-shadow">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Card className="bg-white/80 dark:bg-white/5 border border-kahra-light dark:border-kahra-dark/50 shadow-sm hover:shadow-md transition-all hover:translate-y-[-2px]">
                 <CardContent className="p-6">
-                  <div className="bg-blue-100 dark:bg-blue-800/30 h-10 w-10 rounded-full flex items-center justify-center mb-4">
-                    <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <div className="bg-kahra-light dark:bg-kahra-dark/50 h-12 w-12 rounded-full flex items-center justify-center mb-4">
+                    <MessageCircle className="h-6 w-6 text-kahra-primary dark:text-kahra-accent" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">Conversational Experience</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Conversational Experience</h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    No forms or endless questionnaires. Have a natural conversation with our AI assistant.
+                    Chat naturally with our AI assistant instead of filling out lengthy forms or questionnaires.
                   </p>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-white/80 dark:bg-white/5 border border-kahra-light dark:border-kahra-dark/50 shadow-sm hover:shadow-md transition-all hover:translate-y-[-2px]">
                 <CardContent className="p-6">
-                  <div className="bg-blue-100 dark:bg-blue-800/30 h-10 w-10 rounded-full flex items-center justify-center mb-4">
-                    <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <div className="bg-kahra-light dark:bg-kahra-dark/50 h-12 w-12 rounded-full flex items-center justify-center mb-4">
+                    <Target className="h-6 w-6 text-kahra-primary dark:text-kahra-accent" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">Career Match Scoring</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Career Match Scoring</h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Get personalized career recommendations with match scores based on your unique profile.
+                    Get personalized career matches with compatibility scores based on your unique profile.
                   </p>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 shadow-sm hover:shadow-md transition-shadow sm:col-span-2">
+              <Card className="bg-white/80 dark:bg-white/5 border border-kahra-light dark:border-kahra-dark/50 shadow-sm hover:shadow-md transition-all hover:translate-y-[-2px] sm:col-span-2">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-12 w-12 rounded-full flex items-center justify-center shrink-0">
-                      <Star className="h-6 w-6 text-white" />
+                    <div className="bg-gradient-to-r from-kahra-primary to-kahra-secondary h-14 w-14 rounded-full flex items-center justify-center shrink-0 shadow-md">
+                      <Star className="h-7 w-7 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold mb-1">Start your career journey today</h3>
+                      <h3 className="text-xl font-semibold mb-1 text-gray-800 dark:text-white">Start your career journey today</h3>
                       <p className="text-gray-600 dark:text-gray-300">
                         Join thousands of users who have discovered their ideal career path with our AI assistant.
                       </p>
