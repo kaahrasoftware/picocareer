@@ -94,6 +94,7 @@ export function PicoChatContainer() {
   const handleInitiateChat = () => {
     if (!isAuthenticated) {
       toast({
+        title: "Authentication Required",
         description: "Please sign in to start a career assessment."
       });
       return;
@@ -106,6 +107,7 @@ export function PicoChatContainer() {
   const handleViewPastSessions = () => {
     if (!isAuthenticated) {
       toast({
+        title: "Authentication Required",
         description: "Please sign in to view past assessments."
       });
       return;
@@ -118,6 +120,7 @@ export function PicoChatContainer() {
   const handleDownloadResults = () => {
     if (messages.length === 0) {
       toast({
+        title: "No Results",
         description: "No results to download yet."
       });
       return;
@@ -127,11 +130,13 @@ export function PicoChatContainer() {
       downloadPdfResults(messages);
       
       toast({
+        title: "Download Complete",
         description: "Your career assessment results have been downloaded."
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
+        title: "Download Error",
         description: "There was a problem generating your results PDF.",
         variant: "destructive"
       });

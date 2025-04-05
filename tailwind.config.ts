@@ -55,6 +55,27 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Add PicoCareer custom colors
+        picocareer: {
+          primary: "#3B82F6", // Blue
+          secondary: "#1E40AF", // Darker Blue
+          accent: "#60A5FA", // Light Blue
+          light: "#EFF6FF", // Very Light Blue
+          dark: "#1E3A8A", // Very Dark Blue
+          black: "#0F172A", // Almost Black
+          gray: "#64748B", // Medium Gray
+          "gray-light": "#F1F5F9", // Light Gray
+          success: "#10B981", // Green
+          warning: "#F59E0B", // Amber
+          error: "#EF4444", // Red
+        },
+        kahra: {
+          primary: "#8B5CF6", // Purple
+          secondary: "#7C3AED", // Dark Purple
+          accent: "#A78BFA", // Light Purple
+          light: "#F5F3FF", // Very Light Purple
+          dark: "#4C1D95", // Very Dark Purple
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
