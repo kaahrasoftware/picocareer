@@ -17,13 +17,13 @@ export function SystemMessage({
   isDisabled = false
 }: SystemMessageProps) {
   return (
-    <div className="flex flex-col space-y-3 mb-4">
-      <div className="flex items-start space-x-3">
-        <div className="mt-0.5">
-          <RobotAvatar size="sm" showSpeechBubble={false} />
-        </div>
-        <div className="bg-muted/50 rounded-lg p-3 max-w-[85%]">
-          <p className="text-sm text-muted-foreground">{content}</p>
+    <div className="flex items-start gap-3 rounded-lg p-3 mb-4 transition-colors">
+      <div className="flex-shrink-0">
+        <RobotAvatar size="sm" showSpeechBubble={false} />
+      </div>
+      <div className="flex-1">
+        <div className="bg-white shadow-sm rounded-lg p-4 border border-gray-100">
+          <p className="text-sm text-gray-600 leading-relaxed">{content}</p>
         </div>
       </div>
     </div>
