@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { RobotAvatar } from '../robot-avatar/RobotAvatar';
 
 interface SystemMessageProps {
@@ -27,26 +26,6 @@ export function SystemMessage({
           <p className="text-sm text-muted-foreground">{content}</p>
         </div>
       </div>
-      
-      {suggestions && suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-2 pl-12">
-          {suggestions.map((suggestion, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              className={cn(
-                "bg-background hover:bg-muted text-sm",
-                isDisabled && "opacity-60 pointer-events-none"
-              )}
-              onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
-              disabled={isDisabled}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
