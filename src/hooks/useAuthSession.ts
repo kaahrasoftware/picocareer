@@ -3,6 +3,7 @@ import React, { useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 // Session protection levels
 export type AuthProtectionLevel = 'required' | 'optional' | 'public';
@@ -10,6 +11,7 @@ export type AuthProtectionLevel = 'required' | 'optional' | 'public';
 export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional') {
   const { session, user, loading, error, signOut } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   // Handle route protection based on authentication state
   React.useEffect(() => {
@@ -17,11 +19,10 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
     if (loading) return;
     
     if (protectionLevel === 'required' && !session) {
-      // Instead of using useNavigate, we can use window.location for critical redirects
-      // when we're not sure if we're in a router context
-      window.location.href = '/auth';
+      // Use navigate for routing within React Router
+      navigate('/auth');
     }
-  }, [session, loading, protectionLevel]);
+  }, [session, loading, protectionLevel, navigate]);
 
   // Add session refresh helper
   const refreshSession = useCallback(async () => {
@@ -35,6 +36,7 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
       // Invalidate user data queries after session refresh
       if (data.session?.user?.id) {
         queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       }
       
       return !!data.session;

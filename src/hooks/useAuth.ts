@@ -5,12 +5,14 @@ import { supabase, throttledAuthOperation } from "@/integrations/supabase/client
 import { AuthError } from "@supabase/supabase-js";
 import { useAuth as useAuthContext } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 export function useAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { session, user, signOut } = useAuthContext();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
@@ -26,9 +28,8 @@ export function useAuth() {
 
       if (error) throw error;
 
-      // Invalidate queries to ensure fresh data after sign-in
-      if (data.session?.user?.id) {
-        // First ensure the session is properly stored
+      // First ensure the session is properly stored
+      if (data.session) {
         await supabase.auth.setSession(data.session);
         
         // Then invalidate queries to refresh data
@@ -36,12 +37,15 @@ export function useAuth() {
         queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         
-        // Add a small delay before showing the success toast to ensure the UI has time to update
+        // Show success toast after a small delay to ensure UI has updated
         setTimeout(() => {
           toast({
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
+          
+          // Navigate to home after successful login
+          navigate('/');
         }, 100);
       }
 

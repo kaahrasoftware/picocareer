@@ -29,16 +29,26 @@ export function useAuthState() {
       try {
         // First set up auth state change listener
         const { data } = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
+          async (event, currentSession) => {
             console.log('Auth state changed:', event);
             
             if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
               setSession(null);
               setUser(null);
+              // Clear queries when user signs out
+              queryClient.clear();
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              // Set session state immediately to update UI
               setSession(currentSession);
               setUser(currentSession?.user ?? null);
               authRetryCount.current = 0;
+              
+              // Invalidate queries to refresh data after sign in
+              if (currentSession?.user?.id) {
+                queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
+                queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
+                queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+              }
             }
           }
         );
@@ -79,7 +89,7 @@ export function useAuthState() {
         authChangeSubscription.current.unsubscribe();
       }
     };
-  }, [toast]);
+  }, [toast, queryClient]);
 
   const signOut = async () => {
     try {

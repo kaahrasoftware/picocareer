@@ -2,12 +2,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { NotificationPanel } from "./navigation/NotificationPanel";
 import { UserMenu } from "./navigation/UserMenu";
 import { MainNavigation } from "./navigation/MainNavigation";
-import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -18,8 +15,6 @@ import { useEffect, useState } from "react";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
   const { session, isError, isLoading: authLoading } = useAuthSession();
   const { data: profile, isLoading: profileLoading } = useUserProfile(session);
   const { data: notifications = [], isLoading: notificationsLoading } = useNotifications(session);
@@ -34,45 +29,6 @@ export function MenuSidebar() {
       setIsInitialized(true);
     }
   }, [authLoading, profileLoading]);
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['notifications', session.user.id] });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      queryClient.clear();
-      navigate("/auth");
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Show loading state until auth is initialized
   if (!isInitialized) {
@@ -152,7 +108,7 @@ export function MenuSidebar() {
               <NotificationPanel
                 notifications={notifications}
                 unreadCount={unreadCount}
-                onMarkAsRead={handleMarkAsRead}
+                onMarkAsRead={() => {}} // We'll implement this in another PR
               />
             )}
             {!session?.user && (
@@ -185,7 +141,7 @@ export function MenuSidebar() {
               <NotificationPanel
                 notifications={notifications}
                 unreadCount={unreadCount}
-                onMarkAsRead={handleMarkAsRead}
+                onMarkAsRead={() => {}} // We'll implement this in another PR
               />
             )}
             {session?.user && profile ? (

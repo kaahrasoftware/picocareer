@@ -43,14 +43,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Invalidate user-related queries when auth state changes
   useEffect(() => {
     if (!authState.loading && authState.session?.user?.id) {
-      // Delay query invalidation slightly to ensure we're not in the middle of auth state update
-      const timeoutId = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['profile', authState.session?.user?.id] });
-        queryClient.invalidateQueries({ queryKey: ['notifications', authState.session?.user?.id] });
-        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
+      // Immediately invalidate queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['profile', authState.session?.user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', authState.session?.user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     }
   }, [authState.session, authState.loading, queryClient]);
 
