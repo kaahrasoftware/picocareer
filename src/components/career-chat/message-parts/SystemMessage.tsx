@@ -17,8 +17,12 @@ export function SystemMessage({
   isDisabled = false
 }: SystemMessageProps) {
   return (
-    <div className="mb-6 text-center">
-      <p className="text-muted-foreground mb-4">{content}</p>
+    <div className="flex flex-col items-center justify-center mb-8 max-w-lg mx-auto text-center p-6 bg-white rounded-xl shadow-sm border border-primary/20">
+      <div className="mb-4">
+        <RobotAvatar size="lg" showSpeechBubble={false} />
+      </div>
+      
+      <p className="text-muted-foreground mb-6">{content}</p>
       
       {suggestions && suggestions.length > 0 && onSuggestionClick && (
         <div className="flex flex-wrap gap-2 justify-center">
