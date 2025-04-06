@@ -6,7 +6,6 @@ import { OptionCards } from '@/components/career-chat/OptionCards';
 import { CareerRecommendationCard } from '@/components/career-chat/message-parts/CareerRecommendationCard';
 import { RecommendationSection } from '@/components/career-chat/message-parts/RecommendationSection';
 import { UserMessage } from '@/components/career-chat/message-parts/UserMessage';
-import { SystemMessage } from '@/components/career-chat/message-parts/SystemMessage';
 import { BotMessage } from '@/components/career-chat/message-parts/BotMessage';
 import { parseStructuredRecommendation } from '@/components/career-chat/utils/recommendationParser';
 import { StructuredMessage } from '@/types/database/message-types';
@@ -58,14 +57,13 @@ export function ChatMessage({
     }
   };
 
-  // Handle welcome message specially - now using SystemMessage
-  if (isWelcomeMessage) {
+  // Handle welcome message or system messages - now using BotMessage
+  if (isWelcomeMessage || isSystem) {
     return (
-      <SystemMessage 
+      <BotMessage 
         content={message.content}
-        suggestions={message.metadata?.suggestions as string[] | undefined} 
-        onSuggestionClick={handleSuggestionSelect}
-        isDisabled={isDisabled}
+        isTyping={false}
+        category={isWelcomeMessage ? "welcome" : "system"}
       />
     );
   }
@@ -151,17 +149,6 @@ export function ChatMessage({
   // Regular chat messages based on message type
   if (isUser) {
     return <UserMessage content={message.content} />;
-  }
-  
-  if (isSystem) {
-    return (
-      <SystemMessage 
-        content={message.content}
-        suggestions={message.metadata?.suggestions as string[] | undefined} 
-        onSuggestionClick={handleSuggestionSelect}
-        isDisabled={isDisabled}
-      />
-    );
   }
   
   // Handle structured conversation (new format)

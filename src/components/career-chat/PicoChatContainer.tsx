@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useConfigCheck } from './hooks/useConfigCheck';
@@ -38,7 +37,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
   const { isAuthenticated } = useAuthSession('optional');
   const [localIsTyping, setLocalIsTyping] = useState(false);
 
-  // Effect to auto-initialize a chat session when the component loads
   useEffect(() => {
     if (!isChatLoading && configChecked && !hasConfigError && messages.length === 0) {
       handleStartNewChat();
@@ -57,7 +55,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
 
   const handleSuggestionClick = (suggestion: string) => {
     if (isTyping || localIsTyping) {
-      // Don't process clicks when already processing something
       return;
     }
     
@@ -77,7 +74,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
 
   const handleSendMessage = async (msg: string) => {
     if (isTyping || localIsTyping) {
-      // Don't send when already processing something
       return;
     }
     
@@ -90,8 +86,7 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
 
   const handleInitiateChat = () => {
     if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
+      toast.error("Authentication Required", {
         description: "Please sign in to start a career assessment."
       });
       return;
@@ -108,8 +103,7 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
 
   const handleDownloadResults = () => {
     if (messages.length === 0) {
-      toast({
-        title: "No Results",
+      toast.error("No Results", {
         description: "No results to download yet."
       });
       return;
@@ -118,16 +112,13 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
     try {
       downloadPdfResults(messages);
       
-      toast({
-        title: "Download Complete",
+      toast.success("Download Complete", {
         description: "Your career assessment results have been downloaded."
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast({
-        title: "Download Error",
-        description: "There was a problem generating your results PDF.",
-        variant: "destructive"
+      toast.error("Download Error", {
+        description: "There was a problem generating your results PDF."
       });
     }
   };
