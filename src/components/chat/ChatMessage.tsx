@@ -12,7 +12,6 @@ import { parseStructuredRecommendation } from '@/components/career-chat/utils/re
 import { StructuredMessage } from '@/types/database/message-types';
 import { StructuredQuestionMessage } from './components/StructuredQuestionMessage';
 import { NumberedListMessage } from './components/NumberedListMessage';
-import { WelcomeMessage } from '@/components/career-chat/message-parts/WelcomeMessage';
 
 interface ChatMessageProps {
   message: CareerChatMessage;
@@ -59,13 +58,14 @@ export function ChatMessage({
     }
   };
 
-  // Handle welcome message specially
+  // Handle welcome message specially - now using SystemMessage
   if (isWelcomeMessage) {
     return (
-      <WelcomeMessage 
-        content={message.content} 
-        onBeginAssessment={onBeginAssessment}
-        isDisabled={isDisabled} 
+      <SystemMessage 
+        content={message.content}
+        suggestions={message.metadata?.suggestions as string[] | undefined} 
+        onSuggestionClick={handleSuggestionSelect}
+        isDisabled={isDisabled}
       />
     );
   }
