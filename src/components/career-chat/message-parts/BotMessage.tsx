@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { AlertCircle, PlayCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RobotAvatar } from '../robot-avatar/RobotAvatar';
-import { Button } from '@/components/ui/button';
 
 interface BotMessageProps {
   content: string;
@@ -60,6 +59,7 @@ export function BotMessage({
     return content;
   }, [content]);
 
+  // Default bot message
   return (
     <div 
       className={cn(
@@ -85,23 +85,22 @@ export function BotMessage({
         ) : (
           <p className="text-sm text-gray-700 whitespace-pre-wrap">{cleanedContent}</p>
         )}
-
+        
         {suggestions && suggestions.length > 0 && onSuggestionClick && (
           <div className="flex flex-wrap gap-2 mt-3 justify-start">
             {suggestions.map((suggestion, index) => (
-              <Button
+              <button
                 key={index}
                 onClick={() => onSuggestionClick(suggestion)}
                 disabled={isDisabled}
                 className={cn(
-                  "text-sm",
-                  suggestion === "Begin Assessment" && "bg-primary flex items-center gap-1"
+                  "px-4 py-2 text-sm font-medium rounded-full transition-colors",
+                  "border border-primary/30 text-primary hover:bg-primary/10",
+                  isDisabled && "opacity-50 cursor-not-allowed"
                 )}
-                size="sm"
               >
-                {suggestion === "Begin Assessment" && <PlayCircle size={16} />}
                 {suggestion}
-              </Button>
+              </button>
             ))}
           </div>
         )}
