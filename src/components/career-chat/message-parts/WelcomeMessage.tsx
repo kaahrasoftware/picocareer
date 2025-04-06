@@ -21,8 +21,6 @@ export function WelcomeMessage({
         <RobotAvatar size="xl" showSpeechBubble={true} />
       </div>
       
-      <h2 className="text-xl font-semibold mb-3">Welcome to Your Career Assessment</h2>
-      
       <p className="text-muted-foreground mb-6">{content}</p>
       
       {onBeginAssessment && (
