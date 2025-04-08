@@ -3316,11 +3316,7 @@ export type Database = {
     }
     Functions: {
       add_hub_member: {
-        Args: {
-          _hub_id: string
-          _email: string
-          _role: string
-        }
+        Args: { _hub_id: string; _email: string; _role: string }
         Returns: Json
       }
       add_tokens_to_wallet: {
@@ -3334,42 +3330,27 @@ export type Database = {
         Returns: undefined
       }
       calculate_hub_member_count: {
-        Args: {
-          _hub_id: string
-        }
+        Args: { _hub_id: string }
         Returns: number
       }
       calculate_hub_storage_usage: {
-        Args: {
-          _hub_id: string
-        }
+        Args: { _hub_id: string }
         Returns: number
       }
       check_and_insert_major: {
-        Args: {
-          major_data: Json
-        }
+        Args: { major_data: Json }
         Returns: Json
       }
       check_hub_admin: {
-        Args: {
-          user_id: string
-          target_hub_id: string
-        }
+        Args: { user_id: string; target_hub_id: string }
         Returns: boolean
       }
       check_hub_membership: {
-        Args: {
-          user_id: string
-          target_hub_id: string
-        }
+        Args: { user_id: string; target_hub_id: string }
         Returns: boolean
       }
       check_pending_invitation: {
-        Args: {
-          user_id: string
-          target_hub_id: string
-        }
+        Args: { user_id: string; target_hub_id: string }
         Returns: boolean
       }
       check_timezone_dst_changes: {
@@ -3377,10 +3358,7 @@ export type Database = {
         Returns: undefined
       }
       check_verification_rate_limit: {
-        Args: {
-          _token: string
-          _ip_address: string
-        }
+        Args: { _token: string; _ip_address: string }
         Returns: boolean
       }
       clean_old_notifications: {
@@ -3388,9 +3366,7 @@ export type Database = {
         Returns: undefined
       }
       confirm_hub_membership: {
-        Args: {
-          _hub_id: string
-        }
+        Args: { _hub_id: string }
         Returns: Json
       }
       create_hub_member: {
@@ -3438,9 +3414,7 @@ export type Database = {
         Returns: undefined
       }
       get_hub_recommendations: {
-        Args: {
-          p_hub_id: string
-        }
+        Args: { p_hub_id: string }
         Returns: {
           content_type: string
           content_id: string
@@ -3450,33 +3424,23 @@ export type Database = {
         }[]
       }
       gtrgm_compress: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_decompress: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_in: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_options: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: undefined
       }
       gtrgm_out: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       is_admin: {
@@ -3484,15 +3448,11 @@ export type Database = {
         Returns: boolean
       }
       is_hub_admin: {
-        Args: {
-          hub_id: string
-        }
+        Args: { hub_id: string }
         Returns: boolean
       }
       is_hub_member: {
-        Args: {
-          hub_id: string
-        }
+        Args: { hub_id: string }
         Returns: boolean
       }
       log_hub_audit_event: {
@@ -3520,9 +3480,7 @@ export type Database = {
         Returns: undefined
       }
       refresh_hub_metrics: {
-        Args: {
-          _hub_id: string
-        }
+        Args: { _hub_id: string }
         Returns: Json
       }
       refresh_personality_test_mappings: {
@@ -3530,10 +3488,7 @@ export type Database = {
         Returns: undefined
       }
       schedule_notification: {
-        Args: {
-          p_notifications: Json[]
-          p_scheduled_for: string
-        }
+        Args: { p_notifications: Json[]; p_scheduled_for: string }
         Returns: undefined
       }
       send_session_feedback_requests: {
@@ -3541,9 +3496,7 @@ export type Database = {
         Returns: undefined
       }
       set_limit: {
-        Args: {
-          "": number
-        }
+        Args: { "": number }
         Returns: number
       }
       show_limit: {
@@ -3551,9 +3504,7 @@ export type Database = {
         Returns: number
       }
       show_trgm: {
-        Args: {
-          "": string
-        }
+        Args: { "": string }
         Returns: string[]
       }
       update_availability_dst: {
@@ -4138,27 +4089,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -4166,20 +4119,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -4187,20 +4142,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -4208,21 +4165,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -4231,6 +4190,586 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      announcement_category: ["event", "news", "alert", "general"],
+      audit_action: [
+        "member_added",
+        "member_removed",
+        "member_role_changed",
+        "hub_settings_updated",
+        "announcement_created",
+        "announcement_updated",
+        "announcement_deleted",
+        "resource_added",
+        "resource_removed",
+        "department_created",
+        "department_updated",
+        "department_deleted",
+        "member_invitation_sent",
+        "member_invitation_cancelled",
+        "member_role_updated",
+        "branding_updated",
+        "member_confirmed",
+        "confirmed_hub_membership",
+      ],
+      categories: [
+        "Technology",
+        "Digital Tools",
+        "Extracurricular Activities",
+        "Success Stories",
+        "Volunteerism",
+        "Community Service",
+        "Entrepreneurship",
+        "Financial Literacy",
+        "Arts Careers",
+        "STEM Education",
+        "STEM Careers",
+        "Humanities Careers",
+        "Diversity and Inclusion",
+        "Educational Resources",
+        "Leadership Development",
+        "Mental Health",
+        "Wellbeing",
+        "High School to University Transition",
+        "Study Abroad Preparation",
+        "Personal Branding",
+        "Internship and Job Search",
+        "Networking Strategies",
+        "Skill Development",
+        "University Admissions",
+        "Career Guidance",
+      ],
+      chat_reaction_type: [
+        "thumbs-up",
+        "thumbs-down",
+        "heart",
+        "smile",
+        "laugh",
+        "angry",
+        "frown",
+        "meh",
+      ],
+      chat_room_type: ["public", "private"],
+      country: [
+        "Afghanistan",
+        "Albania",
+        "Algeria",
+        "Andorra",
+        "Angola",
+        "Antigua and Barbuda",
+        "Argentina",
+        "Armenia",
+        "Australia",
+        "Austria",
+        "Azerbaijan",
+        "Bahamas",
+        "Bahrain",
+        "Bangladesh",
+        "Barbados",
+        "Belarus",
+        "Belgium",
+        "Belize",
+        "Benin",
+        "Bhutan",
+        "Bolivia",
+        "Bosnia and Herzegovina",
+        "Botswana",
+        "Brazil",
+        "Brunei",
+        "Bulgaria",
+        "Burkina Faso",
+        "Burundi",
+        "Cabo Verde",
+        "Cambodia",
+        "Cameroon",
+        "Canada",
+        "Central African Republic",
+        "Chad",
+        "Chile",
+        "China",
+        "Colombia",
+        "Comoros",
+        "Congo",
+        "Costa Rica",
+        "Croatia",
+        "Cuba",
+        "Cyprus",
+        "Czech Republic",
+        "Denmark",
+        "Djibouti",
+        "Dominica",
+        "Dominican Republic",
+        "East Timor",
+        "Ecuador",
+        "Egypt",
+        "El Salvador",
+        "Equatorial Guinea",
+        "Eritrea",
+        "Estonia",
+        "Eswatini",
+        "Ethiopia",
+        "Fiji",
+        "Finland",
+        "France",
+        "Gabon",
+        "Gambia",
+        "Georgia",
+        "Germany",
+        "Ghana",
+        "Greece",
+        "Grenada",
+        "Guatemala",
+        "Guinea",
+        "Guinea-Bissau",
+        "Guyana",
+        "Haiti",
+        "Honduras",
+        "Hungary",
+        "Iceland",
+        "India",
+        "Indonesia",
+        "Iran",
+        "Iraq",
+        "Ireland",
+        "Israel",
+        "Italy",
+        "Ivory Coast",
+        "Jamaica",
+        "Japan",
+        "Jordan",
+        "Kazakhstan",
+        "Kenya",
+        "Kiribati",
+        "Kuwait",
+        "Kyrgyzstan",
+        "Laos",
+        "Latvia",
+        "Lebanon",
+        "Lesotho",
+        "Liberia",
+        "Libya",
+        "Liechtenstein",
+        "Lithuania",
+        "Luxembourg",
+        "Madagascar",
+        "Malawi",
+        "Malaysia",
+        "Maldives",
+        "Mali",
+        "Malta",
+        "Marshall Islands",
+        "Mauritania",
+        "Mauritius",
+        "Mexico",
+        "Micronesia",
+        "Moldova",
+        "Monaco",
+        "Mongolia",
+        "Montenegro",
+        "Morocco",
+        "Mozambique",
+        "Myanmar",
+        "Namibia",
+        "Nauru",
+        "Nepal",
+        "Netherlands",
+        "New Zealand",
+        "Nicaragua",
+        "Niger",
+        "Nigeria",
+        "North Korea",
+        "North Macedonia",
+        "Norway",
+        "Oman",
+        "Pakistan",
+        "Palau",
+        "Palestine",
+        "Panama",
+        "Papua New Guinea",
+        "Paraguay",
+        "Peru",
+        "Philippines",
+        "Poland",
+        "Portugal",
+        "Qatar",
+        "Romania",
+        "Russia",
+        "Rwanda",
+        "Saint Kitts and Nevis",
+        "Saint Lucia",
+        "Saint Vincent and the Grenadines",
+        "Samoa",
+        "San Marino",
+        "Sao Tome and Principe",
+        "Saudi Arabia",
+        "Senegal",
+        "Serbia",
+        "Seychelles",
+        "Sierra Leone",
+        "Singapore",
+        "Slovakia",
+        "Slovenia",
+        "Solomon Islands",
+        "Somalia",
+        "South Africa",
+        "South Korea",
+        "South Sudan",
+        "Spain",
+        "Sri Lanka",
+        "Sudan",
+        "Suriname",
+        "Sweden",
+        "Switzerland",
+        "Syria",
+        "Taiwan",
+        "Tajikistan",
+        "Tanzania",
+        "Thailand",
+        "Togo",
+        "Tonga",
+        "Trinidad and Tobago",
+        "Tunisia",
+        "Turkey",
+        "Turkmenistan",
+        "Tuvalu",
+        "Uganda",
+        "Ukraine",
+        "United Arab Emirates",
+        "United Kingdom",
+        "United States",
+        "Uruguay",
+        "Uzbekistan",
+        "Vanuatu",
+        "Vatican City",
+        "Venezuela",
+        "Vietnam",
+        "Yemen",
+        "Zambia",
+        "Zimbabwe",
+      ],
+      degree: [
+        "No Degree",
+        "High School",
+        "Associate",
+        "Bachelor",
+        "Master",
+        "PhD",
+        "MD",
+      ],
+      dichotomies: [
+        "Introversion (I)",
+        "Extraversion (E)",
+        "Sensing (S)",
+        "Intuition (N)",
+        "Thinking (T)",
+        "Feeling (F)",
+        "Judging (J)",
+        "Perceiving (P)",
+      ],
+      document_type: ["pdf", "word", "powerpoint", "excel", "other"],
+      event_types: ["Coffee Time", "Hackathon", "Panel", "Webinar", "Workshop"],
+      feedback_type: ["mentor_feedback", "mentee_feedback"],
+      hub_member_role: ["admin", "moderator", "member", "faculty", "student"],
+      hub_type: ["University", "NGO", "Organization", "High School"],
+      interaction_type: [
+        "page_view",
+        "click",
+        "search",
+        "bookmark",
+        "content_view",
+      ],
+      language: [
+        "English",
+        "Spanish",
+        "French",
+        "Chinese",
+        "Hindi",
+        "Arabic",
+        "Bengali",
+        "Portuguese",
+        "Russian",
+        "German",
+        "Japanese",
+        "Nigerian Pidgin",
+        "Turkish",
+        "Hausa",
+        "Swahili",
+        "Vietnamese",
+        "Korean",
+        "Italian",
+        "Thai",
+        "Marathi",
+        "Yoruba",
+        "Polish",
+        "Malayalam",
+        "Ukrainian",
+        "Zulu",
+        "Igbo",
+        "Afrikaans",
+        "Ewe",
+        "Twi",
+        "Anufo",
+      ],
+      meeting_platform: ["Google Meet", "WhatsApp", "Telegram", "Phone Call"],
+      notification_category: [
+        "all",
+        "unread",
+        "session",
+        "system",
+        "mentorship",
+        "general",
+        "major_update",
+      ],
+      notification_type: [
+        "session_booked",
+        "session_cancelled",
+        "session_reminder",
+        "mentor_request",
+        "system_update",
+        "profile_update",
+        "major_update",
+        "hub_invitation_sent",
+        "availability_request",
+        "hub_invite",
+        "hub_membership",
+      ],
+      onboarding_status: [
+        "Pending",
+        "Under Review",
+        "Consent Signed",
+        "Approved",
+        "Rejected",
+      ],
+      personality_question_type: [
+        "multiple_choice",
+        "likert_scale",
+        "open_ended",
+      ],
+      recommendation_type: ["career", "major", "trait"],
+      resource_access_level: ["public", "members", "faculty", "admin"],
+      resource_type: ["document", "image", "video", "audio", "external_link"],
+      school_type: ["High School", "College", "University", "Other"],
+      session_type: [
+        "Know About my Career",
+        "Resume/CV Review",
+        "Campus France",
+        "Undergrad Application",
+        "Grad Application",
+        "TOEFL Exam Prep Advice",
+        "IELTS Exam Prep Advice",
+        "Duolingo Exam Prep Advice",
+        "SAT Exam Prep Advice",
+        "ACT Exam Prep Advice",
+        "GRE Exam Prep Advice",
+        "GMAT Exam Prep Advice",
+        "MCAT Exam Prep Advice",
+        "LSAT Exam Prep Advice",
+        "DAT Exam Prep Advice",
+        "Advice for PhD Students",
+        "How to Find Grants/Fellowships",
+        "Grant Writing Guidance",
+        "Interview Prep",
+        "How to Succeed as a College Student",
+        "Investment Strategies",
+        "Study Abroad Programs",
+        "Tips for F-1 Students",
+        "College Application Last Review",
+        "Application Essays Review",
+        "I need someone to practice my presentation with",
+        "Study Tips",
+        "Volunteer Opportunities",
+        "Know About my Academic Major",
+      ],
+      setting_type: [
+        "timezone",
+        "notifications",
+        "language",
+        "theme",
+        "notification_preferences",
+        "language_preference",
+      ],
+      states: [
+        "Alabama - AL",
+        "Alaska - AK",
+        "Arizona - AZ",
+        "Arkansas - AR",
+        "California - CA",
+        "Colorado - CO",
+        "Connecticut - CT",
+        "Delaware - DE",
+        "Florida - FL",
+        "Georgia - GA",
+        "Hawaii - HI",
+        "Idaho - ID",
+        "Illinois - IL",
+        "Indiana - IN",
+        "Iowa - IA",
+        "Kansas - KS",
+        "Kentucky - KY",
+        "Louisiana - LA",
+        "Maine - ME",
+        "Maryland - MD",
+        "Massachusetts - MA",
+        "Michigan - MI",
+        "Minnesota - MN",
+        "Mississippi - MS",
+        "Missouri - MO",
+        "Montana - MT",
+        "Nebraska - NE",
+        "Nevada - NV",
+        "New Hampshire - NH",
+        "New Jersey - NJ",
+        "New Mexico - NM",
+        "New York - NY",
+        "North Carolina - NC",
+        "North Dakota - ND",
+        "Ohio - OH",
+        "Oklahoma - OK",
+        "Oregon - OR",
+        "Pennsylvania - PA",
+        "Rhode Island - RI",
+        "South Carolina - SC",
+        "South Dakota - SD",
+        "Tennessee - TN",
+        "Texas - TX",
+        "Utah - UT",
+        "Vermont - VT",
+        "Virginia - VA",
+        "Washington - WA",
+        "West Virginia - WV",
+        "Wisconsin - WI",
+        "Wyoming - WY",
+        "Washington DC - DC",
+        "Guam - GU",
+        "U.S. Virgin Islands - VI",
+        "Puerto Rico - PR",
+      ],
+      status: ["Approved", "Pending", "Rejected"],
+      subcategories: [
+        "Industry-Specific Career Insights",
+        "Choosing the Right Career Path",
+        "Transitioning Between Careers",
+        "Work-Life Balance Tips",
+        "Career Advancement Strategies",
+        "Crafting a Winning Personal Statement",
+        "Navigating the Application Process",
+        "Preparing for Entrance Exams",
+        "Choosing the Right University",
+        "Scholarship and Financial Aid Advice",
+        "Soft Skills for Professional Success",
+        "Technical Skill Mastery",
+        "Communication Skills Development",
+        "Problem-Solving and Critical Thinking",
+        "Time Management Techniques",
+        "Building Meaningful Connections",
+        "Leveraging LinkedIn and Other Platforms",
+        "Networking for Introverts",
+        "Finding a Mentor",
+        "Professional Event Etiquette",
+        "Crafting an Effective Resume",
+        "Acing Job Interviews",
+        "Finding Internship Opportunities",
+        "Gaining Work Experience in High School",
+        "Navigating Job Portals and Applications",
+        "Creating a Strong Online Presence",
+        "Building a Professional Portfolio",
+        "Social Media for Career Growth",
+        "Establishing Expertise in Your Field",
+        "Branding for Aspiring Entrepreneurs",
+        "Researching International Programs",
+        "Visa Application Guidance",
+        "Adjusting to New Cultures",
+        "Managing Finances Abroad",
+        "Safety Tips for International Students",
+        "Adapting to University Life",
+        "Choosing a Major",
+        "Navigating Academic Expectations",
+        "Developing Independence",
+        "Building New Friendships",
+        "Managing Stress and Anxiety",
+        "Overcoming Imposter Syndrome",
+        "Balancing Academic and Personal Life",
+        "Self-Care Strategies for Students",
+        "Seeking Support When Needed",
+        "Cultivating Emotional Intelligence",
+        "Becoming a Campus Leader",
+        "Decision-Making Skills",
+        "Managing Teams Effectively",
+        "Conflict Resolution Strategies",
+        "Starting a Business in College",
+        "Writing a Business Plan",
+        "Finding Funding for Startups",
+        "Marketing Your Ideas",
+        "Overcoming Entrepreneurial Challenges",
+        "Top Study Tools and Apps",
+        "Online Learning Platforms",
+        "Using Libraries Effectively",
+        "Exam Preparation Guides",
+        "Developing Effective Study Habits",
+        "Addressing Bias in Academia and Workplaces",
+        "Supporting Underrepresented Groups",
+        "Building Inclusive Communities",
+        "Overcoming Barriers to Opportunity",
+        "Celebrating Cultural Differences",
+        "Encouraging STEM in Schools",
+        "Exploring Careers in Technology",
+        "Women in STEM",
+        "Robotics and Coding for Beginners",
+        "Research Opportunities in STEM Fields",
+        "Exploring Creative Career Paths",
+        "Building a Career in Writing",
+        "Career Options for History Majors",
+        "Monetizing Artistic Talents",
+        "Pursuing Higher Education in the Arts",
+        "Budgeting for Students",
+        "Managing Student Loans",
+        "Saving for the Future",
+        "Understanding Credit and Debt",
+        "Finding Part-Time Jobs as a Student",
+        "Finding Volunteer Opportunities",
+        "Benefits of Community Involvement",
+        "Organizing Campus Charity Events",
+        "Highlighting Volunteer Work in Applications",
+        "Making a Difference Locally and Globally",
+        "Essential Tech Skills for the Workplace",
+        "Leveraging AI in Career Planning",
+        "Artificial Intelligence",
+        "Machine Learning",
+        "Best Apps for Productivity",
+        "Using Technology for Collaboration",
+        "Staying Updated on Industry Trends",
+        "Alumni Career Journeys",
+        "Inspirational Mentor-Student Relationships",
+        "Overcoming Academic and Career Challenges",
+        "Students Who Made a Difference",
+        "First-Generation College Graduates",
+        "Benefits of Joining Clubs and Societies",
+        "Sports and Physical Wellbeing",
+        "Exploring Creative Hobbies",
+        "How Extracurriculars Boost Applications",
+        "Starting Your Own Club or Organization",
+      ],
+      user_type: ["mentor", "mentee", "admin", "editor"],
+      webinar_platform: ["Google Meet", "Zoom"],
+      "where did you hear about us": [
+        "Instagram",
+        "Facebook",
+        "TikTok",
+        "LinkedIn",
+        "X (Twitter)",
+        "WhatsApp",
+        "YouTube",
+        "Search Engine (Google, Bing...)",
+        "RedNote",
+        "Friend/Family",
+        "Other",
+      ],
+    },
+  },
+} as const

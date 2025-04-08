@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getNotificationCategory, type NotificationCategory } from "@/types/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { useMarkNotificationRead } from "@/hooks/useMarkNotificationRead";
 
 interface Notification {
   id: string;
@@ -44,6 +45,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const markNotificationRead = useMarkNotificationRead();
 
   // Update local notifications when props change
   useEffect(() => {
@@ -58,22 +60,36 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   const toggleReadStatus = async (notification: Notification) => {
     try {
+      // Update local state immediately for responsive UI
       setLocalNotifications(prev => prev.map(n => 
         n.id === notification.id ? { ...n, read: !n.read } : n
       ));
-      await onMarkAsRead(notification.id);
+      
+      // Call the provided callback (for backward compatibility)
+      if (onMarkAsRead) {
+        onMarkAsRead(notification.id);
+      }
+      
+      // Persist change to database using our mutation hook
+      await markNotificationRead.mutate({ 
+        notificationId: notification.id, 
+        read: !notification.read 
+      });
     } catch (error) {
       console.error('Error toggling notification status:', error);
+      
+      // Revert local state if mutation failed
+      setLocalNotifications(prev => prev.map(n => 
+        n.id === notification.id ? { ...n, read: notification.read } : n
+      ));
+      
       toast({
         title: "Error updating notification",
         description: "Please try again later",
         variant: "destructive",
       });
 
-      setLocalNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, read: notification.read } : n
-      ));
-
+      // If JWT error, clear queries and redirect to auth
       if (error instanceof Error && error.message.includes('JWT')) {
         queryClient.clear();
         navigate("/auth");
