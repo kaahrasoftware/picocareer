@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { router } from '@/router/routes';
 import { HubStorageInitializer } from '@/components/hub/HubStorageInitializer';
-import { LoadingProvider, useLoading } from '@/context/LoadingContext';
+import { LoadingProvider } from '@/context/LoadingContext';
 import { AuthProvider } from '@/context/AuthContext';
 import './styles/guide.css'; // Import guide styles
 
@@ -19,27 +19,15 @@ const queryClient = new QueryClient({
   },
 });
 
-// Separate component to properly use the useLoading hook
-function AppContent() {
-  const { globalLoading } = useLoading();
-  
-  return (
-    <>
-      <RouterProvider router={router} />
-      <HubStorageInitializer />
-      <Toaster />
-    </>
-  );
-}
-
-// Main App component with proper provider nesting
 function App() {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <LoadingProvider>
           <AuthProvider>
-            <AppContent />
+            <RouterProvider router={router} />
+            <HubStorageInitializer />
+            <Toaster />
           </AuthProvider>
         </LoadingProvider>
       </QueryClientProvider>

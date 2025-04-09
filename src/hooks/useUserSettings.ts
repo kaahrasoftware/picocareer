@@ -1,79 +1,124 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useCallback, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// This must match exactly what's in the database enum
-export type SettingType = 
-  | "timezone" 
-  | "notifications" 
-  | "language" 
-  | "theme" 
-  | "notification_preferences"
-  | "language_preference";
+export type SettingType = 'timezone' | 'theme' | 'language_preference' | 'notification_settings' | 'privacy_settings' | 'display_settings' | 'session_settings' | 'accessibility_settings';
 
-// Helper type for UI-specific settings
-export type UISettingType = {
-  email_notifications: boolean;
-  push_notifications: boolean;
-  compact_mode: boolean;
-  theme: string;
-  timezone: string;
-  notification_preferences: string;
+export interface UISettingType {
+  theme: {
+    theme: 'light' | 'dark';
+    compact_mode: boolean;
+  };
   language_preference: string;
-};
-
-interface UserSetting {
-  id: string;
-  profile_id: string;
-  setting_type: SettingType;
-  setting_value: string;
+  notification_settings: {
+    email_notifications: boolean;
+    app_notifications: boolean;
+    mentorship_notifications: boolean;
+    session_reminders: boolean;
+  };
+  privacy_settings: {
+    profile_visibility: 'public' | 'private' | 'mentors_only';
+    contact_info_visible: boolean;
+    show_online_status: boolean;
+  };
+  display_settings: {
+    show_recent_activity: boolean;
+    show_recommendations: boolean;
+    default_view: 'grid' | 'list';
+  };
+  session_settings: {
+    auto_accept_sessions: boolean;
+    default_session_length: number;
+    buffer_time_minutes: number;
+  };
+  accessibility_settings: {
+    high_contrast: boolean;
+    large_text: boolean;
+    reduce_animations: boolean;
+  };
 }
 
-export function useUserSettings(profileId: string | undefined) {
+export function useUserSettings(profileId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [cachedSettings, setCachedSettings] = useState<Record<string, string>>({});
 
-  const { data: settings } = useQuery({
+  const { data: settings = [], isLoading } = useQuery({
     queryKey: ['user-settings', profileId],
     queryFn: async () => {
-      if (!profileId) {
-        return null;
-      }
+      if (!profileId) return [];
       
       const { data, error } = await supabase
         .from('user_settings')
         .select('*')
         .eq('profile_id', profileId);
-      
+        
       if (error) {
-        console.error('Error fetching settings:', error);
-        return null;
+        console.error('Error fetching user settings:', error);
+        return [];
       }
       
-      return data as UserSetting[];
+      // Update cached settings
+      const settingsObj: Record<string, string> = {};
+      data.forEach(setting => {
+        settingsObj[setting.type] = setting.value;
+      });
+      setCachedSettings(settingsObj);
+      
+      return data;
     },
-    enabled: !!profileId
+    enabled: !!profileId,
   });
+
+  const getSetting = useCallback((type: SettingType | keyof UISettingType): string => {
+    // First try from cached settings
+    if (cachedSettings[type]) {
+      return cachedSettings[type];
+    }
+    
+    // Then try from query data
+    const setting = settings.find(s => s.type === type);
+    return setting?.value || '';
+  }, [settings, cachedSettings]);
 
   const updateSetting = useMutation({
     mutationFn: async ({ type, value }: { type: SettingType; value: string }) => {
-      if (!profileId) throw new Error('No profile ID provided');
-
-      const { data, error } = await supabase
+      if (!profileId) throw new Error('Profile ID is required');
+      
+      // Check if setting already exists
+      const { data: existingSetting } = await supabase
         .from('user_settings')
-        .upsert({
-          profile_id: profileId,
-          setting_type: type,
-          setting_value: value,
-          updated_at: new Date().toISOString() // Add the updated_at field
-        }, {
-          onConflict: 'profile_id,setting_type'
-        })
-        .select()
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('type', type)
         .single();
-
-      if (error) throw error;
-      return data;
+      
+      if (existingSetting) {
+        // Update existing setting
+        const { error } = await supabase
+          .from('user_settings')
+          .update({ value })
+          .eq('id', existingSetting.id);
+          
+        if (error) throw error;
+      } else {
+        // Insert new setting
+        const { error } = await supabase
+          .from('user_settings')
+          .insert({ profile_id: profileId, type, value });
+          
+        if (error) throw error;
+      }
+      
+      // Update cached settings
+      setCachedSettings(prev => ({
+        ...prev,
+        [type]: value,
+      }));
+      
+      return { type, value };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-settings', profileId] });
@@ -85,42 +130,17 @@ export function useUserSettings(profileId: string | undefined) {
     onError: (error) => {
       console.error('Error updating setting:', error);
       toast({
-        title: "Error",
-        description: "Failed to update settings. Please try again.",
+        title: "Error updating settings",
+        description: "There was a problem saving your settings. Please try again.",
         variant: "destructive",
       });
-    }
+    },
   });
-
-  // Helper function to convert database settings to UI settings
-  const getSetting = (type: keyof UISettingType): string | null => {
-    if (!settings) return null;
-
-    const setting = settings.find(s => s.setting_type === type);
-    if (!setting) {
-      // Return defaults based on setting type
-      switch (type) {
-        case 'notification_preferences':
-          return JSON.stringify({
-            email_notifications: true,
-            push_notifications: true
-          });
-        case 'language_preference':
-          return 'en';
-        case 'theme':
-          return 'light';
-        case 'timezone':
-          return null;
-        default:
-          return null;
-      }
-    }
-    return setting.setting_value;
-  };
 
   return {
     settings,
+    isLoading,
     getSetting,
-    updateSetting
+    updateSetting,
   };
 }
