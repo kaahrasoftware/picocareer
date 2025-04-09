@@ -19,19 +19,7 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <LoadingProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </LoadingProvider>
-    </QueryClientProvider>
-  );
-}
-
-// Separate component to allow proper Hook usage and context inheritance
+// Separate component to properly use the useLoading hook
 function AppContent() {
   const { globalLoading } = useLoading();
   
@@ -41,6 +29,21 @@ function AppContent() {
       <HubStorageInitializer />
       <Toaster />
     </>
+  );
+}
+
+// Main App component with proper provider nesting
+function App() {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <LoadingProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </LoadingProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 

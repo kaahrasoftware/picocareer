@@ -25,7 +25,8 @@ const LoadingContext = createContext<LoadingContextType>({
 
 export const useLoading = () => useContext(LoadingContext);
 
-export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Fix: Use function declaration instead of arrow function to ensure proper React component recognition
+export function LoadingProvider({ children }: { children: ReactNode }) {
   const [globalLoading, setGlobalLoadingState] = useState<LoadingState>({
     isLoading: false,
     progress: 0,
@@ -65,4 +66,4 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
       {children}
     </LoadingContext.Provider>
   );
-};
+}
