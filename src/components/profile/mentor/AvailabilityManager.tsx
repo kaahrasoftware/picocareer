@@ -10,8 +10,6 @@ import { Availability } from "@/types/calendar";
 import { CalendarContainer } from "../calendar/CalendarContainer";
 import { MultiDayAvailabilityForm } from "../calendar/availability/MultiDayAvailabilityForm";
 import { DateRange } from "react-day-picker";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { CalendarDays, CalendarRange } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AvailabilityManagerProps {
@@ -89,7 +87,8 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       return;
     }
 
-    setAvailability(data || []);
+    const availabilityData = data || [];
+    setAvailability(availabilityData);
   };
 
   const handleDeleteSlot = async (slotId: string) => {
@@ -102,6 +101,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       if (error) throw error;
 
       setExistingSlots(existingSlots.filter(slot => slot.id !== slotId));
+      fetchAllAvailability();
       onUpdate();
     } catch (error) {
       console.error('Error deleting slot:', error);
@@ -124,26 +124,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       <div className="grid gap-6 md:grid-cols-12">
         {/* Calendar section - wider to accommodate two months */}
         <div className="md:col-span-7 bg-background rounded-lg border shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Calendar</h3>
-            <ToggleGroup 
-              type="single" 
-              value={selectionMode} 
-              onValueChange={(value) => {
-                if (value) setSelectionMode(value as "single" | "range");
-              }}
-              className="bg-background rounded-md border p-1"
-            >
-              <ToggleGroupItem value="single" aria-label="Single day selection">
-                <CalendarDays className="h-4 w-4 mr-2" />
-                <span>Single Day</span>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="range" aria-label="Date range selection">
-                <CalendarRange className="h-4 w-4 mr-2" />
-                <span>Date Range</span>
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+          <h3 className="text-lg font-medium mb-4">Calendar</h3>
           <CalendarContainer
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}

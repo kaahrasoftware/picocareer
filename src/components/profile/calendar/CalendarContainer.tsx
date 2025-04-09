@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, isPast, isAfter } from "date-fns";
 import { Availability } from "@/types/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionDetailsDialog } from "./SessionDetailsDialog";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
+import { CalendarDays, CalendarRange } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
@@ -30,6 +32,7 @@ export function CalendarContainer({
   selectionMode = "single"
 }: CalendarContainerProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [viewMode, setViewMode] = useState<"single" | "range">(selectionMode);
 
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
@@ -41,13 +44,32 @@ export function CalendarContainer({
   const getAvailabilityStatus = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Skip availability check for past dates
+    if (isPast(date) && date.getTime() !== today.getTime()) {
+      return null;
+    }
 
     // Get both one-time and recurring slots for this date
     const dayAvailabilities = availability.filter(slot => {
-      if (slot.recurring && slot.day_of_week === dayOfWeek) {
-        return true;
+      // For one-time availability
+      if (!slot.recurring) {
+        return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
       }
-      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
+      
+      // For recurring availability, check if it was created before this date
+      if (slot.recurring && slot.day_of_week === dayOfWeek) {
+        // Only apply recurring slots to dates after the creation date
+        const creationDate = new Date(slot.created_at);
+        const slotStartDate = new Date(slot.start_date_time);
+        
+        // Make sure we use the creation date, not the start time
+        return isAfter(date, creationDate) || format(date, 'yyyy-MM-dd') === format(creationDate, 'yyyy-MM-dd');
+      }
+      
+      return false;
     });
 
     // If there's at least one available slot, consider the day available
@@ -78,16 +100,36 @@ export function CalendarContainer({
   return (
     <div className="space-y-6">
       <div className={cn(
-        "mx-auto",
-        selectionMode === "range" ? "w-full" : "w-fit"
+        "mx-auto relative",
+        viewMode === "range" ? "w-full" : "w-fit"
       )}>
-        {selectionMode === "single" ? (
+        <div className="absolute right-4 top-4 z-10">
+          <ToggleGroup 
+            type="single" 
+            value={viewMode} 
+            onValueChange={(value) => {
+              if (value) setViewMode(value as "single" | "range");
+            }}
+            className="bg-white dark:bg-gray-800 rounded-md border shadow-sm p-1"
+          >
+            <ToggleGroupItem value="single" aria-label="Single day selection" className="text-xs">
+              <CalendarDays className="h-3.5 w-3.5 mr-1" />
+              <span>Day</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="range" aria-label="Date range selection" className="text-xs">
+              <CalendarRange className="h-3.5 w-3.5 mr-1" />
+              <span>Range</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
+        {viewMode === "single" ? (
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
             defaultMonth={selectedDate}
-            className="rounded-lg border bg-card shadow-sm p-3"
+            className="rounded-lg border bg-card shadow-sm p-3 pt-12"
             modifiers={{
               sessions: hasSessionsOnDate,
               available: (date) => getAvailabilityStatus(date) === 'available'
@@ -105,7 +147,7 @@ export function CalendarContainer({
             }}
           />
         ) : (
-          <div className="bg-card border rounded-lg shadow-sm p-4">
+          <div className="bg-card border rounded-lg shadow-sm p-4 pt-12">
             <Calendar
               mode="range"
               selected={selectedDateRange}
@@ -130,16 +172,16 @@ export function CalendarContainer({
               }}
               styles={{
                 day_range_middle: {
-                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
                   color: '#7e22ce',
                 },
                 day_selected: {
-                  backgroundColor: '#9333ea',
+                  backgroundColor: '#8b5cf6',
                   color: 'white',
                   fontWeight: 'bold',
                 },
                 day_range_end: {
-                  backgroundColor: '#9333ea',
+                  backgroundColor: '#8b5cf6',
                   color: 'white',
                   fontWeight: 'bold',
                 }
