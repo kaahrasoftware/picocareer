@@ -7,19 +7,26 @@ import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionDetailsDialog } from "./SessionDetailsDialog";
+import { DateRange } from "react-day-picker";
 
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
   setSelectedDate: (date: Date | undefined) => void;
   availability: Availability[];
   events?: CalendarEvent[];
+  selectedDateRange?: DateRange | undefined;
+  setSelectedDateRange?: (range: DateRange | undefined) => void;
+  selectionMode?: "single" | "range";
 }
 
 export function CalendarContainer({ 
   selectedDate, 
   setSelectedDate, 
   availability,
-  events = [] 
+  events = [],
+  selectedDateRange,
+  setSelectedDateRange,
+  selectionMode = "single"
 }: CalendarContainerProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
@@ -70,27 +77,57 @@ export function CalendarContainer({
   return (
     <div className="space-y-6">
       <div className="w-full sm:w-fit mx-auto">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          defaultMonth={selectedDate}
-          className="rounded-md border bg-kahra-darker mx-auto"
-          modifiers={{
-            sessions: hasSessionsOnDate,
-            available: (date) => getAvailabilityStatus(date) === 'available'
-          }}
-          modifiersStyles={{
-            sessions: {
-              border: '2px solid #3b82f6',
-              borderRadius: '4px'
-            },
-            available: {
-              backgroundColor: 'rgba(34, 197, 94, 0.2)',
-              color: '#166534'
-            }
-          }}
-        />
+        {selectionMode === "single" ? (
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            defaultMonth={selectedDate}
+            className="rounded-md border bg-kahra-darker mx-auto"
+            modifiers={{
+              sessions: hasSessionsOnDate,
+              available: (date) => getAvailabilityStatus(date) === 'available'
+            }}
+            modifiersStyles={{
+              sessions: {
+                border: '2px solid #3b82f6',
+                borderRadius: '4px'
+              },
+              available: {
+                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                color: '#166534'
+              }
+            }}
+          />
+        ) : (
+          <Calendar
+            mode="range"
+            selected={selectedDateRange}
+            onSelect={setSelectedDateRange}
+            defaultMonth={selectedDate}
+            className="rounded-md border bg-kahra-darker mx-auto"
+            numberOfMonths={2}
+            modifiers={{
+              sessions: hasSessionsOnDate,
+              available: (date) => getAvailabilityStatus(date) === 'available'
+            }}
+            modifiersStyles={{
+              sessions: {
+                border: '2px solid #3b82f6',
+                borderRadius: '4px'
+              },
+              available: {
+                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                color: '#166534'
+              }
+            }}
+            disabled={(date) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              return date < today;
+            }}
+          />
+        )}
       </div>
 
       {selectedDate && selectedDateEvents.length > 0 && (

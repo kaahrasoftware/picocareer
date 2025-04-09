@@ -11,6 +11,11 @@ export interface Availability {
   end_time: string;
   created_at: string;
   is_available: boolean;
+  recurring?: boolean;
+  start_date_time?: string;
+  end_date_time?: string;
+  timezone_offset?: number;
+  reference_timezone?: string;
 }
 
 // Define calendar event type
@@ -30,6 +35,11 @@ export interface CalendarEvent {
   meeting_link?: string;
   meeting_platform?: MeetingPlatform;
   color?: string;
+  start_time?: string;
+  end_time?: string;
+  description?: string;
+  event_type?: string;
+  session_details?: any;
 }
 
 // Define mentor session type
@@ -51,6 +61,8 @@ export interface MentorSession {
     duration: number;
     type: string;
   };
+  mentor?: any;
+  mentee?: any;
 }
 
 // Define notification categories

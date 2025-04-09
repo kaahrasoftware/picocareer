@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +9,10 @@ import { ExistingTimeSlots } from "../calendar/availability/ExistingTimeSlots";
 import { format } from "date-fns";
 import { Availability } from "@/types/calendar";
 import { CalendarContainer } from "../calendar/CalendarContainer";
+import { MultiDayAvailabilityForm } from "../calendar/availability/MultiDayAvailabilityForm";
+import { DateRange } from "react-day-picker";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { CalendarDays, CalendarRange } from "lucide-react";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -16,9 +21,11 @@ interface AvailabilityManagerProps {
 
 export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManagerProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>();
   const [existingSlots, setExistingSlots] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("available");
   const [availability, setAvailability] = useState<Availability[]>([]);
+  const [selectionMode, setSelectionMode] = useState<"single" | "range">("single");
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -101,6 +108,13 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     }
   };
 
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setSelectedDateRange(range);
+    if (range?.from) {
+      setSelectedDate(range.from);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -109,11 +123,28 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       <CardContent className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <h4 className="font-medium mb-2">Select Date</h4>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium">Select Date</h4>
+              <ToggleGroup type="single" value={selectionMode} onValueChange={(value) => {
+                if (value) setSelectionMode(value as "single" | "range");
+              }}>
+                <ToggleGroupItem value="single" aria-label="Single day selection">
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="sr-only">Single day</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="range" aria-label="Date range selection">
+                  <CalendarRange className="h-4 w-4" />
+                  <span className="sr-only">Date range</span>
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
             <CalendarContainer
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
               availability={availability}
+              selectedDateRange={selectedDateRange}
+              setSelectedDateRange={handleDateRangeChange}
+              selectionMode={selectionMode}
             />
           </div>
           
@@ -125,16 +156,30 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                   <TabsTrigger value="unavailable">Unavailable Times</TabsTrigger>
                 </TabsList>
                 <TabsContent value="available">
-                  <TimeSlotForm
-                    selectedDate={selectedDate}
-                    profileId={profileId}
-                    onSuccess={() => {
-                      fetchAvailability();
-                      fetchAllAvailability();
-                      onUpdate();
-                    }}
-                    onShowUnavailable={() => setActiveTab("unavailable")}
-                  />
+                  {selectionMode === "single" ? (
+                    <TimeSlotForm
+                      selectedDate={selectedDate}
+                      profileId={profileId}
+                      onSuccess={() => {
+                        fetchAvailability();
+                        fetchAllAvailability();
+                        onUpdate();
+                      }}
+                      onShowUnavailable={() => setActiveTab("unavailable")}
+                    />
+                  ) : (
+                    <MultiDayAvailabilityForm
+                      selectedDate={selectedDate}
+                      selectedDateRange={selectedDateRange}
+                      profileId={profileId}
+                      onSuccess={() => {
+                        fetchAvailability();
+                        fetchAllAvailability();
+                        onUpdate();
+                      }}
+                      onDateRangeChange={handleDateRangeChange}
+                    />
+                  )}
                 </TabsContent>
                 <TabsContent value="unavailable">
                   <UnavailableTimeForm

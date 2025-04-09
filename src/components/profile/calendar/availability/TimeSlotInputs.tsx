@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { format, parse, isWithinInterval } from 'date-fns';
+import { format, parse, isWithinInterval, addDays } from 'date-fns';
+import { DateRange } from "react-day-picker";
 
 interface TimeSlotInputsProps {
   timeSlots: string[];
@@ -15,6 +16,7 @@ interface TimeSlotInputsProps {
   onStartTimeSelect: (time: string) => void;
   onEndTimeSelect: (time: string) => void;
   onRecurringChange: (value: boolean) => void;
+  selectedDateRange?: DateRange;
 }
 
 interface ExistingSlot {
@@ -34,6 +36,7 @@ export function TimeSlotInputs({
   onStartTimeSelect,
   onEndTimeSelect,
   onRecurringChange,
+  selectedDateRange,
 }: TimeSlotInputsProps) {
   const [existingSlots, setExistingSlots] = useState<ExistingSlot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -114,6 +117,15 @@ export function TimeSlotInputs({
     });
   };
 
+  const getDateRangeText = () => {
+    if (!selectedDateRange?.from) return "";
+    if (!selectedDateRange.to) return format(selectedDateRange.from, 'MMM d, yyyy');
+    
+    const daysCount = Math.round((selectedDateRange.to.getTime() - selectedDateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    return `${format(selectedDateRange.from, 'MMM d')} - ${format(selectedDateRange.to, 'MMM d, yyyy')} (${daysCount} days)`;
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -164,8 +176,19 @@ export function TimeSlotInputs({
           checked={isRecurring}
           onCheckedChange={onRecurringChange}
         />
-        <Label htmlFor="recurring">Make this a weekly recurring availability</Label>
+        <Label htmlFor="recurring">
+          {selectedDateRange && selectedDateRange.from && selectedDateRange.to ? 
+            "Make this a weekly recurring availability for all selected dates" :
+            "Make this a weekly recurring availability"
+          }
+        </Label>
       </div>
+
+      {selectedDateRange && selectedDateRange.from && (
+        <p className="text-sm text-yellow-600 dark:text-yellow-400">
+          This time will be applied to: {getDateRangeText()}
+        </p>
+      )}
 
       <p className="text-sm text-muted-foreground">
         Times shown in your timezone ({userTimezone})
