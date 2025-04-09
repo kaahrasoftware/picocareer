@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
+import { useMarkNotificationRead } from "@/hooks/useMarkNotificationRead";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export function MenuSidebar() {
   const { data: notifications = [], isLoading: notificationsLoading } = useNotifications(session);
   const [isInitialized, setIsInitialized] = useState(false);
   const isMobile = useIsMobile();
+  const markNotificationRead = useMarkNotificationRead();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -29,6 +31,18 @@ export function MenuSidebar() {
       setIsInitialized(true);
     }
   }, [authLoading, profileLoading]);
+
+  // Handler for marking a notification as read
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await markNotificationRead.mutate({ 
+        notificationId, 
+        read: true 
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
 
   // Show loading state until auth is initialized
   if (!isInitialized) {
@@ -108,7 +122,7 @@ export function MenuSidebar() {
               <NotificationPanel
                 notifications={notifications}
                 unreadCount={unreadCount}
-                onMarkAsRead={() => {}} // We'll implement this in another PR
+                onMarkAsRead={handleMarkAsRead}
               />
             )}
             {!session?.user && (
@@ -141,7 +155,7 @@ export function MenuSidebar() {
               <NotificationPanel
                 notifications={notifications}
                 unreadCount={unreadCount}
-                onMarkAsRead={() => {}} // We'll implement this in another PR
+                onMarkAsRead={handleMarkAsRead}
               />
             )}
             {session?.user && profile ? (

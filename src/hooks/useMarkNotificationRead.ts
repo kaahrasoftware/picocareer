@@ -9,36 +9,62 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: async ({ 
       notificationId, 
-      read 
+      read,
+      allUnread = false // New parameter to mark all as read
     }: { 
-      notificationId: string; 
-      read: boolean 
+      notificationId?: string; 
+      read?: boolean;
+      allUnread?: boolean;
     }) => {
       try {
-        const { error } = await supabase
-          .from('notifications')
-          .update({ 
-            read, 
-            updated_at: new Date().toISOString() 
-          })
-          .eq('id', notificationId);
+        let result;
+        
+        // Handle marking all unread notifications as read
+        if (allUnread) {
+          const { error } = await supabase
+            .from('notifications')
+            .update({ 
+              read: true, 
+              updated_at: new Date().toISOString() 
+            })
+            .eq('read', false);
+            
+          if (error) throw error;
+          result = { success: true, action: 'all_marked_read' };
+          
+        } else if (notificationId) {
+          // Handle single notification update
+          const { error } = await supabase
+            .from('notifications')
+            .update({ 
+              read: read, 
+              updated_at: new Date().toISOString() 
+            })
+            .eq('id', notificationId);
 
-        if (error) {
-          throw error;
+          if (error) throw error;
+          result = { success: true, notificationId, read };
+        } else {
+          throw new Error('Invalid parameters: Either notificationId or allUnread must be provided');
         }
 
-        return { success: true, notificationId, read };
+        return result;
       } catch (error) {
         console.error('Error updating notification status:', error);
         throw error;
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       // Invalidate notifications queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       
-      // Optional: You could also update the cache directly for immediate UI updates
-      // but the invalidation above will refresh the data from the server
+      if (data.action === 'all_marked_read') {
+        toast({
+          title: "All notifications marked as read",
+          description: "Your notifications have been updated",
+          variant: "default",
+        });
+      }
     },
     onError: (error: any) => {
       console.error('Failed to update notification status:', error);

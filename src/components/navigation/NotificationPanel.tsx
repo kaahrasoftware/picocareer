@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Bell, BellDot, Search, X } from "lucide-react";
+import { Bell, BellDot, Check, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +42,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
   const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -94,6 +95,45 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
         queryClient.clear();
         navigate("/auth");
       }
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      // Only proceed if there are unread notifications
+      const hasUnreadNotifications = localNotifications.some(n => !n.read);
+      if (!hasUnreadNotifications) {
+        toast({
+          title: "No unread notifications",
+          description: "All your notifications are already marked as read",
+          variant: "default",
+        });
+        return;
+      }
+
+      setIsMarkingAllRead(true);
+      
+      // Update local state immediately for responsive UI
+      setLocalNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      
+      // Persist changes to database
+      await markNotificationRead.mutate({ 
+        allUnread: true 
+      });
+      
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      
+      // Revert local state if mutation failed
+      setLocalNotifications(notifications);
+      
+      toast({
+        title: "Error updating notifications",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMarkingAllRead(false);
     }
   };
 
@@ -177,15 +217,32 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
       </SheetTrigger>
       <SheetContent className="w-[400px] bg-white">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-gray-800">
-            Notifications
-            <Badge 
-              variant="destructive" 
-              className="ml-2"
-            >
-              {localNotifications.filter(n => !n.read).length}
-            </Badge>
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2 text-gray-800">
+              Notifications
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="ml-2"
+                >
+                  {localNotifications.filter(n => !n.read).length}
+                </Badge>
+              )}
+            </SheetTitle>
+            
+            {unreadCount > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-xs flex items-center gap-1"
+                onClick={markAllAsRead}
+                disabled={isMarkingAllRead}
+              >
+                <Check className="h-3.5 w-3.5" />
+                {isMarkingAllRead ? "Marking..." : "Mark all as read"}
+              </Button>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="mt-4 space-y-3">
