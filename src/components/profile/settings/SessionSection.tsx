@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, InfoCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SessionSectionProps {
   profileId: string;
@@ -105,7 +106,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
         <CardContent className="pt-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="defaultSessionDuration">Default Session Duration (minutes)</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="defaultSessionDuration">Default Session Duration (minutes)</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">This will be the default duration for new session types you create.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="defaultSessionDuration"
                 type="number"
@@ -118,7 +131,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reminderTime">Session Reminder Time</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="reminderTime">Session Reminder Time</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">You and your mentees will receive notifications at this time before sessions.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Select 
                 value={settings.reminderTime.toString()}
                 onValueChange={(value) => handleInputChange('reminderTime', parseInt(value) as 15 | 30 | 60 | 1440)}
@@ -136,7 +161,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bufferBetweenSessions">Buffer Between Sessions (minutes)</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="bufferBetweenSessions">Buffer Between Sessions (minutes)</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">The minimum time between your sessions. Helps avoid back-to-back meetings.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="bufferBetweenSessions"
                 type="number"
@@ -149,7 +186,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="defaultMeetingPlatform">Default Meeting Platform</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="defaultMeetingPlatform">Default Meeting Platform</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">This platform will be used for your meetings unless specified otherwise.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Select 
                 value={settings.defaultMeetingPlatform}
                 onValueChange={(value) => handleInputChange('defaultMeetingPlatform', value as any)}
@@ -182,7 +231,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="autoAcceptBookings" className="font-medium">Auto-accept Bookings</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="autoAcceptBookings" className="font-medium">Auto-accept Bookings</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">When enabled, session bookings will be confirmed automatically.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Automatically confirm session bookings without manual approval
               </p>
@@ -196,7 +257,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="allowRescheduling" className="font-medium">Allow Rescheduling</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="allowRescheduling" className="font-medium">Allow Rescheduling</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">When enabled, mentees can reschedule sessions up until the time limit.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Allow mentees to reschedule sessions
               </p>
@@ -210,7 +283,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
           {settings.allowRescheduling && (
             <div className="space-y-2 ml-6">
-              <Label htmlFor="rescheduleTimeLimit">Reschedule Time Limit (hours before session)</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="rescheduleTimeLimit">Reschedule Time Limit (hours before session)</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">Mentees can't reschedule a session if it's less than this many hours away.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="rescheduleTimeLimit"
                 type="number"
@@ -224,7 +309,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="allowCancellation" className="font-medium">Allow Cancellation</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="allowCancellation" className="font-medium">Allow Cancellation</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">When enabled, mentees can cancel sessions up until the time limit.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Allow mentees to cancel sessions
               </p>
@@ -238,7 +335,19 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
           {settings.allowCancellation && (
             <div className="space-y-2 ml-6">
-              <Label htmlFor="cancellationTimeLimit">Cancellation Time Limit (hours before session)</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="cancellationTimeLimit">Cancellation Time Limit (hours before session)</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-80">Mentees can't cancel a session if it's less than this many hours away.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="cancellationTimeLimit"
                 type="number"

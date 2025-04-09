@@ -1,249 +1,183 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { AlertCircle, ExternalLink } from "lucide-react";
-import { CalendarEvent } from "@/types/calendar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { CalendarX, Clock, ExternalLink, MoreHorizontal, BadgeCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { RescheduleDialog } from "./RescheduleDialog";
+import { CancelSessionDialog } from "./CancelSessionDialog";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface SessionActionsProps {
-  session: CalendarEvent;
-  canCancel: boolean;
-  canMarkAttendance: boolean;
-  attendance: boolean;
-  setAttendance: (value: boolean) => void;
-  isCancelling: boolean;
-  cancellationNote: string;
-  onCancellationNoteChange: (note: string) => void;
-  onCancel: () => Promise<void>;
+  session: any;
   onClose: () => void;
+  refetchSessions: () => void;
 }
 
-export function SessionActions({
-  session,
-  canCancel,
-  canMarkAttendance,
-  attendance,
-  setAttendance,
-  cancellationNote,
-  onCancellationNoteChange,
-  onClose,
-}: SessionActionsProps) {
+export function SessionActions({ session, onClose, refetchSessions }: SessionActionsProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { session: authSession } = useAuthSession();
+  const userId = authSession?.user?.id;
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const isMentor = userId === session.mentor.id;
+  const isMentee = userId === session.mentee.id;
+  const { getSetting } = useUserSettings(session.mentor.id);
+  
+  // Parse the session settings to check if rescheduling and cancellations are allowed
+  const sessionSettingsStr = getSetting('session_settings');
+  let sessionSettings = {
+    allowRescheduling: true,
+    rescheduleTimeLimit: 24,
+    allowCancellation: true,
+    cancellationTimeLimit: 24
+  };
+  
+  try {
+    if (sessionSettingsStr) {
+      const parsed = JSON.parse(sessionSettingsStr);
+      sessionSettings = {
+        ...sessionSettings,
+        ...parsed
+      };
+    }
+  } catch (e) {
+    console.error('Error parsing session settings:', e);
+  }
 
-  const handleAttendanceToggle = async (checked: boolean) => {
+  const hasPassedRescheduleTimeLimit = () => {
+    const sessionTime = new Date(session.scheduled_at);
+    const currentTime = new Date();
+    const hoursDifference = (sessionTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
+    return hoursDifference < sessionSettings.rescheduleTimeLimit;
+  };
+
+  const hasPassedCancellationTimeLimit = () => {
+    const sessionTime = new Date(session.scheduled_at);
+    const currentTime = new Date();
+    const hoursDifference = (sessionTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
+    return hoursDifference < sessionSettings.cancellationTimeLimit;
+  };
+
+  const canReschedule = (
+    session.status === "scheduled" && 
+    (isMentor || (isMentee && sessionSettings.allowRescheduling && !hasPassedRescheduleTimeLimit()))
+  );
+
+  const canCancel = (
+    session.status === "scheduled" && 
+    (isMentor || (isMentee && sessionSettings.allowCancellation && !hasPassedCancellationTimeLimit()))
+  );
+
+  const markCompleted = async () => {
+    if (!isMentor) return;
+    
     try {
       const { error } = await supabase
         .from('mentor_sessions')
-        .update({ attendance_confirmed: checked })
-        .eq('id', session.session_details?.id);
-
+        .update({ status: 'completed' })
+        .eq('id', session.id);
+      
       if (error) throw error;
-
-      setAttendance(checked);
+      
       toast({
-        title: checked ? "Attendance confirmed" : "Attendance unconfirmed",
-        description: checked 
-          ? "Thank you for confirming your attendance"
-          : "Attendance status has been updated",
+        title: 'Session updated',
+        description: 'Session has been marked as completed.',
       });
+      
+      refetchSessions();
+      onClose();
     } catch (error) {
-      console.error('Error updating attendance:', error);
+      console.error('Error updating session:', error);
       toast({
-        title: "Error",
-        description: "Failed to update attendance status",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update session status.',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleJoinSession = () => {
-    if (session.session_details?.meeting_link) {
-      window.open(session.session_details.meeting_link, '_blank');
+  const openMeetingLink = () => {
+    if (session.meeting_link) {
+      window.open(session.meeting_link, '_blank');
     } else {
       toast({
-        title: "No meeting link available",
-        description: "The meeting link for this session is not available",
-        variant: "destructive",
+        title: 'No meeting link available',
+        description: 'The meeting link has not been set up yet.',
+        variant: 'destructive',
       });
     }
   };
-
-  const handleCancelSession = async () => {
-    if (!session.session_details?.id) return;
-    
-    setIsProcessing(true);
-    try {
-      // Cancel Google Calendar event if it exists
-      if (session.session_details?.calendar_event_id) {
-        console.log('Cancelling Google Calendar event:', session.session_details.calendar_event_id);
-        
-        const { error: cancelError } = await supabase.functions.invoke('cancel-meet-link', {
-          body: { 
-            sessionId: session.session_details.id 
-          }
-        });
-
-        if (cancelError) {
-          console.error('Error cancelling Google Calendar event:', cancelError);
-          throw new Error('Failed to cancel Google Calendar event');
-        }
-      }
-
-      // Restore mentor availability if there was an availability slot
-      if (session.session_details.availability_slot_id) {
-        const { error: availabilityError } = await supabase
-          .from('mentor_availability')
-          .update({ is_available: true })
-          .eq('id', session.session_details.availability_slot_id);
-
-        if (availabilityError) {
-          console.error('Error restoring availability:', availabilityError);
-          throw new Error('Failed to restore mentor availability');
-        }
-      }
-
-      // Update session status
-      const { error: updateError } = await supabase
-        .from('mentor_sessions')
-        .update({ 
-          status: 'cancelled',
-          notes: cancellationNote 
-        })
-        .eq('id', session.session_details.id);
-
-      if (updateError) throw updateError;
-
-      // Create notifications for both mentor and mentee
-      const notifications = [
-        {
-          profile_id: session.session_details.mentor.id,
-          title: 'Session Cancelled',
-          message: `Session with ${session.session_details.mentee.full_name} has been cancelled. Reason: ${cancellationNote}`,
-          type: 'session_cancelled' as const,
-          action_url: '/profile?tab=calendar',
-          category: 'mentorship' as const
-        },
-        {
-          profile_id: session.session_details.mentee.id,
-          title: 'Session Cancelled',
-          message: `Session with ${session.session_details.mentor.full_name} has been cancelled. Reason: ${cancellationNote}`,
-          type: 'session_cancelled' as const,
-          action_url: '/profile?tab=calendar',
-          category: 'mentorship' as const
-        }
-      ];
-
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert(notifications);
-
-      if (notificationError) throw notificationError;
-
-      // Send email notifications
-      const { error: emailError } = await supabase.functions.invoke('send-session-email', {
-        body: { 
-          sessionId: session.session_details.id,
-          type: 'cancellation'
-        }
-      });
-
-      if (emailError) {
-        console.error('Error sending cancellation emails:', emailError);
-      }
-
-      toast({
-        title: "Session cancelled",
-        description: "The session has been cancelled and notifications have been sent.",
-      });
-
-      // Close the dialog and reset state
-      setIsProcessing(false);
-      onClose();
-      
-      // Refresh events
-      await queryClient.invalidateQueries({ queryKey: ['session-events'] });
-
-    } catch (error) {
-      console.error('Error cancelling session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to cancel the session",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  if (session.status === 'cancelled') {
-    return (
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
-        <AlertCircle className="h-4 w-4" />
-        <span className="text-sm font-medium">This session has been cancelled</span>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-4">
-      {canMarkAttendance && (
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-          <Label htmlFor="attendance" className="text-sm font-medium">
-            Confirm Attendance
-          </Label>
-          <Switch
-            id="attendance"
-            checked={attendance}
-            onCheckedChange={handleAttendanceToggle}
-          />
-        </div>
-      )}
-
-      {session.session_details?.meeting_link && (
-        <Button
-          className="w-full bg-primary hover:bg-primary/90"
-          onClick={handleJoinSession}
-        >
-          Join Session <ExternalLink className="ml-2 h-4 w-4" />
-        </Button>
-      )}
-
-      {canCancel && (
-        <>
-          <div className="flex justify-center">
-            <Textarea
-              placeholder="Please provide a reason for cancellation..."
-              value={cancellationNote}
-              onChange={(e) => onCancellationNoteChange(e.target.value)}
-              className="h-24 resize-none bg-muted w-3/4"
-            />
-          </div>
-          
-          <Button
-            variant="destructive"
-            onClick={handleCancelSession}
-            disabled={!cancellationNote.trim() || isProcessing}
-            className="w-full bg-[#ea384c] hover:bg-[#ea384c]/90"
-          >
-            {isProcessing ? "Cancelling..." : "Cancel Session"}
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
-        </>
-      )}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {session.meeting_link && (
+            <DropdownMenuItem onClick={openMeetingLink}>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Join Meeting
+            </DropdownMenuItem>
+          )}
+          
+          {canReschedule && (
+            <DropdownMenuItem onClick={() => setIsRescheduling(true)}>
+              <Clock className="mr-2 h-4 w-4" />
+              Reschedule
+            </DropdownMenuItem>
+          )}
+          
+          {canCancel && (
+            <DropdownMenuItem onClick={() => setIsCancelling(true)}>
+              <CalendarX className="mr-2 h-4 w-4" />
+              Cancel Session
+            </DropdownMenuItem>
+          )}
+          
+          {isMentor && session.status === "scheduled" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={markCompleted}>
+                <BadgeCheck className="mr-2 h-4 w-4" />
+                Mark as Completed
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      {!canCancel && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 text-yellow-500">
-          <AlertCircle className="h-4 w-4" />
-          <span className="text-sm">
-            Sessions cannot be cancelled less than 1 hour before the start time
-          </span>
-        </div>
+      {isRescheduling && (
+        <RescheduleDialog
+          isOpen={isRescheduling}
+          onClose={() => setIsRescheduling(false)}
+          sessionId={session.id}
+          currentScheduledTime={new Date(session.scheduled_at)}
+          duration={session.session_type.duration}
+        />
       )}
-    </div>
+      
+      {isCancelling && (
+        <CancelSessionDialog
+          isOpen={isCancelling}
+          onClose={() => setIsCancelling(false)}
+          sessionId={session.id}
+          scheduledTime={new Date(session.scheduled_at)}
+          withParticipant={isMentor ? session.mentee.full_name : session.mentor.full_name}
+        />
+      )}
+    </>
   );
 }

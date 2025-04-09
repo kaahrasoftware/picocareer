@@ -1,1 +1,9 @@
-project_id = "wurdmlkfkzuivvwxjmxk"
+
+[functions.manage-session]
+verify_jwt = true
+
+[functions.reschedule_session]
+verify_jwt = true
+
+[functions.cancel_session]
+verify_jwt = true
