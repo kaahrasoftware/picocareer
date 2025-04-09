@@ -6,14 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { format, areIntervalsOverlapping } from "date-fns";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { getTimezoneOffset } from "@/utils/timezoneUpdater";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface TimeSlotFormProps {
   selectedDate: Date;
   profileId: string;
   onSuccess: () => void;
-  onShowUnavailable?: () => void;
+  onShowUnavailable: () => void;
 }
 
 export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavailable }: TimeSlotFormProps) {
@@ -24,9 +25,14 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
   const { toast } = useToast();
   const { getSetting } = useUserSettings(profileId);
   const userTimezone = getSetting('timezone');
-  const isPastDate = new Date(selectedDate) < new Date();
+  
+  // Get current user session and profile to check if admin
+  const { session } = useAuthSession();
+  const { data: currentUserProfile } = useUserProfile(session);
+  const isAdmin = currentUserProfile?.user_type === 'admin';
+  const isCurrentUser = profileId === session?.user.id;
 
-  const checkForOverlap = async (startDateTime: Date, endDateTime: Date) => {
+  const checkExistingAvailability = async (startDateTime: Date, endDateTime: Date) => {
     const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
     
@@ -39,7 +45,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       .select('*')
       .eq('profile_id', profileId)
       .eq('is_available', true)
-      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`)
+      .order('start_date_time', { ascending: true });
 
     if (error) {
       console.error('Error checking availability:', error);
@@ -102,13 +109,12 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
-      // Check for overlapping slots
-      const hasOverlap = await checkForOverlap(startDateTime, endDateTime);
-
-      if (hasOverlap) {
+      // Check for existing overlapping availability
+      const hasConflict = await checkExistingAvailability(startDateTime, endDateTime);
+      if (hasConflict) {
         toast({
-          title: "Time slot conflict",
-          description: "This time slot overlaps with an existing availability slot. Please choose a different time.",
+          title: "Availability Conflict",
+          description: "There is already existing availability during this time period. Please choose a different time.",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -116,22 +122,56 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       }
 
       const dayOfWeek = selectedDate.getDay();
-      const timezoneOffset = new Date().getTimezoneOffset();
+      
+      // Calculate timezone offset for this specific date and time
+      const timezoneOffsetMinutes = getTimezoneOffset(startDateTime, userTimezone);
 
-      const { error } = await supabase
-        .from('mentor_availability')
-        .insert({
-          profile_id: profileId,
-          start_date_time: startDateTime.toISOString(),
-          end_date_time: endDateTime.toISOString(),
-          is_available: true,
-          recurring: isRecurring,
-          day_of_week: isRecurring ? dayOfWeek : null,
-          timezone_offset: timezoneOffset,
-          reference_timezone: userTimezone
+      console.log('Creating availability with:', {
+        timezoneOffsetMinutes,
+        userTimezone,
+        isAdmin,
+        isCurrentUser,
+        profileId
+      });
+
+      // If the current user is an admin and is managing someone else's availability,
+      // use the admin edge function instead of direct insert
+      if (isAdmin && !isCurrentUser) {
+        const { data, error } = await supabase.functions.invoke('admin-create-availability', {
+          body: JSON.stringify({
+            profileId,
+            startDateTime: startDateTime.toISOString(),
+            endDateTime: endDateTime.toISOString(),
+            isAvailable: true,
+            recurring: isRecurring,
+            dayOfWeek: isRecurring ? dayOfWeek : null,
+            timezoneOffset: timezoneOffsetMinutes,
+            referenceTimezone: userTimezone,
+            dstAware: true,
+            lastDstCheck: new Date().toISOString()
+          })
         });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Regular insert for the user's own availability
+        const { error } = await supabase
+          .from('mentor_availability')
+          .insert({
+            profile_id: profileId,
+            start_date_time: startDateTime.toISOString(),
+            end_date_time: endDateTime.toISOString(),
+            is_available: true,
+            recurring: isRecurring,
+            day_of_week: isRecurring ? dayOfWeek : null,
+            timezone_offset: timezoneOffsetMinutes,
+            reference_timezone: userTimezone,
+            dst_aware: true,
+            last_dst_check: new Date().toISOString()
+          });
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
@@ -144,7 +184,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       setSelectedEndTime(undefined);
       setIsRecurring(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error setting availability:', error);
       toast({
         title: "Error",
@@ -168,52 +208,28 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
   };
 
   const timeSlots = generateTimeSlots();
-  
-  const isDisabled = !selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone;
 
   return (
     <div className="space-y-4">
-      {isRecurring && (
-        <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertDescription className="text-sm text-blue-700 dark:text-blue-300">
-            Recurring availability will only apply to this day of the week going forward, starting from today.
-            Past dates will not be affected.
-          </AlertDescription>
-        </Alert>
-      )}
-      
       <TimeSlotInputs
         timeSlots={timeSlots}
-        selectedDate={selectedDate}
         selectedStartTime={selectedStartTime}
         selectedEndTime={selectedEndTime}
         isRecurring={isRecurring}
         userTimezone={userTimezone || 'Not set'}
+        selectedDate={selectedDate}
         onStartTimeSelect={setSelectedStartTime}
         onEndTimeSelect={setSelectedEndTime}
-        onRecurringChange={() => setIsRecurring(!isRecurring)}
+        onRecurringChange={setIsRecurring}
       />
 
-      <div className="flex gap-2 mt-4">
-        <Button 
-          onClick={handleSaveAvailability}
-          disabled={isDisabled}
-          className="flex-1"
-        >
-          {isSubmitting ? "Saving..." : "Save Availability"}
-        </Button>
-        
-        {onShowUnavailable && (
-          <Button 
-            variant="outline"
-            onClick={onShowUnavailable}
-            className="flex-1"
-          >
-            Mark Unavailable
-          </Button>
-        )}
-      </div>
+      <Button 
+        onClick={handleSaveAvailability}
+        disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
+        className="w-full"
+      >
+        {isSubmitting ? "Saving..." : "Save Availability"}
+      </Button>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Clock, Calendar, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ExistingTimeSlotsProps {
   slots: any[];
@@ -33,7 +32,6 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
         {sortedSlots.map((slot) => {
           const startTime = parseISO(slot.start_date_time);
           const endTime = parseISO(slot.end_date_time);
-          const creationDate = parseISO(slot.created_at);
           
           return (
             <div 
@@ -41,7 +39,7 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
               className="flex items-center justify-between p-4 rounded-lg border bg-background hover:bg-accent/5 transition-colors"
             >
               <div className="space-y-2">
-                <div className="flex items-center flex-wrap">
+                <div className="flex items-center">
                   <div className="bg-primary/10 text-primary p-1.5 rounded-md mr-3">
                     <Clock className="h-4 w-4" />
                   </div>
@@ -50,36 +48,21 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
                   </span>
                   
                   {slot.recurring && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                            <RefreshCw className="h-3 w-3 mr-1" />
-                            Weekly
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Recurring weekly on {format(startTime, 'EEEE')}s starting from {format(creationDate, 'MMM d, yyyy')}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Weekly
+                    </Badge>
                   )}
                 </div>
                 
                 <div className="flex items-center text-sm text-muted-foreground pl-9">
                   <Calendar className="h-4 w-4 mr-2 opacity-70" />
                   {slot.recurring ? (
-                    <span>Every {format(startTime, 'EEEE')} starting {format(creationDate, 'MMM d, yyyy')}</span>
+                    <span>Every {format(startTime, 'EEEE')}</span>
                   ) : (
                     <span>{format(startTime, 'MMMM d, yyyy')}</span>
                   )}
                 </div>
-                
-                {!slot.is_available && (
-                  <div className="pl-9 text-sm text-destructive">
-                    <span>Marked as unavailable</span>
-                  </div>
-                )}
               </div>
               
               <Button 
