@@ -15,7 +15,7 @@ const corsHeaders = {
 
 interface EmailRequest {
   sessionId: string;
-  type: 'confirmation' | 'cancellation' | 'update';
+  type: 'confirmation' | 'cancellation' | 'update' | 'reminder';
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -395,6 +395,79 @@ const handler = async (req: Request): Promise<Response> => {
           </html>
         `;
         break;
+
+      case 'reminder':
+        subject = `Reminder: Upcoming Session with ${session.mentor.full_name}`;
+        content = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+            <style>${baseStyles}</style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header" style="background-color: #3b82f6;">
+                <h1>Session Reminder</h1>
+              </div>
+              <div class="content">
+                <p>Hello ${session.mentee.full_name},</p>
+                <p>This is a friendly reminder about your upcoming ${session.session_type.type} session with ${session.mentor.full_name}.</p>
+                
+                <div class="session-time">
+                  <h3>📅 Session Time</h3>
+                  <p><strong>Your time (${menteeTimezone}):</strong> ${menteeTime}</p>
+                  <p><strong>Mentor's time (${mentorTimezone}):</strong> ${mentorTime}</p>
+                  <p><strong>Duration:</strong> ${session.session_type.duration} minutes</p>
+                </div>
+                
+                <div class="session-details">
+                  <h3>Session Details</h3>
+                  <div class="detail-row">
+                    <div class="detail-label">Session Type:</div>
+                    <div class="detail-value">${session.session_type.type}</div>
+                  </div>
+                  ${session.notes ? `
+                  <div class="detail-row">
+                    <div class="detail-label">Session Notes:</div>
+                    <div class="detail-value">${session.notes}</div>
+                  </div>
+                  ` : ''}
+                </div>
+                
+                ${session.meeting_link ? `
+                <div class="meeting-link">
+                  <h3>Join the Meeting</h3>
+                  <p>Click the button below at the scheduled time to join your session:</p>
+                  <a href="${session.meeting_link}" target="_blank">Join Session</a>
+                </div>
+                ` : 
+                session.meeting_platform === 'google_meet' ? 
+                `<div class="meeting-link">
+                  <h3>Meeting Information</h3>
+                  <p>A Google Meet link will be provided closer to the session time.</p>
+                </div>` : ''
+                }
+                
+                <div class="actions">
+                  <p>Need to make changes?</p>
+                  <a href="https://picocareer.com/profile/calendar" target="_blank">View Calendar</a>
+                </div>
+              </div>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
+                <p>If you have any questions, please contact us at info@picocareer.com</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+
+      default:
+        throw new Error(`Unsupported email type: ${type}`);
     }
 
     const emailPayload = {
@@ -404,7 +477,11 @@ const handler = async (req: Request): Promise<Response> => {
       html: content,
     };
 
-    console.log('Sending email with payload:', emailPayload);
+    console.log('Sending email with payload:', {
+      from: emailPayload.from,
+      to: emailPayload.to,
+      subject: emailPayload.subject
+    });
 
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",

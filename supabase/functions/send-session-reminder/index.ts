@@ -26,6 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { sessionId, senderId } = await req.json() as ReminderRequest;
+    console.log('Received reminder request:', { sessionId, senderId });
 
     if (!sessionId) {
       throw new Error('Session ID is required');
@@ -56,11 +57,16 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (sessionError || !session) {
+      console.error('Session fetch error:', sessionError);
       throw new Error('Session not found');
     }
 
     // Verify that the sender is the mentor
     if (session.mentor_id !== senderId) {
+      console.error('Authorization error: User is not the mentor', { 
+        mentorId: session.mentor_id, 
+        senderId 
+      });
       throw new Error('Only mentors can send session reminders');
     }
 
@@ -78,13 +84,14 @@ const handler = async (req: Request): Promise<Response> => {
       minute: '2-digit'
     });
 
-    // Create meeting link information
+    // Create meeting link information for notification
     const meetingLinkInfo = session.meeting_link 
       ? `\n<div style="margin-top: 10px;"><a href="${session.meeting_link}" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">Join now</a></div>`
       : session.meeting_platform === 'google_meet' 
         ? '\nA Google Meet link will be sent before the session.'
         : '';
 
+    console.log('Creating in-app notification for mentee');
     // Create in-app notification
     const notification = {
       profile_id: session.mentee_id,
@@ -101,11 +108,15 @@ const handler = async (req: Request): Promise<Response> => {
       .insert(notification);
 
     if (notificationError) {
+      console.error('Notification creation error:', notificationError);
       throw new Error('Failed to create notification');
     }
 
-    // Send email reminder
-    await fetch(`${SUPABASE_URL}/functions/v1/send-session-email`, {
+    console.log('In-app notification created successfully');
+
+    // Send email reminder using the send-session-email function
+    console.log('Sending email reminder via send-session-email function');
+    const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-session-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,12 +124,29 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         sessionId,
-        type: 'reminder',
-        fromEmail: 'info@picocareer.com'
+        type: 'reminder'
       })
     });
 
-    return new Response(JSON.stringify({ success: true }), {
+    const emailData = await emailResponse.text();
+    console.log('Email function response:', {
+      status: emailResponse.status,
+      body: emailData
+    });
+
+    if (!emailResponse.ok) {
+      console.error('Email sending failed:', emailData);
+      // Don't throw an error here, as we've already created the notification
+      // Just log the error but still return success for the notification part
+    } else {
+      console.log('Email reminder sent successfully');
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true,
+      notificationSent: true,
+      emailSent: emailResponse.ok
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
