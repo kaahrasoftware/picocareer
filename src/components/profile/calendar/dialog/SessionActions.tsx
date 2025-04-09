@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { CalendarX, Clock, ExternalLink, MoreHorizontal, BadgeCheck } from "lucide-react";
+import { AlertCircle, Bell, CalendarX, Clock, ExternalLink, MoreHorizontal, BadgeCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -28,6 +28,7 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   const userId = authSession?.user?.id;
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
   const isMentor = userId === session.mentor.id;
   const isMentee = userId === session.mentee.id;
   const { getSetting } = useUserSettings(session.mentor.id);
@@ -67,6 +68,12 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
     return hoursDifference < sessionSettings.cancellationTimeLimit;
   };
 
+  const isUpcoming = () => {
+    const sessionTime = new Date(session.scheduled_at);
+    const currentTime = new Date();
+    return sessionTime > currentTime;
+  };
+
   const canReschedule = (
     session.status === "scheduled" && 
     (isMentor || (isMentee && sessionSettings.allowRescheduling && !hasPassedRescheduleTimeLimit()))
@@ -75,6 +82,12 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   const canCancel = (
     session.status === "scheduled" && 
     (isMentor || (isMentee && sessionSettings.allowCancellation && !hasPassedCancellationTimeLimit()))
+  );
+
+  const canSendReminder = (
+    session.status === "scheduled" && 
+    isMentor && 
+    isUpcoming()
   );
 
   const markCompleted = async () => {
@@ -117,6 +130,37 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
     }
   };
 
+  const sendReminderNow = async () => {
+    if (!canSendReminder) return;
+    
+    setIsSendingReminder(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-session-reminder', {
+        body: {
+          sessionId: session.id,
+          senderId: userId
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Reminder sent',
+        description: 'A reminder has been sent to the mentee.',
+      });
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send reminder.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingReminder(false);
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -130,6 +174,13 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
             <DropdownMenuItem onClick={openMeetingLink}>
               <ExternalLink className="mr-2 h-4 w-4" />
               Join Meeting
+            </DropdownMenuItem>
+          )}
+          
+          {canSendReminder && (
+            <DropdownMenuItem onClick={sendReminderNow} disabled={isSendingReminder}>
+              <Bell className="mr-2 h-4 w-4" />
+              {isSendingReminder ? 'Sending...' : 'Send Reminder'}
             </DropdownMenuItem>
           )}
           

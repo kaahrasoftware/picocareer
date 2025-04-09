@@ -13,7 +13,8 @@ const corsHeaders = {
 
 interface EmailRequest {
   sessionId: string;
-  type: 'confirmation' | 'cancellation' | 'update';
+  type: 'confirmation' | 'cancellation' | 'update' | 'reminder';
+  fromEmail?: string;
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
