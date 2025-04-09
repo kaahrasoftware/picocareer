@@ -29,9 +29,13 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isSendingReminder, setIsSendingReminder] = useState(false);
-  const isMentor = userId === session.mentor.id;
-  const isMentee = userId === session.mentee.id;
-  const { getSetting } = useUserSettings(session.mentor.id);
+  
+  // Add null checks to prevent errors when session.mentor is undefined
+  const isMentor = userId === session?.mentor?.id;
+  const isMentee = userId === session?.mentee?.id;
+  
+  // Use optional chaining to safely access mentor ID
+  const { getSetting } = useUserSettings(session?.mentor?.id || '');
   
   // Parse the session settings to check if rescheduling and cancellations are allowed
   const sessionSettingsStr = getSetting('session_settings');
@@ -55,6 +59,7 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   }
 
   const hasPassedRescheduleTimeLimit = () => {
+    if (!session?.scheduled_at) return true;
     const sessionTime = new Date(session.scheduled_at);
     const currentTime = new Date();
     const hoursDifference = (sessionTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
@@ -62,6 +67,7 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   };
 
   const hasPassedCancellationTimeLimit = () => {
+    if (!session?.scheduled_at) return true;
     const sessionTime = new Date(session.scheduled_at);
     const currentTime = new Date();
     const hoursDifference = (sessionTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
@@ -69,29 +75,30 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   };
 
   const isUpcoming = () => {
+    if (!session?.scheduled_at) return false;
     const sessionTime = new Date(session.scheduled_at);
     const currentTime = new Date();
     return sessionTime > currentTime;
   };
 
   const canReschedule = (
-    session.status === "scheduled" && 
+    session?.status === "scheduled" && 
     (isMentor || (isMentee && sessionSettings.allowRescheduling && !hasPassedRescheduleTimeLimit()))
   );
 
   const canCancel = (
-    session.status === "scheduled" && 
+    session?.status === "scheduled" && 
     (isMentor || (isMentee && sessionSettings.allowCancellation && !hasPassedCancellationTimeLimit()))
   );
 
   const canSendReminder = (
-    session.status === "scheduled" && 
+    session?.status === "scheduled" && 
     isMentor && 
     isUpcoming()
   );
 
   const markCompleted = async () => {
-    if (!isMentor) return;
+    if (!isMentor || !session?.id) return;
     
     try {
       const { error } = await supabase
@@ -119,7 +126,7 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   };
 
   const openMeetingLink = () => {
-    if (session.meeting_link) {
+    if (session?.meeting_link) {
       window.open(session.meeting_link, '_blank');
     } else {
       toast({
@@ -131,7 +138,7 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
   };
 
   const sendReminderNow = async () => {
-    if (!canSendReminder) return;
+    if (!canSendReminder || !session?.id || !userId) return;
     
     setIsSendingReminder(true);
     
@@ -160,6 +167,11 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
       setIsSendingReminder(false);
     }
   };
+
+  // If session is undefined or doesn't have necessary properties, render nothing
+  if (!session || !session.id) {
+    return null;
+  }
 
   return (
     <>
@@ -210,23 +222,23 @@ export function SessionActions({ session, onClose, refetchSessions }: SessionAct
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {isRescheduling && (
+      {isRescheduling && session.id && (
         <RescheduleDialog
           isOpen={isRescheduling}
           onClose={() => setIsRescheduling(false)}
           sessionId={session.id}
           currentScheduledTime={new Date(session.scheduled_at)}
-          duration={session.session_type.duration}
+          duration={session.session_type?.duration}
         />
       )}
       
-      {isCancelling && (
+      {isCancelling && session.id && (
         <CancelSessionDialog
           isOpen={isCancelling}
           onClose={() => setIsCancelling(false)}
           sessionId={session.id}
           scheduledTime={new Date(session.scheduled_at)}
-          withParticipant={isMentor ? session.mentee.full_name : session.mentor.full_name}
+          withParticipant={isMentor ? session.mentee?.full_name : session.mentor?.full_name}
         />
       )}
     </>

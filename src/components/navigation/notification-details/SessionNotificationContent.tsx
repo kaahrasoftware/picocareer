@@ -107,9 +107,9 @@ export function SessionNotificationContent({ sessionData }: SessionNotificationC
           )}
         </div>
 
-        {sessionData.notes && (
+        {sessionData.note && (
           <div className="p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-md">
-            <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.notes}</p>
+            <p><span className="font-medium text-zinc-300">Note:</span> {sessionData.note}</p>
           </div>
         )}
       </div>

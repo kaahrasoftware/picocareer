@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,8 +23,6 @@ export function SessionDetailsDialog({
   onCancel,
 }: SessionDetailsDialogProps) {
   const { session: authSession } = useAuthSession();
-  const [attendance, setAttendance] = useState(false);
-  const [cancellationNote, setCancellationNote] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const { getSetting } = useUserSettings(authSession?.user?.id || '');
   const userTimezone = getSetting('timezone');
@@ -55,20 +54,17 @@ export function SessionDetailsDialog({
   const isMentor = authSession?.user?.id === session.session_details.mentor.id;
   const feedbackType = isMentor ? 'mentor_feedback' : 'mentee_feedback';
   
-  // Calculate if session can be cancelled (more than 1 hour before start)
-  const canCancel = session.session_details.status === 'scheduled' && 
-    new Date(session.session_details.scheduled_at) > new Date(Date.now() + 60 * 60 * 1000);
-
-  // Can mark attendance if session is scheduled and within 15 minutes of start time
-  const sessionTime = new Date(session.session_details.scheduled_at);
-  const canMarkAttendance = session.session_details.status === 'scheduled' && 
-    Math.abs(sessionTime.getTime() - Date.now()) <= 15 * 60 * 1000;
-
-  // Check if session is in the past
+  // Calculate if session is in the past
   const isPastSession = new Date(session.session_details.scheduled_at) < new Date();
 
   // Can provide feedback if session is completed or is in the past, and feedback hasn't been provided yet
   const canProvideFeedback = (session.session_details.status === 'completed' || isPastSession) && !existingFeedback;
+
+  // Function to refetch sessions
+  const refetchSessions = () => {
+    // This would normally refetch calendar events, but for this dialog we'll just close it
+    onClose();
+  };
 
   return (
     <>
@@ -76,18 +72,11 @@ export function SessionDetailsDialog({
         <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
           <SessionInfo session={session} userTimezone={userTimezone || 'UTC'} />
 
-          {session.session_details.status === 'scheduled' && !isPastSession && (
+          {session.session_details && (
             <SessionActions
-              session={session}
-              canCancel={canCancel}
-              canMarkAttendance={canMarkAttendance}
-              attendance={attendance}
-              setAttendance={setAttendance}
-              isCancelling={false}
-              cancellationNote={cancellationNote}
-              onCancellationNoteChange={setCancellationNote}
-              onCancel={onCancel}
+              session={session.session_details}
               onClose={onClose}
+              refetchSessions={refetchSessions}
             />
           )}
 
