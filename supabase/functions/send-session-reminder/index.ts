@@ -1,162 +1,146 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ReminderRequest {
-  sessionId: string;
-  senderId: string;
-}
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
+serve(async (req) => {
+  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { sessionId, senderId } = await req.json() as ReminderRequest;
-    console.log('Received reminder request:', { sessionId, senderId });
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const { sessionId, senderId, customMessage } = await req.json();
 
-    if (!sessionId) {
-      throw new Error('Session ID is required');
+    if (!sessionId || !senderId) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Missing required parameters",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    if (!senderId) {
-      throw new Error('Sender ID is required');
-    }
-
-    // Fetch session details with explicit column selection
+    // Fetch session details
     const { data: session, error: sessionError } = await supabase
       .from('mentor_sessions')
       .select(`
         id,
+        scheduled_at,
         mentor_id,
         mentee_id,
-        session_type_id,
-        scheduled_at,
-        notes,
-        meeting_platform,
-        meeting_link,
-        calendar_event_id,
-        mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name),
-        mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name),
-        session_type:mentor_session_types(type, duration)
+        mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name, email),
+        mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name, email),
+        session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration)
       `)
       .eq('id', sessionId)
       .single();
 
     if (sessionError || !session) {
-      console.error('Session fetch error:', sessionError);
-      throw new Error('Session not found');
+      console.error("Error fetching session:", sessionError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Session not found",
+        }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    // Verify that the sender is the mentor
+    // Verify sender is the mentor
     if (session.mentor_id !== senderId) {
-      console.error('Authorization error: User is not the mentor', { 
-        mentorId: session.mentor_id, 
-        senderId 
-      });
-      throw new Error('Only mentors can send session reminders');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Only the mentor can send session reminders",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    // Format session date for display
-    const sessionDate = new Date(session.scheduled_at);
-    const formattedDate = sessionDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
+    // Create in-app notification for mentee
+    const sessionTime = new Date(session.scheduled_at);
+    const mentorName = session.mentor.full_name;
+    const menteeName = session.mentee.full_name;
+    const sessionType = session.session_type.type;
+    const formattedTime = sessionTime.toLocaleString('en-US', {
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
 
-    const formattedTime = sessionDate.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const notificationMessage = `Reminder: You have a "${sessionType}" session with ${mentorName} scheduled for ${formattedTime}. ${customMessage || ''}`;
 
-    // Create meeting link information for notification
-    const meetingLinkInfo = session.meeting_link 
-      ? `\n<div style="margin-top: 10px;"><a href="${session.meeting_link}" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">Join now</a></div>`
-      : session.meeting_platform === 'google_meet' 
-        ? '\nA Google Meet link will be sent before the session.'
-        : '';
-
-    console.log('Creating in-app notification for mentee');
-    // Create in-app notification
+    // Insert in-app notification
     const notification = {
       profile_id: session.mentee_id,
-      title: 'Session Reminder',
-      message: `Your ${session.session_type.type} session with ${session.mentor.full_name} is scheduled for ${formattedDate} at ${formattedTime}.${meetingLinkInfo ? ' Click to join.' : ''}`,
-      type: 'session_reminder',
-      action_url: '/profile?tab=calendar',
-      category: 'session'
+      title: "Session Reminder",
+      message: notificationMessage,
+      type: "session_reminder",
+      category: "mentorship",
+      action_url: `/profile?tab=calendar`
     };
 
-    // Insert notification
     const { error: notificationError } = await supabase
-      .from('notifications')
+      .from("notifications")
       .insert(notification);
 
     if (notificationError) {
-      console.error('Notification creation error:', notificationError);
-      throw new Error('Failed to create notification');
+      console.error("Error creating notification:", notificationError);
     }
 
-    console.log('In-app notification created successfully');
-
-    // Send email reminder using the send-session-email function
-    console.log('Sending email reminder via send-session-email function');
-    const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-session-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-      },
-      body: JSON.stringify({
+    // Send email reminder
+    await supabase.functions.invoke('send-session-email', {
+      body: { 
         sessionId,
-        type: 'reminder'
-      })
+        type: 'reminder',
+        customMessage
+      }
     });
 
-    const emailData = await emailResponse.text();
-    console.log('Email function response:', {
-      status: emailResponse.status,
-      body: emailData
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Reminder sent successfully",
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
 
-    if (!emailResponse.ok) {
-      console.error('Email sending failed:', emailData);
-      // Don't throw an error here, as we've already created the notification
-      // Just log the error but still return success for the notification part
-    } else {
-      console.log('Email reminder sent successfully');
-    }
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      notificationSent: true,
-      emailSent: emailResponse.ok
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (error) {
-    console.error("Error in send-session-reminder function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("Error processing request:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
-};
-
-serve(handler);
+});

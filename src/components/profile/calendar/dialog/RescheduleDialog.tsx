@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { TimeSlotSelector } from "../../mentor/availability/TimeSlotSelector";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useMentorTimezone } from "@/hooks/useMentorTimezone";
-import { Alert, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 
 interface RescheduleDialogProps {
