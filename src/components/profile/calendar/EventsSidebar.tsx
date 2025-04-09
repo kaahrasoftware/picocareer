@@ -1,147 +1,145 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatInTimeZone } from 'date-fns-tz';
-import { isSameDay } from 'date-fns';
-import { CalendarEvent, Availability } from "@/types/calendar";
-import { TimeGrid } from "./TimeGrid";
-import { TimeGridLines } from "./TimeGridLines";
-import { EventSlot } from "./EventSlot";
-import { AvailabilitySlot } from "./AvailabilitySlot";
+
+import { useState } from "react";
+import { format, isToday, isSameDay } from "date-fns";
+import { PlusCircle, Calendar as CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SessionCard } from "./SessionCard";
+import { RescheduleDialog } from "./dialog/RescheduleDialog";
+import { CancelDialog } from "./dialog/CancelDialog";
+import { SendReminderDialog } from "./dialog/SendReminderDialog";
+import type { CalendarEvent } from "@/types/calendar";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface EventsSidebarProps {
   date: Date;
   events: CalendarEvent[];
-  availability?: Availability[];
   isMentor?: boolean;
   onEventClick?: (event: CalendarEvent) => void;
   onEventDelete?: (event: CalendarEvent) => void;
-  timezone?: string;
 }
 
-export function EventsSidebar({ 
-  date, 
-  events, 
-  availability = [], 
-  isMentor = false, 
+export function EventsSidebar({
+  date,
+  events,
+  isMentor = false,
   onEventClick,
   onEventDelete,
-  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone 
 }: EventsSidebarProps) {
-  const CELL_HEIGHT = 52;
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
+  const { session } = useAuthSession();
+  const userId = session?.user.id;
 
-  // Filter events for the selected date and exclude cancelled events
-  const activeEvents = events.filter(event => {
-    const eventDate = new Date(event.start_time);
-    return event.status !== 'cancelled' && isSameDay(eventDate, date);
-  });
+  const filteredEvents = events.filter((event) =>
+    isSameDay(new Date(event.start_time), date)
+  );
 
-  // Calculate overlapping events and their positions
-  const getEventPositions = (events: CalendarEvent[]) => {
-    const sortedEvents = [...events].sort((a, b) => 
-      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-    );
-
-    const positions = new Map<string, { left: number; width: number }>();
-    const overlaps = new Map<string, Set<string>>();
-
-    // Find overlapping events
-    for (let i = 0; i < sortedEvents.length; i++) {
-      const event = sortedEvents[i];
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
-      const overlappingEvents = new Set<string>();
-
-      for (let j = 0; j < sortedEvents.length; j++) {
-        if (i === j) continue;
-        const otherEvent = sortedEvents[j];
-        const otherStart = new Date(otherEvent.start_time);
-        const otherEnd = new Date(otherEvent.end_time);
-
-        if (eventStart < otherEnd && eventEnd > otherStart) {
-          overlappingEvents.add(otherEvent.id);
-        }
-      }
-
-      overlaps.set(event.id, overlappingEvents);
-    }
-
-    // Calculate positions for each event
-    sortedEvents.forEach(event => {
-      const overlappingEvents = overlaps.get(event.id) || new Set();
-      const totalOverlaps = overlappingEvents.size + 1;
-      const usedPositions = new Set<number>();
-
-      // Check positions already taken by overlapping events
-      overlappingEvents.forEach(overlapId => {
-        const pos = positions.get(overlapId);
-        if (pos) {
-          usedPositions.add(Math.floor(pos.left / (100 / totalOverlaps)));
-        }
-      });
-
-      // Find first available position
-      let position = 0;
-      while (usedPositions.has(position)) {
-        position++;
-      }
-
-      positions.set(event.id, {
-        left: (position * (100 / totalOverlaps)),
-        width: (100 / totalOverlaps)
-      });
-    });
-
-    return positions;
+  const handleReschedule = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setShowReschedule(true);
   };
 
-  const eventPositions = getEventPositions(activeEvents);
+  const handleCancel = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setShowCancel(true);
+  };
+
+  const handleReminder = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setShowReminder(true);
+  };
+
+  const handleDialogClose = () => {
+    setShowReschedule(false);
+    setShowCancel(false);
+    setShowReminder(false);
+    setSelectedEvent(null);
+  };
+
+  const handleEventDeleted = () => {
+    if (selectedEvent && onEventDelete) {
+      onEventDelete(selectedEvent);
+    }
+    handleDialogClose();
+  };
 
   return (
-    <div className="w-full lg:w-[600px] bg-background border border-border rounded-lg p-4">
-      <div className="space-y-4">
+    <div className="border rounded-md p-4 w-full lg:w-auto lg:min-w-[350px]">
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h3 className="font-medium text-lg text-center lg:text-left">
-            {formatInTimeZone(date, timezone, 'MMMM d, yyyy')}
+          <h3 className="text-lg font-semibold">
+            {isToday(date)
+              ? "Today's Sessions"
+              : `Sessions for ${format(date, "MMMM d, yyyy")}`}
           </h3>
-          <p className="text-sm text-muted-foreground text-center lg:text-left">
-            Timezone: {timezone}
+          <p className="text-sm text-muted-foreground">
+            {filteredEvents.length === 0
+              ? "No sessions scheduled"
+              : `${filteredEvents.length} session${
+                  filteredEvents.length === 1 ? "" : "s"
+                }`}
           </p>
         </div>
-
-        <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="overflow-x-auto">
-            <div className="relative grid grid-cols-[80px_1fr] gap-4 min-w-[350px] md:min-w-[500px]">
-              <TimeGrid timezone={timezone} cellHeight={CELL_HEIGHT} />
-
-              <div className="relative border-l border-border min-h-[2496px]">
-                <TimeGridLines cellHeight={CELL_HEIGHT} />
-
-                {isMentor && availability.map((slot, index) => (
-                  <AvailabilitySlot
-                    key={`${slot.start_date_time}-${index}`}
-                    slot={slot}
-                    date={date}
-                    timezone={timezone}
-                    index={index}
-                    cellHeight={CELL_HEIGHT}
-                  />
-                ))}
-
-                {activeEvents.map((event) => (
-                  <EventSlot
-                    key={event.id}
-                    event={event}
-                    timezone={timezone}
-                    onClick={onEventClick}
-                    onDelete={onEventDelete}
-                    cellHeight={CELL_HEIGHT}
-                    position={eventPositions.get(event.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </ScrollArea>
+        <Button variant="outline" size="sm" className="gap-1">
+          <PlusCircle className="h-4 w-4" /> Book
+        </Button>
       </div>
+
+      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+        {filteredEvents.length === 0 ? (
+          <div className="text-center py-8">
+            <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+            <h3 className="mt-2 text-sm font-semibold">No Sessions</h3>
+            <p className="text-sm text-muted-foreground">
+              {isToday(date)
+                ? "You have no sessions scheduled for today."
+                : `No sessions scheduled for ${format(date, "MMMM d")}.`}
+            </p>
+          </div>
+        ) : (
+          filteredEvents.map((event) => (
+            <SessionCard
+              key={event.id}
+              event={event}
+              onClick={() => onEventClick && onEventClick(event)}
+              onReschedule={handleReschedule}
+              onCancel={handleCancel}
+              onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
+            />
+          ))
+        )}
+      </div>
+
+      {selectedEvent && showReschedule && (
+        <RescheduleDialog
+          isOpen={showReschedule}
+          onClose={handleDialogClose}
+          sessionId={selectedEvent.id}
+          currentScheduledTime={new Date(selectedEvent.start_time)}
+          duration={selectedEvent.session_details?.session_type.duration || 60}
+          mentorId={selectedEvent.session_details?.mentor.id || ''}
+        />
+      )}
+
+      {selectedEvent && showCancel && (
+        <CancelDialog
+          isOpen={showCancel}
+          onClose={handleDialogClose}
+          sessionId={selectedEvent.id}
+          onCancelled={handleEventDeleted}
+        />
+      )}
+
+      {selectedEvent && showReminder && userId && (
+        <SendReminderDialog
+          isOpen={showReminder}
+          onClose={handleDialogClose}
+          sessionId={selectedEvent.id}
+          senderId={userId}
+        />
+      )}
     </div>
   );
 }
