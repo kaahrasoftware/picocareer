@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckIcon, Info } from "lucide-react";
+import { CheckIcon, Info, Plus, Trash } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 interface SessionSectionProps {
   profileId: string;
@@ -16,7 +17,7 @@ interface SessionSectionProps {
 
 interface SessionSettings {
   defaultSessionDuration: number;
-  reminderTime: 15 | 30 | 60 | 1440;
+  reminderTimes: Array<15 | 30 | 60 | 1440>;
   defaultMeetingPlatform: 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other';
   customMeetingPlatform: string;
   allowRescheduling: boolean;
@@ -27,7 +28,7 @@ interface SessionSettings {
 
 const defaultSessionSettings: SessionSettings = {
   defaultSessionDuration: 30,
-  reminderTime: 30,
+  reminderTimes: [30],
   defaultMeetingPlatform: 'Google Meet',
   customMeetingPlatform: '',
   allowRescheduling: true,
@@ -41,6 +42,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
   const [settings, setSettings] = useState<SessionSettings>(defaultSessionSettings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [newReminderTime, setNewReminderTime] = useState<15 | 30 | 60 | 1440>(30);
 
   useEffect(() => {
     const sessionSettings = getSetting('session_settings');
@@ -69,6 +71,37 @@ export function SessionSection({ profileId }: SessionSectionProps) {
       ...prev,
       [key]: value
     }));
+  };
+
+  const addReminderTime = () => {
+    if (settings.reminderTimes.length >= 5) {
+      setErrorMessage("Maximum of 5 reminder times allowed");
+      return;
+    }
+    
+    // Don't add duplicate times
+    if (!settings.reminderTimes.includes(newReminderTime)) {
+      setSettings(prev => ({
+        ...prev,
+        reminderTimes: [...prev.reminderTimes, newReminderTime].sort((a, b) => a - b)
+      }));
+      setErrorMessage(null);
+    } else {
+      setErrorMessage("This reminder time is already added");
+    }
+  };
+
+  const removeReminderTime = (time: number) => {
+    if (settings.reminderTimes.length <= 1) {
+      setErrorMessage("At least one reminder time is required");
+      return;
+    }
+    
+    setSettings(prev => ({
+      ...prev,
+      reminderTimes: prev.reminderTimes.filter(t => t !== time)
+    }));
+    setErrorMessage(null);
   };
 
   const saveSettings = async () => {
@@ -127,33 +160,74 @@ export function SessionSection({ profileId }: SessionSectionProps) {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="reminderTime">Session Reminder Time</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="w-80">You and your mentees will receive notifications at this time before sessions.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Label>Session Reminder Times</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-80">You and your mentees will receive notifications at these times before sessions. You can add up to 5 reminder times.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {settings.reminderTimes.length}/5
+                </Badge>
               </div>
-              <Select 
-                value={settings.reminderTime.toString()}
-                onValueChange={(value) => handleInputChange('reminderTime', parseInt(value) as 15 | 30 | 60 | 1440)}
-              >
-                <SelectTrigger id="reminderTime">
-                  <SelectValue placeholder="Select reminder time" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 minutes before</SelectItem>
-                  <SelectItem value="30">30 minutes before</SelectItem>
-                  <SelectItem value="60">1 hour before</SelectItem>
-                  <SelectItem value="1440">1 day before</SelectItem>
-                </SelectContent>
-              </Select>
+              
+              <div className="flex flex-wrap gap-2 mb-2">
+                {settings.reminderTimes.map(time => (
+                  <Badge 
+                    key={time} 
+                    variant="secondary"
+                    className="flex items-center gap-1 px-2 py-1"
+                  >
+                    {time === 1440 ? "1 day" : `${time} minutes`}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => removeReminderTime(time)}
+                    >
+                      <Trash className="h-3 w-3" />
+                      <span className="sr-only">Remove reminder</span>
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Select 
+                  value={newReminderTime.toString()}
+                  onValueChange={(value) => setNewReminderTime(parseInt(value) as 15 | 30 | 60 | 1440)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes before</SelectItem>
+                    <SelectItem value="30">30 minutes before</SelectItem>
+                    <SelectItem value="60">1 hour before</SelectItem>
+                    <SelectItem value="1440">1 day before</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={addReminderTime}
+                  disabled={settings.reminderTimes.length >= 5}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">

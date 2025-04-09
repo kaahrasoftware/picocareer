@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -82,9 +83,30 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to create notifications');
     }
 
-    // Schedule reminder notifications
+    // Get mentor's reminder time settings
+    const { data: mentorSettings, error: settingsError } = await supabase
+      .from('user_settings')
+      .select('setting_value')
+      .eq('profile_id', session.mentor_id)
+      .eq('setting_type', 'session_settings')
+      .single();
+
+    // Default reminder times if settings not found
+    let reminderTimes = [60, 30, 10]; // Default reminder times in minutes
+    
+    if (!settingsError && mentorSettings?.setting_value) {
+      try {
+        const parsedSettings = JSON.parse(mentorSettings.setting_value);
+        if (parsedSettings.reminderTimes && Array.isArray(parsedSettings.reminderTimes)) {
+          reminderTimes = parsedSettings.reminderTimes;
+        }
+      } catch (e) {
+        console.error('Error parsing mentor settings:', e);
+      }
+    }
+
+    // Schedule reminder notifications based on mentor settings
     const scheduledAt = new Date(session.scheduled_at);
-    const reminderTimes = [60, 30, 10, 1];
 
     for (const minutes of reminderTimes) {
       const reminderTime = new Date(scheduledAt.getTime() - minutes * 60000);
@@ -95,15 +117,15 @@ const handler = async (req: Request): Promise<Response> => {
       const reminderNotifications = [
         {
           profile_id: session.mentor_id,
-          title: `Session Reminder: ${minutes} minutes`,
-          message: `Your session with ${session.mentee.full_name} starts in ${minutes} minutes.${meetingLinkInfo}`,
+          title: `Session Reminder: ${minutes === 1440 ? '1 day' : `${minutes} minutes`}`,
+          message: `Your session with ${session.mentee.full_name} starts ${minutes === 1440 ? 'tomorrow' : `in ${minutes} minutes`}.${meetingLinkInfo}`,
           type: 'session_reminder',
           action_url: '/profile?tab=calendar'
         },
         {
           profile_id: session.mentee_id,
-          title: `Session Reminder: ${minutes} minutes`,
-          message: `Your session with ${session.mentor.full_name} starts in ${minutes} minutes.${meetingLinkInfo}`,
+          title: `Session Reminder: ${minutes === 1440 ? '1 day' : `${minutes} minutes`}`,
+          message: `Your session with ${session.mentor.full_name} starts ${minutes === 1440 ? 'tomorrow' : `in ${minutes} minutes`}.${meetingLinkInfo}`,
           type: 'session_reminder',
           action_url: '/profile?tab=calendar'
         }

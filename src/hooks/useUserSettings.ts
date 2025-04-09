@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +39,7 @@ export interface UISettingType {
   };
   session_settings: {
     defaultSessionDuration: number;
-    reminderTime: 15 | 30 | 60 | 1440;
+    reminderTimes: Array<15 | 30 | 60 | 1440>;
     defaultMeetingPlatform: 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other';
     customMeetingPlatform: string;
     allowRescheduling: boolean;
