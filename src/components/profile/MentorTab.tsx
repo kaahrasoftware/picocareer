@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MentorshipStats } from "./mentor/MentorshipStats";
 import { SessionTypeManager } from "./mentor/SessionTypeManager";
 import { AvailabilityManager } from "./mentor/AvailabilityManager";
+import { SessionSection } from "./settings/SessionSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
@@ -61,6 +62,7 @@ export function MentorTab({ profile }: MentorTabProps) {
         <TabsTrigger value="stats">Stats</TabsTrigger>
         <TabsTrigger value="session-types">Session Types</TabsTrigger>
         <TabsTrigger value="availability">Availability</TabsTrigger>
+        <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
 
       <TabsContent value="stats">
@@ -80,6 +82,10 @@ export function MentorTab({ profile }: MentorTabProps) {
           profileId={profileId}
           onUpdate={refetchSessions}
         />
+      </TabsContent>
+
+      <TabsContent value="settings">
+        <SessionSection profileId={profileId} />
       </TabsContent>
     </Tabs>
   );

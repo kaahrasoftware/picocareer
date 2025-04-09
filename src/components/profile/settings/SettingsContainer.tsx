@@ -6,7 +6,6 @@ import { TimezoneSection } from "./TimezoneSection";
 import { NotificationSection } from "./NotificationSection";
 import { DisplaySection } from "./DisplaySection";
 import { PrivacySection } from "./PrivacySection";
-import { SessionSection } from "./SessionSection";
 import { AccessibilitySection } from "./AccessibilitySection";
 import { ThemeSection } from "./ThemeSection";
 import { LanguageSection } from "./LanguageSection";
@@ -35,12 +34,11 @@ export function SettingsContainer({ profileId }: SettingsContainerProps) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="interface" className="w-full">
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-5 mb-4">
             <TabsTrigger value="interface">Interface</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
             <TabsTrigger value="display">Display</TabsTrigger>
-            <TabsTrigger value="session">Session</TabsTrigger>
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
           </TabsList>
           
@@ -62,10 +60,6 @@ export function SettingsContainer({ profileId }: SettingsContainerProps) {
           
           <TabsContent value="display">
             <DisplaySection profileId={profileId} />
-          </TabsContent>
-          
-          <TabsContent value="session">
-            <SessionSection profileId={profileId} />
           </TabsContent>
           
           <TabsContent value="accessibility">

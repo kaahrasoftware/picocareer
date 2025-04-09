@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SessionTypeManager } from "@/components/profile/mentor/SessionTypeManager";
 import { AvailabilityManager } from "@/components/profile/mentor/AvailabilityManager";
 import { TimezoneSection } from "@/components/profile/settings/TimezoneSection";
+import { SessionSection } from "@/components/profile/settings/SessionSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSessionTypeManager } from "@/components/profile/mentor/hooks/useSessionTypeManager";
@@ -53,6 +54,7 @@ export function MentorSettingsTab({ profile }: MentorSettingsTabProps) {
           <TabsTrigger value="session-types">Session Types</TabsTrigger>
           <TabsTrigger value="availability">Availability</TabsTrigger>
           <TabsTrigger value="timezone">Timezone</TabsTrigger>
+          <TabsTrigger value="session-settings">Session Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="session-types" className="pt-4">
@@ -93,6 +95,17 @@ export function MentorSettingsTab({ profile }: MentorSettingsTabProps) {
             </CardHeader>
             <CardContent>
               <TimezoneSection profileId={profileId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="session-settings" className="pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Session Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SessionSection profileId={profileId} />
             </CardContent>
           </Card>
         </TabsContent>
