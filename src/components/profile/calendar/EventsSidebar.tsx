@@ -9,6 +9,9 @@ import { CancelDialog } from "./dialog/CancelDialog";
 import { SendReminderDialog } from "./dialog/SendReminderDialog";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventsSidebarProps {
   date: Date;
@@ -30,6 +33,8 @@ export function EventsSidebar({
   const [showCancel, setShowCancel] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const { session } = useAuthSession();
+  const { toast } = useToast();
+  const { cancelSession } = useSessionManagement();
   const userId = session?.user.id;
 
   const filteredEvents = events.filter((event) =>
@@ -49,6 +54,51 @@ export function EventsSidebar({
   const handleReminder = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setShowReminder(true);
+  };
+
+  const handleJoin = (event: CalendarEvent) => {
+    if (event.session_details?.meeting_link) {
+      window.open(event.session_details.meeting_link, '_blank');
+    } else {
+      toast({
+        title: "No meeting link available",
+        description: "The meeting link has not been set up yet.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkComplete = async (event: CalendarEvent) => {
+    try {
+      // Only mentors can mark sessions as complete
+      if (!isMentor || !event.id) {
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('mentor_sessions')
+        .update({ status: 'completed' })
+        .eq('id', event.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Session updated',
+        description: 'Session has been marked as completed.',
+      });
+      
+      // Refresh events in parent component
+      if (onEventDelete) {
+        onEventDelete(event);
+      }
+    } catch (error: any) {
+      console.error('Error updating session:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update session status.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDialogClose = () => {
@@ -99,16 +149,23 @@ export function EventsSidebar({
             </p>
           </div>
         ) : (
-          filteredEvents.map((event) => (
-            <SessionCard
-              key={event.id}
-              event={event}
-              onClick={() => onEventClick && onEventClick(event)}
-              onReschedule={handleReschedule}
-              onCancel={handleCancel}
-              onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
-            />
-          ))
+          filteredEvents.map((event) => {
+            // Add the user ID to the event object for user role checking in SessionCard
+            const eventWithUserId = { ...event, user_id: userId };
+            
+            return (
+              <SessionCard
+                key={event.id}
+                event={eventWithUserId}
+                onClick={onEventClick ? () => onEventClick(event) : undefined}
+                onJoin={handleJoin}
+                onReschedule={onReschedule}
+                onCancel={handleCancel}
+                onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
+                onMarkComplete={isMentor && event.session_details?.mentor.id === userId ? handleMarkComplete : undefined}
+              />
+            );
+          })
         )}
       </div>
 

@@ -5,9 +5,11 @@ import {
   Calendar, 
   Clock, 
   User,
+  ExternalLink,
   Bell,
+  CalendarClock,
   CalendarX,
-  CalendarClock
+  CheckCircle
 } from "lucide-react";
 import { 
   Card, 
@@ -15,36 +17,52 @@ import {
   CardFooter 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import type { CalendarEvent } from "@/types/calendar";
 
 interface SessionCardProps {
   event: CalendarEvent;
   onClick?: () => void;
+  onJoin?: (event: CalendarEvent) => void;
   onReschedule?: (event: CalendarEvent) => void;
   onCancel?: (event: CalendarEvent) => void;
   onReminder?: (event: CalendarEvent) => void;
+  onMarkComplete?: (event: CalendarEvent) => void;
 }
 
 export function SessionCard({ 
   event, 
   onClick, 
+  onJoin,
   onReschedule, 
   onCancel, 
-  onReminder 
+  onReminder,
+  onMarkComplete
 }: SessionCardProps) {
   const startTime = new Date(event.start_time as string);
   const isUpcoming = startTime > new Date();
-  const isMentor = event.session_details?.mentor.id === event.session_details?.mentee.id;
+  const isMentor = event.session_details?.mentor.id === event.user_id;
+  const isCompleted = event.status === "completed";
+  const isCancelled = event.status === "cancelled";
 
   // Get participant details based on whether current user is mentor or mentee
   const participant = isMentor 
     ? event.session_details?.mentee 
     : event.session_details?.mentor;
 
+  const handleButtonClick = (
+    e: React.MouseEvent, 
+    handler?: (event: CalendarEvent) => void
+  ) => {
+    if (!handler) return;
+    e.stopPropagation();
+    handler(event);
+  };
+
   return (
     <Card 
-      className={`relative overflow-hidden ${onClick ? "cursor-pointer" : ""}`}
-      onClick={onClick}
+      className={`relative overflow-hidden ${onClick && !isCancelled ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
+      onClick={onClick && !isCancelled ? onClick : undefined}
     >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
@@ -54,15 +72,22 @@ export function SessionCard({
               {event.session_details?.session_type?.type || "Mentoring Session"}
             </p>
           </div>
-          <div className={`px-2 py-1 text-xs rounded-full ${
-            event.status === "cancelled" ? "bg-destructive/10 text-destructive" : 
-            event.status === "completed" ? "bg-green-100 text-green-800" : 
-            "bg-blue-100 text-blue-800"
-          }`}>
-            {event.status === "cancelled" ? "Cancelled" : 
-             event.status === "completed" ? "Completed" : 
+          <Badge 
+            variant={
+              isCancelled ? "destructive" : 
+              isCompleted ? "outline" : 
+              "secondary"
+            }
+            className={`whitespace-nowrap px-2 text-xs ${
+              isCancelled ? "bg-destructive/10 hover:bg-destructive/20 text-destructive" : 
+              isCompleted ? "bg-green-100 hover:bg-green-200 text-green-800" : 
+              "bg-blue-100 hover:bg-blue-200 text-blue-800"
+            }`}
+          >
+            {isCancelled ? "Cancelled" : 
+             isCompleted ? "Completed" : 
              "Scheduled"}
-          </div>
+          </Badge>
         </div>
 
         <div className="space-y-2 mt-2">
@@ -87,48 +112,71 @@ export function SessionCard({
         </div>
       </CardContent>
 
-      {isUpcoming && (
-        <CardFooter className="flex justify-end gap-2 px-4 py-2 bg-muted/20">
-          {onReminder && (
+      {/* Render action buttons based on session status and permissions */}
+      {!isCancelled && (
+        <CardFooter className="flex flex-wrap gap-2 px-4 py-2 bg-muted/20">
+          {/* Join button (visible for all users if meeting link exists) */}
+          {event.session_details?.meeting_link && (
             <Button 
-              variant="ghost" 
+              variant="default" 
               size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onReminder(event);
-              }}
+              className="flex-grow"
+              onClick={(e) => handleButtonClick(e, onJoin)}
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Join
+            </Button>
+          )}
+          
+          {/* Remind button (visible for mentors for upcoming sessions) */}
+          {isUpcoming && onReminder && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-grow"
+              onClick={(e) => handleButtonClick(e, onReminder)}
             >
               <Bell className="h-4 w-4 mr-1" />
               Remind
             </Button>
           )}
           
-          {onReschedule && (
+          {/* Reschedule button (visible for upcoming sessions) */}
+          {isUpcoming && onReschedule && (
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onReschedule(event);
-              }}
+              className="flex-grow"
+              onClick={(e) => handleButtonClick(e, onReschedule)}
             >
               <CalendarClock className="h-4 w-4 mr-1" />
               Reschedule
             </Button>
           )}
           
-          {onCancel && (
+          {/* Cancel button (visible for upcoming sessions) */}
+          {isUpcoming && onCancel && (
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm" 
-              className="text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCancel(event);
-              }}
+              className="flex-grow text-destructive hover:text-destructive"
+              onClick={(e) => handleButtonClick(e, onCancel)}
             >
               <CalendarX className="h-4 w-4 mr-1" />
               Cancel
+            </Button>
+          )}
+
+          {/* Mark as Complete button (visible for mentors for non-completed sessions) */}
+          {!isCompleted && onMarkComplete && isMentor && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-grow text-green-600 hover:text-green-700"
+              onClick={(e) => handleButtonClick(e, onMarkComplete)}
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Complete
             </Button>
           )}
         </CardFooter>

@@ -40,6 +40,7 @@ export interface CalendarEvent {
   description?: string;
   event_type?: string;
   session_details?: any;
+  user_id?: string; // Added for tracking current user ID in SessionCard
 }
 
 // Define mentor session type
