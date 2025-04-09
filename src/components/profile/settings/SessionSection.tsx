@@ -42,7 +42,8 @@ const defaultSessionSettings: SessionSettings = {
 export function SessionSection({ profileId }: SessionSectionProps) {
   const { getSetting, updateSetting } = useUserSettings(profileId);
   const [settings, setSettings] = useState<SessionSettings>(defaultSessionSettings);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const sessionSettings = getSetting('session_settings');
@@ -75,6 +76,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
   const saveSettings = async () => {
     setSaveStatus('saving');
+    setErrorMessage(null);
     try {
       await updateSetting.mutateAsync({
         type: 'session_settings',
@@ -84,7 +86,9 @@ export function SessionSection({ profileId }: SessionSectionProps) {
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error('Error saving session settings:', error);
-      setSaveStatus('idle');
+      setSaveStatus('error');
+      setErrorMessage("There was a problem saving your settings. Please try again.");
+      setTimeout(() => setSaveStatus('idle'), 5000);
     }
   };
 
@@ -248,6 +252,12 @@ export function SessionSection({ profileId }: SessionSectionProps) {
         </CardContent>
       </Card>
 
+      {errorMessage && (
+        <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+          {errorMessage}
+        </div>
+      )}
+
       <Button
         onClick={saveSettings}
         disabled={saveStatus === 'saving'}
@@ -260,6 +270,8 @@ export function SessionSection({ profileId }: SessionSectionProps) {
             <CheckIcon className="h-4 w-4 mr-2" />
             Saved
           </>
+        ) : saveStatus === 'error' ? (
+          'Try Again'
         ) : (
           'Save Session Settings'
         )}

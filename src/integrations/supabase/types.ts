@@ -3909,6 +3909,10 @@ export type Database = {
         | "theme"
         | "notification_preferences"
         | "language_preference"
+        | "session_settings"
+        | "privacy_settings"
+        | "display_settings"
+        | "accessibility_settings"
       states:
         | "Alabama - AL"
         | "Alaska - AK"
@@ -4593,6 +4597,10 @@ export const Constants = {
         "theme",
         "notification_preferences",
         "language_preference",
+        "session_settings",
+        "privacy_settings",
+        "display_settings",
+        "accessibility_settings",
       ],
       states: [
         "Alabama - AL",
