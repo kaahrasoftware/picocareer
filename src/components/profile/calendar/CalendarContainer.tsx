@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import { Availability } from "@/types/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,13 +41,28 @@ export function CalendarContainer({
   const getAvailabilityStatus = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     // Get both one-time and recurring slots for this date
     const dayAvailabilities = availability.filter(slot => {
-      if (slot.recurring && slot.day_of_week === dayOfWeek) {
+      // For one-time slots, check the specific date
+      if (!slot.recurring && format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
         return true;
       }
-      return format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr;
+      
+      // For recurring slots, check if they apply to this date
+      if (slot.recurring && slot.day_of_week === dayOfWeek) {
+        // Check if the slot was created before the date we're checking
+        // This ensures recurring slots only apply to future dates from when they were created
+        const slotCreationDate = new Date(slot.created_at || slot.start_date_time);
+        slotCreationDate.setHours(0, 0, 0, 0);
+        
+        // Only apply recurring slots to dates that are after the creation date
+        return isAfter(date, slotCreationDate) || format(date, 'yyyy-MM-dd') === format(slotCreationDate, 'yyyy-MM-dd');
+      }
+      
+      return false;
     });
 
     // If there's at least one available slot, consider the day available

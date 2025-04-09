@@ -5,10 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotInputs } from "./TimeSlotInputs";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { format, areIntervalsOverlapping } from "date-fns";
+import { format, areIntervalsOverlapping, addDays } from "date-fns";
 import { getTimezoneOffset } from "@/utils/timezoneUpdater";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface TimeSlotFormProps {
   selectedDate: Date;
@@ -31,6 +33,11 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
   const { data: currentUserProfile } = useUserProfile(session);
   const isAdmin = currentUserProfile?.user_type === 'admin';
   const isCurrentUser = profileId === session?.user.id;
+
+  // Today's date for reference
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPastDate = selectedDate < today;
 
   const checkExistingAvailability = async (startDateTime: Date, endDateTime: Date) => {
     const startOfDay = new Date(selectedDate);
@@ -131,7 +138,8 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
         userTimezone,
         isAdmin,
         isCurrentUser,
-        profileId
+        profileId,
+        isRecurring
       });
 
       // If the current user is an admin and is managing someone else's availability,
@@ -176,7 +184,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
       toast({
         title: "Success",
         description: isRecurring 
-          ? `Weekly availability has been set for every ${format(selectedDate, 'EEEE')}`
+          ? `Weekly availability has been set for every ${format(selectedDate, 'EEEE')} going forward`
           : "Availability has been set",
       });
       
@@ -211,6 +219,17 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
 
   return (
     <div className="space-y-4">
+      {isRecurring && (
+        <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+          <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-800 dark:text-blue-300">Weekly Recurring Availability</AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-400">
+            When you set recurring availability, it will apply to all future {format(selectedDate, 'EEEE')}s. 
+            This will not affect any dates in the past.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <TimeSlotInputs
         timeSlots={timeSlots}
         selectedStartTime={selectedStartTime}
@@ -222,6 +241,17 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
         onEndTimeSelect={setSelectedEndTime}
         onRecurringChange={setIsRecurring}
       />
+
+      {isPastDate && (
+        <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+          <InfoIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-amber-800 dark:text-amber-300">Past Date Selected</AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-400">
+            You are setting availability for a date in the past. This is only useful if you're marking 
+            time as unavailable or setting up recurring availability for future weeks.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Button 
         onClick={handleSaveAvailability}
