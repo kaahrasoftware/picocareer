@@ -1,77 +1,252 @@
+
+import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckIcon } from "lucide-react";
 
-export function NotificationSection() {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { getSetting, updateSetting } = useUserSettings(profile?.id);
+interface NotificationSectionProps {
+  profileId: string;
+}
 
-  const notificationSettings = getSetting('notification_preferences');
-  const parsedSettings = notificationSettings ? JSON.parse(notificationSettings) : null;
-  const emailNotifications = parsedSettings?.email_notifications ?? true;
-  const pushNotifications = parsedSettings?.push_notifications ?? true;
+interface NotificationPreferences {
+  email: {
+    sessions: boolean;
+    mentorship: boolean;
+    system: boolean;
+    marketing: boolean;
+  };
+  push: {
+    sessions: boolean;
+    mentorship: boolean;
+    system: boolean;
+    marketing: boolean;
+  };
+}
 
-  // Set default notifications on first load if no settings exist
+const defaultPreferences: NotificationPreferences = {
+  email: {
+    sessions: true,
+    mentorship: true,
+    system: true,
+    marketing: false,
+  },
+  push: {
+    sessions: true,
+    mentorship: true,
+    system: true,
+    marketing: false,
+  },
+};
+
+export function NotificationSection({ profileId }: NotificationSectionProps) {
+  const { getSetting, updateSetting } = useUserSettings(profileId);
+  const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPreferences);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving'>('idle');
+
   useEffect(() => {
-    if (profile?.id && !notificationSettings) {
-      updateSetting.mutate({
-        type: 'notification_preferences',
-        value: JSON.stringify({
-          email_notifications: true,
-          push_notifications: true
-        })
-      });
+    const notificationPreferences = getSetting('notification_preferences');
+    if (notificationPreferences) {
+      try {
+        setPreferences(JSON.parse(notificationPreferences));
+      } catch (e) {
+        console.error('Error parsing notification preferences:', e);
+      }
     }
-  }, [profile?.id, notificationSettings]);
+  }, [getSetting]);
 
-  const handleNotificationChange = (type: 'email_notifications' | 'push_notifications', checked: boolean) => {
-    const currentSettings = parsedSettings || {
-      email_notifications: true,
-      push_notifications: true
-    };
+  const handleToggle = (
+    channel: 'email' | 'push',
+    type: 'sessions' | 'mentorship' | 'system' | 'marketing',
+    value: boolean
+  ) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [channel]: {
+        ...prev[channel],
+        [type]: value,
+      },
+    }));
+  };
 
-    updateSetting.mutate({
-      type: 'notification_preferences',
-      value: JSON.stringify({
-        ...currentSettings,
-        [type]: checked
-      })
-    });
+  const savePreferences = async () => {
+    setSaveStatus('saving');
+    try {
+      await updateSetting.mutateAsync({
+        type: 'notification_preferences',
+        value: JSON.stringify(preferences),
+      });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+      setSaveStatus('idle');
+    }
   };
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Notifications</h3>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label>Email Notifications</Label>
-            <p className="text-sm text-muted-foreground">
-              Receive email notifications about your sessions and updates
-            </p>
-          </div>
-          <Switch
-            checked={emailNotifications}
-            onCheckedChange={(checked) => handleNotificationChange('email_notifications', checked)}
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label>Push Notifications</Label>
-            <p className="text-sm text-muted-foreground">
-              Receive push notifications about your sessions and updates
-            </p>
-          </div>
-          <Switch
-            checked={pushNotifications}
-            onCheckedChange={(checked) => handleNotificationChange('push_notifications', checked)}
-          />
-        </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Notification Preferences</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Control how and when you receive notifications.
+        </p>
       </div>
+
+      <Tabs defaultValue="email" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="email">Email Notifications</TabsTrigger>
+          <TabsTrigger value="push">Push Notifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="email" className="space-y-4 mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="email-sessions" className="font-medium">Session Updates</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Notifications about upcoming sessions, cancellations, and rescheduling
+                    </p>
+                  </div>
+                  <Switch
+                    id="email-sessions"
+                    checked={preferences.email.sessions}
+                    onCheckedChange={(value) => handleToggle('email', 'sessions', value)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="email-mentorship" className="font-medium">Mentorship Activity</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Updates related to your mentorship activities and connections
+                    </p>
+                  </div>
+                  <Switch
+                    id="email-mentorship"
+                    checked={preferences.email.mentorship}
+                    onCheckedChange={(value) => handleToggle('email', 'mentorship', value)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="email-system" className="font-medium">System Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Important updates about your account, security alerts, and platform changes
+                    </p>
+                  </div>
+                  <Switch
+                    id="email-system"
+                    checked={preferences.email.system}
+                    onCheckedChange={(value) => handleToggle('email', 'system', value)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="email-marketing" className="font-medium">Marketing & Promotional</Label>
+                    <p className="text-sm text-muted-foreground">
+                      News, feature updates, and promotional content
+                    </p>
+                  </div>
+                  <Switch
+                    id="email-marketing"
+                    checked={preferences.email.marketing}
+                    onCheckedChange={(value) => handleToggle('email', 'marketing', value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="push" className="space-y-4 mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="push-sessions" className="font-medium">Session Updates</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Notifications about upcoming sessions, cancellations, and rescheduling
+                    </p>
+                  </div>
+                  <Switch
+                    id="push-sessions"
+                    checked={preferences.push.sessions}
+                    onCheckedChange={(value) => handleToggle('push', 'sessions', value)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="push-mentorship" className="font-medium">Mentorship Activity</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Updates related to your mentorship activities and connections
+                    </p>
+                  </div>
+                  <Switch
+                    id="push-mentorship"
+                    checked={preferences.push.mentorship}
+                    onCheckedChange={(value) => handleToggle('push', 'mentorship', value)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="push-system" className="font-medium">System Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Important updates about your account, security alerts, and platform changes
+                    </p>
+                  </div>
+                  <Switch
+                    id="push-system"
+                    checked={preferences.push.system}
+                    onCheckedChange={(value) => handleToggle('push', 'system', value)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="push-marketing" className="font-medium">Marketing & Promotional</Label>
+                    <p className="text-sm text-muted-foreground">
+                      News, feature updates, and promotional content
+                    </p>
+                  </div>
+                  <Switch
+                    id="push-marketing"
+                    checked={preferences.push.marketing}
+                    onCheckedChange={(value) => handleToggle('push', 'marketing', value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <Button
+        onClick={savePreferences}
+        disabled={saveStatus === 'saving'}
+        className="mt-4"
+      >
+        {saveStatus === 'saving' ? (
+          'Saving...'
+        ) : saveStatus === 'saved' ? (
+          <>
+            <CheckIcon className="h-4 w-4 mr-2" />
+            Saved
+          </>
+        ) : (
+          'Save Preferences'
+        )}
+      </Button>
     </div>
   );
 }
