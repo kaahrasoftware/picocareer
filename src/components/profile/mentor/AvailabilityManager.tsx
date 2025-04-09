@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlotForm } from "../calendar/availability/TimeSlotForm";
 import { UnavailableTimeForm } from "../calendar/availability/UnavailableTimeForm";
@@ -13,6 +12,7 @@ import { MultiDayAvailabilityForm } from "../calendar/availability/MultiDayAvail
 import { DateRange } from "react-day-picker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CalendarDays, CalendarRange } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AvailabilityManagerProps {
   profileId: string;
@@ -116,46 +116,57 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manage Availability</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="font-medium">Select Date</h4>
-              <ToggleGroup type="single" value={selectionMode} onValueChange={(value) => {
-                if (value) setSelectionMode(value as "single" | "range");
-              }}>
-                <ToggleGroupItem value="single" aria-label="Single day selection">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="sr-only">Single day</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="range" aria-label="Date range selection">
-                  <CalendarRange className="h-4 w-4" />
-                  <span className="sr-only">Date range</span>
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-            <CalendarContainer
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              availability={availability}
-              selectedDateRange={selectedDateRange}
-              setSelectedDateRange={handleDateRangeChange}
-              selectionMode={selectionMode}
-            />
-          </div>
-          
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-semibold text-foreground/90">Manage Availability</h2>
+        <ToggleGroup 
+          type="single" 
+          value={selectionMode} 
+          onValueChange={(value) => {
+            if (value) setSelectionMode(value as "single" | "range");
+          }}
+          className="bg-background rounded-md border p-1"
+        >
+          <ToggleGroupItem value="single" aria-label="Single day selection" className="px-3">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            <span>Single Day</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="range" aria-label="Date range selection" className="px-3">
+            <CalendarRange className="h-4 w-4 mr-2" />
+            <span>Date Range</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="bg-background rounded-lg border shadow-sm p-4">
+          <h3 className="text-lg font-medium mb-4">Select Date</h3>
+          <CalendarContainer
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            availability={availability}
+            selectedDateRange={selectedDateRange}
+            setSelectedDateRange={handleDateRangeChange}
+            selectionMode={selectionMode}
+          />
+        </div>
+        
+        <div className="bg-background rounded-lg border shadow-sm p-4">
           {selectedDate && (
-            <div>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="w-full">
+            <>
+              <h3 className="text-lg font-medium mb-4">
+                {selectionMode === "single" 
+                  ? `Availability for ${format(selectedDate, 'MMMM d, yyyy')}` 
+                  : "Set Availability for Multiple Days"}
+              </h3>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+                <TabsList className="w-full mb-4">
                   <TabsTrigger value="available">Available Times</TabsTrigger>
                   <TabsTrigger value="unavailable">Unavailable Times</TabsTrigger>
                 </TabsList>
-                <TabsContent value="available">
+                
+                <TabsContent value="available" className="pt-2">
                   {selectionMode === "single" ? (
                     <TimeSlotForm
                       selectedDate={selectedDate}
@@ -181,7 +192,8 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                     />
                   )}
                 </TabsContent>
-                <TabsContent value="unavailable">
+                
+                <TabsContent value="unavailable" className="pt-2">
                   <UnavailableTimeForm
                     selectedDate={selectedDate}
                     profileId={profileId}
@@ -193,15 +205,18 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
                   />
                 </TabsContent>
               </Tabs>
-            </div>
+            </>
           )}
         </div>
+      </div>
 
+      <div className="bg-background rounded-lg border shadow-sm p-6">
+        <h3 className="text-lg font-medium mb-4">Your Availability Slots</h3>
         <ExistingTimeSlots 
           slots={existingSlots}
           onDelete={handleDeleteSlot}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

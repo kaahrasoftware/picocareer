@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parse, isWithinInterval, addDays } from 'date-fns';
 import { DateRange } from "react-day-picker";
+import { Clock } from "lucide-react";
 
 interface TimeSlotInputsProps {
   timeSlots: string[];
@@ -126,57 +127,88 @@ export function TimeSlotInputs({
     return `${format(selectedDateRange.from, 'MMM d')} - ${format(selectedDateRange.to, 'MMM d, yyyy')} (${daysCount} days)`;
   };
 
+  // Group time slots by hour for a more structured display
+  const groupedTimeSlots: Record<string, string[]> = {};
+  timeSlots.forEach(timeSlot => {
+    const hour = timeSlot.split(':')[0];
+    if (!groupedTimeSlots[hour]) {
+      groupedTimeSlots[hour] = [];
+    }
+    groupedTimeSlots[hour].push(timeSlot);
+  });
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h4 className="font-medium mb-2">Start Time</h4>
-          <select
-            value={selectedStartTime}
-            onChange={(e) => onStartTimeSelect(e.target.value)}
-            className="w-full border border-input bg-background px-3 py-2 rounded-md"
-          >
-            <option value="">Select start time</option>
-            {timeSlots.map((time) => (
-              <option 
-                key={time} 
-                value={time}
-                disabled={isTimeSlotDisabled(time) || (selectedEndTime ? time >= selectedEndTime : false)}
-              >
-                {time}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Label htmlFor="start-time" className="text-sm font-medium">Start Time</Label>
+          </div>
+          <div className="relative">
+            <select
+              id="start-time"
+              value={selectedStartTime || ""}
+              onChange={(e) => onStartTimeSelect(e.target.value)}
+              className="w-full border border-input bg-background px-3 py-2 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            >
+              <option value="">Select start time</option>
+              {Object.keys(groupedTimeSlots).sort((a, b) => parseInt(a) - parseInt(b)).map((hour) => (
+                <optgroup key={hour} label={`${hour}:00 - ${hour}:59`}>
+                  {groupedTimeSlots[hour].map((time) => (
+                    <option 
+                      key={time} 
+                      value={time}
+                      disabled={isTimeSlotDisabled(time) || (selectedEndTime ? time >= selectedEndTime : false)}
+                    >
+                      {format(parse(time, 'HH:mm', new Date()), 'h:mm a')}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div>
-          <h4 className="font-medium mb-2">End Time</h4>
-          <select
-            value={selectedEndTime}
-            onChange={(e) => onEndTimeSelect(e.target.value)}
-            className="w-full border border-input bg-background px-3 py-2 rounded-md"
-          >
-            <option value="">Select end time</option>
-            {timeSlots.map((time) => (
-              <option 
-                key={time} 
-                value={time}
-                disabled={isTimeSlotDisabled(time) || (selectedStartTime ? time <= selectedStartTime : false)}
-              >
-                {time}
-              </option>
-            ))}
-          </select>
+        <div className="space-y-3">
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Label htmlFor="end-time" className="text-sm font-medium">End Time</Label>
+          </div>
+          <div className="relative">
+            <select
+              id="end-time"
+              value={selectedEndTime || ""}
+              onChange={(e) => onEndTimeSelect(e.target.value)}
+              className="w-full border border-input bg-background px-3 py-2 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            >
+              <option value="">Select end time</option>
+              {Object.keys(groupedTimeSlots).sort((a, b) => parseInt(a) - parseInt(b)).map((hour) => (
+                <optgroup key={hour} label={`${hour}:00 - ${hour}:59`}>
+                  {groupedTimeSlots[hour].map((time) => (
+                    <option 
+                      key={time} 
+                      value={time}
+                      disabled={isTimeSlotDisabled(time) || (selectedStartTime ? time <= selectedStartTime : false)}
+                    >
+                      {format(parse(time, 'HH:mm', new Date()), 'h:mm a')}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-900/30 p-3 rounded-md border">
         <Switch
           id="recurring"
           checked={isRecurring}
           onCheckedChange={onRecurringChange}
+          className="data-[state=checked]:bg-primary"
         />
-        <Label htmlFor="recurring">
+        <Label htmlFor="recurring" className="text-sm font-medium cursor-pointer">
           {selectedDateRange && selectedDateRange.from && selectedDateRange.to ? 
             "Make this a weekly recurring availability for all selected dates" :
             "Make this a weekly recurring availability"
@@ -185,14 +217,20 @@ export function TimeSlotInputs({
       </div>
 
       {selectedDateRange && selectedDateRange.from && (
-        <p className="text-sm text-yellow-600 dark:text-yellow-400">
-          This time will be applied to: {getDateRangeText()}
-        </p>
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-md p-3">
+          <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center">
+            <span className="font-medium">Note:</span>
+            <span className="ml-1">This time will be applied to: {getDateRangeText()}</span>
+          </p>
+        </div>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        Times shown in your timezone ({userTimezone})
-      </p>
+      <div className="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-md border">
+        <p className="text-sm text-muted-foreground flex items-center">
+          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+          Times shown in your timezone ({userTimezone})
+        </p>
+      </div>
     </div>
   );
 }

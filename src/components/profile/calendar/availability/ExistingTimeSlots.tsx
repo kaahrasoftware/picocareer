@@ -1,125 +1,80 @@
-import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
-import { formatInTimeZone } from "date-fns-tz";
-import { format } from "date-fns";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 
-interface TimeSlot {
-  id: string;
-  profile_id: string;
-  start_date_time: string;
-  end_date_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week: number | null;
-}
+import React from 'react';
+import { format, parseISO } from 'date-fns';
+import { Button } from "@/components/ui/button";
+import { Trash2, Clock, Calendar, RefreshCw } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface ExistingTimeSlotsProps {
-  slots: TimeSlot[];
+  slots: any[];
   onDelete: (id: string) => void;
 }
 
 export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { getSetting } = useUserSettings(profile?.id || '');
-  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (!slots.length) {
+    return (
+      <div className="text-center py-6 border border-dashed rounded-md bg-background">
+        <p className="text-muted-foreground">No availability slots set for this date.</p>
+      </div>
+    );
+  }
 
-  // Fetch mentor's timezone from user_settings
-  const { data: mentorSettings } = useQuery({
-    queryKey: ['mentor-timezone', slots[0]?.profile_id],
-    queryFn: async () => {
-      if (!slots[0]?.profile_id) return null;
-      
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', slots[0]?.profile_id)
-        .eq('setting_type', 'timezone')
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!slots[0]?.profile_id
+  // Sort the slots by start time
+  const sortedSlots = [...slots].sort((a, b) => {
+    return new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime();
   });
 
-  const mentorTimezone = mentorSettings?.setting_value || 'UTC';
-
-  if (slots.length === 0) return null;
-
   return (
-    <div className="space-y-4">
-      <h4 className="font-medium">Existing Time Slots</h4>
-      <div className="space-y-2">
-        {slots.map((slot) => {
-          const startDate = new Date(slot.start_date_time);
-          const formattedDate = format(startDate, 'MMM d, yyyy');
+    <ScrollArea className="h-[320px] pr-4">
+      <div className="space-y-3">
+        {sortedSlots.map((slot) => {
+          const startTime = parseISO(slot.start_date_time);
+          const endTime = parseISO(slot.end_date_time);
           
-          // Convert times to both user's and mentor's timezone
-          const startTimeUser = formatInTimeZone(
-            startDate,
-            userTimezone,
-            'h:mm a'
-          );
-          const endTimeUser = formatInTimeZone(
-            new Date(slot.end_date_time),
-            userTimezone,
-            'h:mm a'
-          );
-
-          const startTimeMentor = formatInTimeZone(
-            startDate,
-            mentorTimezone,
-            'h:mm a'
-          );
-          const endTimeMentor = formatInTimeZone(
-            new Date(slot.end_date_time),
-            mentorTimezone,
-            'h:mm a'
-          );
-
           return (
-            <div
-              key={slot.id}
-              className={cn(
-                "flex items-center justify-between rounded-lg border p-4",
-                !slot.is_available && "bg-destructive/10 border-destructive/20"
-              )}
+            <div 
+              key={slot.id} 
+              className="flex items-center justify-between p-4 rounded-md border bg-background hover:bg-accent/5 transition-colors"
             >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium">
-                  {startTimeUser} - {endTimeUser}
-                  {!slot.is_available && " (Unavailable)"}
-                </span>
-                <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    <span>{formattedDate}</span>
-                  </div>
-                  <span>Your timezone: {userTimezone}</span>
-                  <span>Mentor's time: {startTimeMentor} - {endTimeMentor} ({mentorTimezone})</span>
+              <div className="space-y-1">
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="font-medium">
+                    {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
+                  </span>
+                  
                   {slot.recurring && (
-                    <span className="text-primary">Recurring weekly</span>
+                    <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Weekly
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {slot.recurring ? (
+                    <span>Every {format(startTime, 'EEEE')}</span>
+                  ) : (
+                    <span>{format(startTime, 'MMMM d, yyyy')}</span>
                   )}
                 </div>
               </div>
-              <Button
-                variant={slot.is_available ? "outline" : "destructive"}
+              
+              <Button 
+                variant="ghost" 
                 size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => onDelete(slot.id)}
               >
-                Delete
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
               </Button>
             </div>
           );
         })}
       </div>
-    </div>
+    </ScrollArea>
   );
 }
