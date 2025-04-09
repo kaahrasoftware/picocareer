@@ -8,12 +8,14 @@ import { DisplaySection } from "./DisplaySection";
 import { PrivacySection } from "./PrivacySection";
 import { SessionSection } from "./SessionSection";
 import { AccessibilitySection } from "./AccessibilitySection";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { ThemeSection } from "./ThemeSection";
+import { LanguageSection } from "./LanguageSection";
 
-export function SettingsContainer() {
-  const { user } = useAuthSession();
-  const profileId = user?.id;
+interface SettingsContainerProps {
+  profileId?: string;
+}
 
+export function SettingsContainer({ profileId }: SettingsContainerProps) {
   if (!profileId) {
     return (
       <Card>
@@ -43,7 +45,11 @@ export function SettingsContainer() {
           </TabsList>
           
           <TabsContent value="interface">
-            <TimezoneSection profileId={profileId} />
+            <div className="space-y-8">
+              <TimezoneSection profileId={profileId} />
+              <ThemeSection profileId={profileId} />
+              <LanguageSection profileId={profileId} />
+            </div>
           </TabsContent>
           
           <TabsContent value="notifications">

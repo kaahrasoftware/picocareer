@@ -1,6 +1,6 @@
+
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
@@ -17,18 +17,27 @@ const languages = [
   { code: "pt", name: "Portuguese" }
 ];
 
-export function LanguageSection() {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { getSetting, updateSetting } = useUserSettings(profile?.id);
+interface LanguageSectionProps {
+  profileId: string;
+}
 
-  const currentLanguage = getSetting('language_preference') || 'en';
+export function LanguageSection({ profileId }: LanguageSectionProps) {
+  const { getSetting, updateSetting } = useUserSettings(profileId);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
+
+  useEffect(() => {
+    const savedLanguage = getSetting('language_preference');
+    if (savedLanguage) {
+      setCurrentLanguage(savedLanguage);
+    }
+  }, [getSetting]);
 
   const handleLanguageChange = (value: string) => {
     updateSetting.mutate({
       type: 'language_preference',
       value: value
     });
+    setCurrentLanguage(value);
   };
 
   return (

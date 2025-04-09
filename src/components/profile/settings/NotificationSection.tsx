@@ -5,8 +5,6 @@ import { Label } from "@/components/ui/label";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Badge } from "@/components/ui/badge";
 import { Bell, BellOff, Mail, MessageSquare } from "lucide-react";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface NotificationSectionProps {
   profileId: string;
@@ -20,18 +18,18 @@ export function NotificationSection({ profileId }: NotificationSectionProps) {
   const [sessionReminders, setSessionReminders] = useState(true);
 
   useEffect(() => {
-    // Get notification settings from user_settings
-    const notificationSettings = getSetting('notification_settings');
-    if (notificationSettings) {
-      try {
+    try {
+      // Get notification settings from user_settings
+      const notificationSettings = getSetting('notification_settings');
+      if (notificationSettings) {
         const settings = JSON.parse(notificationSettings);
         setEmailNotifications(settings.email_notifications ?? true);
         setAppNotifications(settings.app_notifications ?? true);
         setMentorshipNotifications(settings.mentorship_notifications ?? true);
         setSessionReminders(settings.session_reminders ?? true);
-      } catch (error) {
-        console.error('Error parsing notification settings:', error);
       }
+    } catch (error) {
+      console.error('Error parsing notification settings:', error);
     }
   }, [getSetting]);
 

@@ -19,7 +19,7 @@ export interface UISettingType {
     session_reminders: boolean;
   };
   privacy_settings: {
-    profile_visibility: 'public' | 'private' | 'mentors_only';
+    profile_visibility: 'public' | 'mentees' | 'private';
     contact_info_visible: boolean;
     show_online_status: boolean;
   };
@@ -63,7 +63,7 @@ export function useUserSettings(profileId?: string) {
       // Update cached settings
       const settingsObj: Record<string, string> = {};
       data.forEach(setting => {
-        settingsObj[setting.type] = setting.value;
+        settingsObj[setting.setting_type] = setting.setting_value;
       });
       setCachedSettings(settingsObj);
       
@@ -79,8 +79,8 @@ export function useUserSettings(profileId?: string) {
     }
     
     // Then try from query data
-    const setting = settings.find(s => s.type === type);
-    return setting?.value || '';
+    const setting = settings.find(s => s.setting_type === type);
+    return setting?.setting_value || '';
   }, [settings, cachedSettings]);
 
   const updateSetting = useMutation({
@@ -92,14 +92,14 @@ export function useUserSettings(profileId?: string) {
         .from('user_settings')
         .select('id')
         .eq('profile_id', profileId)
-        .eq('type', type)
+        .eq('setting_type', type)
         .single();
       
       if (existingSetting) {
         // Update existing setting
         const { error } = await supabase
           .from('user_settings')
-          .update({ value })
+          .update({ setting_value: value })
           .eq('id', existingSetting.id);
           
         if (error) throw error;
@@ -107,7 +107,11 @@ export function useUserSettings(profileId?: string) {
         // Insert new setting
         const { error } = await supabase
           .from('user_settings')
-          .insert({ profile_id: profileId, type, value });
+          .insert({ 
+            profile_id: profileId, 
+            setting_type: type, 
+            setting_value: value 
+          });
           
         if (error) throw error;
       }
