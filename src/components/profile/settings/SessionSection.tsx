@@ -48,7 +48,11 @@ export function SessionSection({ profileId }: SessionSectionProps) {
     const sessionSettings = getSetting('session_settings');
     if (sessionSettings) {
       try {
-        setSettings(JSON.parse(sessionSettings));
+        const parsedSettings = JSON.parse(sessionSettings);
+        setSettings(prevSettings => ({
+          ...defaultSessionSettings,
+          ...parsedSettings
+        }));
       } catch (e) {
         console.error('Error parsing session settings:', e);
       }
@@ -144,7 +148,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
               <Label htmlFor="defaultMeetingPlatform">Default Meeting Platform</Label>
               <Select 
                 value={settings.defaultMeetingPlatform}
-                onValueChange={(value) => handleInputChange('defaultMeetingPlatform', value as 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other')}
+                onValueChange={(value) => handleInputChange('defaultMeetingPlatform', value as any)}
               >
                 <SelectTrigger id="defaultMeetingPlatform">
                   <SelectValue placeholder="Select platform" />

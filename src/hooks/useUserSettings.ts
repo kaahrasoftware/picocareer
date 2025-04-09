@@ -4,7 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export type SettingType = 'timezone' | 'theme' | 'language_preference' | 'notification_settings' | 'privacy_settings' | 'display_settings' | 'session_settings' | 'accessibility_settings';
+// Update to match the database enum values
+export type SettingType = 
+  | 'timezone' 
+  | 'theme' 
+  | 'language_preference' 
+  | 'notification_settings' 
+  | 'privacy_settings' 
+  | 'display_settings' 
+  | 'session_settings' 
+  | 'accessibility_settings';
 
 export interface UISettingType {
   theme: {
@@ -29,9 +38,16 @@ export interface UISettingType {
     default_view: 'grid' | 'list';
   };
   session_settings: {
-    auto_accept_sessions: boolean;
-    default_session_length: number;
-    buffer_time_minutes: number;
+    defaultSessionDuration: number;
+    reminderTime: 15 | 30 | 60 | 1440;
+    autoAcceptBookings: boolean;
+    bufferBetweenSessions: number;
+    defaultMeetingPlatform: 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other';
+    customMeetingPlatform: string;
+    allowRescheduling: boolean;
+    rescheduleTimeLimit: number;
+    allowCancellation: boolean;
+    cancellationTimeLimit: number;
   };
   accessibility_settings: {
     high_contrast: boolean;
@@ -72,7 +88,7 @@ export function useUserSettings(profileId?: string) {
     enabled: !!profileId,
   });
 
-  const getSetting = useCallback((type: SettingType | keyof UISettingType): string => {
+  const getSetting = useCallback((type: SettingType): string => {
     // First try from cached settings
     if (cachedSettings[type]) {
       return cachedSettings[type];
