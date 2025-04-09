@@ -1,108 +1,107 @@
 
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export function UserMenu() {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { signOut, user } = useAuthSession();
-  const [initials, setInitials] = useState("U");
-  const [displayName, setDisplayName] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  // Extract user initials and display name
-  useEffect(() => {
-    if (user?.email) {
-      const email = user.email;
-      setInitials(email[0]?.toUpperCase() || "U");
-      setDisplayName(email);
-    }
-  }, [user]);
-
-  // Check if user is admin
-  useEffect(() => {
-    if (user && user.app_metadata?.user_type === "admin") {
-      setIsAdmin(true);
-    }
-  }, [user]);
+  const { toast } = useToast();
+  const { session, signOut } = useAuthSession();
+  const queryClient = useQueryClient();
+  const { data: profile, isLoading } = useUserProfile(session);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
+    if (isSigningOut) return;
+    
     try {
+      setIsSigningOut(true);
+      console.log('User menu: signing out');
+      
+      // Clear all cached data on signout immediately for better UX
+      queryClient.clear();
+      
       await signOut();
+      
       toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
       });
-      navigate("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
+      
+      // Navigate after signing out
+      navigate("/auth");
+      
+    } catch (error: any) {
+      console.error('Error in UserMenu sign out:', error);
       toast({
-        title: "Sign out failed",
-        description: "There was a problem signing out. Please try again.",
+        title: "Error signing out",
+        description: error.message || "An error occurred while signing out",
         variant: "destructive",
       });
+      
+      // If there was an error, force a hard reload as fallback
+      if (error.message?.includes('network') || error.message?.includes('timeout')) {
+        window.location.href = "/auth";
+      }
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
-  const handleProfileClick = () => {
-    navigate("/profile");
-  };
-  
-  const handleDashboardClick = () => {
-    navigate("/dashboard");
-  };
+  if (isLoading) {
+    return <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>;
+  }
+
+  if (!profile) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative h-10 w-10 rounded-full"
-          aria-label="User menu"
-        >
-          <Avatar>
-            <AvatarImage
-              src={user?.user_metadata?.avatar_url}
-              alt={displayName}
-            />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
+        <button className="outline-none" data-testid="user-menu-button">
+          <ProfileAvatar
+            avatarUrl={profile.avatar_url}
+            imageAlt={profile.full_name || profile.email}
+            size="sm"
+            userId={profile.id}
+            editable={false}
+          />
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <div className="flex items-center justify-start gap-2 p-2">
-          <div className="flex flex-col space-y-0.5">
-            <p className="text-sm font-medium">{displayName}</p>
-            <p className="text-xs text-muted-foreground">
-              {user?.email}
-            </p>
+        <DropdownMenuLabel>
+          <div className="truncate max-w-[95%]">
+            {profile.full_name || profile.email}
           </div>
-        </div>
+          <div className="text-xs text-gray-500 truncate max-w-[95%]">
+            {profile.email}
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleProfileClick}>
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
           Profile
         </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem onClick={handleDashboardClick}>
-            Dashboard
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onClick={handleSignOut}>
-          Sign out
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=settings")}>
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className={isSigningOut ? "opacity-50 cursor-not-allowed" : ""}
+        >
+          {isSigningOut ? "Signing out..." : "Sign out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
