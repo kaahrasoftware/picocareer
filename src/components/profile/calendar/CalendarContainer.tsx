@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionDetailsDialog } from "./SessionDetailsDialog";
 import { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
@@ -76,14 +77,17 @@ export function CalendarContainer({
 
   return (
     <div className="space-y-6">
-      <div className="w-full sm:w-fit mx-auto">
+      <div className={cn(
+        "mx-auto",
+        selectionMode === "range" ? "w-full" : "w-fit"
+      )}>
         {selectionMode === "single" ? (
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
             defaultMonth={selectedDate}
-            className="rounded-md border bg-kahra-darker mx-auto"
+            className="rounded-lg border bg-card shadow-sm p-3"
             modifiers={{
               sessions: hasSessionsOnDate,
               available: (date) => getAvailabilityStatus(date) === 'available'
@@ -91,42 +95,62 @@ export function CalendarContainer({
             modifiersStyles={{
               sessions: {
                 border: '2px solid #3b82f6',
-                borderRadius: '4px'
+                borderRadius: '6px'
               },
               available: {
-                backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                color: '#166534'
+                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                color: '#166534',
+                fontWeight: 500
               }
             }}
           />
         ) : (
-          <Calendar
-            mode="range"
-            selected={selectedDateRange}
-            onSelect={setSelectedDateRange}
-            defaultMonth={selectedDate}
-            className="rounded-md border bg-kahra-darker mx-auto"
-            numberOfMonths={2}
-            modifiers={{
-              sessions: hasSessionsOnDate,
-              available: (date) => getAvailabilityStatus(date) === 'available'
-            }}
-            modifiersStyles={{
-              sessions: {
-                border: '2px solid #3b82f6',
-                borderRadius: '4px'
-              },
-              available: {
-                backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                color: '#166534'
-              }
-            }}
-            disabled={(date) => {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              return date < today;
-            }}
-          />
+          <div className="bg-card border rounded-lg shadow-sm p-4">
+            <Calendar
+              mode="range"
+              selected={selectedDateRange}
+              onSelect={setSelectedDateRange}
+              defaultMonth={selectedDate}
+              className="mx-auto"
+              numberOfMonths={2}
+              modifiers={{
+                sessions: hasSessionsOnDate,
+                available: (date) => getAvailabilityStatus(date) === 'available'
+              }}
+              modifiersStyles={{
+                sessions: {
+                  border: '2px solid #3b82f6',
+                  borderRadius: '6px'
+                },
+                available: {
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  color: '#166534',
+                  fontWeight: 500
+                }
+              }}
+              styles={{
+                day_range_middle: {
+                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                  color: '#7e22ce',
+                },
+                day_selected: {
+                  backgroundColor: '#9333ea',
+                  color: 'white',
+                  fontWeight: 'bold',
+                },
+                day_range_end: {
+                  backgroundColor: '#9333ea',
+                  color: 'white',
+                  fontWeight: 'bold',
+                }
+              }}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
+            />
+          </div>
         )}
       </div>
 

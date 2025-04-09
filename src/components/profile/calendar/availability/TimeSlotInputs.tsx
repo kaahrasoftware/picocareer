@@ -5,7 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parse, isWithinInterval, addDays } from 'date-fns';
 import { DateRange } from "react-day-picker";
-import { Clock } from "lucide-react";
+import { Clock, Calendar, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TimeSlotInputsProps {
   timeSlots: string[];
@@ -141,7 +142,7 @@ export function TimeSlotInputs({
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-3">
-          <div className="flex items-center">
+          <div className="flex items-center mb-1">
             <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
             <Label htmlFor="start-time" className="text-sm font-medium">Start Time</Label>
           </div>
@@ -171,7 +172,7 @@ export function TimeSlotInputs({
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center">
+          <div className="flex items-center mb-1">
             <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
             <Label htmlFor="end-time" className="text-sm font-medium">End Time</Label>
           </div>
@@ -217,20 +218,25 @@ export function TimeSlotInputs({
       </div>
 
       {selectedDateRange && selectedDateRange.from && (
-        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-md p-3">
-          <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center">
-            <span className="font-medium">Note:</span>
-            <span className="ml-1">This time will be applied to: {getDateRangeText()}</span>
-          </p>
-        </div>
+        <Alert className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-md">
+          <div className="flex items-start">
+            <Calendar className="h-4 w-4 mt-0.5 mr-2 text-amber-700 dark:text-amber-400" />
+            <AlertDescription className="text-amber-700 dark:text-amber-400">
+              <span className="font-medium">Date Range:</span>
+              <span className="ml-1">{getDateRangeText()}</span>
+            </AlertDescription>
+          </div>
+        </Alert>
       )}
 
-      <div className="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-md border">
-        <p className="text-sm text-muted-foreground flex items-center">
-          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-          Times shown in your timezone ({userTimezone})
-        </p>
-      </div>
+      <Alert className="bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-800">
+        <div className="flex items-start">
+          <Info className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
+          <AlertDescription className="text-muted-foreground text-sm">
+            Times shown in your timezone ({userTimezone})
+          </AlertDescription>
+        </div>
+      </Alert>
     </div>
   );
 }

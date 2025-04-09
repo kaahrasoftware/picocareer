@@ -14,8 +14,9 @@ interface ExistingTimeSlotsProps {
 export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
   if (!slots.length) {
     return (
-      <div className="text-center py-6 border border-dashed rounded-md bg-background">
+      <div className="text-center py-8 border border-dashed rounded-lg bg-background/50">
         <p className="text-muted-foreground">No availability slots set for this date.</p>
+        <p className="text-sm text-muted-foreground mt-2">Select a date and add available times to see them here.</p>
       </div>
     );
   }
@@ -26,8 +27,8 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
   });
 
   return (
-    <ScrollArea className="h-[320px] pr-4">
-      <div className="space-y-3">
+    <ScrollArea className="h-[350px] pr-4">
+      <div className="grid gap-3 pb-2">
         {sortedSlots.map((slot) => {
           const startTime = parseISO(slot.start_date_time);
           const endTime = parseISO(slot.end_date_time);
@@ -35,11 +36,13 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
           return (
             <div 
               key={slot.id} 
-              className="flex items-center justify-between p-4 rounded-md border bg-background hover:bg-accent/5 transition-colors"
+              className="flex items-center justify-between p-4 rounded-lg border bg-background hover:bg-accent/5 transition-colors"
             >
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <div className="bg-primary/10 text-primary p-1.5 rounded-md mr-3">
+                    <Clock className="h-4 w-4" />
+                  </div>
                   <span className="font-medium">
                     {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
                   </span>
@@ -52,8 +55,8 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
                   )}
                 </div>
                 
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4 mr-2" />
+                <div className="flex items-center text-sm text-muted-foreground pl-9">
+                  <Calendar className="h-4 w-4 mr-2 opacity-70" />
                   {slot.recurring ? (
                     <span>Every {format(startTime, 'EEEE')}</span>
                   ) : (
@@ -65,7 +68,7 @@ export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9 p-0"
                 onClick={() => onDelete(slot.id)}
               >
                 <Trash2 className="h-4 w-4" />

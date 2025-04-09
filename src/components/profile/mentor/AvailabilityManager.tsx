@@ -119,28 +119,31 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-semibold text-foreground/90">Manage Availability</h2>
-        <ToggleGroup 
-          type="single" 
-          value={selectionMode} 
-          onValueChange={(value) => {
-            if (value) setSelectionMode(value as "single" | "range");
-          }}
-          className="bg-background rounded-md border p-1"
-        >
-          <ToggleGroupItem value="single" aria-label="Single day selection" className="px-3">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            <span>Single Day</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="range" aria-label="Date range selection" className="px-3">
-            <CalendarRange className="h-4 w-4 mr-2" />
-            <span>Date Range</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="bg-background rounded-lg border shadow-sm p-4">
-          <h3 className="text-lg font-medium mb-4">Select Date</h3>
+      <div className="grid gap-6 md:grid-cols-12">
+        {/* Calendar section - wider to accommodate two months */}
+        <div className="md:col-span-7 bg-background rounded-lg border shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium">Calendar</h3>
+            <ToggleGroup 
+              type="single" 
+              value={selectionMode} 
+              onValueChange={(value) => {
+                if (value) setSelectionMode(value as "single" | "range");
+              }}
+              className="bg-background rounded-md border p-1"
+            >
+              <ToggleGroupItem value="single" aria-label="Single day selection">
+                <CalendarDays className="h-4 w-4 mr-2" />
+                <span>Single Day</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="range" aria-label="Date range selection">
+                <CalendarRange className="h-4 w-4 mr-2" />
+                <span>Date Range</span>
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           <CalendarContainer
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
@@ -151,7 +154,8 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
           />
         </div>
         
-        <div className="bg-background rounded-lg border shadow-sm p-4">
+        {/* Time slot form section */}
+        <div className="md:col-span-5 bg-background rounded-lg border shadow-sm p-6">
           {selectedDate && (
             <>
               <h3 className="text-lg font-medium mb-4">
@@ -161,7 +165,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
               </h3>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-                <TabsList className="w-full mb-4">
+                <TabsList className="w-full mb-4 grid grid-cols-2">
                   <TabsTrigger value="available">Available Times</TabsTrigger>
                   <TabsTrigger value="unavailable">Unavailable Times</TabsTrigger>
                 </TabsList>
