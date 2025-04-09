@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Switch } from "@/components/ui/switch";
@@ -16,8 +17,6 @@ interface SessionSectionProps {
 interface SessionSettings {
   defaultSessionDuration: number;
   reminderTime: 15 | 30 | 60 | 1440;
-  autoAcceptBookings: boolean;
-  bufferBetweenSessions: number;
   defaultMeetingPlatform: 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other';
   customMeetingPlatform: string;
   allowRescheduling: boolean;
@@ -29,8 +28,6 @@ interface SessionSettings {
 const defaultSessionSettings: SessionSettings = {
   defaultSessionDuration: 30,
   reminderTime: 30,
-  autoAcceptBookings: false,
-  bufferBetweenSessions: 15,
   defaultMeetingPlatform: 'Google Meet',
   customMeetingPlatform: '',
   allowRescheduling: true,
@@ -161,31 +158,6 @@ export function SessionSection({ profileId }: SessionSectionProps) {
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="bufferBetweenSessions">Buffer Between Sessions (minutes)</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="w-80">The minimum time between your sessions. Helps avoid back-to-back meetings.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input
-                id="bufferBetweenSessions"
-                type="number"
-                min={0}
-                max={60}
-                step={5}
-                value={settings.bufferBetweenSessions}
-                onChange={(e) => handleInputChange('bufferBetweenSessions', parseInt(e.target.value) || 15)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
                 <Label htmlFor="defaultMeetingPlatform">Default Meeting Platform</Label>
                 <TooltipProvider>
                   <Tooltip>
@@ -226,32 +198,6 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 />
               </div>
             )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="autoAcceptBookings" className="font-medium">Auto-accept Bookings</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="w-80">When enabled, session bookings will be confirmed automatically.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Automatically confirm session bookings without manual approval
-              </p>
-            </div>
-            <Switch
-              id="autoAcceptBookings"
-              checked={settings.autoAcceptBookings}
-              onCheckedChange={(value) => handleToggle('autoAcceptBookings', value)}
-            />
           </div>
 
           <div className="flex items-center justify-between">
