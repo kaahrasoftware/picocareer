@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Switch } from "@/components/ui/switch";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckIcon, InfoCircle } from "lucide-react";
+import { CheckIcon, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SessionSectionProps {
@@ -111,7 +110,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">This will be the default duration for new session types you create.</p>
@@ -136,7 +135,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">You and your mentees will receive notifications at this time before sessions.</p>
@@ -166,7 +165,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">The minimum time between your sessions. Helps avoid back-to-back meetings.</p>
@@ -191,7 +190,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">This platform will be used for your meetings unless specified otherwise.</p>
@@ -236,7 +235,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">When enabled, session bookings will be confirmed automatically.</p>
@@ -262,7 +261,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">When enabled, mentees can reschedule sessions up until the time limit.</p>
@@ -288,7 +287,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">Mentees can't reschedule a session if it's less than this many hours away.</p>
@@ -314,7 +313,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">When enabled, mentees can cancel sessions up until the time limit.</p>
@@ -340,7 +339,7 @@ export function SessionSection({ profileId }: SessionSectionProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                      <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-80">Mentees can't cancel a session if it's less than this many hours away.</p>
