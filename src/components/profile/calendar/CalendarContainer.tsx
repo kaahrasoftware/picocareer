@@ -170,48 +170,49 @@ export function CalendarContainer({
       </div>
 
       {selectedDate && selectedDateEvents.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="font-medium text-lg text-center sm:text-left">
-            Events for {format(selectedDate, 'MMMM d, yyyy')}
-          </h3>
-          <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
-            <div className="space-y-3 px-2">
-              {selectedDateEvents.map((event) => (
-                <Card 
-                  key={event.id}
-                  className={`
-                    ${event.status === 'cancelled' ? 'border-red-500/20 bg-red-500/10' : 
-                      event.event_type === 'session' ? 'border-blue-500/20 bg-blue-500/10' : 
-                      'border-gray-500/20 bg-gray-500/10'}
-                    hover:shadow-md transition-all cursor-pointer
-                  `}
-                  onClick={() => handleEventClick(event)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <h4 className="font-medium">{event.title}</h4>
-                        {event.description && (
-                          <p className="text-sm text-muted-foreground">
-                            {event.description}
-                          </p>
-                        )}
-                      </div>
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {format(new Date(event.start_time), 'h:mm a')}
-                      </span>
+        <h3 className="font-medium text-lg text-center sm:text-left">
+          Events for {format(selectedDate, 'MMMM d, yyyy')}
+        </h3>
+      )}
+      
+      {selectedDate && selectedDateEvents.length > 0 && (
+        <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
+          <div className="space-y-3 px-2">
+            {selectedDateEvents.map((event) => (
+              <Card 
+                key={event.id}
+                className={`
+                  ${event.status === 'cancelled' ? 'border-red-500/20 bg-red-500/10' : 
+                    event.event_type === 'session' ? 'border-blue-500/20 bg-blue-500/10' : 
+                    'border-gray-500/20 bg-gray-500/10'}
+                  hover:shadow-md transition-all cursor-pointer
+                `}
+                onClick={() => handleEventClick(event)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <h4 className="font-medium">{event.title}</h4>
+                      {event.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {event.description}
+                        </p>
+                      )}
                     </div>
-                    {event.status === 'cancelled' && (
-                      <span className="text-sm text-red-500 mt-2 block">
-                        Cancelled
-                      </span>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      {format(new Date(event.start_time), 'h:mm a')}
+                    </span>
+                  </div>
+                  {event.status === 'cancelled' && (
+                    <span className="text-sm text-red-500 mt-2 block">
+                      Cancelled
+                    </span>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
       )}
 
       <SessionDetailsDialog
