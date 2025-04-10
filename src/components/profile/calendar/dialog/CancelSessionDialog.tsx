@@ -1,9 +1,8 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 
@@ -13,6 +12,7 @@ interface CancelSessionDialogProps {
   sessionId: string;
   scheduledTime: Date;
   withParticipant: string;
+  onSuccess?: () => void;
 }
 
 export function CancelSessionDialog({
@@ -21,65 +21,64 @@ export function CancelSessionDialog({
   sessionId,
   scheduledTime,
   withParticipant,
+  onSuccess
 }: CancelSessionDialogProps) {
   const [reason, setReason] = useState("");
   const { cancelSession, isLoading } = useSessionManagement();
 
   const handleCancel = async () => {
-    if (!reason.trim()) {
-      return;
-    }
-
     try {
       await cancelSession.mutateAsync({
         sessionId,
-        reason,
+        reason
       });
-      onClose();
+      
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
-      console.error("Failed to cancel session:", error);
+      // Error handling is done in the useSessionManagement hook
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Cancel Session</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to cancel your session with {withParticipant} on{" "}
-            {format(scheduledTime, "MMMM d, yyyy 'at' h:mm a")}?
-          </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4">
+        
+        <div className="space-y-4 mt-2">
+          <div className="text-sm">
+            <p>Are you sure you want to cancel your session with <span className="font-medium">{withParticipant}</span>?</p>
+            <p className="text-muted-foreground mt-2">
+              Scheduled for {format(scheduledTime, "MMMM d, yyyy 'at' h:mm a")}
+            </p>
+          </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="reason">
-              Please provide a reason for cancellation
-            </Label>
+            <p className="text-sm font-medium">Reason for cancellation</p>
             <Textarea
-              id="reason"
+              placeholder="Please provide a reason for cancellation (optional)"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="E.g., Schedule conflict, emergency, etc."
               className="min-h-[100px]"
-              required
             />
           </div>
+          
+          <div className="flex justify-end space-x-2 pt-2">
+            <Button variant="outline" onClick={onClose}>
+              Keep Appointment
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              {isLoading ? "Cancelling..." : "Cancel Session"}
+            </Button>
+          </div>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Go Back
-          </Button>
-          <Button 
-            variant="destructive" 
-            onClick={handleCancel} 
-            disabled={isLoading || !reason.trim()}
-          >
-            {isLoading ? "Cancelling..." : "Cancel Session"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
