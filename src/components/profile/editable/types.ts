@@ -1,16 +1,27 @@
-export type TableName = 'schools' | 'majors' | 'careers' | 'companies';
-export type FieldName = 'school_id' | 'academic_major_id' | 'position' | 'company_id';
-export type TitleField = 'name' | 'title';
-export type Status = 'Pending' | 'Approved' | 'Rejected';
 
-export type InsertData = {
+export type TableName = 'majors' | 'schools' | 'companies' | 'careers';
+export type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position' | 'highest_degree';
+export type TitleField = 'title' | 'name';
+export type Status = 'Approved' | 'Pending' | 'Rejected';
+
+export interface QueryResult {
+  id: string;
+  title?: string;
+  name?: string;
+}
+
+export interface InsertData {
+  majors: {
+    title: string;
+    description: string;
+    status: Status;
+  };
   schools: {
     name: string;
     status: Status;
   };
-  majors: {
-    title: string;
-    description: string;
+  companies: {
+    name: string;
     status: Status;
   };
   careers: {
@@ -18,8 +29,4 @@ export type InsertData = {
     description: string;
     status: Status;
   };
-  companies: {
-    name: string;
-    status: Status;
-  };
-};
+}
