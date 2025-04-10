@@ -159,7 +159,7 @@ export function EventsSidebar({
                 event={eventWithUserId}
                 onClick={onEventClick ? () => onEventClick(event) : undefined}
                 onJoin={handleJoin}
-                onReschedule={onReschedule}
+                onReschedule={handleReschedule}
                 onCancel={handleCancel}
                 onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
                 onMarkComplete={isMentor && event.session_details?.mentor.id === userId ? handleMarkComplete : undefined}
