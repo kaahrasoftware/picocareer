@@ -64,6 +64,7 @@ export interface MentorSession {
   };
   mentor?: any;
   mentee?: any;
+  has_feedback?: boolean;
 }
 
 // Define notification categories

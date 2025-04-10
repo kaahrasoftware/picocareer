@@ -48,6 +48,7 @@ export function SessionCard({
   const isMentor = event.session_details?.mentor.id === event.user_id;
   const isCompleted = event.status === "completed";
   const isCancelled = event.status === "cancelled";
+  const hasFeedback = event.session_details?.has_feedback === true;
 
   // Get participant details based on whether current user is mentor or mentee
   const participant = isMentor 
@@ -191,9 +192,10 @@ export function SessionCard({
               size="sm" 
               className="flex-grow text-purple-600 hover:text-purple-700"
               onClick={(e) => handleButtonClick(e, onFeedback)}
+              disabled={hasFeedback}
             >
               <MessageSquare className="h-4 w-4 mr-1" />
-              Feedback
+              {hasFeedback ? "Feedback Provided" : "Feedback"}
             </Button>
           )}
         </CardFooter>

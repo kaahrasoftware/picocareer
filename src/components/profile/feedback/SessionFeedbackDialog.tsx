@@ -67,10 +67,12 @@ export function SessionFeedbackDialog({
 
       if (feedbackError) throw feedbackError;
 
+      // Update mentor_sessions table to indicate feedback has been provided
       const { error: sessionError } = await supabase
         .from('mentor_sessions')
         .update({ 
-          status: didNotShowUp ? 'no_show' : 'completed'
+          status: didNotShowUp ? 'no_show' : 'completed',
+          has_feedback: true
         })
         .eq('id', sessionId);
 

@@ -28,8 +28,11 @@ export function useEventActions() {
   };
 
   const handleFeedback = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    setShowFeedback(true);
+    // Only process if feedback hasn't been provided yet
+    if (!event.session_details?.has_feedback) {
+      setSelectedEvent(event);
+      setShowFeedback(true);
+    }
   };
 
   const handleJoin = (event: CalendarEvent) => {
