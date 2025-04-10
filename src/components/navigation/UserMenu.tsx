@@ -14,6 +14,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Calendar, User, Bookmark, GraduationCap, Settings } from "lucide-react";
 
 export function UserMenu() {
   const navigate = useNavigate();
@@ -66,6 +67,8 @@ export function UserMenu() {
 
   if (!profile) return null;
 
+  const isMentor = profile.user_type === 'mentor';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -89,10 +92,26 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/profile")}>
+        <DropdownMenuItem onClick={() => navigate("/profile")} className="flex items-center gap-2">
+          <User className="h-4 w-4" />
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/profile?tab=settings")}>
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=calendar")} className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          Calendar
+        </DropdownMenuItem>
+        {isMentor && (
+          <DropdownMenuItem onClick={() => navigate("/profile?tab=mentor")} className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Mentor
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=bookmarks")} className="flex items-center gap-2">
+          <Bookmark className="h-4 w-4" />
+          Bookmarks
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/profile?tab=settings")} className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
