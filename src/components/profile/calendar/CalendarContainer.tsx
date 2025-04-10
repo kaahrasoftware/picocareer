@@ -1,218 +1,224 @@
 
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarHeader } from "./CalendarHeader";
-import { CalendarGrid } from "./CalendarGrid";
-import { EventsSidebar } from "./EventsSidebar";
-import { EventsSidebarHeader } from "./EventsSidebarHeader";
-import { MentorAvailabilityForm } from "./MentorAvailabilityForm";
-import { useDisclosure } from "@/hooks/useDisclosure";
-import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
-import { useSessionEvents } from "@/hooks/useSessionEvents";
-import { useEventActions } from "@/hooks/useEventActions";
-import { RescheduleSessionDialog } from "./dialog/RescheduleSessionDialog";
-import { CancelSessionDialog } from "./dialog/CancelSessionDialog";
-import { SessionReminderDialog } from "./dialog/SessionReminderDialog";
-import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
+import { format, isAfter } from "date-fns";
+import { Availability } from "@/types/calendar";
+import type { CalendarEvent } from "@/types/calendar";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SessionDetailsDialog } from "./SessionDetailsDialog";
+import { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 interface CalendarContainerProps {
-  isMentor: boolean;
-  profileId: string;
+  selectedDate: Date | undefined;
+  setSelectedDate: (date: Date | undefined) => void;
+  availability: Availability[];
+  events?: CalendarEvent[];
+  selectedDateRange?: DateRange | undefined;
+  setSelectedDateRange?: (range: DateRange | undefined) => void;
+  selectionMode?: "single" | "range";
 }
 
-export function CalendarContainer({ isMentor, profileId }: CalendarContainerProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const { isOpen: isFormOpen, onOpen: openForm, onClose: closeForm } = useDisclosure();
-  const { data: events = [], refetch: refetchEvents, isLoading } = useSessionEvents();
-  
-  const {
-    selectedEvent,
-    showReschedule,
-    showCancel,
-    showReminder,
-    showFeedback,
-    handleReschedule,
-    handleCancel,
-    handleReminder,
-    handleFeedback,
-    handleJoin,
-    handleMarkComplete,
-    handleDialogClose
-  } = useEventActions();
+export function CalendarContainer({ 
+  selectedDate, 
+  setSelectedDate, 
+  availability,
+  events = [],
+  selectedDateRange,
+  setSelectedDateRange,
+  selectionMode = "single"
+}: CalendarContainerProps) {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
-  // Filter the events based on the selected date
-  const filteredEvents = events.filter(event => {
-    if (!event.start_time) return false;
+  // Function to determine if a date has sessions
+  const hasSessionsOnDate = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
+  };
+
+  // Function to determine availability status for a date
+  const getAvailabilityStatus = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayOfWeek = date.getDay();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get both one-time and recurring slots for this date
+    const dayAvailabilities = availability.filter(slot => {
+      // For one-time slots, check the specific date
+      if (!slot.recurring && format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
+        return true;
+      }
+      
+      // For recurring slots, check if they apply to this date
+      if (slot.recurring && slot.day_of_week === dayOfWeek) {
+        // Check if the slot was created before the date we're checking
+        // This ensures recurring slots only apply to future dates from when they were created
+        const slotCreationDate = new Date(slot.created_at || slot.start_date_time);
+        slotCreationDate.setHours(0, 0, 0, 0);
+        
+        // Only apply recurring slots to dates that are after the creation date
+        return isAfter(date, slotCreationDate) || format(date, 'yyyy-MM-dd') === format(slotCreationDate, 'yyyy-MM-dd');
+      }
+      
+      return false;
+    });
+
+    // If there's at least one available slot, consider the day available
+    const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
     
-    const eventDate = new Date(event.start_time);
-    return (
-      eventDate.getDate() === selectedDate.getDate() &&
-      eventDate.getMonth() === selectedDate.getMonth() &&
-      eventDate.getFullYear() === selectedDate.getFullYear()
-    );
+    if (hasAvailable) return 'available';
+    return null;
+  };
+
+  // Filter events for selected date
+  const selectedDateEvents = events.filter(event => {
+    if (!selectedDate) return false;
+    return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
 
-  // Show the event form when clicking the "Add Availability" button
-  const handleAddAvailability = () => {
-    openForm();
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
   };
 
-  // Refresh events when forms are closed
-  useEffect(() => {
-    if (!isFormOpen) {
-      refetchEvents();
-    }
-  }, [isFormOpen, refetchEvents]);
-
-  // Add user ID to events for SessionCard component
-  const eventsWithUserId = events.map(event => ({
-    ...event,
-    user_id: profileId
-  }));
-
-  // When a session is rescheduled, cancelled, marked as complete, etc.
-  const handleEventChange = () => {
-    refetchEvents();
-    handleDialogClose();
+  const handleCloseDialog = () => {
+    setSelectedEvent(null);
   };
 
-  const renderDateCellContent = (date: Date) => {
-    // Find events for this date
-    const dateEvents = events.filter(event => {
-      if (!event.start_time) return false;
-      
-      const eventDate = new Date(event.start_time);
-      return (
-        eventDate.getDate() === date.getDate() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
-      );
-    });
-    
-    // Return dot indicators for the events
-    return (
-      <div className="flex gap-0.5 justify-center mt-1">
-        {dateEvents.length > 0 && (
-          <>
-            {dateEvents.some(e => e.status === "scheduled") && (
-              <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-            )}
-            {dateEvents.some(e => e.status === "completed") && (
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
-            )}
-            {dateEvents.some(e => e.status === "cancelled" || e.status === "no_show") && (
-              <div className="h-1.5 w-1.5 rounded-full bg-red-500"></div>
-            )}
-          </>
-        )}
-      </div>
-    );
+  const handleCancelSession = async () => {
+    handleCloseDialog();
   };
 
   return (
-    <div>
-      <CalendarHeader 
-        isMentor={isMentor}
-        selectedMonth={format(selectedDate, "MMMM yyyy")} 
-      />
-      
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-6 mt-6">
-        <div className="md:col-span-5">
-          <div className="p-4 bg-background rounded-lg border shadow-sm">
-            <CalendarGrid 
-              selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
-              renderDateCellContent={renderDateCellContent}
+    <div className="space-y-6">
+      <div className={cn(
+        "mx-auto",
+        selectionMode === "range" ? "w-full" : "w-fit"
+      )}>
+        {selectionMode === "single" ? (
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            defaultMonth={selectedDate}
+            className="rounded-lg border bg-card shadow-sm p-3"
+            modifiers={{
+              sessions: hasSessionsOnDate,
+              available: (date) => getAvailabilityStatus(date) === 'available'
+            }}
+            modifiersStyles={{
+              sessions: {
+                border: '2px solid #3b82f6',
+                borderRadius: '6px'
+              },
+              available: {
+                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                color: '#166534',
+                fontWeight: 500
+              }
+            }}
+          />
+        ) : (
+          <div className="bg-card border rounded-lg shadow-sm p-4">
+            <Calendar
+              mode="range"
+              selected={selectedDateRange}
+              onSelect={setSelectedDateRange}
+              defaultMonth={selectedDate}
+              className="mx-auto"
+              numberOfMonths={2}
+              modifiers={{
+                sessions: hasSessionsOnDate,
+                available: (date) => getAvailabilityStatus(date) === 'available'
+              }}
+              modifiersStyles={{
+                sessions: {
+                  border: '2px solid #3b82f6',
+                  borderRadius: '6px'
+                },
+                available: {
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  color: '#166534',
+                  fontWeight: 500
+                }
+              }}
+              styles={{
+                day_range_middle: {
+                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                  color: '#7e22ce',
+                },
+                day_selected: {
+                  backgroundColor: '#9333ea',
+                  color: 'white',
+                  fontWeight: 'bold',
+                },
+                day_range_end: {
+                  backgroundColor: '#9333ea',
+                  color: 'white',
+                  fontWeight: 'bold',
+                }
+              }}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
             />
           </div>
-          
-          {isMentor && (
-            <div className="mt-4">
-              <Button 
-                onClick={handleAddAvailability} 
-                variant="default"
-                className="w-full"
-              >
-                <CalendarPlus className="mr-2 h-4 w-4" />
-                Add Availability
-              </Button>
-            </div>
-          )}
-          
-          {/* MentorAvailabilityForm dialog */}
-          {isFormOpen && (
-            <MentorAvailabilityForm
-              onClose={closeForm}
-              profileId={profileId}
-              selectedDate={selectedDate}
-            />
-          )}
-        </div>
-        
-        <div className="md:col-span-2">
-          <div className="bg-background rounded-lg border shadow-sm h-full">
-            <EventsSidebarHeader 
-              date={selectedDate}
-              events={filteredEvents}  
-            />
-            
-            <EventsSidebar
-              date={selectedDate}
-              events={eventsWithUserId}
-              isMentor={isMentor}
-              onEventDelete={() => refetchEvents()}
-            />
-          </div>
-        </div>
+        )}
       </div>
-      
-      {/* Dialogs */}
-      {showReschedule && selectedEvent && (
-        <RescheduleSessionDialog
-          isOpen={showReschedule}
-          onClose={handleDialogClose}
-          sessionId={selectedEvent.id}
-          currentScheduledTime={new Date(selectedEvent.start_time as string)}
-          duration={selectedEvent.session_details?.session_type?.duration || 60}
-          onSuccess={handleEventChange}
-        />
+
+      {selectedDate && selectedDateEvents.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-medium text-lg text-center sm:text-left">
+            Events for {format(selectedDate, 'MMMM d, yyyy')}
+          </h3>
+          <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
+            <div className="space-y-3 px-2">
+              {selectedDateEvents.map((event) => (
+                <Card 
+                  key={event.id}
+                  className={`
+                    ${event.status === 'cancelled' ? 'border-red-500/20 bg-red-500/10' : 
+                      event.event_type === 'session' ? 'border-blue-500/20 bg-blue-500/10' : 
+                      'border-gray-500/20 bg-gray-500/10'}
+                    hover:shadow-md transition-all cursor-pointer
+                  `}
+                  onClick={() => handleEventClick(event)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <h4 className="font-medium">{event.title}</h4>
+                        {event.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {event.description}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        {format(new Date(event.start_time), 'h:mm a')}
+                      </span>
+                    </div>
+                    {event.status === 'cancelled' && (
+                      <span className="text-sm text-red-500 mt-2 block">
+                        Cancelled
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
       )}
-      
-      {showCancel && selectedEvent && (
-        <CancelSessionDialog
-          isOpen={showCancel}
-          onClose={handleDialogClose}
-          sessionId={selectedEvent.id}
-          scheduledTime={new Date(selectedEvent.start_time as string)}
-          withParticipant={selectedEvent.title.split(" with ")[1]}
-          onSuccess={handleEventChange}
-        />
-      )}
-      
-      {showReminder && selectedEvent && (
-        <SessionReminderDialog
-          isOpen={showReminder}
-          onClose={handleDialogClose}
-          sessionId={selectedEvent.id}
-          participantName={selectedEvent.title.split(" with ")[1]}
-          onSuccess={handleEventChange}
-        />
-      )}
-      
-      {showFeedback && selectedEvent && selectedEvent.session_details && (
-        <SessionFeedbackDialog
-          isOpen={showFeedback}
-          onClose={handleDialogClose}
-          sessionId={selectedEvent.id}
-          feedbackType={isMentor ? 'mentor_feedback' : 'mentee_feedback'}
-          fromProfileId={profileId}
-          toProfileId={isMentor 
-            ? selectedEvent.session_details?.mentee?.id 
-            : selectedEvent.session_details?.mentor?.id}
-        />
-      )}
+
+      <SessionDetailsDialog
+        session={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        onCancel={handleCancelSession}
+      />
     </div>
   );
 }
