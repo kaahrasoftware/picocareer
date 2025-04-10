@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { fetchAllFromTable } from "@/hooks/useAllReferenceData";
 import {
   Select,
   SelectContent,
@@ -39,6 +40,8 @@ export function PaginatedSelect({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
+  const [loadingAll, setLoadingAll] = useState(false);
+  const [allOptions, setAllOptions] = useState<any[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Clear search when selecting a value
@@ -58,6 +61,7 @@ export function PaginatedSelect({
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
   
+  // Initial paginated results
   const {
     data: options,
     isLoading,
@@ -80,6 +84,21 @@ export function PaginatedSelect({
       staleTime: 5 * 60 * 1000, // 5 minutes
     }
   });
+  
+  // Function to load all options when needed
+  const loadAllOptions = async () => {
+    if (!loadingAll && options.length < totalPages * 20) {
+      setLoadingAll(true);
+      try {
+        const allItems = await fetchAllFromTable(tableName, searchField);
+        setAllOptions(allItems);
+      } catch (error) {
+        console.error(`Error loading all ${tableName}:`, error);
+      } finally {
+        setLoadingAll(false);
+      }
+    }
+  };
   
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -138,6 +157,10 @@ export function PaginatedSelect({
     );
   }
 
+  // Display count information if we have it
+  const displayedItems = options.length;
+  const totalItems = allOptions.length > 0 ? allOptions.length : (totalPages * 20);
+
   return (
     <Select
       value={value}
@@ -168,6 +191,11 @@ export function PaginatedSelect({
               }
             }}
           />
+          {displayedItems > 0 && (
+            <div className="text-xs text-muted-foreground mb-2">
+              Showing {displayedItems} of {totalItems} options
+            </div>
+          )}
         </div>
         <ScrollArea className="h-[200px]">
           {isLoading ? (
@@ -194,6 +222,30 @@ export function PaginatedSelect({
                     }}
                   >
                     Load more results
+                  </Button>
+                </div>
+              )}
+              {totalPages > 3 && !loadingAll && (
+                <div className="p-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-xs"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      loadAllOptions();
+                    }}
+                    disabled={loadingAll}
+                  >
+                    {loadingAll ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        Loading all options...
+                      </>
+                    ) : (
+                      "Load all options"
+                    )}
                   </Button>
                 </div>
               )}

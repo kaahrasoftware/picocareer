@@ -1,7 +1,9 @@
+
 import { Major } from "@/types/database/majors";
 import { School } from "@/types/database/schools";
 import { DegreeSelect } from "./education/DegreeSelect";
 import { CustomSelect } from "./education/CustomSelect";
+import { useAllSchools } from "@/hooks/useAllReferenceData";
 
 interface EducationSectionProps {
   highestDegree: string;
@@ -20,6 +22,12 @@ export function EducationSection({
   majors,
   schools,
 }: EducationSectionProps) {
+  // Get full list of schools (this will use the paginated approach)
+  const { data: allSchools } = useAllSchools();
+
+  // Use the comprehensive school list if available, otherwise use the provided schools
+  const schoolOptions = allSchools || schools;
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Education</h3>
@@ -41,7 +49,7 @@ export function EducationSection({
 
         <CustomSelect
           value={schoolId}
-          options={schools}
+          options={schoolOptions}
           placeholder="School"
           handleSelectChange={handleSelectChange}
           tableName="schools"

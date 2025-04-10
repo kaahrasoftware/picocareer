@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +13,7 @@ import { LinksSection } from "./sections/LinksSection";
 import { LocationSection } from "./sections/LocationSection";
 import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
+import { useAllSchools, useAllMajors } from "@/hooks/useAllReferenceData";
 
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormProps) {
   const { toast } = useToast();
@@ -21,21 +21,9 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
   const [localProfile, setLocalProfile] = useState(profile);
   const isMentee = profile.user_type === 'mentee';
   
-  // Fetch schools, companies, and majors for dropdowns
-  const { data: schools = [] } = useQuery({
-    queryKey: ['schools'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schools')
-        .select('id, name')
-        .eq('status', 'Approved')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
+  const { data: allSchools } = useAllSchools();
+  const { data: allMajors } = useAllMajors();
+  
   const { data: companies = [] } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
@@ -50,20 +38,6 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
     }
   });
 
-  const { data: majors = [] } = useQuery({
-    queryKey: ['majors'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('majors')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-  
   const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm<FormFields>({
     defaultValues: {
       first_name: profile.first_name || "",
@@ -174,8 +148,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
           <EducationSection
             register={register}
             handleFieldChange={handleFieldChange}
-            schools={schools}
-            majors={majors}
+            schools={allSchools || []}
+            majors={allMajors || []}
             schoolId={localProfile.school_id}
             academicMajorId={localProfile.academic_major_id}
             highestDegree={localProfile.highest_degree as Degree}
@@ -200,7 +174,6 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         </>
       )}
 
-      {/* Form Actions */}
       <div className="flex justify-end gap-4">
         <Button
           type="button"
