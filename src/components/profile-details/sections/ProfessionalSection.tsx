@@ -2,14 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { UseFormRegister } from "react-hook-form";
 import { FormFields } from "../types/form-types";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Company {
@@ -34,42 +27,41 @@ export function ProfessionalSection({
   yearsOfExperience,
   companies,
 }: ProfessionalSectionProps) {
-  // Fetch careers for the position select
-  const { data: careers = [] } = useQuery({
-    queryKey: ['careers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('careers')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
   return (
     <div className="bg-muted rounded-lg p-4">
       <h4 className="font-semibold mb-4">Professional Experience</h4>
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium">Position</label>
-          <Select 
-            value={position} 
+          <SearchableSelect 
+            value={position || ""} 
             onValueChange={(value) => handleFieldChange("position", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select position" />
-            </SelectTrigger>
-            <SelectContent>
-              {careers.map((career) => (
-                <SelectItem key={career.id} value={career.id}>
-                  {career.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Select position"
+            tableName="careers"
+            selectField="title"
+            searchField="title"
+            allowCustomValue={true}
+            onCustomValueSubmit={async (value) => {
+              try {
+                const { data, error } = await supabase
+                  .from('careers')
+                  .insert({ 
+                    title: value,
+                    description: `Custom position: ${value}`,
+                    status: 'Pending'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (error) throw error;
+                if (data) {
+                  handleFieldChange('position', data.id);
+                }
+              } catch (error) {
+                console.error('Error adding custom position:', error);
+              }
+            }}
+          />
           <input
             type="hidden"
             {...register("position")}
@@ -78,21 +70,34 @@ export function ProfessionalSection({
 
         <div>
           <label className="text-sm font-medium">Company</label>
-          <Select 
-            value={companyId} 
+          <SearchableSelect 
+            value={companyId || ""} 
             onValueChange={(value) => handleFieldChange("company_id", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select company" />
-            </SelectTrigger>
-            <SelectContent>
-              {companies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Select company"
+            tableName="companies"
+            selectField="name"
+            searchField="name"
+            allowCustomValue={true}
+            onCustomValueSubmit={async (value) => {
+              try {
+                const { data, error } = await supabase
+                  .from('companies')
+                  .insert({ 
+                    name: value,
+                    status: 'Pending'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (error) throw error;
+                if (data) {
+                  handleFieldChange('company_id', data.id);
+                }
+              } catch (error) {
+                console.error('Error adding custom company:', error);
+              }
+            }}
+          />
           <input
             type="hidden"
             {...register("company_id")}

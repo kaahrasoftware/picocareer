@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EducationSectionProps {
   register: UseFormRegister<FormFields>;
@@ -67,21 +69,35 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">Academic Major</label>
-          <Select 
-            value={academicMajorId} 
+          <SearchableSelect 
+            value={academicMajorId || ""} 
             onValueChange={(value) => handleFieldChange("academic_major_id", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select academic major" />
-            </SelectTrigger>
-            <SelectContent>
-              {majors.map((major) => (
-                <SelectItem key={major.id} value={major.id}>
-                  {major.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Select academic major"
+            tableName="majors"
+            selectField="title"
+            searchField="title"
+            allowCustomValue={true}
+            onCustomValueSubmit={async (value) => {
+              try {
+                const { data, error } = await supabase
+                  .from('majors')
+                  .insert({ 
+                    title: value,
+                    description: `Custom major: ${value}`,
+                    status: 'Pending'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (error) throw error;
+                if (data) {
+                  handleFieldChange('academic_major_id', data.id);
+                }
+              } catch (error) {
+                console.error('Error adding custom major:', error);
+              }
+            }}
+          />
           <input
             type="hidden"
             {...register("academic_major_id")}
@@ -90,21 +106,34 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">School</label>
-          <Select 
-            value={schoolId} 
+          <SearchableSelect 
+            value={schoolId || ""} 
             onValueChange={(value) => handleFieldChange("school_id", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select school" />
-            </SelectTrigger>
-            <SelectContent>
-              {schools.map((school) => (
-                <SelectItem key={school.id} value={school.id}>
-                  {school.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Select school"
+            tableName="schools"
+            selectField="name"
+            searchField="name"
+            allowCustomValue={true}
+            onCustomValueSubmit={async (value) => {
+              try {
+                const { data, error } = await supabase
+                  .from('schools')
+                  .insert({ 
+                    name: value,
+                    status: 'Pending'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (error) throw error;
+                if (data) {
+                  handleFieldChange('school_id', data.id);
+                }
+              } catch (error) {
+                console.error('Error adding custom school:', error);
+              }
+            }}
+          />
           <input
             type="hidden"
             {...register("school_id")}

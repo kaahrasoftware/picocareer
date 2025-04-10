@@ -1,4 +1,5 @@
-import { CustomSelect } from "./education/CustomSelect";
+
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,44 +26,74 @@ export function ProfessionalSection({
   handleSelectChange,
   companies,
 }: ProfessionalSectionProps) {
-  // Fetch careers for the position select
-  const { data: careers } = useQuery({
-    queryKey: ['careers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('careers')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Professional Experience</h3>
 
-      <CustomSelect
-        value={position}
-        options={careers || []}
-        placeholder="Select Position"
-        handleSelectChange={handleSelectChange}
-        tableName="careers"
-        fieldName="position"
-        titleField="title"
-      />
+      <div>
+        <label className="text-sm font-medium">Position</label>
+        <SearchableSelect
+          value={position}
+          onValueChange={(value) => handleSelectChange("position", value)}
+          placeholder="Select Position"
+          tableName="careers"
+          selectField="title"
+          searchField="title"
+          allowCustomValue={true}
+          onCustomValueSubmit={async (value) => {
+            try {
+              const { data, error } = await supabase
+                .from('careers')
+                .insert({ 
+                  title: value,
+                  description: `Custom position: ${value}`,
+                  status: 'Pending'
+                })
+                .select('id')
+                .single();
+              
+              if (error) throw error;
+              if (data) {
+                handleSelectChange('position', data.id);
+              }
+            } catch (error) {
+              console.error('Error adding custom position:', error);
+            }
+          }}
+        />
+      </div>
 
-      <CustomSelect
-        value={companyId}
-        options={companies}
-        placeholder="Company"
-        handleSelectChange={handleSelectChange}
-        tableName="companies"
-        fieldName="company_id"
-        titleField="name"
-      />
+      <div>
+        <label className="text-sm font-medium">Company</label>
+        <SearchableSelect
+          value={companyId}
+          onValueChange={(value) => handleSelectChange("company_id", value)}
+          placeholder="Select Company"
+          tableName="companies"
+          selectField="name"
+          searchField="name"
+          allowCustomValue={true}
+          onCustomValueSubmit={async (value) => {
+            try {
+              const { data, error } = await supabase
+                .from('companies')
+                .insert({ 
+                  name: value,
+                  status: 'Pending'
+                })
+                .select('id')
+                .single();
+              
+              if (error) throw error;
+              if (data) {
+                handleSelectChange('company_id', data.id);
+              }
+            } catch (error) {
+              console.error('Error adding custom company:', error);
+            }
+          }}
+        />
+      </div>
 
       <div>
         <label className="text-sm font-medium">Years of Experience</label>

@@ -1,7 +1,8 @@
+
 import { Major } from "@/types/database/majors";
 import { School } from "@/types/database/schools";
 import { DegreeSelect } from "./education/DegreeSelect";
-import { PaginatedSelect } from "@/components/common/PaginatedSelect";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EducationSectionProps {
@@ -32,7 +33,7 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">Academic Major</label>
-          <PaginatedSelect
+          <SearchableSelect
             value={academicMajorId}
             onValueChange={(value) => handleSelectChange('academic_major_id', value)}
             placeholder="Select Academic Major"
@@ -65,7 +66,7 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">School</label>
-          <PaginatedSelect
+          <SearchableSelect
             value={schoolId}
             onValueChange={(value) => handleSelectChange('school_id', value)}
             placeholder="Select School"
