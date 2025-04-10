@@ -1,7 +1,7 @@
 
 import { UseFormRegister } from "react-hook-form";
 import { FormFields } from "../types/form-types";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,8 +28,8 @@ export function ProfessionalSection({
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium">Position</label>
-          <SearchableSelect 
-            value={position || ""} 
+          <EnhancedComboBox
+            value={position || ""}
             onValueChange={(value) => handleFieldChange("position", value)}
             placeholder="Select position"
             tableName="careers"
@@ -65,8 +65,8 @@ export function ProfessionalSection({
 
         <div>
           <label className="text-sm font-medium">Company</label>
-          <SearchableSelect 
-            value={companyId || ""} 
+          <EnhancedComboBox
+            value={companyId || ""}
             onValueChange={(value) => handleFieldChange("company_id", value)}
             placeholder="Select company"
             tableName="companies"

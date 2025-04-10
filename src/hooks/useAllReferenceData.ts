@@ -2,10 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Paginated fetch utility function
-export async function fetchAllFromTable(tableName: string, orderField: string) {
+// Enhanced fetch utility function with better type safety
+export async function fetchAllFromTable<T extends { id: string }>(
+  tableName: string, 
+  orderField: string
+): Promise<T[]> {
   try {
-    const allItems = [];
+    const allItems: T[] = [];
     let page = 0;
     const pageSize = 1000; // Large page size to reduce number of requests
     let hasMore = true;
@@ -27,7 +30,7 @@ export async function fetchAllFromTable(tableName: string, orderField: string) {
       }
       
       if (data && data.length > 0) {
-        allItems.push(...data);
+        allItems.push(...data as T[]);
         page++;
       } else {
         hasMore = false;
@@ -44,34 +47,62 @@ export async function fetchAllFromTable(tableName: string, orderField: string) {
   }
 }
 
+interface School {
+  id: string;
+  name: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
+}
+
+interface Major {
+  id: string;
+  title: string;
+}
+
+interface Career {
+  id: string;
+  title: string;
+}
+
 export function useAllSchools() {
-  return useQuery({
+  return useQuery<School[]>({
     queryKey: ['schools-all'],
-    queryFn: () => fetchAllFromTable('schools', 'name'),
+    queryFn: () => fetchAllFromTable<School>('schools', 'name'),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
 export function useAllCompanies() {
-  return useQuery({
+  return useQuery<Company[]>({
     queryKey: ['companies-all'],
-    queryFn: () => fetchAllFromTable('companies', 'name'),
+    queryFn: () => fetchAllFromTable<Company>('companies', 'name'),
     staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000,
   });
 }
 
 export function useAllMajors() {
-  return useQuery({
+  return useQuery<Major[]>({
     queryKey: ['majors-all'],
-    queryFn: () => fetchAllFromTable('majors', 'title'),
+    queryFn: () => fetchAllFromTable<Major>('majors', 'title'),
     staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000,
   });
 }
 
 export function useAllCareers() {
-  return useQuery({
+  return useQuery<Career[]>({
     queryKey: ['careers-all'],
-    queryFn: () => fetchAllFromTable('careers', 'title'),
+    queryFn: () => fetchAllFromTable<Career>('careers', 'title'),
     staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000,
   });
 }

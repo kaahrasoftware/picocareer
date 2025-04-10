@@ -1,7 +1,6 @@
 
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Company {
@@ -32,7 +31,7 @@ export function ProfessionalSection({
 
       <div>
         <label className="text-sm font-medium">Position</label>
-        <SearchableSelect
+        <EnhancedComboBox
           value={position}
           onValueChange={(value) => handleSelectChange("position", value)}
           placeholder="Select Position"
@@ -65,7 +64,7 @@ export function ProfessionalSection({
 
       <div>
         <label className="text-sm font-medium">Company</label>
-        <SearchableSelect
+        <EnhancedComboBox
           value={companyId}
           onValueChange={(value) => handleSelectChange("company_id", value)}
           placeholder="Select Company"

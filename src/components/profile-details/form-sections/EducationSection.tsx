@@ -2,7 +2,7 @@
 import { Major } from "@/types/database/majors";
 import { School } from "@/types/database/schools";
 import { DegreeSelect } from "./education/DegreeSelect";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EducationSectionProps {
@@ -33,7 +33,7 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">Academic Major</label>
-          <SearchableSelect
+          <EnhancedComboBox
             value={academicMajorId}
             onValueChange={(value) => handleSelectChange('academic_major_id', value)}
             placeholder="Select Academic Major"
@@ -66,7 +66,7 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">School</label>
-          <SearchableSelect
+          <EnhancedComboBox
             value={schoolId}
             onValueChange={(value) => handleSelectChange('school_id', value)}
             placeholder="Select School"

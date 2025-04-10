@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EducationSectionProps {
@@ -69,8 +69,8 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">Academic Major</label>
-          <SearchableSelect 
-            value={academicMajorId || ""} 
+          <EnhancedComboBox
+            value={academicMajorId || ""}
             onValueChange={(value) => handleFieldChange("academic_major_id", value)}
             placeholder="Select academic major"
             tableName="majors"
@@ -106,8 +106,8 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">School</label>
-          <SearchableSelect 
-            value={schoolId || ""} 
+          <EnhancedComboBox
+            value={schoolId || ""}
             onValueChange={(value) => handleFieldChange("school_id", value)}
             placeholder="Select school"
             tableName="schools"
