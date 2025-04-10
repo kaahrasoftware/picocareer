@@ -7,6 +7,7 @@ import { SessionCard } from "./SessionCard";
 import { RescheduleDialog } from "./dialog/RescheduleDialog";
 import { CancelDialog } from "./dialog/CancelDialog";
 import { SendReminderDialog } from "./dialog/SendReminderDialog";
+import { SessionFeedbackDialog } from "../feedback/SessionFeedbackDialog";
 import type { CalendarEvent } from "@/types/calendar";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
@@ -32,6 +33,7 @@ export function EventsSidebar({
   const [showReschedule, setShowReschedule] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const { session } = useAuthSession();
   const { toast } = useToast();
   const { cancelSession } = useSessionManagement();
@@ -54,6 +56,11 @@ export function EventsSidebar({
   const handleReminder = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setShowReminder(true);
+  };
+
+  const handleFeedback = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setShowFeedback(true);
   };
 
   const handleJoin = (event: CalendarEvent) => {
@@ -105,6 +112,7 @@ export function EventsSidebar({
     setShowReschedule(false);
     setShowCancel(false);
     setShowReminder(false);
+    setShowFeedback(false);
     setSelectedEvent(null);
   };
 
@@ -163,6 +171,7 @@ export function EventsSidebar({
                 onCancel={handleCancel}
                 onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
                 onMarkComplete={isMentor && event.session_details?.mentor.id === userId ? handleMarkComplete : undefined}
+                onFeedback={handleFeedback}
               />
             );
           })
@@ -195,6 +204,19 @@ export function EventsSidebar({
           onClose={handleDialogClose}
           sessionId={selectedEvent.id}
           senderId={userId}
+        />
+      )}
+
+      {selectedEvent && showFeedback && userId && selectedEvent.session_details && (
+        <SessionFeedbackDialog
+          isOpen={showFeedback}
+          onClose={handleDialogClose}
+          sessionId={selectedEvent.id}
+          feedbackType={isMentor ? 'mentor_feedback' : 'mentee_feedback'}
+          fromProfileId={userId}
+          toProfileId={isMentor 
+            ? selectedEvent.session_details.mentee.id 
+            : selectedEvent.session_details.mentor.id}
         />
       )}
     </div>

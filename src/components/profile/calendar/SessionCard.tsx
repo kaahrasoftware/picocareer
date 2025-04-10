@@ -9,7 +9,8 @@ import {
   Bell,
   CalendarClock,
   CalendarX,
-  CheckCircle
+  CheckCircle,
+  MessageSquare
 } from "lucide-react";
 import { 
   Card, 
@@ -28,6 +29,7 @@ interface SessionCardProps {
   onCancel?: (event: CalendarEvent) => void;
   onReminder?: (event: CalendarEvent) => void;
   onMarkComplete?: (event: CalendarEvent) => void;
+  onFeedback?: (event: CalendarEvent) => void;
 }
 
 export function SessionCard({ 
@@ -37,10 +39,12 @@ export function SessionCard({
   onReschedule, 
   onCancel, 
   onReminder,
-  onMarkComplete
+  onMarkComplete,
+  onFeedback
 }: SessionCardProps) {
   const startTime = new Date(event.start_time as string);
   const isUpcoming = startTime > new Date();
+  const isPast = startTime < new Date();
   const isMentor = event.session_details?.mentor.id === event.user_id;
   const isCompleted = event.status === "completed";
   const isCancelled = event.status === "cancelled";
@@ -116,7 +120,7 @@ export function SessionCard({
       {!isCancelled && (
         <CardFooter className="flex flex-wrap gap-2 px-4 py-2 bg-muted/20">
           {/* Join button (visible for all users if meeting link exists) */}
-          {event.session_details?.meeting_link && (
+          {event.session_details?.meeting_link && isUpcoming && (
             <Button 
               variant="default" 
               size="sm" 
@@ -168,7 +172,7 @@ export function SessionCard({
           )}
 
           {/* Mark as Complete button (visible for mentors for non-completed sessions) */}
-          {!isCompleted && onMarkComplete && isMentor && (
+          {!isCompleted && !isUpcoming && onMarkComplete && isMentor && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -177,6 +181,19 @@ export function SessionCard({
             >
               <CheckCircle className="h-4 w-4 mr-1" />
               Complete
+            </Button>
+          )}
+          
+          {/* Feedback button (visible for past sessions) */}
+          {isPast && onFeedback && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-grow text-purple-600 hover:text-purple-700"
+              onClick={(e) => handleButtonClick(e, onFeedback)}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Feedback
             </Button>
           )}
         </CardFooter>
