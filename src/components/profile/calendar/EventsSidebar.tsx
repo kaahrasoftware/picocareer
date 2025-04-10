@@ -1,108 +1,92 @@
 
-import { isSameDay } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { SessionCard } from "./SessionCard";
-import { EventsSidebarHeader } from "./EventsSidebarHeader";
+import { useState } from "react";
 import { EmptyStateDisplay } from "./EmptyStateDisplay";
-import { EventDialogs } from "./EventDialogs";
+import { SessionCard } from "./SessionCard";
 import type { CalendarEvent } from "@/types/calendar";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useSessionManagement } from "@/hooks/useSessionManagement";
-import { useEventActions } from "@/hooks/useEventActions";
 
-interface EventsSidebarProps {
-  date: Date;
+export interface EventsSidebarProps {
+  date?: Date;
   events: CalendarEvent[];
   isMentor?: boolean;
-  onEventClick?: (event: CalendarEvent) => void;
-  onEventDelete?: (event: CalendarEvent) => void;
+  onEventDelete?: () => void;
 }
 
-export function EventsSidebar({
-  date,
-  events,
+export function EventsSidebar({ 
+  date, 
+  events = [], 
   isMentor = false,
-  onEventClick,
-  onEventDelete,
+  onEventDelete
 }: EventsSidebarProps) {
-  const { session } = useAuthSession();
-  const { cancelSession } = useSessionManagement();
-  const userId = session?.user.id;
+  // Filter events for the selected date if a date is provided
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
   
-  const {
-    selectedEvent,
-    showReschedule,
-    showCancel,
-    showReminder,
-    showFeedback,
-    handleReschedule,
-    handleCancel,
-    handleReminder,
-    handleFeedback,
-    handleJoin,
-    handleMarkComplete,
-    handleDialogClose
-  } = useEventActions();
+  const filteredEvents = date 
+    ? events.filter(event => {
+        // Ensure event.start_time is valid
+        if (!event.start_time) return false;
+        
+        const eventDate = new Date(event.start_time);
+        const selectedDate = new Date(date);
+        
+        // Compare only the date portion (not time)
+        return eventDate.getDate() === selectedDate.getDate() && 
+               eventDate.getMonth() === selectedDate.getMonth() && 
+               eventDate.getFullYear() === selectedDate.getFullYear();
+      })
+    : events;
+    
+  const hasEvents = filteredEvents.length > 0;
 
-  const filteredEvents = events.filter((event) =>
-    isSameDay(new Date(event.start_time), date)
-  );
-
-  const handleEventDeleted = () => {
-    if (selectedEvent && onEventDelete) {
-      onEventDelete(selectedEvent);
-    }
-    handleDialogClose();
+  const statusFilters: Record<string, string> = {
+    all: "All",
+    scheduled: "Upcoming",
+    completed: "Completed",
+    cancelled: "Cancelled"
   };
-
-  const handleCompleteSession = async (event: CalendarEvent) => {
-    const success = await handleMarkComplete(event);
-    if (success && onEventDelete) {
-      onEventDelete(event);
-    }
-  };
+  
+  // Apply status filter if not "all"
+  const statusFilteredEvents = selectedFilter === "all" 
+    ? filteredEvents 
+    : filteredEvents.filter(event => event.status === selectedFilter);
 
   return (
-    <div className="border rounded-md p-4 w-full lg:w-[700px] lg:min-w-[500px]">
-      <EventsSidebarHeader date={date} events={filteredEvents} />
-
-      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-        {filteredEvents.length === 0 ? (
-          <EmptyStateDisplay date={date} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {filteredEvents.map((event) => {
-              // Add the user ID to the event object for user role checking in SessionCard
-              const eventWithUserId = { ...event, user_id: userId };
-              
-              return (
-                <SessionCard
-                  key={event.id}
-                  event={eventWithUserId}
-                  onClick={onEventClick ? () => onEventClick(event) : undefined}
-                  onJoin={handleJoin}
-                  onReschedule={handleReschedule}
-                  onCancel={handleCancel}
-                  onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
-                  onMarkComplete={isMentor && event.session_details?.mentor.id === userId ? handleCompleteSession : undefined}
-                  onFeedback={handleFeedback}
-                />
-              );
-            })}
+    <div className="h-full overflow-hidden flex flex-col">
+      {hasEvents && (
+        <div className="px-4 py-2 border-b">
+          <div className="flex space-x-2 overflow-x-auto pb-1">
+            {Object.entries(statusFilters).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedFilter(key)}
+                className={`px-3 py-1 text-xs rounded-full whitespace-nowrap ${
+                  selectedFilter === key 
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
+        </div>
+      )}
+      
+      <div className="flex-1 overflow-y-auto p-4">
+        {statusFilteredEvents.length > 0 ? (
+          <div className="space-y-4">
+            {statusFilteredEvents.map((event) => (
+              <SessionCard 
+                key={event.id} 
+                event={event} 
+                isMentor={isMentor}
+                onDelete={onEventDelete}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyStateDisplay date={date} showAddButton={isMentor} />
         )}
       </div>
-
-      <EventDialogs 
-        selectedEvent={selectedEvent}
-        showReschedule={showReschedule}
-        showCancel={showCancel}
-        showReminder={showReminder}
-        showFeedback={showFeedback}
-        userId={userId}
-        isMentor={isMentor}
-        onClose={handleEventDeleted}
-      />
     </div>
   );
 }
