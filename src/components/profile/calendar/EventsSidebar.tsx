@@ -1,5 +1,5 @@
 
-import { isSameDay } from "date-fns";
+import { isSameDay, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { SessionCard } from "./SessionCard";
 import { EventsSidebarHeader } from "./EventsSidebarHeader";
@@ -44,8 +44,13 @@ export function EventsSidebar({
     handleDialogClose
   } = useEventActions();
 
+  // Make sure date is valid before filtering
+  const isValidDate = date && isValid(date);
+  
   const filteredEvents = events.filter((event) =>
-    isSameDay(new Date(event.start_time), date)
+    isValidDate && event.start_time ? 
+      isSameDay(new Date(event.start_time), date) : 
+      false
   );
 
   const handleEventDeleted = () => {
