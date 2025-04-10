@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isAfter } from "date-fns";
@@ -9,7 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionDetailsDialog } from "./SessionDetailsDialog";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
-
 interface CalendarContainerProps {
   selectedDate: Date | undefined;
   setSelectedDate: (date: Date | undefined) => void;
@@ -19,10 +17,9 @@ interface CalendarContainerProps {
   setSelectedDateRange?: (range: DateRange | undefined) => void;
   selectionMode?: "single" | "range";
 }
-
-export function CalendarContainer({ 
-  selectedDate, 
-  setSelectedDate, 
+export function CalendarContainer({
+  selectedDate,
+  setSelectedDate,
   availability,
   events = [],
   selectedDateRange,
@@ -50,24 +47,22 @@ export function CalendarContainer({
       if (!slot.recurring && format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
         return true;
       }
-      
+
       // For recurring slots, check if they apply to this date
       if (slot.recurring && slot.day_of_week === dayOfWeek) {
         // Check if the slot was created before the date we're checking
         // This ensures recurring slots only apply to future dates from when they were created
         const slotCreationDate = new Date(slot.created_at || slot.start_date_time);
         slotCreationDate.setHours(0, 0, 0, 0);
-        
+
         // Only apply recurring slots to dates that are after the creation date
         return isAfter(date, slotCreationDate) || format(date, 'yyyy-MM-dd') === format(slotCreationDate, 'yyyy-MM-dd');
       }
-      
       return false;
     });
 
     // If there's at least one available slot, consider the day available
     const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
-    
     if (hasAvailable) return 'available';
     return null;
   };
@@ -77,149 +72,73 @@ export function CalendarContainer({
     if (!selectedDate) return false;
     return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
   });
-
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
   };
-
   const handleCloseDialog = () => {
     setSelectedEvent(null);
   };
-
   const handleCancelSession = async () => {
     handleCloseDialog();
   };
-
-  return (
-    <div className="space-y-6">
-      <div className={cn(
-        "mx-auto",
-        selectionMode === "range" ? "w-full" : "w-fit"
-      )}>
-        {selectionMode === "single" ? (
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            defaultMonth={selectedDate}
-            className="rounded-lg border bg-card shadow-sm p-3"
-            modifiers={{
-              sessions: hasSessionsOnDate,
-              available: (date) => getAvailabilityStatus(date) === 'available'
-            }}
-            modifiersStyles={{
-              sessions: {
-                border: '2px solid #3b82f6',
-                borderRadius: '6px'
-              },
-              available: {
-                backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                color: '#166534',
-                fontWeight: 500
-              }
-            }}
-          />
-        ) : (
-          <div className="bg-card border rounded-lg shadow-sm p-4">
-            <Calendar
-              mode="range"
-              selected={selectedDateRange}
-              onSelect={setSelectedDateRange}
-              defaultMonth={selectedDate}
-              className="mx-auto"
-              numberOfMonths={2}
-              modifiers={{
-                sessions: hasSessionsOnDate,
-                available: (date) => getAvailabilityStatus(date) === 'available'
-              }}
-              modifiersStyles={{
-                sessions: {
-                  border: '2px solid #3b82f6',
-                  borderRadius: '6px'
-                },
-                available: {
-                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                  color: '#166534',
-                  fontWeight: 500
-                }
-              }}
-              styles={{
-                day_range_middle: {
-                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
-                  color: '#7e22ce',
-                },
-                day_selected: {
-                  backgroundColor: '#9333ea',
-                  color: 'white',
-                  fontWeight: 'bold',
-                },
-                day_range_end: {
-                  backgroundColor: '#9333ea',
-                  color: 'white',
-                  fontWeight: 'bold',
-                }
-              }}
-              disabled={(date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return date < today;
-              }}
-            />
-          </div>
-        )}
+  return <div className="space-y-6">
+      <div className={cn("mx-auto", selectionMode === "range" ? "w-full" : "w-fit")}>
+        {selectionMode === "single" ? <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} defaultMonth={selectedDate} className="rounded-lg border bg-card shadow-sm p-3" modifiers={{
+        sessions: hasSessionsOnDate,
+        available: date => getAvailabilityStatus(date) === 'available'
+      }} modifiersStyles={{
+        sessions: {
+          border: '2px solid #3b82f6',
+          borderRadius: '6px'
+        },
+        available: {
+          backgroundColor: 'rgba(34, 197, 94, 0.15)',
+          color: '#166534',
+          fontWeight: 500
+        }
+      }} /> : <div className="bg-card border rounded-lg shadow-sm p-4">
+            <Calendar mode="range" selected={selectedDateRange} onSelect={setSelectedDateRange} defaultMonth={selectedDate} className="mx-auto" numberOfMonths={2} modifiers={{
+          sessions: hasSessionsOnDate,
+          available: date => getAvailabilityStatus(date) === 'available'
+        }} modifiersStyles={{
+          sessions: {
+            border: '2px solid #3b82f6',
+            borderRadius: '6px'
+          },
+          available: {
+            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+            color: '#166534',
+            fontWeight: 500
+          }
+        }} styles={{
+          day_range_middle: {
+            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+            color: '#7e22ce'
+          },
+          day_selected: {
+            backgroundColor: '#9333ea',
+            color: 'white',
+            fontWeight: 'bold'
+          },
+          day_range_end: {
+            backgroundColor: '#9333ea',
+            color: 'white',
+            fontWeight: 'bold'
+          }
+        }} disabled={date => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return date < today;
+        }} />
+          </div>}
       </div>
 
-      {selectedDate && selectedDateEvents.length > 0 && (
-        <h3 className="font-medium text-lg text-center sm:text-left">
-          Events for {format(selectedDate, 'MMMM d, yyyy')}
-        </h3>
-      )}
+      {selectedDate && selectedDateEvents.length > 0}
       
-      {selectedDate && selectedDateEvents.length > 0 && (
-        <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
-          <div className="space-y-3 px-2">
-            {selectedDateEvents.map((event) => (
-              <Card 
-                key={event.id}
-                className={`
-                  ${event.status === 'cancelled' ? 'border-red-500/20 bg-red-500/10' : 
-                    event.event_type === 'session' ? 'border-blue-500/20 bg-blue-500/10' : 
-                    'border-gray-500/20 bg-gray-500/10'}
-                  hover:shadow-md transition-all cursor-pointer
-                `}
-                onClick={() => handleEventClick(event)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <h4 className="font-medium">{event.title}</h4>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {event.description}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {format(new Date(event.start_time), 'h:mm a')}
-                    </span>
-                  </div>
-                  {event.status === 'cancelled' && (
-                    <span className="text-sm text-red-500 mt-2 block">
-                      Cancelled
-                    </span>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
-      )}
+      {selectedDate && selectedDateEvents.length > 0 && <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
+          
+        </ScrollArea>}
 
-      <SessionDetailsDialog
-        session={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
-        onCancel={handleCancelSession}
-      />
-    </div>
-  );
+      <SessionDetailsDialog session={selectedEvent} onClose={() => setSelectedEvent(null)} onCancel={handleCancelSession} />
+    </div>;
 }
