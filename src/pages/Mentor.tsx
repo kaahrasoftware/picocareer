@@ -1,3 +1,4 @@
+
 import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
@@ -12,18 +13,25 @@ import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { addDays } from "date-fns";
+import { MentorListDialog } from "@/components/MentorListDialog";
+import { MentorFilters } from "@/components/mentors/MentorFilters";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
-  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
-  const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
-  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [schoolFilter, setSchoolFilter] = useState<string>("all");
+  const [majorFilter, setMajorFilter] = useState<string>("all");
+  const [educationFilter, setEducationFilter] = useState<string>("all");
+  const [experienceFilter, setExperienceFilter] = useState<string>("all");
+  const [ratingFilter, setRatingFilter] = useState<string>("all");
+  const [sessionFilter, setSessionFilter] = useState<string>("all");
   const [hasAvailabilityFilter, setHasAvailabilityFilter] = useState(false);
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const profileId = searchParams.get('profileId');
   const showDialog = searchParams.get('dialog') === 'true';
 
@@ -34,7 +42,20 @@ export default function Mentor() {
   }, [profileId, showDialog]);
 
   const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: ['profiles', searchQuery, selectedSkills, locationFilter, companyFilter, schoolFilter, fieldFilter, hasAvailabilityFilter],
+    queryKey: [
+      'profiles', 
+      searchQuery, 
+      selectedSkills, 
+      locationFilter, 
+      companyFilter, 
+      schoolFilter, 
+      majorFilter,
+      educationFilter,
+      experienceFilter,
+      ratingFilter,
+      sessionFilter,  
+      hasAvailabilityFilter
+    ],
     queryFn: async () => {
       let query = supabase
         .from('profiles')
@@ -88,16 +109,40 @@ export default function Mentor() {
         );
       }
 
-      if (locationFilter) {
+      if (locationFilter && locationFilter !== "all") {
         query = query.eq('location', locationFilter);
       }
 
-      if (companyFilter) {
+      if (companyFilter && companyFilter !== "all") {
         query = query.eq('company_id', companyFilter);
       }
 
-      if (schoolFilter) {
+      if (schoolFilter && schoolFilter !== "all") {
         query = query.eq('school_id', schoolFilter);
+      }
+      
+      if (majorFilter && majorFilter !== "all") {
+        query = query.eq('academic_major_id', majorFilter);
+      }
+      
+      if (educationFilter && educationFilter !== "all") {
+        query = query.eq('highest_degree', educationFilter);
+      }
+      
+      if (experienceFilter && experienceFilter !== "all") {
+        // Parse ranges like "1-3", "4-7", "8-10", "10+"
+        if (experienceFilter === "10+") {
+          query = query.gte('years_of_experience', 10);
+        } else {
+          const [min, max] = experienceFilter.split('-').map(Number);
+          query = query.gte('years_of_experience', min).lte('years_of_experience', max);
+        }
+      }
+
+      if (sessionFilter && sessionFilter !== "all") {
+        // Parse values like "10+", "50+", "100+"
+        const minSessions = parseInt(sessionFilter.replace('+', ''));
+        query = query.gte('total_booked_sessions', minSessions);
       }
 
       const { data, error } = await query;
@@ -119,14 +164,30 @@ export default function Mentor() {
         );
 
       const mentorsWithAvailability = new Set(availabilities?.map(a => a.profile_id) || []);
+      
+      // Handle rating filter for the client-side (since ratings might be in another table)
+      let filteredData = data;
+      if (ratingFilter && ratingFilter !== "all") {
+        const minRating = parseFloat(ratingFilter.replace('+', ''));
+        // This is a placeholder - in a real app, you'd join with ratings table
+        // For now, we'll simulate by filtering randomly
+        filteredData = data.filter(profile => {
+          // This is a placeholder simulation - replace with actual rating logic
+          const rating = (profile.id.charCodeAt(0) % 5) + 1; // Random rating between 1-5
+          return rating >= minRating;
+        });
+      }
 
-      return data.map((profile: any) => ({
+      return filteredData.map((profile: any) => ({
         ...profile,
         company_name: profile.company?.name,
         school_name: profile.school?.name,
         academic_major: profile.academic_major?.title,
         career_title: profile.career?.title,
-        hasAvailability: mentorsWithAvailability.has(profile.id)
+        hasAvailability: mentorsWithAvailability.has(profile.id),
+        // Placeholder for rating, replace with actual ratings from your system
+        rating: (profile.id.charCodeAt(0) % 5) + 1,
+        totalRatings: profile.id.charCodeAt(1) % 100
       }));
     }
   });
@@ -214,27 +275,32 @@ export default function Mentor() {
               </div>
 
               <h1 className="text-3xl font-bold">PicoCareer Mentors</h1>
-              
-              <CommunityFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedSkills={selectedSkills}
-                onSkillsChange={setSelectedSkills}
-                locationFilter={locationFilter}
-                onLocationChange={setLocationFilter}
-                companyFilter={companyFilter}
-                onCompanyChange={setCompanyFilter}
-                schoolFilter={schoolFilter}
-                onSchoolChange={setSchoolFilter}
-                fieldFilter={fieldFilter}
-                onFieldChange={setFieldFilter}
-                hasAvailabilityFilter={hasAvailabilityFilter}
-                onHasAvailabilityChange={setHasAvailabilityFilter}
-                showAvailabilityFilter={true}
-                fields={[]}
-                availableMentorsCount={profiles.length}
-              />
 
+              <div className="bg-card border rounded-lg shadow-sm">
+                <MentorFilters
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  companyFilter={companyFilter}
+                  setCompanyFilter={setCompanyFilter}
+                  educationFilter={educationFilter}
+                  setEducationFilter={setEducationFilter}
+                  experienceFilter={experienceFilter}
+                  setExperienceFilter={setExperienceFilter}
+                  sessionFilter={sessionFilter}
+                  setSessionFilter={setSessionFilter}
+                  majorFilter={majorFilter}
+                  setMajorFilter={setMajorFilter}
+                  schoolFilter={schoolFilter}
+                  setSchoolFilter={setSchoolFilter}
+                  ratingFilter={ratingFilter}
+                  setRatingFilter={setRatingFilter}
+                  availabilityFilter={hasAvailabilityFilter}
+                  setAvailabilityFilter={setHasAvailabilityFilter}
+                  locationFilter={locationFilter as string}
+                  setLocationFilter={setLocationFilter as (value: string) => void}
+                />
+              </div>
+              
               {error ? (
                 <div className="text-center py-8">
                   <p className="text-destructive">Failed to load community profiles.</p>

@@ -50,6 +50,7 @@ export async function fetchAllFromTable<T extends { id: string }>(
 interface School {
   id: string;
   name: string;
+  location?: string;
 }
 
 interface Company {
