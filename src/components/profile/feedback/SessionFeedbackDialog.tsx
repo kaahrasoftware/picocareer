@@ -52,6 +52,7 @@ export function SessionFeedbackDialog({
 
     setIsSubmitting(true);
     try {
+      // First, insert the feedback
       const { error: feedbackError } = await supabase
         .from('session_feedback')
         .insert({
@@ -67,12 +68,11 @@ export function SessionFeedbackDialog({
 
       if (feedbackError) throw feedbackError;
 
-      // Update mentor_sessions table to indicate feedback has been provided
+      // Update the session status if it's a no-show
       const { error: sessionError } = await supabase
         .from('mentor_sessions')
         .update({ 
-          status: didNotShowUp ? 'no_show' : 'completed',
-          has_feedback: true
+          status: didNotShowUp ? 'no_show' : 'completed'
         })
         .eq('id', sessionId);
 
@@ -98,7 +98,7 @@ export function SessionFeedbackDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Session Feedback</DialogTitle>
         </DialogHeader>

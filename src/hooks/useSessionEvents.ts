@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -56,7 +57,8 @@ export function useSessionEvents() {
           session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(
             type,
             duration
-          )
+          ),
+          feedback:session_feedback!inner(id)
         `)
         .or(`mentor_id.eq.${currentUserId},mentee_id.eq.${currentUserId}`);
 
@@ -68,6 +70,23 @@ export function useSessionEvents() {
         });
         throw error;
       }
+
+      // Get separate feedback count to check if there's any feedback for each session
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from("session_feedback")
+        .select('session_id, from_profile_id')
+        .eq('from_profile_id', currentUserId);
+
+      if (feedbackError) {
+        console.error('Error fetching feedback:', feedbackError);
+      }
+
+      // Create a map of session IDs that have feedback from the current user
+      const sessionsWithFeedback = new Set(
+        (feedbackData || [])
+          .filter(f => f.from_profile_id === currentUserId)
+          .map(f => f.session_id)
+      );
 
       // Transform sessions into calendar events
       const events: CalendarEvent[] = sessions.map((session) => ({
@@ -94,7 +113,9 @@ export function useSessionEvents() {
           mentor: session.mentor,
           mentee: session.mentee,
           session_type: session.session_type,
+          has_feedback: sessionsWithFeedback.has(session.id)
         },
+        user_id: currentUserId
       }));
 
       return events;
