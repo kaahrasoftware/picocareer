@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Card,
@@ -16,7 +17,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-type TableName = "blogs" | "videos" | "mentor_sessions" | "careers" | "majors" | "schools";
+// Define a more flexible table name type that includes notifications
+export type TableName = "blogs" | "videos" | "mentor_sessions" | "careers" | "majors" | "schools" | "notifications";
 type ContentStatus = "Approved" | "Pending" | "Rejected";
 
 interface ContentStatusCardProps {
@@ -44,7 +46,7 @@ export function ContentStatusCard({
   const { toast } = useToast();
 
   const handleStatusChange = async (newStatus: ContentStatus) => {
-    if (tableName === 'mentor_sessions') return; // Skip for mentor sessions as they don't have status
+    if (tableName === 'mentor_sessions' || tableName === 'notifications') return; // Skip for these tables as they don't use status field the same way
 
     setChanging(true);
     try {
@@ -83,7 +85,7 @@ export function ContentStatusCard({
           <CardDescription>Total: {total}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          {tableName !== 'mentor_sessions' && (
+          {tableName !== 'mentor_sessions' && tableName !== 'notifications' && (
             <>
               <div className="flex justify-between text-sm">
                 <span>Approved</span>
@@ -111,10 +113,22 @@ export function ContentStatusCard({
               </div>
             </>
           )}
+          {tableName === 'notifications' && (
+            <>
+              <div className="flex justify-between text-sm">
+                <span>Read</span>
+                <span>{approved}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Unread</span>
+                <span>{pending}</span>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
-      {tableName !== 'mentor_sessions' && pending > 0 && (
+      {tableName !== 'mentor_sessions' && tableName !== 'notifications' && pending > 0 && (
         <Select
           disabled={changing}
           onValueChange={handleStatusChange}

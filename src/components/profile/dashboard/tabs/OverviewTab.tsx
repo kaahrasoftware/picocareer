@@ -1,11 +1,13 @@
+
 import { StatsCard } from "../StatsCard";
 import { ActivityChart } from "../ActivityChart";
 import { ContentDistributionChart } from "../ContentDistributionChart";
 import { ContentStatusCard } from "../ContentStatusCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Video, Calendar } from "lucide-react";
+import { Users, BookOpen, Video, Calendar } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAllSchools } from "@/hooks/useAllReferenceData";
 
 export function OverviewTab() {
   // Fetch users statistics
@@ -100,6 +102,9 @@ export function OverviewTab() {
     }
   });
 
+  // Use the useAllSchools hook to get full count
+  const { data: allSchools } = useAllSchools();
+
   // Monthly session data for chart
   const { data: monthlyStats } = useQuery({
     queryKey: ['dashboard-monthly'],
@@ -141,6 +146,9 @@ export function OverviewTab() {
       </div>
     );
   }
+
+  // Calculate the actual total number of schools
+  const schoolsTotal = allSchools?.length || contentStats?.schools.total || 0;
 
   return (
     <div className="space-y-8">
@@ -198,7 +206,7 @@ export function OverviewTab() {
         />
         <ContentStatusCard
           title="Schools"
-          total={contentStats?.schools.total || 0}
+          total={schoolsTotal}
           approved={contentStats?.schools.approved || 0}
           pending={contentStats?.schools.pending || 0}
           rejected={contentStats?.schools.rejected || 0}
@@ -209,8 +217,9 @@ export function OverviewTab() {
         <ContentStatusCard
           title="Notifications"
           total={contentStats?.notifications.total || 0}
-          unread={contentStats?.notifications.unread || 0}
-          read={contentStats?.notifications.read || 0}
+          approved={contentStats?.notifications.read || 0}
+          pending={contentStats?.notifications.unread || 0}
+          rejected={0}
           tableName="notifications"
           itemId="notification-id"
           onStatusChange={handleStatusChange}
