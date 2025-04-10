@@ -4,38 +4,44 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Paginated fetch utility function
 export async function fetchAllFromTable(tableName: string, orderField: string) {
-  const allItems = [];
-  let page = 0;
-  const pageSize = 1000; // Large page size to reduce number of requests
-  let hasMore = true;
-  
-  while (hasMore) {
-    const start = page * pageSize;
-    const end = start + pageSize - 1;
+  try {
+    const allItems = [];
+    let page = 0;
+    const pageSize = 1000; // Large page size to reduce number of requests
+    let hasMore = true;
     
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq('status', 'Approved')
-      .range(start, end)
-      .order(orderField);
-    
-    if (error) {
-      console.error(`Error fetching ${tableName}:`, error);
-      throw error;
+    while (hasMore) {
+      const start = page * pageSize;
+      const end = start + pageSize - 1;
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('status', 'Approved')
+        .range(start, end)
+        .order(orderField);
+      
+      if (error) {
+        console.error(`Error fetching ${tableName}:`, error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        allItems.push(...data);
+        page++;
+      } else {
+        hasMore = false;
+      }
+      
+      // Safety limit to prevent infinite loops
+      if (page > 10) break;
     }
     
-    if (data && data.length > 0) {
-      allItems.push(...data);
-      page++;
-    } else {
-      hasMore = false;
-    }
-    
-    // No longer limiting to 10 pages to fetch all items
+    return allItems;
+  } catch (error) {
+    console.error(`Error in fetchAllFromTable for ${tableName}:`, error);
+    return [];
   }
-  
-  return allItems;
 }
 
 export function useAllSchools() {

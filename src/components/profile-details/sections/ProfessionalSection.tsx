@@ -1,29 +1,24 @@
 
-import { Input } from "@/components/ui/input";
 import { UseFormRegister } from "react-hook-form";
 import { FormFields } from "../types/form-types";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Company {
-  id: string;
-  name: string;
-}
 
 interface ProfessionalSectionProps {
   register: UseFormRegister<FormFields>;
   handleFieldChange: (field: keyof FormFields, value: any) => void;
-  companyId?: string;
   position?: string;
+  companyId?: string;
   yearsOfExperience: number;
-  companies: Company[];
+  companies: { id: string; name: string }[];
 }
 
 export function ProfessionalSection({
   register,
   handleFieldChange,
-  companyId,
   position,
+  companyId,
   yearsOfExperience,
   companies,
 }: ProfessionalSectionProps) {

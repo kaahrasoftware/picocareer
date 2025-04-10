@@ -37,10 +37,21 @@ export function SearchableSelect({
   onCustomValueSubmit
 }: SearchableSelectProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState<string>("");
   const { toast } = useToast();
+  
+  // Debounce search input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
   
   // Paginated query with search
   const {
@@ -49,13 +60,13 @@ export function SearchableSelect({
     page,
     setPage,
     totalPages,
-  } = usePaginatedQuery<any>({
-    queryKey: [tableName, 'select', searchQuery],
+  } = usePaginatedQuery({
+    queryKey: [tableName, 'select', debouncedSearch],
     tableName,
     paginationOptions: {
       limit: 20,
       page: 1,
-      searchQuery: searchQuery,
+      searchQuery: debouncedSearch,
       searchColumn: searchField,
       orderBy: searchField,
       orderDirection: 'asc'
@@ -81,17 +92,21 @@ export function SearchableSelect({
   
   // Get display name for the selected value
   const getDisplayName = () => {
-    const selectedOption = options.find(option => option.id === value);
+    if (!value) return "";
+    
+    const selectedOption = options?.find(option => option.id === value);
     if (selectedOption) {
-      return selectedOption[selectField];
+      const displayName = selectedOption[selectField];
+      setSelectedLabel(displayName);
+      return displayName;
     }
     
     // If we have a value but can't find the option, fetch it
-    if (value && options.length > 0 && !isLoading) {
+    if (value && options?.length > 0 && !isLoading && !selectedLabel) {
       fetchSelectedItem();
     }
     
-    return "";
+    return selectedLabel;
   };
   
   // Fetch the selected item details if not in the current options list
@@ -103,23 +118,26 @@ export function SearchableSelect({
         .from(tableName)
         .select(`id, ${selectField}`)
         .eq('id', value)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       
       if (data) {
-        // Add to options if not already there
-        if (!options.some(option => option.id === data.id)) {
-          // We don't update the options state here as it would reset pagination
-          // Instead we rely on the displayName for UI
-        }
+        setSelectedLabel(data[selectField]);
       }
     } catch (error) {
       console.error(`Error fetching ${tableName} item:`, error);
     }
   };
+
+  // Initial load of selected item
+  useEffect(() => {
+    if (value && !selectedLabel && !isLoading) {
+      fetchSelectedItem();
+    }
+  }, [value, isLoading]);
   
-  // Find display name from the options
+  // Display name
   const displayName = getDisplayName();
   
   if (showCustomInput) {
@@ -128,7 +146,7 @@ export function SearchableSelect({
         <Input
           value={customValue}
           onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName.slice(0, -1)} name`}
+          placeholder={`Enter new ${tableName.slice(0, -1)} name`}
         />
         <div className="flex gap-2">
           <Button
@@ -171,6 +189,11 @@ export function SearchableSelect({
               setShowCustomInput(true);
             } else {
               onValueChange(newValue);
+              // Find and set the label from options
+              const option = options?.find(opt => opt.id === newValue);
+              if (option) {
+                setSelectedLabel(option[selectField]);
+              }
             }
           }}
           onOpenChange={setIsSelectOpen}
@@ -187,9 +210,9 @@ export function SearchableSelect({
                 <div className="flex justify-center items-center py-4">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 </div>
-              ) : options.length > 0 ? (
+              ) : options && options.length > 0 ? (
                 <>
-                  {options.map((option: any) => (
+                  {options.map((option) => (
                     <SelectItem key={option.id} value={option.id}>
                       {option[selectField]}
                     </SelectItem>
