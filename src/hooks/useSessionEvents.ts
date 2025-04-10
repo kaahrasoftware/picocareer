@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -69,33 +70,65 @@ export function useSessionEvents() {
         throw error;
       }
 
+      // Fetch feedback status for these sessions
+      const sessionIds = sessions.map(session => session.id);
+      
+      // Skip feedback query if there are no sessions
+      if (sessionIds.length === 0) {
+        return [];
+      }
+      
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('session_feedback')
+        .select('session_id, from_profile_id')
+        .in('session_id', sessionIds)
+        .eq('from_profile_id', currentUserId);
+        
+      if (feedbackError) {
+        console.error('Error fetching feedback data:', feedbackError);
+      }
+      
+      // Create a map of session IDs that have feedback from current user
+      const feedbackMap = new Map();
+      if (feedbackData) {
+        feedbackData.forEach(feedback => {
+          feedbackMap.set(feedback.session_id, true);
+        });
+      }
+
       // Transform sessions into calendar events
-      const events: CalendarEvent[] = sessions.map((session) => ({
-        id: session.id,
-        title: `Session with ${
-          session.mentor.id === currentUserId
-            ? session.mentee.full_name
-            : session.mentor.full_name
-        }`,
-        description: `Mentoring session`,
-        start_time: session.scheduled_at,
-        end_time: new Date(
-          new Date(session.scheduled_at).getTime() +
-            (session.session_type?.duration || 60) * 60 * 1000
-        ).toISOString(),
-        event_type: 'session',
-        status: session.status,
-        session_details: {
+      const events: CalendarEvent[] = sessions.map((session) => {
+        // Check if current user has provided feedback for this session
+        const hasFeedback = feedbackMap.has(session.id);
+        
+        return {
           id: session.id,
-          scheduled_at: session.scheduled_at,
+          title: `Session with ${
+            session.mentor.id === currentUserId
+              ? session.mentee.full_name
+              : session.mentor.full_name
+          }`,
+          description: `Mentoring session`,
+          start_time: session.scheduled_at,
+          end_time: new Date(
+            new Date(session.scheduled_at).getTime() +
+              (session.session_type?.duration || 60) * 60 * 1000
+          ).toISOString(),
+          event_type: 'session',
           status: session.status,
-          notes: session.notes,
-          meeting_link: session.meeting_link,
-          mentor: session.mentor,
-          mentee: session.mentee,
-          session_type: session.session_type,
-        },
-      }));
+          session_details: {
+            id: session.id,
+            scheduled_at: session.scheduled_at,
+            status: session.status,
+            notes: session.notes,
+            meeting_link: session.meeting_link,
+            mentor: session.mentor,
+            mentee: session.mentee,
+            session_type: session.session_type,
+            has_feedback: hasFeedback, // Add feedback status
+          },
+        };
+      });
 
       return events;
     },

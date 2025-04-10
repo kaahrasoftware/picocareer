@@ -67,16 +67,27 @@ export function SessionFeedbackDialog({
 
       if (feedbackError) throw feedbackError;
 
-      // Update mentor_sessions table to indicate feedback has been provided
-      const { error: sessionError } = await supabase
-        .from('mentor_sessions')
-        .update({ 
-          status: didNotShowUp ? 'no_show' : 'completed',
-          has_feedback: true
-        })
-        .eq('id', sessionId);
+      // Update mentor_sessions table to indicate session status if it's a no-show
+      if (didNotShowUp) {
+        const { error: sessionError } = await supabase
+          .from('mentor_sessions')
+          .update({ 
+            status: 'no_show'
+          })
+          .eq('id', sessionId);
 
-      if (sessionError) throw sessionError;
+        if (sessionError) throw sessionError;
+      } else {
+        // If not a no-show, mark as completed
+        const { error: sessionError } = await supabase
+          .from('mentor_sessions')
+          .update({ 
+            status: 'completed'
+          })
+          .eq('id', sessionId);
+
+        if (sessionError) throw sessionError;
+      }
 
       toast({
         title: "Feedback Submitted",

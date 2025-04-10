@@ -191,10 +191,10 @@ export function SessionCard({
               variant={hasFeedback ? "outline" : "outline"}
               size="sm" 
               className={hasFeedback 
-                ? "flex-grow text-purple-400 opacity-75 cursor-not-allowed" 
+                ? "flex-grow text-gray-400 opacity-75 cursor-not-allowed" 
                 : "flex-grow text-purple-600 hover:text-purple-700"
               }
-              onClick={(e) => handleButtonClick(e, onFeedback)}
+              onClick={(e) => !hasFeedback && handleButtonClick(e, onFeedback)}
               disabled={hasFeedback}
             >
               <MessageSquare className="h-4 w-4 mr-1" />
