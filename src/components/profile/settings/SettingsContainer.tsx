@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,25 +8,21 @@ import { PrivacySection } from "./PrivacySection";
 import { AccessibilitySection } from "./AccessibilitySection";
 import { ThemeSection } from "./ThemeSection";
 import { LanguageSection } from "./LanguageSection";
-
 interface SettingsContainerProps {
   profileId?: string;
 }
-
-export function SettingsContainer({ profileId }: SettingsContainerProps) {
+export function SettingsContainer({
+  profileId
+}: SettingsContainerProps) {
   if (!profileId) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle>Settings</CardTitle>
           <CardDescription>You need to be logged in to access settings.</CardDescription>
         </CardHeader>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card className="w-full">
+  return <Card className="w-full">
       <CardHeader>
         <CardTitle>Settings</CardTitle>
         <CardDescription>Manage your account preferences and settings</CardDescription>
@@ -37,7 +32,7 @@ export function SettingsContainer({ profileId }: SettingsContainerProps) {
           <TabsList className="grid grid-cols-3 sm:grid-cols-5 mb-4">
             <TabsTrigger value="interface">Interface</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
+            
             <TabsTrigger value="display">Display</TabsTrigger>
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
           </TabsList>
@@ -67,6 +62,5 @@ export function SettingsContainer({ profileId }: SettingsContainerProps) {
           </TabsContent>
         </Tabs>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
