@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   LayoutDashboard, 
@@ -7,16 +8,18 @@ import {
   School,
   BookOpen,
   Video,
-  Award
+  Award,
+  Settings
 } from "lucide-react";
 import { OverviewTab } from "./dashboard/tabs/OverviewTab";
 import { UsersTab } from "./dashboard/tabs/UsersTab";
+import { AppSettingsTab } from "./dashboard/tabs/AppSettingsTab";
 
 export function DashboardTab() {
   return (
     <div className="space-y-8 p-6">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-4">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-9 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             Overview
@@ -48,6 +51,10 @@ export function DashboardTab() {
           <TabsTrigger value="scholarships" className="gap-2">
             <Award className="h-4 w-4" />
             Scholarships
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2">
+            <Settings className="h-4 w-4" />
+            App Settings
           </TabsTrigger>
         </TabsList>
 
@@ -99,6 +106,10 @@ export function DashboardTab() {
             <h2 className="text-2xl font-bold">Scholarships Management</h2>
             {/* Add scholarships management UI */}
           </div>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <AppSettingsTab />
         </TabsContent>
       </Tabs>
     </div>
