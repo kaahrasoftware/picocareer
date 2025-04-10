@@ -5,7 +5,6 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MentorGrid } from "@/components/community/MentorGrid";
@@ -13,13 +12,12 @@ import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { addDays } from "date-fns";
-import { MentorListDialog } from "@/components/MentorListDialog";
 import { MentorFilters } from "@/components/mentors/MentorFilters";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [locationFilter, setLocationFilter] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
   const [majorFilter, setMajorFilter] = useState<string>("all");
@@ -296,8 +294,8 @@ export default function Mentor() {
                   setRatingFilter={setRatingFilter}
                   availabilityFilter={hasAvailabilityFilter}
                   setAvailabilityFilter={setHasAvailabilityFilter}
-                  locationFilter={locationFilter as string}
-                  setLocationFilter={setLocationFilter as (value: string) => void}
+                  locationFilter={locationFilter}
+                  setLocationFilter={setLocationFilter}
                 />
               </div>
               
