@@ -32,8 +32,7 @@ export async function fetchAllFromTable(tableName: string, orderField: string) {
       hasMore = false;
     }
     
-    // Safety limit to prevent infinite loops
-    if (page > 10) break;
+    // No longer limiting to 10 pages to fetch all items
   }
   
   return allItems;

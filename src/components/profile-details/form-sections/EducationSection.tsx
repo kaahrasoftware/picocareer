@@ -1,9 +1,8 @@
-
 import { Major } from "@/types/database/majors";
 import { School } from "@/types/database/schools";
 import { DegreeSelect } from "./education/DegreeSelect";
-import { CustomSelect } from "./education/CustomSelect";
-import { useAllSchools } from "@/hooks/useAllReferenceData";
+import { PaginatedSelect } from "@/components/common/PaginatedSelect";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EducationSectionProps {
   highestDegree: string;
@@ -22,12 +21,6 @@ export function EducationSection({
   majors,
   schools,
 }: EducationSectionProps) {
-  // Get full list of schools (this will use the paginated approach)
-  const { data: allSchools } = useAllSchools();
-
-  // Use the comprehensive school list if available, otherwise use the provided schools
-  const schoolOptions = allSchools || schools;
-
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Education</h3>
@@ -37,25 +30,70 @@ export function EducationSection({
           handleSelectChange={handleSelectChange}
         />
 
-        <CustomSelect
-          value={academicMajorId}
-          options={majors}
-          placeholder="Academic Major"
-          handleSelectChange={handleSelectChange}
-          tableName="majors"
-          fieldName="academic_major_id"
-          titleField="title"
-        />
+        <div>
+          <label className="text-sm font-medium">Academic Major</label>
+          <PaginatedSelect
+            value={academicMajorId}
+            onValueChange={(value) => handleSelectChange('academic_major_id', value)}
+            placeholder="Select Academic Major"
+            tableName="majors"
+            selectField="title"
+            searchField="title"
+            allowCustomValue={true}
+            onCustomValueSubmit={async (value) => {
+              try {
+                const { data, error } = await supabase
+                  .from('majors')
+                  .insert({ 
+                    title: value,
+                    description: `Custom major: ${value}`,
+                    status: 'Pending'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (error) throw error;
+                if (data) {
+                  handleSelectChange('academic_major_id', data.id);
+                }
+              } catch (error) {
+                console.error('Error adding custom major:', error);
+              }
+            }}
+          />
+        </div>
 
-        <CustomSelect
-          value={schoolId}
-          options={schoolOptions}
-          placeholder="School"
-          handleSelectChange={handleSelectChange}
-          tableName="schools"
-          fieldName="school_id"
-          titleField="name"
-        />
+        <div>
+          <label className="text-sm font-medium">School</label>
+          <PaginatedSelect
+            value={schoolId}
+            onValueChange={(value) => handleSelectChange('school_id', value)}
+            placeholder="Select School"
+            tableName="schools"
+            selectField="name"
+            searchField="name"
+            allowCustomValue={true}
+            onCustomValueSubmit={async (value) => {
+              try {
+                const { data, error } = await supabase
+                  .from('schools')
+                  .insert({ 
+                    name: value,
+                    status: 'Pending'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (error) throw error;
+                if (data) {
+                  handleSelectChange('school_id', data.id);
+                }
+              } catch (error) {
+                console.error('Error adding custom school:', error);
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   );
