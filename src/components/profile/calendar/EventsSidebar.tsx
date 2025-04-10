@@ -63,31 +63,33 @@ export function EventsSidebar({
   };
 
   return (
-    <div className="border rounded-md p-4 w-full lg:w-auto lg:min-w-[350px]">
+    <div className="border rounded-md p-4 w-full lg:w-[700px] lg:min-w-[500px]">
       <EventsSidebarHeader date={date} events={filteredEvents} />
 
       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
         {filteredEvents.length === 0 ? (
           <EmptyStateDisplay date={date} />
         ) : (
-          filteredEvents.map((event) => {
-            // Add the user ID to the event object for user role checking in SessionCard
-            const eventWithUserId = { ...event, user_id: userId };
-            
-            return (
-              <SessionCard
-                key={event.id}
-                event={eventWithUserId}
-                onClick={onEventClick ? () => onEventClick(event) : undefined}
-                onJoin={handleJoin}
-                onReschedule={handleReschedule}
-                onCancel={handleCancel}
-                onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
-                onMarkComplete={isMentor && event.session_details?.mentor.id === userId ? handleCompleteSession : undefined}
-                onFeedback={handleFeedback}
-              />
-            );
-          })
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filteredEvents.map((event) => {
+              // Add the user ID to the event object for user role checking in SessionCard
+              const eventWithUserId = { ...event, user_id: userId };
+              
+              return (
+                <SessionCard
+                  key={event.id}
+                  event={eventWithUserId}
+                  onClick={onEventClick ? () => onEventClick(event) : undefined}
+                  onJoin={handleJoin}
+                  onReschedule={handleReschedule}
+                  onCancel={handleCancel}
+                  onReminder={isMentor && event.session_details?.mentor.id === userId ? handleReminder : undefined}
+                  onMarkComplete={isMentor && event.session_details?.mentor.id === userId ? handleCompleteSession : undefined}
+                  onFeedback={handleFeedback}
+                />
+              );
+            })}
+          </div>
         )}
       </div>
 
