@@ -2,19 +2,16 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { AvailabilitySection } from "./AvailabilitySection";
 import { CalendarHeader } from "./CalendarHeader";
 import { CalendarGrid } from "./CalendarGrid";
 import { EventsSidebar } from "./EventsSidebar";
 import { EventsSidebarHeader } from "./EventsSidebarHeader";
-import { CalendarEvent } from "@/types/calendar";
 import { MentorAvailabilityForm } from "./MentorAvailabilityForm";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
 import { useEventActions } from "@/hooks/useEventActions";
-import { SessionDetailView } from "./SessionDetailView";
 import { RescheduleSessionDialog } from "./dialog/RescheduleSessionDialog";
 import { CancelSessionDialog } from "./dialog/CancelSessionDialog";
 import { SessionReminderDialog } from "./dialog/SessionReminderDialog";
@@ -117,7 +114,7 @@ export function CalendarContainer({ isMentor, profileId }: CalendarContainerProp
   return (
     <div>
       <CalendarHeader 
-        isMentor={isMentor} 
+        isMentor={isMentor}
         selectedMonth={format(selectedDate, "MMMM yyyy")} 
       />
       
@@ -147,7 +144,6 @@ export function CalendarContainer({ isMentor, profileId }: CalendarContainerProp
           {/* MentorAvailabilityForm dialog */}
           {isFormOpen && (
             <MentorAvailabilityForm
-              isOpen={isFormOpen}
               onClose={closeForm}
               profileId={profileId}
               selectedDate={selectedDate}
@@ -158,19 +154,15 @@ export function CalendarContainer({ isMentor, profileId }: CalendarContainerProp
         <div className="md:col-span-2">
           <div className="bg-background rounded-lg border shadow-sm h-full">
             <EventsSidebarHeader 
-              date={selectedDate} 
+              date={selectedDate}
+              events={filteredEvents}  
             />
             
             <EventsSidebar
+              date={selectedDate}
               events={eventsWithUserId}
-              onEventJoin={handleJoin}
-              onEventReschedule={handleReschedule}
-              onEventCancel={handleCancel}
-              onEventReminder={handleReminder}
-              onEventComplete={handleMarkComplete}
-              onEventFeedback={handleFeedback}
               isMentor={isMentor}
-              userId={profileId}
+              onEventDelete={() => refetchEvents()}
             />
           </div>
         </div>
