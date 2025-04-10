@@ -1,35 +1,32 @@
 
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { PlusCircle } from "lucide-react";
+import { format, isToday } from "date-fns";
+import { Button } from "@/components/ui/button";
+import type { CalendarEvent } from "@/types/calendar";
 
-export interface EventsSidebarHeaderProps {
+interface EventsSidebarHeaderProps {
   date: Date;
-  events?: any[];
+  events: CalendarEvent[];
 }
 
-export function EventsSidebarHeader({ date, events = [] }: EventsSidebarHeaderProps) {
-  // Make sure we have a valid date
-  const isValidDate = date instanceof Date && !isNaN(date.getTime());
-  
-  // Format the date, but only if it's valid
-  const formattedDate = isValidDate 
-    ? format(date, "EEEE, MMMM d, yyyy")
-    : "Select a date";
-
-  // Count events if we have any
-  const eventsCount = Array.isArray(events) ? events.length : 0;
-
+export function EventsSidebarHeader({ date, events }: EventsSidebarHeaderProps) {
   return (
-    <div className="p-4 border-b">
-      <div className="flex items-center">
-        <CalendarIcon className="w-5 h-5 mr-2 text-primary" />
-        <h3 className="font-medium">{formattedDate}</h3>
-      </div>
-      {isValidDate && (
-        <p className="text-sm text-muted-foreground mt-1">
-          {eventsCount} {eventsCount === 1 ? 'event' : 'events'} scheduled
+    <div className="flex justify-between items-center mb-4">
+      <div>
+        <h3 className="text-lg font-semibold">
+          {isToday(date)
+            ? "Today's Sessions"
+            : `Sessions for ${format(date, "MMMM d, yyyy")}`}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {events.length === 0
+            ? "No sessions scheduled"
+            : `${events.length} session${events.length === 1 ? "" : "s"}`}
         </p>
-      )}
+      </div>
+      <Button variant="outline" size="sm" className="gap-1">
+        <PlusCircle className="h-4 w-4" /> Book
+      </Button>
     </div>
   );
 }
