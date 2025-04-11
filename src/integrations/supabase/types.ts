@@ -2667,24 +2667,101 @@ export type Database = {
       }
       scholarships: {
         Row: {
+          academic_requirements: Json | null
+          amount: number | null
+          application_open_date: string | null
+          application_process: string | null
+          application_url: string | null
+          author_id: string | null
+          award_frequency: string | null
+          category: string[] | null
+          citizenship_requirements: string[] | null
+          contact_information: Json | null
           created_at: string
-          id: number
-          title: string | null
-          updated_at: string | null
+          deadline: string | null
+          demographic_requirements: string[] | null
+          description: string
+          eligibility_criteria: Json | null
+          featured: boolean | null
+          id: string
+          provider_name: string
+          renewable: boolean | null
+          required_documents: string[] | null
+          source_verified: boolean | null
+          status: string
+          tags: string[] | null
+          title: string
+          total_applicants: number | null
+          updated_at: string
+          views_count: number | null
         }
         Insert: {
+          academic_requirements?: Json | null
+          amount?: number | null
+          application_open_date?: string | null
+          application_process?: string | null
+          application_url?: string | null
+          author_id?: string | null
+          award_frequency?: string | null
+          category?: string[] | null
+          citizenship_requirements?: string[] | null
+          contact_information?: Json | null
           created_at?: string
-          id?: number
-          title?: string | null
-          updated_at?: string | null
+          deadline?: string | null
+          demographic_requirements?: string[] | null
+          description: string
+          eligibility_criteria?: Json | null
+          featured?: boolean | null
+          id?: string
+          provider_name: string
+          renewable?: boolean | null
+          required_documents?: string[] | null
+          source_verified?: boolean | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          total_applicants?: number | null
+          updated_at?: string
+          views_count?: number | null
         }
         Update: {
+          academic_requirements?: Json | null
+          amount?: number | null
+          application_open_date?: string | null
+          application_process?: string | null
+          application_url?: string | null
+          author_id?: string | null
+          award_frequency?: string | null
+          category?: string[] | null
+          citizenship_requirements?: string[] | null
+          contact_information?: Json | null
           created_at?: string
-          id?: number
-          title?: string | null
-          updated_at?: string | null
+          deadline?: string | null
+          demographic_requirements?: string[] | null
+          description?: string
+          eligibility_criteria?: Json | null
+          featured?: boolean | null
+          id?: string
+          provider_name?: string
+          renewable?: boolean | null
+          required_documents?: string[] | null
+          source_verified?: boolean | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          total_applicants?: number | null
+          updated_at?: string
+          views_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scholarships_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {

@@ -1,6 +1,6 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
-import { MainLayout } from "./layouts"; // Changed from DefaultLayout to MainLayout
+import { MainLayout } from "./layouts";
 import Index from "../pages/Index";
 import Career from "../pages/Career";
 import Mentor from "../pages/Mentor";
@@ -33,11 +33,13 @@ import Hubs from "../pages/Hubs";
 import Hub from "../pages/Hub";
 import HubInviteResponse from "../pages/HubInviteResponse";
 import CareerChat from "../pages/CareerChat";
+import Scholarships from "@/pages/Scholarships";
+import ScholarshipAdd from "@/pages/ScholarshipAdd";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />, // Changed from DefaultLayout to MainLayout
+    element: <MainLayout />,
     errorElement: <Error />,
     children: [
       {
@@ -57,7 +59,7 @@ export const router = createBrowserRouter([
         element: <Career />,
       },
       {
-        path: "career-chat", // New route
+        path: "career-chat",
         element: <CareerChat />,
       },
       {
@@ -191,6 +193,14 @@ export const router = createBrowserRouter([
       {
         path: "hub-invite/response",
         element: <HubInviteResponse />,
+      },
+      {
+        path: "/scholarships",
+        element: <Scholarships />
+      },
+      {
+        path: "/scholarships/add",
+        element: <ScholarshipAdd />
       },
     ],
   },
