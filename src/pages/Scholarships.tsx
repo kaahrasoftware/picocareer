@@ -183,6 +183,12 @@ export default function Scholarships() {
     setFilters(newFilters);
   };
 
+  const resetFilters = () => {
+    setFilters({
+      status: "Active",
+    });
+  };
+
   // Get featured scholarships
   const featuredScholarships = scholarships.filter((s) => s.featured);
 
@@ -239,6 +245,7 @@ export default function Scholarships() {
               <ScholarshipGrid
                 scholarships={scholarships}
                 isLoading={isLoading}
+                resetFilters={resetFilters}
               />
             </div>
           </div>

@@ -273,19 +273,21 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                 <FormItem>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={`w-[190px] justify-start text-left font-normal ${
-                          !field.value ? "text-muted-foreground" : ""
-                        }`}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          "Deadline before..."
-                        )}
-                      </Button>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={`w-[190px] justify-start text-left font-normal ${
+                            !field.value ? "text-muted-foreground" : ""
+                          }`}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            "Deadline before..."
+                          )}
+                        </Button>
+                      </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                       <Calendar
@@ -443,9 +445,11 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                                 onValueChange={field.onChange}
                                 value={field.value}
                               >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Any GPA" />
-                                </SelectTrigger>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Any GPA" />
+                                  </SelectTrigger>
+                                </FormControl>
                                 <SelectContent>
                                   <SelectItem value="">Any GPA</SelectItem>
                                   <SelectItem value="2.5">2.5+</SelectItem>
@@ -603,9 +607,11 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                                 onValueChange={field.onChange}
                                 value={field.value}
                               >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Any Frequency" />
-                                </SelectTrigger>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Any Frequency" />
+                                  </SelectTrigger>
+                                </FormControl>
                                 <SelectContent>
                                   <SelectItem value="">Any Frequency</SelectItem>
                                   {awardFrequencyOptions.map(option => (
@@ -667,9 +673,11 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                                 onValueChange={field.onChange}
                                 value={field.value}
                               >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Any Complexity" />
-                                </SelectTrigger>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Any Complexity" />
+                                  </SelectTrigger>
+                                </FormControl>
                                 <SelectContent>
                                   <SelectItem value="">Any Complexity</SelectItem>
                                   {applicationProcessOptions.map(option => (

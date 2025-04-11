@@ -21,9 +21,10 @@ interface ScholarshipGridProps {
   scholarships: Scholarship[];
   isLoading: boolean;
   compact?: boolean;
+  resetFilters?: () => void;
 }
 
-export function ScholarshipGrid({ scholarships, isLoading, compact = false }: ScholarshipGridProps) {
+export function ScholarshipGrid({ scholarships, isLoading, compact = false, resetFilters }: ScholarshipGridProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -34,7 +35,7 @@ export function ScholarshipGrid({ scholarships, isLoading, compact = false }: Sc
   }
 
   if (!scholarships || scholarships.length === 0) {
-    return <EmptyState />;
+    return <EmptyState resetFilters={resetFilters} />;
   }
 
   return (
