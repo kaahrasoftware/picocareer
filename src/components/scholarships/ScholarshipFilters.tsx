@@ -443,7 +443,7 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                               <FormLabel>Minimum GPA</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value || "none"}
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -451,7 +451,7 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">Any GPA</SelectItem>
+                                  <SelectItem value="none">Any GPA</SelectItem>
                                   <SelectItem value="2.5">2.5+</SelectItem>
                                   <SelectItem value="3.0">3.0+</SelectItem>
                                   <SelectItem value="3.5">3.5+</SelectItem>
@@ -605,7 +605,7 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                               <FormLabel>Award Frequency</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value || "none"}
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -613,7 +613,7 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">Any Frequency</SelectItem>
+                                  <SelectItem value="none">Any Frequency</SelectItem>
                                   {awardFrequencyOptions.map(option => (
                                     <SelectItem key={option} value={option}>{option}</SelectItem>
                                   ))}
@@ -671,7 +671,7 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                               <FormLabel>Application Complexity</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value || "none"}
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -679,7 +679,7 @@ export function ScholarshipFilters({ onFilterChange, categories }: ScholarshipFi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">Any Complexity</SelectItem>
+                                  <SelectItem value="none">Any Complexity</SelectItem>
                                   {applicationProcessOptions.map(option => (
                                     <SelectItem key={option} value={option}>{option}</SelectItem>
                                   ))}

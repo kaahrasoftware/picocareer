@@ -128,7 +128,7 @@ export default function Scholarships() {
           query = query.filter('eligibility_criteria->major', 'cs', `{${filters.major.join(',')}}`);
         }
         
-        if (filters.gpa_requirement) {
+        if (filters.gpa_requirement && filters.gpa_requirement !== "none") {
           // For GPA, we need to compare as numbers, not exact match
           const minGpa = parseFloat(filters.gpa_requirement);
           query = query.gte('eligibility_criteria->>gpa_requirement', minGpa);
@@ -139,7 +139,7 @@ export default function Scholarships() {
         query = query.eq("renewable", filters.renewable);
       }
 
-      if (filters.award_frequency) {
+      if (filters.award_frequency && filters.award_frequency !== "none") {
         query = query.eq("award_frequency", filters.award_frequency);
       }
 
@@ -159,7 +159,7 @@ export default function Scholarships() {
       }
 
       // For application_process_length, filter client-side since it's a calculated property
-      if (filters.application_process_length) {
+      if (filters.application_process_length && filters.application_process_length !== "none") {
         // This is a simplified approach - in a real app, you would need more sophisticated logic
         return data.filter(scholarship => {
           const processLength = scholarship.application_process ? scholarship.application_process.length : 0;
@@ -180,7 +180,21 @@ export default function Scholarships() {
   });
 
   const handleFilterChange = (newFilters: Filters) => {
-    setFilters(newFilters);
+    // Replace empty strings or "none" values with undefined to clean up filters object
+    const cleanedFilters: Filters = {};
+    
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value !== "" && value !== "none" && value !== undefined) {
+        if (Array.isArray(value) && value.length === 0) {
+          // Skip empty arrays
+          return;
+        }
+        // @ts-ignore - Dynamic key assignment
+        cleanedFilters[key] = value;
+      }
+    });
+    
+    setFilters(cleanedFilters);
   };
 
   const resetFilters = () => {
