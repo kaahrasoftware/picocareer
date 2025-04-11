@@ -19,6 +19,15 @@ interface Filters {
   amount?: string;
   status?: string;
   deadline?: Date;
+  // Advanced filters
+  citizenship?: string[];
+  demographic?: string[];
+  academic_year?: string[];
+  major?: string[];
+  gpa_requirement?: string;
+  renewable?: boolean;
+  award_frequency?: string;
+  application_process_length?: string;
 }
 
 export default function Scholarships() {
@@ -97,6 +106,43 @@ export default function Scholarships() {
         query = query.lte("deadline", filters.deadline.toISOString());
       }
 
+      // Apply advanced filters
+      if (filters.citizenship && filters.citizenship.length > 0) {
+        query = query.overlaps("citizenship_requirements", filters.citizenship);
+      }
+
+      if (filters.demographic && filters.demographic.length > 0) {
+        query = query.overlaps("demographic_requirements", filters.demographic);
+      }
+
+      // Apply academic filters through eligibility_criteria JSONB field
+      if ((filters.academic_year && filters.academic_year.length > 0) || 
+          (filters.major && filters.major.length > 0) ||
+          filters.gpa_requirement) {
+            
+        if (filters.academic_year && filters.academic_year.length > 0) {
+          query = query.filter('eligibility_criteria->academic_year', 'cs', `{${filters.academic_year.join(',')}}`);
+        }
+        
+        if (filters.major && filters.major.length > 0) {
+          query = query.filter('eligibility_criteria->major', 'cs', `{${filters.major.join(',')}}`);
+        }
+        
+        if (filters.gpa_requirement) {
+          // For GPA, we need to compare as numbers, not exact match
+          const minGpa = parseFloat(filters.gpa_requirement);
+          query = query.gte('eligibility_criteria->>gpa_requirement', minGpa);
+        }
+      }
+
+      if (filters.renewable !== undefined) {
+        query = query.eq("renewable", filters.renewable);
+      }
+
+      if (filters.award_frequency) {
+        query = query.eq("award_frequency", filters.award_frequency);
+      }
+
       // Order by featured first, then deadline (upcoming first)
       query = query.order("featured", { ascending: false }).order("deadline", { ascending: true });
 
@@ -110,6 +156,23 @@ export default function Scholarships() {
           variant: "destructive",
         });
         return [];
+      }
+
+      // For application_process_length, filter client-side since it's a calculated property
+      if (filters.application_process_length) {
+        // This is a simplified approach - in a real app, you would need more sophisticated logic
+        return data.filter(scholarship => {
+          const processLength = scholarship.application_process ? scholarship.application_process.length : 0;
+          const requiredDocsCount = scholarship.required_documents ? scholarship.required_documents.length : 0;
+          
+          const complexity = processLength > 500 || requiredDocsCount > 3 
+            ? "Complex (1+ hour)" 
+            : processLength > 200 || requiredDocsCount > 1 
+              ? "Medium (30-60 min)" 
+              : "Simple (less than 30 min)";
+              
+          return complexity === filters.application_process_length;
+        });
       }
 
       return data;
