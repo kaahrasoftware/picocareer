@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useAuthState } from "@/hooks/useAuthState";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
 
 const SCHOLARSHIP_CATEGORIES = [
   "Academic Excellence",
@@ -355,10 +357,10 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
                     <FormItem>
                       <FormLabel>Description*</FormLabel>
                       <FormControl>
-                        <Textarea
+                        <RichTextEditor 
+                          value={field.value} 
+                          onChange={field.onChange} 
                           placeholder="Describe the scholarship"
-                          className="min-h-32"
-                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
@@ -670,9 +672,13 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
                     name="eligibility_criteria.other"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Other Requirements</FormLabel>
+                        <FormLabel>Other Criteria</FormLabel>
                         <FormControl>
-                          <Input placeholder="Any other eligibility criteria" {...field} />
+                          <RichTextEditor 
+                            value={field.value || ""} 
+                            onChange={field.onChange}
+                            placeholder="Any other eligibility criteria"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -809,10 +815,10 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
                     <FormItem>
                       <FormLabel>Application Process</FormLabel>
                       <FormControl>
-                        <Textarea
+                        <RichTextEditor 
+                          value={field.value || ""} 
+                          onChange={field.onChange}
                           placeholder="Describe the application process"
-                          className="min-h-24"
-                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
