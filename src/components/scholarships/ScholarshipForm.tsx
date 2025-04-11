@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +5,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Plus, CalendarIcon, Building, School, Award, Pencil, Info, Bookmark, Contact, Category } from "lucide-react";
+import { X, Plus, CalendarIcon, Building, School, Award, Pencil, Info, Bookmark, Contact, Tags } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useAuthState } from "@/hooks/useAuthState";
 
-// Predefined scholarship categories and tags
 const SCHOLARSHIP_CATEGORIES = [
   "Academic Excellence",
   "Athletic",
@@ -92,7 +90,6 @@ const REQUIRED_DOCUMENTS = [
   "Proof of Citizenship",
 ];
 
-// Schema definition with all relevant fields from the database table
 const scholarshipSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().min(20, "Description must be at least 20 characters"),
@@ -181,7 +178,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
     },
   });
 
-  // Handlers for array fields
   const handleAddTag = () => {
     if (tagInput && !tags.includes(tagInput)) {
       setTags([...tags, tagInput]);
@@ -225,7 +221,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
     }
   };
 
-  // Form submission handler
   const onSubmit = async (data: ScholarshipFormValues) => {
     if (!user) {
       toast({
@@ -252,13 +247,11 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
       let response;
 
       if (scholarship) {
-        // Update existing scholarship
         response = await supabase
           .from("scholarships")
           .update(scholarshipData)
           .eq("id", scholarship.id);
       } else {
-        // Create new scholarship
         response = await supabase.from("scholarships").insert(scholarshipData);
       }
 
@@ -286,7 +279,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
     }
   };
 
-  // Function to move between form tabs
   const nextTab = (current: string) => {
     const tabs = ["basic", "eligibility", "application", "categories", "contact"];
     const currentIndex = tabs.indexOf(current);
@@ -321,7 +313,7 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
               <span className="hidden sm:inline">Application</span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="flex gap-2 items-center">
-              <Category className="h-4 w-4" />
+              <Tags className="h-4 w-4" />
               <span className="hidden sm:inline">Categorization</span>
             </TabsTrigger>
             <TabsTrigger value="contact" className="flex gap-2 items-center">
@@ -330,7 +322,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
             </TabsTrigger>
           </TabsList>
 
-          {/* Basic Info Tab */}
           <TabsContent value="basic" className="space-y-6">
             <Card>
               <CardHeader>
@@ -504,7 +495,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
             </Card>
           </TabsContent>
 
-          {/* Eligibility Tab */}
           <TabsContent value="eligibility" className="space-y-6">
             <Card>
               <CardHeader>
@@ -702,7 +692,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
             </Card>
           </TabsContent>
 
-          {/* Application Tab */}
           <TabsContent value="application" className="space-y-6">
             <Card>
               <CardHeader>
@@ -881,12 +870,11 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
             </Card>
           </TabsContent>
 
-          {/* Categories Tab */}
           <TabsContent value="categories" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Category className="h-5 w-5" />
+                  <Tags className="h-5 w-5" />
                   Categorization
                 </CardTitle>
                 <CardDescription>
@@ -991,7 +979,6 @@ export function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
             </Card>
           </TabsContent>
 
-          {/* Contact Tab */}
           <TabsContent value="contact" className="space-y-6">
             <Card>
               <CardHeader>
