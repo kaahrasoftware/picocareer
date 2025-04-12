@@ -7,12 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, GraduationCap, User, School, BookMarked, Briefcase, BookOpen } from "lucide-react";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { StandardPagination } from "@/components/common/StandardPagination";
 import { EmptyState } from "@/components/scholarships/EmptyState";
+import { MentorCard } from "@/components/MentorCard";
 
 export function BookmarksTab() {
   const { user } = useAuthState();
@@ -59,7 +59,7 @@ export function BookmarksTab() {
         throw error;
       }
 
-      // Now fetch the actual mentor profiles
+      // Now fetch the actual mentor profiles with career title
       if (data && data.length > 0) {
         const mentorIds = data.map(bookmark => bookmark.content_id);
         
@@ -73,7 +73,11 @@ export function BookmarksTab() {
             position,
             bio,
             company_id,
-            location
+            location,
+            skills,
+            keywords,
+            years_of_experience,
+            top_mentor
           `)
           .in("id", mentorIds);
           
@@ -82,34 +86,45 @@ export function BookmarksTab() {
           throw mentorError;
         }
 
-        // Fetch company names if needed
-        const companyIds = mentorProfiles
-          .filter(profile => profile.company_id)
-          .map(profile => profile.company_id);
-
-        let companiesData = {};
-        
-        if (companyIds.length > 0) {
-          const { data: companies, error: companiesError } = await supabase
-            .from("companies")
-            .select("id, name")
-            .in("id", companyIds);
+        // For each profile, get career title if position is set
+        const enrichedProfiles = await Promise.all(
+          mentorProfiles.map(async (profile) => {
+            let careerTitle = null;
+            let companyName = null;
             
-          if (companiesError) {
-            console.error("Error fetching companies:", companiesError);
-          } else if (companies) {
-            companiesData = companies.reduce((acc, company) => {
-              acc[company.id] = company.name;
-              return acc;
-            }, {});
-          }
-        }
-
-        // Enrich mentor profiles with company names
-        const enrichedProfiles = mentorProfiles.map(profile => ({
-          ...profile,
-          company_name: profile.company_id ? companiesData[profile.company_id] : null
-        }));
+            // Fetch career title if position is set
+            if (profile.position) {
+              const { data: careerData, error: careerError } = await supabase
+                .from("careers")
+                .select("title")
+                .eq("id", profile.position)
+                .single();
+                
+              if (!careerError && careerData) {
+                careerTitle = careerData.title;
+              }
+            }
+            
+            // Fetch company name if company_id is set
+            if (profile.company_id) {
+              const { data: companyData, error: companyError } = await supabase
+                .from("companies")
+                .select("name")
+                .eq("id", profile.company_id)
+                .single();
+                
+              if (!companyError && companyData) {
+                companyName = companyData.name;
+              }
+            }
+            
+            return {
+              ...profile,
+              career_title: careerTitle,
+              company_name: companyName
+            };
+          })
+        );
         
         return { 
           data: enrichedProfiles, 
@@ -392,31 +407,19 @@ export function BookmarksTab() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mentorBookmarks.map((mentor) => (
-                  <Card key={mentor.id} className="hover:shadow transition-all">
-                    <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                      <ProfileAvatar
-                        avatarUrl={mentor.avatar_url}
-                        imageAlt={mentor.full_name || "Mentor"}
-                        size="md"
-                      />
-                      <div>
-                        <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {mentor.position} {mentor.company_name ? `at ${mentor.company_name}` : ""}
-                        </p>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="line-clamp-3 text-sm">
-                        {mentor.bio || "No bio available"}
-                      </p>
-                      <div className="mt-4">
-                        <Button asChild variant="outline" size="sm" className="w-full">
-                          <Link to={`/mentor/${mentor.id}`}>View Profile</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <MentorCard
+                    key={mentor.id}
+                    id={mentor.id}
+                    name={mentor.full_name || ""}
+                    position={mentor.career_title || ""}
+                    company={mentor.company_name || ""}
+                    location={mentor.location}
+                    skills={mentor.skills || []}
+                    keywords={mentor.keywords || []}
+                    avatarUrl={mentor.avatar_url || ""}
+                    hourlyRate={0} // We don't have this info in the bookmark
+                    topMentor={mentor.top_mentor || false}
+                  />
                 ))}
               </div>
               
