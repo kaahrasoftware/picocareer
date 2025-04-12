@@ -56,7 +56,7 @@ const refreshQueue: (() => void)[] = [];
 // Helper function to throttle auth operations
 export const throttledAuthOperation = async (operation: () => Promise<any>) => {
   const now = Date.now();
-  const minInterval = 5000; // 5 seconds between auth operations (reduced from 30s)
+  const minInterval = 3000; // 3 seconds between auth operations (reduced from 5s)
   
   if (now - lastRefreshTime < minInterval) {
     console.log('Throttling auth operation to prevent rate limiting');
@@ -103,5 +103,48 @@ export const getStoredSession = () => {
   } catch (error) {
     console.error('Error reading stored session:', error);
     return null;
+  }
+};
+
+// Detect session expiration and try to recover
+export const detectSessionExpiration = () => {
+  try {
+    const storedSession = getStoredSession();
+    if (storedSession?.expires_at) {
+      const expiresAt = new Date(storedSession.expires_at * 1000);
+      const now = new Date();
+      
+      if (expiresAt < now) {
+        console.warn('Session expired, attempting to refresh');
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Error checking session expiration:', error);
+    return false;
+  }
+};
+
+// Force a session recovery attempt
+export const attemptSessionRecovery = async () => {
+  try {
+    console.log('Attempting session recovery');
+    const { data, error } = await supabase.auth.refreshSession();
+    
+    if (error) {
+      console.error('Session recovery failed:', error);
+      return false;
+    }
+    
+    if (data.session) {
+      console.log('Session recovered successfully');
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error during session recovery:', error);
+    return false;
   }
 };

@@ -35,12 +35,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } else if (!authState.loading) {
       console.log('Auth state updated:', {
         isAuthenticated: !!authState.session,
-        userId: authState.user?.id 
+        userId: authState.user?.id,
+        expiresAt: authState.session?.expires_at
+          ? new Date(authState.session.expires_at * 1000).toISOString()
+          : null
       });
     }
   }, [authState.session, authState.loading, authState.error]);
 
-  // Handle session expiration
+  // Handle session expiration and proactive refresh
   useEffect(() => {
     const checkSessionExpiry = () => {
       if (authState.session) {
@@ -50,8 +53,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const now = new Date();
           const timeUntilExpiry = expiryTime.getTime() - now.getTime();
           
-          // If session will expire in less than 5 minutes, refresh it
-          if (timeUntilExpiry < 5 * 60 * 1000 && timeUntilExpiry > 0) {
+          // If session will expire in less than 10 minutes, refresh it
+          // This is more aggressive than before (changed from 5 to 10 minutes)
+          if (timeUntilExpiry < 10 * 60 * 1000 && timeUntilExpiry > 0) {
             console.log('Session about to expire, refreshing token');
             // This will trigger a token refresh through Supabase's autoRefreshToken
             queryClient.invalidateQueries({ queryKey: ['auth-session'] });
@@ -60,8 +64,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
     
-    // Check session expiry every minute
-    const interval = setInterval(checkSessionExpiry, 60 * 1000);
+    // Check session expiry every 30 seconds (increased from every minute)
+    const interval = setInterval(checkSessionExpiry, 30 * 1000);
     
     return () => clearInterval(interval);
   }, [authState.session, queryClient]);
