@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -6,17 +7,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, GraduationCap, User, School, BookMarked, Briefcase, BookOpen } from "lucide-react";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
+import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { StandardPagination } from "@/components/common/StandardPagination";
 import { EmptyState } from "@/components/scholarships/EmptyState";
-import { MentorCard } from "@/components/MentorCard";
 
 export function BookmarksTab() {
   const { user } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
   
+  // Pagination states
   const [mentorsPage, setMentorsPage] = useState(1);
   const [careersPage, setCareersPage] = useState(1);
   const [majorsPage, setMajorsPage] = useState(1);
@@ -24,11 +26,13 @@ export function BookmarksTab() {
   
   const PAGE_SIZE = 6;
 
+  // Fetch bookmarked mentors with pagination
   const { data: mentorBookmarksData = { data: [], count: 0 }, isLoading: mentorsLoading } = useQuery({
     queryKey: ["bookmarked-mentors", user?.id, mentorsPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
+      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -37,6 +41,7 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
+      // Get paginated data with proper join
       const start = (mentorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -54,6 +59,7 @@ export function BookmarksTab() {
         throw error;
       }
 
+      // Now fetch the actual mentor profiles
       if (data && data.length > 0) {
         const mentorIds = data.map(bookmark => bookmark.content_id);
         
@@ -67,16 +73,7 @@ export function BookmarksTab() {
             position,
             bio,
             company_id,
-            location,
-            skills,
-            keywords,
-            years_of_experience,
-            top_mentor,
-            unique_mentees_count,
-            total_sessions,
-            average_rating,
-            rating_count,
-            reliability_score
+            location
           `)
           .in("id", mentorIds);
           
@@ -85,42 +82,34 @@ export function BookmarksTab() {
           throw mentorError;
         }
 
-        const enrichedProfiles = await Promise.all(
-          mentorProfiles.map(async (profile) => {
-            let careerTitle = null;
-            let companyName = null;
+        // Fetch company names if needed
+        const companyIds = mentorProfiles
+          .filter(profile => profile.company_id)
+          .map(profile => profile.company_id);
+
+        let companiesData = {};
+        
+        if (companyIds.length > 0) {
+          const { data: companies, error: companiesError } = await supabase
+            .from("companies")
+            .select("id, name")
+            .in("id", companyIds);
             
-            if (profile.position) {
-              const { data: careerData, error: careerError } = await supabase
-                .from("careers")
-                .select("title")
-                .eq("id", profile.position)
-                .single();
-                
-              if (!careerError && careerData) {
-                careerTitle = careerData.title;
-              }
-            }
-            
-            if (profile.company_id) {
-              const { data: companyData, error: companyError } = await supabase
-                .from("companies")
-                .select("name")
-                .eq("id", profile.company_id)
-                .single();
-                
-              if (!companyError && companyData) {
-                companyName = companyData.name;
-              }
-            }
-            
-            return {
-              ...profile,
-              career_title: careerTitle,
-              company_name: companyName
-            };
-          })
-        );
+          if (companiesError) {
+            console.error("Error fetching companies:", companiesError);
+          } else if (companies) {
+            companiesData = companies.reduce((acc, company) => {
+              acc[company.id] = company.name;
+              return acc;
+            }, {});
+          }
+        }
+
+        // Enrich mentor profiles with company names
+        const enrichedProfiles = mentorProfiles.map(profile => ({
+          ...profile,
+          company_name: profile.company_id ? companiesData[profile.company_id] : null
+        }));
         
         return { 
           data: enrichedProfiles, 
@@ -133,11 +122,13 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "mentors",
   });
 
+  // Fetch bookmarked careers with pagination
   const { data: careerBookmarksData = { data: [], count: 0 }, isLoading: careersLoading } = useQuery({
     queryKey: ["bookmarked-careers", user?.id, careersPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
+      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -146,6 +137,7 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
+      // Get paginated data
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -161,6 +153,7 @@ export function BookmarksTab() {
         throw error;
       }
       
+      // Now fetch the actual careers
       if (data && data.length > 0) {
         const careerIds = data.map(bookmark => bookmark.content_id);
         
@@ -191,11 +184,13 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "careers",
   });
 
+  // Fetch bookmarked academic majors with pagination
   const { data: majorBookmarksData = { data: [], count: 0 }, isLoading: majorsLoading } = useQuery({
     queryKey: ["bookmarked-majors", user?.id, majorsPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
+      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -204,6 +199,7 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
+      // Get paginated data
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -219,6 +215,7 @@ export function BookmarksTab() {
         throw error;
       }
       
+      // Now fetch the actual majors
       if (data && data.length > 0) {
         const majorIds = data.map(bookmark => bookmark.content_id);
         
@@ -249,11 +246,13 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "majors",
   });
 
+  // Fetch bookmarked scholarships with pagination
   const { data: scholarshipBookmarksData = { data: [], count: 0 }, isLoading: scholarshipsLoading } = useQuery({
     queryKey: ["bookmarked-scholarships", user?.id, scholarshipsPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
+      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -262,6 +261,7 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
+      // Get paginated data
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -277,6 +277,7 @@ export function BookmarksTab() {
         throw error;
       }
       
+      // Now fetch the actual scholarships
       if (data && data.length > 0) {
         const scholarshipIds = data.map(bookmark => bookmark.content_id);
         
@@ -289,18 +290,9 @@ export function BookmarksTab() {
           console.error("Error fetching scholarships:", scholarshipsError);
           throw scholarshipsError;
         }
-
-        const transformedScholarships = scholarships.map(scholarship => {
-          return {
-            ...scholarship,
-            eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' 
-              ? JSON.parse(scholarship.eligibility_criteria) 
-              : scholarship.eligibility_criteria || {}
-          };
-        });
         
         return { 
-          data: transformedScholarships || [], 
+          data: scholarships || [], 
           count: count || 0 
         };
       }
@@ -310,6 +302,7 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "scholarships",
   });
 
+  // Extract the data arrays and counts
   const mentorBookmarks = mentorBookmarksData?.data || [];
   const mentorsTotalCount = mentorBookmarksData?.count || 0;
   const mentorsTotalPages = Math.ceil(mentorsTotalCount / PAGE_SIZE);
@@ -326,6 +319,7 @@ export function BookmarksTab() {
   const scholarshipsTotalCount = scholarshipBookmarksData?.count || 0;
   const scholarshipsTotalPages = Math.ceil(scholarshipsTotalCount / PAGE_SIZE);
 
+  // Function to render empty state with custom message
   const renderEmptyState = (type: string, icon: React.ReactNode, linkPath: string) => (
     <Card className="text-center p-8 border-dashed bg-muted/30">
       <div className="flex flex-col items-center gap-2">
@@ -343,6 +337,7 @@ export function BookmarksTab() {
     </Card>
   );
 
+  // Log data for debugging purposes
   useEffect(() => {
     if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
       console.log("No mentor bookmarks found");
@@ -385,24 +380,31 @@ export function BookmarksTab() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mentorBookmarks.map((mentor) => (
-                  <MentorCard
-                    key={mentor.id}
-                    id={mentor.id}
-                    name={mentor.full_name || ""}
-                    position={mentor.career_title || ""}
-                    company={mentor.company_name || ""}
-                    location={mentor.location}
-                    skills={mentor.skills || []}
-                    keywords={mentor.keywords || []}
-                    avatarUrl={mentor.avatar_url || ""}
-                    hourlyRate={0}
-                    topMentor={mentor.top_mentor || false}
-                    menteeCount={mentor.unique_mentees_count || 0}
-                    sessionsHeld={mentor.total_sessions?.toString() || "0"}
-                    rating={mentor.average_rating || 0}
-                    totalRatings={mentor.rating_count || 0}
-                    connectionRate={mentor.reliability_score || 0}
-                  />
+                  <Card key={mentor.id} className="hover:shadow transition-all">
+                    <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                      <ProfileAvatar
+                        avatarUrl={mentor.avatar_url}
+                        imageAlt={mentor.full_name || "Mentor"}
+                        size="md"
+                      />
+                      <div>
+                        <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {mentor.position} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                        </p>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="line-clamp-3 text-sm">
+                        {mentor.bio || "No bio available"}
+                      </p>
+                      <div className="mt-4">
+                        <Button asChild variant="outline" size="sm" className="w-full">
+                          <Link to={`/mentor/${mentor.id}`}>View Profile</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
               

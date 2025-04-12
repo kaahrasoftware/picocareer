@@ -29,9 +29,6 @@ export function MentorResults({ mentors }: MentorResultsProps) {
           avatarUrl={mentor.imageUrl}
           rating={mentor.rating}
           totalRatings={mentor.totalRatings}
-          sessionsHeld={mentor.sessionsHeld}
-          menteeCount={mentor.stats?.mentees ? parseInt(mentor.stats.mentees) : undefined}
-          connectionRate={mentor.stats?.connected ? parseInt(mentor.stats.connected) : undefined}
         />
       ))}
     </div>
