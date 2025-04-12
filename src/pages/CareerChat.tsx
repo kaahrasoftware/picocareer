@@ -14,7 +14,7 @@ export default function CareerChat() {
   const showSidebar = isDesktop ? isSidebarOpen : isSidebarOpen && false;
 
   return (
-    <div className="relative min-h-[calc(100vh-80px)] bg-gradient-to-b from-blue-50 to-white">
+    <div className="relative h-[calc(100vh-80px)] bg-gradient-to-b from-blue-50 to-white overflow-hidden">
       {/* Welcome Banner - Visible before starting a chat */}
       <div className="max-w-6xl mx-auto pt-6 px-4 lg:px-8">
         <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl shadow-md mb-6 overflow-hidden">
@@ -64,18 +64,18 @@ export default function CareerChat() {
       </div>
     
       {/* Main Chat Interface */}
-      <div className="relative flex max-w-6xl mx-auto px-4 lg:px-8">
+      <div className="relative flex max-w-6xl mx-auto px-4 lg:px-8 h-[calc(100vh-240px)]">
         {/* Sidebar */}
         <div 
           className={`${
             showSidebar ? 'w-80 opacity-100' : 'w-0 opacity-0 -translate-x-full'
-          } transition-all duration-300 z-20 absolute lg:relative border-r bg-white/80 backdrop-blur-sm shadow-sm flex-shrink-0 h-[calc(100vh-180px)] rounded-l-xl`}
+          } transition-all duration-300 z-20 absolute lg:relative border-r bg-white/80 backdrop-blur-sm shadow-sm flex-shrink-0 h-full rounded-l-xl`}
         >
           <ChatSidebar onClose={() => setIsSidebarOpen(false)} />
         </div>
         
         {/* Main chat content */}
-        <div className="flex-1 transition-all duration-300">
+        <div className="flex-1 transition-all duration-300 h-full">
           {/* Sidebar toggle */}
           <div className="p-2 lg:hidden sticky top-0 z-10">
             <Button 
@@ -89,7 +89,7 @@ export default function CareerChat() {
           </div>
           
           {/* Chat container with enhanced styling */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-sm">
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-sm h-full">
             <PicoChatContainer
               isSidebarOpen={showSidebar}
               onOpenSidebar={() => setIsSidebarOpen(true)}

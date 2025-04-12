@@ -42,7 +42,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
   useEffect(() => {
     if (!isChatLoading && configChecked && !hasConfigError && messages.length === 0) {
       // Don't auto-start on page load, wait for user to click "Begin Assessment"
-      // This is changed from the original behavior
       setIntroVisible(true);
     } else if (messages.length > 0) {
       setIntroVisible(false);
@@ -50,14 +49,12 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
   }, [isChatLoading, configChecked, hasConfigError, messages.length]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth'
-    });
-  }, [messages, isTyping, localIsTyping]);
-
-  useEffect(() => {
-    setLocalIsTyping(isTyping);
-  }, [isTyping]);
+    if (messagesEndRef.current && !introVisible) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: 'smooth'
+      });
+    }
+  }, [messages, isTyping, localIsTyping, introVisible]);
 
   const handleSuggestionClick = (suggestion: string) => {
     if (isTyping || localIsTyping) {
@@ -142,7 +139,7 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] p-2 md:p-4">
+    <div className="flex flex-col h-full p-2 md:p-4">
       {introVisible && messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center mb-6">
@@ -193,13 +190,13 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
           </div>
         </div>
       ) : (
-        <div className="relative flex-1">
+        <div className="h-full">
           {!isSidebarOpen && (
             <Button
               variant="outline"
               size="icon"
               onClick={onOpenSidebar}
-              className="absolute top-2 left-2 z-10 h-8 w-8 md:hidden bg-white/80"
+              className="absolute top-4 left-4 z-10 h-8 w-8 md:hidden bg-white/80"
             >
               <PanelLeftOpen size={16} />
             </Button>

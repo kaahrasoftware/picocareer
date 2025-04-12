@@ -88,7 +88,7 @@ export function ChatInterface({
   return (
     <div className="flex flex-col h-full bg-white/80 rounded-lg shadow-sm overflow-hidden border">
       {/* Chat Header */}
-      <div className="shadow-sm border-b">
+      <div className="shadow-sm border-b flex-shrink-0">
         <ChatHeader 
           isAnalyzing={isAnalyzing}
           currentCategory={currentCategory}
@@ -99,12 +99,15 @@ export function ChatInterface({
         />
       </div>
 
-      {/* Messages Container - Now using ScrollArea for better scrolling */}
-      <div className="flex-1 relative">
-        <ScrollArea className="h-full" onScroll={handleScroll}>
-          <div className="p-4 space-y-4 bg-gradient-to-b from-white/40 to-white/10 min-h-[calc(100%-2rem)]">
+      {/* Messages Container with fixed height */}
+      <div className="flex-1 relative overflow-hidden">
+        <ScrollArea 
+          className="h-full max-h-[calc(100vh-280px)]" 
+          onScroll={handleScroll}
+        >
+          <div className="p-4 space-y-4 bg-gradient-to-b from-white/40 to-white/10">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <p className="text-gray-400 mb-4">Your chat will appear here</p>
                 <Button 
                   variant="outline" 
@@ -151,7 +154,7 @@ export function ChatInterface({
 
       {/* Action buttons for completed sessions */}
       {isSessionEnded && (
-        <div className="grid grid-cols-2 gap-2 p-2 bg-blue-50 border-t border-blue-100">
+        <div className="grid grid-cols-2 gap-2 p-2 bg-blue-50 border-t border-blue-100 flex-shrink-0">
           <Button 
             variant="outline"
             onClick={onStartNewChat}
@@ -172,16 +175,18 @@ export function ChatInterface({
       )}
 
       {/* Chat Input */}
-      <ChatInput
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        onSendMessage={onSendMessage}
-        isDisabled={isTyping || isAnalyzing}
-        isSessionComplete={isSessionEnded}
-        placeholderText={isEmptyChat ? "Type here to start..." : "Type your response..."}
-        onDownloadResults={onDownloadResults}
-        onStartNewChat={onStartNewChat}
-      />
+      <div className="flex-shrink-0">
+        <ChatInput
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          onSendMessage={onSendMessage}
+          isDisabled={isTyping || isAnalyzing}
+          isSessionComplete={isSessionEnded}
+          placeholderText={isEmptyChat ? "Type here to start..." : "Type your response..."}
+          onDownloadResults={onDownloadResults}
+          onStartNewChat={onStartNewChat}
+        />
+      </div>
     </div>
   );
 }
