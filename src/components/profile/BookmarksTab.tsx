@@ -45,11 +45,12 @@ export function BookmarksTab() {
       const start = (mentorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
+      // Use a proper join between user_bookmarks and profiles
       const { data: bookmarks, error } = await supabase
         .from("user_bookmarks")
         .select(`
           content_id,
-          profiles!user_bookmarks_content_id_fkey(
+          profiles(
             id,
             full_name,
             avatar_url,
@@ -100,11 +101,12 @@ export function BookmarksTab() {
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
+      // Use a proper join between user_bookmarks and careers
       const { data: bookmarks, error } = await supabase
         .from("user_bookmarks")
         .select(`
           content_id,
-          careers!user_bookmarks_content_id_fkey(
+          careers(
             id,
             title,
             description,
@@ -152,11 +154,12 @@ export function BookmarksTab() {
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
+      // Use a proper join between user_bookmarks and majors
       const { data: bookmarks, error } = await supabase
         .from("user_bookmarks")
         .select(`
           content_id,
-          majors!user_bookmarks_content_id_fkey(
+          majors(
             id,
             title,
             description,
@@ -204,11 +207,12 @@ export function BookmarksTab() {
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
+      // Use a proper join between user_bookmarks and scholarships
       const { data: bookmarks, error } = await supabase
         .from("user_bookmarks")
         .select(`
           content_id,
-          scholarships!user_bookmarks_content_id_fkey(*)
+          scholarships(*)
         `)
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship")
