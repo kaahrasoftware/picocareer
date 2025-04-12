@@ -1,4 +1,3 @@
-
 import { Control } from "react-hook-form";
 
 export type MeetingPlatform = "Google Meet" | "Zoom" | "Microsoft Teams" | "Telegram" | "WhatsApp" | "Phone Call";
@@ -16,7 +15,7 @@ export interface SessionType {
   telegram_username?: string;
   phone_number?: string;
   token_cost: number;
-  custom_type_name?: string; // New field for custom type name
+  custom_type_name?: string; // Field for custom type name
 }
 
 export type SessionTypeEnum =
@@ -49,7 +48,7 @@ export type SessionTypeEnum =
   | "Study Tips"
   | "Volunteer Opportunities"
   | "Know About my Academic Major"
-  | "Custom"; // Add Custom type option
+  | "Custom"; // Custom type option
 
 // Add the SESSION_TYPE_OPTIONS export
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
@@ -82,7 +81,7 @@ export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Study Tips",
   "Volunteer Opportunities",
   "Know About my Academic Major",
-  "Custom" // Add Custom type option to array
+  "Custom" // Custom type option in array
 ];
 
 export interface SessionTypeFormData {
@@ -93,7 +92,7 @@ export interface SessionTypeFormData {
   meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
-  custom_type_name?: string; // New field for custom type name
+  custom_type_name?: string; // Field for custom type name
 }
 
 export interface MentorSession {
