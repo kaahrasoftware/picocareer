@@ -41,25 +41,14 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
-      // Get paginated data
+      // Get paginated data with proper join
       const start = (mentorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a proper join between user_bookmarks and profiles
-      const { data: bookmarks, error } = await supabase
+      const { data, error } = await supabase
         .from("user_bookmarks")
         .select(`
-          content_id,
-          profiles(
-            id,
-            full_name,
-            avatar_url,
-            user_type,
-            position,
-            company_name,
-            school_name,
-            bio
-          )
+          content_id
         `)
         .eq("profile_id", user.id)
         .eq("content_type", "mentor")
@@ -69,15 +58,66 @@ export function BookmarksTab() {
         console.error("Error fetching mentor bookmarks:", error);
         throw error;
       }
+
+      // Now fetch the actual mentor profiles
+      if (data && data.length > 0) {
+        const mentorIds = data.map(bookmark => bookmark.content_id);
+        
+        const { data: mentorProfiles, error: mentorError } = await supabase
+          .from("profiles")
+          .select(`
+            id,
+            full_name,
+            avatar_url,
+            user_type,
+            position,
+            bio,
+            company_id,
+            location
+          `)
+          .in("id", mentorIds);
+          
+        if (mentorError) {
+          console.error("Error fetching mentor profiles:", mentorError);
+          throw mentorError;
+        }
+
+        // Fetch company names if needed
+        const companyIds = mentorProfiles
+          .filter(profile => profile.company_id)
+          .map(profile => profile.company_id);
+
+        let companiesData = {};
+        
+        if (companyIds.length > 0) {
+          const { data: companies, error: companiesError } = await supabase
+            .from("companies")
+            .select("id, name")
+            .in("id", companyIds);
+            
+          if (companiesError) {
+            console.error("Error fetching companies:", companiesError);
+          } else if (companies) {
+            companiesData = companies.reduce((acc, company) => {
+              acc[company.id] = company.name;
+              return acc;
+            }, {});
+          }
+        }
+
+        // Enrich mentor profiles with company names
+        const enrichedProfiles = mentorProfiles.map(profile => ({
+          ...profile,
+          company_name: profile.company_id ? companiesData[profile.company_id] : null
+        }));
+        
+        return { 
+          data: enrichedProfiles, 
+          count: count || 0 
+        };
+      }
       
-      const filteredData = bookmarks
-        .filter(bookmark => bookmark.profiles)
-        .map(bookmark => bookmark.profiles);
-      
-      return { 
-        data: filteredData, 
-        count: count || 0 
-      };
+      return { data: [], count: count || 0 };
     },
     enabled: !!user && activeTab === "mentors",
   });
@@ -101,19 +141,9 @@ export function BookmarksTab() {
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a proper join between user_bookmarks and careers
-      const { data: bookmarks, error } = await supabase
+      const { data, error } = await supabase
         .from("user_bookmarks")
-        .select(`
-          content_id,
-          careers(
-            id,
-            title,
-            description,
-            salary_range,
-            image_url
-          )
-        `)
+        .select(`content_id`)
         .eq("profile_id", user.id)
         .eq("content_type", "career")
         .range(start, end);
@@ -123,14 +153,33 @@ export function BookmarksTab() {
         throw error;
       }
       
-      const filteredData = bookmarks
-        .filter(bookmark => bookmark.careers)
-        .map(bookmark => bookmark.careers);
+      // Now fetch the actual careers
+      if (data && data.length > 0) {
+        const careerIds = data.map(bookmark => bookmark.content_id);
+        
+        const { data: careers, error: careersError } = await supabase
+          .from("careers")
+          .select(`
+            id,
+            title,
+            description,
+            salary_range,
+            image_url
+          `)
+          .in("id", careerIds);
+          
+        if (careersError) {
+          console.error("Error fetching careers:", careersError);
+          throw careersError;
+        }
+        
+        return { 
+          data: careers || [], 
+          count: count || 0 
+        };
+      }
       
-      return { 
-        data: filteredData, 
-        count: count || 0 
-      };
+      return { data: [], count: count || 0 };
     },
     enabled: !!user && activeTab === "careers",
   });
@@ -154,19 +203,9 @@ export function BookmarksTab() {
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a proper join between user_bookmarks and majors
-      const { data: bookmarks, error } = await supabase
+      const { data, error } = await supabase
         .from("user_bookmarks")
-        .select(`
-          content_id,
-          majors(
-            id,
-            title,
-            description,
-            degree_levels,
-            featured
-          )
-        `)
+        .select(`content_id`)
         .eq("profile_id", user.id)
         .eq("content_type", "major")
         .range(start, end);
@@ -176,14 +215,33 @@ export function BookmarksTab() {
         throw error;
       }
       
-      const filteredData = bookmarks
-        .filter(bookmark => bookmark.majors)
-        .map(bookmark => bookmark.majors);
+      // Now fetch the actual majors
+      if (data && data.length > 0) {
+        const majorIds = data.map(bookmark => bookmark.content_id);
+        
+        const { data: majors, error: majorsError } = await supabase
+          .from("majors")
+          .select(`
+            id,
+            title,
+            description,
+            degree_levels,
+            featured
+          `)
+          .in("id", majorIds);
+          
+        if (majorsError) {
+          console.error("Error fetching majors:", majorsError);
+          throw majorsError;
+        }
+        
+        return { 
+          data: majors || [], 
+          count: count || 0 
+        };
+      }
       
-      return { 
-        data: filteredData, 
-        count: count || 0 
-      };
+      return { data: [], count: count || 0 };
     },
     enabled: !!user && activeTab === "majors",
   });
@@ -207,13 +265,9 @@ export function BookmarksTab() {
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a proper join between user_bookmarks and scholarships
-      const { data: bookmarks, error } = await supabase
+      const { data, error } = await supabase
         .from("user_bookmarks")
-        .select(`
-          content_id,
-          scholarships(*)
-        `)
+        .select(`content_id`)
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship")
         .range(start, end);
@@ -223,14 +277,27 @@ export function BookmarksTab() {
         throw error;
       }
       
-      const filteredData = bookmarks
-        .filter(bookmark => bookmark.scholarships)
-        .map(bookmark => bookmark.scholarships);
+      // Now fetch the actual scholarships
+      if (data && data.length > 0) {
+        const scholarshipIds = data.map(bookmark => bookmark.content_id);
+        
+        const { data: scholarships, error: scholarshipsError } = await supabase
+          .from("scholarships")
+          .select(`*`)
+          .in("id", scholarshipIds);
+          
+        if (scholarshipsError) {
+          console.error("Error fetching scholarships:", scholarshipsError);
+          throw scholarshipsError;
+        }
+        
+        return { 
+          data: scholarships || [], 
+          count: count || 0 
+        };
+      }
       
-      return { 
-        data: filteredData, 
-        count: count || 0 
-      };
+      return { data: [], count: count || 0 };
     },
     enabled: !!user && activeTab === "scholarships",
   });
@@ -275,16 +342,7 @@ export function BookmarksTab() {
     if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
       console.log("No mentor bookmarks found");
     }
-    if (activeTab === "careers" && careerBookmarks.length === 0 && !careersLoading) {
-      console.log("No career bookmarks found");
-    }
-    if (activeTab === "majors" && majorBookmarks.length === 0 && !majorsLoading) {
-      console.log("No major bookmarks found");
-    }
-    if (activeTab === "scholarships" && scholarshipBookmarks.length === 0 && !scholarshipsLoading) {
-      console.log("No scholarship bookmarks found");
-    }
-  }, [activeTab, mentorBookmarks.length, careerBookmarks.length, majorBookmarks.length, scholarshipBookmarks.length, mentorsLoading, careersLoading, majorsLoading, scholarshipsLoading]);
+  }, [activeTab, mentorBookmarks.length, mentorsLoading]);
 
   return (
     <div className="space-y-6">
@@ -326,7 +384,7 @@ export function BookmarksTab() {
                     <CardHeader className="flex flex-row items-center gap-3 pb-2">
                       <ProfileAvatar
                         avatarUrl={mentor.avatar_url}
-                        imageAlt={mentor.full_name}
+                        imageAlt={mentor.full_name || "Mentor"}
                         size="md"
                       />
                       <div>
