@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,6 +11,7 @@ interface SessionType {
   price: number;
   description: string | null;
   meeting_platform: MeetingPlatform[];
+  custom_type_name?: string | null;
 }
 
 // Helper function to validate UUID format

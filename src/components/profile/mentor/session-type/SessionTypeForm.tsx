@@ -56,44 +56,51 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         return;
       }
 
-      // Check for existing type
-      let queryCondition = '';
+      // Check for existing custom type with the same name
       if (data.type === "Custom") {
-        // For custom types, check if there's already one with the same custom name
-        queryCondition = `and(type.eq.Custom,custom_type_name.eq.${data.custom_type_name})`;
-      } else {
-        // For standard types, just check the type
-        queryCondition = `type.eq.${data.type}`;
-      }
+        const { data: existingType, error: checkError } = await supabase
+          .from('mentor_session_types')
+          .select('id, type, custom_type_name')
+          .eq('profile_id', profileId)
+          .eq('type', 'Custom')
+          .eq('custom_type_name', data.custom_type_name)
+          .maybeSingle();
 
-      const { data: existingType, error: checkError } = await supabase
-        .from('mentor_session_types')
-        .select('id, type, custom_type_name')
-        .eq('profile_id', profileId)
-        .or(queryCondition)
-        .maybeSingle();
+        if (checkError) {
+          console.error('Error checking existing type:', checkError);
+          throw checkError;
+        }
 
-      if (checkError) {
-        console.error('Error checking existing type:', checkError);
-        throw checkError;
-      }
-
-      console.log('Existing type check result:', existingType);
-
-      if (existingType) {
-        if (data.type === "Custom" && existingType.type === "Custom" && existingType.custom_type_name === data.custom_type_name) {
+        if (existingType) {
           toast({
             title: "Error",
             description: "You already have a custom session type with this name",
             variant: "destructive",
           });
+          setIsSubmitting(false);
           return;
-        } else if (data.type !== "Custom") {
+        }
+      } else {
+        // Check for existing standard type
+        const { data: existingType, error: checkError } = await supabase
+          .from('mentor_session_types')
+          .select('id, type')
+          .eq('profile_id', profileId)
+          .eq('type', data.type)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('Error checking existing type:', checkError);
+          throw checkError;
+        }
+
+        if (existingType) {
           toast({
             title: "Error",
             description: "You already have this session type",
             variant: "destructive",
           });
+          setIsSubmitting(false);
           return;
         }
       }
@@ -122,6 +129,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           description: `Failed to create session type: ${error.message}`,
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
@@ -143,7 +151,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         description: error instanceof Error ? error.message : "Failed to create session type",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
