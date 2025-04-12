@@ -1,225 +1,178 @@
-import React from "react";
-import { Card } from "@/components/ui/card";
+
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthSession } from "@/hooks/useAuthSession";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { BookmarkX } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, GraduationCap, User, School, BookMarked } from "lucide-react";
+import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
-import { MajorDetails } from "@/components/MajorDetails";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function BookmarksTab() {
-  const { session } = useAuthSession();
-  const [selectedProfile, setSelectedProfile] = React.useState<string | null>(null);
-  const [selectedCareer, setSelectedCareer] = React.useState<string | null>(null);
-  const [selectedMajor, setSelectedMajor] = React.useState<string | null>(null);
+  const { user } = useAuthState();
+  const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
 
-  const { data: bookmarks, isLoading } = useQuery({
-    queryKey: ['bookmarks', session?.user?.id],
+  // Fetch bookmarked mentors
+  const { data: mentorBookmarks = [], isLoading: mentorsLoading } = useQuery({
+    queryKey: ["bookmarked-mentors", user?.id],
     queryFn: async () => {
-      if (!session?.user?.id) return null;
+      if (!user) return [];
 
-      try {
-        // Get all bookmarks for the user
-        const { data: bookmarkData, error: bookmarkError } = await supabase
-          .from('user_bookmarks')
-          .select('content_type, content_id')
-          .eq('profile_id', session.user.id);
-
-        if (bookmarkError) {
-          console.error('Error fetching bookmarks:', bookmarkError);
-          return null;
-        }
-
-        if (!bookmarkData || bookmarkData.length === 0) return { mentors: [], careers: [], majors: [] };
-
-        // Separate bookmarks by type
-        const mentorIds = bookmarkData.filter(b => b.content_type === 'mentor').map(b => b.content_id);
-        const careerIds = bookmarkData.filter(b => b.content_type === 'career').map(b => b.content_id);
-        const majorIds = bookmarkData.filter(b => b.content_type === 'major').map(b => b.content_id);
-
-        // Fetch mentor profiles
-        const { data: mentorData } = await supabase
-          .from('profiles')
-          .select(`
+      const { data: bookmarks, error } = await supabase
+        .from("user_bookmarks")
+        .select(`
+          content_id,
+          profiles:content_id (
             id,
             full_name,
             avatar_url,
-            position,
             user_type,
-            company:companies(name),
-            careers!profiles_position_fkey(title)
-          `)
-          .in('id', mentorIds)
-          .eq('user_type', 'mentor')
-          .eq('onboarding_status', 'Approved');
+            position,
+            company_name,
+            school_name,
+            bio
+          )
+        `)
+        .eq("profile_id", user.id)
+        .eq("content_type", "mentor");
 
-        // Fetch careers
-        const { data: careerData } = await supabase
-          .from('careers')
-          .select('*')
-          .in('id', careerIds);
-
-        // Fetch majors
-        const { data: majorData } = await supabase
-          .from('majors')
-          .select('*')
-          .in('id', majorIds);
-
-        return {
-          mentors: mentorData || [],
-          careers: careerData || [],
-          majors: majorData || [],
-        };
-      } catch (error) {
-        console.error('Error in bookmark query:', error);
-        return null;
-      }
+      if (error) throw error;
+      return bookmarks
+        .filter(bookmark => bookmark.profiles)
+        .map(bookmark => bookmark.profiles);
     },
-    enabled: !!session?.user?.id,
+    enabled: !!user,
   });
 
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <Skeleton className="h-8 w-48 mb-6" />
-        <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-      </Card>
-    );
-  }
+  // Fetch bookmarked scholarships
+  const { data: scholarshipBookmarks = [], isLoading: scholarshipsLoading } = useQuery({
+    queryKey: ["bookmarked-scholarships", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
 
-  if (!bookmarks || (!bookmarks.mentors.length && !bookmarks.careers.length && !bookmarks.majors.length)) {
-    return (
-      <Card className="p-6">
-        <h2 className="text-2xl font-semibold mb-6">Bookmarks</h2>
-        <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
-          <BookmarkX className="h-12 w-12 mb-4 text-muted-foreground/50" />
-          <p>No bookmarks yet. Your saved items will appear here.</p>
+      const { data: bookmarks, error } = await supabase
+        .from("user_bookmarks")
+        .select(`
+          content_id,
+          scholarships:content_id (*)
+        `)
+        .eq("profile_id", user.id)
+        .eq("content_type", "scholarship");
+
+      if (error) throw error;
+      return bookmarks
+        .filter(bookmark => bookmark.scholarships)
+        .map(bookmark => bookmark.scholarships);
+    },
+    enabled: !!user,
+  });
+
+  // Function to render empty state with custom message
+  const renderEmptyState = (type: string, icon: React.ReactNode) => (
+    <Card className="text-center p-8 border-dashed bg-muted/30">
+      <div className="flex flex-col items-center gap-2">
+        <div className="bg-primary/10 p-3 rounded-full">
+          {icon}
         </div>
-      </Card>
-    );
-  }
+        <h3 className="font-semibold text-xl mt-2">No bookmarked {type}</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
+          You haven't bookmarked any {type} yet. When you find {type} you like, click the bookmark icon to save them here.
+        </p>
+        {type === "mentors" ? (
+          <Button asChild>
+            <Link to="/mentor">Browse Mentors</Link>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link to="/scholarships">Browse Scholarships</Link>
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
 
   return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-semibold mb-6">Bookmarks</h2>
-      <Tabs defaultValue="mentors" className="w-full">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <BookMarked className="w-6 h-6" />
+          My Bookmarks
+        </h2>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="mentors">Mentors</TabsTrigger>
-          <TabsTrigger value="careers">Careers</TabsTrigger>
-          <TabsTrigger value="majors">Majors</TabsTrigger>
+          <TabsTrigger value="mentors" className="flex gap-1 items-center">
+            <User className="h-4 w-4" /> Mentors
+          </TabsTrigger>
+          <TabsTrigger value="scholarships" className="flex gap-1 items-center">
+            <School className="h-4 w-4" /> Scholarships
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mentors">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {bookmarks.mentors.map((mentor) => (
-              <Card 
-                key={mentor.id} 
-                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => setSelectedProfile(mentor.id)}
-              >
-                <div className="flex flex-col items-center text-center">
-                  <ProfileAvatar
-                    avatarUrl={mentor.avatar_url}
-                    fallback={mentor.full_name?.charAt(0) || '?'}
-                    size="md"
-                  />
-                  <h3 className="font-semibold text-lg mt-3 mb-1">
-                    {mentor.full_name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {mentor.careers?.title || 'No position set'} | {mentor.company?.name || 'No company set'}
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="mentors" className="space-y-4">
+          {mentorsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : mentorBookmarks.length === 0 ? (
+            renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />)
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {mentorBookmarks.map((mentor) => (
+                <Card key={mentor.id} className="hover:shadow transition-all">
+                  <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                    <ProfileAvatar
+                      avatarUrl={mentor.avatar_url}
+                      imageAlt={mentor.full_name}
+                      size="md"
+                    />
+                    <div>
+                      <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {mentor.position} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                      </p>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="line-clamp-3 text-sm">
+                      {mentor.bio || "No bio available"}
+                    </p>
+                    <div className="mt-4">
+                      <Button asChild variant="outline" size="sm" className="w-full">
+                        <Link to={`/mentor/${mentor.id}`}>View Profile</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="careers">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {bookmarks.careers.map((career) => (
-              <Card 
-                key={career.id} 
-                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => setSelectedCareer(career.id)}
-              >
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="font-semibold text-lg mb-2">{career.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                    {career.description}
-                  </p>
-                  {career.salary_range && (
-                    <Badge 
-                      className="bg-[#ea384c] hover:bg-[#ea384c]/90 text-white"
-                    >
-                      {career.salary_range}
-                    </Badge>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="majors">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {bookmarks.majors.map((major) => (
-              <Card 
-                key={major.id} 
-                className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => setSelectedMajor(major.id)}
-              >
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="font-semibold text-lg mb-2">{major.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                    {major.description}
-                  </p>
-                  {major.potential_salary && (
-                    <Badge 
-                      className="bg-[#ea384c] hover:bg-[#ea384c]/90 text-white"
-                    >
-                      {major.potential_salary}
-                    </Badge>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="scholarships" className="space-y-4">
+          {scholarshipsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : scholarshipBookmarks.length === 0 ? (
+            renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />)
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {scholarshipBookmarks.map((scholarship) => (
+                <ScholarshipCard
+                  key={scholarship.id}
+                  scholarship={scholarship}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
-
-      {selectedProfile && (
-        <ProfileDetailsDialog
-          userId={selectedProfile}
-          open={!!selectedProfile}
-          onOpenChange={(open) => !open && setSelectedProfile(null)}
-        />
-      )}
-
-      {selectedCareer && (
-        <CareerDetailsDialog
-          careerId={selectedCareer}
-          open={!!selectedCareer}
-          onOpenChange={(open) => !open && setSelectedCareer(null)}
-        />
-      )}
-
-      {selectedMajor && (
-        <MajorDetails
-          major={bookmarks.majors.find(m => m.id === selectedMajor)}
-          open={!!selectedMajor}
-          onOpenChange={(open) => !open && setSelectedMajor(null)}
-        />
-      )}
-    </Card>
+    </div>
   );
 }
