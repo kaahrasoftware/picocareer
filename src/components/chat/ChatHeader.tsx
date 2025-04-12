@@ -60,30 +60,64 @@ export function ChatHeader({
     }
   };
 
+  const getCategoryColor = () => {
+    switch (currentCategory) {
+      case 'education':
+        return 'bg-indigo-50 border-indigo-100';
+      case 'skills':
+        return 'bg-emerald-50 border-emerald-100';
+      case 'workstyle':
+        return 'bg-amber-50 border-amber-100';
+      case 'goals':
+        return 'bg-blue-50 border-blue-100';
+      case 'complete':
+        return isSessionComplete 
+          ? 'bg-green-50 border-green-100'
+          : 'bg-purple-50 border-purple-100';
+      default:
+        return 'bg-gray-50 border-gray-100';
+    }
+  };
+
   return (
-    <div className="bg-white shadow-sm">
-      <div className="flex justify-between items-center">
+    <div className={`${getCategoryColor()} border-b shadow-sm transition-all duration-300`}>
+      <div className="p-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           {isAnalyzing ? (
             <>
-              <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center">
-                <Star className="h-3 w-3 text-primary animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+                <Star className="h-4 w-4 text-primary" />
               </div>
-              <h2 className="font-medium">Analyzing your responses...</h2>
+              <div>
+                <h2 className="font-medium">Analyzing your responses...</h2>
+                <p className="text-xs text-muted-foreground">Finding the best career matches for you</p>
+              </div>
             </>
           ) : (
             <>
               <div className={`h-8 w-8 rounded-full ${isSessionComplete && currentCategory === 'complete' ? 'bg-green-100' : 'bg-primary/10'} flex items-center justify-center`}>
                 {currentCategory ? getCategoryIcon() : <RobotAvatar size="sm" />}
               </div>
-              <h2 className="font-medium">{getCategoryTitle()}</h2>
-              
-              {isSessionComplete && currentCategory === 'complete' && (
-                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2 flex items-center">
-                  <Check className="h-3 w-3 mr-1" />
-                  Complete
-                </span>
-              )}
+              <div>
+                <h2 className="font-medium">{getCategoryTitle()}</h2>
+                {currentCategory && !isSessionComplete && currentCategory !== 'complete' && (
+                  <p className="text-xs text-muted-foreground">
+                    {currentCategory === 'education' && "Tell us about your educational journey"}
+                    {currentCategory === 'skills' && "Share your strengths and abilities"}
+                    {currentCategory === 'workstyle' && "How do you prefer to work?"}
+                    {currentCategory === 'goals' && "What are you looking for in a career?"}
+                  </p>
+                )}
+                
+                {isSessionComplete && currentCategory === 'complete' && (
+                  <div className="flex items-center">
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full flex items-center">
+                      <Check className="h-3 w-3 mr-1" />
+                      Complete
+                    </span>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -116,7 +150,7 @@ export function ChatHeader({
       </div>
       
       {!isAnalyzing && questionProgress > 0 && questionProgress < 100 && (
-        <div className="mt-2">
+        <div className="px-3 pb-2">
           <Progress value={questionProgress} className="h-1.5" />
           <div className="flex justify-end mt-1">
             <span className="text-xs text-gray-500">
@@ -127,13 +161,13 @@ export function ChatHeader({
       )}
       
       {isAnalyzing && (
-        <div className="mt-2">
+        <div className="px-3 pb-2">
           <Progress value={50} className="h-1.5 animate-pulse" />
         </div>
       )}
       
       {isSessionComplete && currentCategory === 'complete' && (
-        <div className="mt-2">
+        <div className="px-3 pb-2">
           <Progress value={100} className="h-1.5 bg-green-100" />
           <div className="flex justify-end mt-1">
             <span className="text-xs text-green-600">
