@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
 import { Button } from '@/components/ui/button';
 import { CareerChatMessage } from '@/types/database/analytics';
-import { RefreshCw, Clock, Download } from 'lucide-react';
+import { RefreshCw, Clock, Download, ChevronDown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatInterfaceProps {
@@ -49,6 +49,41 @@ export function ChatInterface({
   // Determine if this is an empty chat (no messages or only welcome message)
   const isEmptyChat = messages.length === 0 || 
     (messages.length === 1 && messages[0].message_type === 'system');
+  
+  // State to track if user has scrolled up away from bottom
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  
+  // Function to scroll to bottom
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      setHasNewMessages(false);
+      setIsAtBottom(true);
+    }
+  };
+  
+  // Watch for new messages
+  useEffect(() => {
+    if (messages.length > 0 && !isAtBottom) {
+      setHasNewMessages(true);
+    } else if (messages.length > 0) {
+      // Auto-scroll to bottom when new messages arrive if already at bottom
+      scrollToBottom();
+    }
+  }, [messages.length]);
+  
+  // Handle scroll events
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const isScrolledToBottom = 
+      Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50;
+    
+    setIsAtBottom(isScrolledToBottom);
+    if (isScrolledToBottom) {
+      setHasNewMessages(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white/80 rounded-lg shadow-sm overflow-hidden border">
@@ -65,39 +100,54 @@ export function ChatInterface({
       </div>
 
       {/* Messages Container - Now using ScrollArea for better scrolling */}
-      <ScrollArea className="flex-1 relative">
-        <div className="p-4 space-y-4 bg-gradient-to-b from-white/40 to-white/10 min-h-[calc(100%-2rem)]">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <p className="text-gray-400 mb-4">Your chat will appear here</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onBeginAssessment}
-                className="gap-2"
-              >
-                <Clock className="h-4 w-4" />
-                Begin Assessment
-              </Button>
-            </div>
-          ) : (
-            <>
-              {messages.map((message, index) => (
-                <ChatMessage
-                  key={`${message.id}-${index}`}
-                  message={message}
-                  onSuggestionClick={onSuggestionClick}
-                  onBeginAssessment={onBeginAssessment}
-                  currentQuestionProgress={questionProgress}
-                  isDisabled={isTyping || isAnalyzing}
-                />
-              ))}
-              {isTyping && <ChatTypingIndicator />}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </div>
-      </ScrollArea>
+      <div className="flex-1 relative">
+        <ScrollArea className="h-full" onScroll={handleScroll}>
+          <div className="p-4 space-y-4 bg-gradient-to-b from-white/40 to-white/10 min-h-[calc(100%-2rem)]">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <p className="text-gray-400 mb-4">Your chat will appear here</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={onBeginAssessment}
+                  className="gap-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  Begin Assessment
+                </Button>
+              </div>
+            ) : (
+              <>
+                {messages.map((message, index) => (
+                  <ChatMessage
+                    key={`${message.id}-${index}`}
+                    message={message}
+                    onSuggestionClick={onSuggestionClick}
+                    onBeginAssessment={onBeginAssessment}
+                    currentQuestionProgress={questionProgress}
+                    isDisabled={isTyping || isAnalyzing}
+                  />
+                ))}
+                {isTyping && <ChatTypingIndicator />}
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
+        </ScrollArea>
+        
+        {/* Scroll to Bottom Button */}
+        {(hasNewMessages || !isAtBottom) && !isEmptyChat && (
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            className="absolute bottom-4 right-4 shadow-md gap-1 px-3 rounded-full opacity-90 hover:opacity-100"
+            onClick={scrollToBottom}
+          >
+            <ChevronDown className="h-4 w-4" />
+            {hasNewMessages ? 'New messages' : 'Bottom'}
+          </Button>
+        )}
+      </div>
 
       {/* Action buttons for completed sessions */}
       {isSessionEnded && (
