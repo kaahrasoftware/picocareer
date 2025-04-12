@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -13,6 +14,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { StandardPagination } from "@/components/common/StandardPagination";
 import { EmptyState } from "@/components/scholarships/EmptyState";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 
 export function BookmarksTab() {
   const { user } = useAuthState();
@@ -28,12 +30,22 @@ export function BookmarksTab() {
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   
+  // State for career dialog
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const [showCareerDialog, setShowCareerDialog] = useState(false);
+  
   const PAGE_SIZE = 6;
 
   // Function to handle View Profile button click
   const handleViewProfile = (mentorId: string) => {
     setSelectedMentorId(mentorId);
     setShowProfileDialog(true);
+  };
+
+  // Function to handle View Career Details button click
+  const handleViewCareerDetails = (careerId: string) => {
+    setSelectedCareerId(careerId);
+    setShowCareerDialog(true);
   };
 
   // Fetch bookmarked mentors with pagination
@@ -200,7 +212,9 @@ export function BookmarksTab() {
             title,
             description,
             salary_range,
-            image_url
+            image_url,
+            industry,
+            profiles_count
           `)
           .in("id", careerIds);
           
@@ -482,31 +496,49 @@ export function BookmarksTab() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {careerBookmarks.map((career) => (
-                    <Card key={career.id} className="hover:shadow transition-all overflow-hidden">
-                      <div className="h-32 bg-gradient-to-r from-blue-100 to-indigo-100 relative">
+                    <Card key={career.id} className="hover:shadow transition-all overflow-hidden group">
+                      {/* Redesigned header with more visible images */}
+                      <div className="h-40 bg-gradient-to-br from-blue-50 to-indigo-100 relative">
                         {career.image_url && (
                           <img 
                             src={career.image_url} 
                             alt={career.title} 
-                            className="w-full h-full object-cover absolute opacity-40"
+                            className="w-full h-full object-cover"
                           />
                         )}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Briefcase className="h-16 w-16 text-primary opacity-20" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
+                          <div className="p-3 text-white">
+                            <h3 className="font-semibold text-lg drop-shadow-md">{career.title}</h3>
+                            {career.industry && (
+                              <p className="text-sm opacity-90">{career.industry}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <CardContent className="pt-4">
-                        <CardTitle className="text-lg mb-2">{career.title}</CardTitle>
                         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                           {career.description}
                         </p>
-                        {career.salary_range && (
-                          <p className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block mb-3">
-                            {career.salary_range}
-                          </p>
-                        )}
-                        <Button asChild variant="outline" size="sm" className="w-full mt-2">
-                          <Link to={`/career/${career.id}`}>View Details</Link>
+                        <div className="flex items-center justify-between mb-3">
+                          {career.salary_range && (
+                            <span className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block">
+                              {career.salary_range}
+                            </span>
+                          )}
+                          {career.profiles_count > 0 && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {career.profiles_count} {career.profiles_count === 1 ? 'Mentor' : 'Mentors'}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => handleViewCareerDetails(career.id)}
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-2"
+                        >
+                          View Details
                         </Button>
                       </CardContent>
                     </Card>
@@ -604,11 +636,21 @@ export function BookmarksTab() {
         </Tabs>
       </div>
 
+      {/* Dialog for Mentor Profile */}
       {selectedMentorId && (
         <ProfileDetailsDialog
           userId={selectedMentorId}
           open={showProfileDialog}
           onOpenChange={setShowProfileDialog}
+        />
+      )}
+
+      {/* Dialog for Career Details */}
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={showCareerDialog}
+          onOpenChange={setShowCareerDialog}
         />
       )}
     </>
