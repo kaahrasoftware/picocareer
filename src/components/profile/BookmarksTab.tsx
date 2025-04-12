@@ -49,7 +49,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          mentor:profiles!content_id(
+          profiles!user_bookmarks_content_id_fkey(
             id,
             full_name,
             avatar_url,
@@ -64,11 +64,14 @@ export function BookmarksTab() {
         .eq("content_type", "mentor")
         .range(start, end);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching mentor bookmarks:", error);
+        throw error;
+      }
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.mentor)
-        .map(bookmark => bookmark.mentor);
+        .filter(bookmark => bookmark.profiles)
+        .map(bookmark => bookmark.profiles);
       
       return { 
         data: filteredData, 
@@ -101,7 +104,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          career:careers!content_id(
+          careers!user_bookmarks_content_id_fkey(
             id,
             title,
             description,
@@ -113,11 +116,14 @@ export function BookmarksTab() {
         .eq("content_type", "career")
         .range(start, end);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching career bookmarks:", error);
+        throw error;
+      }
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.career)
-        .map(bookmark => bookmark.career);
+        .filter(bookmark => bookmark.careers)
+        .map(bookmark => bookmark.careers);
       
       return { 
         data: filteredData, 
@@ -150,7 +156,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          major:majors!content_id(
+          majors!user_bookmarks_content_id_fkey(
             id,
             title,
             description,
@@ -162,11 +168,14 @@ export function BookmarksTab() {
         .eq("content_type", "major")
         .range(start, end);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching major bookmarks:", error);
+        throw error;
+      }
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.major)
-        .map(bookmark => bookmark.major);
+        .filter(bookmark => bookmark.majors)
+        .map(bookmark => bookmark.majors);
       
       return { 
         data: filteredData, 
@@ -199,17 +208,20 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          scholarship:scholarships!content_id(*)
+          scholarships!user_bookmarks_content_id_fkey(*)
         `)
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship")
         .range(start, end);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching scholarship bookmarks:", error);
+        throw error;
+      }
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.scholarship)
-        .map(bookmark => bookmark.scholarship);
+        .filter(bookmark => bookmark.scholarships)
+        .map(bookmark => bookmark.scholarships);
       
       return { 
         data: filteredData, 
@@ -253,6 +265,22 @@ export function BookmarksTab() {
       </div>
     </Card>
   );
+
+  // Log data for debugging purposes
+  useEffect(() => {
+    if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
+      console.log("No mentor bookmarks found");
+    }
+    if (activeTab === "careers" && careerBookmarks.length === 0 && !careersLoading) {
+      console.log("No career bookmarks found");
+    }
+    if (activeTab === "majors" && majorBookmarks.length === 0 && !majorsLoading) {
+      console.log("No major bookmarks found");
+    }
+    if (activeTab === "scholarships" && scholarshipBookmarks.length === 0 && !scholarshipsLoading) {
+      console.log("No scholarship bookmarks found");
+    }
+  }, [activeTab, mentorBookmarks.length, careerBookmarks.length, majorBookmarks.length, scholarshipBookmarks.length, mentorsLoading, careersLoading, majorsLoading, scholarshipsLoading]);
 
   return (
     <div className="space-y-6">
