@@ -3982,6 +3982,7 @@ export type Database = {
         | "Study Tips"
         | "Volunteer Opportunities"
         | "Know About my Academic Major"
+        | "Custom"
       setting_type:
         | "timezone"
         | "notifications"
@@ -4669,6 +4670,7 @@ export const Constants = {
         "Study Tips",
         "Volunteer Opportunities",
         "Know About my Academic Major",
+        "Custom",
       ],
       setting_type: [
         "timezone",

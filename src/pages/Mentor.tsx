@@ -1,5 +1,5 @@
 
-import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award, ChevronRight } from "lucide-react";
+import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award, ChevronRight, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { addDays } from "date-fns";
 import { MentorFilters } from "@/components/mentors/MentorFilters";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { FeedUploadDialog } from "@/components/forms/feed/FeedUploadDialog";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,8 +33,12 @@ export default function Mentor() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
+  const [feedDialogOpen, setFeedDialogOpen] = useState(false);
   const profileId = searchParams.get('profileId');
   const showDialog = searchParams.get('dialog') === 'true';
+  const { session } = useAuthSession();
+  const { data: userProfile } = useUserProfile(session);
+  const isMentor = userProfile?.user_type === 'mentor';
 
   useEffect(() => {
     if (profileId && showDialog) {
@@ -197,6 +204,10 @@ export default function Mentor() {
     setSearchParams(searchParams);
   };
 
+  const handleAddContent = () => {
+    setFeedDialogOpen(true);
+  };
+
   return (
     <SidebarProvider>
       <div className="app-layout">
@@ -237,16 +248,27 @@ export default function Mentor() {
                       </div>
                     </div>
                     
-                    <Button 
-                      asChild 
-                      size="lg" 
-                      className="bg-white text-blue-700 hover:bg-blue-50 font-semibold gap-2"
-                    >
-                      <Link to="/mentor-registration">
-                        Become a Mentor
-                        <ChevronRight className="h-5 w-5" />
-                      </Link>
-                    </Button>
+                    {isMentor ? (
+                      <Button 
+                        onClick={handleAddContent}
+                        size="lg" 
+                        className="bg-white text-blue-700 hover:bg-blue-50 font-semibold gap-2"
+                      >
+                        Add Content
+                        <FileText className="h-5 w-5" />
+                      </Button>
+                    ) : (
+                      <Button 
+                        asChild 
+                        size="lg" 
+                        className="bg-white text-blue-700 hover:bg-blue-50 font-semibold gap-2"
+                      >
+                        <Link to="/mentor-registration">
+                          Become a Mentor
+                          <ChevronRight className="h-5 w-5" />
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                   
                   <div className="md:w-1/3 lg:w-2/5 relative h-56 md:h-64 lg:h-72 z-10">
@@ -327,6 +349,12 @@ export default function Mentor() {
           onOpenChange={handleCloseDialog}
         />
       )}
+
+      {/* Resource Upload Dialog */}
+      <FeedUploadDialog 
+        open={feedDialogOpen}
+        onOpenChange={setFeedDialogOpen}
+      />
     </SidebarProvider>
   );
 }
