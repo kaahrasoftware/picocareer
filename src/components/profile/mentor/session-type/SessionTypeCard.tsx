@@ -1,5 +1,10 @@
+
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, DollarSign, FileText, Trash2, Video, MessageSquare, Phone } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Clock, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { Database } from "@/integrations/supabase/types";
 
 type SessionType = Database["public"]["Tables"]["mentor_session_types"]["Row"];
@@ -10,63 +15,76 @@ interface SessionTypeCardProps {
 }
 
 export function SessionTypeCard({ sessionType, onDelete }: SessionTypeCardProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Display custom type name if available, otherwise use the regular type
+  const displayTitle = sessionType.type === "Custom" && sessionType.custom_type_name 
+    ? sessionType.custom_type_name 
+    : sessionType.type;
+
   return (
-    <div className="bg-card border rounded-lg p-3 space-y-2 relative group hover:shadow-md transition-shadow">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-        onClick={() => onDelete(sessionType.id)}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
-      
-      <h4 className="font-medium text-base pr-8">{sessionType.type}</h4>
-      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" />
-          {sessionType.duration} min
-        </div>
-        <div className="flex items-center gap-1">
-          <DollarSign className="h-3.5 w-3.5" />
-          ${sessionType.price}
-        </div>
-      </div>
-      {sessionType.description && (
-        <div className="flex items-start gap-1 text-xs text-muted-foreground">
-          <FileText className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-          <p className="line-clamp-2">{sessionType.description}</p>
-        </div>
-      )}
-      {sessionType.meeting_platform && (
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-start gap-1 text-xs text-muted-foreground">
-            <Video className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-            <div className="flex flex-wrap gap-1">
-              {sessionType.meeting_platform.map((platform, index) => (
-                <span key={platform}>
-                  {platform}
-                  {index < sessionType.meeting_platform.length - 1 ? ", " : ""}
-                </span>
-              ))}
-            </div>
+    <>
+      <Card className="h-full">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between">
+            <CardTitle className="text-base font-medium line-clamp-2">
+              {displayTitle}
+              {sessionType.type === "Custom" && (
+                <Badge variant="outline" className="ml-2 text-xs font-normal">
+                  Custom
+                </Badge>
+              )}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
           </div>
-          
-          {sessionType.telegram_username && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MessageSquare className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>@{sessionType.telegram_username}</span>
-            </div>
+        </CardHeader>
+        <CardContent className="pb-4">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Clock className="mr-1 h-4 w-4" />
+            <span>{sessionType.duration} minutes</span>
+          </div>
+          {sessionType.description && (
+            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+              {sessionType.description}
+            </p>
           )}
-          
-          {sessionType.phone_number && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Phone className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{sessionType.phone_number}</span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {sessionType.meeting_platform.map((platform) => (
+              <Badge key={platform} variant="secondary" className="text-xs">
+                {platform}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Session Type</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the "{displayTitle}" session type? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDelete(sessionType.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

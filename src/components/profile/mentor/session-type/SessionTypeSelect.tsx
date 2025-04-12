@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -14,7 +15,7 @@ const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
   "TOEFL Exam Prep Advice": "Get tips and strategies for TOEFL exam preparation, including study plans and practice resources.",
   "IELTS Exam Prep Advice": "Learn effective preparation strategies for IELTS, including tips for all test sections.",
   "Duolingo Exam Prep Advice": "Get guidance on preparing for the Duolingo English Test, including format and practice strategies.",
-  "SAT Exam Prep Advise": "Receive strategic advice for SAT preparation, including study planning and test-taking techniques.",
+  "SAT Exam Prep Advice": "Receive strategic advice for SAT preparation, including study planning and test-taking techniques.",
   "ACT Exam Prep Advice": "Learn effective strategies for ACT preparation across all test sections.",
   "GRE Exam Prep Advice": "Get comprehensive guidance on GRE preparation, including study materials and test strategies.",
   "GMAT Exam Prep Advice": "Receive strategic advice for GMAT preparation, including quantitative and verbal sections.",
@@ -34,7 +35,8 @@ const SESSION_TYPE_DESCRIPTIONS: Record<SessionTypeEnum, string> = {
   "I need someone to practice my presentation with": "Practice and receive feedback on presentation delivery and content.",
   "Study Tips": "Learn effective study techniques, time management, and academic success strategies.",
   "Volunteer Opportunities": "Discover meaningful volunteer opportunities and their impact on personal growth.",
-  "Know About my Academic Major": "Get detailed insights about specific academic majors, coursework, and career prospects."
+  "Know About my Academic Major": "Get detailed insights about specific academic majors, coursework, and career prospects.",
+  "Custom": "Create your own custom session type tailored to your specific expertise and mentoring services."
 };
 
 interface SessionTypeFormData {
@@ -81,7 +83,17 @@ export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectPro
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {SESSION_TYPE_OPTIONS.filter(type => !availableTypes.includes(type)).map((type) => (
+                {/* Always show the Custom option */}
+                <SelectItem key="Custom" value="Custom" className="font-medium text-primary">
+                  Create Custom Session Type
+                </SelectItem>
+                
+                <SelectItem key="divider" value="divider" disabled className="py-0 my-1 border-t" />
+                
+                {/* Show predefined types that the mentor doesn't already have */}
+                {SESSION_TYPE_OPTIONS.filter(type => 
+                  type !== "Custom" && !availableTypes.includes(type)
+                ).map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>
@@ -103,7 +115,9 @@ export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectPro
               {selectedType && SESSION_TYPE_DESCRIPTIONS[selectedType]}
             </DialogDescription>
             <p className="text-xs text-muted-foreground italic">
-              Tip: You can select and copy this description to use in your session details.
+              {selectedType === "Custom" 
+                ? "Create your own custom session type with a unique name that describes your specific expertise."
+                : "Tip: You can select and copy this description to use in your session details."}
             </p>
           </div>
         </DialogContent>

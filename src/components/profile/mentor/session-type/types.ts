@@ -10,6 +10,7 @@ export interface SessionTypeFormData {
   meeting_platform: MeetingPlatform[];
   phone_number?: string;
   telegram_username?: string;
+  custom_type_name?: string; // Added custom type name field
 }
 
 export interface SessionTypeFormProps {
@@ -25,6 +26,7 @@ export interface SessionTypeFormProps {
     meeting_platform?: MeetingPlatform[];
     telegram_username?: string | null;
     phone_number?: string | null;
+    custom_type_name?: string | null; // Added custom type name field
   }>;
 }
 
@@ -35,7 +37,8 @@ export const SESSION_TYPES = {
   "Technical Mentoring": "Technical Mentoring",
   "Academic Advising": "Academic Advising",
   "Industry Insights": "Industry Insights",
-  "SAT Exam Prep Advice": "SAT Exam Prep Advice"
+  "SAT Exam Prep Advice": "SAT Exam Prep Advice",
+  "Custom": "Custom" // Added Custom type
 } as const;
 
 export type SessionTypeEnum = keyof typeof SESSION_TYPES;

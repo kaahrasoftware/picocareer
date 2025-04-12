@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -27,14 +27,17 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       description: "",
       meeting_platform: [],
       telegram_username: "",
-      phone_number: ""
+      phone_number: "",
+      custom_type_name: "",
     }
   });
 
   const selectedPlatforms = methods.watch("meeting_platform") || [];
+  const selectedType = methods.watch("type");
   const showTelegramField = selectedPlatforms.includes("Telegram");
   const showPhoneField = selectedPlatforms.includes("Phone Call");
   const showWhatsAppField = selectedPlatforms.includes("WhatsApp");
+  const isCustomType = selectedType === "Custom";
 
   const onSubmit = async (data: SessionTypeFormData) => {
     try {
@@ -42,12 +45,23 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       console.log('Attempting to add session type:', data);
       console.log('Profile ID:', profileId);
 
+      // Validate custom type name if Custom type is selected
+      if (data.type === "Custom" && (!data.custom_type_name || data.custom_type_name.trim() === "")) {
+        toast({
+          title: "Error",
+          description: "Please provide a name for your custom session type",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Check for existing type
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
-        .select('id, type')
+        .select('id, type, custom_type_name')
         .eq('profile_id', profileId)
-        .eq('type', data.type)
+        .or(`type.eq.${data.type}${data.type === "Custom" ? `,and(type.eq.Custom,custom_type_name.eq.${data.custom_type_name})` : ''}`)
         .maybeSingle();
 
       if (checkError) {
@@ -58,12 +72,21 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       console.log('Existing type check result:', existingType);
 
       if (existingType) {
-        toast({
-          title: "Error",
-          description: "You already have this session type",
-          variant: "destructive",
-        });
-        return;
+        if (data.type === "Custom" && existingType.type === "Custom" && existingType.custom_type_name === data.custom_type_name) {
+          toast({
+            title: "Error",
+            description: "You already have a custom session type with this name",
+            variant: "destructive",
+          });
+          return;
+        } else if (data.type !== "Custom") {
+          toast({
+            title: "Error",
+            description: "You already have this session type",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       // Create new session type
@@ -78,6 +101,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           meeting_platform: data.meeting_platform,
           telegram_username: data.telegram_username || null,
           phone_number: data.phone_number || null,
+          custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
         })
         .select('*')
         .single();
@@ -126,6 +150,27 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               form={{ control: methods.control }}
               availableTypes={availableSessionTypes}
             />
+
+            {isCustomType && (
+              <FormField
+                control={methods.control}
+                name="custom_type_name"
+                rules={{ required: "Custom type name is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Custom Type Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="text" 
+                        placeholder="Enter your custom session type" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={methods.control}

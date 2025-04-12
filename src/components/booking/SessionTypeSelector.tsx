@@ -1,3 +1,4 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SessionType {
@@ -5,6 +6,7 @@ interface SessionType {
   type: string;
   duration: number;
   description: string | null;
+  custom_type_name?: string | null; // Added custom type name field
 }
 
 interface SessionTypeSelectorProps {
@@ -24,7 +26,8 @@ export function SessionTypeSelector({ sessionTypes, onSessionTypeSelect }: Sessi
           {sessionTypes.map((type) => (
             <SelectItem key={type.id} value={type.id}>
               <div className="flex flex-col">
-                <span>{type.type}</span>
+                {/* Show custom type name if available, otherwise use the regular type */}
+                <span>{type.type === "Custom" && type.custom_type_name ? type.custom_type_name : type.type}</span>
                 <span className="text-sm text-muted-foreground">
                   {type.duration} minutes
                 </span>
