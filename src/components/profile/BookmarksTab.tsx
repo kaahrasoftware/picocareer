@@ -290,9 +290,21 @@ export function BookmarksTab() {
           console.error("Error fetching scholarships:", scholarshipsError);
           throw scholarshipsError;
         }
+
+        // Transform the scholarships to ensure proper typing for eligibility_criteria
+        const transformedScholarships = scholarships.map(scholarship => {
+          // Handle JSON fields that need special processing
+          return {
+            ...scholarship,
+            // Ensure eligibility_criteria is properly structured
+            eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' 
+              ? JSON.parse(scholarship.eligibility_criteria) 
+              : scholarship.eligibility_criteria || {}
+          };
+        });
         
         return { 
-          data: scholarships || [], 
+          data: transformedScholarships || [], 
           count: count || 0 
         };
       }
