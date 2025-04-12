@@ -57,11 +57,20 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       }
 
       // Check for existing type
+      let queryCondition = '';
+      if (data.type === "Custom") {
+        // For custom types, check if there's already one with the same custom name
+        queryCondition = `and(type.eq.Custom,custom_type_name.eq.${data.custom_type_name})`;
+      } else {
+        // For standard types, just check the type
+        queryCondition = `type.eq.${data.type}`;
+      }
+
       const { data: existingType, error: checkError } = await supabase
         .from('mentor_session_types')
         .select('id, type, custom_type_name')
         .eq('profile_id', profileId)
-        .or(`type.eq.${data.type}${data.type === "Custom" ? `,and(type.eq.Custom,custom_type_name.eq.${data.custom_type_name})` : ''}`)
+        .or(queryCondition)
         .maybeSingle();
 
       if (checkError) {
@@ -139,8 +148,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     }
   };
 
-  const availableSessionTypes = existingTypes.map(type => type.type as SessionTypeEnum);
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -148,7 +155,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           <div className="space-y-4">
             <SessionTypeSelect
               form={{ control: methods.control }}
-              availableTypes={availableSessionTypes}
+              availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
             />
 
             {isCustomType && (

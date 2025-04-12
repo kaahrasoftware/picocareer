@@ -215,6 +215,62 @@ export interface Database {
           }
         ]
       }
+      mentor_session_types: {
+        Row: {
+          meeting_platform: MeetingPlatform[] | null
+          custom_type_name: string | null
+          phone_number: string | null
+          telegram_username: string | null
+          description: string | null
+          token_cost: number
+          updated_at: string
+          created_at: string
+          price: number
+          duration: number
+          type: SessionType
+          profile_id: string
+          id: string
+        }
+        Insert: {
+          meeting_platform?: MeetingPlatform[] | null
+          custom_type_name?: string | null
+          phone_number?: string | null
+          telegram_username?: string | null
+          description?: string | null
+          token_cost?: number
+          updated_at?: string
+          created_at?: string
+          price: number
+          duration: number
+          type: SessionType
+          profile_id: string
+          id?: string
+        }
+        Update: {
+          meeting_platform?: MeetingPlatform[] | null
+          custom_type_name?: string | null
+          phone_number?: string | null
+          telegram_username?: string | null
+          description?: string | null
+          token_cost?: number
+          updated_at?: string
+          created_at?: string
+          price?: number
+          duration?: number
+          type?: SessionType
+          profile_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_session_types_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

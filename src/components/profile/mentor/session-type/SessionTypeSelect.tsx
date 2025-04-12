@@ -83,7 +83,7 @@ export function SessionTypeSelect({ form, availableTypes }: SessionTypeSelectPro
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {/* Always show the Custom option */}
+                {/* Always show the Custom option at the top */}
                 <SelectItem key="Custom" value="Custom" className="font-medium text-primary">
                   Create Custom Session Type
                 </SelectItem>

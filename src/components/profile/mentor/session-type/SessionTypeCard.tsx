@@ -57,7 +57,7 @@ export function SessionTypeCard({ sessionType, onDelete }: SessionTypeCardProps)
             </p>
           )}
           <div className="mt-2 flex flex-wrap gap-1">
-            {sessionType.meeting_platform.map((platform) => (
+            {sessionType.meeting_platform?.map((platform) => (
               <Badge key={platform} variant="secondary" className="text-xs">
                 {platform}
               </Badge>

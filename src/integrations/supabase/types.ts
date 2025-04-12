@@ -1922,6 +1922,7 @@ export type Database = {
       mentor_session_types: {
         Row: {
           created_at: string
+          custom_type_name: string | null
           description: string | null
           duration: number
           id: string
@@ -1938,6 +1939,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_type_name?: string | null
           description?: string | null
           duration: number
           id?: string
@@ -1954,6 +1956,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_type_name?: string | null
           description?: string | null
           duration?: number
           id?: string
