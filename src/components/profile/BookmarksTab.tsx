@@ -49,7 +49,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          profiles:content_id (
+          profiles:content_id(
             id,
             full_name,
             avatar_url,
@@ -101,7 +101,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          careers:content_id (
+          careers:content_id(
             id,
             title,
             description,
@@ -150,7 +150,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          majors:content_id (
+          majors:content_id(
             id,
             title,
             description,
@@ -199,7 +199,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          scholarships:content_id (*)
+          scholarships:content_id(*)
         `)
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship")
