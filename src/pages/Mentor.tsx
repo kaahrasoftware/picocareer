@@ -16,6 +16,9 @@ import { MentorFilters } from "@/components/mentors/MentorFilters";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { FeedUploadDialog } from "@/components/forms/feed/FeedUploadDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BookPlus, FileBox } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Mentor() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,11 +37,13 @@ export default function Mentor() {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const [feedDialogOpen, setFeedDialogOpen] = useState(false);
+  const [createContentDialogOpen, setCreateContentDialogOpen] = useState(false);
   const profileId = searchParams.get('profileId');
   const showDialog = searchParams.get('dialog') === 'true';
   const { session } = useAuthSession();
   const { data: userProfile } = useUserProfile(session);
   const isMentor = userProfile?.user_type === 'mentor';
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (profileId && showDialog) {
@@ -205,7 +210,17 @@ export default function Mentor() {
   };
 
   const handleAddContent = () => {
-    setFeedDialogOpen(true);
+    setCreateContentDialogOpen(true);
+  };
+
+  const handleOptionClick = (action: string) => {
+    setCreateContentDialogOpen(false);
+    
+    if (action === "blog") {
+      navigate("/blog/upload");
+    } else if (action === "resource") {
+      setFeedDialogOpen(true);
+    }
   };
 
   return (
@@ -349,6 +364,34 @@ export default function Mentor() {
           onOpenChange={handleCloseDialog}
         />
       )}
+
+      {/* Create Content Dialog */}
+      <Dialog open={createContentDialogOpen} onOpenChange={setCreateContentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-semibold">Create New Content</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-6">
+            <Button 
+              onClick={() => handleOptionClick("blog")}
+              className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
+              variant="outline"
+            >
+              <BookPlus className="h-12 w-12 text-primary" />
+              <span className="text-lg font-medium">Blog Post</span>
+            </Button>
+            
+            <Button 
+              onClick={() => handleOptionClick("resource")}
+              className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
+              variant="outline"
+            >
+              <FileBox className="h-12 w-12 text-primary" />
+              <span className="text-lg font-medium">Resource</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Resource Upload Dialog */}
       <FeedUploadDialog 
