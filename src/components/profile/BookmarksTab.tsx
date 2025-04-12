@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -72,7 +72,8 @@ export function BookmarksTab() {
             keywords,
             years_of_experience,
             top_mentor,
-            total_booked_sessions,
+            unique_mentees_count,
+            total_sessions,
             average_rating,
             rating_count,
             reliability_score
@@ -90,56 +91,33 @@ export function BookmarksTab() {
             let companyName = null;
             
             if (profile.position) {
-              try {
-                const { data: careerData } = await supabase
-                  .from("careers")
-                  .select("title")
-                  .eq("id", profile.position)
-                  .single();
-                  
-                if (careerData) {
-                  careerTitle = careerData.title;
-                }
-              } catch (error) {
-                console.error("Error fetching career:", error);
+              const { data: careerData, error: careerError } = await supabase
+                .from("careers")
+                .select("title")
+                .eq("id", profile.position)
+                .single();
+                
+              if (!careerError && careerData) {
+                careerTitle = careerData.title;
               }
             }
             
             if (profile.company_id) {
-              try {
-                const { data: companyData } = await supabase
-                  .from("companies")
-                  .select("name")
-                  .eq("id", profile.company_id)
-                  .single();
-                  
-                if (companyData) {
-                  companyName = companyData.name;
-                }
-              } catch (error) {
-                console.error("Error fetching company:", error);
+              const { data: companyData, error: companyError } = await supabase
+                .from("companies")
+                .select("name")
+                .eq("id", profile.company_id)
+                .single();
+                
+              if (!companyError && companyData) {
+                companyName = companyData.name;
               }
             }
-
+            
             return {
-              id: profile.id,
-              name: profile.full_name || "",
-              imageUrl: profile.avatar_url || "",
-              company: companyName,
-              position: profile.position,
+              ...profile,
               career_title: careerTitle,
-              location: profile.location,
-              skills: profile.skills || [],
-              keywords: profile.keywords || [],
-              top_mentor: profile.top_mentor || false,
-              rating: profile.average_rating || 0,
-              totalRatings: profile.rating_count || 0,
-              stats: {
-                mentees: String(0),
-                connected: String(profile.reliability_score || 0),
-                recordings: String(profile.total_booked_sessions || 0)
-              },
-              sessionsHeld: String(profile.total_booked_sessions || 0)
+              company_name: companyName
             };
           })
         );
@@ -336,17 +314,34 @@ export function BookmarksTab() {
   const mentorsTotalCount = mentorBookmarksData?.count || 0;
   const mentorsTotalPages = Math.ceil(mentorsTotalCount / PAGE_SIZE);
 
-  const careerBookmarks = [];
-  const careersTotalCount = 0;
-  const careersTotalPages = 0;
+  const careerBookmarks = careerBookmarksData?.data || [];
+  const careersTotalCount = careerBookmarksData?.count || 0;
+  const careersTotalPages = Math.ceil(careersTotalCount / PAGE_SIZE);
 
-  const majorBookmarks = [];
-  const majorsTotalCount = 0;
-  const majorsTotalPages = 0;
+  const majorBookmarks = majorBookmarksData?.data || [];
+  const majorsTotalCount = majorBookmarksData?.count || 0;
+  const majorsTotalPages = Math.ceil(majorsTotalCount / PAGE_SIZE);
 
-  const scholarshipBookmarks = [];
-  const scholarshipsTotalCount = 0;
-  const scholarshipsTotalPages = 0;
+  const scholarshipBookmarks = scholarshipBookmarksData?.data || [];
+  const scholarshipsTotalCount = scholarshipBookmarksData?.count || 0;
+  const scholarshipsTotalPages = Math.ceil(scholarshipsTotalCount / PAGE_SIZE);
+
+  const renderEmptyState = (type: string, icon: React.ReactNode, linkPath: string) => (
+    <Card className="text-center p-8 border-dashed bg-muted/30">
+      <div className="flex flex-col items-center gap-2">
+        <div className="bg-primary/10 p-3 rounded-full">
+          {icon}
+        </div>
+        <h3 className="font-semibold text-xl mt-2">No bookmarked {type}</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
+          You haven't bookmarked any {type} yet. When you find {type} you like, click the bookmark icon to save them here.
+        </p>
+        <Button asChild>
+          <Link to={linkPath}>Browse {type}</Link>
+        </Button>
+      </div>
+    </Card>
+  );
 
   useEffect(() => {
     if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
@@ -385,13 +380,7 @@ export function BookmarksTab() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : mentorBookmarks.length === 0 ? (
-            <EmptyState
-              icon={<User className="h-8 w-8 text-primary" />}
-              title="No bookmarked mentors"
-              description="You haven't bookmarked any mentors yet. When you find mentors you like, click the bookmark icon to save them here."
-              actionLabel="Browse Mentors"
-              actionHref="/mentor"
-            />
+            renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />, "/mentor")
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -399,20 +388,20 @@ export function BookmarksTab() {
                   <MentorCard
                     key={mentor.id}
                     id={mentor.id}
-                    name={mentor.name}
-                    position={mentor.position || mentor.career_title}
-                    company={mentor.company}
+                    name={mentor.full_name || ""}
+                    position={mentor.career_title || ""}
+                    company={mentor.company_name || ""}
                     location={mentor.location}
                     skills={mentor.skills || []}
                     keywords={mentor.keywords || []}
-                    avatarUrl={mentor.imageUrl}
+                    avatarUrl={mentor.avatar_url || ""}
                     hourlyRate={0}
                     topMentor={mentor.top_mentor || false}
-                    menteeCount={mentor.stats?.mentees ? parseInt(mentor.stats.mentees) : 0}
-                    connectionRate={mentor.stats?.connected ? parseInt(mentor.stats.connected) : 0}
-                    sessionsHeld={mentor.stats?.recordings || "0"}
-                    rating={mentor.rating || 0}
-                    totalRatings={mentor.totalRatings || 0}
+                    menteeCount={mentor.unique_mentees_count || 0}
+                    sessionsHeld={mentor.total_sessions?.toString() || "0"}
+                    rating={mentor.average_rating || 0}
+                    totalRatings={mentor.rating_count || 0}
+                    connectionRate={mentor.reliability_score || 0}
                   />
                 ))}
               </div>
@@ -432,13 +421,7 @@ export function BookmarksTab() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : careerBookmarks.length === 0 ? (
-            <EmptyState
-              icon={<Briefcase className="h-8 w-8 text-primary" />}
-              title="No bookmarked careers"
-              description="You haven't bookmarked any careers yet. When you find careers you like, click the bookmark icon to save them here."
-              actionLabel="Browse Careers"
-              actionHref="/career"
-            />
+            renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career")
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -489,13 +472,7 @@ export function BookmarksTab() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : majorBookmarks.length === 0 ? (
-            <EmptyState
-              icon={<BookOpen className="h-8 w-8 text-primary" />}
-              title="No bookmarked academic majors"
-              description="You haven't bookmarked any academic majors yet. When you find academic majors you like, click the bookmark icon to save them here."
-              actionLabel="Browse Academic Majors"
-              actionHref="/majors"
-            />
+            renderEmptyState("academic majors", <BookOpen className="h-8 w-8 text-primary" />, "/majors")
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -548,13 +525,7 @@ export function BookmarksTab() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : scholarshipBookmarks.length === 0 ? (
-            <EmptyState
-              icon={<GraduationCap className="h-8 w-8 text-primary" />}
-              title="No bookmarked scholarships"
-              description="You haven't bookmarked any scholarships yet. When you find scholarships you like, click the bookmark icon to save them here."
-              actionLabel="Browse Scholarships"
-              actionHref="/scholarships"
-            />
+            renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />, "/scholarships")
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
