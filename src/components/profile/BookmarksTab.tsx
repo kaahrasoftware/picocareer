@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -135,7 +135,7 @@ export function BookmarksTab() {
               rating: profile.average_rating || 0,
               totalRatings: profile.rating_count || 0,
               stats: {
-                mentees: String(profile.unique_mentees_count || 0),
+                mentees: String(0),
                 connected: String(profile.reliability_score || 0),
                 recordings: String(profile.total_booked_sessions || 0)
               },
