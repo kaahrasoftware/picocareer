@@ -27,8 +27,9 @@ export function MentorResults({ mentors }: MentorResultsProps) {
           location={mentor.location}
           skills={mentor.skills}
           avatarUrl={mentor.imageUrl}
-          rating={mentor.rating}
-          totalRatings={mentor.totalRatings}
+          rating={mentor.rating || 0}
+          totalRatings={mentor.totalRatings || 0}
+          topMentor={mentor.top_mentor}
         />
       ))}
     </div>

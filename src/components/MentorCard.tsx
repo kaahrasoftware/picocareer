@@ -47,6 +47,14 @@ export function MentorCard({
   
   // Use avatarUrl if provided, otherwise use imageUrl
   const displayAvatarUrl = avatarUrl || imageUrl;
+
+  const handleViewProfile = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      setShowProfileDialog(true);
+    }
+  };
   
   return (
     <>
@@ -69,10 +77,10 @@ export function MentorCard({
                   </div>
                 )}
               </div>
-              {position && company && (
+              {position && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Briefcase className="h-3 w-3" />
-                  {position} at {company}
+                  {position} {company && `at ${company}`}
                 </p>
               )}
               {location && (
@@ -145,7 +153,7 @@ export function MentorCard({
           {hourlyRate && (
             <span className="text-sm font-medium">${hourlyRate}/hour</span>
           )}
-          <Button size="sm" onClick={() => setShowProfileDialog(true)}>
+          <Button size="sm" onClick={handleViewProfile}>
             View Profile
           </Button>
         </CardFooter>

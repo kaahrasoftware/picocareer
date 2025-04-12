@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,7 +73,9 @@ export function BookmarksTab() {
             position,
             bio,
             company_id,
-            location
+            location,
+            skills,
+            top_mentor
           `)
           .in("id", mentorIds);
           
@@ -105,10 +107,34 @@ export function BookmarksTab() {
           }
         }
 
-        // Enrich mentor profiles with company names
+        // Fetch career titles for positions
+        const careerIds = mentorProfiles
+          .filter(profile => profile.position)
+          .map(profile => profile.position);
+
+        let careersData = {};
+        
+        if (careerIds.length > 0) {
+          const { data: careers, error: careersError } = await supabase
+            .from("careers")
+            .select("id, title")
+            .in("id", careerIds);
+            
+          if (careersError) {
+            console.error("Error fetching careers:", careersError);
+          } else if (careers) {
+            careersData = careers.reduce((acc, career) => {
+              acc[career.id] = career.title;
+              return acc;
+            }, {});
+          }
+        }
+
+        // Enrich mentor profiles with company names and career titles
         const enrichedProfiles = mentorProfiles.map(profile => ({
           ...profile,
-          company_name: profile.company_id ? companiesData[profile.company_id] : null
+          company_name: profile.company_id ? companiesData[profile.company_id] : null,
+          career_title: profile.position ? careersData[profile.position] : null
         }));
         
         return { 
@@ -402,7 +428,7 @@ export function BookmarksTab() {
                       <div>
                         <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {mentor.position} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                          {mentor.career_title || "Mentor"} {mentor.company_name ? `at ${mentor.company_name}` : ""}
                         </p>
                       </div>
                     </CardHeader>
