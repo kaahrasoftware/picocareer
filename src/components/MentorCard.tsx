@@ -46,9 +46,9 @@ export function MentorCard({
   hourlyRate,
   onClick,
   topMentor = false,
-  sessionsHeld,
-  menteeCount,
-  connectionRate
+  sessionsHeld = "0",
+  menteeCount = 0,
+  connectionRate = 0
 }: MentorCardProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   
@@ -120,7 +120,7 @@ export function MentorCard({
             </div>
           )}
           
-          {keywords.length > 0 && (
+          {keywords && keywords.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground font-medium flex items-center">
                 <Tag className="h-3 w-3 mr-1" />
