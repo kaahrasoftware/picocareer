@@ -7,6 +7,7 @@ import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator';
 import { Button } from '@/components/ui/button';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { RefreshCw, Clock, Download } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatInterfaceProps {
   messages: CareerChatMessage[];
@@ -63,38 +64,40 @@ export function ChatInterface({
         />
       </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-white/40 to-white/10">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <p className="text-gray-400 mb-4">Your chat will appear here</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onBeginAssessment}
-              className="gap-2"
-            >
-              <Clock className="h-4 w-4" />
-              Begin Assessment
-            </Button>
-          </div>
-        ) : (
-          <>
-            {messages.map((message, index) => (
-              <ChatMessage
-                key={`${message.id}-${index}`}
-                message={message}
-                onSuggestionClick={onSuggestionClick}
-                onBeginAssessment={onBeginAssessment}
-                currentQuestionProgress={questionProgress}
-                isDisabled={isTyping || isAnalyzing}
-              />
-            ))}
-            {isTyping && <ChatTypingIndicator />}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
+      {/* Messages Container - Now using ScrollArea for better scrolling */}
+      <ScrollArea className="flex-1 relative">
+        <div className="p-4 space-y-4 bg-gradient-to-b from-white/40 to-white/10 min-h-[calc(100%-2rem)]">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <p className="text-gray-400 mb-4">Your chat will appear here</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onBeginAssessment}
+                className="gap-2"
+              >
+                <Clock className="h-4 w-4" />
+                Begin Assessment
+              </Button>
+            </div>
+          ) : (
+            <>
+              {messages.map((message, index) => (
+                <ChatMessage
+                  key={`${message.id}-${index}`}
+                  message={message}
+                  onSuggestionClick={onSuggestionClick}
+                  onBeginAssessment={onBeginAssessment}
+                  currentQuestionProgress={questionProgress}
+                  isDisabled={isTyping || isAnalyzing}
+                />
+              ))}
+              {isTyping && <ChatTypingIndicator />}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Action buttons for completed sessions */}
       {isSessionEnded && (
