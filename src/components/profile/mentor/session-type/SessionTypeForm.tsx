@@ -22,7 +22,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
       type: undefined as unknown as SessionTypeEnum,
-      duration: 0,
+      duration: 30,
       price: 0,
       description: "",
       meeting_platform: [],
@@ -106,19 +106,23 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       }
 
       // Create new session type
+      const sessionData = {
+        profile_id: profileId,
+        type: data.type,
+        duration: Number(data.duration),
+        price: 0,
+        description: data.description || null,
+        meeting_platform: data.meeting_platform,
+        telegram_username: showTelegramField ? data.telegram_username || null : null,
+        phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
+        custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
+      };
+
+      console.log('Submitting session type data:', sessionData);
+
       const { data: newSessionType, error } = await supabase
         .from('mentor_session_types')
-        .insert({
-          profile_id: profileId,
-          type: data.type,
-          duration: Number(data.duration),
-          price: 0,
-          description: data.description || null,
-          meeting_platform: data.meeting_platform,
-          telegram_username: data.telegram_username || null,
-          phone_number: data.phone_number || null,
-          custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
-        })
+        .insert(sessionData)
         .select('*')
         .single();
 

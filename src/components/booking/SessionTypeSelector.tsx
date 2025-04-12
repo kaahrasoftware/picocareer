@@ -6,7 +6,7 @@ interface SessionType {
   type: string;
   duration: number;
   description: string | null;
-  custom_type_name?: string | null; // Added custom type name field
+  custom_type_name?: string | null;
 }
 
 interface SessionTypeSelectorProps {

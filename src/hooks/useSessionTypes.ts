@@ -12,6 +12,8 @@ interface SessionType {
   description: string | null;
   meeting_platform: MeetingPlatform[];
   custom_type_name?: string | null;
+  telegram_username?: string | null;
+  phone_number?: string | null;
 }
 
 // Helper function to validate UUID format
@@ -54,7 +56,7 @@ export function useSessionTypes(mentorId: string, isOpen: boolean) {
       }
 
       console.log("Fetched session types:", data);
-      setSessionTypes(data);
+      setSessionTypes(data || []);
     }
 
     if (isOpen && mentorId) {
