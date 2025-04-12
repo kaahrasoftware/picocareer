@@ -170,70 +170,75 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "mentors",
   });
 
-  // Fetch bookmarked careers with pagination - UPDATED FOR BETTER QUERIES AND JOINS
+  // Fetch bookmarked careers with pagination - FIXED JOIN QUERY
   const { data: careerBookmarksData = { data: [], count: 0 }, isLoading: careersLoading } = useQuery({
     queryKey: ["bookmarked-careers", user?.id, careersPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
-      // Get total count first with a more efficient query
+      // Get total count first 
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
         .eq("profile_id", user.id)
         .eq("content_type", "career");
       
-      if (countError) throw countError;
+      if (countError) {
+        console.error("Error counting career bookmarks:", countError);
+        throw countError;
+      }
       
       // Calculate pagination offsets
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a join query to get bookmark + career data in one request
-      const { data, error } = await supabase
+      // First get bookmark IDs
+      const { data: bookmarks, error: bookmarksError } = await supabase
         .from("user_bookmarks")
-        .select(`
-          id,
-          content_id,
-          careers!inner(
-            id,
-            title,
-            description,
-            salary_range,
-            image_url,
-            industry,
-            profiles_count
-          )
-        `)
+        .select("content_id")
         .eq("profile_id", user.id)
         .eq("content_type", "career")
         .range(start, end);
 
-      if (error) {
-        console.error("Error fetching career bookmarks:", error);
-        throw error;
+      if (bookmarksError) {
+        console.error("Error fetching career bookmarks:", bookmarksError);
+        throw bookmarksError;
       }
       
-      // Transform the joined data into the expected format
-      const transformedData = data.map(item => ({
-        id: item.careers.id,
-        title: item.careers.title,
-        description: item.careers.description,
-        salary_range: item.careers.salary_range,
-        image_url: item.careers.image_url,
-        industry: item.careers.industry,
-        profiles_count: item.careers.profiles_count
-      }));
+      if (!bookmarks || bookmarks.length === 0) {
+        return { data: [], count: count || 0 };
+      }
+      
+      // Get the actual career data using the bookmark IDs
+      const careerIds = bookmarks.map(bookmark => bookmark.content_id);
+      
+      const { data: careers, error: careersError } = await supabase
+        .from("careers")
+        .select(`
+          id,
+          title,
+          description,
+          salary_range,
+          image_url,
+          industry,
+          profiles_count
+        `)
+        .in("id", careerIds);
+      
+      if (careersError) {
+        console.error("Error fetching careers data:", careersError);
+        throw careersError;
+      }
       
       return { 
-        data: transformedData, 
+        data: careers || [], 
         count: count || 0 
       };
     },
     enabled: !!user && activeTab === "careers",
   });
 
-  // Fetch bookmarked academic majors with pagination
+  // Fetch bookmarked academic majors with pagination - FIXED JOIN QUERY
   const { data: majorBookmarksData = { data: [], count: 0 }, isLoading: majorsLoading } = useQuery({
     queryKey: ["bookmarked-majors", user?.id, majorsPage],
     queryFn: async () => {
@@ -246,53 +251,59 @@ export function BookmarksTab() {
         .eq("profile_id", user.id)
         .eq("content_type", "major");
       
-      if (countError) throw countError;
+      if (countError) {
+        console.error("Error counting major bookmarks:", countError);
+        throw countError;
+      }
 
-      // Get paginated data with proper join
+      // Get paginated bookmark IDs
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a join query to get bookmark + major data in one request
-      const { data, error } = await supabase
+      const { data: bookmarks, error: bookmarksError } = await supabase
         .from("user_bookmarks")
-        .select(`
-          id,
-          content_id,
-          majors!inner(
-            id,
-            title,
-            description,
-            degree_levels,
-            featured
-          )
-        `)
+        .select("content_id")
         .eq("profile_id", user.id)
         .eq("content_type", "major")
         .range(start, end);
 
-      if (error) {
-        console.error("Error fetching major bookmarks:", error);
-        throw error;
+      if (bookmarksError) {
+        console.error("Error fetching major bookmarks:", bookmarksError);
+        throw bookmarksError;
       }
       
-      // Transform the joined data into the expected format
-      const transformedData = data.map(item => ({
-        id: item.majors.id,
-        title: item.majors.title,
-        description: item.majors.description,
-        degree_levels: item.majors.degree_levels,
-        featured: item.majors.featured
-      }));
+      if (!bookmarks || bookmarks.length === 0) {
+        return { data: [], count: count || 0 };
+      }
+      
+      // Get the actual majors data using the bookmark IDs
+      const majorIds = bookmarks.map(bookmark => bookmark.content_id);
+      
+      const { data: majors, error: majorsError } = await supabase
+        .from("majors")
+        .select(`
+          id,
+          title,
+          description,
+          degree_levels,
+          featured
+        `)
+        .in("id", majorIds);
+      
+      if (majorsError) {
+        console.error("Error fetching majors data:", majorsError);
+        throw majorsError;
+      }
       
       return { 
-        data: transformedData, 
+        data: majors || [], 
         count: count || 0 
       };
     },
     enabled: !!user && activeTab === "majors",
   });
 
-  // Fetch bookmarked scholarships with pagination
+  // Fetch bookmarked scholarships with pagination - FIXED JOIN QUERY
   const { data: scholarshipBookmarksData = { data: [], count: 0 }, isLoading: scholarshipsLoading } = useQuery({
     queryKey: ["bookmarked-scholarships", user?.id, scholarshipsPage],
     queryFn: async () => {
@@ -305,32 +316,46 @@ export function BookmarksTab() {
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship");
       
-      if (countError) throw countError;
+      if (countError) {
+        console.error("Error counting scholarship bookmarks:", countError);
+        throw countError;
+      }
 
-      // Get paginated data with proper join
+      // Get paginated bookmark IDs
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
-      // Use a join query to get bookmark + scholarship data in one request
-      const { data, error } = await supabase
+      const { data: bookmarks, error: bookmarksError } = await supabase
         .from("user_bookmarks")
-        .select(`
-          id,
-          content_id,
-          scholarships!inner(*)
-        `)
+        .select("content_id")
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship")
         .range(start, end);
 
-      if (error) {
-        console.error("Error fetching scholarship bookmarks:", error);
-        throw error;
+      if (bookmarksError) {
+        console.error("Error fetching scholarship bookmarks:", bookmarksError);
+        throw bookmarksError;
       }
       
-      // Transform the joined data into the expected format with proper eligibility_criteria handling
-      const transformedData = data.map(item => {
-        const scholarship = item.scholarships;
+      if (!bookmarks || bookmarks.length === 0) {
+        return { data: [], count: count || 0 };
+      }
+      
+      // Get the actual scholarships data using the bookmark IDs
+      const scholarshipIds = bookmarks.map(bookmark => bookmark.content_id);
+      
+      const { data: scholarships, error: scholarshipsError } = await supabase
+        .from("scholarships")
+        .select("*")
+        .in("id", scholarshipIds);
+      
+      if (scholarshipsError) {
+        console.error("Error fetching scholarships data:", scholarshipsError);
+        throw scholarshipsError;
+      }
+      
+      // Transform the data to ensure eligibility_criteria is properly structured
+      const transformedData = scholarships.map(scholarship => {
         return {
           ...scholarship,
           // Ensure eligibility_criteria is properly structured
