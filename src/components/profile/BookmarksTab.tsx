@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -18,7 +17,6 @@ export function BookmarksTab() {
   const { user } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
   
-  // Pagination states
   const [mentorsPage, setMentorsPage] = useState(1);
   const [careersPage, setCareersPage] = useState(1);
   const [majorsPage, setMajorsPage] = useState(1);
@@ -26,13 +24,11 @@ export function BookmarksTab() {
   
   const PAGE_SIZE = 6;
 
-  // Fetch bookmarked mentors with pagination
   const { data: mentorBookmarksData = { data: [], count: 0 }, isLoading: mentorsLoading } = useQuery({
     queryKey: ["bookmarked-mentors", user?.id, mentorsPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
-      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -41,7 +37,6 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
-      // Get paginated data with proper join
       const start = (mentorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -59,7 +54,6 @@ export function BookmarksTab() {
         throw error;
       }
 
-      // Now fetch the actual mentor profiles with career title
       if (data && data.length > 0) {
         const mentorIds = data.map(bookmark => bookmark.content_id);
         
@@ -77,7 +71,12 @@ export function BookmarksTab() {
             skills,
             keywords,
             years_of_experience,
-            top_mentor
+            top_mentor,
+            unique_mentees_count,
+            total_sessions,
+            average_rating,
+            rating_count,
+            reliability_score
           `)
           .in("id", mentorIds);
           
@@ -86,13 +85,11 @@ export function BookmarksTab() {
           throw mentorError;
         }
 
-        // For each profile, get career title if position is set
         const enrichedProfiles = await Promise.all(
           mentorProfiles.map(async (profile) => {
             let careerTitle = null;
             let companyName = null;
             
-            // Fetch career title if position is set
             if (profile.position) {
               const { data: careerData, error: careerError } = await supabase
                 .from("careers")
@@ -105,7 +102,6 @@ export function BookmarksTab() {
               }
             }
             
-            // Fetch company name if company_id is set
             if (profile.company_id) {
               const { data: companyData, error: companyError } = await supabase
                 .from("companies")
@@ -137,13 +133,11 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "mentors",
   });
 
-  // Fetch bookmarked careers with pagination
   const { data: careerBookmarksData = { data: [], count: 0 }, isLoading: careersLoading } = useQuery({
     queryKey: ["bookmarked-careers", user?.id, careersPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
-      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -152,7 +146,6 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
-      // Get paginated data
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -168,7 +161,6 @@ export function BookmarksTab() {
         throw error;
       }
       
-      // Now fetch the actual careers
       if (data && data.length > 0) {
         const careerIds = data.map(bookmark => bookmark.content_id);
         
@@ -199,13 +191,11 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "careers",
   });
 
-  // Fetch bookmarked academic majors with pagination
   const { data: majorBookmarksData = { data: [], count: 0 }, isLoading: majorsLoading } = useQuery({
     queryKey: ["bookmarked-majors", user?.id, majorsPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
-      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -214,7 +204,6 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
-      // Get paginated data
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -230,7 +219,6 @@ export function BookmarksTab() {
         throw error;
       }
       
-      // Now fetch the actual majors
       if (data && data.length > 0) {
         const majorIds = data.map(bookmark => bookmark.content_id);
         
@@ -261,13 +249,11 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "majors",
   });
 
-  // Fetch bookmarked scholarships with pagination
   const { data: scholarshipBookmarksData = { data: [], count: 0 }, isLoading: scholarshipsLoading } = useQuery({
     queryKey: ["bookmarked-scholarships", user?.id, scholarshipsPage],
     queryFn: async () => {
       if (!user) return { data: [], count: 0 };
 
-      // Get total count first
       const { count, error: countError } = await supabase
         .from("user_bookmarks")
         .select('*', { count: 'exact' })
@@ -276,7 +262,6 @@ export function BookmarksTab() {
       
       if (countError) throw countError;
 
-      // Get paginated data
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
@@ -292,7 +277,6 @@ export function BookmarksTab() {
         throw error;
       }
       
-      // Now fetch the actual scholarships
       if (data && data.length > 0) {
         const scholarshipIds = data.map(bookmark => bookmark.content_id);
         
@@ -306,12 +290,9 @@ export function BookmarksTab() {
           throw scholarshipsError;
         }
 
-        // Transform the scholarships to ensure proper typing for eligibility_criteria
         const transformedScholarships = scholarships.map(scholarship => {
-          // Handle JSON fields that need special processing
           return {
             ...scholarship,
-            // Ensure eligibility_criteria is properly structured
             eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' 
               ? JSON.parse(scholarship.eligibility_criteria) 
               : scholarship.eligibility_criteria || {}
@@ -329,7 +310,6 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "scholarships",
   });
 
-  // Extract the data arrays and counts
   const mentorBookmarks = mentorBookmarksData?.data || [];
   const mentorsTotalCount = mentorBookmarksData?.count || 0;
   const mentorsTotalPages = Math.ceil(mentorsTotalCount / PAGE_SIZE);
@@ -346,7 +326,6 @@ export function BookmarksTab() {
   const scholarshipsTotalCount = scholarshipBookmarksData?.count || 0;
   const scholarshipsTotalPages = Math.ceil(scholarshipsTotalCount / PAGE_SIZE);
 
-  // Function to render empty state with custom message
   const renderEmptyState = (type: string, icon: React.ReactNode, linkPath: string) => (
     <Card className="text-center p-8 border-dashed bg-muted/30">
       <div className="flex flex-col items-center gap-2">
@@ -364,7 +343,6 @@ export function BookmarksTab() {
     </Card>
   );
 
-  // Log data for debugging purposes
   useEffect(() => {
     if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
       console.log("No mentor bookmarks found");
@@ -417,8 +395,13 @@ export function BookmarksTab() {
                     skills={mentor.skills || []}
                     keywords={mentor.keywords || []}
                     avatarUrl={mentor.avatar_url || ""}
-                    hourlyRate={0} // We don't have this info in the bookmark
+                    hourlyRate={0}
                     topMentor={mentor.top_mentor || false}
+                    menteeCount={mentor.unique_mentees_count || 0}
+                    sessionsHeld={mentor.total_sessions?.toString() || "0"}
+                    rating={mentor.average_rating || 0}
+                    totalRatings={mentor.rating_count || 0}
+                    connectionRate={mentor.reliability_score || 0}
                   />
                 ))}
               </div>

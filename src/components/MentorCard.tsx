@@ -4,9 +4,10 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, MapPin, BookOpen, Star, Tag, Award } from 'lucide-react';
+import { Briefcase, MapPin, BookOpen, Star, Tag, Award, Users, MessageSquare, TrendingUp } from 'lucide-react';
 import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 import { badgeStyles } from '@/components/career-details/BadgeStyles';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface MentorCardProps {
   id: string;
@@ -24,6 +25,9 @@ export interface MentorCardProps {
   onClick?: () => void;
   imageUrl?: string; // Added for backward compatibility
   topMentor?: boolean;
+  sessionsHeld?: string;
+  menteeCount?: number;
+  connectionRate?: number;
 }
 
 export function MentorCard({
@@ -41,7 +45,10 @@ export function MentorCard({
   education,
   hourlyRate,
   onClick,
-  topMentor = false
+  topMentor = false,
+  sessionsHeld,
+  menteeCount,
+  connectionRate
 }: MentorCardProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   
@@ -134,20 +141,76 @@ export function MentorCard({
             </div>
           )}
         </CardContent>
-        <CardFooter className="border-t pt-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <Star className={`h-4 w-4 ${rating > 0 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-            <span className="text-sm font-medium ml-1">{rating > 0 ? rating.toFixed(1) : "-"}</span>
-            {totalRatings > 0 && (
-              <span className="text-xs text-muted-foreground ml-1">({totalRatings})</span>
-            )}
+        <CardFooter className="border-t pt-4 flex flex-col gap-3">
+          {/* Stats grid */}
+          <div className="w-full grid grid-cols-2 gap-2 text-sm">
+            <TooltipProvider>
+              {/* Rating */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    <Star className={`h-4 w-4 ${rating > 0 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                    <span className="font-medium">
+                      {rating > 0 ? rating.toFixed(1) : "-"}
+                      {totalRatings > 0 && <span className="text-xs text-muted-foreground ml-1">({totalRatings})</span>}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Mentor rating</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              {/* Sessions held */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <MessageSquare className="h-4 w-4 text-blue-500" />
+                    <span className="font-medium">{sessionsHeld || "0"}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Sessions completed</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              {/* Mentee count */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-emerald-500" />
+                    <span className="font-medium">{menteeCount || "0"}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Unique mentees</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              {/* Connection rate */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <TrendingUp className="h-4 w-4 text-purple-500" />
+                    <span className="font-medium">{connectionRate ? `${connectionRate}%` : "N/A"}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Connection success rate</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-          {hourlyRate && (
-            <span className="text-sm font-medium">${hourlyRate}/hour</span>
-          )}
-          <Button size="sm" onClick={() => setShowProfileDialog(true)}>
-            View Profile
-          </Button>
+          
+          {/* Price and view profile button */}
+          <div className="flex items-center justify-between w-full">
+            {hourlyRate !== undefined && (
+              <span className="text-sm font-medium">${hourlyRate}/hour</span>
+            )}
+            <Button size="sm" onClick={() => setShowProfileDialog(true)}>
+              View Profile
+            </Button>
+          </div>
         </CardFooter>
       </Card>
 

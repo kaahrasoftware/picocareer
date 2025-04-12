@@ -1,3 +1,4 @@
+
 export interface Mentor {
   id: string;
   name: string;
@@ -17,4 +18,6 @@ export interface Mentor {
   skills?: string[];
   education?: string;
   sessionsHeld?: string;
+  rating?: number;
+  totalRatings?: number;
 }
