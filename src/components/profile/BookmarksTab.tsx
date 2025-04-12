@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -13,6 +12,7 @@ import { Link } from "react-router-dom";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { StandardPagination } from "@/components/common/StandardPagination";
 import { EmptyState } from "@/components/scholarships/EmptyState";
+import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 
 export function BookmarksTab() {
   const { user } = useAuthState();
@@ -24,7 +24,17 @@ export function BookmarksTab() {
   const [majorsPage, setMajorsPage] = useState(1);
   const [scholarshipsPage, setScholarshipsPage] = useState(1);
   
+  // State for profile dialog
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  
   const PAGE_SIZE = 6;
+
+  // Function to handle View Profile button click
+  const handleViewProfile = (mentorId: string) => {
+    setSelectedMentorId(mentorId);
+    setShowProfileDialog(true);
+  };
 
   // Fetch bookmarked mentors with pagination
   const { data: mentorBookmarksData = { data: [], count: 0 }, isLoading: mentorsLoading } = useQuery({
@@ -383,209 +393,224 @@ export function BookmarksTab() {
   }, [activeTab, mentorBookmarks.length, mentorsLoading]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <BookMarked className="w-6 h-6" />
-          My Bookmarks
-        </h2>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <BookMarked className="w-6 h-6" />
+            My Bookmarks
+          </h2>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="mentors" className="flex gap-1 items-center">
+              <User className="h-4 w-4" /> Mentors
+            </TabsTrigger>
+            <TabsTrigger value="careers" className="flex gap-1 items-center">
+              <Briefcase className="h-4 w-4" /> Careers
+            </TabsTrigger>
+            <TabsTrigger value="majors" className="flex gap-1 items-center">
+              <BookOpen className="h-4 w-4" /> Academic Majors
+            </TabsTrigger>
+            <TabsTrigger value="scholarships" className="flex gap-1 items-center">
+              <School className="h-4 w-4" /> Scholarships
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="mentors" className="space-y-4">
+            {mentorsLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : mentorBookmarks.length === 0 ? (
+              renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />, "/mentor")
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {mentorBookmarks.map((mentor) => (
+                    <Card key={mentor.id} className="hover:shadow transition-all">
+                      <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                        <ProfileAvatar
+                          avatarUrl={mentor.avatar_url}
+                          imageAlt={mentor.full_name || "Mentor"}
+                          size="md"
+                        />
+                        <div>
+                          <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {mentor.career_title || "Mentor"} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                          </p>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="line-clamp-3 text-sm">
+                          {mentor.bio || "No bio available"}
+                        </p>
+                        <div className="mt-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full"
+                            onClick={() => handleViewProfile(mentor.id)}
+                          >
+                            View Profile
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                
+                <StandardPagination 
+                  currentPage={mentorsPage}
+                  totalPages={mentorsTotalPages}
+                  onPageChange={setMentorsPage}
+                />
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="careers" className="space-y-4">
+            {careersLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : careerBookmarks.length === 0 ? (
+              renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career")
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {careerBookmarks.map((career) => (
+                    <Card key={career.id} className="hover:shadow transition-all overflow-hidden">
+                      <div className="h-32 bg-gradient-to-r from-blue-100 to-indigo-100 relative">
+                        {career.image_url && (
+                          <img 
+                            src={career.image_url} 
+                            alt={career.title} 
+                            className="w-full h-full object-cover absolute opacity-40"
+                          />
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Briefcase className="h-16 w-16 text-primary opacity-20" />
+                        </div>
+                      </div>
+                      <CardContent className="pt-4">
+                        <CardTitle className="text-lg mb-2">{career.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {career.description}
+                        </p>
+                        {career.salary_range && (
+                          <p className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block mb-3">
+                            {career.salary_range}
+                          </p>
+                        )}
+                        <Button asChild variant="outline" size="sm" className="w-full mt-2">
+                          <Link to={`/career/${career.id}`}>View Details</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                
+                <StandardPagination 
+                  currentPage={careersPage}
+                  totalPages={careersTotalPages}
+                  onPageChange={setCareersPage}
+                />
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="majors" className="space-y-4">
+            {majorsLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : majorBookmarks.length === 0 ? (
+              renderEmptyState("academic majors", <BookOpen className="h-8 w-8 text-primary" />, "/majors")
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {majorBookmarks.map((major) => (
+                    <Card key={major.id} className="hover:shadow transition-all">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BookOpen className="h-5 w-5 text-primary" />
+                          {major.title}
+                        </CardTitle>
+                        {major.featured && (
+                          <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                            Featured
+                          </span>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
+                          {major.description}
+                        </p>
+                        {major.degree_levels && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {Array.isArray(major.degree_levels) && major.degree_levels.slice(0, 3).map((degree, index) => (
+                              <span key={index} className="bg-blue-50 text-blue-700 text-xs rounded-full px-2 py-0.5">
+                                {degree}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <Button asChild variant="outline" size="sm" className="w-full mt-2">
+                          <Link to={`/majors/${major.id}`}>View Details</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                
+                <StandardPagination 
+                  currentPage={majorsPage}
+                  totalPages={majorsTotalPages}
+                  onPageChange={setMajorsPage}
+                />
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="scholarships" className="space-y-4">
+            {scholarshipsLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : scholarshipBookmarks.length === 0 ? (
+              renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />, "/scholarships")
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {scholarshipBookmarks.map((scholarship) => (
+                    <ScholarshipCard
+                      key={scholarship.id}
+                      scholarship={scholarship}
+                    />
+                  ))}
+                </div>
+                
+                <StandardPagination 
+                  currentPage={scholarshipsPage}
+                  totalPages={scholarshipsTotalPages}
+                  onPageChange={setScholarshipsPage}
+                />
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="mentors" className="flex gap-1 items-center">
-            <User className="h-4 w-4" /> Mentors
-          </TabsTrigger>
-          <TabsTrigger value="careers" className="flex gap-1 items-center">
-            <Briefcase className="h-4 w-4" /> Careers
-          </TabsTrigger>
-          <TabsTrigger value="majors" className="flex gap-1 items-center">
-            <BookOpen className="h-4 w-4" /> Academic Majors
-          </TabsTrigger>
-          <TabsTrigger value="scholarships" className="flex gap-1 items-center">
-            <School className="h-4 w-4" /> Scholarships
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="mentors" className="space-y-4">
-          {mentorsLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : mentorBookmarks.length === 0 ? (
-            renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />, "/mentor")
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mentorBookmarks.map((mentor) => (
-                  <Card key={mentor.id} className="hover:shadow transition-all">
-                    <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                      <ProfileAvatar
-                        avatarUrl={mentor.avatar_url}
-                        imageAlt={mentor.full_name || "Mentor"}
-                        size="md"
-                      />
-                      <div>
-                        <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {mentor.career_title || "Mentor"} {mentor.company_name ? `at ${mentor.company_name}` : ""}
-                        </p>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="line-clamp-3 text-sm">
-                        {mentor.bio || "No bio available"}
-                      </p>
-                      <div className="mt-4">
-                        <Button asChild variant="outline" size="sm" className="w-full">
-                          <Link to={`/mentor/${mentor.id}`}>View Profile</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              <StandardPagination 
-                currentPage={mentorsPage}
-                totalPages={mentorsTotalPages}
-                onPageChange={setMentorsPage}
-              />
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="careers" className="space-y-4">
-          {careersLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : careerBookmarks.length === 0 ? (
-            renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career")
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {careerBookmarks.map((career) => (
-                  <Card key={career.id} className="hover:shadow transition-all overflow-hidden">
-                    <div className="h-32 bg-gradient-to-r from-blue-100 to-indigo-100 relative">
-                      {career.image_url && (
-                        <img 
-                          src={career.image_url} 
-                          alt={career.title} 
-                          className="w-full h-full object-cover absolute opacity-40"
-                        />
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Briefcase className="h-16 w-16 text-primary opacity-20" />
-                      </div>
-                    </div>
-                    <CardContent className="pt-4">
-                      <CardTitle className="text-lg mb-2">{career.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                        {career.description}
-                      </p>
-                      {career.salary_range && (
-                        <p className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block mb-3">
-                          {career.salary_range}
-                        </p>
-                      )}
-                      <Button asChild variant="outline" size="sm" className="w-full mt-2">
-                        <Link to={`/career/${career.id}`}>View Details</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              <StandardPagination 
-                currentPage={careersPage}
-                totalPages={careersTotalPages}
-                onPageChange={setCareersPage}
-              />
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="majors" className="space-y-4">
-          {majorsLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : majorBookmarks.length === 0 ? (
-            renderEmptyState("academic majors", <BookOpen className="h-8 w-8 text-primary" />, "/majors")
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {majorBookmarks.map((major) => (
-                  <Card key={major.id} className="hover:shadow transition-all">
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        {major.title}
-                      </CardTitle>
-                      {major.featured && (
-                        <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                          Featured
-                        </span>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                        {major.description}
-                      </p>
-                      {major.degree_levels && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {Array.isArray(major.degree_levels) && major.degree_levels.slice(0, 3).map((degree, index) => (
-                            <span key={index} className="bg-blue-50 text-blue-700 text-xs rounded-full px-2 py-0.5">
-                              {degree}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <Button asChild variant="outline" size="sm" className="w-full mt-2">
-                        <Link to={`/majors/${major.id}`}>View Details</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              <StandardPagination 
-                currentPage={majorsPage}
-                totalPages={majorsTotalPages}
-                onPageChange={setMajorsPage}
-              />
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="scholarships" className="space-y-4">
-          {scholarshipsLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : scholarshipBookmarks.length === 0 ? (
-            renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />, "/scholarships")
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {scholarshipBookmarks.map((scholarship) => (
-                  <ScholarshipCard
-                    key={scholarship.id}
-                    scholarship={scholarship}
-                  />
-                ))}
-              </div>
-              
-              <StandardPagination 
-                currentPage={scholarshipsPage}
-                totalPages={scholarshipsTotalPages}
-                onPageChange={setScholarshipsPage}
-              />
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
+      {selectedMentorId && (
+        <ProfileDetailsDialog
+          userId={selectedMentorId}
+          open={showProfileDialog}
+          onOpenChange={setShowProfileDialog}
+        />
+      )}
+    </>
   );
 }
