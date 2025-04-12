@@ -1,26 +1,22 @@
 
-import React, { useEffect, useState } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Plus, History, X, MessagesSquare, CheckCircle2, Clock } from 'lucide-react';
+import React, { useState } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
-import { useAuthSession } from '@/hooks/useAuthSession';
-import { ProfileAvatar } from '@/components/ui/profile-avatar';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SessionItem } from './session-management/SessionItem';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { X, PlusCircle, RefreshCw, MessageSquare, Trash2, Edit2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ChatSidebarProps {
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 export function ChatSidebar({ onClose }: ChatSidebarProps) {
   const { 
-    pastSessions, 
-    isFetchingPastSessions, 
+    pastSessions,
+    isFetchingPastSessions,
     fetchPastSessions,
     resumeSession,
     deleteSession,
@@ -28,226 +24,188 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
     handleStartNewChat
   } = useCareerChat();
   
-  const { session } = useAuthSession();
-  const { data: profile, isLoading: isProfileLoading } = useUserProfile(session);
-  const { toast } = useToast();
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [sessionToEdit, setSessionToEdit] = useState<string | null>(null);
+  const [newSessionTitle, setNewSessionTitle] = useState('');
 
-  // Fetch sessions when component mounts
-  useEffect(() => {
-    if (session?.user) {
-      fetchPastSessions();
+  const handleSessionClick = async (sessionId: string) => {
+    try {
+      await resumeSession(sessionId);
+      toast.success('Resumed previous session');
+    } catch (error) {
+      console.error('Failed to resume session:', error);
+      toast.error('Could not load this session');
     }
-  }, [session, fetchPastSessions]);
+  };
+
+  const handleRefreshClick = async () => {
+    await fetchPastSessions();
+  };
 
   const handleNewChat = () => {
-    if (!session?.user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to start a new career assessment."
-      });
-      return;
-    }
-    
     handleStartNewChat();
-    if (onClose) onClose();
+    toast.success('Started new assessment');
   };
 
-  const handleResumeSession = async (sessionId: string) => {
-    await resumeSession(sessionId);
-    if (onClose) onClose();
+  const confirmDeleteSession = (sessionId: string) => {
+    setSessionToDelete(sessionId);
+    setIsDeleteDialogOpen(true);
   };
 
-  // Count active sessions
-  const activeSessions = pastSessions.filter(s => s.status === 'active');
-  const completedSessions = pastSessions.filter(s => s.status === 'completed');
+  const handleDeleteSession = async () => {
+    if (sessionToDelete) {
+      await deleteSession(sessionToDelete);
+      setIsDeleteDialogOpen(false);
+      toast.success('Session deleted');
+    }
+  };
+
+  const openEditDialog = (sessionId: string, currentTitle: string) => {
+    setSessionToEdit(sessionId);
+    setNewSessionTitle(currentTitle);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateTitle = async () => {
+    if (sessionToEdit && newSessionTitle.trim()) {
+      await updateSessionTitle(sessionToEdit, newSessionTitle);
+      setIsEditDialogOpen(false);
+      toast.success('Session renamed');
+    }
+  };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="font-semibold flex items-center gap-2">
-          <MessagesSquare className="h-5 w-5 text-primary" />
-          Career Chats
-        </h2>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="lg:hidden h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* User profile section */}
-      <div className="p-4 border-b">
-        {isProfileLoading ? (
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-          </div>
-        ) : profile ? (
-          <div className="flex items-center gap-3">
-            <ProfileAvatar
-              avatarUrl={profile.avatar_url}
-              imageAlt={profile.full_name || profile.email || "User"}
-              size="md"
-              userId={profile.id}
-              editable={false}
-            />
-            <div>
-              <p className="font-medium text-sm">{profile.full_name || "User"}</p>
-              <p className="text-xs text-muted-foreground truncate max-w-[180px]">{profile.email}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center p-2 text-sm text-muted-foreground">
-            Sign in to save your chat history
-          </div>
-        )}
-      </div>
-      
-      {/* New chat button */}
-      <div className="p-4">
-        <Button 
-          onClick={handleNewChat} 
-          className="w-full flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          New Career Chat
+    <div className="flex flex-col h-full bg-white">
+      <div className="p-4 border-b flex items-center justify-between">
+        <h2 className="font-medium text-lg">Your Assessments</h2>
+        <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
+          <X className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Active sessions counter */}
-      {activeSessions.length > 0 && (
-        <div className="px-4 pb-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              <span>{activeSessions.length} active {activeSessions.length === 1 ? 'session' : 'sessions'}</span>
-            </Badge>
-          </div>
-        </div>
-      )}
+      <div className="p-3 border-b">
+        <Button 
+          variant="default" 
+          className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+          onClick={handleNewChat}
+        >
+          <PlusCircle className="h-4 w-4" />
+          New Assessment
+        </Button>
+      </div>
 
-      {/* Past sessions */}
-      <div className="flex-1 overflow-hidden">
-        {session?.user ? (
-          <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-            <div className="px-4 pt-2">
-              <TabsList className="w-full">
-                <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
-                <TabsTrigger value="active" className="flex-1">Active</TabsTrigger>
-                <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="all" className="h-full">
-              <ScrollArea className="h-[calc(100vh-300px)]">
-                <div className="p-4 space-y-3">
-                  {isFetchingPastSessions ? (
-                    Array(3).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-28 w-full rounded-lg" />
-                    ))
-                  ) : pastSessions.length > 0 ? (
-                    pastSessions.map(session => (
-                      <SessionItem
-                        key={session.id}
-                        session={session}
-                        onResumeSession={handleResumeSession}
-                        onDeleteSession={deleteSession}
-                        onUpdateSessionTitle={updateSessionTitle}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <History className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
-                      <p className="text-muted-foreground">No chat history yet</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Your completed chats will appear here
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-            
-            <TabsContent value="active" className="h-full">
-              <ScrollArea className="h-[calc(100vh-300px)]">
-                <div className="p-4 space-y-3">
-                  {isFetchingPastSessions ? (
-                    Array(2).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-28 w-full rounded-lg" />
-                    ))
-                  ) : activeSessions.length > 0 ? (
-                    activeSessions.map(session => (
-                      <SessionItem
-                        key={session.id}
-                        session={session}
-                        onResumeSession={handleResumeSession}
-                        onDeleteSession={deleteSession}
-                        onUpdateSessionTitle={updateSessionTitle}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <Clock className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
-                      <p className="text-muted-foreground">No active chats</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Start a new chat to begin a career assessment
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-            
-            <TabsContent value="completed" className="h-full">
-              <ScrollArea className="h-[calc(100vh-300px)]">
-                <div className="p-4 space-y-3">
-                  {isFetchingPastSessions ? (
-                    Array(3).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-28 w-full rounded-lg" />
-                    ))
-                  ) : completedSessions.length > 0 ? (
-                    completedSessions.map(session => (
-                      <SessionItem
-                        key={session.id}
-                        session={session}
-                        onResumeSession={handleResumeSession}
-                        onDeleteSession={deleteSession}
-                        onUpdateSessionTitle={updateSessionTitle}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <CheckCircle2 className="h-12 w-12 text-muted-foreground mb-2 opacity-50" />
-                      <p className="text-muted-foreground">No completed chats yet</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Finish a chat to see it here
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
+      <div className="flex-1 overflow-y-auto">
+        {pastSessions.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <p>No previous assessments</p>
+            <p className="text-sm mt-1">Start a new assessment to see results here</p>
+          </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-            <MessagesSquare className="h-16 w-16 text-muted-foreground mb-4 opacity-30" />
-            <p className="text-muted-foreground">Sign in to view your chat history</p>
-            <p className="text-xs text-muted-foreground mt-2 max-w-[200px]">
-              All your chat sessions will be saved and you can resume them anytime
-            </p>
+          <div className="p-2 space-y-1">
+            {pastSessions.map((session) => (
+              <div 
+                key={session.id}
+                className="p-3 rounded-md hover:bg-blue-50 cursor-pointer transition-colors group"
+              >
+                <div 
+                  className="flex justify-between items-start"
+                  onClick={() => handleSessionClick(session.id)}
+                >
+                  <div className="flex-1 truncate">
+                    <div className="font-medium truncate">{session.title || 'Unnamed Assessment'}</div>
+                    <div className="text-xs text-gray-500">
+                      {formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}
+                      {session.metadata?.isComplete && (
+                        <span className="ml-2 inline-flex text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                          Complete
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditDialog(session.id, session.title || 'Unnamed Assessment');
+                    }}
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-7 w-7 text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDeleteSession(session.id);
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      <div className="p-3 border-t">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full gap-2"
+          onClick={handleRefreshClick}
+          disabled={isFetchingPastSessions}
+        >
+          <RefreshCw className={`h-4 w-4 ${isFetchingPastSessions ? 'animate-spin' : ''}`} />
+          {isFetchingPastSessions ? 'Refreshing...' : 'Refresh'}
+        </Button>
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Assessment</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this assessment? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteSession}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit title dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Assessment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="session-title">Assessment Name</Label>
+              <Input 
+                id="session-title"
+                value={newSessionTitle} 
+                onChange={(e) => setNewSessionTitle(e.target.value)}
+                placeholder="Enter a name for this assessment"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateTitle}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
