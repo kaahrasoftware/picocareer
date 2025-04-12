@@ -49,7 +49,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          profiles:content_id(
+          mentor:profiles!content_id(
             id,
             full_name,
             avatar_url,
@@ -67,8 +67,8 @@ export function BookmarksTab() {
       if (error) throw error;
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.profiles)
-        .map(bookmark => bookmark.profiles);
+        .filter(bookmark => bookmark.mentor)
+        .map(bookmark => bookmark.mentor);
       
       return { 
         data: filteredData, 
@@ -101,7 +101,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          careers:content_id(
+          career:careers!content_id(
             id,
             title,
             description,
@@ -116,8 +116,8 @@ export function BookmarksTab() {
       if (error) throw error;
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.careers)
-        .map(bookmark => bookmark.careers);
+        .filter(bookmark => bookmark.career)
+        .map(bookmark => bookmark.career);
       
       return { 
         data: filteredData, 
@@ -150,7 +150,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          majors:content_id(
+          major:majors!content_id(
             id,
             title,
             description,
@@ -165,8 +165,8 @@ export function BookmarksTab() {
       if (error) throw error;
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.majors)
-        .map(bookmark => bookmark.majors);
+        .filter(bookmark => bookmark.major)
+        .map(bookmark => bookmark.major);
       
       return { 
         data: filteredData, 
@@ -199,7 +199,7 @@ export function BookmarksTab() {
         .from("user_bookmarks")
         .select(`
           content_id,
-          scholarships:content_id(*)
+          scholarship:scholarships!content_id(*)
         `)
         .eq("profile_id", user.id)
         .eq("content_type", "scholarship")
@@ -208,8 +208,8 @@ export function BookmarksTab() {
       if (error) throw error;
       
       const filteredData = bookmarks
-        .filter(bookmark => bookmark.scholarships)
-        .map(bookmark => bookmark.scholarships);
+        .filter(bookmark => bookmark.scholarship)
+        .map(bookmark => bookmark.scholarship);
       
       return { 
         data: filteredData, 
