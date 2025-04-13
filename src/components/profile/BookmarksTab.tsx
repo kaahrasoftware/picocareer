@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -61,14 +62,49 @@ export function BookmarksTab() {
     setShowMajorDialog(true);
   };
 
+  // Set up realtime subscriptions for bookmark changes
+  useEffect(() => {
+    if (!user) return;
+    
+    // Listen for changes to bookmarks for the current user
+    const channel = supabase
+      .channel('bookmark-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for inserts, updates, and deletes
+          schema: 'public',
+          table: 'user_bookmarks',
+          filter: `profile_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Bookmark change detected:', payload);
+          
+          // Determine which content type was affected
+          const contentType = payload.new?.content_type || payload.old?.content_type;
+          
+          // Invalidate the appropriate query based on content type
+          if (contentType === 'mentor') {
+            mentorBookmarksQuery.refetch();
+          } else if (contentType === 'career') {
+            careerBookmarksQuery.refetch();
+          } else if (contentType === 'major') {
+            majorBookmarksQuery.refetch();
+          } else if (contentType === 'scholarship') {
+            scholarshipBookmarksQuery.refetch();
+          }
+        }
+      )
+      .subscribe();
+    
+    // Clean up subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   // Fetch bookmarked mentors with pagination
-  const {
-    data: mentorBookmarksData = {
-      data: [],
-      count: 0
-    },
-    isLoading: mentorsLoading
-  } = useQuery({
+  const mentorBookmarksQuery = useQuery({
     queryKey: ["bookmarked-mentors", user?.id, mentorsPage],
     queryFn: async () => {
       if (!user) return {
@@ -178,13 +214,7 @@ export function BookmarksTab() {
   });
 
   // Fetch bookmarked careers with pagination - FIXED JOIN QUERY
-  const {
-    data: careerBookmarksData = {
-      data: [],
-      count: 0
-    },
-    isLoading: careersLoading
-  } = useQuery({
+  const careerBookmarksQuery = useQuery({
     queryKey: ["bookmarked-careers", user?.id, careersPage],
     queryFn: async () => {
       if (!user) return {
@@ -251,13 +281,7 @@ export function BookmarksTab() {
   });
 
   // Fetch bookmarked academic majors with pagination - FIXED JOIN QUERY
-  const {
-    data: majorBookmarksData = {
-      data: [],
-      count: 0
-    },
-    isLoading: majorsLoading
-  } = useQuery({
+  const majorBookmarksQuery = useQuery({
     queryKey: ["bookmarked-majors", user?.id, majorsPage],
     queryFn: async () => {
       if (!user) return {
@@ -343,13 +367,7 @@ export function BookmarksTab() {
   });
 
   // Fetch bookmarked scholarships with pagination - FIXED JOIN QUERY
-  const {
-    data: scholarshipBookmarksData = {
-      data: [],
-      count: 0
-    },
-    isLoading: scholarshipsLoading
-  } = useQuery({
+  const scholarshipBookmarksQuery = useQuery({
     queryKey: ["bookmarked-scholarships", user?.id, scholarshipsPage],
     queryFn: async () => {
       if (!user) return {
@@ -415,17 +433,17 @@ export function BookmarksTab() {
   });
 
   // Extract the data arrays and counts
-  const mentorBookmarks = mentorBookmarksData?.data || [];
-  const mentorsTotalCount = mentorBookmarksData?.count || 0;
+  const mentorBookmarks = mentorBookmarksQuery.data?.data || [];
+  const mentorsTotalCount = mentorBookmarksQuery.data?.count || 0;
   const mentorsTotalPages = Math.ceil(mentorsTotalCount / PAGE_SIZE);
-  const careerBookmarks = careerBookmarksData?.data || [];
-  const careersTotalCount = careerBookmarksData?.count || 0;
+  const careerBookmarks = careerBookmarksQuery.data?.data || [];
+  const careersTotalCount = careerBookmarksQuery.data?.count || 0;
   const careersTotalPages = Math.ceil(careersTotalCount / PAGE_SIZE);
-  const majorBookmarks = majorBookmarksData?.data || [];
-  const majorsTotalCount = majorBookmarksData?.count || 0;
+  const majorBookmarks = majorBookmarksQuery.data?.data || [];
+  const majorsTotalCount = majorBookmarksQuery.data?.count || 0;
   const majorsTotalPages = Math.ceil(majorsTotalCount / PAGE_SIZE);
-  const scholarshipBookmarks = scholarshipBookmarksData?.data || [];
-  const scholarshipsTotalCount = scholarshipBookmarksData?.count || 0;
+  const scholarshipBookmarks = scholarshipBookmarksQuery.data?.data || [];
+  const scholarshipsTotalCount = scholarshipBookmarksQuery.data?.count || 0;
   const scholarshipsTotalPages = Math.ceil(scholarshipsTotalCount / PAGE_SIZE);
 
   // Function to render empty state with custom message
@@ -446,10 +464,10 @@ export function BookmarksTab() {
 
   // Log data for debugging purposes
   useEffect(() => {
-    if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
+    if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorBookmarksQuery.isLoading) {
       console.log("No mentor bookmarks found");
     }
-  }, [activeTab, mentorBookmarks.length, mentorsLoading]);
+  }, [activeTab, mentorBookmarks.length, mentorBookmarksQuery.isLoading]);
   return <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -476,7 +494,7 @@ export function BookmarksTab() {
           </TabsList>
 
           <TabsContent value="mentors" className="space-y-4">
-            {mentorsLoading ? <div className="flex justify-center items-center py-12">
+            {mentorBookmarksQuery.isLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div> : mentorBookmarks.length === 0 ? renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />, "/mentor") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -508,7 +526,7 @@ export function BookmarksTab() {
           </TabsContent>
 
           <TabsContent value="careers" className="space-y-4">
-            {careersLoading ? <div className="flex justify-center items-center py-12">
+            {careerBookmarksQuery.isLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div> : careerBookmarks.length === 0 ? renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -548,7 +566,7 @@ export function BookmarksTab() {
           </TabsContent>
 
           <TabsContent value="majors" className="space-y-4">
-            {majorsLoading ? <div className="flex justify-center items-center py-12">
+            {majorBookmarksQuery.isLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div> : majorBookmarks.length === 0 ? renderEmptyState("academic majors", <BookOpen className="h-8 w-8 text-primary" />, "/majors") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -586,7 +604,7 @@ export function BookmarksTab() {
           </TabsContent>
 
           <TabsContent value="scholarships" className="space-y-4">
-            {scholarshipsLoading ? <div className="flex justify-center items-center py-12">
+            {scholarshipBookmarksQuery.isLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div> : scholarshipBookmarks.length === 0 ? renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />, "/scholarships") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
