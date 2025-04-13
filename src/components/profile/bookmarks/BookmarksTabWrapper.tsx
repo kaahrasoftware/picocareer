@@ -72,33 +72,49 @@ export function BookmarksTabWrapper() {
           console.log('Bookmark change detected:', payload);
           
           try {
-            // Extract the content type and id from the payload
-            const contentType = payload.new?.content_type || payload.old?.content_type;
+            // Safely extract content type with fallbacks and normalization
+            let contentType = '';
+            if (payload.new && payload.new.content_type) {
+              contentType = String(payload.new.content_type).toLowerCase();
+            } else if (payload.old && payload.old.content_type) {
+              contentType = String(payload.old.content_type).toLowerCase();
+            }
+            
+            // Extract content ID
             const contentId = payload.new?.content_id || payload.old?.content_id;
             const isDelete = payload.eventType === 'DELETE';
             
             console.log(`Bookmark ${isDelete ? 'removed' : 'added'} - Type: ${contentType}, ID: ${contentId}`);
             
-            // Pass the update details to our processing function
-            const bookmarkUpdate: RealtimeBookmarkUpdate = {
-              contentType: contentType as any,
-              contentId,
-              action: isDelete ? 'delete' : 'add'
-            };
+            if (!contentType || !contentId) {
+              console.error('Missing content type or ID in bookmark update:', payload);
+              return;
+            }
             
-            // Update the query cache based on content type
-            if (contentType === 'mentor') {
-              console.log('Invalidating mentor bookmarks query');
-              queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
-            } else if (contentType === 'career') {
-              console.log('Invalidating career bookmarks query');
-              queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
-            } else if (contentType === 'major') {
-              console.log('Invalidating major bookmarks query');
-              queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
-            } else if (contentType === 'scholarship') {
-              console.log('Invalidating scholarship bookmarks query');
-              queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
+            // Invalidate the queries based on the content type
+            // Using switch statement for clearer code structure
+            switch (contentType) {
+              case 'mentor':
+                console.log('Invalidating mentor bookmarks query');
+                queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+                break;
+              case 'career':
+                console.log('Invalidating career bookmarks query');
+                // Invalidate all career bookmark queries regardless of pagination
+                queryClient.invalidateQueries({ 
+                  queryKey: ['bookmarked-careers']
+                });
+                break;
+              case 'major':
+                console.log('Invalidating major bookmarks query');
+                queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
+                break;
+              case 'scholarship':
+                console.log('Invalidating scholarship bookmarks query');
+                queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
+                break;
+              default:
+                console.warn('Unknown content type:', contentType);
             }
             
             // Show a toast notification
@@ -109,6 +125,12 @@ export function BookmarksTabWrapper() {
             });
           } catch (error) {
             console.error("Error processing bookmark update:", error);
+            // Show error toast
+            toast({
+              title: "Error updating bookmarks", 
+              description: "Please refresh the page to see the latest bookmarks",
+              variant: "destructive",
+            });
           }
         }
       )
