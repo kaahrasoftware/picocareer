@@ -5,6 +5,7 @@ import { BookMarked, User, Briefcase, BookOpen, School } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useAuthState } from "@/hooks/useAuthState";
+import { useQueryClient } from "@tanstack/react-query";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { MajorDetails } from "@/components/MajorDetails";
@@ -13,10 +14,12 @@ import { CareerBookmarks } from "./CareerBookmarks";
 import { MajorBookmarks } from "./MajorBookmarks";
 import { ScholarshipBookmarks } from "./ScholarshipBookmarks";
 import { MajorProfile, RealtimeBookmarkUpdate } from "./types";
+import { toast } from "@/hooks/use-toast";
 
 export function BookmarksTabWrapper() {
   const { user } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
+  const queryClient = useQueryClient();
 
   // State for profile dialog
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
@@ -66,27 +69,38 @@ export function BookmarksTabWrapper() {
         (payload) => {
           console.log('Bookmark change detected:', payload);
           
-          // Extract the content type and id from the payload
-          const contentType = payload.new?.content_type || payload.old?.content_type;
-          const contentId = payload.new?.content_id || payload.old?.content_id;
-          const isDelete = payload.eventType === 'DELETE';
-          
-          // Pass the update details to our processing function
-          const bookmarkUpdate: RealtimeBookmarkUpdate = {
-            contentType: contentType as any,
-            contentId,
-            action: isDelete ? 'delete' : 'add'
-          };
-          
-          // Update the query cache based on content type
-          if (bookmarkUpdate.contentType === 'mentor') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
-          } else if (bookmarkUpdate.contentType === 'career') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
-          } else if (bookmarkUpdate.contentType === 'major') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
-          } else if (bookmarkUpdate.contentType === 'scholarship') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
+          try {
+            // Extract the content type and id from the payload
+            const contentType = payload.new?.content_type || payload.old?.content_type;
+            const contentId = payload.new?.content_id || payload.old?.content_id;
+            const isDelete = payload.eventType === 'DELETE';
+            
+            // Pass the update details to our processing function
+            const bookmarkUpdate: RealtimeBookmarkUpdate = {
+              contentType: contentType as any,
+              contentId,
+              action: isDelete ? 'delete' : 'add'
+            };
+            
+            // Update the query cache based on content type
+            if (bookmarkUpdate.contentType === 'mentor') {
+              queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+            } else if (bookmarkUpdate.contentType === 'career') {
+              queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
+            } else if (bookmarkUpdate.contentType === 'major') {
+              queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
+            } else if (bookmarkUpdate.contentType === 'scholarship') {
+              queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
+            }
+            
+            // Show a toast notification
+            toast({
+              title: isDelete ? "Bookmark removed" : "Bookmark added",
+              description: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} ${isDelete ? "removed from" : "added to"} your bookmarks`,
+              variant: isDelete ? "destructive" : "default",
+            });
+          } catch (error) {
+            console.error("Error processing bookmark update:", error);
           }
         }
       )
@@ -96,7 +110,7 @@ export function BookmarksTabWrapper() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, queryClient]);
 
   return (
     <div className="space-y-6">
